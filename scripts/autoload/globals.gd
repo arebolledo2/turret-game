@@ -51,6 +51,11 @@ const DIFFICULTY_CONFIG: Dictionary = {
 
 var current_difficulty: Difficulty = Difficulty.EASY
 
+# =============================================================================
+# SETTINGS
+# =============================================================================
+var show_damage_numbers: bool = true
+
 # Helper to get current difficulty config
 func get_difficulty_config() -> Dictionary:
 	return DIFFICULTY_CONFIG[current_difficulty]

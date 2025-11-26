@@ -12,6 +12,10 @@ func _on_xp_dropped(position: Vector2, amount: int) -> void:
 	if xp_drop_scene == null:
 		return
 	
+	# Defer spawn to avoid physics callback error
+	call_deferred("_spawn_xp_drop", position, amount)
+
+func _spawn_xp_drop(position: Vector2, amount: int) -> void:
 	var drop := xp_drop_scene.instantiate()
 	drop.global_position = position
 	drop.xp_value = amount

@@ -41,6 +41,9 @@ func initialize(wave: int) -> void:
 func take_damage(amount: float) -> void:
 	current_health -= amount
 	
+	# Emit damage event for damage numbers
+	Events.damage_dealt.emit(global_position, amount)
+	
 	# Visual feedback - flash white
 	$Sprite2D.modulate = Color.WHITE
 	var tween = create_tween()

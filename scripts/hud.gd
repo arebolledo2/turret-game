@@ -12,8 +12,17 @@ extends CanvasLayer
 @onready var stats_label: Label = $GameOverScreen/Panel/VBoxContainer/StatsLabel
 @onready var difficulty_screen: Control = $DifficultySelect
 @onready var hud_container: MarginContainer = $MarginContainer
+@onready var pause_menu: Control = $PauseMenu
+@onready var settings_menu: Control = $SettingsMenu
+@onready var show_damage_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageCheck
+@onready var resume_button: Button = $PauseMenu/Panel/VBoxContainer/ResumeButton
+@onready var settings_back_button: Button = $SettingsMenu/Panel/VBoxContainer/BackButton
+@onready var easy_button: Button = $DifficultySelect/Panel/VBoxContainer/ButtonContainer/EasyButton
+@onready var restart_button: Button = $GameOverScreen/Panel/VBoxContainer/RestartButton
 
 var player: Node2D = null
+var damage_number_scene: PackedScene
+var is_paused: bool = false
 
 func _ready() -> void:
 	# Hide overlays and HUD initially
@@ -21,6 +30,15 @@ func _ready() -> void:
 	game_over_screen.visible = false
 	difficulty_screen.visible = false
 	hud_container.visible = false
+	pause_menu.visible = false
+	settings_menu.visible = false
+	
+	# Load damage number scene
+	damage_number_scene = preload("res://scenes/damage_number.tscn")
+	
+	# Initialize settings UI
+	if show_damage_check:
+		show_damage_check.button_pressed = Globals.show_damage_numbers
 	
 	# Connect to events
 	Events.player_damaged.connect(_on_player_damaged)
@@ -33,10 +51,20 @@ func _ready() -> void:
 	Events.game_over.connect(_on_game_over)
 	Events.show_difficulty_select.connect(_on_show_difficulty_select)
 	Events.game_started.connect(_on_game_started)
+	Events.damage_dealt.connect(_on_damage_dealt)
 	
 	# Initialize labels
 	update_xp(0)
 	update_turret_count(0)
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("pause") and Globals.is_game_active:
+		if settings_menu.visible:
+			_on_settings_back_pressed()
+		elif pause_menu.visible:
+			toggle_pause()  # Resume the game
+		else:
+			toggle_pause()  # Pause the game
 
 func _on_game_started() -> void:
 	# Show HUD and get player reference
@@ -130,6 +158,8 @@ Time Survived: %d:%02d""" % [
 		game_over_screen.modulate.a = 0.0
 		var tween = create_tween()
 		tween.tween_property(game_over_screen, "modulate:a", 1.0, 0.5)
+		if restart_button:
+			restart_button.grab_focus()
 
 func _on_restart_pressed() -> void:
 	get_tree().reload_current_scene()
@@ -142,6 +172,8 @@ func _on_show_difficulty_select() -> void:
 	difficulty_screen.modulate.a = 0.0
 	var tween = create_tween()
 	tween.tween_property(difficulty_screen, "modulate:a", 1.0, 0.3)
+	if easy_button:
+		easy_button.grab_focus()
 
 func _on_easy_pressed() -> void:
 	_select_difficulty(Globals.Difficulty.EASY)
@@ -159,3 +191,63 @@ func _select_difficulty(difficulty: Globals.Difficulty) -> void:
 		difficulty_screen.visible = false
 		Events.difficulty_selected.emit(difficulty)
 	)
+
+# =============================================================================
+# PAUSE MENU
+# =============================================================================
+func toggle_pause() -> void:
+	is_paused = not is_paused
+	get_tree().paused = is_paused
+	pause_menu.visible = is_paused
+	
+	if is_paused:
+		pause_menu.modulate.a = 0.0
+		var tween = create_tween()
+		tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		tween.tween_property(pause_menu, "modulate:a", 1.0, 0.15)
+		if resume_button:
+			resume_button.grab_focus()
+		Events.game_paused.emit()
+	else:
+		Events.game_resumed.emit()
+
+func _on_resume_pressed() -> void:
+	toggle_pause()
+
+func _on_settings_pressed() -> void:
+	pause_menu.visible = false
+	settings_menu.visible = true
+	settings_menu.modulate.a = 0.0
+	var tween = create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	tween.tween_property(settings_menu, "modulate:a", 1.0, 0.15)
+	if show_damage_check:
+		show_damage_check.grab_focus()
+
+func _on_quit_pressed() -> void:
+	get_tree().paused = false
+	is_paused = false
+	get_tree().reload_current_scene()
+
+func _on_settings_back_pressed() -> void:
+	settings_menu.visible = false
+	pause_menu.visible = true
+	if resume_button:
+		resume_button.grab_focus()
+
+func _on_show_damage_toggled(toggled_on: bool) -> void:
+	Globals.show_damage_numbers = toggled_on
+
+# =============================================================================
+# DAMAGE NUMBERS
+# =============================================================================
+func _on_damage_dealt(pos: Vector2, amount: float) -> void:
+	if not Globals.show_damage_numbers:
+		return
+	if damage_number_scene == null:
+		return
+	
+	var damage_number = damage_number_scene.instantiate()
+	get_tree().current_scene.add_child(damage_number)
+	damage_number.global_position = pos + Vector2(randf_range(-10, 10), -20)
+	damage_number.setup(amount)

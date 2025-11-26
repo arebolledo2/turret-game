@@ -20,6 +20,7 @@ signal enemy_killed(enemy: Node2D, position: Vector2)
 signal enemy_spawned(enemy: Node2D)
 signal player_damaged(current_health: float, max_health: float)
 signal player_died()
+signal damage_dealt(position: Vector2, amount: float)
 
 # Turret Events
 signal turret_spawned(turret: Node2D, position: Vector2)
