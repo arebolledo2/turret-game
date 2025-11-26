@@ -6,7 +6,8 @@
       "Bash(curl:*)",
       "Bash(powershell:*)",
       "Bash(dir \"C:\\Users\\AndresRebolledo\\AppData\\Local\\Godot\")",
-      "Bash(start:*)"
+      "Bash(start:*)",
+      "Bash(timeout /t 5 /nobreak)"
     ],
     "deny": [],
     "ask": []
