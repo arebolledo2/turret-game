@@ -1,0 +1,12 @@
+ea4bc82a6ad023ab7ee23ee620429895
+::res://::1760527989
+icon.svg::CompressedTexture2D::8371495861621196564::1760527589::1760527991::1::::<><>::
+::res://scenes/::1760527579
+enemy.tscn::PackedScene::3572221223356371421::1760527543::0::1::::<><>::res://scripts/enemy.gd
+main.tscn::PackedScene::8351252152418279440::1760527579::0::1::::<><>::uid://c8yqvh3xwn5n5::::res://scenes/player.tscn<>res://scripts/game_manager.gd<>res://scripts/enemy_spawner.gd<>uid://bq5n7xwk8vh3r::::res://scenes/enemy.tscn
+player.tscn::PackedScene::7139627659087906552::1760527522::0::1::::<><>::res://scripts/player.gd
+::res://scripts/::1760527569
+enemy.gd::GDScript::-1::1760527536::0::1::::<>CharacterBody2D<>::
+enemy_spawner.gd::GDScript::-1::1760527569::0::1::::<>Node2D<>::
+game_manager.gd::GDScript::-1::1760527558::0::1::::<>Node<>::
+player.gd::GDScript::-1::1760527514::0::1::::<>CharacterBody2D<>::

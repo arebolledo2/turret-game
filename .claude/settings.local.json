@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where godot)",
+      "Bash(winget install:*)",
+      "Bash(curl:*)",
+      "Bash(powershell:*)",
+      "Bash(dir \"C:\\Users\\AndresRebolledo\\AppData\\Local\\Godot\")",
+      "Bash(start:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

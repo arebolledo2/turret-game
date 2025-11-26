@@ -1,0 +1,159 @@
+[gd_scene load_steps=2 format=3 uid="uid://hud_scene_001"]
+
+[ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud"]
+
+[node name="HUD" type="CanvasLayer"]
+layer = 10
+script = ExtResource("1_hud")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 10.0
+offset_right = -20.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="TopRow" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HealthBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopRow"]
+custom_minimum_size = Vector2(200, 25)
+layout_mode = 2
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="Spacer1" type="Control" parent="MarginContainer/VBoxContainer/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="WaveInfo" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TopRow"]
+layout_mode = 2
+
+[node name="WaveLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/WaveInfo"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Wave 1"
+horizontal_alignment = 1
+
+[node name="TimerLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/WaveInfo"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "0:20"
+horizontal_alignment = 1
+
+[node name="Spacer2" type="Control" parent="MarginContainer/VBoxContainer/TopRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatsContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TopRow"]
+layout_mode = 2
+
+[node name="XPLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/StatsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "XP: 0"
+horizontal_alignment = 2
+
+[node name="TurretLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/StatsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Turrets: 0"
+horizontal_alignment = 2
+
+[node name="WaveAnnouncement" type="Control" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+pivot_offset = Vector2(0, 0)
+
+[node name="WaveLabel" type="Label" parent="WaveAnnouncement"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -50.0
+offset_right = 200.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 64
+text = "Wave 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GameOverScreen" type="Control" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="GameOverScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Panel" type="PanelContainer" parent="GameOverScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -150.0
+offset_right = 200.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="GameOverScreen/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="GameOverScreen/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "GAME OVER"
+horizontal_alignment = 1
+
+[node name="StatsLabel" type="Label" parent="GameOverScreen/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Wave Reached: 1
+Enemies Killed: 0
+XP Collected: 0
+Turrets Spawned: 0
+Time Survived: 0:00"
+horizontal_alignment = 1
+
+[node name="RestartButton" type="Button" parent="GameOverScreen/Panel/VBoxContainer"]
+layout_mode = 2
+text = "Restart"
+
+[connection signal="pressed" from="GameOverScreen/Panel/VBoxContainer/RestartButton" to="." method="_on_restart_pressed"]

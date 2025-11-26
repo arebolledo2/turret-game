@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3 uid="uid://xp_drop_scene_001"]
+
+[ext_resource type="Script" path="res://scripts/xp_drop.gd" id="1_xp_drop"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 8.0
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_1"]
+
+[node name="XPDrop" type="Area2D"]
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("1_xp_drop")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_1")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.5, 0.3, 1, 1)
+scale = Vector2(12, 12)
+texture = SubResource("PlaceholderTexture2D_1")
