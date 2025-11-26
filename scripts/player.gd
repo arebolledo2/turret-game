@@ -56,6 +56,10 @@ func _ready() -> void:
 	add_child(invincibility_timer)
 
 func _physics_process(delta: float) -> void:
+	# Don't process if game hasn't started
+	if Globals == null or not Globals.is_game_active:
+		return
+	
 	handle_movement(delta)
 	clamp_to_arena()
 	move_and_slide()

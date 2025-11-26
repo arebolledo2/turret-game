@@ -7,10 +7,14 @@ var wave_timer: float = 0.0
 var announcement_timer: float = 0.0
 var pause_timer: float = 0.0
 
-@onready var enemy_spawner: Node2D = get_node_or_null("../EnemySpawner")
-@onready var turret_manager: Node = get_node_or_null("../TurretManager")
+var enemy_spawner: Node2D
+var turret_manager: Node
 
 func _ready() -> void:
+	# Get node references (siblings in scene tree)
+	enemy_spawner = get_node_or_null("../EnemySpawner")
+	turret_manager = get_node_or_null("../TurretManager")
+	
 	# Connect to player death
 	Events.player_died.connect(_on_player_died)
 	Events.difficulty_selected.connect(_on_difficulty_selected)
@@ -33,7 +37,7 @@ func start_game() -> void:
 	start_wave_announcement()
 
 func _process(delta: float) -> void:
-	if not Globals.is_game_active:
+	if Globals == null or not Globals.is_game_active:
 		return
 	
 	Globals.time_survived += delta

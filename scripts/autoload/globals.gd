@@ -136,13 +136,13 @@ func get_wave_enemy_count(wave: int) -> int:
 
 func get_enemy_health(wave: int) -> float:
 	var config := get_difficulty_config()
-	var base := ENEMY_BASE_HEALTH * config["enemy_health_mult"]
-	return base * pow(config["enemy_hp_scale_per_wave"], wave - 1)
+	var base: float = ENEMY_BASE_HEALTH * float(config["enemy_health_mult"])
+	return base * pow(float(config["enemy_hp_scale_per_wave"]), wave - 1)
 
 func get_enemy_speed(wave: int) -> float:
 	var config := get_difficulty_config()
-	var base := ENEMY_BASE_SPEED * config["enemy_speed_mult"]
-	return base * pow(config["enemy_speed_scale_per_wave"], wave - 1)
+	var base: float = ENEMY_BASE_SPEED * float(config["enemy_speed_mult"])
+	return base * pow(float(config["enemy_speed_scale_per_wave"]), wave - 1)
 
 func get_spawn_interval(wave: int) -> float:
 	var duration := get_wave_duration(wave)
