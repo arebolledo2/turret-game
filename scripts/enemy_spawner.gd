@@ -107,4 +107,3 @@ func spawn_enemy() -> void:
 		get_parent().add_child(enemy)
 	
 	Events.enemy_spawned.emit(enemy)
-

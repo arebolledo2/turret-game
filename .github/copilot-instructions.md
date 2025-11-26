@@ -1,7 +1,7 @@
 # Turret Survivor - AI Coding Agent Instructions
 
 ## Project Overview
-A wave-based survival game built in **Godot 4.3** using GDScript. The player dodges enemies while auto-spawning turrets provide primary damage. The MVP scope is defined in `doc/00-MVP-IMPLEMENTATION-SPEC.md` (single source of truth for values/constants).
+A wave-based survival game built in **Godot 4.5** using GDScript. The player dodges enemies while auto-spawning turrets provide primary damage. The MVP scope is defined in `doc/00-MVP-IMPLEMENTATION-SPEC.md` (single source of truth for values/constants).
 
 ## Architecture
 
@@ -95,6 +95,37 @@ Difficulty.NIGHTMARE: {
 ```powershell
 .\launch.ps1   # or launch.bat
 ```
+
+### Running Tests
+The project uses [GUT (Godot Unit Test)](https://github.com/bitwes/Gut) for automated testing. Tests are in `tests/`:
+```powershell
+.\run_tests.ps1              # Run all tests
+.\run_tests.ps1 -unit        # Unit tests only (fast, no scenes)
+.\run_tests.ps1 -integration # Integration tests only
+.\run_tests.ps1 -filter "enemy"  # Filter by test name
+```
+
+**Test structure:**
+- `tests/unit/` — Pure logic tests for `globals.gd` (wave scaling, difficulty config)
+- `tests/integration/` — Scene-based tests (enemy behavior, turret targeting, game state)
+
+**Writing tests:**
+```gdscript
+extends GutTest
+
+func before_each() -> void:
+    Globals.reset_stats()  # Always reset state
+
+func test_example():
+    assert_eq(Globals.get_wave_duration(1), 20.0)
+
+func test_signals():
+    watch_signals(Events)
+    Events.game_started.emit()
+    assert_signal_emitted(Events, "game_started")
+```
+
+Use `add_child_autofree()` for nodes that need cleanup. See `tests/README.md` for full documentation.
 
 ### Git Commits
 Commits should be concise, one-line, and begin with a single emoji. Agents may commit frequently.

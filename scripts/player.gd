@@ -17,12 +17,16 @@ var is_dead: bool = false
 var can_fire: bool = true
 var fire_timer: Timer
 var invincibility_timer: Timer
+var animation_timer: Timer
+var current_frame: int = 0
+var is_moving: bool = false
 
 # Projectile scene (will be set up)
 var projectile_scene: PackedScene
 
 @onready var weapon_pivot: Node2D = $WeaponPivot
 @onready var sprite: Sprite2D = $Sprite2D
+@onready var anim_timer: Timer = $AnimationTimer
 
 func _ready() -> void:
 	# Initialize from Globals if available
@@ -54,6 +58,9 @@ func _ready() -> void:
 	invincibility_timer.one_shot = true
 	invincibility_timer.timeout.connect(_on_invincibility_timeout)
 	add_child(invincibility_timer)
+	
+	# Setup animation timer
+	anim_timer.timeout.connect(_on_animation_timer_timeout)
 
 func _physics_process(delta: float) -> void:
 	# Don't process if game hasn't started
@@ -90,6 +97,19 @@ func handle_movement(_delta: float) -> void:
 	# Normalize and apply speed (instant response, no acceleration)
 	input_vector = input_vector.normalized()
 	velocity = input_vector * speed
+	
+	# Handle animation
+	if input_vector.length() > 0.1:
+		if not is_moving:
+			is_moving = true
+			anim_timer.start()
+		# Flip sprite based on horizontal direction
+		if input_vector.x != 0:
+			sprite.flip_h = input_vector.x < 0
+	else:
+		is_moving = false
+		anim_timer.stop()
+		sprite.frame = 0  # Reset to idle frame
 
 func clamp_to_arena() -> void:
 	# Keep player within arena bounds
@@ -160,7 +180,11 @@ func take_damage(amount: float) -> void:
 
 func _on_invincibility_timeout() -> void:
 	is_invincible = false
-	sprite.modulate = Color(0.2, 0.6, 1, 1)  # Reset to player color
+	sprite.modulate = Color.WHITE  # Reset to normal color
+
+func _on_animation_timer_timeout() -> void:
+	# Cycle through walk animation frames (0-15 for 4x4 grid)
+	sprite.frame = (sprite.frame + 1) % 16
 
 func die() -> void:
 	if is_dead:

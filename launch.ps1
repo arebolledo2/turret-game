@@ -3,9 +3,9 @@
 
 $projectPath = $PSScriptRoot
 $godotPaths = @(
-    "C:\Users\AndresRebolledo\AppData\Local\Godot\Godot_v4.3-stable_win64.exe",
     "C:\Users\AndresRebolledo\AppData\Local\Godot\Godot_v4.5.1-stable_win64.exe",
-    "$env:LOCALAPPDATA\Godot\Godot_v4.3-stable_win64.exe"
+    "$env:LOCALAPPDATA\Godot\Godot_v4.5.1-stable_win64.exe",
+    "C:\Users\AndresRebolledo\AppData\Local\Godot\Godot_v4.3-stable_win64.exe"
 )
 
 # Find first available Godot installation
