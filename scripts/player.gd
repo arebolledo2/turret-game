@@ -21,6 +21,11 @@ var animation_timer: Timer
 var current_frame: int = 0
 var is_moving: bool = false
 
+# Turret pickup system
+var carried_turret: Node2D = null
+var nearby_turret: Node2D = null
+var pickup_action_just_pressed: bool = false
+
 # Projectile scene (will be set up)
 var projectile_scene: PackedScene
 
@@ -70,11 +75,15 @@ func _physics_process(delta: float) -> void:
 	handle_movement(delta)
 	clamp_to_arena()
 	move_and_slide()
-	
-	# Auto-aim and fire at closest enemy
-	find_closest_enemy()
-	if closest_enemy and can_fire:
-		fire_at_enemy()
+
+	# Turret pickup/placement system
+	handle_turret_interactions()
+
+	# Auto-aim and fire at closest enemy (only if enabled)
+	if Globals.player_auto_attack_enabled:
+		find_closest_enemy()
+		if closest_enemy and can_fire:
+			fire_at_enemy()
 	
 	# Handle invincibility visual
 	if is_invincible:
@@ -96,7 +105,13 @@ func handle_movement(_delta: float) -> void:
 	
 	# Normalize and apply speed (instant response, no acceleration)
 	input_vector = input_vector.normalized()
-	velocity = input_vector * speed
+
+	# Apply speed penalty if carrying turret
+	var effective_speed := speed
+	if carried_turret and is_instance_valid(carried_turret):
+		effective_speed *= Globals.TURRET_CARRY_SPEED_PENALTY
+
+	velocity = input_vector * effective_speed
 	
 	# Handle animation
 	if input_vector.length() > 0.1:
@@ -110,6 +125,89 @@ func handle_movement(_delta: float) -> void:
 		is_moving = false
 		anim_timer.stop()
 		sprite.frame = 0  # Reset to idle frame
+
+func handle_turret_interactions() -> void:
+	# Detect input (check for just_pressed to toggle)
+	if Input.is_action_just_pressed("pickup_turret"):
+		pickup_action_just_pressed = true
+
+	# If carrying a turret, update its position
+	if carried_turret and is_instance_valid(carried_turret):
+		update_carried_turret_position()
+
+		# Check for placement input
+		if pickup_action_just_pressed:
+			place_turret()
+			pickup_action_just_pressed = false
+	else:
+		# Not carrying - look for nearby turrets
+		find_nearby_turret()
+		update_nearby_turret_indicator()
+
+		# Check for pickup input
+		if pickup_action_just_pressed and nearby_turret and is_instance_valid(nearby_turret):
+			pickup_turret(nearby_turret)
+			pickup_action_just_pressed = false
+
+func find_nearby_turret() -> void:
+	var turrets = get_tree().get_nodes_in_group("turrets")
+	var closest_distance: float = Globals.TURRET_PICKUP_RANGE
+	var previous_nearby := nearby_turret
+	nearby_turret = null
+
+	for turret in turrets:
+		if not is_instance_valid(turret):
+			continue
+		var distance := global_position.distance_to(turret.global_position)
+		if distance < closest_distance:
+			closest_distance = distance
+			nearby_turret = turret
+
+	# Manage indicator state changes
+	if previous_nearby != nearby_turret:
+		if previous_nearby and is_instance_valid(previous_nearby):
+			if previous_nearby.has_method("hide_pickup_indicator"):
+				previous_nearby.hide_pickup_indicator()
+		if nearby_turret and is_instance_valid(nearby_turret):
+			if nearby_turret.has_method("show_pickup_indicator"):
+				nearby_turret.show_pickup_indicator()
+
+func update_nearby_turret_indicator() -> void:
+	pass  # Handled by find_nearby_turret()
+
+func pickup_turret(turret: Node2D) -> void:
+	# Quick swap: drop current turret first
+	if carried_turret and is_instance_valid(carried_turret):
+		place_turret()
+
+	carried_turret = turret
+
+	if turret.has_method("hide_pickup_indicator"):
+		turret.hide_pickup_indicator()
+
+	Events.turret_picked_up.emit(turret)
+
+func place_turret() -> void:
+	if not carried_turret or not is_instance_valid(carried_turret):
+		carried_turret = null
+		return
+
+	var placement_pos := carried_turret.global_position
+	Events.turret_placed.emit(carried_turret, placement_pos)
+
+	carried_turret = null
+
+func update_carried_turret_position() -> void:
+	if not carried_turret or not is_instance_valid(carried_turret):
+		carried_turret = null
+		return
+
+	carried_turret.global_position = global_position + Globals.TURRET_CARRY_OFFSET
+
+func drop_carried_turret() -> void:
+	if carried_turret and is_instance_valid(carried_turret):
+		Events.turret_dropped.emit(carried_turret, carried_turret.global_position)
+		carried_turret = null
 
 func clamp_to_arena() -> void:
 	# Keep player within arena bounds
@@ -190,6 +288,10 @@ func die() -> void:
 	if is_dead:
 		return
 	is_dead = true
+
+	# Drop carried turret before death
+	drop_carried_turret()
+
 	Events.player_died.emit()
 	# Don't queue_free - let GameManager handle game over
 

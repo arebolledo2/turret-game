@@ -55,6 +55,7 @@ var current_difficulty: Difficulty = Difficulty.EASY
 # SETTINGS
 # =============================================================================
 var show_damage_numbers: bool = true
+var player_auto_attack_enabled: bool = false  # Player default attack disabled
 
 # Helper to get current difficulty config
 func get_difficulty_config() -> Dictionary:
@@ -92,6 +93,12 @@ const TURRET_PROJECTILE_SPEED: float = 500.0
 const TURRET_ROTATION_SPEED: float = 180.0  # degrees per second
 const TURRET_MIN_DISTANCE: float = 100.0  # from other turrets
 const TURRET_PLAYER_EXCLUSION: float = 150.0  # won't spawn on player
+
+# Turret Pickup System
+const TURRET_PICKUP_RANGE: float = 60.0  # Player can pick up turrets within this radius
+const TURRET_CARRY_OFFSET: Vector2 = Vector2(0, -40)  # Offset from player center (sits on head)
+const TURRET_CARRY_SPEED_PENALTY: float = 0.7  # 30% speed reduction (multiply by 0.7)
+const TURRET_IN_RANGE_INDICATOR_ALPHA: float = 0.5  # Subtle glow for nearby turrets
 
 # Computed turret values
 var TURRET_DAMAGE: float:

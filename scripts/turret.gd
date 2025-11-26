@@ -10,6 +10,7 @@ var target: Node2D = null
 var can_fire: bool = true
 var fire_timer: Timer
 var projectile_scene: PackedScene
+var is_in_pickup_range: bool = false
 
 @onready var weapon_sprite: Sprite2D = $WeaponSprite
 @onready var range_indicator: Node2D = $RangeIndicator
@@ -124,3 +125,19 @@ func show_range() -> void:
 func hide_range() -> void:
 	if range_indicator:
 		range_indicator.modulate.a = 0.0
+
+func show_pickup_indicator() -> void:
+	is_in_pickup_range = true
+	if range_indicator:
+		# Set to pickup range and blue color
+		if range_indicator.has_method("set_radius"):
+			range_indicator.set_radius(Globals.TURRET_PICKUP_RANGE)
+		range_indicator.modulate = Color(0.5, 0.8, 1.0, Globals.TURRET_IN_RANGE_INDICATOR_ALPHA)
+
+func hide_pickup_indicator() -> void:
+	is_in_pickup_range = false
+	if range_indicator:
+		# Reset to attack range and hide
+		if range_indicator.has_method("set_radius"):
+			range_indicator.set_radius(attack_range)
+		range_indicator.modulate = Color(0.3, 0.8, 0.3, 0.0)

@@ -25,6 +25,9 @@ signal damage_dealt(position: Vector2, amount: float)
 # Turret Events
 signal turret_spawned(turret: Node2D, position: Vector2)
 signal turret_fired(turret: Node2D)
+signal turret_picked_up(turret: Node2D)
+signal turret_placed(turret: Node2D, position: Vector2)
+signal turret_dropped(turret: Node2D, position: Vector2)
 
 # Pickup Events
 signal xp_dropped(position: Vector2, amount: int)
