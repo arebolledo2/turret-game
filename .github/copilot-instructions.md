@@ -66,12 +66,28 @@ if enemy.has_method("initialize"):
 ```
 
 ## Game State Flow
-`GameManager` controls state via enum: `IDLE → WAVE_ANNOUNCEMENT → COMBAT → WAVE_END → (loop or VICTORY/GAME_OVER)`
+`GameManager` controls state via enum: `IDLE → DIFFICULTY_SELECT → WAVE_ANNOUNCEMENT → COMBAT → WAVE_END → (loop or VICTORY/GAME_OVER)`
+
+Game startup:
+1. `show_difficulty_select()` - Player chooses Easy/Medium/Hard
+2. `_on_difficulty_selected()` - Sets `Globals.current_difficulty`, starts game
 
 Wave progression:
 1. `start_wave_announcement()` - Shows UI, spawns turret
 2. `start_combat()` - Starts enemy spawning, wave timer
 3. `end_wave()` - Stops spawning, checks victory (wave 10)
+
+### Difficulty System
+Difficulty is configured via `DIFFICULTY_CONFIG` dictionary in `globals.gd`. Each difficulty defines multipliers for enemy stats, player health, turret damage, and wave scaling. To add a new difficulty:
+```gdscript
+# In globals.gd DIFFICULTY_CONFIG
+Difficulty.NIGHTMARE: {
+    "name": "Nightmare",
+    "enemy_health_mult": 2.0,
+    "enemy_speed_mult": 1.3,
+    # ... other multipliers
+}
+```
 
 ## Developer Workflow
 

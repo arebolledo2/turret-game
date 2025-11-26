@@ -10,13 +10,17 @@ extends CanvasLayer
 @onready var game_over_screen: Control = $GameOverScreen
 @onready var game_over_title: Label = $GameOverScreen/Panel/VBoxContainer/Title
 @onready var stats_label: Label = $GameOverScreen/Panel/VBoxContainer/StatsLabel
+@onready var difficulty_screen: Control = $DifficultySelect
+@onready var hud_container: MarginContainer = $MarginContainer
 
 var player: Node2D = null
 
 func _ready() -> void:
-	# Hide overlays initially
+	# Hide overlays and HUD initially
 	wave_announcement.visible = false
 	game_over_screen.visible = false
+	difficulty_screen.visible = false
+	hud_container.visible = false
 	
 	# Connect to events
 	Events.player_damaged.connect(_on_player_damaged)
@@ -27,16 +31,20 @@ func _ready() -> void:
 	Events.show_wave_announcement.connect(_on_show_wave_announcement)
 	Events.hide_wave_announcement.connect(_on_hide_wave_announcement)
 	Events.game_over.connect(_on_game_over)
-	
-	# Get player reference
-	await get_tree().process_frame
-	player = get_tree().get_first_node_in_group("player")
-	if player:
-		update_health_bar(player.current_health, player.max_health)
+	Events.show_difficulty_select.connect(_on_show_difficulty_select)
+	Events.game_started.connect(_on_game_started)
 	
 	# Initialize labels
 	update_xp(0)
 	update_turret_count(0)
+
+func _on_game_started() -> void:
+	# Show HUD and get player reference
+	hud_container.visible = true
+	await get_tree().process_frame
+	player = get_tree().get_first_node_in_group("player")
+	if player:
+		update_health_bar(player.current_health, player.max_health)
 
 func _on_player_damaged(current_health: float, max_health: float) -> void:
 	update_health_bar(current_health, max_health)
@@ -125,3 +133,29 @@ Time Survived: %d:%02d""" % [
 
 func _on_restart_pressed() -> void:
 	get_tree().reload_current_scene()
+
+# =============================================================================
+# DIFFICULTY SELECTION
+# =============================================================================
+func _on_show_difficulty_select() -> void:
+	difficulty_screen.visible = true
+	difficulty_screen.modulate.a = 0.0
+	var tween = create_tween()
+	tween.tween_property(difficulty_screen, "modulate:a", 1.0, 0.3)
+
+func _on_easy_pressed() -> void:
+	_select_difficulty(Globals.Difficulty.EASY)
+
+func _on_medium_pressed() -> void:
+	_select_difficulty(Globals.Difficulty.MEDIUM)
+
+func _on_hard_pressed() -> void:
+	_select_difficulty(Globals.Difficulty.HARD)
+
+func _select_difficulty(difficulty: Globals.Difficulty) -> void:
+	var tween = create_tween()
+	tween.tween_property(difficulty_screen, "modulate:a", 0.0, 0.2)
+	tween.tween_callback(func(): 
+		difficulty_screen.visible = false
+		Events.difficulty_selected.emit(difficulty)
+	)

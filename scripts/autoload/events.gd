@@ -32,4 +32,6 @@ signal xp_collected(amount: int, total: int)
 # UI Events
 signal show_wave_announcement(wave_number: int)
 signal hide_wave_announcement()
+signal show_difficulty_select()
+signal difficulty_selected(difficulty: int)
 signal update_hud()
