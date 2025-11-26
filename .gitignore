@@ -1,0 +1,47 @@
+# Godot 4+ specific ignores
+.godot/
+
+# Godot-specific ignores
+*.translation
+
+# Imported textures and samples
+.import/
+
+# Editor backup and crash files
+*.tmp
+*.bak
+*~.gd
+*.swp
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE/Editor specific
+.vs/
+.vscode/
+*.code-workspace
+
+# Export templates and builds
+exports/
+build/
+*.exe
+*.x86_64
+*.x86
+*.apk
+*.aab
+*.pck
+*.zip
+
+# Logs
+*.log
+logs/
+
+# Environment and local config
+.env
+.env.local
+
+# GUT test addon output
+.gut_editor_config.json
+.gut_editor_shortcuts.cfg
