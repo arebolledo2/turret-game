@@ -57,6 +57,74 @@ var current_difficulty: Difficulty = Difficulty.EASY
 var show_damage_numbers: bool = true
 var player_auto_attack_enabled: bool = false  # Player default attack disabled
 
+# =============================================================================
+# TURRET TYPE SYSTEM
+# =============================================================================
+# Turret type registry - add new turret types here
+const TURRET_TYPES: Dictionary = {
+	"basic": {
+		"name": "Basic Turret",
+		"icon": "🗼",
+		"description": "Standard auto-targeting turret",
+		"base_stats": {
+			"damage": 15.0,
+			"range": 400.0,
+			"fire_rate": 2.0,
+			"rotation_speed": 180.0,
+			"projectile_speed": 500.0,
+		}
+	},
+	# Future turret types can be added here:
+	# "flame": { "name": "Flame Turret", ... },
+	# "sniper": { "name": "Sniper Turret", ... },
+}
+
+# Runtime turret counts by type
+var turret_counts: Dictionary = {}  # {"basic": 2, "flame": 1, etc.}
+var selected_turret_type: String = ""  # Currently selected in pause menu
+
+# Get turret stats (base stats, future: apply item modifiers)
+func get_turret_stats(turret_type: String) -> Dictionary:
+	if not TURRET_TYPES.has(turret_type):
+		return {}
+	var base_stats: Dictionary = TURRET_TYPES[turret_type]["base_stats"].duplicate()
+	# Apply difficulty modifier to damage
+	base_stats["damage"] = base_stats["damage"] * get_difficulty_config()["turret_damage_mult"]
+	# Future: Apply item modifiers here
+	return base_stats
+
+func get_total_turret_count() -> int:
+	var total := 0
+	for count in turret_counts.values():
+		total += count
+	return total
+
+# =============================================================================
+# ITEMS SYSTEM (Placeholder for future implementation)
+# =============================================================================
+enum ItemRarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, UNIQUE }
+
+const RARITY_COLORS: Dictionary = {
+	ItemRarity.COMMON: Color.WHITE,
+	ItemRarity.UNCOMMON: Color.GREEN,
+	ItemRarity.RARE: Color.CORNFLOWER_BLUE,
+	ItemRarity.EPIC: Color.PURPLE,
+	ItemRarity.LEGENDARY: Color.ORANGE,
+	ItemRarity.UNIQUE: Color.RED,
+}
+
+const RARITY_NAMES: Dictionary = {
+	ItemRarity.COMMON: "Common",
+	ItemRarity.UNCOMMON: "Uncommon",
+	ItemRarity.RARE: "Rare",
+	ItemRarity.EPIC: "Epic",
+	ItemRarity.LEGENDARY: "Legendary",
+	ItemRarity.UNIQUE: "Unique",
+}
+
+# Collected items array - each item is a Dictionary with: name, description, rarity, icon_path
+var collected_items: Array = []
+
 # Helper to get current difficulty config
 func get_difficulty_config() -> Dictionary:
 	return DIFFICULTY_CONFIG[current_difficulty]
@@ -135,6 +203,7 @@ var total_kills: int = 0
 var turrets_spawned: int = 0
 var time_survived: float = 0.0
 var is_game_active: bool = false
+var player_level: int = 1  # Display-only for now
 
 # =============================================================================
 # HELPER FUNCTIONS
@@ -171,3 +240,7 @@ func reset_stats() -> void:
 	turrets_spawned = 0
 	time_survived = 0.0
 	is_game_active = false
+	player_level = 1
+	turret_counts.clear()
+	selected_turret_type = ""
+	collected_items.clear()

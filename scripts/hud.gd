@@ -15,10 +15,26 @@ extends CanvasLayer
 @onready var pause_menu: Control = $PauseMenu
 @onready var settings_menu: Control = $SettingsMenu
 @onready var show_damage_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageCheck
-@onready var resume_button: Button = $PauseMenu/Panel/VBoxContainer/ResumeButton
 @onready var settings_back_button: Button = $SettingsMenu/Panel/VBoxContainer/BackButton
 @onready var easy_button: Button = $DifficultySelect/Panel/VBoxContainer/ButtonContainer/EasyButton
 @onready var restart_button: Button = $GameOverScreen/Panel/VBoxContainer/RestartButton
+
+# Pause Menu References
+@onready var resume_button: Button = $PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/ResumeButton
+@onready var level_label: Label = $PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/LevelLabel
+@onready var pause_wave_label: Label = $PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/WaveLabel
+@onready var stats_grid: GridContainer = $PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid
+
+@onready var turrets_title: Label = $PauseMenu/MainPanel/MainVBox/TurretsSection/TurretsHeader/TurretsTitle
+@onready var turret_icons_row: HBoxContainer = $PauseMenu/MainPanel/MainVBox/TurretsSection/TurretIconsRow
+@onready var turret_details_panel: PanelContainer = $PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel
+@onready var turret_name_label: Label = $PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/TurretName
+@onready var turret_stats_container: HBoxContainer = $PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox
+
+@onready var items_title: Label = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemsTitle
+@onready var items_hint: Label = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemsHint
+@onready var items_scroll: ScrollContainer = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemsScrollContainer
+@onready var items_hbox: HBoxContainer = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemsScrollContainer/ItemsHBox
 
 var player: Node2D = null
 var damage_number_scene: PackedScene
@@ -201,6 +217,11 @@ func toggle_pause() -> void:
 	pause_menu.visible = is_paused
 	
 	if is_paused:
+		# Update stats before showing
+		update_pause_menu_stats()
+		update_turrets_panel()
+		update_items_panel()
+		
 		pause_menu.modulate.a = 0.0
 		var tween = create_tween()
 		tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
@@ -251,3 +272,97 @@ func _on_damage_dealt(pos: Vector2, amount: float) -> void:
 	get_tree().current_scene.add_child(damage_number)
 	damage_number.global_position = pos + Vector2(randf_range(-10, 10), -20)
 	damage_number.setup(amount)
+
+func update_pause_menu_stats() -> void:
+	level_label.text = "Level: %d" % Globals.player_level
+	pause_wave_label.text = "Wave: %d/%d" % [Globals.current_wave, Globals.MAX_WAVES]
+	
+	if player:
+		stats_grid.get_node("HealthValue").text = "%d/%d" % [player.current_health, player.max_health]
+		stats_grid.get_node("SpeedValue").text = "%d" % player.speed
+		stats_grid.get_node("XPValue").text = "%d" % Globals.total_xp
+		stats_grid.get_node("KillsValue").text = "%d" % Globals.total_kills
+		
+		var minutes := int(Globals.time_survived) / 60
+		var seconds := int(Globals.time_survived) % 60
+		stats_grid.get_node("TimeValue").text = "%d:%02d" % [minutes, seconds]
+		
+		stats_grid.get_node("TurretsValue").text = "%d" % Globals.turrets_spawned
+
+func update_turrets_panel() -> void:
+	turrets_title.text = "TURRETS (%d)" % Globals.get_total_turret_count()
+	
+	# Clear existing icons
+	for child in turret_icons_row.get_children():
+		if child.name != "NoTurretsLabel":
+			child.queue_free()
+	
+	var has_turrets := Globals.get_total_turret_count() > 0
+	turret_icons_row.get_node("NoTurretsLabel").visible = not has_turrets
+	turret_details_panel.visible = has_turrets
+	
+	if not has_turrets:
+		return
+		
+	# Create icons for each turret type
+	for type in Globals.TURRET_TYPES.keys():
+		var count: int = Globals.turret_counts.get(type, 0)
+		if count > 0:
+			var btn := Button.new()
+			btn.custom_minimum_size = Vector2(48, 48)
+			btn.text = Globals.TURRET_TYPES[type]["icon"]
+			btn.tooltip_text = Globals.TURRET_TYPES[type]["name"]
+			btn.pressed.connect(func(): _on_turret_icon_pressed(type))
+			
+			var badge := Label.new()
+			badge.text = str(count)
+			badge.add_theme_font_size_override("font_size", 10)
+			badge.position = Vector2(30, 30) # Approximate bottom-right
+			btn.add_child(badge)
+			
+			turret_icons_row.add_child(btn)
+			
+			# Auto-select if nothing selected or current selection invalid
+			if Globals.selected_turret_type == "" or Globals.selected_turret_type == type:
+				_on_turret_icon_pressed(type)
+
+func _on_turret_icon_pressed(type: String) -> void:
+	Globals.selected_turret_type = type
+	update_turret_details(type)
+
+func update_turret_details(type: String) -> void:
+	var config: Dictionary = Globals.TURRET_TYPES[type]
+	var stats: Dictionary = Globals.get_turret_stats(type)
+	var count: int = Globals.turret_counts.get(type, 0)
+	
+	turret_name_label.text = "%s %s (x%d)" % [config["icon"], config["name"], count]
+	
+	var left_stats = turret_stats_container.get_node("LeftStats")
+	left_stats.get_node("DamageLabel").text = "• Damage: %.1f" % stats["damage"]
+	left_stats.get_node("RangeLabel").text = "• Range: %d" % stats["range"]
+	left_stats.get_node("FireRateLabel").text = "• Fire Rate: %.1f/s" % stats["fire_rate"]
+	
+	var right_stats = turret_stats_container.get_node("RightStats")
+	right_stats.get_node("RotationLabel").text = "• Rotation: %d°/s" % stats["rotation_speed"]
+	right_stats.get_node("ProjSpeedLabel").text = "• Proj Speed: %d" % stats["projectile_speed"]
+	
+	var dps: float = stats["damage"] * stats["fire_rate"]
+	right_stats.get_node("DPSLabel").text = "• DPS: %.1f" % dps
+
+func update_items_panel() -> void:
+	var item_count := Globals.collected_items.size()
+	items_title.text = "ITEMS (%d)" % item_count
+	items_hint.visible = item_count == 0
+	items_scroll.visible = item_count > 0
+	
+	# Clear existing items
+	for child in items_hbox.get_children():
+		child.queue_free()
+		
+	# Add item slots (placeholder logic since we have no items yet)
+	for item in Globals.collected_items:
+		var slot := ColorRect.new()
+		slot.custom_minimum_size = Vector2(40, 40)
+		slot.color = Globals.RARITY_COLORS.get(item.get("rarity", 0), Color.WHITE)
+		slot.tooltip_text = item.get("name", "Unknown Item")
+		items_hbox.add_child(slot)

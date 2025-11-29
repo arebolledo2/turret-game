@@ -39,3 +39,6 @@ signal hide_wave_announcement()
 signal show_difficulty_select()
 signal difficulty_selected(difficulty: int)
 signal update_hud()
+
+# Player Progression Events
+signal player_leveled_up(new_level: int)

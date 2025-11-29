@@ -243,49 +243,291 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.7)
+color = Color(0, 0, 0, 0.8)
 
-[node name="Panel" type="PanelContainer" parent="PauseMenu"]
+[node name="MainPanel" type="PanelContainer" parent="PauseMenu"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -150.0
-offset_top = -150.0
-offset_right = 150.0
-offset_bottom = 150.0
+offset_left = -400.0
+offset_top = -300.0
+offset_right = 400.0
+offset_bottom = 300.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PauseMenu/Panel"]
+[node name="MainVBox" type="VBoxContainer" parent="PauseMenu/MainPanel"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 15
 
-[node name="Title" type="Label" parent="PauseMenu/Panel/VBoxContainer"]
+[node name="TopSection" type="HBoxContainer" parent="PauseMenu/MainPanel/MainVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 36
+theme_override_constants/separation = 30
+
+[node name="LeftPanel" type="VBoxContainer" parent="PauseMenu/MainPanel/MainVBox/TopSection"]
+custom_minimum_size = Vector2(180, 0)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
 text = "PAUSED"
 horizontal_alignment = 1
 
-[node name="ResumeButton" type="Button" parent="PauseMenu/Panel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 45)
+[node name="HSeparator" type="HSeparator" parent="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+
+[node name="LevelLabel" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Level: 1"
+horizontal_alignment = 1
+
+[node name="WaveLabel" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Wave: 1/10"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="ResumeButton" type="Button" parent="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
 text = "Resume"
 
-[node name="SettingsButton" type="Button" parent="PauseMenu/Panel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 45)
+[node name="SettingsButton" type="Button" parent="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel"]
+custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "Settings"
 
-[node name="QuitButton" type="Button" parent="PauseMenu/Panel/VBoxContainer"]
-custom_minimum_size = Vector2(0, 45)
+[node name="QuitButton" type="Button" parent="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Quit to Menu"
+
+[node name="StatsPanel" type="VBoxContainer" parent="PauseMenu/MainPanel/MainVBox/TopSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="StatsTitle" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "PLAYER STATS"
+
+[node name="HSeparator" type="HSeparator" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel"]
+layout_mode = 2
+
+[node name="StatsGrid" type="GridContainer" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel"]
+layout_mode = 2
+theme_override_constants/h_separation = 20
+theme_override_constants/v_separation = 4
+columns = 4
+
+[node name="HealthIcon" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "❤ Health:"
+
+[node name="HealthValue" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+text = "100/100"
+
+[node name="SpeedIcon" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "⚡ Speed:"
+
+[node name="SpeedValue" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+text = "300"
+
+[node name="XPIcon" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "✨ XP:"
+
+[node name="XPValue" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+text = "0"
+
+[node name="KillsIcon" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "💀 Kills:"
+
+[node name="KillsValue" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1, 0.5, 0.5, 1)
+text = "0"
+
+[node name="TimeIcon" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "⏱ Time:"
+
+[node name="TimeValue" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.7, 0.7, 1, 1)
+text = "0:00"
+
+[node name="TurretsIcon" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "🗼 Turrets:"
+
+[node name="TurretsValue" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
+text = "0"
+
+[node name="TurretsSection" type="VBoxContainer" parent="PauseMenu/MainPanel/MainVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="TurretsHeader" type="HBoxContainer" parent="PauseMenu/MainPanel/MainVBox/TurretsSection"]
+layout_mode = 2
+
+[node name="TurretsTitle" type="Label" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretsHeader"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "Quit to Menu"
+text = "TURRETS (0)"
+
+[node name="Spacer" type="Control" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretsHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TurretsHint" type="Label" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretsHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "Click turret for details"
+
+[node name="HSeparator" type="HSeparator" parent="PauseMenu/MainPanel/MainVBox/TurretsSection"]
+layout_mode = 2
+
+[node name="TurretIconsRow" type="HBoxContainer" parent="PauseMenu/MainPanel/MainVBox/TurretsSection"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NoTurretsLabel" type="Label" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretIconsRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+text = "No turrets spawned yet"
+
+[node name="TurretDetailsPanel" type="PanelContainer" parent="PauseMenu/MainPanel/MainVBox/TurretsSection"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TurretDetailsVBox" type="VBoxContainer" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TurretName" type="Label" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Select a turret to view details"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox"]
+layout_mode = 2
+
+[node name="StatsHBox" type="HBoxContainer" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 40
+
+[node name="LeftStats" type="VBoxContainer" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DamageLabel" type="Label" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "• Damage: --"
+
+[node name="RangeLabel" type="Label" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "• Range: --"
+
+[node name="FireRateLabel" type="Label" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "• Fire Rate: --"
+
+[node name="RightStats" type="VBoxContainer" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RotationLabel" type="Label" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "• Rotation: --"
+
+[node name="ProjSpeedLabel" type="Label" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "• Proj Speed: --"
+
+[node name="DPSLabel" type="Label" parent="PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+text = "• DPS: --"
+
+[node name="ItemsSection" type="VBoxContainer" parent="PauseMenu/MainPanel/MainVBox"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ItemsTitle" type="Label" parent="PauseMenu/MainPanel/MainVBox/ItemsSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "ITEMS (0)"
+
+[node name="HSeparator" type="HSeparator" parent="PauseMenu/MainPanel/MainVBox/ItemsSection"]
+layout_mode = 2
+
+[node name="ItemsHint" type="Label" parent="PauseMenu/MainPanel/MainVBox/ItemsSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+text = "No items collected"
+horizontal_alignment = 1
+
+[node name="ItemsScrollContainer" type="ScrollContainer" parent="PauseMenu/MainPanel/MainVBox/ItemsSection"]
+visible = false
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+horizontal_scroll_mode = 2
+vertical_scroll_mode = 0
+
+[node name="ItemsHBox" type="HBoxContainer" parent="PauseMenu/MainPanel/MainVBox/ItemsSection/ItemsScrollContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
 
 [node name="SettingsMenu" type="Control" parent="."]
 visible = false
@@ -356,8 +598,8 @@ text = "Back"
 [connection signal="pressed" from="DifficultySelect/Panel/VBoxContainer/ButtonContainer/EasyButton" to="." method="_on_easy_pressed"]
 [connection signal="pressed" from="DifficultySelect/Panel/VBoxContainer/ButtonContainer/MediumButton" to="." method="_on_medium_pressed"]
 [connection signal="pressed" from="DifficultySelect/Panel/VBoxContainer/ButtonContainer/HardButton" to="." method="_on_hard_pressed"]
-[connection signal="pressed" from="PauseMenu/Panel/VBoxContainer/ResumeButton" to="." method="_on_resume_pressed"]
-[connection signal="pressed" from="PauseMenu/Panel/VBoxContainer/SettingsButton" to="." method="_on_settings_pressed"]
-[connection signal="pressed" from="PauseMenu/Panel/VBoxContainer/QuitButton" to="." method="_on_quit_pressed"]
+[connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/ResumeButton" to="." method="_on_resume_pressed"]
+[connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/SettingsButton" to="." method="_on_settings_pressed"]
+[connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/QuitButton" to="." method="_on_quit_pressed"]
 [connection signal="toggled" from="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageCheck" to="." method="_on_show_damage_toggled"]
 [connection signal="pressed" from="SettingsMenu/Panel/VBoxContainer/BackButton" to="." method="_on_settings_back_pressed"]

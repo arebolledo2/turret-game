@@ -34,6 +34,12 @@ func spawn_turret() -> void:
 	turrets.append(turret)
 	Globals.turrets_spawned += 1
 	
+	# Track count by type (default to basic for MVP)
+	var type = "basic"
+	if not Globals.turret_counts.has(type):
+		Globals.turret_counts[type] = 0
+	Globals.turret_counts[type] += 1
+	
 	Events.turret_spawned.emit(turret, spawn_pos)
 
 func find_valid_spawn_position(player: Node2D, max_attempts: int = 50) -> Vector2:
