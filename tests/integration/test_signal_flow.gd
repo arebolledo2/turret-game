@@ -43,6 +43,9 @@ func test_combat_signals_exist():
 func test_turret_signals_exist():
 	assert_has_signal(Events, "turret_spawned")
 	assert_has_signal(Events, "turret_fired")
+	assert_has_signal(Events, "turret_picked_up")
+	assert_has_signal(Events, "turret_placed")
+	assert_has_signal(Events, "turret_dropped")
 
 
 func test_pickup_signals_exist():

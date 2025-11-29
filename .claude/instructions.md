@@ -65,6 +65,10 @@ if enemy.has_method("initialize"):
     enemy.initialize(current_wave)
 ```
 
+**Settings Flags**: Runtime toggles in `Globals`:
+- `show_damage_numbers: bool` — Toggle damage number popups
+- `player_auto_attack_enabled: bool` — Player weapon (disabled by default)
+
 ## Game State Flow
 `GameManager` controls state via enum: `IDLE → DIFFICULTY_SELECT → WAVE_ANNOUNCEMENT → COMBAT → WAVE_END → (loop or VICTORY/GAME_OVER)`
 
@@ -76,6 +80,13 @@ Wave progression:
 1. `start_wave_announcement()` - Shows UI, spawns turret
 2. `start_combat()` - Starts enemy spawning, wave timer
 3. `end_wave()` - Stops spawning, checks victory (wave 10)
+
+### Turret Pickup System
+Players can pick up and reposition turrets:
+- Press **F** (or gamepad A) near a turret to pick it up
+- Carried turret follows player with a speed penalty (30%)
+- Press **F** again to place the turret at current position
+- Relevant constants: `TURRET_PICKUP_RANGE`, `TURRET_CARRY_SPEED_PENALTY`
 
 ### Difficulty System
 Difficulty is configured via `DIFFICULTY_CONFIG` dictionary in [globals.gd](scripts/autoload/globals.gd). Each difficulty defines multipliers for enemy stats, player health, turret damage, and wave scaling. To add a new difficulty:
@@ -147,8 +158,16 @@ When creating commits, use concise, one-line messages that begin with a single e
 
 ### Collision Layers
 - Layer 1: Player
-- Layer 2: Enemies
-- Layer 4: Projectiles
+- Layer 2: Enemy
+- Layer 3: Projectile
+- Layer 4: Pickup
+
+### Input Actions
+| Action | Keys | Gamepad |
+|--------|------|---------|  
+| `move_up/down/left/right` | WASD, Arrow keys | Left stick |
+| `pause` | Escape | Start |
+| `pickup_turret` | F | A button |
 
 ## Code Conventions
 
