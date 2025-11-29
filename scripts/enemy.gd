@@ -7,6 +7,16 @@ const StatusEffect = preload("res://scripts/status_effect.gd")
 @export var contact_damage: float = 33.0
 @export var xp_value: int = 10
 
+# Directional sprite textures
+@export var sprite_south: Texture2D
+@export var sprite_north: Texture2D
+@export var sprite_east: Texture2D
+@export var sprite_west: Texture2D
+@export var sprite_south_east: Texture2D
+@export var sprite_south_west: Texture2D
+@export var sprite_north_east: Texture2D
+@export var sprite_north_west: Texture2D
+
 var current_health: float
 var player: Node2D = null
 
@@ -36,12 +46,39 @@ func _physics_process(delta: float) -> void:
 	velocity = direction * speed
 	move_and_slide()
 	
+	# Update sprite based on movement direction
+	_update_direction_sprite(direction)
+	
 	# Check for collision with player
 	for i in get_slide_collision_count():
 		var collision := get_slide_collision(i)
 		var collider = collision.get_collider()
 		if collider.is_in_group("player") and collider.has_method("take_damage"):
 			collider.take_damage(contact_damage)
+
+func _update_direction_sprite(direction: Vector2) -> void:
+	# Get angle and convert to 8-direction
+	var angle := direction.angle()
+	var sprite := $Sprite2D
+	
+	# Normalize angle to 0-2PI range
+	if angle < 0:
+		angle += TAU
+	
+	# Divide into 8 segments (each 45 degrees = PI/4)
+	# Offset by 22.5 degrees (PI/8) to center segments
+	var segment := int((angle + PI / 8) / (PI / 4)) % 8
+	
+	# Map segment to sprite (0 = east, going counter-clockwise)
+	match segment:
+		0: sprite.texture = sprite_east
+		1: sprite.texture = sprite_north_east
+		2: sprite.texture = sprite_north
+		3: sprite.texture = sprite_north_west
+		4: sprite.texture = sprite_west
+		5: sprite.texture = sprite_south_west
+		6: sprite.texture = sprite_south
+		7: sprite.texture = sprite_south_east
 
 func initialize(wave: int) -> void:
 	# Scale stats based on wave number
@@ -59,7 +96,7 @@ func take_damage(amount: float) -> void:
 	# Visual feedback - flash white
 	$Sprite2D.modulate = Color.WHITE
 	var tween = create_tween()
-	tween.tween_property($Sprite2D, "modulate", Color(1, 0.3, 0.3, 1), 0.1)
+	tween.tween_property($Sprite2D, "modulate", Color.WHITE, 0.1)
 	
 	if current_health <= 0:
 		die()
@@ -142,19 +179,19 @@ func take_dot_damage(amount: float) -> void:
 ## Update visual tint based on active status effects
 func _update_status_visual() -> void:
 	if active_effects.is_empty():
-		# Reset to default red tint
-		$Sprite2D.modulate = Color(1, 0.3, 0.3, 1)
+		# Reset to default (no tint)
+		$Sprite2D.modulate = Color.WHITE
 		return
 	
 	# Blend colors based on active effects
-	var final_color := Color(1, 0.3, 0.3, 1)
+	var final_color := Color.WHITE
 	
 	if active_effects.has(Globals.DamageType.FIRE):
-		final_color = final_color.lerp(Color(1.0, 0.5, 0.2, 1), 0.5)  # Orange tint
+		final_color = final_color.lerp(Color(1.0, 0.5, 0.2, 1), 0.4)  # Orange tint
 	if active_effects.has(Globals.DamageType.ELECTRIC):
-		final_color = final_color.lerp(Color(0.5, 0.8, 1.0, 1), 0.5)  # Blue tint
+		final_color = final_color.lerp(Color(0.5, 0.8, 1.0, 1), 0.4)  # Blue tint
 	if active_effects.has(Globals.DamageType.PLASMA):
-		final_color = final_color.lerp(Color(0.8, 0.4, 1.0, 1), 0.5)  # Purple tint
+		final_color = final_color.lerp(Color(0.8, 0.4, 1.0, 1), 0.4)  # Purple tint
 	
 	$Sprite2D.modulate = final_color
 
