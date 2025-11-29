@@ -56,6 +56,7 @@ var current_difficulty: Difficulty = Difficulty.EASY
 # =============================================================================
 var show_damage_numbers: bool = true
 var player_auto_attack_enabled: bool = false  # Player default attack disabled
+var show_turret_ranges: bool = false  # Toggle turret range indicators
 
 # =============================================================================
 # TURRET TYPE SYSTEM
@@ -89,8 +90,8 @@ const TURRET_TYPES: Dictionary = {
 			"damage": 15.0,
 			"fire_rate": 2.0,
 			"range": 400.0,
-			"rotation_speed": 180.0,
-			"projectile_speed": 500.0,
+			"rotation_speed": 300.0,
+			"projectile_speed": 700.0,
 			"pierce": 0,
 		}
 	},
@@ -118,8 +119,8 @@ const TURRET_TYPES: Dictionary = {
 			"damage": 8.0,
 			"fire_rate": 2.5,
 			"range": 350.0,
-			"rotation_speed": 180.0,
-			"projectile_speed": 400.0,
+			"rotation_speed": 300.0,
+			"projectile_speed": 600.0,
 			"pierce": 99,  # Effectively infinite - passes through enemies
 			"dot_damage": 4.0,
 			"dot_duration": 3.0,
@@ -137,8 +138,8 @@ const TURRET_TYPES: Dictionary = {
 			"damage": 20.0,
 			"fire_rate": 1.0,
 			"range": 450.0,
-			"rotation_speed": 150.0,
-			"projectile_speed": 350.0,
+			"rotation_speed": 280.0,
+			"projectile_speed": 550.0,
 			"pierce": 0,  # Explodes on first enemy
 			"aoe_radius": 80.0,
 		}

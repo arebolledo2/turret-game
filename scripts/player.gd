@@ -78,6 +78,11 @@ func _physics_process(delta: float) -> void:
 
 	# Turret pickup/placement system
 	handle_turret_interactions()
+	
+	# Turret range toggle (Tab / Y button)
+	if Input.is_action_just_pressed("toggle_range"):
+		Globals.show_turret_ranges = not Globals.show_turret_ranges
+		Events.turret_range_toggled.emit(Globals.show_turret_ranges)
 
 	# Auto-aim and fire at closest enemy (only if enabled)
 	if Globals.player_auto_attack_enabled:

@@ -15,7 +15,9 @@ var fire_timer: Timer
 var projectile_scene: PackedScene
 var is_in_pickup_range: bool = false
 
+@onready var base_sprite: Sprite2D = $BaseSprite
 @onready var weapon_sprite: Sprite2D = $WeaponSprite
+@onready var icon_label: Label = $IconLabel
 @onready var range_indicator: Node2D = $RangeIndicator
 
 func _ready() -> void:
@@ -25,10 +27,8 @@ func _ready() -> void:
 	# Initialize stats
 	update_stats()
 	
-	# Setup visual tint
-	var color = Globals.get_turret_color(turret_type)
-	if weapon_sprite:
-		weapon_sprite.modulate = color
+	# Setup visuals based on turret type
+	setup_visuals()
 	
 	# Setup fire rate timer
 	fire_timer = Timer.new()
@@ -38,14 +38,37 @@ func _ready() -> void:
 	add_child(fire_timer)
 	
 	# Setup range indicator
+	var color = Globals.get_turret_color(turret_type)
 	if range_indicator:
 		if range_indicator.has_method("set_radius"):
 			range_indicator.set_radius(current_range)
 		range_indicator.modulate = color
 		range_indicator.modulate.a = 0.0  # Hidden by default
 	
+	# Listen for range toggle event
+	Events.turret_range_toggled.connect(_on_range_toggled)
+	
+	# Apply current range visibility state
+	if Globals.show_turret_ranges:
+		show_range()
+	
 	# Spawn animation
 	play_spawn_animation()
+
+func setup_visuals() -> void:
+	var color = Globals.get_turret_color(turret_type)
+	var turret_config = Globals.TURRET_TYPES.get(turret_type, {})
+	var icon = turret_config.get("icon", "🗼")
+	
+	# Set base color
+	if base_sprite:
+		base_sprite.modulate = color
+		base_sprite.modulate.v = 0.4  # Darken the base
+	
+	# Set icon
+	if icon_label:
+		icon_label.text = icon
+		icon_label.add_theme_font_size_override("font_size", 32)
 
 func update_stats() -> void:
 	stats = Globals.get_turret_stats(turret_type)
@@ -69,10 +92,13 @@ func _update_timer() -> void:
 func _physics_process(delta: float) -> void:
 	find_target()
 	
-	if target and is_instance_valid(target):
+	# Track target even if out of range (for rotation)
+	var track_target = find_tracking_target()
+	
+	if track_target and is_instance_valid(track_target):
 		# Rotate the whole turret toward target if it has rotation speed
 		if current_rotation_speed > 0:
-			var direction_to_target := global_position.direction_to(target.global_position)
+			var direction_to_target := global_position.direction_to(track_target.global_position)
 			var target_angle: float = direction_to_target.angle()
 			var current_angle: float = rotation
 			var angle_diff: float = angle_difference(current_angle, target_angle)
@@ -80,7 +106,9 @@ func _physics_process(delta: float) -> void:
 			var max_rotation: float = deg_to_rad(current_rotation_speed) * delta
 			var rotation_amount: float = clampf(angle_diff, -max_rotation, max_rotation)
 			rotation += rotation_amount
-		
+	
+	# Only fire at targets in range
+	if target and is_instance_valid(target):
 		# Check if we should fire
 		var should_fire = false
 		if current_rotation_speed <= 0:
@@ -96,6 +124,26 @@ func _physics_process(delta: float) -> void:
 		if should_fire and can_fire:
 			fire()
 
+# Find the closest enemy regardless of range (for tracking/rotation)
+func find_tracking_target() -> Node2D:
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	if enemies.is_empty():
+		return null
+	
+	var best_target: Node2D = null
+	var best_dist: float = INF
+	
+	for enemy in enemies:
+		if not is_instance_valid(enemy):
+			continue
+		var dist := global_position.distance_to(enemy.global_position)
+		if dist < best_dist:
+			best_target = enemy
+			best_dist = dist
+	
+	return best_target
+
+# Find target in range for firing
 func find_target() -> void:
 	var enemies = get_tree().get_nodes_in_group("enemies")
 	if enemies.is_empty():
@@ -308,10 +356,12 @@ func _on_fire_timer_timeout() -> void:
 	can_fire = true
 
 func flash_muzzle() -> void:
-	if weapon_sprite:
-		weapon_sprite.modulate = Color.WHITE
+	# Flash the base sprite when firing
+	if base_sprite:
+		var original_color = base_sprite.modulate
+		base_sprite.modulate = Color.WHITE
 		var tween = create_tween()
-		tween.tween_property(weapon_sprite, "modulate", Globals.get_turret_color(turret_type), 0.1)
+		tween.tween_property(base_sprite, "modulate", original_color, 0.1)
 
 func play_spawn_animation() -> void:
 	# Scale up from zero
@@ -323,6 +373,15 @@ func play_spawn_animation() -> void:
 	
 	# Particle burst effect (if we have particles)
 	# spawn_particles()
+
+func _on_range_toggled(show_ranges: bool) -> void:
+	# Don't override pickup indicator if active
+	if is_in_pickup_range:
+		return
+	if show_ranges:
+		show_range()
+	else:
+		hide_range()
 
 func show_range() -> void:
 	if range_indicator:
