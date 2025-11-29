@@ -20,6 +20,7 @@ var invincibility_timer: Timer
 var animation_timer: Timer
 var current_frame: int = 0
 var is_moving: bool = false
+var facing_direction: int = 0  # 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE
 
 # Turret pickup system
 var carried_turret: Node2D = null
@@ -118,18 +119,31 @@ func handle_movement(_delta: float) -> void:
 
 	velocity = input_vector * effective_speed
 	
-	# Handle animation
+	# Handle 8-direction sprite based on movement
 	if input_vector.length() > 0.1:
-		if not is_moving:
-			is_moving = true
-			anim_timer.start()
-		# Flip sprite based on horizontal direction
-		if input_vector.x != 0:
-			sprite.flip_h = input_vector.x < 0
+		is_moving = true
+		facing_direction = get_direction_from_vector(input_vector)
+		sprite.frame = facing_direction
+		sprite.flip_h = false  # No flip needed with 8-dir sprites
 	else:
 		is_moving = false
-		anim_timer.stop()
-		sprite.frame = 0  # Reset to idle frame
+		# Keep facing last direction when stopped
+		sprite.frame = facing_direction
+
+func get_direction_from_vector(dir: Vector2) -> int:
+	# Convert movement vector to 8-direction index
+	# Frame order: S(0), SW(1), W(2), NW(3), N(4), NE(5), E(6), SE(7)
+	var angle := dir.angle()
+	# Normalize angle to 0-2PI range
+	if angle < 0:
+		angle += TAU
+	# Divide circle into 8 sectors (each 45 degrees = PI/4)
+	# Offset by 22.5 degrees so each direction is centered
+	var sector := int(round(angle / (TAU / 8))) % 8
+	# Map: 0=E, 1=SE, 2=S, 3=SW, 4=W, 5=NW, 6=N, 7=NE
+	# We need: 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE
+	var direction_map := [6, 7, 0, 1, 2, 3, 4, 5]  # Maps angle sector to frame index
+	return direction_map[sector]
 
 func handle_turret_interactions() -> void:
 	# Detect input (check for just_pressed to toggle)

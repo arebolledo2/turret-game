@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dg0fxyritgucg"
-path="res://.godot/imported/enemy_north_east.png-b33e99849bc608ef955381f7f1a48fc9.ctex"
+path="res://.godot/imported/enemy_north_east.png-1ca4cd6e4550a18b38f67bea59f1aa0f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/sprites/enemy/enemy_north_east.png"
-dest_files=["res://.godot/imported/enemy_north_east.png-b33e99849bc608ef955381f7f1a48fc9.ctex"]
+source_file="res://assets/sprites/enemy_tiny/enemy_north_east.png"
+dest_files=["res://.godot/imported/enemy_north_east.png-1ca4cd6e4550a18b38f67bea59f1aa0f.ctex"]
 
 [params]
 
