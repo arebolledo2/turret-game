@@ -136,6 +136,41 @@ var turret = turret_scene.instantiate()
 turret.turret_type = "plasma"
 ```
 
+### Enemy Type System
+Enemies use a type-based architecture for varied gameplay. See `doc/EnemyTypes.md` for full design spec.
+
+**Enemy Behaviors** (`Globals.EnemyBehavior`):
+- `CHASE` — Pursues player directly
+- `RANGED` — Keeps distance, fires projectiles (future)
+- `SWARM` — Spawns in groups
+- `TANK` — High health, slow, high damage
+- `EXPLOSIVE` — Explodes on death
+
+**Enemy Types** (defined in `ENEMY_TYPES` dictionary):
+| Type | Behaviors | Min Wave | Special |
+|------|-----------|----------|---------|
+| `basic` | chase | 1 | Standard robot grunt |
+| `fast` | chase, swarm | 2 | Quick but fragile (blue tint) |
+| `tank` | chase, tank | 3 | Slow, high HP (rust tint) |
+| `exploder` | chase, explosive | 4 | Explodes on death (orange tint) |
+| `swarm` | chase, swarm | 2 | Tiny, spawns in groups of 3 (green tint) |
+
+**Working with enemy types:**
+```gdscript
+# Initialize enemy with type and wave
+enemy.initialize(current_wave, "tank")
+
+# Get scaled stats for a type at a wave
+var stats = Globals.get_enemy_stats_for_wave("fast", 5)
+
+# Select random type based on wave and weights
+var enemy_type = Globals.select_random_enemy_type(current_wave)
+
+# Check enemy behaviors
+if Globals.enemy_has_behavior("exploder", Globals.EnemyBehavior.EXPLOSIVE):
+    # Handle explosion logic
+```
+
 ### Modifier System
 Items modify turret stats via filters. Modifiers are stored in `Globals.active_modifiers`:
 ```gdscript
@@ -223,7 +258,8 @@ Commits should be concise, one-line, and begin with a single emoji. Agents may c
 |---------|-------|
 | Game balance | `scripts/autoload/globals.gd`, `doc/00-MVP-IMPLEMENTATION-SPEC.md` |
 | Turret types/stats | `scripts/autoload/globals.gd` (`TURRET_TYPES`), `doc/TurretTypes.md` |
-| New enemy types | `scripts/enemy.gd`, `scenes/enemy.tscn` |
+| Enemy types/stats | `scripts/autoload/globals.gd` (`ENEMY_TYPES`), `doc/EnemyTypes.md` |
+| Enemy behavior | `scripts/enemy.gd`, `scripts/enemy_spawner.gd` |
 | Turret behavior | `scripts/turret.gd`, `scenes/turret.tscn` |
 | Status effects/DoT | `scripts/status_effect.gd`, `scripts/enemy.gd` |
 | Projectiles | `scripts/projectile.gd` (pierce, AoE, DoT application) |

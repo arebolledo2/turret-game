@@ -2,20 +2,32 @@ extends CharacterBody2D
 
 const StatusEffect = preload("res://scripts/status_effect.gd")
 
-@export var max_health: float = 30.0
-@export var speed: float = 150.0
-@export var contact_damage: float = 33.0
-@export var xp_value: int = 10
+# =============================================================================
+# ENEMY TYPE CONFIGURATION
+# =============================================================================
+@export var enemy_type: String = "basic"
 
-# Directional sprite textures
-@export var sprite_south: Texture2D
-@export var sprite_north: Texture2D
-@export var sprite_east: Texture2D
-@export var sprite_west: Texture2D
-@export var sprite_south_east: Texture2D
-@export var sprite_south_west: Texture2D
-@export var sprite_north_east: Texture2D
-@export var sprite_north_west: Texture2D
+# Base stats (set from type or wave initialization)
+var max_health: float = 30.0
+var speed: float = 150.0
+var contact_damage: float = 33.0
+var xp_value: int = 10
+var base_scale: float = 1.0
+var color_tint: Color = Color.WHITE
+
+# Type-specific stats (for special abilities)
+var explosion_radius: float = 0.0
+var explosion_damage: float = 0.0
+
+# Directional sprite textures (loaded dynamically from type)
+var sprite_south: Texture2D
+var sprite_north: Texture2D
+var sprite_east: Texture2D
+var sprite_west: Texture2D
+var sprite_south_east: Texture2D
+var sprite_south_west: Texture2D
+var sprite_north_east: Texture2D
+var sprite_north_west: Texture2D
 
 var current_health: float
 var player: Node2D = null
@@ -23,11 +35,63 @@ var player: Node2D = null
 # Status effects - keyed by DamageType, only strongest of each type is active
 var active_effects: Dictionary = {}  # DamageType -> StatusEffect
 var is_dying: bool = false
+var is_initialized: bool = false
 
 func _ready() -> void:
-	current_health = max_health
 	add_to_group("enemies")
 	player = get_tree().get_first_node_in_group("player")
+	
+	# If not initialized by spawner, initialize with defaults
+	if not is_initialized:
+		_apply_type_config(enemy_type)
+		current_health = max_health
+
+func _apply_type_config(type_id: String) -> void:
+	"""Load configuration from ENEMY_TYPES and apply to this enemy."""
+	enemy_type = type_id
+	var type_def: Dictionary = Globals.ENEMY_TYPES.get(type_id, Globals.ENEMY_TYPES["basic"])
+	var base_stats: Dictionary = type_def.get("base_stats", {})
+	
+	# Load base stats
+	max_health = base_stats.get("health", 30.0)
+	speed = base_stats.get("speed", 150.0)
+	contact_damage = base_stats.get("contact_damage", 33.0)
+	xp_value = base_stats.get("xp_value", 10)
+	base_scale = base_stats.get("scale", 1.0)
+	
+	# Load special ability stats
+	explosion_radius = base_stats.get("explosion_radius", 0.0)
+	explosion_damage = base_stats.get("explosion_damage", 0.0)
+	
+	# Load color tint
+	color_tint = type_def.get("color_tint", Color.WHITE)
+	
+	# Load sprites from sprite folder
+	var sprite_folder: String = type_def.get("sprite_folder", "res://assets/sprites/enemy")
+	_load_sprites(sprite_folder)
+	
+	# Apply visual configuration
+	_apply_visuals()
+
+func _load_sprites(folder_path: String) -> void:
+	"""Load directional sprites from the specified folder."""
+	sprite_south = load(folder_path + "/enemy_south.png")
+	sprite_north = load(folder_path + "/enemy_north.png")
+	sprite_east = load(folder_path + "/enemy_east.png")
+	sprite_west = load(folder_path + "/enemy_west.png")
+	sprite_south_east = load(folder_path + "/enemy_south_east.png")
+	sprite_south_west = load(folder_path + "/enemy_south_west.png")
+	sprite_north_east = load(folder_path + "/enemy_north_east.png")
+	sprite_north_west = load(folder_path + "/enemy_north_west.png")
+
+func _apply_visuals() -> void:
+	"""Apply scale and color tint to the sprite."""
+	if $Sprite2D:
+		$Sprite2D.scale = Vector2(base_scale, base_scale)
+		$Sprite2D.modulate = color_tint
+		# Set initial texture
+		if sprite_south:
+			$Sprite2D.texture = sprite_south
 
 func _physics_process(delta: float) -> void:
 	if is_dying:
@@ -80,11 +144,19 @@ func _update_direction_sprite(direction: Vector2) -> void:
 		6: sprite.texture = sprite_south
 		7: sprite.texture = sprite_south_east
 
-func initialize(wave: int) -> void:
-	# Scale stats based on wave number
-	max_health = Globals.get_enemy_health(wave)
-	speed = Globals.get_enemy_speed(wave)
-	contact_damage = Globals.ENEMY_CONTACT_DAMAGE
+func initialize(wave: int, type_id: String = "basic") -> void:
+	"""Initialize enemy with type and wave-scaled stats."""
+	is_initialized = true
+	
+	# Apply base type configuration
+	_apply_type_config(type_id)
+	
+	# Get wave-scaled stats from Globals
+	var scaled_stats := Globals.get_enemy_stats_for_wave(type_id, wave)
+	max_health = scaled_stats.get("health", max_health)
+	speed = scaled_stats.get("speed", speed)
+	contact_damage = scaled_stats.get("contact_damage", contact_damage)
+	
 	current_health = max_health
 
 func take_damage(amount: float) -> void:
@@ -93,10 +165,10 @@ func take_damage(amount: float) -> void:
 	# Emit damage event for damage numbers
 	Events.damage_dealt.emit(global_position, amount)
 	
-	# Visual feedback - flash white
+	# Visual feedback - flash white then return to base tint
 	$Sprite2D.modulate = Color.WHITE
 	var tween = create_tween()
-	tween.tween_property($Sprite2D, "modulate", Color.WHITE, 0.1)
+	tween.tween_property($Sprite2D, "modulate", color_tint, 0.1)
 	
 	if current_health <= 0:
 		die()
@@ -109,6 +181,10 @@ func die() -> void:
 	# Clear status effects
 	active_effects.clear()
 	
+	# Handle explosive behavior
+	if Globals.enemy_has_behavior(enemy_type, Globals.EnemyBehavior.EXPLOSIVE):
+		_explode()
+	
 	# Emit signals for XP drop and kill tracking
 	Events.enemy_killed.emit(self, global_position)
 	Events.xp_dropped.emit(global_position, xp_value)
@@ -120,6 +196,28 @@ func die() -> void:
 	tween.tween_property($Sprite2D, "scale", Vector2.ZERO, 0.15)
 	tween.tween_property($Sprite2D, "modulate:a", 0.0, 0.15)
 	tween.chain().tween_callback(queue_free)
+
+func _explode() -> void:
+	"""Handle explosion on death for EXPLOSIVE behavior enemies."""
+	if explosion_radius <= 0 or explosion_damage <= 0:
+		return
+	
+	Events.enemy_exploded.emit(global_position, explosion_radius, explosion_damage)
+	
+	# Damage player if in range
+	if player and is_instance_valid(player):
+		var dist := global_position.distance_to(player.global_position)
+		if dist <= explosion_radius and player.has_method("take_damage"):
+			player.take_damage(explosion_damage)
+	
+	# Damage other enemies in range (chain reaction potential)
+	var enemies := get_tree().get_nodes_in_group("enemies")
+	for enemy in enemies:
+		if enemy == self or not is_instance_valid(enemy):
+			continue
+		var dist := global_position.distance_to(enemy.global_position)
+		if dist <= explosion_radius and enemy.has_method("take_damage"):
+			enemy.take_damage(explosion_damage * 0.5)  # Half damage to other enemies
 
 # =============================================================================
 # STATUS EFFECT SYSTEM
@@ -179,12 +277,12 @@ func take_dot_damage(amount: float) -> void:
 ## Update visual tint based on active status effects
 func _update_status_visual() -> void:
 	if active_effects.is_empty():
-		# Reset to default (no tint)
-		$Sprite2D.modulate = Color.WHITE
+		# Reset to base color tint
+		$Sprite2D.modulate = color_tint
 		return
 	
-	# Blend colors based on active effects
-	var final_color := Color.WHITE
+	# Start with base tint and blend status effect colors
+	var final_color := color_tint
 	
 	if active_effects.has(Globals.DamageType.FIRE):
 		final_color = final_color.lerp(Color(1.0, 0.5, 0.2, 1), 0.4)  # Orange tint

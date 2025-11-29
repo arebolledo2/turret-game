@@ -68,6 +68,121 @@ enum AttackStyle { PROJECTILE, INSTANT, AOE, CHAIN }
 # Damage type tags - elemental classification
 enum DamageType { PHYSICAL, FIRE, ELECTRIC, PLASMA }
 
+# Enemy behavior tags - how enemies move/attack
+enum EnemyBehavior { CHASE, RANGED, SWARM, TANK, EXPLOSIVE }
+
+# =============================================================================
+# ENEMY TYPE SYSTEM
+# =============================================================================
+
+# Enemy type registry - add new enemy types here
+const ENEMY_TYPES: Dictionary = {
+	"tiny": {
+		"name": "Tiny Bot",
+		"icon": "🤖",
+		"description": "Small robot enemy. Quick and numerous.",
+		"behaviors": [EnemyBehavior.CHASE, EnemyBehavior.SWARM],
+		"sprite_folder": "res://assets/sprites/enemy_tiny",
+		"base_stats": {
+			"health": 15.0,
+			"speed": 180.0,
+			"contact_damage": 15.0,
+			"xp_value": 5,
+			"scale": 1.0,
+		},
+		"spawn_weight": 80,
+		"min_wave": 1,
+		"spawn_count": 2,  # Spawns in pairs
+	},
+	"basic": {
+		"name": "Robot Grunt",
+		"icon": "🤖",
+		"description": "Standard enemy that chases the player.",
+		"behaviors": [EnemyBehavior.CHASE],
+		"sprite_folder": "res://assets/sprites/enemy_tiny",  # TODO: Replace with 64px sprites
+		"base_stats": {
+			"health": 30.0,
+			"speed": 150.0,
+			"contact_damage": 33.0,
+			"xp_value": 10,
+			"scale": 1.5,  # Scale up the tiny sprite for now
+		},
+		"spawn_weight": 100,
+		"min_wave": 1,
+	},
+	"fast": {
+		"name": "Scout Bot",
+		"icon": "⚡",
+		"description": "Quick but fragile enemy.",
+		"behaviors": [EnemyBehavior.CHASE, EnemyBehavior.SWARM],
+		"sprite_folder": "res://assets/sprites/enemy_tiny",
+		"color_tint": Color(0.6, 0.9, 1.0),  # Light blue tint
+		"base_stats": {
+			"health": 15.0,
+			"speed": 250.0,
+			"contact_damage": 20.0,
+			"xp_value": 8,
+			"scale": 1.2,
+		},
+		"spawn_weight": 60,
+		"min_wave": 2,
+	},
+	"tank": {
+		"name": "Heavy Bot",
+		"icon": "🛡️",
+		"description": "Slow but very tough enemy.",
+		"behaviors": [EnemyBehavior.CHASE, EnemyBehavior.TANK],
+		"sprite_folder": "res://assets/sprites/enemy_tiny",
+		"color_tint": Color(0.8, 0.5, 0.3),  # Brown/rust tint
+		"base_stats": {
+			"health": 120.0,
+			"speed": 80.0,
+			"contact_damage": 50.0,
+			"xp_value": 25,
+			"scale": 2.0,  # Much bigger
+		},
+		"spawn_weight": 20,
+		"min_wave": 3,
+	},
+	"exploder": {
+		"name": "Boom Bot",
+		"icon": "💥",
+		"description": "Explodes on death, damaging nearby enemies and player.",
+		"behaviors": [EnemyBehavior.CHASE, EnemyBehavior.EXPLOSIVE],
+		"sprite_folder": "res://assets/sprites/enemy_tiny",
+		"color_tint": Color(1.0, 0.4, 0.2),  # Orange/red tint
+		"base_stats": {
+			"health": 20.0,
+			"speed": 180.0,
+			"contact_damage": 25.0,
+			"xp_value": 15,
+			"scale": 1.3,
+			"explosion_radius": 100.0,
+			"explosion_damage": 40.0,
+		},
+		"spawn_weight": 25,
+		"min_wave": 4,
+	},
+	"swarm": {
+		"name": "Mini Bot",
+		"icon": "🐜",
+		"description": "Tiny but spawns in groups.",
+		"behaviors": [EnemyBehavior.CHASE, EnemyBehavior.SWARM],
+		"sprite_folder": "res://assets/sprites/enemy_tiny",
+		"color_tint": Color(0.7, 1.0, 0.7),  # Light green tint
+		"base_stats": {
+			"health": 8.0,
+			"speed": 200.0,
+			"contact_damage": 10.0,
+			"xp_value": 3,
+			"scale": 0.5,
+		},
+		"spawn_weight": 40,
+		"min_wave": 2,
+		"spawn_count": 3,  # Spawns multiple at once
+	},
+}
+
 # Color tints for turret types (Phase 1 visual differentiation)
 const TURRET_COLORS: Dictionary = {
 	"normal": Color("66CC66"),
@@ -308,6 +423,86 @@ func get_total_turret_count() -> int:
 	for count in turret_counts.values():
 		total += count
 	return total
+
+# =============================================================================
+# ENEMY TYPE HELPERS
+# =============================================================================
+
+## Get base stats for an enemy type (before wave scaling)
+func get_enemy_type_stats(enemy_type: String) -> Dictionary:
+	if not ENEMY_TYPES.has(enemy_type):
+		return ENEMY_TYPES["basic"]["base_stats"].duplicate(true)
+	return ENEMY_TYPES[enemy_type]["base_stats"].duplicate(true)
+
+## Get scaled stats for an enemy type at a specific wave
+func get_enemy_stats_for_wave(enemy_type: String, wave: int) -> Dictionary:
+	var base_stats := get_enemy_type_stats(enemy_type)
+	var config := get_difficulty_config()
+	
+	# Apply difficulty multipliers
+	base_stats["health"] = base_stats["health"] * config["enemy_health_mult"]
+	base_stats["speed"] = base_stats["speed"] * config["enemy_speed_mult"]
+	base_stats["contact_damage"] = base_stats["contact_damage"] * config["enemy_damage_mult"]
+	
+	# Apply wave scaling
+	base_stats["health"] = base_stats["health"] * pow(config["enemy_hp_scale_per_wave"], wave - 1)
+	base_stats["speed"] = base_stats["speed"] * pow(config["enemy_speed_scale_per_wave"], wave - 1)
+	
+	return base_stats
+
+## Get available enemy types for a given wave (respects min_wave)
+func get_available_enemy_types(wave: int) -> Array:
+	var available: Array = []
+	for enemy_type in ENEMY_TYPES:
+		if ENEMY_TYPES[enemy_type].get("min_wave", 1) <= wave:
+			available.append(enemy_type)
+	return available
+
+## Select a random enemy type based on spawn weights
+func select_random_enemy_type(wave: int) -> String:
+	var available := get_available_enemy_types(wave)
+	if available.is_empty():
+		return "basic"
+	
+	# Calculate total weight
+	var total_weight: float = 0.0
+	for enemy_type in available:
+		total_weight += ENEMY_TYPES[enemy_type].get("spawn_weight", 100)
+	
+	# Random selection based on weight
+	var roll := randf() * total_weight
+	var cumulative: float = 0.0
+	
+	for enemy_type in available:
+		cumulative += ENEMY_TYPES[enemy_type].get("spawn_weight", 100)
+		if roll <= cumulative:
+			return enemy_type
+	
+	return available[-1]  # Fallback to last
+
+## Check if enemy type has a specific behavior
+func enemy_has_behavior(enemy_type: String, behavior: EnemyBehavior) -> bool:
+	if not ENEMY_TYPES.has(enemy_type):
+		return false
+	return behavior in ENEMY_TYPES[enemy_type].get("behaviors", [])
+
+## Get spawn count for an enemy type (for swarm types)
+func get_enemy_spawn_count(enemy_type: String) -> int:
+	if not ENEMY_TYPES.has(enemy_type):
+		return 1
+	return ENEMY_TYPES[enemy_type].get("spawn_count", 1)
+
+## Get color tint for an enemy type
+func get_enemy_color(enemy_type: String) -> Color:
+	if not ENEMY_TYPES.has(enemy_type):
+		return Color.WHITE
+	return ENEMY_TYPES[enemy_type].get("color_tint", Color.WHITE)
+
+## Get sprite folder path for an enemy type
+func get_enemy_sprite_folder(enemy_type: String) -> String:
+	if not ENEMY_TYPES.has(enemy_type):
+		return ENEMY_TYPES["basic"]["sprite_folder"]
+	return ENEMY_TYPES[enemy_type].get("sprite_folder", ENEMY_TYPES["basic"]["sprite_folder"])
 
 # =============================================================================
 # ITEMS SYSTEM (Placeholder for future implementation)

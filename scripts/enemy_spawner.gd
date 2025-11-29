@@ -9,6 +9,9 @@ var enemies_to_spawn: int = 0
 var current_wave: int = 0
 var is_spawning: bool = false
 
+# Enemy type spawning stats
+var enemies_spawned_by_type: Dictionary = {}  # Track spawns per type
+
 func _ready() -> void:
 	# Setup spawn zones on arena edges
 	setup_spawn_zones()
@@ -53,6 +56,7 @@ func setup_spawn_zones() -> void:
 func start_spawning(wave: int) -> void:
 	current_wave = wave
 	enemies_to_spawn = Globals.get_wave_enemy_count(wave)
+	enemies_spawned_by_type.clear()
 	is_spawning = true
 	
 	# Calculate spawn interval
@@ -61,8 +65,7 @@ func start_spawning(wave: int) -> void:
 	spawn_timer.start()
 	
 	# Spawn first enemy immediately
-	spawn_enemy()
-	enemies_to_spawn -= 1
+	_spawn_random_enemy()
 
 func stop_spawning() -> void:
 	is_spawning = false
@@ -74,10 +77,28 @@ func _on_spawn_timer_timeout() -> void:
 		spawn_timer.stop()
 		return
 	
-	spawn_enemy()
-	enemies_to_spawn -= 1
+	_spawn_random_enemy()
 
-func spawn_enemy() -> void:
+func _spawn_random_enemy() -> void:
+	"""Select a random enemy type and spawn it (possibly multiple for swarm types)."""
+	if enemies_to_spawn <= 0:
+		return
+	
+	# Select random enemy type based on wave and weights
+	var enemy_type := Globals.select_random_enemy_type(current_wave)
+	var spawn_count := Globals.get_enemy_spawn_count(enemy_type)
+	
+	# Spawn the enemy (or multiple for swarm types)
+	for i in range(spawn_count):
+		if enemies_to_spawn <= 0:
+			break
+		spawn_enemy(enemy_type)
+		enemies_to_spawn -= 1
+		
+		# Track spawn counts
+		enemies_spawned_by_type[enemy_type] = enemies_spawned_by_type.get(enemy_type, 0) + 1
+
+func spawn_enemy(enemy_type: String = "basic") -> void:
 	if enemy_scene == null:
 		push_error("Enemy scene not set in EnemySpawner!")
 		return
@@ -95,9 +116,9 @@ func spawn_enemy() -> void:
 	var enemy := enemy_scene.instantiate()
 	enemy.global_position = spawn_pos
 	
-	# Initialize with wave-scaled stats
+	# Initialize with type and wave-scaled stats
 	if enemy.has_method("initialize"):
-		enemy.initialize(current_wave)
+		enemy.initialize(current_wave, enemy_type)
 	
 	# Add to scene
 	var enemy_container = get_node_or_null("../EnemyContainer")
