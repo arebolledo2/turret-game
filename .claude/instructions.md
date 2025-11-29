@@ -100,6 +100,77 @@ Difficulty.NIGHTMARE: {
 }
 ```
 
+### Turret Type System
+Turrets use a **dual-tag architecture** separating attack style from damage type. See [doc/TurretTypes.md](doc/TurretTypes.md) for full design spec.
+
+**Attack Styles** (`Globals.AttackStyle`):
+- `PROJECTILE` — Fires visible projectile
+- `INSTANT` — Hitscan/immediate damage
+- `AOE` — Area damage (pulse or explosion)
+- `CHAIN` — Damage jumps between enemies
+
+**Damage Types** (`Globals.DamageType`):
+- `PHYSICAL`, `FIRE`, `ELECTRIC`, `PLASMA`
+
+**Turret Types** (defined in `TURRET_TYPES` dictionary):
+| Type | Attack Style | Damage Type | Special |
+|------|--------------|-------------|--------|
+| `normal` | projectile | physical | Standard turret |
+| `sniper` | instant | physical | Long range, high damage |
+| `fire` | projectile | fire | DoT, high pierce |
+| `plasma` | projectile, aoe | plasma | Explodes on impact |
+| `shock` | aoe | electric | Pulses damage around turret |
+| `tesla` | instant, chain | electric | Chain lightning |
+
+**Working with turret types:**
+```gdscript
+# Get turret stats (with modifiers applied)
+var stats = Globals.get_turret_stats("fire")
+
+# Check turret capabilities
+if Globals.turret_has_attack_style("tesla", Globals.AttackStyle.CHAIN):
+    # Tesla can chain
+
+# Set turret type on instantiation
+var turret = turret_scene.instantiate()
+turret.turret_type = "plasma"
+```
+
+### Modifier System
+Items modify turret stats via filters. Modifiers are stored in `Globals.active_modifiers`:
+```gdscript
+# Add a modifier (+20% fire damage)
+Globals.add_modifier({
+    "id": "fire_boost_1",
+    "stat": "damage",
+    "operation": "multiply",  # or "add"
+    "value": 1.2,
+    "filter": {
+        "damage_type": [Globals.DamageType.FIRE]
+    }
+})
+
+# Remove by ID
+Globals.remove_modifier("fire_boost_1")
+
+# Clear all
+Globals.clear_modifiers()
+```
+
+Filter options: `damage_type`, `attack_style`, `turret_type` (arrays, OR logic).
+
+### Status Effect System
+DoT effects are tracked on enemies via [scripts/status_effect.gd](scripts/status_effect.gd):
+```gdscript
+# Apply burning to an enemy
+enemy.apply_status_effect(Globals.DamageType.FIRE, dot_damage, duration, tick_rate)
+
+# Check if enemy has effect
+if enemy.has_status_effect(Globals.DamageType.FIRE):
+    # Enemy is burning
+```
+Stacking rule: Strongest DoT per damage type wins, duration refreshes.
+
 ## Developer Workflow
 
 ### Running the Game
@@ -151,8 +222,11 @@ When creating commits, use concise, one-line messages that begin with a single e
 | Feature | Files |
 |---------|-------|
 | Game balance | [scripts/autoload/globals.gd](scripts/autoload/globals.gd), [doc/00-MVP-IMPLEMENTATION-SPEC.md](doc/00-MVP-IMPLEMENTATION-SPEC.md) |
+| Turret types/stats | [scripts/autoload/globals.gd](scripts/autoload/globals.gd) (`TURRET_TYPES`), [doc/TurretTypes.md](doc/TurretTypes.md) |
 | New enemy types | [scripts/enemy.gd](scripts/enemy.gd), [scenes/enemy.tscn](scenes/enemy.tscn) |
-| New turret types | [scripts/turret.gd](scripts/turret.gd), [scenes/turret.tscn](scenes/turret.tscn) |
+| Turret behavior | [scripts/turret.gd](scripts/turret.gd), [scenes/turret.tscn](scenes/turret.tscn) |
+| Status effects/DoT | [scripts/status_effect.gd](scripts/status_effect.gd), [scripts/enemy.gd](scripts/enemy.gd) |
+| Projectiles | [scripts/projectile.gd](scripts/projectile.gd) (pierce, AoE, DoT application) |
 | UI changes | [scripts/hud.gd](scripts/hud.gd), [scenes/ui/hud.tscn](scenes/ui/hud.tscn) |
 | Wave behavior | [scripts/game_manager.gd](scripts/game_manager.gd), [scripts/enemy_spawner.gd](scripts/enemy_spawner.gd) |
 
