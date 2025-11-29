@@ -299,6 +299,10 @@ func heal(amount: float) -> void:
 	current_health = min(current_health + amount, max_health)
 	Events.player_damaged.emit(current_health, max_health)
 
+func reset_health() -> void:
+	current_health = max_health
+	Events.player_damaged.emit(current_health, max_health)
+
 func get_health_percent() -> float:
 	return current_health / max_health
 

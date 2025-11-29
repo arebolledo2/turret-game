@@ -415,6 +415,38 @@ var is_game_active: bool = false
 var player_level: int = 1  # Display-only for now
 
 # =============================================================================
+# ECONOMY SYSTEM
+# =============================================================================
+
+# Currency
+var total_gold: int = 0
+const STARTING_GOLD: int = 120  # Enough to buy any single turret
+const GOLD_PER_ENEMY: int = 1
+const GOLD_WAVE_BONUS_BASE: int = 20
+
+# Shop State
+var shop_reroll_count: int = 0
+var current_shop_offers: Array = []
+var pending_turret_purchases: Array[String] = []  # Turret IDs to spawn at wave start
+
+# Shop Constants
+const SHOP_OFFER_COUNT: int = 4
+const REROLL_BASE_COST: int = 5
+const REROLL_COST_INCREMENT: int = 3
+const MAX_REROLLS_PER_WAVE: int = 5
+
+const TURRET_BASE_PRICES: Dictionary = {
+	"normal": 50,
+	"sniper": 120,
+	"fire": 80,
+	"plasma": 100,
+	"shock": 90,
+	"tesla": 110,
+}
+
+const WAVE_PRICE_SCALE: float = 0.15
+
+# =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
 func get_wave_duration(wave: int) -> float:
@@ -454,3 +486,7 @@ func reset_stats() -> void:
 	selected_turret_type = ""
 	collected_items.clear()
 	active_modifiers.clear()
+	total_gold = STARTING_GOLD
+	shop_reroll_count = 0
+	current_shop_offers.clear()
+	pending_turret_purchases.clear()

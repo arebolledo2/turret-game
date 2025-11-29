@@ -7,7 +7,9 @@
       "Bash(powershell:*)",
       "Bash(dir \"C:\\Users\\AndresRebolledo\\AppData\\Local\\Godot\")",
       "Bash(start:*)",
-      "Bash(timeout /t 5 /nobreak)"
+      "Bash(timeout /t 5 /nobreak)",
+      "Bash(Select-String -Pattern \"(passed|failed|Totals)\" -Context 0,2)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

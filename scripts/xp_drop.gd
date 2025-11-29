@@ -42,7 +42,11 @@ func start_collection(player: Node2D) -> void:
 func collect() -> void:
 	Globals.total_xp += xp_value
 	Events.xp_collected.emit(xp_value, Globals.total_xp)
-	
+
+	# Also award gold from same drop
+	Globals.total_gold += Globals.GOLD_PER_ENEMY
+	Events.gold_collected.emit(Globals.GOLD_PER_ENEMY, Globals.total_gold)
+
 	# Collection effect
 	var tween = create_tween()
 	tween.set_parallel(true)

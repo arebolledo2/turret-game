@@ -37,6 +37,19 @@ signal turret_dropped(turret: Node2D, position: Vector2)
 signal xp_dropped(position: Vector2, amount: int)
 signal xp_collected(amount: int, total: int)
 
+# Economy Events
+signal gold_dropped(position: Vector2, amount: int)
+signal gold_collected(amount: int, total: int)
+signal gold_spent(amount: int, remaining: int)
+
+# Shop Events
+signal shop_opened(wave_number: int)
+signal shop_closed()
+signal shop_offers_generated(offers: Array)
+signal shop_purchase_made(offer: Dictionary)
+signal shop_rerolled(new_offers: Array, cost: int)
+signal shop_insufficient_funds(required: int, current: int)
+
 # UI Events
 signal show_wave_announcement(wave_number: int)
 signal hide_wave_announcement()

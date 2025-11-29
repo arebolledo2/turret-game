@@ -4,6 +4,7 @@ extends CanvasLayer
 @onready var wave_label: Label = $MarginContainer/VBoxContainer/TopRow/WaveInfo/WaveLabel
 @onready var timer_label: Label = $MarginContainer/VBoxContainer/TopRow/WaveInfo/TimerLabel
 @onready var xp_label: Label = $MarginContainer/VBoxContainer/TopRow/StatsContainer/XPLabel
+@onready var gold_label: Label = $MarginContainer/VBoxContainer/TopRow/StatsContainer/GoldLabel
 @onready var turret_label: Label = $MarginContainer/VBoxContainer/TopRow/StatsContainer/TurretLabel
 @onready var wave_announcement: Control = $WaveAnnouncement
 @onready var wave_announcement_label: Label = $WaveAnnouncement/WaveLabel
@@ -61,6 +62,8 @@ func _ready() -> void:
 	Events.wave_timer_updated.connect(_on_wave_timer_updated)
 	Events.wave_started.connect(_on_wave_started)
 	Events.xp_collected.connect(_on_xp_collected)
+	Events.gold_collected.connect(_on_gold_changed)
+	Events.gold_spent.connect(_on_gold_changed)
 	Events.turret_spawned.connect(_on_turret_spawned)
 	Events.show_wave_announcement.connect(_on_show_wave_announcement)
 	Events.hide_wave_announcement.connect(_on_hide_wave_announcement)
@@ -68,9 +71,10 @@ func _ready() -> void:
 	Events.show_difficulty_select.connect(_on_show_difficulty_select)
 	Events.game_started.connect(_on_game_started)
 	Events.damage_dealt.connect(_on_damage_dealt)
-	
+
 	# Initialize labels
 	update_xp(0)
+	update_gold(Globals.total_gold)
 	update_turret_count(0)
 
 func _input(event: InputEvent) -> void:
@@ -123,6 +127,13 @@ func _on_xp_collected(_amount: int, total: int) -> void:
 func update_xp(total: int) -> void:
 	if xp_label:
 		xp_label.text = "XP: %d" % total
+
+func _on_gold_changed(_amount: int, total: int) -> void:
+	update_gold(total)
+
+func update_gold(total: int) -> void:
+	if gold_label:
+		gold_label.text = "Gold: %d" % total
 
 func _on_turret_spawned(_turret: Node2D, _position: Vector2) -> void:
 	update_turret_count(Globals.turrets_spawned)

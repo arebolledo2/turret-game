@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://dq8n5xwlavh4s"]
+[gd_scene load_steps=10 format=3 uid="uid://dq8n5xwlavh4s"]
 
 [ext_resource type="PackedScene" uid="uid://c8yqvh3xwn5n5" path="res://scenes/player.tscn" id="1_1a2b3"]
 [ext_resource type="Script" path="res://scripts/game_manager.gd" id="2_2c3d4"]
@@ -7,6 +7,8 @@
 [ext_resource type="Script" path="res://scripts/turret_manager.gd" id="5_turret_mgr"]
 [ext_resource type="Script" path="res://scripts/drop_spawner.gd" id="6_drop_spawner"]
 [ext_resource type="PackedScene" uid="uid://hud_scene_001" path="res://scenes/ui/hud.tscn" id="7_hud"]
+[ext_resource type="Script" path="res://scripts/shop_manager.gd" id="8_shop_mgr"]
+[ext_resource type="PackedScene" uid="uid://shop_screen_001" path="res://scenes/ui/shop_screen.tscn" id="9_shop_screen"]
 
 [node name="Main" type="Node2D"]
 
@@ -51,4 +53,13 @@ script = ExtResource("5_turret_mgr")
 [node name="DropSpawner" type="Node" parent="."]
 script = ExtResource("6_drop_spawner")
 
+[node name="ShopManager" type="Node" parent="."]
+script = ExtResource("8_shop_mgr")
+
 [node name="HUD" parent="." instance=ExtResource("7_hud")]
+
+[node name="ShopLayer" type="CanvasLayer" parent="."]
+layer = 20
+process_mode = 3
+
+[node name="ShopScreen" parent="ShopLayer" instance=ExtResource("9_shop_screen")]

@@ -1,6 +1,6 @@
 extends Node
 
-enum GameState { IDLE, DIFFICULTY_SELECT, WAVE_ANNOUNCEMENT, COMBAT, WAVE_END, VICTORY, GAME_OVER }
+enum GameState { IDLE, DIFFICULTY_SELECT, SHOP, WAVE_ANNOUNCEMENT, COMBAT, WAVE_END, VICTORY, GAME_OVER }
 
 var current_state: GameState = GameState.IDLE
 var wave_timer: float = 0.0
@@ -34,7 +34,9 @@ func start_game() -> void:
 	Globals.reset_stats()
 	Globals.is_game_active = true
 	Events.game_started.emit()
-	start_wave_announcement()
+	
+	# Open shop before first wave so player can choose their starting turret
+	start_shop_phase()
 
 func _process(delta: float) -> void:
 	if Globals == null or not Globals.is_game_active:
@@ -49,6 +51,8 @@ func _process(delta: float) -> void:
 			process_combat(delta)
 		GameState.WAVE_END:
 			process_wave_end(delta)
+		GameState.SHOP:
+			pass  # Shop is UI-driven, no processing needed
 
 func start_wave_announcement() -> void:
 	Globals.current_wave += 1
@@ -58,10 +62,6 @@ func start_wave_announcement() -> void:
 	# Emit announcement signal for UI
 	Events.wave_announcement_started.emit(Globals.current_wave)
 	Events.show_wave_announcement.emit(Globals.current_wave)
-	
-	# Spawn turret (except wave 1 - player starts with nothing)
-	if turret_manager and Globals.current_wave >= 1:
-		turret_manager.spawn_turret()
 
 func process_announcement(delta: float) -> void:
 	announcement_timer -= delta
@@ -103,7 +103,49 @@ func end_wave() -> void:
 func process_wave_end(delta: float) -> void:
 	pause_timer -= delta
 	if pause_timer <= 0:
-		start_wave_announcement()
+		# Award wave completion bonus
+		var wave_bonus = Globals.GOLD_WAVE_BONUS_BASE + (Globals.current_wave * 5)
+		Globals.total_gold += wave_bonus
+		Events.gold_collected.emit(wave_bonus, Globals.total_gold)
+
+		# Shop opens after wave 1 (skip shop before first wave)
+		if Globals.current_wave >= 1:
+			start_shop_phase()
+		else:
+			start_wave_announcement()
+
+func start_shop_phase() -> void:
+	current_state = GameState.SHOP
+	Globals.shop_reroll_count = 0
+	Events.shop_opened.emit(Globals.current_wave)
+
+func end_shop_phase() -> void:
+	current_state = GameState.WAVE_ANNOUNCEMENT
+	Events.shop_closed.emit()
+
+	# Reset game state for the new wave
+	reset_wave_state()
+
+	# Spawn purchased turrets before wave starts
+	var turret_mgr = get_node_or_null("../TurretManager")
+	if turret_mgr and turret_mgr.has_method("spawn_pending_turrets"):
+		turret_mgr.spawn_pending_turrets()
+
+	start_wave_announcement()
+
+func reset_wave_state() -> void:
+	# Clear all enemies
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	for enemy in enemies:
+		if is_instance_valid(enemy):
+			enemy.queue_free()
+	
+	# Reset player health
+	var player = get_tree().get_first_node_in_group("player")
+	if player and player.has_method("reset_health"):
+		player.reset_health()
+	
+	# Turrets maintain their positions between waves
 
 func trigger_victory() -> void:
 	current_state = GameState.VICTORY

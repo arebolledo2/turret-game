@@ -113,22 +113,39 @@ func _do_aoe_explosion() -> void:
 
 ## Spawn a visual explosion effect
 func _spawn_explosion_effect() -> void:
-	# Create a simple visual flash for the explosion
-	# Future: Replace with particle effect
-	var flash := Sprite2D.new()
-	flash.modulate = Color(1.0, 0.8, 0.3, 0.8)
-	flash.global_position = global_position
+	# Create a circle polygon similar to shock turret pulse
+	var viz = Polygon2D.new()
 	
-	# Use the projectile's sprite texture scaled up, or a simple circle
-	if has_node("Sprite2D") and $Sprite2D.texture:
-		flash.texture = $Sprite2D.texture
-		flash.scale = Vector2.ONE * (aoe_radius / 20.0)
+	# Create circle polygon with the aoe_radius
+	var points = PackedVector2Array()
+	var segments = 32
+	for i in range(segments):
+		var angle = i * TAU / float(segments)
+		points.append(Vector2(cos(angle), sin(angle)) * aoe_radius)
+	viz.polygon = points
 	
-	get_tree().current_scene.add_child(flash)
+	# Color based on damage type (plasma = purple/magenta)
+	var explosion_color: Color
+	match damage_type:
+		Globals.DamageType.PLASMA:
+			explosion_color = Color("AA44DD")  # Purple/magenta for plasma
+		Globals.DamageType.FIRE:
+			explosion_color = Color("FF6633")  # Orange for fire
+		Globals.DamageType.ELECTRIC:
+			explosion_color = Color("44DDDD")  # Cyan for electric
+		_:
+			explosion_color = Color("FFAA33")  # Default orange/yellow
 	
-	# Fade out and remove
-	var tween = flash.create_tween()
+	viz.color = explosion_color
+	viz.color.a = 0.5
+	viz.global_position = global_position
+	
+	var parent = get_tree().current_scene if get_tree().current_scene else get_tree().root
+	parent.add_child(viz)
+	
+	# Animate: expand slightly and fade out
+	var tween = viz.create_tween()
 	tween.set_parallel(true)
-	tween.tween_property(flash, "scale", flash.scale * 1.5, 0.2)
-	tween.tween_property(flash, "modulate:a", 0.0, 0.2)
-	tween.chain().tween_callback(flash.queue_free)
+	tween.tween_property(viz, "scale", Vector2.ONE * 1.3, 0.25)
+	tween.tween_property(viz, "modulate:a", 0.0, 0.25)
+	tween.chain().tween_callback(viz.queue_free)
