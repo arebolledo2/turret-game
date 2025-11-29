@@ -21,6 +21,10 @@ signal enemy_spawned(enemy: Node2D)
 signal player_damaged(current_health: float, max_health: float)
 signal player_died()
 signal damage_dealt(position: Vector2, amount: float)
+signal dot_damage_dealt(position: Vector2, amount: float)
+signal status_effect_applied(enemy: Node2D, damage_type: int)
+signal aoe_explosion(position: Vector2, radius: float, damage: float)
+signal chain_lightning_hit(from_pos: Vector2, to_pos: Vector2, damage: float)
 
 # Turret Events
 signal turret_spawned(turret: Node2D, position: Vector2)

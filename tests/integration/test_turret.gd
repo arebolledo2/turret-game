@@ -34,9 +34,11 @@ func test_turret_added_to_group():
 
 
 func test_turret_stats_from_globals():
-	assert_eq(turret.damage, Globals.TURRET_DAMAGE, "Damage should match Globals")
-	assert_eq(turret.fire_rate, Globals.TURRET_FIRE_RATE, "Fire rate should match Globals")
-	assert_eq(turret.attack_range, Globals.TURRET_RANGE, "Range should match Globals")
+	# Normal turret type uses stats from TURRET_TYPES["normal"]
+	var expected_stats = Globals.get_turret_stats("normal")
+	assert_eq(turret.current_damage, expected_stats["damage"], "Damage should match Globals")
+	assert_eq(turret.current_fire_rate, expected_stats["fire_rate"], "Fire rate should match Globals")
+	assert_eq(turret.current_range, expected_stats["range"], "Range should match Globals")
 
 
 func test_turret_can_fire_initially():
@@ -156,12 +158,12 @@ func test_turret_damage_reduced_on_hard():
 	Globals.current_difficulty = Globals.Difficulty.EASY
 	var easy_turret = turret_scene.instantiate()
 	add_child_autofree(easy_turret)
-	var easy_damage = easy_turret.damage
+	var easy_damage = easy_turret.current_damage
 	
 	# Hard turret damage
 	Globals.current_difficulty = Globals.Difficulty.HARD
 	var hard_turret = turret_scene.instantiate()
 	add_child_autofree(hard_turret)
-	var hard_damage = hard_turret.damage
+	var hard_damage = hard_turret.current_damage
 	
 	assert_lt(hard_damage, easy_damage, "Hard mode turrets should deal less damage")

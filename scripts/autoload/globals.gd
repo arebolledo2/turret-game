@@ -60,38 +60,247 @@ var player_auto_attack_enabled: bool = false  # Player default attack disabled
 # =============================================================================
 # TURRET TYPE SYSTEM
 # =============================================================================
+
+# Attack style tags - how damage is delivered
+enum AttackStyle { PROJECTILE, INSTANT, AOE, CHAIN }
+
+# Damage type tags - elemental classification
+enum DamageType { PHYSICAL, FIRE, ELECTRIC, PLASMA }
+
+# Color tints for turret types (Phase 1 visual differentiation)
+const TURRET_COLORS: Dictionary = {
+	"normal": Color("66CC66"),
+	"sniper": Color("4466AA"),
+	"fire": Color("FF6633"),
+	"plasma": Color("AA44DD"),
+	"shock": Color("DDDD44"),
+	"tesla": Color("44DDDD"),
+}
+
 # Turret type registry - add new turret types here
 const TURRET_TYPES: Dictionary = {
-	"basic": {
-		"name": "Basic Turret",
+	"normal": {
+		"name": "Normal Turret",
 		"icon": "🗼",
-		"description": "Standard auto-targeting turret",
+		"description": "Standard auto-targeting turret. Reliable and consistent.",
+		"attack_styles": [AttackStyle.PROJECTILE],
+		"damage_types": [DamageType.PHYSICAL],
 		"base_stats": {
 			"damage": 15.0,
-			"range": 400.0,
 			"fire_rate": 2.0,
+			"range": 400.0,
 			"rotation_speed": 180.0,
 			"projectile_speed": 500.0,
+			"pierce": 0,
 		}
 	},
-	# Future turret types can be added here:
-	# "flame": { "name": "Flame Turret", ... },
-	# "sniper": { "name": "Sniper Turret", ... },
+	"sniper": {
+		"name": "Sniper Turret",
+		"icon": "🎯",
+		"description": "Long-range instant-hit turret. High damage, slow fire rate.",
+		"attack_styles": [AttackStyle.INSTANT],
+		"damage_types": [DamageType.PHYSICAL],
+		"targeting": "farthest",  # Prioritizes back-line enemies
+		"base_stats": {
+			"damage": 45.0,
+			"fire_rate": 0.5,
+			"range": 800.0,
+			"rotation_speed": 120.0,
+		}
+	},
+	"fire": {
+		"name": "Fire Turret",
+		"icon": "🔥",
+		"description": "Incendiary turret that ignites enemies.",
+		"attack_styles": [AttackStyle.PROJECTILE],
+		"damage_types": [DamageType.FIRE],
+		"base_stats": {
+			"damage": 8.0,
+			"fire_rate": 2.5,
+			"range": 350.0,
+			"rotation_speed": 180.0,
+			"projectile_speed": 400.0,
+			"pierce": 99,  # Effectively infinite - passes through enemies
+			"dot_damage": 4.0,
+			"dot_duration": 3.0,
+			"dot_tick_rate": 1.0,
+		}
+	},
+	"plasma": {
+		"name": "Plasma Turret",
+		"icon": "💠",
+		"description": "Fires explosive plasma orbs that damage an area.",
+		"attack_styles": [AttackStyle.PROJECTILE, AttackStyle.AOE],
+		"damage_types": [DamageType.PLASMA],
+		"targeting": "cluster",  # Prefers groups of enemies
+		"base_stats": {
+			"damage": 20.0,
+			"fire_rate": 1.0,
+			"range": 450.0,
+			"rotation_speed": 150.0,
+			"projectile_speed": 350.0,
+			"pierce": 0,  # Explodes on first enemy
+			"aoe_radius": 80.0,
+		}
+	},
+	"shock": {
+		"name": "Shock Turret",
+		"icon": "⚡",
+		"description": "Pulses electric damage around itself.",
+		"attack_styles": [AttackStyle.AOE],
+		"damage_types": [DamageType.ELECTRIC],
+		"base_stats": {
+			"damage": 12.0,
+			"fire_rate": 1.5,  # Pulse interval
+			"range": 200.0,  # Pulse radius
+			"rotation_speed": 0.0,  # Doesn't rotate
+		}
+	},
+	"tesla": {
+		"name": "Tesla Turret",
+		"icon": "⛓️",
+		"description": "Fires chain lightning that jumps between enemies.",
+		"attack_styles": [AttackStyle.INSTANT, AttackStyle.CHAIN],
+		"damage_types": [DamageType.ELECTRIC],
+		"base_stats": {
+			"damage": 18.0,
+			"fire_rate": 1.2,
+			"range": 350.0,
+			"rotation_speed": 200.0,
+			"chain_count": 3,
+			"chain_range": 150.0,
+			"chain_decay": 0.7,
+		}
+	},
 }
 
 # Runtime turret counts by type
-var turret_counts: Dictionary = {}  # {"basic": 2, "flame": 1, etc.}
+var turret_counts: Dictionary = {}  # {"normal": 2, "fire": 1, etc.}
 var selected_turret_type: String = ""  # Currently selected in pause menu
 
-# Get turret stats (base stats, future: apply item modifiers)
+# =============================================================================
+# MODIFIER SYSTEM
+# =============================================================================
+# Active modifiers from items - each modifier is a Dictionary:
+# {
+#   "id": String,           # Unique identifier
+#   "stat": String,         # Which stat to modify (damage, fire_rate, etc.)
+#   "operation": String,    # "add" or "multiply"
+#   "value": float,         # The modification value
+#   "filter": {             # Optional filters (OR logic within each array)
+#     "damage_type": [],    # Array of DamageType enums
+#     "attack_style": [],   # Array of AttackStyle enums
+#     "turret_type": [],    # Array of turret type IDs
+#   }
+# }
+var active_modifiers: Array = []
+
+# Check if a turret matches a modifier's filter
+func _modifier_matches_turret(modifier: Dictionary, turret_type: String) -> bool:
+	if not TURRET_TYPES.has(turret_type):
+		return false
+	
+	var turret_def: Dictionary = TURRET_TYPES[turret_type]
+	var filter: Dictionary = modifier.get("filter", {})
+	
+	# Empty filter matches all turrets
+	if filter.is_empty():
+		return true
+	
+	# Check turret_type filter
+	if filter.has("turret_type") and not filter["turret_type"].is_empty():
+		if turret_type in filter["turret_type"]:
+			return true
+	
+	# Check damage_type filter (OR logic)
+	if filter.has("damage_type") and not filter["damage_type"].is_empty():
+		for dtype in filter["damage_type"]:
+			if dtype in turret_def.get("damage_types", []):
+				return true
+	
+	# Check attack_style filter (OR logic)
+	if filter.has("attack_style") and not filter["attack_style"].is_empty():
+		for astyle in filter["attack_style"]:
+			if astyle in turret_def.get("attack_styles", []):
+				return true
+	
+	# If filters were specified but none matched
+	var has_filters := filter.has("turret_type") or filter.has("damage_type") or filter.has("attack_style")
+	return not has_filters
+
+# Get turret stats with all modifiers applied
 func get_turret_stats(turret_type: String) -> Dictionary:
 	if not TURRET_TYPES.has(turret_type):
 		return {}
-	var base_stats: Dictionary = TURRET_TYPES[turret_type]["base_stats"].duplicate()
+	
+	var base_stats: Dictionary = TURRET_TYPES[turret_type]["base_stats"].duplicate(true)
+	
 	# Apply difficulty modifier to damage
 	base_stats["damage"] = base_stats["damage"] * get_difficulty_config()["turret_damage_mult"]
-	# Future: Apply item modifiers here
+	
+	# Collect applicable modifiers
+	var add_mods: Dictionary = {}  # stat -> total add value
+	var mult_mods: Dictionary = {}  # stat -> array of multipliers
+	
+	for modifier in active_modifiers:
+		if not _modifier_matches_turret(modifier, turret_type):
+			continue
+		
+		var stat: String = modifier.get("stat", "")
+		var operation: String = modifier.get("operation", "add")
+		var value: float = modifier.get("value", 0.0)
+		
+		if operation == "add":
+			add_mods[stat] = add_mods.get(stat, 0.0) + value
+		elif operation == "multiply":
+			if not mult_mods.has(stat):
+				mult_mods[stat] = []
+			mult_mods[stat].append(value)
+	
+	# Apply modifiers: first add, then multiply
+	for stat in add_mods:
+		base_stats[stat] = base_stats.get(stat, 0.0) + add_mods[stat]
+	
+	for stat in mult_mods:
+		var combined_mult: float = 1.0
+		for mult in mult_mods[stat]:
+			combined_mult *= mult
+		base_stats[stat] = base_stats.get(stat, 0.0) * combined_mult
+	
 	return base_stats
+
+# Add a modifier (returns the modifier for chaining)
+func add_modifier(modifier: Dictionary) -> Dictionary:
+	active_modifiers.append(modifier)
+	return modifier
+
+# Remove a modifier by ID
+func remove_modifier(modifier_id: String) -> bool:
+	for i in range(active_modifiers.size() - 1, -1, -1):
+		if active_modifiers[i].get("id", "") == modifier_id:
+			active_modifiers.remove_at(i)
+			return true
+	return false
+
+# Clear all modifiers
+func clear_modifiers() -> void:
+	active_modifiers.clear()
+
+# Get turret color tint
+func get_turret_color(turret_type: String) -> Color:
+	return TURRET_COLORS.get(turret_type, Color.WHITE)
+
+# Check if turret has a specific attack style
+func turret_has_attack_style(turret_type: String, style: AttackStyle) -> bool:
+	if not TURRET_TYPES.has(turret_type):
+		return false
+	return style in TURRET_TYPES[turret_type].get("attack_styles", [])
+
+# Check if turret has a specific damage type
+func turret_has_damage_type(turret_type: String, dtype: DamageType) -> bool:
+	if not TURRET_TYPES.has(turret_type):
+		return false
+	return dtype in TURRET_TYPES[turret_type].get("damage_types", [])
 
 func get_total_turret_count() -> int:
 	var total := 0
@@ -244,3 +453,4 @@ func reset_stats() -> void:
 	turret_counts.clear()
 	selected_turret_type = ""
 	collected_items.clear()
+	active_modifiers.clear()
