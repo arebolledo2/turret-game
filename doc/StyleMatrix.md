@@ -2,7 +2,7 @@
 
 Use this matrix as a planning checklist before running any automated art-generation workflows. Each row defines a distinct visual experiment. For every style, produce **three prompt iterations** of the following assets:
 
-1. **Basic turret** (side view, omnidirectional weapon rig with radial emitter)
+1. **Basic turret** (side view, wide sturdy base with a central spire, the top of the spire has small holes arranged around it for omnidirectional firing)
 2. **Cute but angry enemy robot** (side view, warm accents, readable menace)
 3. **Main character** – mobile turret platform per the canonical description:
    - Mobile turret platform that hovers via rocket thrusters; NOT humanoid, NOT a robot.
@@ -13,7 +13,7 @@ Use this matrix as a planning checklist before running any automated art-generat
    - Hover thrusters can leave cyan exhaust plumes or vapor trails for motion cues.
    - Futuristic sci-fi military equipment with cute proportions.
 
-**Turret Reminder:** Keep turret emitters symmetric (multi-nozzle rings, rotating dishes, energy halos) so they visibly fire in any direction rather than a single forward barrel.
+**Turret Reminder:** Turrets have a wide stable base with a central spire/tower. The TOP of the spire has small holes or ports arranged around it, suggesting it can fire projectiles in all directions. The base is solid and supportive; all firing happens from the spire's tip. Avoid single-barrel designs that only point one way.
 
 **Main Character Styling:** Always restate the active style's palette/finish keywords when prompting the main character so its hovering platform still reads as Neon Synth, Ceramic Toybox, etc.
 
@@ -29,7 +29,7 @@ When executing prompts, start from the Style Guide template and append the per-i
 
 | Asset | Iteration 1 | Iteration 2 | Iteration 3 |
 |-------|-------------|-------------|-------------|
-| Basic Turret | Add "sleek synthwave turret, neon piping, chrome ribs" | Add "floating neon ring stabilizers, translucent side fins" | Add "split-barrel turret with alternating cyan/magenta glow" |
+| Basic Turret | Add "wide hexagonal base, glowing spire with neon port holes, chrome finish" | Add "tiered platform base, crystal spire with cyan emitter rings" | Add "circular base with magenta trim, tapered spire with pulsing hole array" |
 | Angry Enemy | Add "hovering drone, angry LED visor, electric ribs" | Add "spider-leg chassis, neon claws, plasma vents" | Add "compact brawler frame, synth armor plates, pulsing magenta anger core" |
 | Main Character | Add "hovering neon synth platform, cyan socket blazing, magenta underglow, hologram antenna tip" | Add "two-tone chrome body, neon caution chevrons, wide LED smile, spinning thruster ring" | Add "layered synth paneling, animated EQ bars on screen, ultraviolet rocket plumes" |
 
@@ -39,7 +39,7 @@ When executing prompts, start from the Style Guide template and append the per-i
 
 | Asset | Iteration 1 | Iteration 2 | Iteration 3 |
 |-------|-------------|-------------|-------------|
-| Basic Turret | Add "stacked teacup base, hand-painted stripes" | Add "wind-up key detail, rounded cannon" | Add "porcelain glaze chips, pastel floral decals" |
+| Basic Turret | Add "teacup saucer base, cute ceramic spire with painted port dots" | Add "stacked plate base, wind-up key spire with pastel holes" | Add "rounded toybox base, porcelain tower with floral-ringed ports" |
 | Angry Enemy | Add "squashed oval body, coral eyebrows, glossy paint" | Add "rolling egg chassis, tiny ceramic fists" | Add "stacked toy blocks body, angry sticker face" |
 | Main Character | Add "porcelain drum, teal rim, pastel LED emoticon, floating on pastel jet nozzles" | Add "toybox scuffs, cork-texture thruster cones, gold antenna bead" | Add "painted stars on body, soft matte glow, ceramic hover plumes" |
 
@@ -49,7 +49,7 @@ When executing prompts, start from the Style Guide template and append the per-i
 
 | Asset | Iteration 1 | Iteration 2 | Iteration 3 |
 |-------|-------------|-------------|-------------|
-| Basic Turret | Add "blocky concrete base, exposed hydraulic recoil" | Add "dual slag cannons, hazard stripes, vent steam" | Add "armored shutter shield, amber targeting lens" |
+| Basic Turret | Add "blocky concrete base, riveted spire with gun port holes, exposed hydraulics" | Add "welded plate platform, smokestack spire with amber-lit firing vents" | Add "heavy armored base, shutter-shielded tower with rotating port array" |
 | Angry Enemy | Add "tank tread skirt, jagged shoulder plates" | Add "massive gauntlets, welded horns, sparks" | Add "caged reactor belly, leaking oil trails" |
 | Main Character | Add "rough-forged drum, riveted LED bezel, hovering on soot-stained thrusters" | Add "industrial piston thruster pods, amber worklight glow" | Add "burnished metal panels, caution chevrons, welding-spark exhaust trails" |
 
@@ -59,7 +59,7 @@ When executing prompts, start from the Style Guide template and append the per-i
 
 | Asset | Iteration 1 | Iteration 2 | Iteration 3 |
 |-------|-------------|-------------|-------------|
-| Basic Turret | Add "floating pastel plinth, glowing VHS tracking lines" | Add "mint barrel, lavender shell, chrome palm tree decals" | Add "dual cassette-inspired cannons, transparent fins" |
+| Basic Turret | Add "pastel gradient base, VHS-glitch spire with glowing port rings" | Add "mint platform, lavender crystal tower with hologram firing holes" | Add "floating geometric base, cassette-tape spire with soft-glow ports" |
 | Angry Enemy | Add "rollerblade feet, peach visor, glitch aura" | Add "floating pyramid backpack, greek statue cracks" | Add "smoke bubble helmet, sunset-gradient armor" |
 | Main Character | Add "mint drum, lavender LED emoticon, VHS sheen, levitating on pastel vapor jets" | Add "pastel gradient socket, hologram antenna cube, synthwave hover bloom" | Add "floating geometric charms, neon vapor trails from thrusters" |
 
@@ -69,7 +69,7 @@ When executing prompts, start from the Style Guide template and append the per-i
 
 | Asset | Iteration 1 | Iteration 2 | Iteration 3 |
 |-------|-------------|-------------|-------------|
-| Basic Turret | Add "coral encrusted base, glowing barnacle cannons" | Add "jellyfin stabilizers, dripping luminescent ooze" | Add "sea anemone cables, tidal pulse emitter" |
+| Basic Turret | Add "coral reef base, bioluminescent spire with barnacle port holes" | Add "shell-encrusted platform, jellyfish-dome tower with glowing pores" | Add "tidepool rock base, anemone spire with luminous tendril ports" |
 | Angry Enemy | Add "anemone hair, clawed fins, angry coral eyes" | Add "lobster shell armor, snapping mandibles" | Add "stingray cloak, biolum warpaint" |
 | Main Character | Add "pearlescent drum, glowing tidepool veins, hovering on biolum jet streams" | Add "sea glass panel lines, biolum LED face, translucent fin thrusters" | Add "kelp ribbon antenna, misty hover wake, barnacle thruster studs" |
 
@@ -79,7 +79,7 @@ When executing prompts, start from the Style Guide template and append the per-i
 
 | Asset | Iteration 1 | Iteration 2 | Iteration 3 |
 |-------|-------------|-------------|-------------|
-| Basic Turret | Add "chunky pixel base, obvious dithering" | Add "low-color muzzle flash, sprite-styled joints" | Add "posterized shadow wedges, thick outline" |
+| Basic Turret | Add "chunky pixel base, blocky spire with dithered port dots" | Add "8-bit platform, low-color tower with sprite-styled holes" | Add "posterized wide base, thick-outline spire with checkerboard ports" |
 | Angry Enemy | Add "squared limbs, 3-frame snarl, harsh contrast" | Add "scrolling angry eyes, pixel sparks" | Add "round hover jets, checkerboard shading" |
 | Main Character | Add "pixel drum, chibi hover pods, emoticon made of 4 pixels" | Add "block antenna, cyan socket rendered with dithering, sprite thruster sparks" | Add "limited palette highlights, chunky hover exhaust with checker dithers" |
 
@@ -89,7 +89,7 @@ When executing prompts, start from the Style Guide template and append the per-i
 
 | Asset | Iteration 1 | Iteration 2 | Iteration 3 |
 |-------|-------------|-------------|-------------|
-| Basic Turret | Add "noir floodlighting, bold rim lights" | Add "smoke plume ink wash, dramatic silhouette" | Add "halftone gradients, comic speed lines" |
+| Basic Turret | Add "noir shadow base, bold-rimmed spire with dramatic port lights" | Add "ink-wash platform, smoky tower silhouette with halftone holes" | Add "chiaroscuro base, speed-lined spire with crimson-glowing ports" |
 | Angry Enemy | Add "angular visor, neon crimson scowl" | Add "tattered cape, spotlight contrast" | Add "ink splatter effects, dramatic pose" |
 | Main Character | Add "halftone LED face, bold ink seams, hovering via smoky noir jet plume" | Add "noir antenna glint, chiaroscuro body, twin ink-shadow thrusters" | Add "comic caption glow, dramatic ground shadow shaped by exhaust" |
 
@@ -99,7 +99,7 @@ When executing prompts, start from the Style Guide template and append the per-i
 
 | Asset | Iteration 1 | Iteration 2 | Iteration 3 |
 |-------|-------------|-------------|-------------|
-| Basic Turret | Add "tiered deco base, fan motif barrel" | Add "emerald enamel panels, gold filigree" | Add "sunburst vent, jewel-like muzzle" |
+| Basic Turret | Add "tiered deco base, fan-motif spire with gold-inlay port rings" | Add "emerald enamel platform, ivory tower with jeweled firing holes" | Add "sunburst base, geometric spire with onyx-framed ports" |
 | Angry Enemy | Add "gold chevrons, mask-like face, teal enamel joints" | Add "stacked art deco wings, jewel core" | Add "sharp geometric shoulders, illuminated marquee" |
 | Main Character | Add "gold banding, teal enamel socket, deco LED frame, hovering on gilded jet vents" | Add "polished ivory drum, stepped hover base with brass thrusters" | Add "antenna finial orb, mirrored panel lines, art deco exhaust fan" |
 
@@ -109,7 +109,7 @@ When executing prompts, start from the Style Guide template and append the per-i
 
 | Asset | Iteration 1 | Iteration 2 | Iteration 3 |
 |-------|-------------|-------------|-------------|
-| Basic Turret | Add "scrap metal base, mismatched armor plates" | Add "cloth sunshades, dangling charms, dust" | Add "solar panel fins, turquoise patina streaks" |
+| Basic Turret | Add "scrap metal base, rusted spire with mismatched port holes" | Add "salvaged platform, cloth-wrapped tower with patina-ringed vents" | Add "junk pile base, solar-panel spire with dusty firing ports" |
 | Angry Enemy | Add "jury-rigged blades, ragged bandana" | Add "rolling tank of rust, cracked goggles" | Add "patched armor, dangling cables, heat haze" |
 | Main Character | Add "sun-faded paint, patched LED screen, hovering on sputtering scrap boosters" | Add "turquoise patina thruster cones, hanging talismans" | Add "fabric wraps on barrel body, sandy exhaust cloud" |
 
@@ -119,9 +119,55 @@ When executing prompts, start from the Style Guide template and append the per-i
 
 | Asset | Iteration 1 | Iteration 2 | Iteration 3 |
 |-------|-------------|-------------|-------------|
-| Basic Turret | Add "frosted armor plates, hologram targeting reticle" | Add "crystal barrel core, vapor vent" | Add "deployable ice spike base, neon lime trims" |
+| Basic Turret | Add "frosted armor base, ice crystal spire with hologram port rings" | Add "glacial platform, vapor-venting tower with frost-rimmed holes" | Add "ice spike base, silver spire with lime-glowing firing ports" |
 | Angry Enemy | Add "angular ice visor, frosted knuckles" | Add "hover jets emitting snow flurries" | Add "crystal exoskeleton, lime hologram claws" |
 | Main Character | Add "icy chrome drum, frost rimmed LED face, hovering on frost jets" | Add "condensation on antenna, lime hologram socket, crystalline thruster rings" | Add "snow-dusted hover nozzles, aurora vapor trails, crystalline panels" |
+
+
+
+## Prompt Template
+
+Use this template when generating any asset to ensure consistency:
+
+### Template Fields
+```
+[SUBJECT]:    What the asset is (e.g., "Player robot character")
+[FEATURES]:   Key visual details - body shape, limbs, accessories, expression
+[COLORS]:     Primary and accent colors, materials (e.g., "white chrome, cyan accents")
+[STYLE]:      futuristic sci-fi, cute, sleek, high detail
+[VIEW]:       side view, facing right, centered in frame
+[ANIMATION]:  walk cycle ready / idle / static (if applicable)
+[OUTLINE]:    single color black outline, medium shading
+[BACKGROUND]: magenta background
+```
+
+### How to Use
+1. Fill in each field for your asset
+2. Flatten into a single comma-separated prompt
+3. Keep the order: Subject → Features → Colors → Style → View → Animation → Outline → Background
+
+### Template Example
+
+**Filled template:**
+```
+[SUBJECT]:    Player robot character
+[FEATURES]:   Rounded chrome body, stubby legs, single expressive eye, small antenna
+[COLORS]:     White and chrome body, cyan glowing accents
+[STYLE]:      futuristic sci-fi, cute, sleek, high detail
+[VIEW]:       side view, facing right, centered in frame
+[ANIMATION]:  walk cycle ready, 2D flat style
+[OUTLINE]:    single color black outline, medium shading
+[BACKGROUND]: magenta background
+```
+
+**Flattened prompt:**
+```
+Player robot character, rounded chrome body, stubby legs, single expressive eye,
+small antenna, white and chrome body with cyan glowing accents, futuristic sci-fi,
+cute, sleek, high detail, side view, facing right, centered in frame,
+walk cycle ready, 2D flat style, single color black outline, medium shading,
+magenta background
+```
 
 ---
 
