@@ -203,6 +203,7 @@ Commits should be concise, one-line, and begin with a single emoji. Agents may c
 | Feature | Files |
 |---------|-------|
 | Game balance | `scripts/globals.gd` (constants and type dictionaries) |
+| Arena bounds | `scripts/globals.gd` (`ARENA_WIDTH`, `ARENA_HEIGHT`) - automatically applied |
 | Turret types/stats | `scripts/globals.gd` (`TURRET_TYPES`) |
 | Enemy types/stats | `scripts/globals.gd` (`ENEMY_TYPES`) |
 | Turret behavior | `scripts/turret.gd`, `scenes/turret.tscn` |
@@ -232,6 +233,10 @@ Commits should be concise, one-line, and begin with a single emoji. Agents may c
 - Check `is_instance_valid()` before accessing dynamic nodes
 - Prefer `call_deferred()` for physics-related changes during callbacks
 - Death effects: Scale to zero + fade alpha, then `queue_free()` via tween callback
+- **Arena bounds**: Always use `Globals.ARENA_WIDTH` and `Globals.ARENA_HEIGHT` - never hardcode dimensions
+  - `arena_setup.gd` auto-configures visual bounds
+  - `camera_setup.gd` auto-configures camera limits
+  - `player.gd` clamps movement using these constants
 
 ## Visual Style
 - **Theme**: Sci-fi space survival, cute futuristic aesthetic

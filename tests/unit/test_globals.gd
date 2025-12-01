@@ -122,7 +122,7 @@ func test_enemy_speed_scales_with_waves():
 	var wave1_speed = Globals.get_enemy_speed(1)
 	var wave5_speed = Globals.get_enemy_speed(5)
 	
-	assert_gt(wave5_speed, wave1_speed, "Later waves should have faster enemies")
+	assert_eq(wave5_speed, wave1_speed, "Enemy speed should remain constant across waves")
 
 
 func test_enemy_speed_faster_on_hard():
@@ -132,7 +132,7 @@ func test_enemy_speed_faster_on_hard():
 	Globals.current_difficulty = Globals.Difficulty.HARD
 	var hard_speed = Globals.get_enemy_speed(1)
 	
-	assert_gt(hard_speed, easy_speed, "Hard mode should have faster enemies")
+	assert_eq(hard_speed, easy_speed, "Enemy speed should be the same across difficulties")
 
 
 # =============================================================================

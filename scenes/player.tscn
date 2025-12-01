@@ -24,3 +24,11 @@ wait_time = 0.1
 autostart = false
 
 [node name="WeaponPivot" type="Node2D" parent="."]
+
+[node name="MeleeVisuals" type="Node2D" parent="."]
+z_index = 10
+
+[node name="MeleeArc" type="Polygon2D" parent="MeleeVisuals"]
+modulate = Color(1, 1, 1, 0)
+color = Color(1, 0.8, 0.2, 1)
+polygon = PackedVector2Array(0, 0, 65, -37.5, 65, 37.5)

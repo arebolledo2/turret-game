@@ -39,6 +39,11 @@ signal turret_range_toggled(show_range: bool)
 signal xp_dropped(position: Vector2, amount: int)
 signal xp_collected(amount: int, total: int)
 
+# Tech Drop Events
+signal tech_drop_spawned(tech_drop: Node2D, position: Vector2)
+signal tech_drop_destroyed(tech_drop: Node2D, position: Vector2)
+signal tech_drop_despawned(tech_drop: Node2D)  # Wave ended
+
 # Economy Events
 signal gold_dropped(position: Vector2, amount: int)
 signal gold_collected(amount: int, total: int)

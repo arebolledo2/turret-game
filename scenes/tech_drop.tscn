@@ -1,0 +1,49 @@
+[gd_scene load_steps=5 format=3 uid="uid://tech_drop_scene_001"]
+
+[ext_resource type="Script" path="res://scripts/tech_drop.gd" id="1_tech_drop"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 20.0
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0.2, 0.2, 0.2, 0.8)
+
+[node name="TechDrop" type="CharacterBody2D"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_tech_drop")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_1")
+disabled = true
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(0.3, 0.8, 1, 1)
+scale = Vector2(20, 20)
+texture = SubResource("PlaceholderTexture2D_1")
+
+[node name="GlowEffect" type="Sprite2D" parent="."]
+modulate = Color(0.5, 0.9, 1, 0.5)
+scale = Vector2(30, 30)
+texture = SubResource("PlaceholderTexture2D_1")
+z_index = -1
+
+[node name="HealthBar" type="ProgressBar" parent="."]
+offset_left = -25.0
+offset_top = -40.0
+offset_right = 25.0
+offset_bottom = -35.0
+theme_override_styles/background = SubResource("StyleBoxFlat_1")
+max_value = 60.0
+value = 60.0
+show_percentage = false
+
+[node name="IconLabel" type="Label" parent="."]
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
+horizontal_alignment = 1
+vertical_alignment = 1

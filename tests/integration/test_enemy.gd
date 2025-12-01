@@ -34,10 +34,8 @@ func test_enemy_initializes_with_wave_scaling():
 	enemy.initialize(5)
 	
 	var expected_hp = Globals.get_enemy_health(5)
-	var expected_speed = Globals.get_enemy_speed(5)
 	
 	assert_eq(enemy.max_health, expected_hp, "Health should match wave 5 scaling")
-	assert_eq(enemy.speed, expected_speed, "Speed should match wave 5 scaling")
 	assert_eq(enemy.current_health, enemy.max_health, "Current health should equal max")
 
 
@@ -52,7 +50,6 @@ func test_enemy_harder_on_hard_difficulty():
 	Globals.current_difficulty = Globals.Difficulty.EASY
 	enemy.initialize(3)
 	var easy_hp = enemy.max_health
-	var easy_speed = enemy.speed
 	
 	# Create new enemy for hard mode
 	var hard_enemy = enemy_scene.instantiate()
@@ -61,7 +58,6 @@ func test_enemy_harder_on_hard_difficulty():
 	hard_enemy.initialize(3)
 	
 	assert_gt(hard_enemy.max_health, easy_hp, "Hard enemies should have more health")
-	assert_gt(hard_enemy.speed, easy_speed, "Hard enemies should be faster")
 
 
 # =============================================================================

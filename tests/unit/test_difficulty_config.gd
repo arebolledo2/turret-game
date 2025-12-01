@@ -58,8 +58,6 @@ func test_scaling_factors_greater_than_one():
 		
 		assert_gt(config["enemy_hp_scale_per_wave"], 1.0, 
 			"HP scaling must be > 1 for progression")
-		assert_gt(config["enemy_speed_scale_per_wave"], 1.0, 
-			"Speed scaling must be > 1 for progression")
 
 
 func test_difficulty_names_are_strings():

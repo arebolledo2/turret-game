@@ -128,24 +128,40 @@ func _spawn_random_enemy() -> void:
 	var enemy_type := Globals.select_random_enemy_type(current_wave)
 	var spawn_count := Globals.get_enemy_spawn_count(enemy_type)
 
+	# Get a base position for the swarm cluster
+	var base_pos := _get_random_spawn_position()
+
 	# Spawn the enemy (or multiple for swarm types)
 	for i in range(spawn_count):
-		_queue_spawn_with_alert(enemy_type)
+		_queue_spawn_with_alert_at_position(enemy_type, base_pos, i)
 		enemies_spawned += 1
 
 		# Track spawn counts
 		enemies_spawned_by_type[enemy_type] = enemies_spawned_by_type.get(enemy_type, 0) + 1
 
-func _queue_spawn_with_alert(enemy_type: String) -> void:
-	"""Queue an enemy spawn with a visual alert indicator."""
-	# Pick a random spawn zone
+func _get_random_spawn_position() -> Vector2:
+	"""Get a random spawn position from a random zone."""
 	var zone := spawn_zones[randi() % spawn_zones.size()]
-
-	# Random position within the zone
-	var spawn_pos := Vector2(
+	return Vector2(
 		zone.position.x + randf() * zone.size.x,
 		zone.position.y + randf() * zone.size.y
 	)
+
+func _queue_spawn_with_alert(enemy_type: String) -> void:
+	"""Queue an enemy spawn with a visual alert indicator at a random position."""
+	var spawn_pos := _get_random_spawn_position()
+	_queue_spawn_with_alert_at_position(enemy_type, spawn_pos, 0)
+
+func _queue_spawn_with_alert_at_position(enemy_type: String, base_pos: Vector2, swarm_index: int) -> void:
+	"""Queue an enemy spawn with a visual alert indicator near a base position."""
+	# For swarm spawns, offset slightly from base position to create a cluster
+	const SWARM_SPREAD := 60.0  # How far apart swarm members spawn
+	var spawn_pos := base_pos
+	if swarm_index > 0:
+		# Offset subsequent enemies in a circular pattern around the base
+		var angle := (swarm_index * TAU / 5.0) + randf() * 0.5  # Slight randomness
+		var distance := SWARM_SPREAD * (0.7 + randf() * 0.6)  # 42-78 pixels from center
+		spawn_pos = base_pos + Vector2(cos(angle), sin(angle)) * distance
 
 	# Create spawn alert indicator
 	if spawn_alert_scene:

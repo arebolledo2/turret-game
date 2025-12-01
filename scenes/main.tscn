@@ -1,12 +1,15 @@
 [gd_scene load_steps=11 format=3 uid="uid://dq8n5xwlavh4s"]
 
 [ext_resource type="PackedScene" uid="uid://c8yqvh3xwn5n5" path="res://scenes/player.tscn" id="1_1a2b3"]
+[ext_resource type="Script" path="res://scripts/arena_setup.gd" id="1_arena_setup"]
+[ext_resource type="Script" path="res://scripts/camera_setup.gd" id="1_camera_setup"]
 [ext_resource type="Script" path="res://scripts/game_manager.gd" id="2_2c3d4"]
 [ext_resource type="Script" path="res://scripts/enemy_spawner.gd" id="3_3e4f5"]
 [ext_resource type="PackedScene" uid="uid://bq5n7xwk8vh3r" path="res://scenes/enemy.tscn" id="4_4g5h6"]
 [ext_resource type="PackedScene" uid="uid://spawn_alert_001" path="res://scenes/spawn_alert.tscn" id="4_spawn_alert"]
 [ext_resource type="Script" path="res://scripts/turret_manager.gd" id="5_turret_mgr"]
 [ext_resource type="Script" path="res://scripts/drop_spawner.gd" id="6_drop_spawner"]
+[ext_resource type="Script" path="res://scripts/tech_drop_spawner.gd" id="6_tech_drop_spawner"]
 [ext_resource type="PackedScene" uid="uid://hud_scene_001" path="res://scenes/ui/hud.tscn" id="7_hud"]
 [ext_resource type="Script" path="res://scripts/shop_manager.gd" id="8_shop_mgr"]
 [ext_resource type="PackedScene" uid="uid://shop_screen_001" path="res://scenes/ui/shop_screen.tscn" id="9_shop_screen"]
@@ -14,19 +17,20 @@
 [node name="Main" type="Node2D"]
 
 [node name="Arena" type="Node2D" parent="."]
+script = ExtResource("1_arena_setup")
 
 [node name="Ground" type="ColorRect" parent="Arena"]
-offset_left = -960.0
-offset_top = -540.0
-offset_right = 960.0
-offset_bottom = 540.0
+offset_left = -700.0
+offset_top = -450.0
+offset_right = 700.0
+offset_bottom = 450.0
 color = Color(0.12, 0.15, 0.12, 1)
 
 [node name="Boundary" type="ColorRect" parent="Arena"]
-offset_left = -970.0
-offset_top = -550.0
-offset_right = 970.0
-offset_bottom = 550.0
+offset_left = -710.0
+offset_top = -460.0
+offset_right = 710.0
+offset_bottom = 460.0
 color = Color(0.3, 0.35, 0.3, 1)
 z_index = -1
 
@@ -36,15 +40,14 @@ z_index = -1
 
 [node name="DropContainer" type="Node2D" parent="."]
 
+[node name="TechDropContainer" type="Node2D" parent="."]
+
 [node name="Player" parent="." instance=ExtResource("1_1a2b3")]
 position = Vector2(0, 0)
 
 [node name="Camera2D" type="Camera2D" parent="Player"]
+script = ExtResource("1_camera_setup")
 zoom = Vector2(1.5, 1.5)
-limit_left = -1010
-limit_top = -590
-limit_right = 1010
-limit_bottom = 590
 limit_smoothed = true
 position_smoothing_enabled = true
 position_smoothing_speed = 8.0
@@ -62,6 +65,9 @@ script = ExtResource("5_turret_mgr")
 
 [node name="DropSpawner" type="Node" parent="."]
 script = ExtResource("6_drop_spawner")
+
+[node name="TechDropSpawner" type="Node2D" parent="."]
+script = ExtResource("6_tech_drop_spawner")
 
 [node name="ShopManager" type="Node" parent="."]
 script = ExtResource("8_shop_mgr")

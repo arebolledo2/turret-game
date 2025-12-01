@@ -9,11 +9,13 @@ var pause_timer: float = 0.0
 
 var enemy_spawner: Node2D
 var turret_manager: Node
+var tech_drop_spawner: Node2D
 
 func _ready() -> void:
 	# Get node references (siblings in scene tree)
 	enemy_spawner = get_node_or_null("../EnemySpawner")
 	turret_manager = get_node_or_null("../TurretManager")
+	tech_drop_spawner = get_node_or_null("../TechDropSpawner")
 	
 	# Connect to player death
 	Events.player_died.connect(_on_player_died)
@@ -71,13 +73,17 @@ func process_announcement(delta: float) -> void:
 func start_combat() -> void:
 	current_state = GameState.COMBAT
 	wave_timer = Globals.get_wave_duration(Globals.current_wave)
-	
+
 	Events.hide_wave_announcement.emit()
 	Events.wave_started.emit(Globals.current_wave)
-	
+
 	# Start enemy spawning
 	if enemy_spawner:
 		enemy_spawner.start_spawning(Globals.current_wave)
+
+	# Start tech drop spawning
+	if tech_drop_spawner and tech_drop_spawner.has_method("start_spawning"):
+		tech_drop_spawner.start_spawning(Globals.current_wave)
 
 func process_combat(delta: float) -> void:
 	wave_timer -= delta
@@ -93,11 +99,15 @@ func process_combat(delta: float) -> void:
 func end_wave() -> void:
 	current_state = GameState.WAVE_END
 	pause_timer = Globals.BETWEEN_WAVE_PAUSE
-	
+
 	# Stop spawning
 	if enemy_spawner:
 		enemy_spawner.stop_spawning()
-	
+
+	# Stop tech drop spawning
+	if tech_drop_spawner and tech_drop_spawner.has_method("stop_spawning"):
+		tech_drop_spawner.stop_spawning()
+
 	Events.wave_ended.emit(Globals.current_wave)
 	
 	# Check for victory
@@ -143,12 +153,16 @@ func reset_wave_state() -> void:
 	for enemy in enemies:
 		if is_instance_valid(enemy):
 			enemy.queue_free()
-	
+
+	# Clear all tech drops (despawn with no rewards)
+	if tech_drop_spawner and tech_drop_spawner.has_method("clear_all_drops"):
+		tech_drop_spawner.clear_all_drops()
+
 	# Reset player health
 	var player = get_tree().get_first_node_in_group("player")
 	if player and player.has_method("reset_health"):
 		player.reset_health()
-	
+
 	# Turrets maintain their positions between waves
 
 func trigger_victory() -> void:
@@ -159,11 +173,15 @@ func trigger_victory() -> void:
 func _on_player_died() -> void:
 	current_state = GameState.GAME_OVER
 	Globals.is_game_active = false
-	
+
 	# Stop spawning
 	if enemy_spawner:
 		enemy_spawner.stop_spawning()
-	
+
+	# Stop tech drop spawning
+	if tech_drop_spawner and tech_drop_spawner.has_method("stop_spawning"):
+		tech_drop_spawner.stop_spawning()
+
 	Events.game_over.emit(false)
 
 func restart_game() -> void:

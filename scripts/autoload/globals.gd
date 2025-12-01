@@ -19,7 +19,7 @@ const DIFFICULTY_CONFIG: Dictionary = {
 		"enemy_damage_mult": 1.0,
 		"enemy_count_mult": 1.0,
 		"enemy_hp_scale_per_wave": 1.10,   # 10% per wave
-		"enemy_speed_scale_per_wave": 1.03, # 3% per wave
+		"enemy_speed_scale_per_wave": 1.0,  # No speed scaling
 		"player_health_mult": 1.0,
 		"turret_damage_mult": 1.0,
 	},
@@ -27,11 +27,11 @@ const DIFFICULTY_CONFIG: Dictionary = {
 		"name": "Medium",
 		"description": "Balanced challenge",
 		"enemy_health_mult": 1.25,
-		"enemy_speed_mult": 1.1,
+		"enemy_speed_mult": 1.0,
 		"enemy_damage_mult": 1.2,
 		"enemy_count_mult": 1.2,
 		"enemy_hp_scale_per_wave": 1.12,   # 12% per wave
-		"enemy_speed_scale_per_wave": 1.04, # 4% per wave
+		"enemy_speed_scale_per_wave": 1.0,  # No speed scaling
 		"player_health_mult": 1.0,
 		"turret_damage_mult": 1.0,
 	},
@@ -39,11 +39,11 @@ const DIFFICULTY_CONFIG: Dictionary = {
 		"name": "Hard",
 		"description": "For experienced survivors",
 		"enemy_health_mult": 1.5,
-		"enemy_speed_mult": 1.2,
+		"enemy_speed_mult": 1.0,
 		"enemy_damage_mult": 1.5,
 		"enemy_count_mult": 1.4,
 		"enemy_hp_scale_per_wave": 1.15,   # 15% per wave
-		"enemy_speed_scale_per_wave": 1.05, # 5% per wave
+		"enemy_speed_scale_per_wave": 1.0,  # No speed scaling
 		"player_health_mult": 0.8,          # 20% less health
 		"turret_damage_mult": 0.9,          # 10% less turret damage
 	},
@@ -85,14 +85,14 @@ const ENEMY_TYPES: Dictionary = {
 		"sprite_folder": "res://assets/sprites/enemy_tiny",
 		"base_stats": {
 			"health": 15.0,
-			"speed": 120.0,
+			"speed": 90.0,
 			"contact_damage": 15.0,
 			"xp_value": 5,
 			"scale": 1.0,
 		},
 		"spawn_weight": 80,
 		"min_wave": 1,
-		"spawn_count": 2,  # Spawns in pairs
+		"spawn_count": 4,  # Spawns in swarms of 4
 	},
 	"basic": {
 		"name": "Robot Grunt",
@@ -102,13 +102,14 @@ const ENEMY_TYPES: Dictionary = {
 		"sprite_folder": "res://assets/sprites/enemy_tiny",  # TODO: Replace with 64px sprites
 		"base_stats": {
 			"health": 30.0,
-			"speed": 100.0,
+			"speed": 75.0,
 			"contact_damage": 33.0,
 			"xp_value": 10,
 			"scale": 1.5,  # Scale up the tiny sprite for now
 		},
 		"spawn_weight": 100,
 		"min_wave": 1,
+		"spawn_count": 3,  # Spawns in groups of 3
 	},
 	"fast": {
 		"name": "Scout Bot",
@@ -119,13 +120,14 @@ const ENEMY_TYPES: Dictionary = {
 		"color_tint": Color(0.6, 0.9, 1.0),  # Light blue tint
 		"base_stats": {
 			"health": 15.0,
-			"speed": 170.0,
+			"speed": 130.0,
 			"contact_damage": 20.0,
 			"xp_value": 8,
 			"scale": 1.2,
 		},
 		"spawn_weight": 60,
 		"min_wave": 2,
+		"spawn_count": 5,  # Spawns in large swarms
 	},
 	"tank": {
 		"name": "Heavy Bot",
@@ -136,7 +138,7 @@ const ENEMY_TYPES: Dictionary = {
 		"color_tint": Color(0.8, 0.5, 0.3),  # Brown/rust tint
 		"base_stats": {
 			"health": 120.0,
-			"speed": 55.0,
+			"speed": 40.0,
 			"contact_damage": 50.0,
 			"xp_value": 25,
 			"scale": 2.0,  # Much bigger
@@ -153,7 +155,7 @@ const ENEMY_TYPES: Dictionary = {
 		"color_tint": Color(1.0, 0.4, 0.2),  # Orange/red tint
 		"base_stats": {
 			"health": 20.0,
-			"speed": 120.0,
+			"speed": 90.0,
 			"contact_damage": 25.0,
 			"xp_value": 15,
 			"scale": 1.3,
@@ -162,24 +164,7 @@ const ENEMY_TYPES: Dictionary = {
 		},
 		"spawn_weight": 25,
 		"min_wave": 4,
-	},
-	"swarm": {
-		"name": "Mini Bot",
-		"icon": "🐜",
-		"description": "Tiny but spawns in groups.",
-		"behaviors": [EnemyBehavior.CHASE, EnemyBehavior.SWARM],
-		"sprite_folder": "res://assets/sprites/enemy_tiny",
-		"color_tint": Color(0.7, 1.0, 0.7),  # Light green tint
-		"base_stats": {
-			"health": 8.0,
-			"speed": 135.0,
-			"contact_damage": 10.0,
-			"xp_value": 3,
-			"scale": 0.5,
-		},
-		"spawn_weight": 40,
-		"min_wave": 2,
-		"spawn_count": 3,  # Spawns multiple at once
+		"spawn_count": 3,  # Spawns in groups of 3
 	},
 }
 
@@ -641,6 +626,19 @@ const TURRET_BASE_PRICES: Dictionary = {
 }
 
 const WAVE_PRICE_SCALE: float = 0.15
+
+# =============================================================================
+# TECH DROP SYSTEM
+# =============================================================================
+
+# Tech Drop Constants
+const TECH_DROP_SPAWN_INTERVAL: float = 5.0
+const TECH_DROP_SPAWN_CHANCE: float = 0.20
+const TECH_DROP_BASE_HEALTH: float = 60.0  # 50% of tank enemy (120 * 0.5)
+const TECH_DROP_XP_REWARD: int = 100  # Total XP (split across drops)
+const TECH_DROP_GOLD_REWARD: int = 25  # Total gold (split across drops)
+const TECH_DROP_SCATTER_COUNT: int = 5  # XP drops spawned on destruction
+const TECH_DROP_SCATTER_RADIUS: float = 80.0  # Scatter radius
 
 # =============================================================================
 # HELPER FUNCTIONS
