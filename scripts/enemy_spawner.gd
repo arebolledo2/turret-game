@@ -10,7 +10,6 @@ var enemies_spawned: int = 0
 var current_wave: int = 0
 var is_spawning: bool = false
 var wave_duration: float = 0.0
-var wave_elapsed: float = 0.0
 
 # Enemy type spawning stats
 var enemies_spawned_by_type: Dictionary = {}  # Track spawns per type
@@ -60,7 +59,6 @@ func start_spawning(wave: int) -> void:
 	enemies_to_spawn = Globals.get_wave_enemy_count(wave)
 	enemies_spawned = 0
 	wave_duration = Globals.get_wave_duration(wave)
-	wave_elapsed = 0.0
 	enemies_spawned_by_type.clear()
 	is_spawning = true
 
@@ -75,66 +73,43 @@ func stop_spawning() -> void:
 	is_spawning = false
 	spawn_timer.stop()
 	enemies_to_spawn = 0
-	wave_elapsed = 0.0
 
-func _process(delta: float) -> void:
-	if is_spawning:
-		wave_elapsed += delta
-		# Dynamically update spawn interval as wave progresses
-		_update_spawn_interval()
-
-func _update_spawn_interval() -> void:
-	if wave_duration <= 0:
+func update_spawn_rate(wave_time_remaining: float) -> void:
+	"""Called by game manager to update spawn rate based on wave progress."""
+	if not is_spawning or wave_duration <= 0:
 		return
 
-	var remaining_enemies: int = enemies_to_spawn - enemies_spawned
-	if remaining_enemies <= 0:
-		return
-
-	# Progress from 0 to 1 throughout the wave
+	# Calculate progress: starts at 0 (beginning) and goes to 1 (end)
+	var wave_elapsed := wave_duration - wave_time_remaining
 	var progress := clampf(wave_elapsed / wave_duration, 0.0, 1.0)
 
 	# Ramping spawn rate: starts slow, ends fast
-	# At progress 0: spawn at 0.5x the "even" rate (slower start)
-	# At progress 1: spawn at 2.0x the "even" rate (fast finish)
-	var rate_multiplier := 0.5 + (progress * 1.5)
+	# At progress 0: spawn slower (3.0s interval)
+	# At progress 1: spawn faster (0.15s interval)
+	# Linear interpolation from slow to fast
+	var spawn_interval: float = lerpf(3.0, 0.15, progress)
 
-	# Calculate the "even" interval to spawn all enemies over the full wave duration
-	# This gives us a baseline - if we spawned evenly, each enemy gets this much time
-	var even_interval: float = wave_duration / float(enemies_to_spawn)
+	# Update the spawn timer
+	spawn_timer.wait_time = spawn_interval
 
-	# Apply the ramping multiplier
-	var adjusted_interval := even_interval / rate_multiplier
-
-	# Safety: as we approach the end, spawn faster to ensure completion
-	var remaining_time: float = wave_duration - wave_elapsed
-	if remaining_time > 0 and remaining_enemies > 0:
-		# Calculate the max interval we can use to finish on time (with 10% buffer)
-		var max_safe_interval := (remaining_time * 0.9) / float(remaining_enemies)
-		adjusted_interval = minf(adjusted_interval, max_safe_interval)
-
-	# Clamp to reasonable values (min 0.15s, max 3.0s)
-	spawn_timer.wait_time = clampf(adjusted_interval, 0.15, 3.0)
+func _update_spawn_interval() -> void:
+	"""Initialize spawn interval at wave start."""
+	spawn_timer.wait_time = 3.0  # Start slow
 
 func _on_spawn_timer_timeout() -> void:
-	if not is_spawning or enemies_to_spawn <= 0 or enemies_spawned >= enemies_to_spawn:
+	if not is_spawning:
 		return
 
 	_spawn_random_enemy()
 
 func _spawn_random_enemy() -> void:
 	"""Select a random enemy type and spawn it (possibly multiple for swarm types)."""
-	if enemies_spawned >= enemies_to_spawn:
-		return
-
 	# Select random enemy type based on wave and weights
 	var enemy_type := Globals.select_random_enemy_type(current_wave)
 	var spawn_count := Globals.get_enemy_spawn_count(enemy_type)
 
 	# Spawn the enemy (or multiple for swarm types)
 	for i in range(spawn_count):
-		if enemies_spawned >= enemies_to_spawn:
-			break
 		spawn_enemy(enemy_type)
 		enemies_spawned += 1
 

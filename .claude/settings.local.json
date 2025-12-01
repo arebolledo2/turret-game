@@ -9,7 +9,8 @@
       "Bash(start:*)",
       "Bash(timeout /t 5 /nobreak)",
       "Bash(Select-String -Pattern \"(passed|failed|Totals)\" -Context 0,2)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(godot --headless --path . -d -s addons/gut/gut_cmdln.gd:*)"
     ],
     "deny": [],
     "ask": []

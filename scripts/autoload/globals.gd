@@ -595,7 +595,7 @@ var ENEMY_CONTACT_DAMAGE: float:
 # Wave Timing
 const WAVE_ANNOUNCEMENT_TIME: float = 1.5
 const TURRET_SPAWN_TIME: float = 0.5
-const BETWEEN_WAVE_PAUSE: float = 2.0
+const BETWEEN_WAVE_PAUSE: float = 0.5
 const WAVE_BASE_DURATION: float = 20.0  # wave 1
 const WAVE_DURATION_INCREMENT: float = 4.0  # per wave
 const WAVE_BASE_ENEMY_COUNT: int = 10
