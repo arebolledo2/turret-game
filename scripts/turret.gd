@@ -375,9 +375,6 @@ func play_spawn_animation() -> void:
 	# spawn_particles()
 
 func _on_range_toggled(show_ranges: bool) -> void:
-	# Don't override pickup indicator if active
-	if is_in_pickup_range:
-		return
 	if show_ranges:
 		show_range()
 	else:
@@ -393,18 +390,19 @@ func hide_range() -> void:
 
 func show_pickup_indicator() -> void:
 	is_in_pickup_range = true
-	if range_indicator:
-		# Set to pickup range and blue color
-		if range_indicator.has_method("set_radius"):
-			range_indicator.set_radius(Globals.TURRET_PICKUP_RANGE)
-		range_indicator.modulate = Color(0.5, 0.8, 1.0, Globals.TURRET_IN_RANGE_INDICATOR_ALPHA)
+	# Brighten the turret sprites to indicate it's in pickup range
+	if base_sprite:
+		base_sprite.modulate = base_sprite.modulate.lightened(0.4)
+	if weapon_sprite:
+		weapon_sprite.modulate = weapon_sprite.modulate.lightened(0.4)
 
 func hide_pickup_indicator() -> void:
 	is_in_pickup_range = false
-	if range_indicator:
-		# Reset to attack range and hide
-		if range_indicator.has_method("set_radius"):
-			range_indicator.set_radius(current_range)
-		range_indicator.modulate = Globals.get_turret_color(turret_type)
-		range_indicator.modulate.a = 0.0
+	# Reset sprites to normal brightness
+	var color = Globals.get_turret_color(turret_type)
+	if base_sprite:
+		base_sprite.modulate = color
+		base_sprite.modulate.v = 0.4  # Darken the base (same as setup_visuals)
+	if weapon_sprite:
+		weapon_sprite.modulate = Color.WHITE
 

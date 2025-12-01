@@ -85,7 +85,7 @@ const ENEMY_TYPES: Dictionary = {
 		"sprite_folder": "res://assets/sprites/enemy_tiny",
 		"base_stats": {
 			"health": 15.0,
-			"speed": 180.0,
+			"speed": 120.0,
 			"contact_damage": 15.0,
 			"xp_value": 5,
 			"scale": 1.0,
@@ -102,7 +102,7 @@ const ENEMY_TYPES: Dictionary = {
 		"sprite_folder": "res://assets/sprites/enemy_tiny",  # TODO: Replace with 64px sprites
 		"base_stats": {
 			"health": 30.0,
-			"speed": 150.0,
+			"speed": 100.0,
 			"contact_damage": 33.0,
 			"xp_value": 10,
 			"scale": 1.5,  # Scale up the tiny sprite for now
@@ -119,7 +119,7 @@ const ENEMY_TYPES: Dictionary = {
 		"color_tint": Color(0.6, 0.9, 1.0),  # Light blue tint
 		"base_stats": {
 			"health": 15.0,
-			"speed": 250.0,
+			"speed": 170.0,
 			"contact_damage": 20.0,
 			"xp_value": 8,
 			"scale": 1.2,
@@ -136,7 +136,7 @@ const ENEMY_TYPES: Dictionary = {
 		"color_tint": Color(0.8, 0.5, 0.3),  # Brown/rust tint
 		"base_stats": {
 			"health": 120.0,
-			"speed": 80.0,
+			"speed": 55.0,
 			"contact_damage": 50.0,
 			"xp_value": 25,
 			"scale": 2.0,  # Much bigger
@@ -153,7 +153,7 @@ const ENEMY_TYPES: Dictionary = {
 		"color_tint": Color(1.0, 0.4, 0.2),  # Orange/red tint
 		"base_stats": {
 			"health": 20.0,
-			"speed": 180.0,
+			"speed": 120.0,
 			"contact_damage": 25.0,
 			"xp_value": 15,
 			"scale": 1.3,
@@ -172,7 +172,7 @@ const ENEMY_TYPES: Dictionary = {
 		"color_tint": Color(0.7, 1.0, 0.7),  # Light green tint
 		"base_stats": {
 			"health": 8.0,
-			"speed": 200.0,
+			"speed": 135.0,
 			"contact_damage": 10.0,
 			"xp_value": 3,
 			"scale": 0.5,
@@ -204,7 +204,7 @@ const TURRET_TYPES: Dictionary = {
 		"base_stats": {
 			"damage": 15.0,
 			"fire_rate": 2.0,
-			"range": 400.0,
+			"range": 250.0,
 			"rotation_speed": 300.0,
 			"projectile_speed": 700.0,
 			"pierce": 0,
@@ -220,7 +220,7 @@ const TURRET_TYPES: Dictionary = {
 		"base_stats": {
 			"damage": 45.0,
 			"fire_rate": 0.5,
-			"range": 800.0,
+			"range": 500.0,
 			"rotation_speed": 120.0,
 		}
 	},
@@ -233,7 +233,7 @@ const TURRET_TYPES: Dictionary = {
 		"base_stats": {
 			"damage": 8.0,
 			"fire_rate": 2.5,
-			"range": 350.0,
+			"range": 220.0,
 			"rotation_speed": 300.0,
 			"projectile_speed": 600.0,
 			"pierce": 99,  # Effectively infinite - passes through enemies
@@ -252,7 +252,7 @@ const TURRET_TYPES: Dictionary = {
 		"base_stats": {
 			"damage": 20.0,
 			"fire_rate": 1.0,
-			"range": 450.0,
+			"range": 280.0,
 			"rotation_speed": 280.0,
 			"projectile_speed": 550.0,
 			"pierce": 0,  # Explodes on first enemy
@@ -268,7 +268,7 @@ const TURRET_TYPES: Dictionary = {
 		"base_stats": {
 			"damage": 12.0,
 			"fire_rate": 1.5,  # Pulse interval
-			"range": 200.0,  # Pulse radius
+			"range": 150.0,  # Pulse radius
 			"rotation_speed": 0.0,  # Doesn't rotate
 		}
 	},
@@ -281,10 +281,10 @@ const TURRET_TYPES: Dictionary = {
 		"base_stats": {
 			"damage": 18.0,
 			"fire_rate": 1.2,
-			"range": 350.0,
+			"range": 220.0,
 			"rotation_speed": 200.0,
 			"chain_count": 3,
-			"chain_range": 150.0,
+			"chain_range": 120.0,
 			"chain_decay": 0.7,
 		}
 	},
@@ -540,13 +540,13 @@ func get_difficulty_name() -> String:
 # =============================================================================
 # GAME CONSTANTS (Base values - modified by difficulty)
 # =============================================================================
-const ARENA_WIDTH: int = 1920
-const ARENA_HEIGHT: int = 1080
+const ARENA_WIDTH: int = 1400
+const ARENA_HEIGHT: int = 900
 const MAX_WAVES: int = 10
 
 # Player Constants
 const PLAYER_BASE_MAX_HEALTH: float = 100.0
-const PLAYER_SPEED: float = 300.0
+const PLAYER_SPEED: float = 200.0
 const PLAYER_PICKUP_RADIUS: float = 50.0
 const PLAYER_INVINCIBILITY_TIME: float = 0.5
 const PLAYER_WEAPON_DAMAGE: float = 5.0
@@ -579,7 +579,7 @@ var TURRET_DAMAGE: float:
 
 # Enemy Base Constants (Wave 1)
 const ENEMY_BASE_HEALTH: float = 30.0
-const ENEMY_BASE_SPEED: float = 150.0
+const ENEMY_BASE_SPEED: float = 100.0
 const ENEMY_BASE_CONTACT_DAMAGE: float = 33.0
 
 # Computed enemy scaling factors

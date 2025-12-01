@@ -69,25 +69,60 @@ func test_wave_starts_at_1_after_selection():
 	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
 	await get_tree().process_frame
 	
-	assert_eq(Globals.current_wave, 1, "First wave should be wave 1")
+	# Wave starts at 0, increments to 1 when wave announcement starts (after shop)
+	# At this point we're in shop phase, wave is still 0
+	assert_eq(Globals.current_wave, 0, "Wave should be 0 during initial shop phase")
 
 
 # =============================================================================
-# WAVE ANNOUNCEMENT TESTS
+# SHOP PHASE TESTS
 # =============================================================================
 
-func test_game_enters_wave_announcement():
+func test_game_enters_shop_after_difficulty():
 	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
 	await get_tree().process_frame
 	
-	assert_eq(game_manager.current_state, game_manager.GameState.WAVE_ANNOUNCEMENT,
-		"Should enter WAVE_ANNOUNCEMENT after difficulty selected")
+	assert_eq(game_manager.current_state, game_manager.GameState.SHOP,
+		"Should enter SHOP after difficulty selected")
 
 
-func test_wave_announcement_signal_emitted():
+func test_shop_opened_signal_emitted():
 	watch_signals(Events)
 	
 	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	await get_tree().process_frame
+	
+	assert_signal_emitted(Events, "shop_opened")
+
+
+# =============================================================================
+# WAVE ANNOUNCEMENT TESTS (after shop closes)
+# =============================================================================
+
+func test_game_enters_wave_announcement_after_shop():
+	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	await get_tree().process_frame
+	
+	# Verify we're in shop state
+	assert_eq(game_manager.current_state, game_manager.GameState.SHOP,
+		"Should be in SHOP after difficulty selected")
+	
+	# Close shop to proceed to wave announcement (call method directly like shop_screen does)
+	game_manager.end_shop_phase()
+	
+	# State should be WAVE_ANNOUNCEMENT immediately after calling end_shop_phase
+	assert_eq(game_manager.current_state, game_manager.GameState.WAVE_ANNOUNCEMENT,
+		"Should enter WAVE_ANNOUNCEMENT after shop closed")
+
+
+func test_wave_announcement_signal_emitted_after_shop():
+	watch_signals(Events)
+	
+	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	await get_tree().process_frame
+	
+	# Close shop to trigger wave announcement
+	game_manager.end_shop_phase()
 	await get_tree().process_frame
 	
 	assert_signal_emitted(Events, "wave_announcement_started")
@@ -100,6 +135,10 @@ func test_wave_announcement_signal_emitted():
 
 func test_combat_starts_after_announcement():
 	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	await get_tree().process_frame
+	
+	# Close shop to proceed to wave announcement
+	game_manager.end_shop_phase()
 	await get_tree().process_frame
 	
 	# Wait for announcement timer to finish (1.5 seconds + buffer)
@@ -119,6 +158,10 @@ func test_wave_started_signal_emitted_during_combat():
 	watch_signals(Events)
 	
 	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	await get_tree().process_frame
+	
+	# Close shop to proceed
+	game_manager.end_shop_phase()
 	
 	# Wait for combat to start
 	var start_time = Time.get_ticks_msec()
@@ -168,9 +211,14 @@ func test_game_deactivates_on_player_death():
 func test_time_survived_increments():
 	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
 	await get_tree().process_frame
+	
+	# Close shop to start the game properly
+	game_manager.end_shop_phase()
+	await get_tree().process_frame
+	
 	Globals.time_survived = 0.0
 	
-	# Process some frames
+	# Process some frames while game is active
 	for i in range(10):
 		await get_tree().process_frame
 	
