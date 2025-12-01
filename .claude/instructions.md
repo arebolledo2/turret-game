@@ -1,43 +1,42 @@
-# Turret Survivor - Claude Instructions
+# Turret Game - Claude Instructions
 
 ## Project Overview
-A wave-based survival game built in **Godot 4.5** using GDScript. The player dodges enemies while auto-spawning turrets provide primary damage. The MVP scope is defined in [doc/00-MVP-IMPLEMENTATION-SPEC.md](doc/00-MVP-IMPLEMENTATION-SPEC.md) (single source of truth for values/constants).
+A wave-based survival tower defense game built in **Godot 4.5** using GDScript. The player dodges enemies in an arena while turrets provide primary damage. Purchase turrets between waves using gold earned from kills.
 
 ## Architecture
 
 ### Signal Bus Pattern (Event-Driven)
-All cross-system communication uses the `Events` autoload ([scripts/autoload/events.gd](scripts/autoload/events.gd)):
+All cross-system communication uses the `Events` autoload ([scripts/events.gd](scripts/events.gd)):
 ```gdscript
 # Emitting events
-Events.enemy_killed.emit(self, global_position)
-Events.xp_dropped.emit(global_position, xp_value)
+Events.enemy_killed.emit(enemy, global_position)
+Events.gold_collected.emit(amount)
 
 # Subscribing in _ready()
 Events.player_damaged.connect(_on_player_damaged)
 ```
 **Never** use direct node references for cross-system communication. Use signals.
 
-### Global Constants ([scripts/autoload/globals.gd](scripts/autoload/globals.gd))
+### Global Constants ([scripts/globals.gd](scripts/globals.gd))
 All game constants and wave scaling formulas live here. **Always** read values from `Globals`:
 ```gdscript
 max_health = Globals.PLAYER_MAX_HEALTH
-var enemy_hp = Globals.get_enemy_health(wave)  # Use helper functions for scaled values
+var stats = Globals.get_turret_stats("fire")  # Use helper functions for stats
 ```
 
 ### Scene Tree Structure
 ```
 Main (main.tscn)
-├── Player, EnemySpawner, TurretManager, DropSpawner, GameManager
+├── Player, EnemySpawner, TurretManager, ShopManager, GameManager
 ├── TurretContainer/  (turrets added here)
 ├── EnemyContainer/   (enemies spawned here)
-├── DropContainer/    (XP drops spawned here)
-└── HUD (CanvasLayer)
+└── HUD (CanvasLayer with DifficultySelect, ShopUI, WaveAnnouncement)
 ```
 
 ### Key Patterns
 
 **Entity Groups**: All entities use groups for querying:
-- `"player"`, `"enemies"`, `"turrets"`, `"pickups"`
+- `"player"`, `"enemies"`, `"turrets"`
 ```gdscript
 var enemies = get_tree().get_nodes_in_group("enemies")
 var player = get_tree().get_first_node_in_group("player")
@@ -65,21 +64,22 @@ if enemy.has_method("initialize"):
     enemy.initialize(current_wave)
 ```
 
-**Settings Flags**: Runtime toggles in `Globals`:
+**Settings**: Runtime toggles in `Globals`:
 - `show_damage_numbers: bool` — Toggle damage number popups
-- `player_auto_attack_enabled: bool` — Player weapon (disabled by default)
+- `show_turret_ranges: bool` — Toggle turret range indicators
 
 ## Game State Flow
-`GameManager` controls state via enum: `IDLE → DIFFICULTY_SELECT → WAVE_ANNOUNCEMENT → COMBAT → WAVE_END → (loop or VICTORY/GAME_OVER)`
+`GameManager` controls state via enum: `IDLE → DIFFICULTY_SELECT → SHOP → WAVE_ANNOUNCEMENT → COMBAT → WAVE_END → (loop or VICTORY/GAME_OVER)`
 
 Game startup:
 1. `show_difficulty_select()` - Player chooses Easy/Medium/Hard
 2. `_on_difficulty_selected()` - Sets `Globals.current_difficulty`, starts game
 
-Wave progression:
-1. `start_wave_announcement()` - Shows UI, spawns turret
-2. `start_combat()` - Starts enemy spawning, wave timer
-3. `end_wave()` - Stops spawning, checks victory (wave 10)
+Wave cycle:
+1. `start_shop()` - Show shop UI, player purchases turrets
+2. `start_wave_announcement()` - Shows wave number (1.5s)
+3. `start_combat()` - Spawns purchased turrets, starts enemy spawning with alerts, wave timer
+4. `end_wave()` - Stops spawning, awards wave bonus gold, checks victory (wave 10)
 
 ### Turret Pickup System
 Players can pick up and reposition turrets:
@@ -88,88 +88,69 @@ Players can pick up and reposition turrets:
 - Press **F** again to place the turret at current position
 - Relevant constants: `TURRET_PICKUP_RANGE`, `TURRET_CARRY_SPEED_PENALTY`
 
+### Shop & Economy System
+Gold-based economy for purchasing turrets:
+- **Starting Gold**: 120 (buy one turret)
+- **Gold per Kill**: 1 gold per enemy
+- **Wave Bonus**: 20 + (wave × 5) gold
+- **Shop Offers**: 4 random turret offers per wave
+- **Reroll**: Costs 5 gold, increments +3 per reroll (max 5 rerolls)
+- **Price Scaling**: Base price × (1 + 0.15 × wave)
+
+Shop manager emits signals: `shop_opened`, `shop_purchase_made`, `shop_rerolled`, `shop_closed`
+
 ### Difficulty System
-Difficulty is configured via `DIFFICULTY_CONFIG` dictionary in [globals.gd](scripts/autoload/globals.gd). Each difficulty defines multipliers for enemy stats, player health, turret damage, and wave scaling. To add a new difficulty:
-```gdscript
-# In globals.gd DIFFICULTY_CONFIG
-Difficulty.NIGHTMARE: {
-    "name": "Nightmare",
-    "enemy_health_mult": 2.0,
-    "enemy_speed_mult": 1.3,
-    # ... other multipliers
-}
-```
+Three difficulty levels with multipliers for enemy/player/turret stats and wave scaling. Configured in `DIFFICULTY_CONFIG` dictionary in [globals.gd](scripts/globals.gd).
 
 ### Turret Type System
-Turrets use a **dual-tag architecture** separating attack style from damage type. See [doc/TurretTypes.md](doc/TurretTypes.md) for full design spec.
+Six turret types defined in `TURRET_TYPES` dictionary ([globals.gd](scripts/globals.gd)):
 
-**Attack Styles** (`Globals.AttackStyle`):
-- `PROJECTILE` — Fires visible projectile
-- `INSTANT` — Hitscan/immediate damage
-- `AOE` — Area damage (pulse or explosion)
-- `CHAIN` — Damage jumps between enemies
-
-**Damage Types** (`Globals.DamageType`):
-- `PHYSICAL`, `FIRE`, `ELECTRIC`, `PLASMA`
-
-**Turret Types** (defined in `TURRET_TYPES` dictionary):
-| Type | Attack Style | Damage Type | Special |
-|------|--------------|-------------|--------|
-| `normal` | projectile | physical | Standard turret |
-| `sniper` | instant | physical | Long range, high damage |
-| `fire` | projectile | fire | DoT, high pierce |
-| `plasma` | projectile, aoe | plasma | Explodes on impact |
-| `shock` | aoe | electric | Pulses damage around turret |
-| `tesla` | instant, chain | electric | Chain lightning |
+| Type | Damage | Range | Fire Rate | Price | Special |
+|------|--------|-------|-----------|-------|---------|
+| `normal` | 10 | 300 | 1.0/s | 80 | Standard projectile |
+| `sniper` | 25 | 500 | 0.5/s | 120 | Instant hit, long range |
+| `fire` | 8 | 250 | 1.2/s | 100 | DoT, pierce 3 |
+| `plasma` | 15 | 350 | 0.8/s | 140 | Explosive AOE |
+| `shock` | 6 | 200 | 2.0/s | 90 | AOE pulse around self |
+| `tesla` | 12 | 400 | 1.0/s | 130 | Chain lightning (3 targets) |
 
 **Working with turret types:**
 ```gdscript
 # Get turret stats (with modifiers applied)
 var stats = Globals.get_turret_stats("fire")
-
-# Check turret capabilities
-if Globals.turret_has_attack_style("tesla", Globals.AttackStyle.CHAIN):
-    # Tesla can chain
+# Returns: {damage, range, fire_rate, projectile_speed, price, shop_weight, ...}
 
 # Set turret type on instantiation
 var turret = turret_scene.instantiate()
 turret.turret_type = "plasma"
 ```
 
-### Modifier System
-Items modify turret stats via filters. Modifiers are stored in `Globals.active_modifiers`:
-```gdscript
-# Add a modifier (+20% fire damage)
-Globals.add_modifier({
-    "id": "fire_boost_1",
-    "stat": "damage",
-    "operation": "multiply",  # or "add"
-    "value": 1.2,
-    "filter": {
-        "damage_type": [Globals.DamageType.FIRE]
-    }
-})
+### Enemy Type System
+Seven enemy types defined in `ENEMY_TYPES` dictionary ([globals.gd](scripts/globals.gd)):
 
-# Remove by ID
-Globals.remove_modifier("fire_boost_1")
+| Type | Base HP | Speed | Damage | Min Wave | Special |
+|------|---------|-------|--------|----------|---------|
+| `tiny_bot` | 15 | 180 | 10 | 1 | Small, spawn in pairs |
+| `robot_grunt` | 30 | 150 | 10 | 1 | Standard enemy |
+| `scout_bot` | 20 | 220 | 8 | 2 | Fast, fragile |
+| `heavy_bot` | 80 | 80 | 20 | 3 | Slow, tanky |
+| `boom_bot` | 25 | 140 | 15 | 4 | Explodes on death |
+| `mini_bot` | 10 | 160 | 8 | 2 | Tiny, spawn in groups of 3 |
+| `swarm` | varies | varies | varies | varies | Multiple variants |
 
-# Clear all
-Globals.clear_modifiers()
-```
-
-Filter options: `damage_type`, `attack_style`, `turret_type` (arrays, OR logic).
+Enemy stats scale per wave: +10% HP, +3% speed. Enemy spawner shows visual alerts before spawning.
 
 ### Status Effect System
-DoT effects are tracked on enemies via [scripts/status_effect.gd](scripts/status_effect.gd):
+DoT effects (from fire turrets) are tracked on enemies via [scripts/status_effect.gd](scripts/status_effect.gd):
 ```gdscript
 # Apply burning to an enemy
-enemy.apply_status_effect(Globals.DamageType.FIRE, dot_damage, duration, tick_rate)
+enemy.apply_status_effect("fire", dot_damage, duration)
 
 # Check if enemy has effect
-if enemy.has_status_effect(Globals.DamageType.FIRE):
+if enemy.has_status_effect("fire"):
     # Enemy is burning
 ```
-Stacking rule: Strongest DoT per damage type wins, duration refreshes.
+Stacking rule: Strongest DoT per type wins, duration refreshes.
 
 ## Developer Workflow
 
@@ -221,20 +202,21 @@ When creating commits, use concise, one-line messages that begin with a single e
 ### Key Files to Modify
 | Feature | Files |
 |---------|-------|
-| Game balance | [scripts/autoload/globals.gd](scripts/autoload/globals.gd), [doc/00-MVP-IMPLEMENTATION-SPEC.md](doc/00-MVP-IMPLEMENTATION-SPEC.md) |
-| Turret types/stats | [scripts/autoload/globals.gd](scripts/autoload/globals.gd) (`TURRET_TYPES`), [doc/TurretTypes.md](doc/TurretTypes.md) |
-| New enemy types | [scripts/enemy.gd](scripts/enemy.gd), [scenes/enemy.tscn](scenes/enemy.tscn) |
+| Game balance | [scripts/globals.gd](scripts/globals.gd) (constants and type dictionaries) |
+| Turret types/stats | [scripts/globals.gd](scripts/globals.gd) (`TURRET_TYPES`) |
+| Enemy types/stats | [scripts/globals.gd](scripts/globals.gd) (`ENEMY_TYPES`) |
 | Turret behavior | [scripts/turret.gd](scripts/turret.gd), [scenes/turret.tscn](scenes/turret.tscn) |
-| Status effects/DoT | [scripts/status_effect.gd](scripts/status_effect.gd), [scripts/enemy.gd](scripts/enemy.gd) |
-| Projectiles | [scripts/projectile.gd](scripts/projectile.gd) (pierce, AoE, DoT application) |
-| UI changes | [scripts/hud.gd](scripts/hud.gd), [scenes/ui/hud.tscn](scenes/ui/hud.tscn) |
-| Wave behavior | [scripts/game_manager.gd](scripts/game_manager.gd), [scripts/enemy_spawner.gd](scripts/enemy_spawner.gd) |
+| Enemy behavior | [scripts/enemy.gd](scripts/enemy.gd), [scenes/enemy.tscn](scenes/enemy.tscn) |
+| Shop system | [scripts/shop_manager.gd](scripts/shop_manager.gd), [scenes/ui/shop_ui.tscn](scenes/ui/shop_ui.tscn) |
+| Wave spawning | [scripts/game_manager.gd](scripts/game_manager.gd), [scripts/enemy_spawner.gd](scripts/enemy_spawner.gd) |
+| Projectiles | [scripts/projectile.gd](scripts/projectile.gd) (pierce, AOE, DoT) |
+| UI changes | [scripts/hud.gd](scripts/hud.gd), [scenes/ui/](scenes/ui/) |
 
 ### Collision Layers
 - Layer 1: Player
 - Layer 2: Enemy
 - Layer 3: Projectile
-- Layer 4: Pickup
+- Layer 4: Turret (for pickup interaction)
 
 ### Input Actions
 | Action | Keys | Gamepad |
@@ -251,15 +233,21 @@ When creating commits, use concise, one-line messages that begin with a single e
 - Prefer `call_deferred()` for physics-related changes during callbacks
 - Death effects: Scale to zero + fade alpha, then `queue_free()` via tween callback
 
-## Asset Conventions
-Assets are not yet implemented. When adding sprites, audio, or fonts, follow this structure:
+## Visual Style
+- **Theme**: Sci-fi space survival, cute futuristic aesthetic
+- **Perspective**: Side-view 2D (like Binding of Isaac/Brotato)
+- **Mood**: Futuristic, cute, elegant, sleek with cool colors (blues, cyans, silvers)
+- **Detail**: High detail with single-color black outlines, medium shading
+- **Animation**: 2-frame directional sprites for efficiency
+
+Asset organization:
 ```
-assets/
-├── sprites/    # PNG files, use snake_case (e.g., turret_base.png)
-├── audio/      # WAV for SFX, OGG for music
-└── fonts/      # TTF/OTF files
+assets/sprites/
+├── enemy_tiny/          # 8 directional sprites per enemy
+├── player/              # Directional animation frames
+├── turrets/             # Base + weapon layer designs
+└── UI/                  # Icons, panels, overlays
 ```
-Import settings are auto-generated in `.import` files—do not edit these manually.
 
 ## Claude-Specific Guidelines
 
@@ -286,6 +274,3 @@ Use the TodoWrite tool for multi-step tasks to track progress and give visibilit
 - Break down complex features into specific steps
 - Mark tasks as in_progress before starting, completed when done
 - Update the todo list as you discover new requirements
-
-## Post-MVP Reference
-Documents `01-04` in [/doc](doc/) contain the broader vision (shop system, multiple turret types, upgrades). These are **not** in scope for MVP implementation.

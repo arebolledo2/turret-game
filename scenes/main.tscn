@@ -1,9 +1,10 @@
-[gd_scene load_steps=10 format=3 uid="uid://dq8n5xwlavh4s"]
+[gd_scene load_steps=11 format=3 uid="uid://dq8n5xwlavh4s"]
 
 [ext_resource type="PackedScene" uid="uid://c8yqvh3xwn5n5" path="res://scenes/player.tscn" id="1_1a2b3"]
 [ext_resource type="Script" path="res://scripts/game_manager.gd" id="2_2c3d4"]
 [ext_resource type="Script" path="res://scripts/enemy_spawner.gd" id="3_3e4f5"]
 [ext_resource type="PackedScene" uid="uid://bq5n7xwk8vh3r" path="res://scenes/enemy.tscn" id="4_4g5h6"]
+[ext_resource type="PackedScene" uid="uid://spawn_alert_001" path="res://scenes/spawn_alert.tscn" id="4_spawn_alert"]
 [ext_resource type="Script" path="res://scripts/turret_manager.gd" id="5_turret_mgr"]
 [ext_resource type="Script" path="res://scripts/drop_spawner.gd" id="6_drop_spawner"]
 [ext_resource type="PackedScene" uid="uid://hud_scene_001" path="res://scenes/ui/hud.tscn" id="7_hud"]
@@ -54,6 +55,7 @@ script = ExtResource("2_2c3d4")
 [node name="EnemySpawner" type="Node2D" parent="."]
 script = ExtResource("3_3e4f5")
 enemy_scene = ExtResource("4_4g5h6")
+spawn_alert_scene = ExtResource("4_spawn_alert")
 
 [node name="TurretManager" type="Node" parent="."]
 script = ExtResource("5_turret_mgr")
