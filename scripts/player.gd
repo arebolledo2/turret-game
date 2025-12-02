@@ -316,23 +316,26 @@ func _on_fire_timer_timeout() -> void:
 func take_damage(amount: float) -> void:
 	if is_invincible or is_dead:
 		return
-	
+
 	current_health -= amount
 	is_invincible = true
 	invincibility_timer.wait_time = invincibility_time
 	invincibility_timer.start()
-	
+
 	# Visual feedback - flash red
 	sprite.modulate = Color(1, 0.3, 0.3, 1)
-	
+
+	# Defensive pulse - knockback nearby enemies
+	apply_defensive_pulse()
+
 	# Screen shake (if camera exists)
 	var camera = get_node_or_null("Camera2D")
 	if camera and camera.has_method("shake"):
 		camera.shake(0.2, 5)
-	
+
 	# Emit signal
 	Events.player_damaged.emit(current_health, max_health)
-	
+
 	if current_health <= 0:
 		die()
 
@@ -428,6 +431,11 @@ func perform_melee_attack() -> void:
 				enemy.take_damage(melee_damage)
 				hit_count += 1
 
+			# Apply knockback
+			if enemy.has_method("apply_knockback"):
+				var knockback_dir := global_position.direction_to(enemy.global_position)
+				enemy.apply_knockback(Globals.PLAYER_MELEE_KNOCKBACK_FORCE, knockback_dir)
+
 	# Screen shake on successful hit
 	if hit_count > 0:
 		var camera = get_node_or_null("Camera2D")
@@ -518,4 +526,48 @@ func _on_melee_windup_timeout() -> void:
 	"""Called when windup phase completes - execute the attack."""
 	if is_winding_up:
 		perform_melee_attack()
+
+# =============================================================================
+# DEFENSIVE PULSE SYSTEM
+# =============================================================================
+
+func apply_defensive_pulse() -> void:
+	"""Knockback enemies when player takes damage."""
+	var enemies = get_tree().get_nodes_in_group("enemies")
+	var pulse_radius: float = Globals.PLAYER_DEFENSIVE_PULSE_RADIUS
+	var pulse_force: float = Globals.PLAYER_DEFENSIVE_PULSE_KNOCKBACK_FORCE
+
+	for enemy in enemies:
+		if not is_instance_valid(enemy):
+			continue
+
+		var distance := global_position.distance_to(enemy.global_position)
+		if distance <= pulse_radius:
+			if enemy.has_method("apply_knockback"):
+				var knockback_dir := global_position.direction_to(enemy.global_position)
+				enemy.apply_knockback(pulse_force, knockback_dir)
+
+	# Visual feedback - pulse ring
+	spawn_defensive_pulse_visual()
+
+func spawn_defensive_pulse_visual() -> void:
+	"""Create visual effect for defensive pulse."""
+	var viz = Polygon2D.new()
+	var points = PackedVector2Array()
+	var segments = 32
+	for i in range(segments):
+		var angle = i * TAU / float(segments)
+		points.append(Vector2(cos(angle), sin(angle)) * Globals.PLAYER_DEFENSIVE_PULSE_RADIUS)
+	viz.polygon = points
+	viz.color = Color(1.0, 0.8, 0.3)  # Golden defensive color
+	viz.color.a = 0.5
+	viz.global_position = global_position
+
+	get_tree().current_scene.add_child(viz)
+
+	var tween = viz.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(viz, "scale", Vector2.ONE * 1.4, 0.3)
+	tween.tween_property(viz, "modulate:a", 0.0, 0.3)
+	tween.chain().tween_callback(viz.queue_free)
 

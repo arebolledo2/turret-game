@@ -16,6 +16,7 @@ var damage_type: Globals.DamageType = Globals.DamageType.PHYSICAL
 var dot_damage: float = 0.0
 var dot_duration: float = 0.0
 var dot_tick_rate: float = 1.0
+var knockback_force: float = 0.0  # Knockback force for explosions
 var hit_enemies: Array = []  # Track enemies hit (for pierce)
 
 func _ready() -> void:
@@ -48,10 +49,11 @@ func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: G
 	dot_damage = stats.get("dot_damage", 0.0)
 	dot_duration = stats.get("dot_duration", 0.0)
 	dot_tick_rate = stats.get("dot_tick_rate", 1.0)
+	knockback_force = stats.get("knockback_force", 0.0)
 	damage_type = dtype
 	is_player_projectile = from_player
 	is_setup = true
-	
+
 	# Set collision
 	call_deferred("set_collision_layer", 4)  # projectile layer
 	call_deferred("set_collision_mask", 2)   # enemy layer
@@ -92,22 +94,27 @@ func _on_body_entered(body: Node2D) -> void:
 func _do_aoe_explosion() -> void:
 	var enemies = get_tree().get_nodes_in_group("enemies")
 	var explosion_pos = global_position
-	
+
 	Events.aoe_explosion.emit(explosion_pos, aoe_radius, damage)
-	
+
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
 			continue
-		
+
 		var distance = explosion_pos.distance_to(enemy.global_position)
 		if distance <= aoe_radius:
 			if enemy.has_method("take_damage"):
 				enemy.take_damage(damage)
-			
+
 			# Apply DoT to all enemies in AoE
 			if dot_damage > 0 and dot_duration > 0 and enemy.has_method("apply_status_effect"):
 				enemy.apply_status_effect(damage_type, dot_damage, dot_duration, dot_tick_rate)
-	
+
+			# Apply knockback
+			if knockback_force > 0 and enemy.has_method("apply_knockback"):
+				var knockback_dir := explosion_pos.direction_to(enemy.global_position)
+				enemy.apply_knockback(knockback_force, knockback_dir)
+
 	# Visual feedback for explosion (spawn effect or flash)
 	_spawn_explosion_effect()
 

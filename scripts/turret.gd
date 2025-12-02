@@ -231,20 +231,30 @@ func _fire_aoe_pulse() -> void:
 	# Damage all enemies in range
 	var enemies = get_tree().get_nodes_in_group("enemies")
 	var hit_count = 0
-	
+
 	# Visual pulse
 	_spawn_pulse_effect()
-	
+
+	# Get slow parameters if this turret applies slow
+	var slow_intensity: float = stats.get("slow_intensity", 0.0)
+	var slow_duration: float = stats.get("slow_duration", 0.0)
+
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
 			continue
-		
+
 		var dist = global_position.distance_to(enemy.global_position)
 		if dist <= current_range:
 			if enemy.has_method("take_damage"):
 				enemy.take_damage(current_damage)
 				hit_count += 1
-	
+
+			# Apply slow effect if configured
+			if slow_intensity > 0 and slow_duration > 0 and enemy.has_method("apply_status_effect"):
+				var damage_types = Globals.TURRET_TYPES[turret_type].get("damage_types", [])
+				var dtype = damage_types[0] if not damage_types.is_empty() else Globals.DamageType.ELECTRIC
+				enemy.apply_status_effect(dtype, 0.0, slow_duration, 1.0, slow_intensity)
+
 	if hit_count > 0:
 		Events.aoe_explosion.emit(global_position, current_range, current_damage)
 

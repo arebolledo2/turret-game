@@ -1,17 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(where godot)",
-      "Bash(winget install:*)",
-      "Bash(curl:*)",
-      "Bash(powershell:*)",
-      "Bash(dir \"C:\\Users\\AndresRebolledo\\AppData\\Local\\Godot\")",
-      "Bash(start:*)",
-      "Bash(timeout /t 5 /nobreak)",
-      "Bash(Select-String -Pattern \"(passed|failed|Totals)\" -Context 0,2)",
-      "Bash(findstr:*)",
-      "Bash(godot --headless --path . -d -s addons/gut/gut_cmdln.gd:*)",
-      "Bash(cat:*)"
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

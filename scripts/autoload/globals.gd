@@ -89,6 +89,7 @@ const ENEMY_TYPES: Dictionary = {
 			"contact_damage": 33.0,
 			"xp_value": 10,
 			"scale": 1.5,  # Scale up the tiny sprite for now
+			"mass": 1.0,  # Baseline mass for knockback resistance
 		},
 		"spawn_weight": 100,
 		"min_wave": 1,
@@ -107,6 +108,7 @@ const ENEMY_TYPES: Dictionary = {
 			"contact_damage": 20.0,
 			"xp_value": 8,
 			"scale": 1.2,
+			"mass": 0.6,  # Lighter, easier to knock back
 		},
 		"spawn_weight": 60,
 		"min_wave": 2,
@@ -125,6 +127,7 @@ const ENEMY_TYPES: Dictionary = {
 			"contact_damage": 50.0,
 			"xp_value": 25,
 			"scale": 2.0,  # Much bigger
+			"mass": 3.0,  # Very heavy, resistant to knockback
 		},
 		"spawn_weight": 20,
 		"min_wave": 3,
@@ -144,6 +147,7 @@ const ENEMY_TYPES: Dictionary = {
 			"scale": 1.3,
 			"explosion_radius": 100.0,
 			"explosion_damage": 40.0,
+			"mass": 0.8,  # Slightly lighter than baseline
 		},
 		"spawn_weight": 25,
 		"min_wave": 4,
@@ -225,6 +229,7 @@ const TURRET_TYPES: Dictionary = {
 			"projectile_speed": 550.0,
 			"pierce": 0,  # Explodes on first enemy
 			"aoe_radius": 80.0,
+			"knockback_force": 120.0,  # Explosive knockback
 		}
 	},
 	"shock": {
@@ -238,6 +243,8 @@ const TURRET_TYPES: Dictionary = {
 			"fire_rate": 1.5,  # Pulse interval
 			"range": 150.0,  # Pulse radius
 			"rotation_speed": 0.0,  # Doesn't rotate
+			"slow_intensity": 0.25,  # 25% slow (enemy moves at 75% speed)
+			"slow_duration": 0.5,  # Short duration
 		}
 	},
 	"tesla": {
@@ -521,6 +528,14 @@ const PLAYER_WEAPON_DAMAGE: float = 5.0
 const PLAYER_WEAPON_FIRE_RATE: float = 3.0  # shots per second
 const PLAYER_WEAPON_RANGE: float = 200.0
 const PLAYER_PROJECTILE_SPEED: float = 600.0
+
+# Knockback Constants
+const PLAYER_MELEE_KNOCKBACK_FORCE: float = 180.0
+const PLASMA_TURRET_KNOCKBACK_FORCE: float = 120.0
+const PLAYER_DEFENSIVE_PULSE_KNOCKBACK_FORCE: float = 250.0
+const PLAYER_DEFENSIVE_PULSE_RADIUS: float = 120.0
+const KNOCKBACK_DECAY_RATE: float = 8.0  # Per second
+const KNOCKBACK_MIN_VELOCITY: float = 5.0  # Stop when below this
 
 # Computed player values
 var PLAYER_MAX_HEALTH: float:

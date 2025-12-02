@@ -19,6 +19,10 @@ var color_tint: Color = Color.WHITE
 var explosion_radius: float = 0.0
 var explosion_damage: float = 0.0
 
+# Knockback and slow mechanics
+var mass: float = 1.0  # Resistance to knockback
+var knockback_velocity: Vector2 = Vector2.ZERO  # Current knockback impulse
+
 # Directional sprite textures (loaded dynamically from type)
 var sprite_south: Texture2D
 var sprite_north: Texture2D
@@ -62,6 +66,9 @@ func _apply_type_config(type_id: String) -> void:
 	# Load special ability stats
 	explosion_radius = base_stats.get("explosion_radius", 0.0)
 	explosion_damage = base_stats.get("explosion_damage", 0.0)
+
+	# Load knockback resistance
+	mass = base_stats.get("mass", 1.0)
 	
 	# Load color tint
 	color_tint = type_def.get("color_tint", Color.WHITE)
@@ -96,20 +103,29 @@ func _apply_visuals() -> void:
 func _physics_process(delta: float) -> void:
 	if is_dying:
 		return
-		
+
 	# Process status effects
 	_process_status_effects(delta)
-	
+
 	if player == null or not is_instance_valid(player):
 		player = get_tree().get_first_node_in_group("player")
 		if player == null:
 			return
-	
-	# Move towards player (simple chase AI)
+
 	var direction := global_position.direction_to(player.global_position)
-	velocity = direction * speed
+
+	# Apply knockback first (overrides AI movement temporarily)
+	if knockback_velocity.length() > Globals.KNOCKBACK_MIN_VELOCITY:
+		velocity = knockback_velocity
+		knockback_velocity *= (1.0 - Globals.KNOCKBACK_DECAY_RATE * delta)
+	else:
+		knockback_velocity = Vector2.ZERO
+		# Normal AI movement with slow multiplier applied
+		var effective_speed: float = speed * get_movement_speed_multiplier()
+		velocity = direction * effective_speed
+
 	move_and_slide()
-	
+
 	# Update sprite based on movement direction
 	_update_direction_sprite(direction)
 	
@@ -244,33 +260,58 @@ func _process_status_effects(delta: float) -> void:
 		active_effects.erase(dtype)
 		_update_status_visual()
 
-## Apply a status effect (DoT). Uses strongest-per-damage-type logic.
-func apply_status_effect(damage_type: Globals.DamageType, dot_damage: float, dot_duration: float, dot_tick_rate: float = 1.0) -> void:
-	if is_dying or dot_damage <= 0 or dot_duration <= 0:
+## Apply a status effect (DoT and/or slow). Uses strongest-per-damage-type logic.
+func apply_status_effect(damage_type: Globals.DamageType, dot_damage: float, dot_duration: float, dot_tick_rate: float = 1.0, slow_intensity: float = 0.0) -> void:
+	if is_dying or (dot_damage <= 0 and slow_intensity <= 0) or dot_duration <= 0:
 		return
-	
-	var new_effect := StatusEffect.new(damage_type, dot_damage, dot_duration, dot_tick_rate)
-	
+
+	var new_effect := StatusEffect.new(damage_type, dot_damage, dot_duration, dot_tick_rate, slow_intensity)
+
 	if active_effects.has(damage_type):
 		var existing: StatusEffect = active_effects[damage_type]
-		# Refresh with potentially stronger damage
-		existing.refresh(dot_damage, dot_duration)
+		# Refresh with potentially stronger damage/slow
+		existing.refresh(dot_damage, dot_duration, slow_intensity)
 	else:
 		active_effects[damage_type] = new_effect
 		Events.status_effect_applied.emit(self, damage_type)
-	
+
 	_update_status_visual()
+
+## Get movement speed multiplier from status effects (slow)
+func get_movement_speed_multiplier() -> float:
+	var multiplier: float = 1.0
+
+	# Apply strongest slow effect
+	var strongest_slow: float = 0.0
+	for effect in active_effects.values():
+		if effect.slow_intensity > strongest_slow:
+			strongest_slow = effect.slow_intensity
+
+	# Slow intensity reduces speed: 0.3 slow = 0.7x speed
+	if strongest_slow > 0:
+		multiplier *= (1.0 - strongest_slow)
+
+	return multiplier
+
+## Apply knockback impulse
+func apply_knockback(force: float, direction: Vector2) -> void:
+	if is_dying or mass <= 0:
+		return
+
+	# F = ma → a = F/m → velocity (instant impulse)
+	var knockback_magnitude: float = force / mass
+	knockback_velocity = direction.normalized() * knockback_magnitude
 
 ## Take DoT damage (separate from regular damage for potential future differentiation)
 func take_dot_damage(amount: float) -> void:
 	if is_dying:
 		return
-	
+
 	current_health -= amount
-	
+
 	# Emit damage event for damage numbers (could use different color for DoT)
 	Events.dot_damage_dealt.emit(global_position, amount)
-	
+
 	if current_health <= 0:
 		die()
 
