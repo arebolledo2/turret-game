@@ -77,23 +77,6 @@ enum EnemyBehavior { CHASE, RANGED, SWARM, TANK, EXPLOSIVE }
 
 # Enemy type registry - add new enemy types here
 const ENEMY_TYPES: Dictionary = {
-	"tiny": {
-		"name": "Tiny Bot",
-		"icon": "🤖",
-		"description": "Small robot enemy. Quick and numerous.",
-		"behaviors": [EnemyBehavior.CHASE, EnemyBehavior.SWARM],
-		"sprite_folder": "res://assets/sprites/enemy_tiny",
-		"base_stats": {
-			"health": 15.0,
-			"speed": 90.0,
-			"contact_damage": 15.0,
-			"xp_value": 5,
-			"scale": 1.0,
-		},
-		"spawn_weight": 80,
-		"min_wave": 1,
-		"spawn_count": 4,  # Spawns in swarms of 4
-	},
 	"basic": {
 		"name": "Robot Grunt",
 		"icon": "🤖",
