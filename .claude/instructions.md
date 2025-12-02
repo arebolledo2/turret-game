@@ -269,7 +269,6 @@ When referencing files or code locations, always use clickable markdown links:
 
 ### Making Changes
 1. **Avoid over-engineering**: Only make requested changes
-2. **Don't add extras**: No unsolicited refactoring, comments, or "improvements"
 3. **Keep it simple**: Three similar lines > premature abstraction
 4. **Security**: Watch for command injection, XSS, or other vulnerabilities
 5. **Test your changes**: Run tests after significant changes

@@ -31,4 +31,4 @@ z_index = 10
 [node name="MeleeArc" type="Polygon2D" parent="MeleeVisuals"]
 modulate = Color(1, 1, 1, 0)
 color = Color(1, 0.8, 0.2, 1)
-polygon = PackedVector2Array(0, 0, 65, -37.5, 65, 37.5)
+polygon = PackedVector2Array(0, 0, 32.5, -56.3, 45.9, -45.9, 56.3, -32.5, 65, 0, 56.3, 32.5, 45.9, 45.9, 32.5, 56.3)

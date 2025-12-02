@@ -26,6 +26,7 @@ var facing_direction: int = 0  # 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE
 var can_melee: bool = true
 var is_meleeing: bool = false
 var is_winding_up: bool = false
+var melee_target_enemy: Node2D = null  # Track the locked-on target
 var melee_timer: Timer
 var melee_animation_timer: Timer
 var melee_windup_timer: Timer
@@ -390,6 +391,8 @@ func attempt_melee_attack() -> void:
 
 	# Start windup if any enemy is in range
 	if closest_enemy_in_range:
+		# Lock onto this target for the entire attack
+		melee_target_enemy = closest_enemy_in_range
 		# Update facing direction to face the enemy
 		var to_enemy := global_position.direction_to(closest_enemy_in_range.global_position)
 		facing_direction = get_direction_from_vector(to_enemy)
@@ -411,12 +414,28 @@ func perform_melee_attack() -> void:
 	melee_timer.start()
 	melee_animation_timer.start()
 
-	# Calculate attack direction from facing_direction
-	var attack_direction := get_attack_direction_from_facing()
+	# Calculate attack direction - use locked target if still valid
+	var attack_direction := get_current_melee_direction()
 
-	# Visual feedback - attack swing
+	# Visual feedback - attack swing (starts animation)
 	play_melee_swing_animation(attack_direction)
 
+	# Apply damage and knockback immediately as the swing starts
+	apply_melee_damage_and_knockback()
+
+	# Clear the locked target after attack
+	melee_target_enemy = null
+
+func get_current_melee_direction() -> Vector2:
+	"""Get the direction for melee attack, prioritizing locked target."""
+	# If we have a valid locked target, always face it
+	if melee_target_enemy and is_instance_valid(melee_target_enemy):
+		return global_position.direction_to(melee_target_enemy.global_position)
+	# Otherwise fall back to facing direction
+	return get_attack_direction_from_facing()
+
+func apply_melee_damage_and_knockback() -> void:
+	"""Apply damage and knockback to enemies in melee range."""
 	# Detect and damage ALL enemies in melee range (360 degrees for reliability)
 	var enemies = get_tree().get_nodes_in_group("enemies")
 	var hit_count := 0
@@ -478,8 +497,8 @@ func show_melee_windup_indicator() -> void:
 		push_warning("MeleeArc node not found!")
 		return
 
-	# Rotate arc to attack direction
-	var attack_direction := get_attack_direction_from_facing()
+	# Rotate arc to attack direction (using locked target)
+	var attack_direction := get_current_melee_direction()
 	melee_arc.rotation = attack_direction.angle()
 
 	# Make sure arc is visible with starting opacity
