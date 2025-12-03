@@ -174,7 +174,7 @@ const ENEMY_TYPES: Dictionary = {
 			"scale": 1.4,
 			"mass": 1.2,
 		},
-		"spawn_weight": 40,
+		"spawn_weight": 80,
 		"min_wave": 2,
 		"spawn_count": 2,
 	},
