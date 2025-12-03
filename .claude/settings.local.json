@@ -3,7 +3,8 @@
     "allow": [
       "Bash(dir:*)",
       "Bash(powershell -ExecutionPolicy Bypass -File run_tests.ps1)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(powershell:*)"
     ],
     "deny": [],
     "ask": []

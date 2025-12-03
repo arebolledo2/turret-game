@@ -109,29 +109,95 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 		var spacer = Control.new()
 		spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 		vbox.add_child(spacer)
+	elif offer["type"] == "item":
+		create_item_ui(offer, vbox)
 
-		# Price
-		var price_label = Label.new()
-		price_label.text = "%d Gold" % offer["price"]
-		price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		price_label.add_theme_font_size_override("font_size", 16)
-		price_label.add_theme_color_override("font_color", Color.GOLD)
-		vbox.add_child(price_label)
+	# Price (common for both turrets and items)
+	var price_label = Label.new()
+	price_label.text = "%d Gold" % offer["price"]
+	price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	price_label.add_theme_font_size_override("font_size", 16)
+	price_label.add_theme_color_override("font_color", Color.GOLD)
+	vbox.add_child(price_label)
 
-		# Purchase button
-		var button = Button.new()
-		button.process_mode = PROCESS_MODE_ALWAYS  # Allow interaction when paused
-		if offer.get("sold", false):
-			button.text = "SOLD"
+	# Purchase button (common for both turrets and items)
+	var button = Button.new()
+	button.process_mode = PROCESS_MODE_ALWAYS  # Allow interaction when paused
+	if offer.get("sold", false):
+		button.text = "SOLD"
+		button.disabled = true
+	else:
+		button.text = "Purchase"
+		button.pressed.connect(func(): _on_purchase_pressed(index))
+		if Globals.total_gold < offer["price"]:
 			button.disabled = true
-		else:
-			button.text = "Purchase"
-			button.pressed.connect(func(): _on_purchase_pressed(index))
-			if Globals.total_gold < offer["price"]:
-				button.disabled = true
-		vbox.add_child(button)
+	vbox.add_child(button)
 
 	return panel
+
+func create_item_ui(offer: Dictionary, container: VBoxContainer) -> void:
+	var item_id = offer["item_id"]
+	var item_data = Globals.ITEMS[item_id]
+
+	# Icon
+	var icon_label = Label.new()
+	icon_label.text = item_data["icon"]
+	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	icon_label.add_theme_font_size_override("font_size", 48)
+	container.add_child(icon_label)
+
+	# Name with rarity color
+	var name_label = Label.new()
+	name_label.text = item_data["name"]
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.add_theme_font_size_override("font_size", 18)
+	name_label.add_theme_color_override("font_color", Globals.RARITY_COLORS[item_data["rarity"]])
+	container.add_child(name_label)
+
+	# Description
+	var desc_label = Label.new()
+	desc_label.text = item_data["description"]
+	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	desc_label.add_theme_font_size_override("font_size", 12)
+	container.add_child(desc_label)
+
+	# Modifiers display
+	for modifier in item_data["modifiers"]:
+		var mod_label = Label.new()
+		mod_label.text = format_modifier(modifier)
+		mod_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		mod_label.add_theme_font_size_override("font_size", 11)
+		# Green for benefits (value > 1.0 for multiply), red for drawbacks
+		var is_benefit = (modifier["operation"] == "multiply" and modifier["value"] > 1.0) or \
+		                  (modifier["operation"] == "add" and modifier["value"] > 0.0)
+		mod_label.add_theme_color_override("font_color", Color.GREEN if is_benefit else Color.RED)
+		container.add_child(mod_label)
+
+	# Spacer
+	var spacer = Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	container.add_child(spacer)
+
+func format_modifier(modifier: Dictionary) -> String:
+	var stat = modifier["stat"]
+	var operation = modifier["operation"]
+	var value = modifier["value"]
+
+	var stat_name = stat.replace("_", " ").capitalize()
+	var sign_str = "+"
+	var display_value = 0.0
+
+	if operation == "multiply":
+		display_value = (value - 1.0) * 100.0  # Convert to percentage
+		sign_str = "+" if display_value > 0 else ""
+		return "%s%.1f%% %s" % [sign_str, display_value, stat_name]
+	elif operation == "add":
+		display_value = value
+		sign_str = "+" if value > 0 else ""
+		return "%s%.0f %s" % [sign_str, display_value, stat_name]  # Absolute value (no %)
+
+	return ""
 
 func _on_purchase_pressed(index: int) -> void:
 	if shop_manager:

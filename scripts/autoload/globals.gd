@@ -432,6 +432,42 @@ func remove_modifier(modifier_id: String) -> bool:
 func clear_modifiers() -> void:
 	active_modifiers.clear()
 
+# Player stat modifier functions
+func get_player_speed() -> float:
+	var base_speed = PLAYER_SPEED
+	return _apply_modifiers_to_stat(base_speed, "player_speed")
+
+func get_player_max_health() -> float:
+	var base_health = PLAYER_MAX_HEALTH
+	return _apply_modifiers_to_stat(base_health, "player_max_health")
+
+func get_player_weapon_damage() -> float:
+	var base_damage = PLAYER_WEAPON_DAMAGE
+	return _apply_modifiers_to_stat(base_damage, "player_weapon_damage")
+
+func _apply_modifiers_to_stat(base_value: float, stat_name: String) -> float:
+	var add_value: float = 0.0
+	var mult_values: Array[float] = []
+
+	for modifier in active_modifiers:
+		if modifier.get("stat", "") != stat_name:
+			continue
+
+		var operation = modifier.get("operation", "add")
+		var value = modifier.get("value", 0.0)
+
+		if operation == "add":
+			add_value += value
+		elif operation == "multiply":
+			mult_values.append(value)
+
+	# Apply: base + adds, then multiply
+	var result = base_value + add_value
+	for mult in mult_values:
+		result *= mult
+
+	return result
+
 # Get turret color tint
 func get_turret_color(turret_type: String) -> Color:
 	return TURRET_COLORS.get(turret_type, Color.WHITE)
@@ -557,8 +593,71 @@ const RARITY_NAMES: Dictionary = {
 	ItemRarity.UNIQUE: "Unique",
 }
 
-# Collected items array - each item is a Dictionary with: name, description, rarity, icon_path
-var collected_items: Array = []
+# Item definitions - Dictionary keyed by item_id
+const ITEMS: Dictionary = {
+	"swift_boots": {
+		"name": "Swift Boots",
+		"icon": "👟",
+		"description": "Move faster, shoot weaker",
+		"rarity": ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "player_speed", "operation": "multiply", "value": 1.05},
+			{"stat": "damage", "operation": "multiply", "value": 0.97, "filter": {"turret_type": ["all"]}}
+		]
+	},
+	"heavy_ammunition": {
+		"name": "Heavy Ammunition",
+		"icon": "💥",
+		"description": "Powerful rounds, but heavy to carry",
+		"rarity": ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "damage", "operation": "multiply", "value": 1.04, "filter": {"turret_type": ["all"]}},
+			{"stat": "player_max_health", "operation": "add", "value": -5.0}
+		]
+	},
+	"lightweight_frame": {
+		"name": "Lightweight Frame",
+		"icon": "🪶",
+		"description": "Speed at the cost of protection",
+		"rarity": ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "player_speed", "operation": "multiply", "value": 1.03},
+			{"stat": "player_max_health", "operation": "add", "value": -3.0}
+		]
+	},
+	"reinforced_plating": {
+		"name": "Reinforced Plating",
+		"icon": "🛡️",
+		"description": "Sturdy but sluggish",
+		"rarity": ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "player_max_health", "operation": "add", "value": 10.0},
+			{"stat": "player_speed", "operation": "multiply", "value": 0.96}
+		]
+	},
+	"precision_optics": {
+		"name": "Precision Optics",
+		"icon": "🔭",
+		"description": "Better aim, more focus required",
+		"rarity": ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "fire_rate", "operation": "multiply", "value": 1.03, "filter": {"turret_type": ["all"]}},
+			{"stat": "player_speed", "operation": "multiply", "value": 0.98}
+		]
+	}
+}
+
+const ITEM_BASE_PRICES: Dictionary = {
+	ItemRarity.COMMON: 40,
+	ItemRarity.UNCOMMON: 70,
+	ItemRarity.RARE: 110,
+	ItemRarity.EPIC: 160,
+	ItemRarity.LEGENDARY: 240,
+	ItemRarity.UNIQUE: 350,
+}
+
+# Collected items array - stores item_ids of purchased items
+var collected_items: Array[String] = []
 
 # Helper to get current difficulty config
 func get_difficulty_config() -> Dictionary:

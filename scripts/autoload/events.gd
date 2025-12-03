@@ -57,6 +57,9 @@ signal shop_purchase_made(offer: Dictionary)
 signal shop_rerolled(new_offers: Array, cost: int)
 signal shop_insufficient_funds(required: int, current: int)
 
+# Item Events
+signal item_collected(item_data: Dictionary)
+
 # UI Events
 signal show_wave_announcement(wave_number: int)
 signal hide_wave_announcement()

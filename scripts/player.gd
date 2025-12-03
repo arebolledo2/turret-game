@@ -54,15 +54,15 @@ var projectile_scene: PackedScene
 func _ready() -> void:
 	# Initialize from Globals if available
 	if Globals:
-		max_health = Globals.PLAYER_MAX_HEALTH
-		speed = Globals.PLAYER_SPEED
+		max_health = Globals.get_player_max_health()
+		speed = Globals.get_player_speed()
 		pickup_radius = Globals.PLAYER_PICKUP_RADIUS
 		invincibility_time = Globals.PLAYER_INVINCIBILITY_TIME
-		weapon_damage = Globals.PLAYER_WEAPON_DAMAGE
+		weapon_damage = Globals.get_player_weapon_damage()
 		weapon_fire_rate = Globals.PLAYER_WEAPON_FIRE_RATE
 		weapon_range = Globals.PLAYER_WEAPON_RANGE
 		projectile_speed = Globals.PLAYER_PROJECTILE_SPEED
-	
+
 	current_health = max_health
 	add_to_group("player")
 	
