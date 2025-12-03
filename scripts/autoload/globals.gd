@@ -69,7 +69,7 @@ enum AttackStyle { PROJECTILE, INSTANT, AOE, CHAIN }
 enum DamageType { PHYSICAL, FIRE, ELECTRIC, PLASMA }
 
 # Enemy behavior tags - how enemies move/attack
-enum EnemyBehavior { CHASE, RANGED, SWARM, TANK, EXPLOSIVE }
+enum EnemyBehavior { CHASE, RANGED, SWARM, TANK, EXPLOSIVE, WANDER, CHARGE }
 
 # =============================================================================
 # ENEMY TYPE SYSTEM
@@ -152,6 +152,61 @@ const ENEMY_TYPES: Dictionary = {
 		"spawn_weight": 25,
 		"min_wave": 4,
 		"spawn_count": 3,  # Spawns in groups of 3
+	},
+	"lazy_wanderer": {
+		"name": "Lazy Bot",
+		"icon": "😴",
+		"description": "Wanders aimlessly, never chases the player.",
+		"behaviors": [EnemyBehavior.WANDER],
+		"sprite_folder": "res://assets/sprites/enemy_tiny",
+		"color_tint": Color(0.7, 0.7, 0.9),  # Light purple/gray tint
+		"behavior_params": {
+			"wander_pause_min": 1.5,
+			"wander_pause_max": 3.0,
+			"wander_move_min": 2.0,
+			"wander_move_max": 4.0,
+		},
+		"base_stats": {
+			"health": 25.0,
+			"speed": 40.0,
+			"contact_damage": 20.0,
+			"xp_value": 8,
+			"scale": 1.4,
+			"mass": 1.2,
+		},
+		"spawn_weight": 40,
+		"min_wave": 2,
+		"spawn_count": 2,
+	},
+	"charger": {
+		"name": "Charger Bot",
+		"icon": "⚡",
+		"description": "Wanders lazily until player is close, then charges aggressively.",
+		"behaviors": [EnemyBehavior.CHARGE],
+		"sprite_folder": "res://assets/sprites/enemy_tiny",
+		"color_tint": Color(1.0, 0.8, 0.3),  # Yellow/gold tint
+		"behavior_params": {
+			"wander_pause_min": 1.0,
+			"wander_pause_max": 2.0,
+			"wander_move_min": 1.5,
+			"wander_move_max": 2.5,
+			"charge_detect_radius": 200.0,
+			"charge_alert_duration": 0.9,
+			"charge_speed_multiplier": 3.0,
+			"charge_duration": 1.5,
+			"charge_cooldown": 2.5,
+		},
+		"base_stats": {
+			"health": 35.0,
+			"speed": 60.0,
+			"contact_damage": 40.0,
+			"xp_value": 15,
+			"scale": 1.5,
+			"mass": 1.5,
+		},
+		"spawn_weight": 30,
+		"min_wave": 3,
+		"spawn_count": 1,
 	},
 }
 

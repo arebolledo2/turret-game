@@ -41,6 +41,36 @@ var active_effects: Dictionary = {}  # DamageType -> StatusEffect
 var is_dying: bool = false
 var is_initialized: bool = false
 
+# Behavior system state
+var current_behavior: Globals.EnemyBehavior = Globals.EnemyBehavior.CHASE
+var behavior_params: Dictionary = {}
+
+# WANDER behavior state
+var wander_target: Vector2 = Vector2.ZERO
+var wander_timer: float = 0.0
+var is_wandering: bool = false  # true = moving, false = paused
+
+# CHARGE behavior state
+enum ChargeState { IDLE, ALERT, CHARGING, COOLDOWN }
+var charge_state: ChargeState = ChargeState.IDLE
+var charge_timer: float = 0.0
+var charge_target_pos: Vector2 = Vector2.ZERO
+var charge_direction: Vector2 = Vector2.ZERO
+var charge_alert_indicator: Node2D = null
+
+# Default behavior parameters
+const DEFAULT_BEHAVIOR_PARAMS: Dictionary = {
+	"wander_pause_min": 1.5,
+	"wander_pause_max": 3.0,
+	"wander_move_min": 2.0,
+	"wander_move_max": 4.0,
+	"charge_detect_radius": 200.0,
+	"charge_alert_duration": 0.9,
+	"charge_speed_multiplier": 3.0,
+	"charge_duration": 1.5,
+	"charge_cooldown": 2.5,
+}
+
 func _ready() -> void:
 	add_to_group("enemies")
 	player = get_tree().get_first_node_in_group("player")
@@ -69,9 +99,25 @@ func _apply_type_config(type_id: String) -> void:
 
 	# Load knockback resistance
 	mass = base_stats.get("mass", 1.0)
-	
+
 	# Load color tint
 	color_tint = type_def.get("color_tint", Color.WHITE)
+
+	# Load behavior_params
+	behavior_params = type_def.get("behavior_params", {})
+
+	# Determine primary behavior
+	var behaviors: Array = type_def.get("behaviors", [Globals.EnemyBehavior.CHASE])
+	if behaviors.is_empty():
+		current_behavior = Globals.EnemyBehavior.CHASE
+	else:
+		# Priority: CHARGE > WANDER > CHASE
+		if Globals.EnemyBehavior.CHARGE in behaviors:
+			current_behavior = Globals.EnemyBehavior.CHARGE
+		elif Globals.EnemyBehavior.WANDER in behaviors:
+			current_behavior = Globals.EnemyBehavior.WANDER
+		else:
+			current_behavior = behaviors[0]
 	
 	# Load sprites from sprite folder
 	var sprite_folder: String = type_def.get("sprite_folder", "res://assets/sprites/enemy")
@@ -112,7 +158,8 @@ func _physics_process(delta: float) -> void:
 		if player == null:
 			return
 
-	var direction := global_position.direction_to(player.global_position)
+	# Execute behavior to get movement direction
+	var movement_direction: Vector2 = _execute_current_behavior(delta)
 
 	# Apply knockback first (overrides AI movement temporarily)
 	if knockback_velocity.length() > Globals.KNOCKBACK_MIN_VELOCITY:
@@ -120,14 +167,21 @@ func _physics_process(delta: float) -> void:
 		knockback_velocity *= (1.0 - Globals.KNOCKBACK_DECAY_RATE * delta)
 	else:
 		knockback_velocity = Vector2.ZERO
-		# Normal AI movement with slow multiplier applied
+		# Normal AI movement with behavior-based direction
 		var effective_speed: float = speed * get_movement_speed_multiplier()
-		velocity = direction * effective_speed
+
+		# Apply charge speed boost if charging
+		if current_behavior == Globals.EnemyBehavior.CHARGE and charge_state == ChargeState.CHARGING:
+			var charge_mult: float = behavior_params.get("charge_speed_multiplier", DEFAULT_BEHAVIOR_PARAMS["charge_speed_multiplier"])
+			effective_speed *= charge_mult
+
+		velocity = movement_direction.normalized() * effective_speed
 
 	move_and_slide()
 
-	# Update sprite based on movement direction
-	_update_direction_sprite(direction)
+	# Update sprite based on velocity (works for all behaviors)
+	if velocity.length() > 0:
+		_update_direction_sprite(velocity.normalized())
 	
 	# Check for collision with player
 	for i in get_slide_collision_count():
@@ -140,15 +194,15 @@ func _update_direction_sprite(direction: Vector2) -> void:
 	# Get angle and convert to 8-direction
 	var angle := direction.angle()
 	var sprite := $Sprite2D
-	
+
 	# Normalize angle to 0-2PI range
 	if angle < 0:
 		angle += TAU
-	
+
 	# Divide into 8 segments (each 45 degrees = PI/4)
 	# Offset by 22.5 degrees (PI/8) to center segments
 	var segment := int((angle + PI / 8) / (PI / 4)) % 8
-	
+
 	# Map segment to sprite (0 = east, going counter-clockwise)
 	match segment:
 		0: sprite.texture = sprite_east
@@ -159,6 +213,154 @@ func _update_direction_sprite(direction: Vector2) -> void:
 		5: sprite.texture = sprite_south_west
 		6: sprite.texture = sprite_south
 		7: sprite.texture = sprite_south_east
+
+# =============================================================================
+# BEHAVIOR SYSTEM
+# =============================================================================
+
+func _execute_current_behavior(delta: float) -> Vector2:
+	"""Execute the current behavior and return movement direction."""
+	match current_behavior:
+		Globals.EnemyBehavior.CHASE:
+			return _behavior_chase()
+		Globals.EnemyBehavior.WANDER:
+			return _behavior_wander()
+		Globals.EnemyBehavior.CHARGE:
+			return _behavior_charge(delta)
+		_:
+			return _behavior_chase()
+
+func _behavior_chase() -> Vector2:
+	"""Chase behavior - move directly toward player."""
+	if player and is_instance_valid(player):
+		return global_position.direction_to(player.global_position)
+	return Vector2.ZERO
+
+func _behavior_wander() -> Vector2:
+	"""Wander behavior - randomly move anywhere in arena with pauses."""
+	var pause_min: float = behavior_params.get("wander_pause_min", DEFAULT_BEHAVIOR_PARAMS["wander_pause_min"])
+	var pause_max: float = behavior_params.get("wander_pause_max", DEFAULT_BEHAVIOR_PARAMS["wander_pause_max"])
+	var move_min: float = behavior_params.get("wander_move_min", DEFAULT_BEHAVIOR_PARAMS["wander_move_min"])
+	var move_max: float = behavior_params.get("wander_move_max", DEFAULT_BEHAVIOR_PARAMS["wander_move_max"])
+
+	# Initialize on first call
+	if wander_timer == 0:
+		wander_timer = randf_range(pause_min, pause_max)
+		is_wandering = false
+
+	wander_timer -= get_process_delta_time()
+
+	if wander_timer <= 0:
+		is_wandering = not is_wandering
+
+		if is_wandering:
+			# Pick random target anywhere in arena
+			wander_target = _get_random_arena_position()
+			wander_timer = randf_range(move_min, move_max)
+		else:
+			wander_timer = randf_range(pause_min, pause_max)
+
+	# Check if reached target (within 20 pixels)
+	if is_wandering and global_position.distance_to(wander_target) < 20.0:
+		# Reached target early - switch to pause
+		is_wandering = false
+		wander_timer = randf_range(pause_min, pause_max)
+
+	if is_wandering:
+		return global_position.direction_to(wander_target)
+	else:
+		return Vector2.ZERO
+
+func _get_random_arena_position() -> Vector2:
+	"""Get a random position within the arena bounds."""
+	# Get arena bounds from Globals
+	var arena_width := Globals.ARENA_WIDTH
+	var arena_height := Globals.ARENA_HEIGHT
+
+	# Add padding to avoid edges (50 pixels from edge)
+	var padding := 50.0
+	var min_x := -arena_width / 2.0 + padding
+	var max_x := arena_width / 2.0 - padding
+	var min_y := -arena_height / 2.0 + padding
+	var max_y := arena_height / 2.0 - padding
+
+	return Vector2(
+		randf_range(min_x, max_x),
+		randf_range(min_y, max_y)
+	)
+
+func _behavior_charge(delta: float) -> Vector2:
+	"""Charge behavior - wander until player is close, then charge in straight line."""
+	var detect_radius: float = behavior_params.get("charge_detect_radius", DEFAULT_BEHAVIOR_PARAMS["charge_detect_radius"])
+
+	charge_timer -= delta
+
+	match charge_state:
+		ChargeState.IDLE:
+			if player and is_instance_valid(player):
+				var dist := global_position.distance_to(player.global_position)
+				if dist <= detect_radius:
+					_charge_enter_alert_state()
+			return _behavior_wander()
+
+		ChargeState.ALERT:
+			if charge_timer <= 0:
+				_charge_enter_charging_state()
+			if player and is_instance_valid(player):
+				return global_position.direction_to(player.global_position) * 0.0
+			return Vector2.ZERO
+
+		ChargeState.CHARGING:
+			if charge_timer <= 0:
+				_charge_enter_cooldown_state()
+			return charge_direction
+
+		ChargeState.COOLDOWN:
+			if charge_timer <= 0:
+				charge_state = ChargeState.IDLE
+			return _behavior_wander()
+
+	return Vector2.ZERO
+
+func _charge_enter_alert_state() -> void:
+	"""Enter alert state - show visual indicator above head."""
+	charge_state = ChargeState.ALERT
+	charge_timer = behavior_params.get("charge_alert_duration", DEFAULT_BEHAVIOR_PARAMS["charge_alert_duration"])
+	_spawn_charge_alert_indicator()
+
+func _charge_enter_charging_state() -> void:
+	"""Enter charging state - lock direction toward player position."""
+	charge_state = ChargeState.CHARGING
+	charge_timer = behavior_params.get("charge_duration", DEFAULT_BEHAVIOR_PARAMS["charge_duration"])
+
+	if player and is_instance_valid(player):
+		charge_target_pos = player.global_position
+		charge_direction = global_position.direction_to(charge_target_pos)
+	else:
+		charge_direction = Vector2.RIGHT.rotated(randf() * TAU)
+
+	if charge_alert_indicator:
+		charge_alert_indicator.queue_free()
+		charge_alert_indicator = null
+
+func _charge_enter_cooldown_state() -> void:
+	"""Enter cooldown state before returning to idle."""
+	charge_state = ChargeState.COOLDOWN
+	charge_timer = behavior_params.get("charge_cooldown", DEFAULT_BEHAVIOR_PARAMS["charge_cooldown"])
+
+func _spawn_charge_alert_indicator() -> void:
+	"""Create visual alert indicator above enemy head."""
+	var alert_scene := preload("res://scenes/spawn_alert.tscn")
+	charge_alert_indicator = alert_scene.instantiate()
+	charge_alert_indicator.position = Vector2(0, -40)
+
+	# Yellow/orange color for charge alert
+	if charge_alert_indicator.has_node("OuterCircle"):
+		charge_alert_indicator.get_node("OuterCircle").color = Color(1.0, 0.8, 0.0)
+	if charge_alert_indicator.has_node("InnerCircle"):
+		charge_alert_indicator.get_node("InnerCircle").color = Color(1.0, 0.9, 0.3)
+
+	add_child(charge_alert_indicator)
 
 func initialize(wave: int, type_id: String = "basic") -> void:
 	"""Initialize enemy with type and wave-scaled stats."""
@@ -196,7 +398,12 @@ func die() -> void:
 	
 	# Clear status effects
 	active_effects.clear()
-	
+
+	# Clean up charge alert indicator if active
+	if charge_alert_indicator:
+		charge_alert_indicator.queue_free()
+		charge_alert_indicator = null
+
 	# Handle explosive behavior
 	if Globals.enemy_has_behavior(enemy_type, Globals.EnemyBehavior.EXPLOSIVE):
 		_explode()
@@ -337,4 +544,3 @@ func _update_status_visual() -> void:
 ## Check if enemy has a specific status effect
 func has_status_effect(damage_type: Globals.DamageType) -> bool:
 	return active_effects.has(damage_type)
-
