@@ -149,7 +149,7 @@ const ENEMY_TYPES: Dictionary = {
 			"explosion_damage": 40.0,
 			"mass": 0.8,  # Slightly lighter than baseline
 		},
-		"spawn_weight": 25,
+		"spawn_weight": 0,  # Disabled - will never spawn
 		"min_wave": 4,
 		"spawn_count": 3,  # Spawns in groups of 3
 	},
