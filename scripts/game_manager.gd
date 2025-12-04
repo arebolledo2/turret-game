@@ -2,7 +2,7 @@ extends Node
 
 enum GameState { IDLE, DIFFICULTY_SELECT, SHOP, WAVE_ANNOUNCEMENT, COMBAT, WAVE_END, VICTORY, GAME_OVER }
 
-var current_state: GameState = GameState.IDLE
+var current_state = GameState.IDLE
 var wave_timer: float = 0.0
 var announcement_timer: float = 0.0
 var pause_timer: float = 0.0
@@ -186,4 +186,3 @@ func _on_player_died() -> void:
 
 func restart_game() -> void:
 	get_tree().reload_current_scene()
-
