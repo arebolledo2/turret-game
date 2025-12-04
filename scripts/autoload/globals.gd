@@ -161,8 +161,8 @@ const ENEMY_TYPES: Dictionary = {
 		"sprite_folder": "res://assets/sprites/enemy_tiny",
 		"color_tint": Color(0.7, 0.7, 0.9),  # Light purple/gray tint
 		"behavior_params": {
-			"wander_pause_min": 1.5,
-			"wander_pause_max": 3.0,
+			"wander_pause_min": 0.0,
+			"wander_pause_max": 0.0,
 			"wander_move_min": 2.0,
 			"wander_move_max": 4.0,
 		},

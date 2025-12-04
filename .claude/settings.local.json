@@ -4,7 +4,9 @@
       "Bash(dir:*)",
       "Bash(powershell -ExecutionPolicy Bypass -File run_tests.ps1)",
       "Bash(findstr:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(cat:*)",
+      "Bash(wc:*)"
     ],
     "deny": [],
     "ask": []
