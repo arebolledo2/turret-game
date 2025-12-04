@@ -63,7 +63,7 @@ func get_total_turret_count() -> int:
 
 ## Get player max health with difficulty and modifiers applied
 func get_player_max_health() -> float:
-	var base_health := GameConstants.PLAYER_BASE_MAX_HEALTH * get_difficulty_config()["player_health_mult"]
+	var base_health: float = GameConstants.PLAYER_BASE_MAX_HEALTH * get_difficulty_config()["player_health_mult"]
 	return modifiers.get_player_max_health(base_health)
 
 
@@ -102,14 +102,14 @@ func get_spawn_interval(wave: int) -> float:
 
 ## Get enemy health for a specific wave (using base enemy stats)
 func get_enemy_health(wave: int) -> float:
-	var config := get_difficulty_config()
+	var config: Dictionary = get_difficulty_config()
 	var base: float = GameConstants.ENEMY_BASE_HEALTH * float(config["enemy_health_mult"])
 	return base * pow(float(config["enemy_hp_scale_per_wave"]), wave - 1)
 
 
 ## Get enemy speed for a specific wave
 func get_enemy_speed(wave: int) -> float:
-	var config := get_difficulty_config()
+	var config: Dictionary = get_difficulty_config()
 	var base: float = GameConstants.ENEMY_BASE_SPEED * float(config["enemy_speed_mult"])
 	return base * pow(float(config["enemy_speed_scale_per_wave"]), wave - 1)
 

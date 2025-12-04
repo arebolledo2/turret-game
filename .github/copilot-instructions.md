@@ -6,7 +6,7 @@ A wave-based survival tower defense game built in **Godot 4.5** using GDScript. 
 ## Architecture
 
 ### Signal Bus Pattern (Event-Driven)
-All cross-system communication uses the `Events` autoload (`scripts/events.gd`):
+All cross-system communication uses the `Events` autoload (`scripts/autoload/events.gd`):
 ```gdscript
 # Emitting events
 Events.enemy_killed.emit(enemy, global_position)
@@ -17,11 +17,22 @@ Events.player_damaged.connect(_on_player_damaged)
 ```
 **Never** use direct node references for cross-system communication. Use signals.
 
-### Global Constants (`scripts/globals.gd`)
-All game constants and wave scaling formulas live here. **Always** read values from `Globals`:
+### Modular Architecture
+Game logic is split into focused modules:
+- **Constants**: `scripts/data/game_constants.gd` - All numeric constants and configs
+- **Enums**: `scripts/data/game_enums.gd` - Type-safe enumerations
+- **Registries**: `scripts/registries/{enemy,turret,item}_registry.gd` - Type definitions
+- **Systems**: `scripts/systems/{modifier,game_state}.gd` - Core logic
+- **UI Components**: `scripts/ui/*.gd` - Modular UI handlers
+- **Globals**: `scripts/autoload/globals.gd` - Maintained for compatibility (references new modules)
+
 ```gdscript
-max_health = Globals.PLAYER_MAX_HEALTH
-var stats = Globals.get_turret_stats("fire")  # Use helper functions for stats
+# Access constants
+var max_health = GameConstants.PLAYER_BASE_MAX_HEALTH
+var difficulty = GameEnums.Difficulty.MEDIUM
+
+# Get turret stats (with modifiers applied)
+var stats = Globals.get_turret_stats("fire")
 ```
 
 ### Scene Tree Structure
@@ -30,8 +41,10 @@ Main (main.tscn)
 ├── Player, EnemySpawner, TurretManager, ShopManager, GameManager
 ├── TurretContainer/  (turrets added here)
 ├── EnemyContainer/   (enemies spawned here)
-└── HUD (CanvasLayer with DifficultySelect, ShopUI, WaveAnnouncement)
+└── HUD (CanvasLayer)
+    └── UI components (difficulty select, shop, wave announcement, pause menu, etc.)
 ```
+HUD delegates to modular UI component scripts in `scripts/ui/`.
 
 ### Key Patterns
 
@@ -100,10 +113,10 @@ Gold-based economy for purchasing turrets:
 Shop manager emits signals: `shop_opened`, `shop_purchase_made`, `shop_rerolled`, `shop_closed`
 
 ### Difficulty System
-Three difficulty levels with multipliers for enemy/player/turret stats and wave scaling. Configured in `DIFFICULTY_CONFIG` dictionary in `globals.gd`.
+Three difficulty levels with multipliers for enemy/player/turret stats and wave scaling. Configured in `GameConstants.DIFFICULTY_CONFIG`.
 
 ### Turret Type System
-Six turret types defined in `TURRET_TYPES` dictionary (`globals.gd`):
+Six turret types defined in `TurretRegistry` (`scripts/registries/turret_registry.gd`):
 
 | Type | Damage | Range | Fire Rate | Price | Special |
 |------|--------|-------|-----------|-------|---------|
@@ -126,7 +139,7 @@ turret.turret_type = "plasma"
 ```
 
 ### Enemy Type System
-Seven enemy types defined in `ENEMY_TYPES` dictionary (`globals.gd`):
+Seven enemy types defined in `EnemyRegistry` (`scripts/registries/enemy_registry.gd`):
 
 | Type | Base HP | Speed | Damage | Min Wave | Special |
 |------|---------|-------|--------|----------|---------|
@@ -202,16 +215,18 @@ Commits should be concise, one-line, and begin with a single emoji. Agents may c
 ### Key Files to Modify
 | Feature | Files |
 |---------|-------|
-| Game balance | `scripts/globals.gd` (constants and type dictionaries) |
-| Arena bounds | `scripts/globals.gd` (`ARENA_WIDTH`, `ARENA_HEIGHT`) - automatically applied |
-| Turret types/stats | `scripts/globals.gd` (`TURRET_TYPES`) |
-| Enemy types/stats | `scripts/globals.gd` (`ENEMY_TYPES`) |
-| Turret behavior | `scripts/turret.gd`, `scenes/turret.tscn` |
-| Enemy behavior | `scripts/enemy.gd`, `scenes/enemy.tscn` |
-| Shop system | `scripts/shop_manager.gd`, `scenes/ui/shop_ui.tscn` |
+| Constants/balance | `scripts/data/game_constants.gd` |
+| Arena bounds | `GameConstants.ARENA_WIDTH`, `ARENA_HEIGHT` - auto-applied |
+| Turret types/stats | `scripts/registries/turret_registry.gd` |
+| Enemy types/stats | `scripts/registries/enemy_registry.gd` |
+| Item definitions | `scripts/registries/item_registry.gd` |
+| Modifier system | `scripts/systems/modifier_system.gd` |
+| Runtime state | `scripts/systems/game_state.gd` (or `Globals` for compatibility) |
+| Turret behavior | `scripts/turret.gd` |
+| Enemy behavior | `scripts/enemy.gd` |
+| Shop system | `scripts/shop_manager.gd` |
 | Wave spawning | `scripts/game_manager.gd`, `scripts/enemy_spawner.gd` |
-| Projectiles | `scripts/projectile.gd` (pierce, AOE, DoT) |
-| UI changes | `scripts/hud.gd`, `scenes/ui/` |
+| UI components | `scripts/ui/*.gd`, `scripts/hud.gd` (orchestrator) |
 
 ### Collision Layers
 - Layer 1: Player
@@ -228,12 +243,13 @@ Commits should be concise, one-line, and begin with a single emoji. Agents may c
 
 ## Code Conventions
 
-- Use `@export` for inspector-exposed properties, initialize from `Globals` in `_ready()`
+- Use `@export` for inspector-exposed properties
 - Use `@onready` for node references
+- Use explicit types for dictionary/config access: `var config: Dictionary = get_difficulty_config()`
 - Check `is_instance_valid()` before accessing dynamic nodes
 - Prefer `call_deferred()` for physics-related changes during callbacks
 - Death effects: Scale to zero + fade alpha, then `queue_free()` via tween callback
-- **Arena bounds**: Always use `Globals.ARENA_WIDTH` and `Globals.ARENA_HEIGHT` - never hardcode dimensions
+- **Arena bounds**: Always use `GameConstants.ARENA_WIDTH` and `ARENA_HEIGHT` - never hardcode dimensions
   - `arena_setup.gd` auto-configures visual bounds
   - `camera_setup.gd` auto-configures camera limits
   - `player.gd` clamps movement using these constants

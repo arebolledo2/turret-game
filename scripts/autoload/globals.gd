@@ -461,8 +461,8 @@ func get_enemy_type_stats(enemy_type: String) -> Dictionary:
 	return ENEMY_TYPES[enemy_type]["base_stats"].duplicate(true)
 
 func get_enemy_stats_for_wave(enemy_type: String, wave: int) -> Dictionary:
-	var base_stats := get_enemy_type_stats(enemy_type)
-	var config := get_difficulty_config()
+	var base_stats: Dictionary = get_enemy_type_stats(enemy_type)
+	var config: Dictionary = get_difficulty_config()
 
 	base_stats["health"] = base_stats["health"] * config["enemy_health_mult"]
 	base_stats["speed"] = base_stats["speed"] * config["enemy_speed_mult"]
@@ -733,12 +733,12 @@ func get_wave_enemy_count(wave: int) -> int:
 	return int(base_count * get_difficulty_config()["enemy_count_mult"])
 
 func get_enemy_health(wave: int) -> float:
-	var config := get_difficulty_config()
+	var config: Dictionary = get_difficulty_config()
 	var base: float = ENEMY_BASE_HEALTH * float(config["enemy_health_mult"])
 	return base * pow(float(config["enemy_hp_scale_per_wave"]), wave - 1)
 
 func get_enemy_speed(wave: int) -> float:
-	var config := get_difficulty_config()
+	var config: Dictionary = get_difficulty_config()
 	var base: float = ENEMY_BASE_SPEED * float(config["enemy_speed_mult"])
 	return base * pow(float(config["enemy_speed_scale_per_wave"]), wave - 1)
 
