@@ -135,6 +135,24 @@ const TYPES: Dictionary = {
 		"min_wave": 3,
 		"spawn_count": 1,
 	},
+	"neon_drone": {
+		"name": "Neon Drone",
+		"icon": "💠",
+		"description": "Animated hovering drone with neon synth aesthetics.",
+		"behaviors": [GameEnums.EnemyBehavior.CHASE],
+		"scene_path": "res://scenes/enemy_animated.tscn",
+		"base_stats": {
+			"health": 40.0,
+			"speed": 100.0,
+			"contact_damage": 30.0,
+			"xp_value": 12,
+			"scale": 0.15,
+			"mass": 1.0,
+		},
+		"spawn_weight": 40,
+		"min_wave": 2,
+		"spawn_count": 2,
+	},
 }
 
 

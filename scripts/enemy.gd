@@ -81,18 +81,18 @@ func _ready() -> void:
 		current_health = max_health
 
 func _apply_type_config(type_id: String) -> void:
-	"""Load configuration from ENEMY_TYPES and apply to this enemy."""
+	"""Load configuration from EnemyRegistry and apply to this enemy."""
 	enemy_type = type_id
-	var type_def: Dictionary = Globals.ENEMY_TYPES.get(type_id, Globals.ENEMY_TYPES["basic"])
+	var type_def: Dictionary = EnemyRegistry.get_type(type_id)
 	var base_stats: Dictionary = type_def.get("base_stats", {})
-	
+
 	# Load base stats
 	max_health = base_stats.get("health", 30.0)
 	speed = base_stats.get("speed", 150.0)
 	contact_damage = base_stats.get("contact_damage", 33.0)
 	xp_value = base_stats.get("xp_value", 10)
 	base_scale = base_stats.get("scale", 1.0)
-	
+
 	# Load special ability stats
 	explosion_radius = base_stats.get("explosion_radius", 0.0)
 	explosion_damage = base_stats.get("explosion_damage", 0.0)
@@ -118,11 +118,12 @@ func _apply_type_config(type_id: String) -> void:
 			current_behavior = Globals.EnemyBehavior.WANDER
 		else:
 			current_behavior = behaviors[0]
-	
-	# Load sprites from sprite folder
-	var sprite_folder: String = type_def.get("sprite_folder", "res://assets/sprites/enemy")
-	_load_sprites(sprite_folder)
-	
+
+	# Load sprites from sprite folder (only for non-animated enemies)
+	if type_def.has("sprite_folder") and has_node("Sprite2D"):
+		var sprite_folder: String = type_def.get("sprite_folder", "res://assets/sprites/enemy_tiny")
+		_load_sprites(sprite_folder)
+
 	# Apply visual configuration
 	_apply_visuals()
 
@@ -139,12 +140,18 @@ func _load_sprites(folder_path: String) -> void:
 
 func _apply_visuals() -> void:
 	"""Apply scale and color tint to the sprite."""
-	if $Sprite2D:
-		$Sprite2D.scale = Vector2(base_scale, base_scale)
-		$Sprite2D.modulate = color_tint
+	if has_node("Sprite2D"):
+		var sprite = $Sprite2D
+		sprite.scale = Vector2(base_scale, base_scale)
+		sprite.modulate = color_tint
 		# Set initial texture
 		if sprite_south:
-			$Sprite2D.texture = sprite_south
+			sprite.texture = sprite_south
+	elif has_node("AnimatedSprite2D"):
+		var anim_sprite = $AnimatedSprite2D
+		anim_sprite.scale = Vector2(base_scale, base_scale)
+		anim_sprite.modulate = color_tint
+		# AnimatedSprite2D uses sprite_frames, not individual textures
 
 func _physics_process(delta: float) -> void:
 	if is_dying:
@@ -191,6 +198,19 @@ func _physics_process(delta: float) -> void:
 			collider.take_damage(contact_damage)
 
 func _update_direction_sprite(direction: Vector2) -> void:
+	# AnimatedSprite2D enemies use left/right animations only
+	if has_node("AnimatedSprite2D"):
+		var anim_sprite = $AnimatedSprite2D
+		if direction.x < 0:
+			anim_sprite.play("move_left")
+		else:
+			anim_sprite.play("move_right")
+		return
+
+	# Sprite2D enemies use 8-directional sprites
+	if not has_node("Sprite2D"):
+		return
+
 	# Get angle and convert to 8-direction
 	var angle := direction.angle()
 	var sprite := $Sprite2D

@@ -178,12 +178,21 @@ func _queue_spawn_with_alert_at_position(enemy_type: String, base_pos: Vector2, 
 
 func _spawn_enemy_immediate(enemy_type: String, spawn_pos: Vector2) -> void:
 	"""Immediately spawn an enemy at the given position (called after alert finishes)."""
-	if enemy_scene == null:
+	# Check if enemy type has custom scene path
+	var type_def := EnemyRegistry.get_type(enemy_type)
+	var scene_to_use: PackedScene
+
+	if type_def.has("scene_path"):
+		scene_to_use = load(type_def["scene_path"])
+	else:
+		scene_to_use = enemy_scene
+
+	if scene_to_use == null:
 		push_error("Enemy scene not set in EnemySpawner!")
 		return
 
 	# Create enemy
-	var enemy := enemy_scene.instantiate()
+	var enemy := scene_to_use.instantiate()
 	enemy.global_position = spawn_pos
 
 	# Initialize with type and wave-scaled stats

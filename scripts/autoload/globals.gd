@@ -456,68 +456,38 @@ func get_total_turret_count() -> int:
 # ENEMY TYPE HELPERS
 # =============================================================================
 func get_enemy_type_stats(enemy_type: String) -> Dictionary:
-	if not ENEMY_TYPES.has(enemy_type):
-		return ENEMY_TYPES["basic"]["base_stats"].duplicate(true)
-	return ENEMY_TYPES[enemy_type]["base_stats"].duplicate(true)
+	# Delegate to EnemyRegistry
+	return EnemyRegistry.get_base_stats(enemy_type)
 
 func get_enemy_stats_for_wave(enemy_type: String, wave: int) -> Dictionary:
-	var base_stats: Dictionary = get_enemy_type_stats(enemy_type)
+	# Delegate to EnemyRegistry (it handles difficulty config internally)
 	var config: Dictionary = get_difficulty_config()
-
-	base_stats["health"] = base_stats["health"] * config["enemy_health_mult"]
-	base_stats["speed"] = base_stats["speed"] * config["enemy_speed_mult"]
-	base_stats["contact_damage"] = base_stats["contact_damage"] * config["enemy_damage_mult"]
-
-	base_stats["health"] = base_stats["health"] * pow(config["enemy_hp_scale_per_wave"], wave - 1)
-	base_stats["speed"] = base_stats["speed"] * pow(config["enemy_speed_scale_per_wave"], wave - 1)
-
-	return base_stats
+	return EnemyRegistry.get_stats_for_wave(enemy_type, wave, config)
 
 func get_available_enemy_types(wave: int) -> Array:
-	var available: Array = []
-	for enemy_type in ENEMY_TYPES:
-		if ENEMY_TYPES[enemy_type].get("min_wave", 1) <= wave:
-			available.append(enemy_type)
-	return available
+	# Delegate to EnemyRegistry
+	return EnemyRegistry.get_available_types(wave)
 
 func select_random_enemy_type(wave: int) -> String:
-	var available := get_available_enemy_types(wave)
-	if available.is_empty():
-		return "basic"
+	# Delegate to EnemyRegistry
+	return EnemyRegistry.select_random_type(wave)
 
-	var total_weight: float = 0.0
-	for enemy_type in available:
-		total_weight += ENEMY_TYPES[enemy_type].get("spawn_weight", 100)
-
-	var roll := randf() * total_weight
-	var cumulative: float = 0.0
-
-	for enemy_type in available:
-		cumulative += ENEMY_TYPES[enemy_type].get("spawn_weight", 100)
-		if roll <= cumulative:
-			return enemy_type
-
-	return available[-1]
-
-func enemy_has_behavior(enemy_type: String, behavior: EnemyBehavior) -> bool:
-	if not ENEMY_TYPES.has(enemy_type):
-		return false
-	return behavior in ENEMY_TYPES[enemy_type].get("behaviors", [])
+func enemy_has_behavior(enemy_type: String, behavior) -> bool:
+	# Delegate to EnemyRegistry
+	# Accepts both Globals.EnemyBehavior and GameEnums.EnemyBehavior (same values, different namespace)
+	return EnemyRegistry.has_behavior(enemy_type, behavior)
 
 func get_enemy_spawn_count(enemy_type: String) -> int:
-	if not ENEMY_TYPES.has(enemy_type):
-		return 1
-	return ENEMY_TYPES[enemy_type].get("spawn_count", 1)
+	# Delegate to EnemyRegistry
+	return EnemyRegistry.get_spawn_count(enemy_type)
 
 func get_enemy_color(enemy_type: String) -> Color:
-	if not ENEMY_TYPES.has(enemy_type):
-		return Color.WHITE
-	return ENEMY_TYPES[enemy_type].get("color_tint", Color.WHITE)
+	# Delegate to EnemyRegistry
+	return EnemyRegistry.get_color(enemy_type)
 
 func get_enemy_sprite_folder(enemy_type: String) -> String:
-	if not ENEMY_TYPES.has(enemy_type):
-		return ENEMY_TYPES["basic"]["sprite_folder"]
-	return ENEMY_TYPES[enemy_type].get("sprite_folder", ENEMY_TYPES["basic"]["sprite_folder"])
+	# Delegate to EnemyRegistry
+	return EnemyRegistry.get_sprite_folder(enemy_type)
 
 # =============================================================================
 # ITEMS SYSTEM

@@ -21,18 +21,24 @@ Events.player_damaged.connect(_on_player_damaged)
 Game logic is split into focused modules:
 - **Constants**: `scripts/data/game_constants.gd` - All numeric constants and configs
 - **Enums**: `scripts/data/game_enums.gd` - Type-safe enumerations
-- **Registries**: `scripts/registries/{enemy,turret,item}_registry.gd` - Type definitions
+- **Registries**: `scripts/registries/{enemy,turret,item}_registry.gd` - Type definitions and queries
 - **Systems**: `scripts/systems/{modifier,game_state}.gd` - Core logic
 - **UI Components**: `scripts/ui/*.gd` - Modular UI handlers
-- **Globals**: `scripts/autoload/globals.gd` - Maintained for compatibility (references new modules)
+- **Globals**: `scripts/autoload/globals.gd` - Legacy compatibility layer (delegates to registries)
+
+**Important**: Always use registries directly in new code. `Globals` methods like `get_enemy_stats_for_wave()` now delegate to `EnemyRegistry`.
 
 ```gdscript
 # Access constants
 var max_health = GameConstants.PLAYER_BASE_MAX_HEALTH
 var difficulty = GameEnums.Difficulty.MEDIUM
 
-# Get turret stats (with modifiers applied)
-var stats = Globals.get_turret_stats("fire")
+# Get enemy type definition (preferred - use registry directly)
+var enemy_def = EnemyRegistry.get_type("neon_drone")
+var stats = EnemyRegistry.get_stats_for_wave("neon_drone", wave, difficulty_config)
+
+# Legacy approach (still works - delegates to registry)
+var stats = Globals.get_enemy_stats_for_wave("neon_drone", wave)
 ```
 
 ### Scene Tree Structure
