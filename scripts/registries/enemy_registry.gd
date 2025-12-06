@@ -5,17 +5,17 @@ extends RefCounted
 
 const TYPES: Dictionary = {
 	"basic": {
-		"name": "Robot Grunt",
-		"icon": "🤖",
-		"description": "Standard enemy that chases the player.",
+		"name": "Spider Drone",
+		"icon": "🕷️",
+		"description": "Animated spider-like drone with sleek neon design.",
 		"behaviors": [GameEnums.EnemyBehavior.CHASE],
-		"sprite_folder": "res://assets/sprites/enemy_tiny",
+		"scene_path": "res://scenes/enemy_spider_drone.tscn",
 		"base_stats": {
 			"health": 30.0,
 			"speed": 75.0,
 			"contact_damage": 33.0,
 			"xp_value": 10,
-			"scale": 1.5,
+			"scale": 0.15,
 			"mass": 1.0,
 		},
 		"spawn_weight": 100,
@@ -245,5 +245,5 @@ static func get_color(type_id: String) -> Color:
 ## Get sprite folder path for an enemy type
 static func get_sprite_folder(type_id: String) -> String:
 	if not TYPES.has(type_id):
-		return TYPES["basic"]["sprite_folder"]
-	return TYPES[type_id].get("sprite_folder", TYPES["basic"]["sprite_folder"])
+		return "res://assets/sprites/enemy_tiny"
+	return TYPES[type_id].get("sprite_folder", "res://assets/sprites/enemy_tiny")

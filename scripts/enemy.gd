@@ -404,9 +404,11 @@ func take_damage(amount: float) -> void:
 	Events.damage_dealt.emit(global_position, amount)
 	
 	# Visual feedback - flash white then return to base tint
-	$Sprite2D.modulate = Color.WHITE
-	var tween = create_tween()
-	tween.tween_property($Sprite2D, "modulate", color_tint, 0.1)
+	var sprite_node = get_node_or_null("Sprite2D") if has_node("Sprite2D") else get_node_or_null("AnimatedSprite2D")
+	if sprite_node:
+		sprite_node.modulate = Color.WHITE
+		var tween = create_tween()
+		tween.tween_property(sprite_node, "modulate", color_tint, 0.1)
 	
 	if current_health <= 0:
 		die()
@@ -434,11 +436,15 @@ func die() -> void:
 	Globals.total_kills += 1
 	
 	# Death effect (scale down and fade)
-	var tween = create_tween()
-	tween.set_parallel(true)
-	tween.tween_property($Sprite2D, "scale", Vector2.ZERO, 0.15)
-	tween.tween_property($Sprite2D, "modulate:a", 0.0, 0.15)
-	tween.chain().tween_callback(queue_free)
+	var sprite_node = get_node_or_null("Sprite2D") if has_node("Sprite2D") else get_node_or_null("AnimatedSprite2D")
+	if sprite_node:
+		var tween = create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(sprite_node, "scale", Vector2.ZERO, 0.15)
+		tween.tween_property(sprite_node, "modulate:a", 0.0, 0.15)
+		tween.chain().tween_callback(queue_free)
+	else:
+		queue_free()
 
 func _explode() -> void:
 	"""Handle explosion on death for EXPLOSIVE behavior enemies."""
@@ -544,9 +550,13 @@ func take_dot_damage(amount: float) -> void:
 
 ## Update visual tint based on active status effects
 func _update_status_visual() -> void:
+	var sprite_node = get_node_or_null("Sprite2D") if has_node("Sprite2D") else get_node_or_null("AnimatedSprite2D")
+	if not sprite_node:
+		return
+	
 	if active_effects.is_empty():
 		# Reset to base color tint
-		$Sprite2D.modulate = color_tint
+		sprite_node.modulate = color_tint
 		return
 	
 	# Start with base tint and blend status effect colors
@@ -559,7 +569,7 @@ func _update_status_visual() -> void:
 	if active_effects.has(Globals.DamageType.PLASMA):
 		final_color = final_color.lerp(Color(0.8, 0.4, 1.0, 1), 0.4)  # Purple tint
 	
-	$Sprite2D.modulate = final_color
+	sprite_node.modulate = final_color
 
 ## Check if enemy has a specific status effect
 func has_status_effect(damage_type: Globals.DamageType) -> bool:
