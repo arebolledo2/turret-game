@@ -33,7 +33,7 @@ func _ready() -> void:
 func setup_spawn_zones() -> void:
 	var half_width := Globals.ARENA_WIDTH / 2.0
 	var half_height := Globals.ARENA_HEIGHT / 2.0
-	var zone_depth := 80.0  # How far from edge enemies can spawn
+	var zone_depth := 200.0  # How far from edge enemies can spawn (allows spawning closer to middle)
 	var inset := 20.0  # Small inset from the very edge
 
 	# Top edge (full width, spawn inside arena near top)

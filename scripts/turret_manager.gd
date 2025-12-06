@@ -135,7 +135,13 @@ func spawn_turret_type(turret_id: String) -> void:
 		return
 
 	var player = get_tree().get_first_node_in_group("player")
-	var spawn_pos := find_valid_spawn_position(player)
+	var spawn_pos: Vector2
+	
+	# First turret of the game spawns next to player
+	if Globals.turrets_spawned == 0 and player:
+		spawn_pos = player.global_position + Vector2(80, 0)  # 80 pixels to the right
+	else:
+		spawn_pos = find_valid_spawn_position(player)
 
 	if spawn_pos == Vector2.INF:
 		push_warning("Could not find valid turret spawn position!")
