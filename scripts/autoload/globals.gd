@@ -229,7 +229,7 @@ const TURRET_TYPES: Dictionary = {
 			"damage": 15.0,
 			"fire_rate": 2.0,
 			"range": 250.0,
-			"rotation_speed": 300.0,
+			"rotation_speed": 0.0,
 			"projectile_speed": 700.0,
 			"pierce": 0,
 		}
