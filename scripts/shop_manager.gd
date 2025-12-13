@@ -38,21 +38,22 @@ func generate_turret_offer() -> void:
 	Globals.current_shop_offers.append(offer)
 
 func generate_item_offer(generated_item_ids: Array[String]) -> void:
-	# Get available items (filter out max_stacks items)
-	var available_items = ItemRegistry.get_available_item_ids(Globals.item_counts)
+	# Use weighted rarity selection based on wave and luck
+	var random_item_id := ItemRegistry.get_weighted_random_item(
+		Globals.current_wave,
+		Globals.get_player_luck(),
+		Globals.item_counts,
+		generated_item_ids
+	)
 	
-	# Filter out items already in this shop
-	available_items = available_items.filter(func(item_id): return item_id not in generated_item_ids)
-	
-	if available_items.is_empty():
+	if random_item_id.is_empty():
 		# Fallback to turret if no items available
 		generate_turret_offer()
 		return
 	
-	var random_item_id = available_items[randi() % available_items.size()]
 	var item_data = ItemRegistry.get_item(random_item_id)
 	var base_price = ItemRegistry.get_item_price(random_item_id)
-	var scaled_price = calculate_item_price(base_price, Globals.current_wave)
+	var scaled_price = calculate_item_price(base_price, Globals.current_wave, random_item_id)
 
 	# Track this item as generated
 	generated_item_ids.append(random_item_id)
@@ -71,8 +72,18 @@ func calculate_turret_price(base_price: int, wave: int) -> int:
 	var penalty_multiplier = 1.0 + GameConstants.TURRET_PURCHASE_PENALTY * Globals.turrets_purchased
 	return int(base_price * wave_multiplier * penalty_multiplier)
 
-func calculate_item_price(base_price: int, wave: int) -> int:
-	return int(base_price * (1.0 + Globals.WAVE_PRICE_SCALE * wave))
+func calculate_item_price(base_price: int, wave: int, item_id: String = "") -> int:
+	var price := base_price * (1.0 + Globals.WAVE_PRICE_SCALE * wave)
+	
+	# Apply Fortune's Favor discount for rare+ items
+	if not item_id.is_empty() and ItemRegistry.has_special_effect("fortunes_favor"):
+		var rarity := ItemRegistry.get_rarity(item_id)
+		if rarity >= GameEnums.ItemRarity.RARE:
+			# Check if player has Fortune's Favor
+			if Globals.item_counts.get("fortunes_favor", 0) > 0:
+				price *= 0.85  # 15% discount
+	
+	return int(price)
 
 func purchase_offer(offer_index: int) -> bool:
 	if offer_index < 0 or offer_index >= Globals.current_shop_offers.size():
@@ -157,7 +168,10 @@ func reroll_shop() -> bool:
 	return true
 
 func get_reroll_cost() -> int:
-	return Globals.REROLL_BASE_COST + (Globals.REROLL_COST_INCREMENT * Globals.shop_reroll_count)
+	var base_cost := Globals.REROLL_BASE_COST + (Globals.REROLL_COST_INCREMENT * Globals.shop_reroll_count)
+	# Apply reroll cost multiplier from modifiers (e.g., Probability Matrix)
+	var multiplier := Globals.get_reroll_cost_multiplier()
+	return int(base_cost * multiplier)
 
 func can_afford_reroll() -> bool:
 	if Globals.shop_reroll_count >= Globals.MAX_REROLLS_PER_WAVE:

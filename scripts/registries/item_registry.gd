@@ -249,6 +249,41 @@ const ITEMS: Dictionary = {
 		"rarity": GameEnums.ItemRarity.EPIC,
 		"special_effect": "executioner",
 		"modifiers": []
+	},
+	
+	# ==========================================================================
+	# LUCK ITEMS
+	# ==========================================================================
+	
+	"lucky_charm": {
+		"name": "Lucky Charm",
+		"icon": "🍀",
+		"description": "+10 luck. Better items may appear in shops.",
+		"rarity": GameEnums.ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "player_luck", "operation": "add", "value": 0.10}
+		]
+	},
+	"probability_matrix": {
+		"name": "Probability Matrix",
+		"icon": "🎲",
+		"description": "+25 luck, but rerolls cost 50% more.",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"modifiers": [
+			{"stat": "player_luck", "operation": "add", "value": 0.25},
+			{"stat": "reroll_cost", "operation": "multiply", "value": 1.5}
+		]
+	},
+	"fortunes_favor": {
+		"name": "Fortune's Favor",
+		"icon": "⭐",
+		"description": "+40 luck. Rare+ items cost 15% less.",
+		"rarity": GameEnums.ItemRarity.EPIC,
+		"max_stacks": 1,
+		"modifiers": [
+			{"stat": "player_luck", "operation": "add", "value": 0.40}
+		],
+		"special_effect": "fortune_discount"
 	}
 }
 
@@ -340,3 +375,95 @@ static func get_special_effect(item_id: String) -> String:
 	if not ITEMS.has(item_id):
 		return ""
 	return ITEMS[item_id].get("special_effect", "")
+
+
+## Get all items of a specific rarity
+static func get_items_by_rarity(rarity: GameEnums.ItemRarity) -> Array:
+	var result: Array = []
+	for item_id in ITEMS.keys():
+		if ITEMS[item_id].get("rarity", GameEnums.ItemRarity.COMMON) == rarity:
+			result.append(item_id)
+	return result
+
+
+## Calculate effective rarity weights based on wave and luck
+## Returns Dictionary of {GameEnums.ItemRarity: float}
+static func calculate_rarity_weights(wave: int, luck: float) -> Dictionary:
+	var weights: Dictionary = {}
+	var clamped_luck := clampf(luck, 0.0, GameConstants.PLAYER_MAX_LUCK)
+	
+	for rarity in GameConstants.RARITY_BASE_WEIGHTS.keys():
+		var min_wave: int = GameConstants.RARITY_MIN_WAVE.get(rarity, 1)
+		
+		# Skip rarities not yet unlocked
+		if wave < min_wave:
+			weights[rarity] = 0.0
+			continue
+		
+		var base_weight: float = GameConstants.RARITY_BASE_WEIGHTS[rarity]
+		var luck_mult: float = GameConstants.LUCK_WEIGHT_MULTIPLIERS.get(rarity, 1.0)
+		
+		# Interpolate based on luck (0.0 = no effect, 1.0+ = full multiplier effect)
+		var effective_luck := minf(clamped_luck, 1.0)  # Cap at 1.0 for lerp, but allow >1.0 for extra bonus
+		var luck_factor := lerpf(1.0, luck_mult, effective_luck)
+		
+		# Extra luck bonus beyond 1.0
+		if clamped_luck > 1.0:
+			var extra_luck := clamped_luck - 1.0
+			luck_factor *= (1.0 + extra_luck * (luck_mult - 1.0) * 0.5)
+		
+		# Wave progression bonus
+		var waves_past_min := wave - min_wave
+		var wave_bonus := 1.0 + GameConstants.RARITY_WAVE_BONUS_PER_WAVE * waves_past_min
+		
+		weights[rarity] = base_weight * luck_factor * wave_bonus
+	
+	return weights
+
+
+## Get a weighted random item based on wave and luck
+## Filters out items already in the shop (excluded_ids) and items at max stacks
+static func get_weighted_random_item(wave: int, luck: float, item_counts: Dictionary, excluded_ids: Array) -> String:
+	var rarity_weights := calculate_rarity_weights(wave, luck)
+	
+	# Build pool of available items per rarity
+	var rarity_pools: Dictionary = {}  # rarity -> Array of item_ids
+	var effective_weights: Dictionary = {}  # rarity -> weight (0 if no items available)
+	
+	for rarity in rarity_weights.keys():
+		var items := get_items_by_rarity(rarity)
+		# Filter out excluded and max-stacked items
+		var available: Array = []
+		for item_id in items:
+			if item_id not in excluded_ids and not is_at_max_stacks(item_id, item_counts):
+				available.append(item_id)
+		
+		rarity_pools[rarity] = available
+		effective_weights[rarity] = rarity_weights[rarity] if not available.is_empty() else 0.0
+	
+	# Calculate total weight
+	var total_weight: float = 0.0
+	for weight in effective_weights.values():
+		total_weight += weight
+	
+	# No items available at all
+	if total_weight <= 0.0:
+		return ""
+	
+	# Roll for rarity
+	var roll := randf() * total_weight
+	var cumulative: float = 0.0
+	var selected_rarity: GameEnums.ItemRarity = GameEnums.ItemRarity.COMMON
+	
+	for rarity in effective_weights.keys():
+		cumulative += effective_weights[rarity]
+		if roll <= cumulative:
+			selected_rarity = rarity
+			break
+	
+	# Pick random item from selected rarity pool
+	var pool: Array = rarity_pools[selected_rarity]
+	if pool.is_empty():
+		return ""
+	
+	return pool[randi() % pool.size()]

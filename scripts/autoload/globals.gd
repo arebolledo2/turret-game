@@ -411,6 +411,19 @@ func get_player_max_health() -> float:
 func get_player_weapon_damage() -> float:
 	return _apply_modifiers_to_stat(PLAYER_WEAPON_DAMAGE, "player_weapon_damage")
 
+## Get player luck with modifiers applied, clamped to valid range
+func get_player_luck() -> float:
+	var modified_luck := _apply_modifiers_to_stat(player_luck, "player_luck")
+	return clampf(modified_luck, 0.0, GameConstants.PLAYER_MAX_LUCK)
+
+## Get player luck as display integer (0.11 -> 11)
+func get_player_luck_display() -> int:
+	return int(get_player_luck() * 100.0)
+
+## Get reroll cost multiplier (from items like Probability Matrix)
+func get_reroll_cost_multiplier() -> float:
+	return _apply_modifiers_to_stat(1.0, "reroll_cost")
+
 func _apply_modifiers_to_stat(base_value: float, stat_name: String) -> float:
 	var add_value: float = 0.0
 	var mult_values: Array[float] = []
@@ -600,6 +613,7 @@ var total_kills: int = 0
 var turrets_spawned: int = 0
 var turrets_purchased: int = 0  # Tracks turrets bought (for price penalty)
 var item_counts: Dictionary = {}  # Tracks item counts for max_stacks
+var player_luck: float = GameConstants.PLAYER_BASE_LUCK  # Luck stat for rarity rolls
 var time_survived: float = 0.0
 var is_game_active: bool = false
 var player_level: int = 1
@@ -680,6 +694,7 @@ func reset_stats() -> void:
 	time_survived = 0.0
 	is_game_active = false
 	player_level = 1
+	player_luck = GameConstants.PLAYER_BASE_LUCK
 	turret_counts.clear()
 	item_counts.clear()
 	selected_turret_type = ""

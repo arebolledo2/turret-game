@@ -93,6 +93,49 @@ const TECH_DROP_SCATTER_COUNT: int = 5
 const TECH_DROP_SCATTER_RADIUS: float = 80.0
 
 # =============================================================================
+# RARITY / LUCK SYSTEM
+# =============================================================================
+
+# Base rarity weights (higher = more common)
+# These are the weights when luck = 0 and wave = 1
+const RARITY_BASE_WEIGHTS: Dictionary = {
+	GameEnums.ItemRarity.COMMON: 100.0,
+	GameEnums.ItemRarity.UNCOMMON: 40.0,
+	GameEnums.ItemRarity.RARE: 15.0,
+	GameEnums.ItemRarity.EPIC: 5.0,
+	GameEnums.ItemRarity.LEGENDARY: 1.0,
+	GameEnums.ItemRarity.UNIQUE: 0.0,  # Special drops only
+}
+
+# How much each point of luck (0.0-1.0) shifts weight toward higher rarities
+# At luck=1.0, apply these multipliers to base weights
+const LUCK_WEIGHT_MULTIPLIERS: Dictionary = {
+	GameEnums.ItemRarity.COMMON: 0.5,      # Common becomes less likely
+	GameEnums.ItemRarity.UNCOMMON: 0.8,    # Uncommon slightly less likely
+	GameEnums.ItemRarity.RARE: 1.5,        # Rare more likely
+	GameEnums.ItemRarity.EPIC: 2.5,        # Epic much more likely
+	GameEnums.ItemRarity.LEGENDARY: 4.0,   # Legendary very boosted
+	GameEnums.ItemRarity.UNIQUE: 1.0,      # Unique unchanged (special only)
+}
+
+# Wave-based rarity unlocks (items below min_wave can't appear)
+const RARITY_MIN_WAVE: Dictionary = {
+	GameEnums.ItemRarity.COMMON: 1,
+	GameEnums.ItemRarity.UNCOMMON: 1,
+	GameEnums.ItemRarity.RARE: 2,
+	GameEnums.ItemRarity.EPIC: 4,
+	GameEnums.ItemRarity.LEGENDARY: 6,
+	GameEnums.ItemRarity.UNIQUE: 1,  # Special conditions only
+}
+
+# Wave-based weight bonus (per wave after min_wave)
+const RARITY_WAVE_BONUS_PER_WAVE: float = 0.05  # +5% weight per wave past min
+
+# Player luck configuration
+const PLAYER_BASE_LUCK: float = 0.0
+const PLAYER_MAX_LUCK: float = 2.0  # Cap at 200% for sanity
+
+# =============================================================================
 # DIFFICULTY CONFIGURATIONS
 # =============================================================================
 const DIFFICULTY_CONFIG: Dictionary = {
