@@ -24,9 +24,9 @@ Game logic is split into focused modules:
 - **Registries**: `scripts/registries/{enemy,turret,item}_registry.gd` - Type definitions and queries
 - **Systems**: `scripts/systems/{modifier,game_state}.gd` - Core logic
 - **UI Components**: `scripts/ui/*.gd` - Modular UI handlers
-- **Globals**: `scripts/autoload/globals.gd` - Legacy compatibility layer (delegates to registries)
+- **Globals**: `scripts/autoload/globals.gd` - Runtime game state and compatibility layer
 
-**Important**: Always use registries directly in new code. `Globals` methods like `get_enemy_stats_for_wave()` now delegate to `EnemyRegistry`.
+**Important**: Use registries directly for type definitions. `Globals` provides runtime state (wave number, gold, difficulty) and helper methods that delegate to registries. Some legacy type data still exists in Globals for backward compatibility.
 
 ```gdscript
 # Access constants
@@ -50,7 +50,7 @@ Main (main.tscn)
 └── HUD (CanvasLayer)
     └── UI components (difficulty select, shop, wave announcement, pause menu, etc.)
 ```
-HUD delegates to modular UI component scripts in `scripts/ui/`.
+HUD (`scripts/hud.gd`) orchestrates UI components. Modular UI handlers exist in `scripts/ui/` for specific screens (difficulty select, wave announcement, game over, pause menu, settings).
 
 ### Key Patterns
 
@@ -83,61 +83,68 @@ if enemy.has_method("initialize"):
     enemy.initialize(current_wave)
 ```
 
-**Settings**: Runtime toggles in `Globals`:
+**Settings**: Runtime toggles available in `Globals`:
 - `show_damage_numbers: bool` — Toggle damage number popups
 - `show_turret_ranges: bool` — Toggle turret range indicators
 
+Access via `Globals.show_damage_numbers` and `Globals.show_turret_ranges`.
+
 ## Game State Flow
-`GameManager` controls state via enum: `IDLE → DIFFICULTY_SELECT → SHOP → WAVE_ANNOUNCEMENT → COMBAT → WAVE_END → (loop or VICTORY/GAME_OVER)`
+`GameManager` controls state via enum: `IDLE → DIFFICULTY_SELECT → WAVE_ANNOUNCEMENT → COMBAT → WAVE_END → SHOP → (loop or VICTORY/GAME_OVER)`
 
 Game startup:
 1. `show_difficulty_select()` - Player chooses Easy/Medium/Hard
 2. `_on_difficulty_selected()` - Sets `Globals.current_difficulty`, starts game
+3. Spawns one free starting turret, proceeds directly to wave 1
 
 Wave cycle:
-1. `start_shop()` - Show shop UI, player purchases turrets
-2. `start_wave_announcement()` - Shows wave number (1.5s)
-3. `start_combat()` - Spawns purchased turrets, starts enemy spawning with alerts, wave timer
-4. `end_wave()` - Stops spawning, awards wave bonus gold, checks victory (wave 10)
+1. `start_wave_announcement()` - Shows wave number for brief period
+2. `start_combat()` - Starts enemy spawning with visual alerts and wave timer
+3. `end_wave()` - Stops spawning, awards wave bonus gold, checks victory condition
+4. `start_shop()` - Show shop UI between waves (after wave 1+)
+
+Wave duration increases progressively with each wave (base duration + increment per wave). Enemy count also scales with wave number.
 
 ### Turret Pickup System
 Players can pick up and reposition turrets:
-- Press **F** (or gamepad A) near a turret to pick it up
-- Carried turret follows player with a speed penalty (30%)
-- Press **F** again to place the turret at current position
+- Use `pickup_turret` input action near a turret to pick it up
+- Carried turret follows player with reduced movement speed
+- Use `pickup_turret` action again to place the turret at current position
 - Relevant constants: `TURRET_PICKUP_RANGE`, `TURRET_CARRY_SPEED_PENALTY`
 
 ### Shop & Economy System
-Gold-based economy for purchasing turrets:
-- **Starting Gold**: 120 (buy one turret)
-- **Gold per Kill**: 1 gold per enemy
-- **Wave Bonus**: 20 + (wave × 5) gold
-- **Shop Offers**: 4 random turret offers per wave
-- **Reroll**: Costs 5 gold, increments +3 per reroll (max 5 rerolls)
-- **Price Scaling**: Base price × (1 + 0.15 × wave)
+Gold-based economy for purchasing turrets and items:
+- **Shop Offers**: Mixed turret and item offers each wave
+- **Offer Mix**: Configurable ratio of item vs turret offers (see `GameConstants.SHOP_ITEM_CHANCE`)
+- **Shop Offer Count**: Configurable (see `GameConstants.SHOP_OFFER_COUNT`)
+- **Reroll System**: Base cost with increment per reroll, max rerolls per wave
+- **Price Scaling**: Wave-based and turret ownership penalty
+- Economy constants configured in `GameConstants` (gold rewards, bonuses, costs, shop parameters)
 
 Shop manager emits signals: `shop_opened`, `shop_purchase_made`, `shop_rerolled`, `shop_closed`
 
 ### Difficulty System
-Three difficulty levels with multipliers for enemy/player/turret stats and wave scaling. Configured in `GameConstants.DIFFICULTY_CONFIG`.
+Three difficulty levels with multipliers for enemy/player/turret stats and wave scaling. All values configured in `GameConstants.DIFFICULTY_CONFIG`.
 
 ### Turret Type System
-Six turret types defined in `TurretRegistry` (`scripts/registries/turret_registry.gd`):
+Turret types defined in `TurretRegistry` (`scripts/registries/turret_registry.gd`). Each turret has a definition with:
+- `name`, `icon`, `description`
+- `attack_styles`: Array of `GameEnums.AttackStyle` (PROJECTILE, INSTANT, AOE, CHAIN)
+- `damage_types`: Array of `GameEnums.DamageType` (PHYSICAL, FIRE, PLASMA, ELECTRIC)
+- `base_stats`: Dictionary with damage, fire_rate, range, rotation_speed, plus type-specific stats
+- `targeting`: Optional targeting behavior ("farthest", "cluster")
 
-| Type | Damage | Range | Fire Rate | Price | Special |
-|------|--------|-------|-----------|-------|---------|
-| `normal` | 10 | 300 | 1.0/s | 80 | Standard projectile |
-| `sniper` | 25 | 500 | 0.5/s | 120 | Instant hit, long range |
-| `fire` | 8 | 250 | 1.2/s | 100 | DoT, pierce 3 |
-| `plasma` | 15 | 350 | 0.8/s | 140 | Explosive AOE |
-| `shock` | 6 | 200 | 2.0/s | 90 | AOE pulse around self |
-| `tesla` | 12 | 400 | 1.0/s | 130 | Chain lightning (3 targets) |
+Base prices defined in `TurretRegistry.BASE_PRICES`, colors in `TurretRegistry.COLORS`.
 
 **Working with turret types:**
 ```gdscript
-# Get turret stats (with modifiers applied)
+# Get turret definition (direct registry access)
+var turret_def = TurretRegistry.get_type("fire")
+var base_stats = TurretRegistry.get_base_stats("fire")
+var price = TurretRegistry.get_base_price("fire")
+
+# Get modified stats (via Globals for compatibility)
 var stats = Globals.get_turret_stats("fire")
-# Returns: {damage, range, fire_rate, projectile_speed, price, shop_weight, ...}
 
 # Set turret type on instantiation
 var turret = turret_scene.instantiate()
@@ -145,19 +152,23 @@ turret.turret_type = "plasma"
 ```
 
 ### Enemy Type System
-Seven enemy types defined in `EnemyRegistry` (`scripts/registries/enemy_registry.gd`):
+Enemy types defined in `EnemyRegistry` (`scripts/registries/enemy_registry.gd`). Each enemy has:
+- `name`, `icon`, `description`
+- `behaviors`: Array of `GameEnums.EnemyBehavior` (CHASE, WANDER, SWARM, TANK, EXPLOSIVE)
+- `base_stats`: Dictionary with health, speed, contact_damage, xp_value, scale, mass
+- `spawn_weight`: Spawn pool weighting (0 = disabled)
+- `min_wave`: First wave this enemy can appear
+- `spawn_count`: How many spawn per trigger
+- `scene_path` or `sprite_folder`: Visual assets
 
-| Type | Base HP | Speed | Damage | Min Wave | Special |
-|------|---------|-------|--------|----------|---------|
-| `tiny_bot` | 15 | 180 | 10 | 1 | Small, spawn in pairs |
-| `robot_grunt` | 30 | 150 | 10 | 1 | Standard enemy |
-| `scout_bot` | 20 | 220 | 8 | 2 | Fast, fragile |
-| `heavy_bot` | 80 | 80 | 20 | 3 | Slow, tanky |
-| `boom_bot` | 25 | 140 | 15 | 4 | Explodes on death |
-| `mini_bot` | 10 | 160 | 8 | 2 | Tiny, spawn in groups of 3 |
-| `swarm` | varies | varies | varies | varies | Multiple variants |
+Enemy stats scale per wave using difficulty-based multipliers. Enemy spawner shows visual alerts before spawning.
 
-Enemy stats scale per wave: +10% HP, +3% speed. Enemy spawner shows visual alerts before spawning.
+### Player Combat System
+Player has two attack modes:
+
+**Auto-Fire Projectiles**: Player automatically targets and fires at nearest enemy within weapon range. Uses same projectile pattern as turrets. Configurable damage, fire rate, range, and projectile speed in `GameConstants.PLAYER_WEAPON_*`.
+
+**Melee Attack**: Close-range attack with windup animation, arc-based damage cone, and knockback. Configurable damage, range, arc angle, cooldown, and windup time. Locks onto target during windup. Useful for crowd control and defensive positioning.
 
 ### Status Effect System
 DoT effects (from fire turrets) are tracked on enemies via `scripts/status_effect.gd`:
@@ -241,11 +252,14 @@ Commits should be concise, one-line, and begin with a single emoji. Agents may c
 - Layer 4: Turret (for pickup interaction)
 
 ### Input Actions
-| Action | Keys | Gamepad |
-|--------|------|---------|  
+| Action | Default Keys | Gamepad |
+|--------|-------------|---------|  
 | `move_up/down/left/right` | WASD, Arrow keys | Left stick |
 | `pause` | Escape | Start |
-| `pickup_turret` | F | A button |
+| `pickup_turret` | Configurable | Configurable |
+| `melee_attack` | Configurable | Configurable |
+
+Input mappings are defined in `project.godot` and can be customized in Project Settings.
 
 ## Code Conventions
 
