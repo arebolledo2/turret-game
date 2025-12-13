@@ -11,7 +11,8 @@ extends GutTest
 # =============================================================================
 
 func test_all_items_exist():
-	var expected_items = ["swift_boots", "heavy_ammunition", "lightweight_frame", "reinforced_plating", "precision_optics"]
+	# Shop V2 items
+	var expected_items = ["scrap_magnet", "reinforced_hull", "quick_loader", "shock_absorbers", "dense_rounds"]
 	for item_id in expected_items:
 		assert_true(ItemRegistry.has_item(item_id), "Item '%s' should exist" % item_id)
 
@@ -19,11 +20,11 @@ func test_all_items_exist():
 func test_get_all_item_ids():
 	var ids = ItemRegistry.get_all_item_ids()
 	assert_gt(ids.size(), 0, "Should return at least one item ID")
-	assert_has(ids, "swift_boots", "Should include 'swift_boots'")
+	assert_has(ids, "scrap_magnet", "Should include 'scrap_magnet'")
 
 
 func test_get_item_returns_valid_definition():
-	var item = ItemRegistry.get_item("swift_boots")
+	var item = ItemRegistry.get_item("scrap_magnet")
 	assert_has(item, "name", "Item should have name")
 	assert_has(item, "description", "Item should have description")
 	assert_has(item, "icon", "Item should have icon")
@@ -37,7 +38,7 @@ func test_get_item_nonexistent_returns_empty():
 
 
 func test_has_item_returns_true_for_valid():
-	assert_true(ItemRegistry.has_item("heavy_ammunition"), "Should return true for valid item")
+	assert_true(ItemRegistry.has_item("dense_rounds"), "Should return true for valid item")
 
 
 func test_has_item_returns_false_for_invalid():
@@ -54,9 +55,13 @@ func test_all_items_have_required_fields():
 
 
 func test_all_items_have_at_least_one_modifier():
+	# Note: Some items like executioners_mark have special_effect instead of modifiers
 	for item_id in ItemRegistry.get_all_item_ids():
+		var item = ItemRegistry.get_item(item_id)
 		var modifiers = ItemRegistry.get_modifiers(item_id)
-		assert_gt(modifiers.size(), 0, "%s should have at least one modifier" % item_id)
+		var has_special_effect = item.has("special_effect")
+		assert_true(modifiers.size() > 0 or has_special_effect,
+			"%s should have at least one modifier or a special_effect" % item_id)
 
 
 # =============================================================================
@@ -64,8 +69,8 @@ func test_all_items_have_at_least_one_modifier():
 # =============================================================================
 
 func test_get_rarity_returns_correct_rarity():
-	var rarity = ItemRegistry.get_rarity("swift_boots")
-	assert_eq(rarity, GameEnums.ItemRarity.COMMON, "Swift boots should be COMMON rarity")
+	var rarity = ItemRegistry.get_rarity("scrap_magnet")
+	assert_eq(rarity, GameEnums.ItemRarity.COMMON, "Scrap magnet should be COMMON rarity")
 
 
 func test_get_rarity_fallback_for_invalid():
@@ -172,7 +177,7 @@ func test_price_increases_with_rarity():
 
 
 func test_get_item_price():
-	var price = ItemRegistry.get_item_price("swift_boots")
+	var price = ItemRegistry.get_item_price("scrap_magnet")
 	var expected = ItemRegistry.get_rarity_price(GameEnums.ItemRarity.COMMON)
 	assert_eq(price, expected, "Item price should match rarity price")
 
@@ -187,7 +192,7 @@ func test_get_item_price_invalid():
 # =============================================================================
 
 func test_get_modifiers_returns_array():
-	var mods = ItemRegistry.get_modifiers("swift_boots")
+	var mods = ItemRegistry.get_modifiers("scrap_magnet")
 	assert_typeof(mods, TYPE_ARRAY, "get_modifiers should return array")
 
 
@@ -196,35 +201,35 @@ func test_get_modifiers_nonexistent_returns_empty():
 	assert_eq(mods.size(), 0, "Non-existent item should return empty modifiers")
 
 
-func test_swift_boots_has_speed_modifier():
-	var mods = ItemRegistry.get_modifiers("swift_boots")
+func test_shock_absorbers_has_speed_modifier():
+	var mods = ItemRegistry.get_modifiers("shock_absorbers")
 	var has_speed_mod = false
 	for mod in mods:
 		if mod.get("stat") == "player_speed":
 			has_speed_mod = true
 			assert_eq(mod.get("operation"), "multiply", "Speed modifier should be multiply")
 			assert_gt(mod.get("value"), 1.0, "Speed modifier should increase speed")
-	assert_true(has_speed_mod, "Swift boots should have speed modifier")
+	assert_true(has_speed_mod, "Shock absorbers should have speed modifier")
 
 
-func test_heavy_ammunition_has_damage_modifier():
-	var mods = ItemRegistry.get_modifiers("heavy_ammunition")
+func test_dense_rounds_has_damage_modifier():
+	var mods = ItemRegistry.get_modifiers("dense_rounds")
 	var has_damage_mod = false
 	for mod in mods:
 		if mod.get("stat") == "damage":
 			has_damage_mod = true
 			assert_gt(mod.get("value"), 1.0, "Damage modifier should increase damage")
-	assert_true(has_damage_mod, "Heavy ammunition should have damage modifier")
+	assert_true(has_damage_mod, "Dense rounds should have damage modifier")
 
 
-func test_reinforced_plating_has_health_modifier():
-	var mods = ItemRegistry.get_modifiers("reinforced_plating")
+func test_reinforced_hull_has_health_modifier():
+	var mods = ItemRegistry.get_modifiers("reinforced_hull")
 	var has_health_mod = false
 	for mod in mods:
 		if mod.get("stat") == "player_max_health":
 			has_health_mod = true
 			assert_gt(mod.get("value"), 0.0, "Health modifier should be positive add")
-	assert_true(has_health_mod, "Reinforced plating should have health modifier")
+	assert_true(has_health_mod, "Reinforced hull should have health modifier")
 
 
 func test_modifier_has_required_fields():

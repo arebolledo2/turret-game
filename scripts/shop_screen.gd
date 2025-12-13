@@ -137,7 +137,7 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 
 func create_item_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	var item_id = offer["item_id"]
-	var item_data = Globals.ITEMS[item_id]
+	var item_data = ItemRegistry.get_item(item_id)
 
 	# Icon
 	var icon_label = Label.new()
@@ -151,7 +151,7 @@ func create_item_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	name_label.text = item_data["name"]
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_font_size_override("font_size", 18)
-	name_label.add_theme_color_override("font_color", Globals.RARITY_COLORS[item_data["rarity"]])
+	name_label.add_theme_color_override("font_color", ItemRegistry.get_rarity_color(item_data["rarity"]))
 	container.add_child(name_label)
 
 	# Description
@@ -170,7 +170,7 @@ func create_item_ui(offer: Dictionary, container: VBoxContainer) -> void:
 		mod_label.add_theme_font_size_override("font_size", 11)
 		# Green for benefits (value > 1.0 for multiply), red for drawbacks
 		var is_benefit = (modifier["operation"] == "multiply" and modifier["value"] > 1.0) or \
-		                  (modifier["operation"] == "add" and modifier["value"] > 0.0)
+						  (modifier["operation"] == "add" and modifier["value"] > 0.0)
 		mod_label.add_theme_color_override("font_color", Color.GREEN if is_benefit else Color.RED)
 		container.add_child(mod_label)
 

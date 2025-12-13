@@ -488,7 +488,7 @@ func test_apply_to_stat_ignores_other_stats():
 
 func test_get_player_speed():
 	modifier_system.add_modifier({
-		"id": "swift_boots",
+		"id": "scrap_magnet",
 		"stat": "player_speed",
 		"operation": "multiply",
 		"value": 1.1

@@ -2,6 +2,7 @@ class_name ItemRegistry
 extends RefCounted
 
 ## Registry of all items and helper functions
+## Shop V2: 19 items (9 interesting + 10 boring trade-off items)
 
 # Rarity color scheme
 const RARITY_COLORS: Dictionary = {
@@ -32,55 +33,222 @@ const BASE_PRICES: Dictionary = {
 }
 
 const ITEMS: Dictionary = {
-	"swift_boots": {
-		"name": "Swift Boots",
-		"icon": "👟",
-		"description": "Move faster, shoot weaker",
+	# ==========================================================================
+	# COMMON TIER (Price: 40) - 5 items (1 interesting, 4 boring)
+	# ==========================================================================
+	
+	# Interesting
+	"scrap_magnet": {
+		"name": "Scrap Magnet",
+		"icon": "🧲",
+		"description": "Increases pickup radius by 30%",
 		"rarity": GameEnums.ItemRarity.COMMON,
 		"modifiers": [
-			{"stat": "player_speed", "operation": "multiply", "value": 1.05},
+			{"stat": "pickup_radius", "operation": "multiply", "value": 1.3}
+		]
+	},
+	
+	# Boring trade-offs
+	"reinforced_hull": {
+		"name": "Reinforced Hull",
+		"icon": "🛡️",
+		"description": "+15 max HP, but 3% slower movement",
+		"rarity": GameEnums.ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "player_max_health", "operation": "add", "value": 15.0},
+			{"stat": "player_speed", "operation": "multiply", "value": 0.97}
+		]
+	},
+	"quick_loader": {
+		"name": "Quick Loader",
+		"icon": "⏱️",
+		"description": "+10% fire rate, but 3% less damage",
+		"rarity": GameEnums.ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "fire_rate", "operation": "multiply", "value": 1.10, "filter": {"turret_type": ["all"]}},
 			{"stat": "damage", "operation": "multiply", "value": 0.97, "filter": {"turret_type": ["all"]}}
 		]
 	},
-	"heavy_ammunition": {
-		"name": "Heavy Ammunition",
-		"icon": "💥",
-		"description": "Powerful rounds, but heavy to carry",
+	"shock_absorbers": {
+		"name": "Shock Absorbers",
+		"icon": "🏃",
+		"description": "+10% movement speed, but -5 max HP",
 		"rarity": GameEnums.ItemRarity.COMMON,
 		"modifiers": [
-			{"stat": "damage", "operation": "multiply", "value": 1.04, "filter": {"turret_type": ["all"]}},
+			{"stat": "player_speed", "operation": "multiply", "value": 1.10},
 			{"stat": "player_max_health", "operation": "add", "value": -5.0}
 		]
 	},
-	"lightweight_frame": {
-		"name": "Lightweight Frame",
-		"icon": "🪶",
-		"description": "Speed at the cost of protection",
+	"dense_rounds": {
+		"name": "Dense Rounds",
+		"icon": "🔩",
+		"description": "+10% damage, but 2% slower fire rate",
 		"rarity": GameEnums.ItemRarity.COMMON,
 		"modifiers": [
-			{"stat": "player_speed", "operation": "multiply", "value": 1.03},
-			{"stat": "player_max_health", "operation": "add", "value": -3.0}
+			{"stat": "damage", "operation": "multiply", "value": 1.10, "filter": {"turret_type": ["all"]}},
+			{"stat": "fire_rate", "operation": "multiply", "value": 0.98, "filter": {"turret_type": ["all"]}}
 		]
 	},
-	"reinforced_plating": {
-		"name": "Reinforced Plating",
-		"icon": "🛡️",
-		"description": "Sturdy but sluggish",
-		"rarity": GameEnums.ItemRarity.COMMON,
+	
+	# ==========================================================================
+	# UNCOMMON TIER (Price: 70) - 5 items (1 interesting, 4 boring)
+	# ==========================================================================
+	
+	# Interesting
+	"overcharged_cells": {
+		"name": "Overcharged Cells",
+		"icon": "⚡",
+		"description": "Electric turrets deal 30% more damage but chain to fewer targets",
+		"rarity": GameEnums.ItemRarity.UNCOMMON,
 		"modifiers": [
-			{"stat": "player_max_health", "operation": "add", "value": 10.0},
-			{"stat": "player_speed", "operation": "multiply", "value": 0.96}
+			{"stat": "damage", "operation": "multiply", "value": 1.3, "filter": {"damage_type": ["electric"]}},
+			{"stat": "chain_count", "operation": "add", "value": -1, "filter": {"turret_type": ["tesla"]}}
 		]
 	},
-	"precision_optics": {
-		"name": "Precision Optics",
-		"icon": "🔭",
-		"description": "Better aim, more focus required",
-		"rarity": GameEnums.ItemRarity.COMMON,
+	
+	# Boring trade-offs
+	"extended_barrel": {
+		"name": "Extended Barrel",
+		"icon": "📏",
+		"description": "+15% turret range, but 10% slower fire rate",
+		"rarity": GameEnums.ItemRarity.UNCOMMON,
 		"modifiers": [
-			{"stat": "fire_rate", "operation": "multiply", "value": 1.03, "filter": {"turret_type": ["all"]}},
-			{"stat": "player_speed", "operation": "multiply", "value": 0.98}
+			{"stat": "range", "operation": "multiply", "value": 1.15, "filter": {"turret_type": ["all"]}},
+			{"stat": "fire_rate", "operation": "multiply", "value": 0.90, "filter": {"turret_type": ["all"]}}
 		]
+	},
+	"heavy_plating": {
+		"name": "Heavy Plating",
+		"icon": "🪨",
+		"description": "+20 max HP, but 8% slower movement",
+		"rarity": GameEnums.ItemRarity.UNCOMMON,
+		"modifiers": [
+			{"stat": "player_max_health", "operation": "add", "value": 20.0},
+			{"stat": "player_speed", "operation": "multiply", "value": 0.92}
+		]
+	},
+	"rapid_coolant": {
+		"name": "Rapid Coolant",
+		"icon": "❄️",
+		"description": "+15% fire rate, but 10% reduced range",
+		"rarity": GameEnums.ItemRarity.UNCOMMON,
+		"modifiers": [
+			{"stat": "fire_rate", "operation": "multiply", "value": 1.15, "filter": {"turret_type": ["all"]}},
+			{"stat": "range", "operation": "multiply", "value": 0.90, "filter": {"turret_type": ["all"]}}
+		]
+	},
+	"nimble_servos": {
+		"name": "Nimble Servos",
+		"icon": "🦿",
+		"description": "+8% movement speed, but 5% less turret damage",
+		"rarity": GameEnums.ItemRarity.UNCOMMON,
+		"modifiers": [
+			{"stat": "player_speed", "operation": "multiply", "value": 1.08},
+			{"stat": "damage", "operation": "multiply", "value": 0.95, "filter": {"turret_type": ["all"]}}
+		]
+	},
+	
+	# ==========================================================================
+	# RARE TIER (Price: 110) - 6 items (4 interesting, 2 boring)
+	# ==========================================================================
+	
+	# Interesting (2 unique)
+	"volatile_rounds": {
+		"name": "Volatile Rounds",
+		"icon": "🔴",
+		"description": "Turret projectiles explode on hit, but turrets fire slower",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"max_stacks": 1,
+		"modifiers": [
+			{"stat": "aoe_radius", "operation": "add", "value": 40.0, "filter": {"turret_type": ["normal", "fire"]}},
+			{"stat": "fire_rate", "operation": "multiply", "value": 0.85, "filter": {"turret_type": ["all"]}}
+		]
+	},
+	"incendiary_gel": {
+		"name": "Incendiary Gel",
+		"icon": "🩸",
+		"description": "Fire effects last twice as long and tick faster",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"max_stacks": 1,
+		"modifiers": [
+			{"stat": "dot_duration", "operation": "multiply", "value": 2.0, "filter": {"turret_type": ["fire"]}},
+			{"stat": "dot_tick_rate", "operation": "multiply", "value": 0.5, "filter": {"turret_type": ["fire"]}}
+		]
+	},
+	"targeting_matrix": {
+		"name": "Targeting Matrix",
+		"icon": "🎯",
+		"description": "Turrets rotate 100% faster and have 15% increased fire rate",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"modifiers": [
+			{"stat": "rotation_speed", "operation": "multiply", "value": 2.0, "filter": {"turret_type": ["all"]}},
+			{"stat": "fire_rate", "operation": "multiply", "value": 1.15, "filter": {"turret_type": ["all"]}}
+		]
+	},
+	"plasma_capacitor": {
+		"name": "Plasma Capacitor",
+		"icon": "🟣",
+		"description": "Plasma explosions are 60% larger with stronger knockback",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"modifiers": [
+			{"stat": "aoe_radius", "operation": "multiply", "value": 1.6, "filter": {"turret_type": ["plasma"]}},
+			{"stat": "knockback_force", "operation": "multiply", "value": 1.5, "filter": {"turret_type": ["plasma"]}}
+		]
+	},
+	
+	# Boring trade-offs
+	"fortified_core": {
+		"name": "Fortified Core",
+		"icon": "💚",
+		"description": "+25 max HP, but 10% less turret damage",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"modifiers": [
+			{"stat": "player_max_health", "operation": "add", "value": 25.0},
+			{"stat": "damage", "operation": "multiply", "value": 0.90, "filter": {"turret_type": ["all"]}}
+		]
+	},
+	"overclocked_motors": {
+		"name": "Overclocked Motors",
+		"icon": "⚙️",
+		"description": "+20% turret rotation speed, but 5% slower fire rate",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"modifiers": [
+			{"stat": "rotation_speed", "operation": "multiply", "value": 1.20, "filter": {"turret_type": ["all"]}},
+			{"stat": "fire_rate", "operation": "multiply", "value": 0.95, "filter": {"turret_type": ["all"]}}
+		]
+	},
+	
+	# ==========================================================================
+	# EPIC TIER (Price: 160) - 3 items (all interesting)
+	# ==========================================================================
+	
+	"shrapnel_rounds": {
+		"name": "Shrapnel Rounds",
+		"icon": "💥",
+		"description": "Projectiles pierce through 1 additional enemy",
+		"rarity": GameEnums.ItemRarity.EPIC,
+		"modifiers": [
+			{"stat": "pierce", "operation": "add", "value": 1, "filter": {"attack_style": ["projectile"]}}
+		]
+	},
+	"glass_cannon_core": {
+		"name": "Glass Cannon Core",
+		"icon": "💎",
+		"description": "ALL turrets deal 40% more damage. You have 50% less health.",
+		"rarity": GameEnums.ItemRarity.EPIC,
+		"max_stacks": 1,
+		"modifiers": [
+			{"stat": "damage", "operation": "multiply", "value": 1.4, "filter": {"turret_type": ["all"]}},
+			{"stat": "player_max_health", "operation": "multiply", "value": 0.5}
+		]
+	},
+	"executioners_mark": {
+		"name": "Executioner's Mark",
+		"icon": "☠️",
+		"description": "Turrets deal 50% bonus damage to enemies below 25% health",
+		"rarity": GameEnums.ItemRarity.EPIC,
+		"special_effect": "executioner",
+		"modifiers": []
 	}
 }
 
@@ -133,3 +301,42 @@ static func get_modifiers(item_id: String) -> Array:
 	if not ITEMS.has(item_id):
 		return []
 	return ITEMS[item_id].get("modifiers", [])
+
+
+## Get max stacks for an item (0 = unlimited)
+static func get_max_stacks(item_id: String) -> int:
+	if not ITEMS.has(item_id):
+		return 0
+	return ITEMS[item_id].get("max_stacks", 0)
+
+
+## Check if item is at max stacks based on current counts
+static func is_at_max_stacks(item_id: String, item_counts: Dictionary) -> bool:
+	var max_stacks := get_max_stacks(item_id)
+	if max_stacks == 0:
+		return false  # Unlimited stacking
+	var current_count := item_counts.get(item_id, 0) as int
+	return current_count >= max_stacks
+
+
+## Get all item IDs that are not at max stacks
+static func get_available_item_ids(item_counts: Dictionary) -> Array:
+	var available: Array = []
+	for item_id in ITEMS.keys():
+		if not is_at_max_stacks(item_id, item_counts):
+			available.append(item_id)
+	return available
+
+
+## Check if item has a special effect
+static func has_special_effect(item_id: String) -> bool:
+	if not ITEMS.has(item_id):
+		return false
+	return ITEMS[item_id].has("special_effect")
+
+
+## Get special effect type
+static func get_special_effect(item_id: String) -> String:
+	if not ITEMS.has(item_id):
+		return ""
+	return ITEMS[item_id].get("special_effect", "")

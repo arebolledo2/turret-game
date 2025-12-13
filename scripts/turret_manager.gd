@@ -119,6 +119,34 @@ func find_valid_spawn_position_excluding(player: Node2D, existing_positions: Arr
 	
 	return Vector2.INF
 
+func spawn_starting_turret() -> void:
+	"""Spawn a free Normal turret at arena center at game start"""
+	if turret_scene == null:
+		push_error("Turret scene not loaded!")
+		return
+	
+	# Spawn at arena center (0, 0)
+	var spawn_pos := Vector2.ZERO
+	
+	var turret := turret_scene.instantiate()
+	turret.global_position = spawn_pos
+	turret.turret_type = "normal"
+	
+	var turret_container = get_node_or_null("../TurretContainer")
+	if turret_container:
+		turret_container.add_child(turret)
+	else:
+		get_parent().add_child(turret)
+	
+	turrets.append(turret)
+	Globals.turrets_spawned += 1
+	
+	if not Globals.turret_counts.has("normal"):
+		Globals.turret_counts["normal"] = 0
+	Globals.turret_counts["normal"] += 1
+	
+	Events.turret_spawned.emit(turret, spawn_pos)
+
 func spawn_pending_turrets() -> void:
 	"""Spawn all turrets from pending purchases queue"""
 	for turret_id in Globals.pending_turret_purchases:

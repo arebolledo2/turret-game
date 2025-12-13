@@ -33,49 +33,67 @@ func before_each() -> void:
 func test_generate_offers_creates_correct_count():
 	shop_manager.generate_offers()
 
-	# Should generate 3 turrets + 1 item = 4 offers
+	# Shop V2: 4 offers with 65% item / 35% turret chance per slot
 	assert_eq(Globals.current_shop_offers.size(), 4,
-		"Should generate exactly 4 offers (3 turrets + 1 item)")
+		"Should generate exactly 4 offers")
 
 
 func test_generate_offers_has_turret_offers():
-	shop_manager.generate_offers()
-
-	var turret_count = 0
-	for offer in Globals.current_shop_offers:
-		if offer["type"] == "turret":
-			turret_count += 1
-
-	assert_eq(turret_count, 3, "Should have exactly 3 turret offers")
+	# Shop V2: Turret/item distribution is random, just verify we have some turrets over multiple runs
+	var total_turrets = 0
+	for _i in range(20):
+		shop_manager.generate_offers()
+		for offer in Globals.current_shop_offers:
+			if offer["type"] == "turret":
+				total_turrets += 1
+	
+	# With 35% turret chance per slot, ~1.4 turrets per shop, ~28 over 20 shops
+	assert_gt(total_turrets, 0, "Should have some turret offers over multiple generations")
 
 
 func test_generate_offers_has_item_offers():
-	shop_manager.generate_offers()
-
-	var item_count = 0
-	for offer in Globals.current_shop_offers:
-		if offer["type"] == "item":
-			item_count += 1
-
-	assert_eq(item_count, 1, "Should have exactly 1 item offer")
+	# Shop V2: Turret/item distribution is random, just verify we have some items over multiple runs
+	var total_items = 0
+	for _i in range(20):
+		shop_manager.generate_offers()
+		for offer in Globals.current_shop_offers:
+			if offer["type"] == "item":
+				total_items += 1
+	
+	# With 65% item chance per slot, ~2.6 items per shop, ~52 over 20 shops
+	assert_gt(total_items, 0, "Should have some item offers over multiple generations")
 
 
 func test_turret_offers_have_valid_turret_ids():
-	shop_manager.generate_offers()
-
-	for offer in Globals.current_shop_offers:
-		if offer["type"] == "turret":
-			assert_has(Globals.TURRET_TYPES, offer["turret_id"],
-				"Turret offer should have valid turret_id")
+	# Shop V2: Generate offers multiple times to ensure we test turrets
+	var found_turret = false
+	for _i in range(10):
+		shop_manager.generate_offers()
+		for offer in Globals.current_shop_offers:
+			if offer["type"] == "turret":
+				assert_has(Globals.TURRET_TYPES, offer["turret_id"],
+					"Turret offer should have valid turret_id")
+				found_turret = true
+		if found_turret:
+			break
+	
+	assert_true(found_turret, "Should have found at least one turret offer to validate")
 
 
 func test_item_offers_have_valid_item_ids():
-	shop_manager.generate_offers()
-
-	for offer in Globals.current_shop_offers:
-		if offer["type"] == "item":
-			assert_has(Globals.ITEMS, offer["item_id"],
-				"Item offer should have valid item_id")
+	# Shop V2: Generate offers multiple times to ensure we test items
+	var found_item = false
+	for _i in range(10):
+		shop_manager.generate_offers()
+		for offer in Globals.current_shop_offers:
+			if offer["type"] == "item":
+				assert_true(ItemRegistry.has_item(offer["item_id"]),
+					"Item offer should have valid item_id")
+				found_item = true
+		if found_item:
+			break
+	
+	assert_true(found_item, "Should have found at least one item offer to validate")
 
 
 func test_offers_have_required_fields():
@@ -89,14 +107,20 @@ func test_offers_have_required_fields():
 
 
 func test_generate_offers_no_duplicate_turrets():
-	shop_manager.generate_offers()
-
-	var turret_ids = []
-	for offer in Globals.current_shop_offers:
-		if offer["type"] == "turret":
-			assert_does_not_have(turret_ids, offer["turret_id"],
-				"Should not have duplicate turret types")
-			turret_ids.append(offer["turret_id"])
+	# Shop V2: With random distribution, duplicates are now allowed in a single shop
+	# This test now just verifies that turret offers have valid IDs
+	var validated_count = 0
+	for _i in range(10):
+		shop_manager.generate_offers()
+		for offer in Globals.current_shop_offers:
+			if offer["type"] == "turret":
+				assert_has(Globals.TURRET_TYPES, offer["turret_id"],
+					"Turret offer should have valid turret_id")
+				validated_count += 1
+		if validated_count > 0:
+			break
+	
+	assert_gt(validated_count, 0, "Should have validated at least one turret offer")
 
 
 func test_generate_offers_clears_previous():
@@ -118,36 +142,63 @@ func test_generate_offers_clears_previous():
 
 func test_turret_price_wave_1():
 	Globals.current_wave = 1
-	shop_manager.generate_offers()
-
-	for offer in Globals.current_shop_offers:
-		if offer["type"] == "turret":
-			var base_price = Globals.TURRET_BASE_PRICES[offer["turret_id"]]
-			var expected = int(base_price * (1.0 + Globals.WAVE_PRICE_SCALE * 1))
-			assert_eq(offer["price"], expected,
-				"Wave 1 turret price should be base * (1 + 0.15 * 1)")
+	
+	# Shop V2: Generate offers multiple times to ensure we get a turret
+	var found_turret = false
+	for _i in range(10):
+		shop_manager.generate_offers()
+		for offer in Globals.current_shop_offers:
+			if offer["type"] == "turret":
+				var base_price = Globals.TURRET_BASE_PRICES[offer["turret_id"]]
+				var expected_wave_mult = 1.0 + Globals.WAVE_PRICE_SCALE * 1
+				var expected_penalty_mult = 1.0 + GameConstants.TURRET_PURCHASE_PENALTY * Globals.turrets_purchased
+				var expected = int(base_price * expected_wave_mult * expected_penalty_mult)
+				assert_eq(offer["price"], expected,
+					"Wave 1 turret price should include wave and penalty multipliers")
+				found_turret = true
+				break
+		if found_turret:
+			break
+	
+	assert_true(found_turret, "Should have found at least one turret offer in 10 attempts")
 
 
 func test_turret_price_scales_with_wave():
 	Globals.current_wave = 5
-	shop_manager.generate_offers()
-
-	for offer in Globals.current_shop_offers:
-		if offer["type"] == "turret":
-			var base_price = Globals.TURRET_BASE_PRICES[offer["turret_id"]]
-			var expected = int(base_price * (1.0 + Globals.WAVE_PRICE_SCALE * 5))
-			assert_eq(offer["price"], expected,
-				"Wave 5 turret price should be base * (1 + 0.15 * 5)")
+	
+	# Shop V2: Generate offers multiple times to ensure we get a turret
+	var found_turret = false
+	for _i in range(10):
+		shop_manager.generate_offers()
+		for offer in Globals.current_shop_offers:
+			if offer["type"] == "turret":
+				var base_price = Globals.TURRET_BASE_PRICES[offer["turret_id"]]
+				var expected_wave_mult = 1.0 + Globals.WAVE_PRICE_SCALE * 5
+				var expected_penalty_mult = 1.0 + GameConstants.TURRET_PURCHASE_PENALTY * Globals.turrets_purchased
+				var expected = int(base_price * expected_wave_mult * expected_penalty_mult)
+				assert_eq(offer["price"], expected,
+					"Wave 5 turret price should include wave and penalty multipliers")
+				found_turret = true
+				break
+		if found_turret:
+			break
+	
+	assert_true(found_turret, "Should have found at least one turret offer in 10 attempts")
 
 
 func test_calculate_turret_price_formula():
 	# Test the price calculation function directly
+	# Shop V2: Price includes wave scaling + turret purchase penalty
 	var base_price = 100
 	var wave = 3
-	var expected = int(base_price * (1.0 + Globals.WAVE_PRICE_SCALE * wave))
+	Globals.turrets_purchased = 2  # Simulate having bought 2 turrets
+	
+	var wave_mult = 1.0 + Globals.WAVE_PRICE_SCALE * wave
+	var penalty_mult = 1.0 + GameConstants.TURRET_PURCHASE_PENALTY * Globals.turrets_purchased
+	var expected = int(base_price * wave_mult * penalty_mult)
 
 	var result = shop_manager.calculate_turret_price(base_price, wave)
-	assert_eq(result, expected, "Price formula: base * (1.0 + 0.15 * wave)")
+	assert_eq(result, expected, "Price formula: base * wave_mult * penalty_mult")
 
 
 func test_item_price_scales_with_wave():
@@ -156,8 +207,7 @@ func test_item_price_scales_with_wave():
 
 	for offer in Globals.current_shop_offers:
 		if offer["type"] == "item":
-			var item_data = Globals.ITEMS[offer["item_id"]]
-			var base_price = Globals.ITEM_BASE_PRICES[item_data["rarity"]]
+			var base_price = ItemRegistry.get_item_price(offer["item_id"])
 			var expected = int(base_price * (1.0 + Globals.WAVE_PRICE_SCALE * 5))
 			assert_eq(offer["price"], expected,
 				"Item price should scale with wave")
@@ -199,20 +249,27 @@ func test_purchase_turret_marks_sold():
 
 func test_purchase_turret_adds_to_pending():
 	Globals.total_gold = 500
-	shop_manager.generate_offers()
-
-	# Find first turret offer
+	
+	# Shop V2: Generate offers multiple times to ensure we get a turret
 	var turret_index = -1
-	for i in range(Globals.current_shop_offers.size()):
-		if Globals.current_shop_offers[i]["type"] == "turret":
-			turret_index = i
+	var turret_id = ""
+	for _i in range(10):
+		shop_manager.generate_offers()
+		for j in range(Globals.current_shop_offers.size()):
+			if Globals.current_shop_offers[j]["type"] == "turret":
+				turret_index = j
+				turret_id = Globals.current_shop_offers[j]["turret_id"]
+				break
+		if turret_index >= 0:
 			break
-
-	var turret_id = Globals.current_shop_offers[turret_index]["turret_id"]
-	shop_manager.purchase_offer(turret_index)
-
-	assert_has(Globals.pending_turret_purchases, turret_id,
-		"Purchased turret should be added to pending purchases")
+	
+	if turret_index >= 0:
+		shop_manager.purchase_offer(turret_index)
+		assert_has(Globals.pending_turret_purchases, turret_id,
+			"Purchased turret should be added to pending purchases")
+	else:
+		# This shouldn't happen with 35% turret chance over 10 generations
+		assert_true(false, "Should have found at least one turret offer in 10 attempts")
 
 
 func test_purchase_insufficient_funds():
@@ -301,10 +358,14 @@ func test_purchase_item_adds_modifiers():
 			item_index = i
 			break
 
-	if item_index >= 0:
-		shop_manager.purchase_offer(item_index)
-		assert_gt(Globals.active_modifiers.size(), initial_modifier_count,
-			"Purchased item should add modifiers")
+	# Skip test if no items in shop (due to probabilistic generation)
+	if item_index < 0:
+		pass_test("No item offers generated - skipping test")
+		return
+	
+	shop_manager.purchase_offer(item_index)
+	assert_gt(Globals.active_modifiers.size(), initial_modifier_count,
+		"Purchased item should add modifiers")
 
 
 # =============================================================================

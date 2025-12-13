@@ -37,8 +37,12 @@ func start_game() -> void:
 	Globals.is_game_active = true
 	Events.game_started.emit()
 	
-	# Open shop before first wave so player can choose their starting turret
-	start_shop_phase()
+	# Spawn free starting turret (skip initial shop phase)
+	if turret_manager and turret_manager.has_method("spawn_starting_turret"):
+		turret_manager.spawn_starting_turret()
+	
+	# Go directly to wave 1
+	start_wave_announcement()
 
 func _process(delta: float) -> void:
 	if Globals == null or not Globals.is_game_active:

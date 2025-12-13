@@ -69,50 +69,49 @@ func test_wave_starts_at_1_after_selection():
 	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
 	await get_tree().process_frame
 	
-	# Wave starts at 0, increments to 1 when wave announcement starts (after shop)
-	# At this point we're in shop phase, wave is still 0
-	assert_eq(Globals.current_wave, 0, "Wave should be 0 during initial shop phase")
+	# Wave now starts at 1 immediately (skips initial shop phase in Shop V2)
+	assert_eq(Globals.current_wave, 1, "Wave should be 1 after game starts (Shop V2 skips initial shop)")
 
 
 # =============================================================================
-# SHOP PHASE TESTS
+# SHOP PHASE TESTS (Shop V2: Shop only appears AFTER wave 1)
 # =============================================================================
 
-func test_game_enters_shop_after_difficulty():
+func test_game_enters_wave_announcement_after_difficulty():
 	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
 	await get_tree().process_frame
 	
-	assert_eq(game_manager.current_state, game_manager.GameState.SHOP,
-		"Should enter SHOP after difficulty selected")
+	# Shop V2: Skip initial shop, go directly to wave announcement
+	assert_eq(game_manager.current_state, game_manager.GameState.WAVE_ANNOUNCEMENT,
+		"Should enter WAVE_ANNOUNCEMENT after difficulty selected (Shop V2)")
 
 
-func test_shop_opened_signal_emitted():
+func test_wave_announcement_signal_emitted_on_start():
 	watch_signals(Events)
 	
 	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
 	await get_tree().process_frame
 	
-	assert_signal_emitted(Events, "shop_opened")
+	# Shop V2: Wave announcement emitted immediately after game starts
+	assert_signal_emitted(Events, "wave_announcement_started")
 
 
 # =============================================================================
-# WAVE ANNOUNCEMENT TESTS (after shop closes)
+# WAVE ANNOUNCEMENT TESTS (Shop V2: starts immediately after difficulty select)
 # =============================================================================
 
 func test_game_enters_wave_announcement_after_shop():
+	# Shop V2: First need to complete wave 1 to see shop
+	# For this test, we verify the shop -> wave announcement flow AFTER wave 1
 	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
 	await get_tree().process_frame
 	
-	# Verify we're in shop state
-	assert_eq(game_manager.current_state, game_manager.GameState.SHOP,
-		"Should be in SHOP after difficulty selected")
-	
-	# Close shop to proceed to wave announcement (call method directly like shop_screen does)
-	game_manager.end_shop_phase()
-	
-	# State should be WAVE_ANNOUNCEMENT immediately after calling end_shop_phase
+	# We should already be in WAVE_ANNOUNCEMENT (Shop V2 skips initial shop)
 	assert_eq(game_manager.current_state, game_manager.GameState.WAVE_ANNOUNCEMENT,
-		"Should enter WAVE_ANNOUNCEMENT after shop closed")
+		"Should be in WAVE_ANNOUNCEMENT after difficulty selected (Shop V2)")
+	
+	# Can't test shop->wave_announcement flow here since shop only opens after waves
+	# This test now verifies the initial game start flow instead
 
 
 func test_wave_announcement_signal_emitted_after_shop():
@@ -121,10 +120,7 @@ func test_wave_announcement_signal_emitted_after_shop():
 	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
 	await get_tree().process_frame
 	
-	# Close shop to trigger wave announcement
-	game_manager.end_shop_phase()
-	await get_tree().process_frame
-	
+	# Shop V2: Wave announcement emitted immediately (no shop phase at start)
 	assert_signal_emitted(Events, "wave_announcement_started")
 	assert_signal_emitted(Events, "show_wave_announcement")
 

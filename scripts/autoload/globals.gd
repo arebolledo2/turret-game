@@ -512,59 +512,8 @@ const RARITY_NAMES: Dictionary = {
 	ItemRarity.UNIQUE: "Unique",
 }
 
-const ITEMS: Dictionary = {
-	"swift_boots": {
-		"name": "Swift Boots",
-		"icon": "👟",
-		"description": "Move faster, shoot weaker",
-		"rarity": ItemRarity.COMMON,
-		"modifiers": [
-			{"stat": "player_speed", "operation": "multiply", "value": 1.05},
-			{"stat": "damage", "operation": "multiply", "value": 0.97, "filter": {"turret_type": ["all"]}}
-		]
-	},
-	"heavy_ammunition": {
-		"name": "Heavy Ammunition",
-		"icon": "💥",
-		"description": "Powerful rounds, but heavy to carry",
-		"rarity": ItemRarity.COMMON,
-		"modifiers": [
-			{"stat": "damage", "operation": "multiply", "value": 1.04, "filter": {"turret_type": ["all"]}},
-			{"stat": "player_max_health", "operation": "add", "value": -5.0}
-		]
-	},
-	"lightweight_frame": {
-		"name": "Lightweight Frame",
-		"icon": "🪶",
-		"description": "Speed at the cost of protection",
-		"rarity": ItemRarity.COMMON,
-		"modifiers": [
-			{"stat": "player_speed", "operation": "multiply", "value": 1.03},
-			{"stat": "player_max_health", "operation": "add", "value": -3.0}
-		]
-	},
-	"reinforced_plating": {
-		"name": "Reinforced Plating",
-		"icon": "🛡️",
-		"description": "Sturdy but sluggish",
-		"rarity": ItemRarity.COMMON,
-		"modifiers": [
-			{"stat": "player_max_health", "operation": "add", "value": 10.0},
-			{"stat": "player_speed", "operation": "multiply", "value": 0.96}
-		]
-	},
-	"precision_optics": {
-		"name": "Precision Optics",
-		"icon": "🔭",
-		"description": "Better aim, more focus required",
-		"rarity": ItemRarity.COMMON,
-		"modifiers": [
-			{"stat": "fire_rate", "operation": "multiply", "value": 1.03, "filter": {"turret_type": ["all"]}},
-			{"stat": "player_speed", "operation": "multiply", "value": 0.98}
-		]
-	}
-}
-
+# Items are now in ItemRegistry - use ItemRegistry.get_item(id) instead
+# Legacy ITEM_BASE_PRICES kept for compatibility
 const ITEM_BASE_PRICES: Dictionary = {
 	ItemRarity.COMMON: 40,
 	ItemRarity.UNCOMMON: 70,
@@ -649,6 +598,8 @@ var current_wave: int = 0
 var total_xp: int = 0
 var total_kills: int = 0
 var turrets_spawned: int = 0
+var turrets_purchased: int = 0  # Tracks turrets bought (for price penalty)
+var item_counts: Dictionary = {}  # Tracks item counts for max_stacks
 var time_survived: float = 0.0
 var is_game_active: bool = false
 var player_level: int = 1
@@ -725,10 +676,12 @@ func reset_stats() -> void:
 	total_xp = 0
 	total_kills = 0
 	turrets_spawned = 0
+	turrets_purchased = 0
 	time_survived = 0.0
 	is_game_active = false
 	player_level = 1
 	turret_counts.clear()
+	item_counts.clear()
 	selected_turret_type = ""
 	collected_items.clear()
 	active_modifiers.clear()

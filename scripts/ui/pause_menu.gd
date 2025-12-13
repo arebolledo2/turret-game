@@ -175,11 +175,11 @@ func update_items_panel() -> void:
 
 		# Add item slots
 		for item_id in Globals.collected_items:
-			if not Globals.ITEMS.has(item_id):
+			if not ItemRegistry.has_item(item_id):
 				continue
-			var item_data = Globals.ITEMS[item_id]
+			var item_data = ItemRegistry.get_item(item_id)
 			var slot := ColorRect.new()
 			slot.custom_minimum_size = Vector2(40, 40)
-			slot.color = Globals.RARITY_COLORS.get(item_data.get("rarity", 0), Color.WHITE)
+			slot.color = ItemRegistry.get_rarity_color(item_data.get("rarity", 0))
 			slot.tooltip_text = "%s\n%s" % [item_data.get("name", "Unknown Item"), item_data.get("description", "")]
 			items_hbox.add_child(slot)

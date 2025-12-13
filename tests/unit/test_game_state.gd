@@ -472,7 +472,7 @@ func test_reset_clears_selected_turret():
 
 
 func test_reset_clears_collected_items():
-	game_state.collected_items.append("swift_boots")
+	game_state.collected_items.append("scrap_magnet")
 	game_state.reset()
 	assert_true(game_state.collected_items.is_empty(), "Reset should clear collected items")
 

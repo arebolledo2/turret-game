@@ -122,34 +122,84 @@ var turrets_purchased: int = 0  # Track total turrets bought (not including star
 
 ---
 
-## 4. New Item System: 10 Creative Items
+## 4. New Item System
+
+### Unique/Limited Item Support
+Items can now have a `max_stacks` property that limits how many copies can be obtained per run:
+- `max_stacks: 1` = Unique item (can only own one)
+- `max_stacks: 3` = Limited item (can stack up to 3)
+- No `max_stacks` = Unlimited (can stack infinitely)
+
+```gdscript
+# Item definition with max_stacks
+"volatile_rounds": {
+    "name": "Volatile Rounds",
+    ...
+    "max_stacks": 1,  # Unique - only one allowed
+}
+```
+
+**Shop behavior:** Items at max stacks should not appear in shop offers.
 
 ### Design Philosophy
-- Remove "boring" stat-stick items with minor trade-offs
-- Focus on **interesting effects** that change gameplay
-- Items should feel exciting to purchase
-- Balance power with meaningful drawbacks or synergy requirements
+- **Interesting items** = Powerful effects, build-defining, often unique
+- **Boring items** = Simple stat trade-offs, stackable, always useful filler
+- Both item types serve a purpose in the economy
 
-### Items to REMOVE (Current Boring Items)
+### Items to REMOVE (Current Items)
 | Item ID | Reason |
 |---------|--------|
-| `swift_boots` | Minor speed buff, weak damage penalty - unexciting |
-| `heavy_ammunition` | Tiny damage buff, minor HP loss - barely noticeable |
-| `lightweight_frame` | Minor speed, minor HP loss - same problem |
-| `reinforced_plating` | Minor HP, minor speed loss - boring trade |
-| `precision_optics` | Minor fire rate, minor speed loss - forgettable |
+| `swift_boots` | Replaced with new system |
+| `heavy_ammunition` | Replaced with new system |
+| `lightweight_frame` | Replaced with new system |
+| `reinforced_plating` | Replaced with new system |
+| `precision_optics` | Replaced with new system |
 
-### NEW Items (10 Creative Damage/Effect Items)
+---
+
+### NEW Interesting Items (9 Items)
 
 #### Common Tier (Price: 40)
 
-**1. Volatile Rounds** 🔴
+**1. Scrap Magnet** 🧲
+```gdscript
+"scrap_magnet": {
+    "name": "Scrap Magnet",
+    "icon": "🧲",
+    "description": "Increases pickup radius by 30%",
+    "rarity": GameEnums.ItemRarity.COMMON,
+    "modifiers": [
+        {"stat": "pickup_radius", "operation": "multiply", "value": 1.3}
+    ]
+}
+```
+
+#### Uncommon Tier (Price: 70)
+
+**2. Overcharged Cells** ⚡
+```gdscript
+"overcharged_cells": {
+    "name": "Overcharged Cells",
+    "icon": "⚡",
+    "description": "Electric turrets deal 30% more damage but chain to fewer targets",
+    "rarity": GameEnums.ItemRarity.UNCOMMON,
+    "modifiers": [
+        {"stat": "damage", "operation": "multiply", "value": 1.3, "filter": {"damage_type": ["electric"]}},
+        {"stat": "chain_count", "operation": "add", "value": -1, "filter": {"turret_type": ["tesla"]}}
+    ]
+}
+```
+
+#### Rare Tier (Price: 110)
+
+**3. Volatile Rounds** 🔴 *(UNIQUE)*
 ```gdscript
 "volatile_rounds": {
     "name": "Volatile Rounds",
     "icon": "🔴",
     "description": "Turret projectiles explode on hit, but turrets fire slower",
-    "rarity": GameEnums.ItemRarity.COMMON,
+    "rarity": GameEnums.ItemRarity.RARE,
+    "max_stacks": 1,
     "modifiers": [
         {"stat": "aoe_radius", "operation": "add", "value": 40.0, "filter": {"turret_type": ["normal", "fire"]}},
         {"stat": "fire_rate", "operation": "multiply", "value": 0.85, "filter": {"turret_type": ["all"]}}
@@ -157,42 +207,14 @@ var turrets_purchased: int = 0  # Track total turrets bought (not including star
 }
 ```
 
-**2. Scrap Magnet** 🧲
-```gdscript
-"scrap_magnet": {
-    "name": "Scrap Magnet",
-    "icon": "🧲",
-    "description": "Gold drops are attracted to you from further away",
-    "rarity": GameEnums.ItemRarity.COMMON,
-    "modifiers": [
-        {"stat": "pickup_radius", "operation": "multiply", "value": 2.0}
-    ]
-}
-```
-
-#### Uncommon Tier (Price: 70)
-
-**3. Overcharged Cells** ⚡
-```gdscript
-"overcharged_cells": {
-    "name": "Overcharged Cells",
-    "icon": "⚡",
-    "description": "Electric turrets deal 50% more damage but chain to fewer targets",
-    "rarity": GameEnums.ItemRarity.UNCOMMON,
-    "modifiers": [
-        {"stat": "damage", "operation": "multiply", "value": 1.5, "filter": {"damage_type": ["electric"]}},
-        {"stat": "chain_count", "operation": "add", "value": -1, "filter": {"turret_type": ["tesla"]}}
-    ]
-}
-```
-
-**4. Incendiary Gel** 🩸
+**4. Incendiary Gel** 🩸 *(UNIQUE)*
 ```gdscript
 "incendiary_gel": {
     "name": "Incendiary Gel",
     "icon": "🩸",
     "description": "Fire effects last twice as long and tick faster",
-    "rarity": GameEnums.ItemRarity.UNCOMMON,
+    "rarity": GameEnums.ItemRarity.RARE,
+    "max_stacks": 1,
     "modifiers": [
         {"stat": "dot_duration", "operation": "multiply", "value": 2.0, "filter": {"turret_type": ["fire"]}},
         {"stat": "dot_tick_rate", "operation": "multiply", "value": 0.5, "filter": {"turret_type": ["fire"]}}
@@ -200,36 +222,7 @@ var turrets_purchased: int = 0  # Track total turrets bought (not including star
 }
 ```
 
-**5. Glass Cannon Core** 💎
-```gdscript
-"glass_cannon_core": {
-    "name": "Glass Cannon Core",
-    "icon": "💎",
-    "description": "ALL turrets deal 40% more damage. You have 50% less health.",
-    "rarity": GameEnums.ItemRarity.UNCOMMON,
-    "modifiers": [
-        {"stat": "damage", "operation": "multiply", "value": 1.4, "filter": {"turret_type": ["all"]}},
-        {"stat": "player_max_health", "operation": "multiply", "value": 0.5}
-    ]
-}
-```
-
-#### Rare Tier (Price: 110)
-
-**6. Shrapnel Rounds** 💥
-```gdscript
-"shrapnel_rounds": {
-    "name": "Shrapnel Rounds",
-    "icon": "💥",
-    "description": "Projectiles pierce through 2 additional enemies",
-    "rarity": GameEnums.ItemRarity.RARE,
-    "modifiers": [
-        {"stat": "pierce", "operation": "add", "value": 2, "filter": {"attack_style": ["projectile"]}}
-    ]
-}
-```
-
-**7. Targeting Matrix** 🎯
+**5. Targeting Matrix** 🎯
 ```gdscript
 "targeting_matrix": {
     "name": "Targeting Matrix",
@@ -243,7 +236,7 @@ var turrets_purchased: int = 0  # Track total turrets bought (not including star
 }
 ```
 
-**8. Plasma Capacitor** 🟣
+**6. Plasma Capacitor** 🟣
 ```gdscript
 "plasma_capacitor": {
     "name": "Plasma Capacitor",
@@ -259,25 +252,40 @@ var turrets_purchased: int = 0  # Track total turrets bought (not including star
 
 #### Epic Tier (Price: 160)
 
-**9. Berserker Protocol** 🔥
+**7. Shrapnel Rounds** 💥
 ```gdscript
-"berserker_protocol": {
-    "name": "Berserker Protocol",
-    "icon": "🔥",
-    "description": "Turrets fire 50% faster when enemies are within close range",
+"shrapnel_rounds": {
+    "name": "Shrapnel Rounds",
+    "icon": "💥",
+    "description": "Projectiles pierce through 1 additional enemy",
     "rarity": GameEnums.ItemRarity.EPIC,
-    "special_effect": "berserker_protocol",
-    "modifiers": []
-    # Note: Requires special handling - conditional fire rate boost
+    "modifiers": [
+        {"stat": "pierce", "operation": "add", "value": 1, "filter": {"attack_style": ["projectile"]}}
+    ]
 }
 ```
 
-**10. Executioner's Mark** ☠️
+**8. Glass Cannon Core** 💎 *(UNIQUE)*
+```gdscript
+"glass_cannon_core": {
+    "name": "Glass Cannon Core",
+    "icon": "💎",
+    "description": "ALL turrets deal 40% more damage. You have 50% less health.",
+    "rarity": GameEnums.ItemRarity.EPIC,
+    "max_stacks": 1,
+    "modifiers": [
+        {"stat": "damage", "operation": "multiply", "value": 1.4, "filter": {"turret_type": ["all"]}},
+        {"stat": "player_max_health", "operation": "multiply", "value": 0.5}
+    ]
+}
+```
+
+**9. Executioner's Mark** ☠️
 ```gdscript
 "executioners_mark": {
     "name": "Executioner's Mark",
     "icon": "☠️",
-    "description": "Turrets deal 100% bonus damage to enemies below 25% health",
+    "description": "Turrets deal 50% bonus damage to enemies below 25% health",
     "rarity": GameEnums.ItemRarity.EPIC,
     "special_effect": "executioner",
     "modifiers": []
@@ -285,12 +293,194 @@ var turrets_purchased: int = 0  # Track total turrets bought (not including star
 }
 ```
 
+---
+
+### NEW Boring Items (10 Trade-off Items)
+
+These are simple stat trade-off items that lean positive but have a cost. Players will generally be happy to obtain them as filler between interesting items.
+
+#### Common Tier (Price: 40)
+
+**1. Reinforced Hull** 🛡️
+```gdscript
+"reinforced_hull": {
+    "name": "Reinforced Hull",
+    "icon": "🛡️",
+    "description": "+15 max HP, but 5% slower movement",
+    "rarity": GameEnums.ItemRarity.COMMON,
+    "modifiers": [
+        {"stat": "player_max_health", "operation": "add", "value": 15.0},
+        {"stat": "player_speed", "operation": "multiply", "value": 0.95}
+    ]
+}
+```
+
+**2. Quick Loader** ⏱️
+```gdscript
+"quick_loader": {
+    "name": "Quick Loader",
+    "icon": "⏱️",
+    "description": "+10% fire rate, but 5% less damage",
+    "rarity": GameEnums.ItemRarity.COMMON,
+    "modifiers": [
+        {"stat": "fire_rate", "operation": "multiply", "value": 1.10, "filter": {"turret_type": ["all"]}},
+        {"stat": "damage", "operation": "multiply", "value": 0.95, "filter": {"turret_type": ["all"]}}
+    ]
+}
+```
+
+**3. Shock Absorbers** 🏃
+```gdscript
+"shock_absorbers": {
+    "name": "Shock Absorbers",
+    "icon": "🏃",
+    "description": "+10% movement speed, but -10 max HP",
+    "rarity": GameEnums.ItemRarity.COMMON,
+    "modifiers": [
+        {"stat": "player_speed", "operation": "multiply", "value": 1.10},
+        {"stat": "player_max_health", "operation": "add", "value": -10.0}
+    ]
+}
+```
+
+**4. Dense Rounds** 🔩
+```gdscript
+"dense_rounds": {
+    "name": "Dense Rounds",
+    "icon": "🔩",
+    "description": "+10% damage, but 5% slower fire rate",
+    "rarity": GameEnums.ItemRarity.COMMON,
+    "modifiers": [
+        {"stat": "damage", "operation": "multiply", "value": 1.10, "filter": {"turret_type": ["all"]}},
+        {"stat": "fire_rate", "operation": "multiply", "value": 0.95, "filter": {"turret_type": ["all"]}}
+    ]
+}
+```
+
+#### Uncommon Tier (Price: 70)
+
+**5. Extended Barrel** 📏
+```gdscript
+"extended_barrel": {
+    "name": "Extended Barrel",
+    "icon": "📏",
+    "description": "+15% turret range, but 10% slower fire rate",
+    "rarity": GameEnums.ItemRarity.UNCOMMON,
+    "modifiers": [
+        {"stat": "range", "operation": "multiply", "value": 1.15, "filter": {"turret_type": ["all"]}},
+        {"stat": "fire_rate", "operation": "multiply", "value": 0.90, "filter": {"turret_type": ["all"]}}
+    ]
+}
+```
+
+**6. Heavy Plating** 🪨
+```gdscript
+"heavy_plating": {
+    "name": "Heavy Plating",
+    "icon": "🪨",
+    "description": "+20 max HP, but 8% slower movement",
+    "rarity": GameEnums.ItemRarity.UNCOMMON,
+    "modifiers": [
+        {"stat": "player_max_health", "operation": "add", "value": 20.0},
+        {"stat": "player_speed", "operation": "multiply", "value": 0.92}
+    ]
+}
+```
+
+**7. Rapid Coolant** ❄️
+```gdscript
+"rapid_coolant": {
+    "name": "Rapid Coolant",
+    "icon": "❄️",
+    "description": "+15% fire rate, but 10% reduced range",
+    "rarity": GameEnums.ItemRarity.UNCOMMON,
+    "modifiers": [
+        {"stat": "fire_rate", "operation": "multiply", "value": 1.15, "filter": {"turret_type": ["all"]}},
+        {"stat": "range", "operation": "multiply", "value": 0.90, "filter": {"turret_type": ["all"]}}
+    ]
+}
+```
+
+**8. Nimble Servos** 🦿
+```gdscript
+"nimble_servos": {
+    "name": "Nimble Servos",
+    "icon": "🦿",
+    "description": "+8% movement speed, but 5% less turret damage",
+    "rarity": GameEnums.ItemRarity.UNCOMMON,
+    "modifiers": [
+        {"stat": "player_speed", "operation": "multiply", "value": 1.08},
+        {"stat": "damage", "operation": "multiply", "value": 0.95, "filter": {"turret_type": ["all"]}}
+    ]
+}
+```
+
+#### Rare Tier (Price: 110)
+
+**9. Fortified Core** 💚
+```gdscript
+"fortified_core": {
+    "name": "Fortified Core",
+    "icon": "💚",
+    "description": "+25 max HP, but 10% less turret damage",
+    "rarity": GameEnums.ItemRarity.RARE,
+    "modifiers": [
+        {"stat": "player_max_health", "operation": "add", "value": 25.0},
+        {"stat": "damage", "operation": "multiply", "value": 0.90, "filter": {"turret_type": ["all"]}}
+    ]
+}
+```
+
+**10. Overclocked Motors** ⚙️
+```gdscript
+"overclocked_motors": {
+    "name": "Overclocked Motors",
+    "icon": "⚙️",
+    "description": "+20% turret rotation speed, but 5% slower fire rate",
+    "rarity": GameEnums.ItemRarity.RARE,
+    "modifiers": [
+        {"stat": "rotation_speed", "operation": "multiply", "value": 1.20, "filter": {"turret_type": ["all"]}},
+        {"stat": "fire_rate", "operation": "multiply", "value": 0.95, "filter": {"turret_type": ["all"]}}
+    ]
+}
+```
+
+---
+
+### Item Summary Table
+
+| Item | Rarity | Price | Unique | Category |
+|------|--------|-------|--------|----------|
+| Scrap Magnet | Common | 40 | No | Interesting |
+| Reinforced Hull | Common | 40 | No | Boring |
+| Quick Loader | Common | 40 | No | Boring |
+| Shock Absorbers | Common | 40 | No | Boring |
+| Dense Rounds | Common | 40 | No | Boring |
+| Overcharged Cells | Uncommon | 70 | No | Interesting |
+| Extended Barrel | Uncommon | 70 | No | Boring |
+| Heavy Plating | Uncommon | 70 | No | Boring |
+| Rapid Coolant | Uncommon | 70 | No | Boring |
+| Nimble Servos | Uncommon | 70 | No | Boring |
+| Volatile Rounds | Rare | 110 | **Yes** | Interesting |
+| Incendiary Gel | Rare | 110 | **Yes** | Interesting |
+| Targeting Matrix | Rare | 110 | No | Interesting |
+| Plasma Capacitor | Rare | 110 | No | Interesting |
+| Fortified Core | Rare | 110 | No | Boring |
+| Overclocked Motors | Rare | 110 | No | Boring |
+| Shrapnel Rounds | Epic | 160 | No | Interesting |
+| Glass Cannon Core | Epic | 160 | **Yes** | Interesting |
+| Executioner's Mark | Epic | 160 | No | Interesting |
+
+**Total: 19 items** (9 interesting + 10 boring)
+
 ### Files to Modify
 | File | Changes |
 |------|---------|
-| `scripts/registries/item_registry.gd` | Remove old items, add 10 new items |
+| `scripts/registries/item_registry.gd` | Remove old items, add 19 new items, add `max_stacks` support |
 | `scripts/systems/modifier_system.gd` | Add support for new modifier types (aoe_radius, pierce, etc.) |
-| `scripts/turret.gd` | Handle special effects (berserker, executioner) |
+| `scripts/turret.gd` | Handle special effects (executioner) |
+| `scripts/shop_manager.gd` | Filter out items at max stacks from shop offers |
+| `scripts/autoload/globals.gd` | Track item counts per ID for max_stacks enforcement |
 
 ---
 
@@ -338,22 +528,23 @@ func generate_offers() -> void:
 ### Phase 1: Core Changes (Low Risk)
 1. ✅ Update turret stats in `turret_registry.gd`
 2. ✅ Add new constants to `game_constants.gd`
-3. ✅ Update `globals.gd` with new state variables
+3. ✅ Update `globals.gd` with new state variables (turrets_purchased, item_counts)
 
 ### Phase 2: Economy System
 4. ✅ Implement escalating turret pricing in `shop_manager.gd`
 5. ✅ Update shop slot distribution logic
+6. ✅ Add max_stacks filtering for unique items
 
 ### Phase 3: Item Overhaul
-6. ✅ Remove old items from `item_registry.gd`
-7. ✅ Add 10 new items to `item_registry.gd`
-8. ✅ Update `modifier_system.gd` for new modifier types
-9. ✅ Add special effect handling in `turret.gd` (berserker, executioner)
+7. ✅ Remove old items from `item_registry.gd`
+8. ✅ Add 19 new items to `item_registry.gd` (9 interesting + 10 boring)
+9. ✅ Update `modifier_system.gd` for new modifier types
+10. ✅ Add special effect handling in `turret.gd` (executioner)
 
 ### Phase 4: Game Flow
-10. ✅ Remove initial shop phase in `game_manager.gd`
-11. ✅ Implement free starting turret spawn
-12. ✅ Update starting gold
+11. ✅ Remove initial shop phase in `game_manager.gd`
+12. ✅ Implement free starting turret spawn
+13. ✅ Update starting gold
 
 ---
 
@@ -365,9 +556,11 @@ func generate_offers() -> void:
 - [ ] Turret damage feels impactful
 - [ ] Buying turrets increases future turret prices
 - [ ] Shop shows ~65% items, ~35% turrets on average
-- [ ] All 10 new items appear in shop
+- [ ] All 19 items can appear in shop
+- [ ] Unique items (max_stacks: 1) don't appear after being purchased
 - [ ] New items apply their effects correctly
-- [ ] Special effects (berserker, executioner) work as intended
+- [ ] Executioner special effect works (bonus damage below 25% HP)
+- [ ] Boring items stack correctly when purchased multiple times
 - [ ] Game balance feels good through all 10 waves
 
 ---
@@ -385,17 +578,27 @@ func generate_offers() -> void:
 - Late game should have 4-6 turrets max (vs potential 8-10 before)
 
 ### Item Power Curve
-- Common: Quality-of-life or minor synergies
-- Uncommon: Meaningful buffs with trade-offs
-- Rare: Significant power spikes
-- Epic: Build-defining effects
+- **Common**: Quality-of-life or minor trade-offs (boring items dominate)
+- **Uncommon**: Meaningful buffs with trade-offs, one interesting synergy item
+- **Rare**: Significant power spikes, unique build-defining items
+- **Epic**: Game-changing effects (Shrapnel, Glass Cannon, Executioner)
+
+### Item Distribution by Rarity
+| Rarity | Interesting | Boring | Total |
+|--------|-------------|--------|-------|
+| Common | 1 | 4 | 5 |
+| Uncommon | 1 | 4 | 5 |
+| Rare | 4 | 2 | 6 |
+| Epic | 3 | 0 | 3 |
+| **Total** | **9** | **10** | **19** |
 
 ---
 
 ## Future Considerations (Not in this update)
 
-- Legendary/Unique tier items
+- Legendary tier items (super rare, very powerful)
 - Turret upgrade system (enhance existing turrets)
 - Item synergy combos (e.g., "fire items empower each other")
 - Shop locking (pay to keep an offer for next wave)
 - Turret selling (recover partial gold)
+- More unique items with interesting mechanics
