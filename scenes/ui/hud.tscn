@@ -32,6 +32,21 @@ max_value = 100.0
 value = 100.0
 show_percentage = false
 
+[node name="HealthLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/HealthBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 2
+text = "100/100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="Spacer1" type="Control" parent="MarginContainer/VBoxContainer/TopRow"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -406,6 +421,17 @@ theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
 text = "0"
 
+[node name="LuckIcon" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "🍀 Luck:"
+
+[node name="LuckValue" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.3, 1, 0.3, 1)
+text = "0"
+
 [node name="TurretsSection" type="VBoxContainer" parent="PauseMenu/MainPanel/MainVBox"]
 layout_mode = 2
 size_flags_vertical = 3
@@ -534,6 +560,43 @@ vertical_scroll_mode = 0
 [node name="ItemsHBox" type="HBoxContainer" parent="PauseMenu/MainPanel/MainVBox/ItemsSection/ItemsScrollContainer"]
 layout_mode = 2
 theme_override_constants/separation = 6
+
+[node name="ItemDetailsPanel" type="PanelContainer" parent="PauseMenu/MainPanel/MainVBox/ItemsSection"]
+visible = false
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+
+[node name="ItemDetailsVBox" type="VBoxContainer" parent="PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ItemHeader" type="HBoxContainer" parent="PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ItemIcon" type="Label" parent="PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "🧲"
+
+[node name="ItemName" type="Label" parent="PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+text = "Item Name"
+
+[node name="ItemRarity" type="Label" parent="PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+text = "Common"
+
+[node name="ItemDescription" type="Label" parent="PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+text = "Item description goes here"
+autowrap_mode = 2
 
 [node name="SettingsMenu" type="Control" parent="."]
 visible = false

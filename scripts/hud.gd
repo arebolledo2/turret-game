@@ -20,6 +20,7 @@ const SettingsMenuScript = preload("res://scripts/ui/settings_menu.gd")
 
 # Node references
 @onready var health_bar: ProgressBar = $MarginContainer/VBoxContainer/TopRow/HealthBar
+@onready var health_label: Label = $MarginContainer/VBoxContainer/TopRow/HealthBar/HealthLabel
 @onready var wave_label: Label = $MarginContainer/VBoxContainer/TopRow/WaveInfo/WaveLabel
 @onready var timer_label: Label = $MarginContainer/VBoxContainer/TopRow/WaveInfo/TimerLabel
 @onready var xp_label: Label = $MarginContainer/VBoxContainer/TopRow/StatsContainer/XPLabel
@@ -53,6 +54,11 @@ const SettingsMenuScript = preload("res://scripts/ui/settings_menu.gd")
 @onready var items_hint: Label = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemsHint
 @onready var items_scroll: ScrollContainer = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemsScrollContainer
 @onready var items_hbox: HBoxContainer = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemsScrollContainer/ItemsHBox
+@onready var item_details_panel: PanelContainer = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel
+@onready var item_icon_label: Label = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemIcon
+@onready var item_name_label: Label = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemName
+@onready var item_rarity_label: Label = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemRarity
+@onready var item_description_label: Label = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemDescription
 
 # UI Components (using preloaded scripts)
 var _game_hud
@@ -103,6 +109,7 @@ func _setup_components() -> void:
 	_game_hud = GameHUDScript.new()
 	_game_hud.setup({
 		"health_bar": health_bar,
+		"health_label": health_label,
 		"wave_label": wave_label,
 		"timer_label": timer_label,
 		"xp_label": xp_label,
@@ -150,6 +157,11 @@ func _setup_components() -> void:
 		"items_hint": items_hint,
 		"items_scroll": items_scroll,
 		"items_hbox": items_hbox,
+		"item_details_panel": item_details_panel,
+		"item_icon_label": item_icon_label,
+		"item_name_label": item_name_label,
+		"item_rarity_label": item_rarity_label,
+		"item_description_label": item_description_label,
 	}, self)
 
 	# Settings menu component

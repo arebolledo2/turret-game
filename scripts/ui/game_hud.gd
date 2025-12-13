@@ -4,6 +4,7 @@ extends RefCounted
 ## Handles the main gameplay HUD elements (health bar, wave info, stats)
 
 var health_bar: ProgressBar
+var health_label: Label
 var wave_label: Label
 var timer_label: Label
 var xp_label: Label
@@ -13,6 +14,7 @@ var turret_label: Label
 
 func setup(nodes: Dictionary) -> void:
 	health_bar = nodes.get("health_bar")
+	health_label = nodes.get("health_label")
 	wave_label = nodes.get("wave_label")
 	timer_label = nodes.get("timer_label")
 	xp_label = nodes.get("xp_label")
@@ -38,6 +40,10 @@ func update_health_bar(current: float, maximum: float) -> void:
 			health_bar.modulate = Color.YELLOW
 		else:
 			health_bar.modulate = Color.RED
+
+	# Update health text label
+	if health_label:
+		health_label.text = "%d/%d" % [int(current), int(maximum)]
 
 
 func update_wave_timer(time_remaining: float) -> void:

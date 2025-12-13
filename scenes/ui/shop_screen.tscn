@@ -72,6 +72,259 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Reroll (Cost: 10)"
 
+[node name="PlayerBuildSection" type="PanelContainer" parent="ShopPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="PlayerBuildVBox" type="VBoxContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BuildTitle" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "YOUR BUILD"
+
+[node name="HSeparator" type="HSeparator" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox"]
+layout_mode = 2
+
+[node name="StatsGrid" type="GridContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 2
+columns = 14
+
+[node name="HealthIcon" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "❤"
+
+[node name="HealthValue" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+text = "100/100"
+
+[node name="SpeedIcon" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "⚡"
+
+[node name="SpeedValue" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+text = "300"
+
+[node name="LuckIcon" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "🍀"
+
+[node name="LuckValue" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.3, 1, 0.3, 1)
+text = "0"
+
+[node name="XPIcon" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "✨"
+
+[node name="XPValue" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+text = "0"
+
+[node name="KillsIcon" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "💀"
+
+[node name="KillsValue" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(1, 0.5, 0.5, 1)
+text = "0"
+
+[node name="TimeIcon" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "⏱"
+
+[node name="TimeValue" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/StatsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7, 0.7, 1, 1)
+text = "0:00"
+
+[node name="TurretsSection" type="VBoxContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TurretsHeader" type="HBoxContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection"]
+layout_mode = 2
+
+[node name="TurretsTitle" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretsHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "TURRETS (0)"
+
+[node name="Spacer" type="Control" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretsHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TurretsHint" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretsHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "Click for details"
+
+[node name="TurretIconsRow" type="HBoxContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="NoTurretsLabel" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretIconsRow"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+text = "No turrets spawned yet"
+
+[node name="TurretDetailsPanel" type="PanelContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection"]
+visible = false
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+
+[node name="TurretDetailsVBox" type="VBoxContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TurretName" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Select a turret"
+horizontal_alignment = 1
+
+[node name="StatsHBox" type="HBoxContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 30
+
+[node name="LeftStats" type="VBoxContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DamageLabel" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "• Damage: --"
+
+[node name="RangeLabel" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "• Range: --"
+
+[node name="FireRateLabel" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "• Fire Rate: --"
+
+[node name="RightStats" type="VBoxContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RotationLabel" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "• Rotation: --"
+
+[node name="ProjSpeedLabel" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "• Proj Speed: --"
+
+[node name="DPSLabel" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+text = "• DPS: --"
+
+[node name="ItemsSection" type="VBoxContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ItemsHeader" type="HBoxContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection"]
+layout_mode = 2
+
+[node name="ItemsTitle" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemsHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "ITEMS (0)"
+
+[node name="Spacer" type="Control" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemsHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ItemsHint" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemsHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+text = "Click for details"
+
+[node name="ItemsScrollContainer" type="ScrollContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection"]
+visible = false
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+horizontal_scroll_mode = 2
+vertical_scroll_mode = 0
+
+[node name="ItemsHBox" type="HBoxContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemsScrollContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="NoItemsLabel" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
+text = "No items collected"
+
+[node name="ItemDetailsPanel" type="PanelContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection"]
+visible = false
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+
+[node name="ItemDetailsVBox" type="VBoxContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemDetailsPanel"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="ItemHeader" type="HBoxContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ItemIcon" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "🧲"
+
+[node name="ItemName" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "Item Name"
+
+[node name="ItemRarity" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+text = "Common"
+
+[node name="ItemDescription" type="Label" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+text = "Item description goes here"
+autowrap_mode = 2
+
 [node name="ButtonContainer" type="HBoxContainer" parent="ShopPanel/VBoxContainer"]
 layout_mode = 2
 alignment = 1
