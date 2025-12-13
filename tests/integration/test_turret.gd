@@ -135,17 +135,18 @@ func test_turret_clears_target_when_no_enemies():
 func test_fire_cooldown_disables_can_fire():
 	# Directly test the cooldown mechanism without firing projectiles
 	assert_true(turret.can_fire, "Should start able to fire")
-	
+
 	# Simulate what happens when fire() sets can_fire = false
 	turret.can_fire = false
 	assert_false(turret.can_fire, "Should not be able to fire after firing")
-	
+
 	# Start the fire timer manually
 	turret.fire_timer.start()
-	
-	# Wait for timer
-	await turret.fire_timer.timeout
-	
+
+	# Wait for timer using a scene tree timer to avoid signal issues on cleanup
+	var wait_time = turret.fire_timer.wait_time + 0.1
+	await get_tree().create_timer(wait_time).timeout
+
 	assert_true(turret.can_fire, "Should be able to fire after cooldown")
 
 

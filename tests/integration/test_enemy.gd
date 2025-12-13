@@ -76,9 +76,9 @@ func test_enemy_takes_damage():
 func test_enemy_survives_partial_damage():
 	enemy.initialize(1)
 	enemy.take_damage(5)
-	
+
 	assert_true(is_instance_valid(enemy), "Enemy should survive partial damage")
-	assert_gt(enemy.current_health, 0, "Health should remain positive")
+	assert_gt(enemy.current_health, 0.0, "Health should remain positive")
 
 
 # =============================================================================

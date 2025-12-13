@@ -120,14 +120,14 @@ func test_add_modifier_for_chain():
 		"id": "test_chain_boost",
 		"stat": "chain_count",
 		"operation": "add",
-		"value": 2,
+		"value": 2.0,
 		"filter": {"attack_style": [Globals.AttackStyle.CHAIN]}
 	})
-	
+
 	var tesla_stats = Globals.get_turret_stats("tesla")
-	var base_chain = Globals.TURRET_TYPES["tesla"]["base_stats"]["chain_count"]
-	
-	assert_eq(tesla_stats["chain_count"], base_chain + 2, "Tesla chain count should be increased by 2")
+	var base_chain: float = Globals.TURRET_TYPES["tesla"]["base_stats"]["chain_count"]
+
+	assert_eq(tesla_stats["chain_count"], base_chain + 2.0, "Tesla chain count should be increased by 2")
 
 
 func test_remove_modifier():
