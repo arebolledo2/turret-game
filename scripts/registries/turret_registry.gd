@@ -15,12 +15,12 @@ const COLORS: Dictionary = {
 
 # Base prices for turret types
 const BASE_PRICES: Dictionary = {
-	"normal": 50,
-	"sniper": 120,
-	"fire": 80,
-	"plasma": 100,
-	"shock": 90,
-	"tesla": 110,
+	"normal": 65,
+	"sniper": 150,
+	"fire": 105,
+	"plasma": 130,
+	"shock": 118,
+	"tesla": 143,
 }
 
 const TYPES: Dictionary = {
@@ -31,9 +31,9 @@ const TYPES: Dictionary = {
 		"attack_styles": [GameEnums.AttackStyle.PROJECTILE],
 		"damage_types": [GameEnums.DamageType.PHYSICAL],
 		"base_stats": {
-			"damage": 18.0,
-			"fire_rate": 2.0,
-			"range": 180.0,
+			"damage": 50.0,
+			"fire_rate": 1.2,
+			"range": 160.0,
 			"rotation_speed": 300.0,
 			"projectile_speed": 700.0,
 			"pierce": 0,
@@ -47,7 +47,7 @@ const TYPES: Dictionary = {
 		"damage_types": [GameEnums.DamageType.PHYSICAL],
 		"targeting": "farthest",
 		"base_stats": {
-			"damage": 45.0,
+			"damage": 70.0,
 			"fire_rate": 0.5,
 			"range": 500.0,
 			"rotation_speed": 120.0,
@@ -60,13 +60,13 @@ const TYPES: Dictionary = {
 		"attack_styles": [GameEnums.AttackStyle.PROJECTILE],
 		"damage_types": [GameEnums.DamageType.FIRE],
 		"base_stats": {
-			"damage": 10.0,
-			"fire_rate": 2.5,
-			"range": 160.0,
+			"damage": 18.0,
+			"fire_rate": 2.0,
+			"range": 140.0,
 			"rotation_speed": 300.0,
 			"projectile_speed": 600.0,
 			"pierce": 99,
-			"dot_damage": 4.0,
+			"dot_damage": 8.0,
 			"dot_duration": 3.0,
 			"dot_tick_rate": 1.0,
 		}
@@ -79,13 +79,13 @@ const TYPES: Dictionary = {
 		"damage_types": [GameEnums.DamageType.PLASMA],
 		"targeting": "cluster",
 		"base_stats": {
-			"damage": 25.0,
+			"damage": 40.0,
 			"fire_rate": 1.0,
-			"range": 200.0,
+			"range": 170.0,
 			"rotation_speed": 280.0,
 			"projectile_speed": 550.0,
 			"pierce": 0,
-			"aoe_radius": 80.0,
+			"aoe_radius": 100.0,
 			"knockback_force": 120.0,
 		}
 	},
@@ -96,9 +96,9 @@ const TYPES: Dictionary = {
 		"attack_styles": [GameEnums.AttackStyle.AOE],
 		"damage_types": [GameEnums.DamageType.ELECTRIC],
 		"base_stats": {
-			"damage": 15.0,
+			"damage": 25.0,
 			"fire_rate": 1.5,
-			"range": 120.0,
+			"range": 100.0,
 			"rotation_speed": 0.0,
 			"slow_intensity": 0.25,
 			"slow_duration": 0.5,
@@ -111,12 +111,12 @@ const TYPES: Dictionary = {
 		"attack_styles": [GameEnums.AttackStyle.INSTANT, GameEnums.AttackStyle.CHAIN],
 		"damage_types": [GameEnums.DamageType.ELECTRIC],
 		"base_stats": {
-			"damage": 22.0,
+			"damage": 38.0,
 			"fire_rate": 1.2,
-			"range": 170.0,
+			"range": 150.0,
 			"rotation_speed": 200.0,
 			"chain_count": 3,
-			"chain_range": 120.0,
+			"chain_range": 150.0,
 			"chain_decay": 0.7,
 		}
 	},

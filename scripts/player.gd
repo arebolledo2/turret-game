@@ -32,7 +32,7 @@ var melee_animation_timer: Timer
 var melee_windup_timer: Timer
 
 # Melee configuration (export for easy tuning)
-@export var melee_damage: float = 20.0
+@export var melee_damage: float = 35.0
 @export var melee_range: float = 65.0
 @export var melee_arc_degrees: float = 120.0
 @export var melee_cooldown: float = 0.7
