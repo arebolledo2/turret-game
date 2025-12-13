@@ -198,14 +198,14 @@ func fire() -> void:
 	# Determine attack style
 	var turret_def = TurretRegistry.get_type(turret_type)
 	var attack_styles = turret_def.get("attack_styles", [])
-	ameEnums.AttackStyle.PROJECTILE in attack_styles:
+	
+	if GameEnums.AttackStyle.PROJECTILE in attack_styles:
 		_fire_projectile()
 	elif GameEnums.AttackStyle.CHAIN in attack_styles:
 		_fire_chain()
 	elif GameEnums.AttackStyle.INSTANT in attack_styles:
 		_fire_instant()
-	elif GameEnumant()
-	elif Globals.AttackStyle.AOE in attack_styles:
+	elif GameEnums.AttackStyle.AOE in attack_styles:
 		_fire_aoe_pulse()
 	
 	Events.turret_fired.emit(self)
@@ -264,10 +264,10 @@ func _fire_aoe_pulse() -> void:
 				hit_count += 1
 
 			# Apply slow effect if configured
-			if slturret_def = TurretRegistry.get_type(turret_type)
+			if slow_intensity > 0 and slow_duration > 0 and enemy.has_method("apply_status_effect"):
+				var turret_def = TurretRegistry.get_type(turret_type)
 				var damage_types = turret_def.get("damage_types", [])
-				var dtype = damage_types[0] if not damage_types.is_empty() else GameEnum", [])
-				var dtype = damage_types[0] if not damage_types.is_empty() else Globals.DamageType.ELECTRIC
+				var dtype = damage_types[0] if not damage_types.is_empty() else GameEnums.DamageType.ELECTRIC
 				enemy.apply_status_effect(dtype, 0.0, slow_duration, 1.0, slow_intensity)
 
 	if hit_count > 0:
@@ -329,9 +329,9 @@ func _find_closest_enemy_excluding(pos: Vector2, range_limit: float, excluded: A
 	return best_target
 
 func _draw_tracer(end_pos: Vector2) -> void:
-	var line = Line2D.newTurretRegistry.g
+	var line = Line2D.new()
 	line.width = 2.0
-	line.default_color = Globals.get_turret_color(turret_type)
+	line.default_color = TurretRegistry.get_color(turret_type)
 	line.add_point(Vector2.ZERO) # Local space
 	line.add_point(to_local(end_pos))
 	add_child(line)
@@ -365,9 +365,9 @@ func _spawn_pulse_effect() -> void:
 	var points = PackedVector2Array()
 	for i in range(32):
 		var angle = i * TAU / 32.0
-		points.appeTurretRegistry.gngle), sin(angle)) * current_range)
+		points.append(Vector2(cos(angle), sin(angle)) * current_range)
 	viz.polygon = points
-	viz.color = Globals.get_turret_color(turret_type)
+	viz.color = TurretRegistry.get_color(turret_type)
 	viz.color.a = 0.3
 	
 	add_child(viz)
@@ -435,4 +435,3 @@ func hide_pickup_indicator() -> void:
 			sprite_node.modulate.v = 0.4
 	if weapon_sprite:
 		weapon_sprite.modulate = Color.WHITE
-

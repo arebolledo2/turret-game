@@ -168,3 +168,358 @@ func test_turret_damage_reduced_on_hard():
 	var hard_damage = hard_turret.current_damage
 	
 	assert_lt(hard_damage, easy_damage, "Hard mode turrets should deal less damage")
+
+
+# =============================================================================
+# ATTACK STYLE SELECTION TESTS
+# =============================================================================
+
+func test_normal_turret_uses_projectile_attack():
+	var normal_turret = turret_scene.instantiate()
+	normal_turret.turret_type = "normal"
+	add_child_autofree(normal_turret)
+	
+	var turret_def = TurretRegistry.get_type("normal")
+	var attack_styles = turret_def["attack_styles"]
+	
+	assert_true(GameEnums.AttackStyle.PROJECTILE in attack_styles, "Normal turret should have PROJECTILE attack style")
+
+
+func test_sniper_turret_uses_instant_attack():
+	var sniper_turret = turret_scene.instantiate()
+	sniper_turret.turret_type = "sniper"
+	add_child_autofree(sniper_turret)
+	
+	var turret_def = TurretRegistry.get_type("sniper")
+	var attack_styles = turret_def["attack_styles"]
+	
+	assert_true(GameEnums.AttackStyle.INSTANT in attack_styles, "Sniper turret should have INSTANT attack style")
+
+
+func test_shock_turret_uses_aoe_attack():
+	var shock_turret = turret_scene.instantiate()
+	shock_turret.turret_type = "shock"
+	add_child_autofree(shock_turret)
+	
+	var turret_def = TurretRegistry.get_type("shock")
+	var attack_styles = turret_def["attack_styles"]
+	
+	assert_true(GameEnums.AttackStyle.AOE in attack_styles, "Shock turret should have AOE attack style")
+
+
+func test_tesla_turret_uses_chain_attack():
+	var tesla_turret = turret_scene.instantiate()
+	tesla_turret.turret_type = "tesla"
+	add_child_autofree(tesla_turret)
+	
+	var turret_def = TurretRegistry.get_type("tesla")
+	var attack_styles = turret_def["attack_styles"]
+	
+	assert_true(GameEnums.AttackStyle.CHAIN in attack_styles, "Tesla turret should have CHAIN attack style")
+
+
+func test_fire_turret_has_fire_damage_type():
+	var fire_turret = turret_scene.instantiate()
+	fire_turret.turret_type = "fire"
+	add_child_autofree(fire_turret)
+	
+	var turret_def = TurretRegistry.get_type("fire")
+	var damage_types = turret_def["damage_types"]
+	
+	assert_true(GameEnums.DamageType.FIRE in damage_types, "Fire turret should have FIRE damage type")
+
+
+func test_plasma_turret_has_plasma_damage_type():
+	var plasma_turret = turret_scene.instantiate()
+	plasma_turret.turret_type = "plasma"
+	add_child_autofree(plasma_turret)
+	
+	var turret_def = TurretRegistry.get_type("plasma")
+	var damage_types = turret_def["damage_types"]
+	
+	assert_true(GameEnums.DamageType.PLASMA in damage_types, "Plasma turret should have PLASMA damage type")
+
+
+# =============================================================================
+# FIRING MECHANISM TESTS
+# =============================================================================
+
+func test_projectile_turret_spawns_projectile():
+	watch_signals(Events)
+	
+	var normal_turret = turret_scene.instantiate()
+	normal_turret.turret_type = "normal"
+	add_child_autofree(normal_turret)
+	normal_turret.global_position = Vector2.ZERO
+	
+	# Create enemy in range
+	var enemy = enemy_scene.instantiate()
+	add_child_autofree(enemy)
+	enemy.global_position = Vector2(100, 0)
+	enemy.initialize(1)
+	
+	await get_tree().physics_frame
+	
+	# Give turret a target
+	normal_turret.target = enemy
+	
+	# Count Area2D nodes before (projectiles are Area2D)
+	var scene_root = get_tree().current_scene if get_tree().current_scene else get_tree().root
+	var projectiles_before = scene_root.get_children().filter(func(n): return n is Area2D).size()
+	
+	# Fire
+	normal_turret.fire()
+	
+	await get_tree().physics_frame
+	
+	# Check projectile was spawned
+	var projectiles_after = scene_root.get_children().filter(func(n): return n is Area2D).size()
+	assert_gt(projectiles_after, projectiles_before, "Projectile turret should spawn a projectile")
+	
+	# Check signal emitted
+	assert_signal_emitted(Events, "turret_fired", "Should emit turret_fired signal")
+
+
+func test_instant_turret_damages_target_immediately():
+	var sniper_turret = turret_scene.instantiate()
+	sniper_turret.turret_type = "sniper"
+	add_child_autofree(sniper_turret)
+	sniper_turret.global_position = Vector2.ZERO
+	
+	# Create enemy in range
+	var enemy = enemy_scene.instantiate()
+	add_child_autofree(enemy)
+	enemy.global_position = Vector2(100, 0)
+	enemy.initialize(1)
+	
+	await get_tree().physics_frame
+	
+	sniper_turret.target = enemy
+	var initial_health = enemy.current_health
+	
+	# Fire instant attack
+	sniper_turret._fire_instant()
+	
+	await get_tree().physics_frame
+	
+	# Enemy should have taken damage
+	assert_lt(enemy.current_health, initial_health, "Instant attack should damage enemy immediately")
+
+
+func test_aoe_turret_hits_multiple_enemies():
+	var shock_turret = turret_scene.instantiate()
+	shock_turret.turret_type = "shock"
+	add_child_autofree(shock_turret)
+	shock_turret.global_position = Vector2.ZERO
+	
+	# Create multiple enemies in range
+	var enemy1 = enemy_scene.instantiate()
+	add_child_autofree(enemy1)
+	enemy1.global_position = Vector2(50, 0)
+	enemy1.initialize(1)
+	
+	var enemy2 = enemy_scene.instantiate()
+	add_child_autofree(enemy2)
+	enemy2.global_position = Vector2(-50, 0)
+	enemy2.initialize(1)
+	
+	var enemy3 = enemy_scene.instantiate()
+	add_child_autofree(enemy3)
+	enemy3.global_position = Vector2(0, 50)
+	enemy3.initialize(1)
+	
+	await get_tree().physics_frame
+	
+	var initial_health1 = enemy1.current_health
+	var initial_health2 = enemy2.current_health
+	var initial_health3 = enemy3.current_health
+	
+	# Fire AOE pulse
+	shock_turret._fire_aoe_pulse()
+	
+	await get_tree().physics_frame
+	
+	# All enemies in range should be damaged
+	assert_lt(enemy1.current_health, initial_health1, "Enemy 1 should be damaged by AOE")
+	assert_lt(enemy2.current_health, initial_health2, "Enemy 2 should be damaged by AOE")
+	assert_lt(enemy3.current_health, initial_health3, "Enemy 3 should be damaged by AOE")
+
+
+func test_aoe_turret_applies_slow_effect():
+	var shock_turret = turret_scene.instantiate()
+	shock_turret.turret_type = "shock"
+	add_child_autofree(shock_turret)
+	shock_turret.global_position = Vector2.ZERO
+	
+	# Create enemy in range
+	var enemy = enemy_scene.instantiate()
+	add_child_autofree(enemy)
+	enemy.global_position = Vector2(50, 0)
+	enemy.initialize(1)
+	
+	await get_tree().physics_frame
+	
+	var initial_speed = enemy.speed
+	
+	# Fire AOE pulse
+	shock_turret._fire_aoe_pulse()
+	
+	await get_tree().physics_frame
+	
+	# Check if slow effect was applied - enemy should have reduced speed
+	# or have active status effects
+	var has_slow = false
+	if enemy.has_method("has_status_effect"):
+		# Status effects use dtype as key, not the slow type
+		has_slow = not enemy.active_effects.is_empty()
+	
+	assert_true(has_slow or enemy.speed < initial_speed, "Shock turret should apply slow effect to enemies")
+
+
+func test_chain_lightning_chains_between_enemies():
+	watch_signals(Events)
+	
+	var tesla_turret = turret_scene.instantiate()
+	tesla_turret.turret_type = "tesla"
+	add_child_autofree(tesla_turret)
+	tesla_turret.global_position = Vector2.ZERO
+	
+	# Create multiple enemies in chain range
+	var enemy1 = enemy_scene.instantiate()
+	add_child_autofree(enemy1)
+	enemy1.global_position = Vector2(100, 0)
+	enemy1.initialize(1)
+	
+	var enemy2 = enemy_scene.instantiate()
+	add_child_autofree(enemy2)
+	enemy2.global_position = Vector2(200, 0)
+	enemy2.initialize(1)
+	
+	var enemy3 = enemy_scene.instantiate()
+	add_child_autofree(enemy3)
+	enemy3.global_position = Vector2(300, 0)
+	enemy3.initialize(1)
+	
+	await get_tree().physics_frame
+	
+	tesla_turret.target = enemy1
+	
+	var initial_health1 = enemy1.current_health
+	var initial_health2 = enemy2.current_health
+	var initial_health3 = enemy3.current_health
+	
+	# Fire chain lightning
+	tesla_turret._fire_chain()
+	
+	await get_tree().physics_frame
+	
+	# First enemy should definitely be hit
+	assert_lt(enemy1.current_health, initial_health1, "First enemy should be hit by chain lightning")
+	
+	# Second enemy should be chained to
+	assert_lt(enemy2.current_health, initial_health2, "Second enemy should be hit by chain")
+	
+	# Third enemy may or may not be hit depending on chain_count
+	# Check that chain_lightning_hit signal was emitted at least once
+	assert_signal_emitted(Events, "chain_lightning_hit", "Chain lightning should emit signal")
+
+
+func test_chain_lightning_damage_decays():
+	var tesla_turret = turret_scene.instantiate()
+	tesla_turret.turret_type = "tesla"
+	add_child_autofree(tesla_turret)
+	tesla_turret.global_position = Vector2.ZERO
+	
+	# Create enemies at increasing distances
+	var enemy1 = enemy_scene.instantiate()
+	add_child_autofree(enemy1)
+	enemy1.global_position = Vector2(100, 0)
+	enemy1.initialize(1)
+	
+	var enemy2 = enemy_scene.instantiate()
+	add_child_autofree(enemy2)
+	enemy2.global_position = Vector2(200, 0)
+	enemy2.initialize(1)
+	
+	await get_tree().physics_frame
+	
+	tesla_turret.target = enemy1
+	
+	var initial_health1 = enemy1.current_health
+	var initial_health2 = enemy2.current_health
+	
+	tesla_turret._fire_chain()
+	
+	await get_tree().physics_frame
+	
+	var damage1 = initial_health1 - enemy1.current_health
+	var damage2 = initial_health2 - enemy2.current_health
+	
+	# Second target should take less damage due to chain_decay
+	assert_gt(damage1, damage2, "Chain lightning damage should decay on subsequent targets")
+
+
+# =============================================================================
+# TARGETING STRATEGY TESTS
+# =============================================================================
+
+func test_sniper_targets_farthest_enemy():
+	var sniper_turret = turret_scene.instantiate()
+	sniper_turret.turret_type = "sniper"
+	add_child_autofree(sniper_turret)
+	sniper_turret.global_position = Vector2.ZERO
+	
+	# Create enemies at different distances (both within sniper's 500 range)
+	var enemy_near = enemy_scene.instantiate()
+	add_child_autofree(enemy_near)
+	enemy_near.global_position = Vector2(100, 0)
+	enemy_near.initialize(1)
+	
+	var enemy_far = enemy_scene.instantiate()
+	add_child_autofree(enemy_far)
+	enemy_far.global_position = Vector2(400, 0)
+	enemy_far.initialize(1)
+	
+	# Wait for physics to settle
+	await get_tree().physics_frame
+	await get_tree().physics_frame
+	
+	# Explicitly verify distances before testing
+	var dist_near = sniper_turret.global_position.distance_to(enemy_near.global_position)
+	var dist_far = sniper_turret.global_position.distance_to(enemy_far.global_position)
+	
+	assert_lt(dist_near, dist_far, "Test setup: near enemy should be closer than far enemy")
+	
+	sniper_turret.find_target()
+	
+	# Sniper has "farthest" targeting strategy - should target the farther enemy
+	assert_not_null(sniper_turret.target, "Sniper should find a target")
+	if sniper_turret.target:
+		var target_dist = sniper_turret.global_position.distance_to(sniper_turret.target.global_position)
+		# Target distance should be closer to far enemy distance than near enemy distance
+		assert_almost_eq(target_dist, dist_far, 1.0, "Sniper should target the farther enemy")
+
+
+func test_normal_turret_targets_nearest_enemy():
+	var normal_turret = turret_scene.instantiate()
+	normal_turret.turret_type = "normal"
+	add_child_autofree(normal_turret)
+	normal_turret.global_position = Vector2.ZERO
+	
+	# Create enemies at different distances
+	var enemy_near = enemy_scene.instantiate()
+	add_child_autofree(enemy_near)
+	enemy_near.global_position = Vector2(80, 0)
+	enemy_near.initialize(1)
+	
+	var enemy_far = enemy_scene.instantiate()
+	add_child_autofree(enemy_far)
+	enemy_far.global_position = Vector2(150, 0)
+	enemy_far.initialize(1)
+	
+	await get_tree().physics_frame
+	
+	normal_turret.find_target()
+	
+	# Normal turret defaults to nearest targeting
+	assert_eq(normal_turret.target, enemy_near, "Normal turret should target nearest enemy in range")
