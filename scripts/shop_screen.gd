@@ -117,7 +117,7 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 
 	if offer["type"] == "turret":
 		var turret_id = offer["turret_id"]
-		var turret_config = Globals.TURRET_TYPES[turret_id]
+		var turret_config = TurretRegistry.get_type(turret_id)
 		var turret_stats = Globals.get_turret_stats(turret_id)
 
 		# Icon

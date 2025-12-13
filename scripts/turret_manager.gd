@@ -158,7 +158,7 @@ func spawn_turret_type(turret_id: String) -> void:
 		push_error("Turret scene not loaded!")
 		return
 
-	if not Globals.TURRET_TYPES.has(turret_id):
+	if not TurretRegistry.TYPES.has(turret_id):
 		push_error("Invalid turret type: " + turret_id)
 		return
 

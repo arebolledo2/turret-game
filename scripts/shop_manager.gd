@@ -23,10 +23,10 @@ func generate_offers() -> void:
 	Events.shop_offers_generated.emit(Globals.current_shop_offers)
 
 func generate_turret_offer() -> void:
-	var turret_types = Globals.TURRET_TYPES.keys()
+	var turret_types = TurretRegistry.get_all_type_ids()
 	var random_type = turret_types[randi() % turret_types.size()]
 
-	var base_price = Globals.TURRET_BASE_PRICES.get(random_type, 50)
+	var base_price = TurretRegistry.get_base_price(random_type)
 	var scaled_price = calculate_turret_price(base_price, Globals.current_wave)
 
 	var offer = {
@@ -112,7 +112,7 @@ func purchase_offer(offer_index: int) -> bool:
 		for other_offer in Globals.current_shop_offers:
 			if other_offer.get("type") == "turret" and not other_offer.get("sold", false):
 				var turret_type = other_offer.get("turret_id", "")
-				var base_price = Globals.TURRET_BASE_PRICES.get(turret_type, 50)
+				var base_price = TurretRegistry.get_base_price(turret_type)
 				other_offer["price"] = calculate_turret_price(base_price, Globals.current_wave)
 	elif offer["type"] == "item":
 		apply_item(offer["item_id"])

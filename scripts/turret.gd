@@ -39,7 +39,7 @@ func _ready() -> void:
 	add_child(fire_timer)
 	
 	# Setup range indicator
-	var color = Globals.get_turret_color(turret_type)
+	var color = TurretRegistry.get_color(turret_type)
 	if range_indicator:
 		if range_indicator.has_method("set_radius"):
 			range_indicator.set_radius(current_range)
@@ -57,8 +57,8 @@ func _ready() -> void:
 	play_spawn_animation()
 
 func setup_visuals() -> void:
-	var color = Globals.get_turret_color(turret_type)
-	var turret_config = Globals.TURRET_TYPES.get(turret_type, {})
+	var color = TurretRegistry.get_color(turret_type)
+	var turret_config = TurretRegistry.get_type(turret_type)
 	var icon = turret_config.get("icon", "🗼")
 
 	# Set base color - support both AnimatedSprite2D and legacy Sprite2D
@@ -196,14 +196,15 @@ func fire() -> void:
 	fire_timer.start()
 	
 	# Determine attack style
-	var attack_styles = Globals.TURRET_TYPES[turret_type].get("attack_styles", [])
-	
-	if Globals.AttackStyle.PROJECTILE in attack_styles:
+	var turret_def = TurretRegistry.get_type(turret_type)
+	var attack_styles = turret_def.get("attack_styles", [])
+	ameEnums.AttackStyle.PROJECTILE in attack_styles:
 		_fire_projectile()
-	elif Globals.AttackStyle.CHAIN in attack_styles:
+	elif GameEnums.AttackStyle.CHAIN in attack_styles:
 		_fire_chain()
-	elif Globals.AttackStyle.INSTANT in attack_styles:
+	elif GameEnums.AttackStyle.INSTANT in attack_styles:
 		_fire_instant()
+	elif GameEnumant()
 	elif Globals.AttackStyle.AOE in attack_styles:
 		_fire_aoe_pulse()
 	
@@ -219,8 +220,9 @@ func _fire_projectile() -> void:
 	projectile.global_position = global_position
 
 	# Determine damage type
-	var damage_types = Globals.TURRET_TYPES[turret_type].get("damage_types", [Globals.DamageType.PHYSICAL])
-	var dtype = damage_types[0] if not damage_types.is_empty() else Globals.DamageType.PHYSICAL
+	var turret_def = TurretRegistry.get_type(turret_type)
+	var damage_types = turret_def.get("damage_types", [GameEnums.DamageType.PHYSICAL])
+	var dtype = damage_types[0] if not damage_types.is_empty() else GameEnums.DamageType.PHYSICAL
 
 	# Calculate direction to target
 	var direction = global_position.direction_to(target.global_position)
@@ -262,8 +264,9 @@ func _fire_aoe_pulse() -> void:
 				hit_count += 1
 
 			# Apply slow effect if configured
-			if slow_intensity > 0 and slow_duration > 0 and enemy.has_method("apply_status_effect"):
-				var damage_types = Globals.TURRET_TYPES[turret_type].get("damage_types", [])
+			if slturret_def = TurretRegistry.get_type(turret_type)
+				var damage_types = turret_def.get("damage_types", [])
+				var dtype = damage_types[0] if not damage_types.is_empty() else GameEnum", [])
 				var dtype = damage_types[0] if not damage_types.is_empty() else Globals.DamageType.ELECTRIC
 				enemy.apply_status_effect(dtype, 0.0, slow_duration, 1.0, slow_intensity)
 
@@ -326,7 +329,7 @@ func _find_closest_enemy_excluding(pos: Vector2, range_limit: float, excluded: A
 	return best_target
 
 func _draw_tracer(end_pos: Vector2) -> void:
-	var line = Line2D.new()
+	var line = Line2D.newTurretRegistry.g
 	line.width = 2.0
 	line.default_color = Globals.get_turret_color(turret_type)
 	line.add_point(Vector2.ZERO) # Local space
@@ -362,7 +365,7 @@ func _spawn_pulse_effect() -> void:
 	var points = PackedVector2Array()
 	for i in range(32):
 		var angle = i * TAU / 32.0
-		points.append(Vector2(cos(angle), sin(angle)) * current_range)
+		points.appeTurretRegistry.gngle), sin(angle)) * current_range)
 	viz.polygon = points
 	viz.color = Globals.get_turret_color(turret_type)
 	viz.color.a = 0.3
@@ -423,7 +426,7 @@ func show_pickup_indicator() -> void:
 func hide_pickup_indicator() -> void:
 	is_in_pickup_range = false
 	# Reset sprites to normal brightness
-	var color = Globals.get_turret_color(turret_type)
+	var color = TurretRegistry.get_color(turret_type)
 	var sprite_node = animated_sprite if animated_sprite else base_sprite
 	if sprite_node:
 		sprite_node.modulate = color

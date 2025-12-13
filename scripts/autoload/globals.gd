@@ -209,113 +209,7 @@ const ENEMY_TYPES: Dictionary = {
 	},
 }
 
-const TURRET_COLORS: Dictionary = {
-	"normal": Color("66CC66"),
-	"sniper": Color("4466AA"),
-	"fire": Color("FF6633"),
-	"plasma": Color("AA44DD"),
-	"shock": Color("DDDD44"),
-	"tesla": Color("44DDDD"),
-}
-
-const TURRET_TYPES: Dictionary = {
-	"normal": {
-		"name": "Normal Turret",
-		"icon": "🗼",
-		"description": "Standard auto-targeting turret. Reliable and consistent.",
-		"attack_styles": [AttackStyle.PROJECTILE],
-		"damage_types": [DamageType.PHYSICAL],
-		"base_stats": {
-			"damage": 15.0,
-			"fire_rate": 2.0,
-			"range": 250.0,
-			"rotation_speed": 0.0,
-			"projectile_speed": 700.0,
-			"pierce": 0,
-		}
-	},
-	"sniper": {
-		"name": "Sniper Turret",
-		"icon": "🎯",
-		"description": "Long-range instant-hit turret. High damage, slow fire rate.",
-		"attack_styles": [AttackStyle.INSTANT],
-		"damage_types": [DamageType.PHYSICAL],
-		"targeting": "farthest",
-		"base_stats": {
-			"damage": 45.0,
-			"fire_rate": 0.5,
-			"range": 500.0,
-			"rotation_speed": 0.0,
-		}
-	},
-	"fire": {
-		"name": "Fire Turret",
-		"icon": "🔥",
-		"description": "Incendiary turret that ignites enemies.",
-		"attack_styles": [AttackStyle.PROJECTILE],
-		"damage_types": [DamageType.FIRE],
-		"base_stats": {
-			"damage": 8.0,
-			"fire_rate": 2.5,
-			"range": 220.0,
-			"rotation_speed": 0.0,
-			"projectile_speed": 600.0,
-			"pierce": 99,
-			"dot_damage": 4.0,
-			"dot_duration": 3.0,
-			"dot_tick_rate": 1.0,
-		}
-	},
-	"plasma": {
-		"name": "Plasma Turret",
-		"icon": "💠",
-		"description": "Fires explosive plasma orbs that damage an area.",
-		"attack_styles": [AttackStyle.PROJECTILE, AttackStyle.AOE],
-		"damage_types": [DamageType.PLASMA],
-		"targeting": "cluster",
-		"base_stats": {
-			"damage": 20.0,
-			"fire_rate": 1.0,
-			"range": 280.0,
-			"rotation_speed": 0.0,
-			"projectile_speed": 550.0,
-			"pierce": 0,
-			"aoe_radius": 80.0,
-			"knockback_force": 120.0,
-		}
-	},
-	"shock": {
-		"name": "Shock Turret",
-		"icon": "⚡",
-		"description": "Pulses electric damage around itself.",
-		"attack_styles": [AttackStyle.AOE],
-		"damage_types": [DamageType.ELECTRIC],
-		"base_stats": {
-			"damage": 12.0,
-			"fire_rate": 1.5,
-			"range": 150.0,
-			"rotation_speed": 0.0,
-			"slow_intensity": 0.25,
-			"slow_duration": 0.5,
-		}
-	},
-	"tesla": {
-		"name": "Tesla Turret",
-		"icon": "⛓️",
-		"description": "Fires chain lightning that jumps between enemies.",
-		"attack_styles": [AttackStyle.INSTANT, AttackStyle.CHAIN],
-		"damage_types": [DamageType.ELECTRIC],
-		"base_stats": {
-			"damage": 18.0,
-			"fire_rate": 1.2,
-			"range": 220.0,
-			"rotation_speed": 0.0,
-			"chain_count": 3,
-			"chain_range": 120.0,
-			"chain_decay": 0.7,
-		}
-	},
-}
+# Legacy TURRET_COLORS and TURRET_TYPES removed - use TurretRegistry instead
 
 var turret_counts: Dictionary = {}
 var selected_turret_type: String = ""
@@ -326,10 +220,10 @@ var selected_turret_type: String = ""
 var active_modifiers: Array = []
 
 func _modifier_matches_turret(modifier: Dictionary, turret_type: String) -> bool:
-	if not TURRET_TYPES.has(turret_type):
+	if not TurretRegistry.TYPES.has(turret_type):
 		return false
 
-	var turret_def: Dictionary = TURRET_TYPES[turret_type]
+	var turret_def: Dictionary = TurretRegistry.get_type(turret_type)
 	var filter: Dictionary = modifier.get("filter", {})
 
 	if filter.is_empty():
@@ -353,10 +247,10 @@ func _modifier_matches_turret(modifier: Dictionary, turret_type: String) -> bool
 	return not has_filters
 
 func get_turret_stats(turret_type: String) -> Dictionary:
-	if not TURRET_TYPES.has(turret_type):
+	if not TurretRegistry.TYPES.has(turret_type):
 		return {}
 
-	var base_stats: Dictionary = TURRET_TYPES[turret_type]["base_stats"].duplicate(true)
+	var base_stats: Dictionary = TurretRegistry.get_base_stats(turret_type)
 	base_stats["damage"] = base_stats["damage"] * get_difficulty_config()["turret_damage_mult"]
 
 	var add_mods: Dictionary = {}
@@ -447,17 +341,31 @@ func _apply_modifiers_to_stat(base_value: float, stat_name: String) -> float:
 	return result
 
 func get_turret_color(turret_type: String) -> Color:
-	return TURRET_COLORS.get(turret_type, Color.WHITE)
+	return TurretRegistry.get_color(turret_type)
 
 func turret_has_attack_style(turret_type: String, style: AttackStyle) -> bool:
-	if not TURRET_TYPES.has(turret_type):
-		return false
-	return style in TURRET_TYPES[turret_type].get("attack_styles", [])
+	return TurretRegistry.has_attack_style(turret_type, _convert_attack_style(style))
 
 func turret_has_damage_type(turret_type: String, dtype: DamageType) -> bool:
-	if not TURRET_TYPES.has(turret_type):
-		return false
-	return dtype in TURRET_TYPES[turret_type].get("damage_types", [])
+	return TurretRegistry.has_damage_type(turret_type, _convert_damage_type(dtype))
+
+## Convert Globals.AttackStyle to GameEnums.AttackStyle
+func _convert_attack_style(style: AttackStyle) -> GameEnums.AttackStyle:
+	match style:
+		AttackStyle.PROJECTILE: return GameEnums.AttackStyle.PROJECTILE
+		AttackStyle.INSTANT: return GameEnums.AttackStyle.INSTANT
+		AttackStyle.AOE: return GameEnums.AttackStyle.AOE
+		AttackStyle.CHAIN: return GameEnums.AttackStyle.CHAIN
+		_: return GameEnums.AttackStyle.PROJECTILE
+
+## Convert Globals.DamageType to GameEnums.DamageType
+func _convert_damage_type(dtype: DamageType) -> GameEnums.DamageType:
+	match dtype:
+		DamageType.PHYSICAL: return GameEnums.DamageType.PHYSICAL
+		DamageType.FIRE: return GameEnums.DamageType.FIRE
+		DamageType.PLASMA: return GameEnums.DamageType.PLASMA
+		DamageType.ELECTRIC: return GameEnums.DamageType.ELECTRIC
+		_: return GameEnums.DamageType.PHYSICAL
 
 func get_total_turret_count() -> int:
 	var total := 0
@@ -635,14 +543,7 @@ const REROLL_BASE_COST: int = 5
 const REROLL_COST_INCREMENT: int = 3
 const MAX_REROLLS_PER_WAVE: int = 5
 
-const TURRET_BASE_PRICES: Dictionary = {
-	"normal": 50,
-	"sniper": 120,
-	"fire": 80,
-	"plasma": 100,
-	"shock": 90,
-	"tesla": 110,
-}
+# Legacy TURRET_BASE_PRICES removed - use TurretRegistry.BASE_PRICES instead
 
 const WAVE_PRICE_SCALE: float = 0.15
 

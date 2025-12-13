@@ -15,12 +15,12 @@ func before_each():
 func test_all_turret_types_exist():
 	var expected_types = ["normal", "sniper", "fire", "plasma", "shock", "tesla"]
 	for turret_type in expected_types:
-		assert_true(Globals.TURRET_TYPES.has(turret_type), "Missing turret type: " + turret_type)
+		assert_true(TurretRegistry.TYPES.has(turret_type), "Missing turret type: " + turret_type)
 
 
 func test_turret_types_have_required_fields():
-	for turret_type in Globals.TURRET_TYPES:
-		var turret_def = Globals.TURRET_TYPES[turret_type]
+	for turret_type in TurretRegistry.TYPES:
+		var turret_def = TurretRegistry.get_type(turret_type)
 		assert_true(turret_def.has("name"), turret_type + " missing name")
 		assert_true(turret_def.has("attack_styles"), turret_type + " missing attack_styles")
 		assert_true(turret_def.has("damage_types"), turret_type + " missing damage_types")
@@ -28,26 +28,28 @@ func test_turret_types_have_required_fields():
 
 
 func test_turret_types_have_colors():
-	for turret_type in Globals.TURRET_TYPES:
-		assert_true(Globals.TURRET_COLORS.has(turret_type), turret_type + " missing color")
+	for turret_type in TurretRegistry.TYPES:
+		assert_true(TurretRegistry.COLORS.has(turret_type), turret_type + " missing color")
 
 
 func test_normal_turret_is_projectile_physical():
-	var styles = Globals.TURRET_TYPES["normal"]["attack_styles"]
-	var types = Globals.TURRET_TYPES["normal"]["damage_types"]
-	assert_true(Globals.AttackStyle.PROJECTILE in styles)
-	assert_true(Globals.DamageType.PHYSICAL in types)
+	var turret_def = TurretRegistry.get_type("normal")
+	var styles = turret_def["attack_styles"]
+	var types = turret_def["damage_types"]
+	assert_true(GameEnums.AttackStyle.PROJECTILE in styles)
+	assert_true(GameEnums.DamageType.PHYSICAL in types)
 
 
 func test_sniper_turret_is_instant_physical():
-	var styles = Globals.TURRET_TYPES["sniper"]["attack_styles"]
-	var types = Globals.TURRET_TYPES["sniper"]["damage_types"]
-	assert_true(Globals.AttackStyle.INSTANT in styles)
-	assert_true(Globals.DamageType.PHYSICAL in types)
+	var turret_def = TurretRegistry.get_type("sniper")
+	var styles = turret_def["attack_styles"]
+	var types = turret_def["damage_types"]
+	assert_true(GameEnums.AttackStyle.INSTANT in styles)
+	assert_true(GameEnums.DamageType.PHYSICAL in types)
 
 
 func test_fire_turret_has_dot_stats():
-	var stats = Globals.TURRET_TYPES["fire"]["base_stats"]
+	var stats = TurretRegistry.get_base_stats("fire")
 	assert_true(stats.has("dot_damage"), "Fire turret should have dot_damage")
 	assert_true(stats.has("dot_duration"), "Fire turret should have dot_duration")
 	assert_gt(stats["dot_damage"], 0.0, "Fire dot_damage should be positive")
@@ -55,28 +57,29 @@ func test_fire_turret_has_dot_stats():
 
 
 func test_fire_turret_has_high_pierce():
-	var stats = Globals.TURRET_TYPES["fire"]["base_stats"]
+	var stats = TurretRegistry.get_base_stats("fire")
 	assert_gte(stats.get("pierce", 0), 99, "Fire turret should have high pierce")
 
 
 func test_tesla_turret_has_chain_stats():
-	var stats = Globals.TURRET_TYPES["tesla"]["base_stats"]
+	var stats = TurretRegistry.get_base_stats("tesla")
 	assert_true(stats.has("chain_count"), "Tesla should have chain_count")
 	assert_true(stats.has("chain_range"), "Tesla should have chain_range")
 	assert_true(stats.has("chain_decay"), "Tesla should have chain_decay")
 
 
 func test_plasma_turret_has_aoe_stats():
-	var stats = Globals.TURRET_TYPES["plasma"]["base_stats"]
+	var stats = TurretRegistry.get_base_stats("plasma")
 	assert_true(stats.has("aoe_radius"), "Plasma should have aoe_radius")
 	assert_gt(stats["aoe_radius"], 0.0, "AoE radius should be positive")
 
 
 func test_shock_turret_is_aoe_electric():
-	var styles = Globals.TURRET_TYPES["shock"]["attack_styles"]
-	var types = Globals.TURRET_TYPES["shock"]["damage_types"]
-	assert_true(Globals.AttackStyle.AOE in styles)
-	assert_true(Globals.DamageType.ELECTRIC in types)
+	var turret_def = TurretRegistry.get_type("shock")
+	var styles = turret_def["attack_styles"]
+	var types = turret_def["damage_types"]
+	assert_true(GameEnums.AttackStyle.AOE in styles)
+	assert_true(GameEnums.DamageType.ELECTRIC in types)
 
 
 # =============================================================================
@@ -89,11 +92,11 @@ func test_modifier_affects_matching_turret():
 		"stat": "damage",
 		"operation": "multiply",
 		"value": 1.5,
-		"filter": {"damage_type": [Globals.DamageType.FIRE]}
+		"filter": {"damage_type": [GameEnums.DamageType.FIRE]}
 	})
 	
 	var fire_stats = Globals.get_turret_stats("fire")
-	var base_damage = Globals.TURRET_TYPES["fire"]["base_stats"]["damage"]
+	var base_damage = TurretRegistry.get_base_stats("fire")["damage"]
 	var expected = base_damage * Globals.get_difficulty_config()["turret_damage_mult"] * 1.5
 	
 	assert_almost_eq(fire_stats["damage"], expected, 0.01, "Fire damage should be boosted 50%")
@@ -105,11 +108,11 @@ func test_modifier_does_not_affect_unmatched_turret():
 		"stat": "damage",
 		"operation": "multiply",
 		"value": 1.5,
-		"filter": {"damage_type": [Globals.DamageType.FIRE]}
+		"filter": {"damage_type": [GameEnums.DamageType.FIRE]}
 	})
 	
 	var normal_stats = Globals.get_turret_stats("normal")
-	var base_damage = Globals.TURRET_TYPES["normal"]["base_stats"]["damage"]
+	var base_damage = TurretRegistry.get_base_stats("normal")["damage"]
 	var expected = base_damage * Globals.get_difficulty_config()["turret_damage_mult"]
 	
 	assert_almost_eq(normal_stats["damage"], expected, 0.01, "Normal damage should NOT be boosted")
@@ -121,11 +124,11 @@ func test_add_modifier_for_chain():
 		"stat": "chain_count",
 		"operation": "add",
 		"value": 2.0,
-		"filter": {"attack_style": [Globals.AttackStyle.CHAIN]}
+		"filter": {"attack_style": [GameEnums.AttackStyle.CHAIN]}
 	})
 
 	var tesla_stats = Globals.get_turret_stats("tesla")
-	var base_chain: float = Globals.TURRET_TYPES["tesla"]["base_stats"]["chain_count"]
+	var base_chain: float = TurretRegistry.get_base_stats("tesla")["chain_count"]
 
 	assert_eq(tesla_stats["chain_count"], base_chain + 2.0, "Tesla chain count should be increased by 2")
 
@@ -170,5 +173,5 @@ func test_turret_has_damage_type():
 
 
 func test_get_turret_color():
-	var color = Globals.get_turret_color("fire")
+	var color = TurretRegistry.get_color("fire")
 	assert_eq(color, Color("FF6633"), "Fire turret should be orange")

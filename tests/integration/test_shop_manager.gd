@@ -71,7 +71,7 @@ func test_turret_offers_have_valid_turret_ids():
 		shop_manager.generate_offers()
 		for offer in Globals.current_shop_offers:
 			if offer["type"] == "turret":
-				assert_has(Globals.TURRET_TYPES, offer["turret_id"],
+				assert_has(TurretRegistry.TYPES, offer["turret_id"],
 					"Turret offer should have valid turret_id")
 				found_turret = true
 		if found_turret:
@@ -114,7 +114,7 @@ func test_generate_offers_no_duplicate_turrets():
 		shop_manager.generate_offers()
 		for offer in Globals.current_shop_offers:
 			if offer["type"] == "turret":
-				assert_has(Globals.TURRET_TYPES, offer["turret_id"],
+				assert_has(TurretRegistry.TYPES, offer["turret_id"],
 					"Turret offer should have valid turret_id")
 				validated_count += 1
 		if validated_count > 0:
