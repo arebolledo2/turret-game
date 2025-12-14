@@ -6,7 +6,8 @@
       "Bash(findstr:*)",
       "Bash(powershell:*)",
       "Bash(cat:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

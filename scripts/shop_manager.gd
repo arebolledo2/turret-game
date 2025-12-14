@@ -11,20 +11,36 @@ func generate_offers() -> void:
 
 	# Track generated items to avoid duplicates
 	var generated_item_ids: Array[String] = []
+	# Track generated turrets to avoid duplicates
+	var generated_turret_ids: Array[String] = []
 
 	# Roll each slot: 65% item, 35% turret
 	for i in range(Globals.SHOP_OFFER_COUNT):
 		var roll = randf()
 		if roll < GameConstants.SHOP_ITEM_CHANCE:
-			generate_item_offer(generated_item_ids)
+			generate_item_offer(generated_item_ids, generated_turret_ids)
 		else:
-			generate_turret_offer()
+			generate_turret_offer(generated_turret_ids)
 
 	Events.shop_offers_generated.emit(Globals.current_shop_offers)
 
-func generate_turret_offer() -> void:
+func generate_turret_offer(generated_turret_ids: Array[String]) -> void:
 	var turret_types = TurretRegistry.get_all_type_ids()
-	var random_type = turret_types[randi() % turret_types.size()]
+
+	# Filter out already generated turrets
+	var available_turrets: Array[String] = []
+	for turret_id in turret_types:
+		if turret_id not in generated_turret_ids:
+			available_turrets.append(turret_id)
+
+	# If all turrets are already generated, allow duplicates
+	if available_turrets.is_empty():
+		available_turrets = turret_types
+
+	var random_type = available_turrets[randi() % available_turrets.size()]
+
+	# Track this turret as generated
+	generated_turret_ids.append(random_type)
 
 	var base_price = TurretRegistry.get_base_price(random_type)
 	var scaled_price = calculate_turret_price(base_price, Globals.current_wave)
@@ -37,7 +53,7 @@ func generate_turret_offer() -> void:
 	}
 	Globals.current_shop_offers.append(offer)
 
-func generate_item_offer(generated_item_ids: Array[String]) -> void:
+func generate_item_offer(generated_item_ids: Array[String], generated_turret_ids: Array[String]) -> void:
 	# Use weighted rarity selection based on wave and luck
 	var random_item_id := ItemRegistry.get_weighted_random_item(
 		Globals.current_wave,
@@ -45,10 +61,10 @@ func generate_item_offer(generated_item_ids: Array[String]) -> void:
 		Globals.item_counts,
 		generated_item_ids
 	)
-	
+
 	if random_item_id.is_empty():
 		# Fallback to turret if no items available
-		generate_turret_offer()
+		generate_turret_offer(generated_turret_ids)
 		return
 	
 	var item_data = ItemRegistry.get_item(random_item_id)

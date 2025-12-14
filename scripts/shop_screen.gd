@@ -250,6 +250,8 @@ func _on_purchase_made(_offer: Dictionary) -> void:
 	# Defer regeneration to avoid freeing the button that was just clicked
 	_request_regeneration()
 	update_reroll_button()
+	# Update player build display to show new stats/turrets/items
+	update_player_build()
 
 func _request_regeneration() -> void:
 	if not regeneration_pending:

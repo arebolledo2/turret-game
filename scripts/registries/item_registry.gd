@@ -101,7 +101,7 @@ const ITEMS: Dictionary = {
 		"description": "Electric turrets deal 30% more damage but chain to fewer targets",
 		"rarity": GameEnums.ItemRarity.UNCOMMON,
 		"modifiers": [
-			{"stat": "damage", "operation": "multiply", "value": 1.3, "filter": {"damage_type": ["electric"]}},
+			{"stat": "damage", "operation": "multiply", "value": 1.3, "filter": {"damage_type": [GameEnums.DamageType.ELECTRIC]}},
 			{"stat": "chain_count", "operation": "add", "value": -1, "filter": {"turret_type": ["tesla"]}}
 		]
 	},
@@ -228,7 +228,7 @@ const ITEMS: Dictionary = {
 		"description": "Projectiles pierce through 1 additional enemy",
 		"rarity": GameEnums.ItemRarity.EPIC,
 		"modifiers": [
-			{"stat": "pierce", "operation": "add", "value": 1, "filter": {"attack_style": ["projectile"]}}
+			{"stat": "pierce", "operation": "add", "value": 1, "filter": {"attack_style": [GameEnums.AttackStyle.PROJECTILE]}}
 		]
 	},
 	"glass_cannon_core": {
