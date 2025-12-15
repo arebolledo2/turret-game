@@ -82,16 +82,59 @@ func setup_visuals() -> void:
 
 func update_stats() -> void:
 	stats = Globals.get_turret_stats(turret_type)
+
+	# Apply proximity-based modifiers from items
+	_apply_proximity_modifiers()
+
 	current_damage = stats.get("damage", 15.0)
 	current_range = stats.get("range", 250.0)
 	current_fire_rate = stats.get("fire_rate", 2.0)
 	current_rotation_speed = stats.get("rotation_speed", 180.0)
-	
+
 	if fire_timer:
 		_update_timer()
-	
+
 	if range_indicator and range_indicator.has_method("set_radius"):
 		range_indicator.set_radius(current_range)
+
+func _apply_proximity_modifiers() -> void:
+	var turret_manager = get_node_or_null("/root/Main/TurretManager")
+	if not turret_manager:
+		return
+
+	# Signal Amplifier: +15% range if clustered, -10% fire rate if isolated
+	if ItemRegistry.has_special_effect("signal_amplifier") and Globals.item_counts.get("signal_amplifier", 0) > 0:
+		var nearby = turret_manager.get_turrets_within_radius(global_position, 200.0)
+		if nearby.size() > 0:
+			# Clustered: +15% range
+			stats["range"] = stats.get("range", 0.0) * 1.15
+		else:
+			# Isolated: -10% fire rate
+			stats["fire_rate"] = stats.get("fire_rate", 1.0) * 0.90
+
+	# Isolation Protocol: +40% damage if isolated, -15% damage if clustered
+	if ItemRegistry.has_special_effect("isolation_protocol") and Globals.item_counts.get("isolation_protocol", 0) > 0:
+		var stacks = Globals.item_counts.get("isolation_protocol", 0)
+		var nearby = turret_manager.get_turrets_within_radius(global_position, 250.0)
+		if nearby.size() == 0:
+			# Isolated: +40% damage per stack
+			var damage_mult = 1.0 + (0.40 * stacks)
+			stats["damage"] = stats.get("damage", 0.0) * damage_mult
+		else:
+			# Clustered: -15% damage per stack
+			var damage_mult = 1.0 - (0.15 * stacks)
+			stats["damage"] = stats.get("damage", 0.0) * damage_mult
+
+	# Feedback Loop: +6% fire rate per nearby turret (max +30%)
+	if ItemRegistry.has_special_effect("feedback_loop") and Globals.item_counts.get("feedback_loop", 0) > 0:
+		var nearby = turret_manager.get_turrets_within_radius(global_position, 180.0)
+		var fire_rate_bonus = min(nearby.size() * 0.06, 0.30)
+		stats["fire_rate"] = stats.get("fire_rate", 1.0) * (1.0 + fire_rate_bonus)
+
+	# Apply temporary buffs from Chain Reaction
+	if BuffSystem:
+		var fire_rate_buff = BuffSystem.get_buff_multiplier(self, "fire_rate")
+		stats["fire_rate"] = stats.get("fire_rate", 1.0) * fire_rate_buff
 
 func _update_timer() -> void:
 	if current_fire_rate > 0:

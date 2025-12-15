@@ -545,6 +545,13 @@ const TURRET_ROTATION_SPEED: float = 180.0
 const TURRET_MIN_DISTANCE: float = 100.0
 const TURRET_PLAYER_EXCLUSION: float = 150.0
 
+## Get turret minimum distance (modified by Personal Space item)
+func get_turret_min_distance() -> float:
+	# Personal Space increases minimum distance to 200px
+	if ItemRegistry.has_special_effect("personal_space") and item_counts.get("personal_space", 0) > 0:
+		return 200.0
+	return TURRET_MIN_DISTANCE
+
 const TURRET_PICKUP_RANGE: float = 60.0
 const TURRET_CARRY_OFFSET: Vector2 = Vector2(0, -40)
 const TURRET_CARRY_SPEED_PENALTY: float = 0.7

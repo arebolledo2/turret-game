@@ -588,6 +588,62 @@ const ITEMS: Dictionary = {
 	},
 
 	# ==========================================================================
+	# PROXIMITY ITEMS
+	# ==========================================================================
+
+	"signal_amplifier": {
+		"name": "Signal Amplifier",
+		"icon": "📡",
+		"description": "Turrets within 200px of another turret +15% range. Isolated turrets -10% fire rate",
+		"rarity": GameEnums.ItemRarity.UNCOMMON,
+		"special_effect": "signal_amplifier",
+		"modifiers": []
+	},
+	"isolation_protocol": {
+		"name": "Isolation Protocol",
+		"icon": "🛡️",
+		"description": "Turrets >250px from all others +40% damage. Turrets within 250px -15% damage",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"max_stacks": 2,
+		"special_effect": "isolation_protocol",
+		"modifiers": []
+	},
+	"feedback_loop": {
+		"name": "Feedback Loop",
+		"icon": "🔄",
+		"description": "+6% fire rate per turret within 180px (max +30% with 5 nearby). All turrets -8% range",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"max_stacks": 1,
+		"special_effect": "feedback_loop",
+		"modifiers": [
+			{"stat": "range", "operation": "multiply", "value": 0.92}
+		]
+	},
+	"personal_space": {
+		"name": "Personal Space",
+		"icon": "⭕",
+		"description": "Minimum turret distance increased to 200px. All turrets +35% damage and +20% range",
+		"rarity": GameEnums.ItemRarity.EPIC,
+		"max_stacks": 1,
+		"special_effect": "personal_space",
+		"modifiers": [
+			{"stat": "damage", "operation": "multiply", "value": 1.35},
+			{"stat": "range", "operation": "multiply", "value": 1.20}
+		]
+	},
+	"chain_reaction": {
+		"name": "Chain Reaction",
+		"icon": "⚡",
+		"description": "When a turret fires, turrets within 150px +8% fire rate for 2s (stacks 5x = +40%). All turrets -15% damage",
+		"rarity": GameEnums.ItemRarity.LEGENDARY,
+		"max_stacks": 1,
+		"special_effect": "chain_reaction",
+		"modifiers": [
+			{"stat": "damage", "operation": "multiply", "value": 0.85}
+		]
+	},
+
+	# ==========================================================================
 	# LUCK ITEMS
 	# ==========================================================================
 
