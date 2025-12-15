@@ -30,14 +30,15 @@ var melee_target_enemy: Node2D = null  # Track the locked-on target
 var melee_timer: Timer
 var melee_animation_timer: Timer
 var melee_windup_timer: Timer
+var melee_damage_timer: Timer
 
 # Melee configuration (export for easy tuning)
 @export var melee_damage: float = 35.0
-@export var melee_range: float = 65.0
+@export var melee_range: float = 80.0  # Increased to better match visual arc and large enemies
 @export var melee_arc_degrees: float = 120.0
 @export var melee_cooldown: float = 0.7
-@export var melee_windup_time: float = 0.2
-@export var melee_animation_duration: float = 0.2
+@export var melee_windup_time: float = 0.15  # Reduced for snappier feel
+@export var melee_animation_duration: float = 0.15  # Reduced for snappier feel
 
 # Turret pickup system
 var carried_turret: Node2D = null
@@ -105,6 +106,13 @@ func _ready() -> void:
 	melee_windup_timer.wait_time = melee_windup_time
 	melee_windup_timer.timeout.connect(_on_melee_windup_timeout)
 	add_child(melee_windup_timer)
+
+	# Setup melee damage timer (very short delay to sync with animation start)
+	melee_damage_timer = Timer.new()
+	melee_damage_timer.one_shot = true
+	melee_damage_timer.wait_time = 0.05  # Nearly instant - just enough for visual sync
+	melee_damage_timer.timeout.connect(_on_melee_damage_timeout)
+	add_child(melee_damage_timer)
 
 func _physics_process(delta: float) -> void:
 	# Don't process if game hasn't started
@@ -420,11 +428,8 @@ func perform_melee_attack() -> void:
 	# Visual feedback - attack swing (starts animation)
 	play_melee_swing_animation(attack_direction)
 
-	# Apply damage and knockback immediately as the swing starts
-	apply_melee_damage_and_knockback()
-
-	# Clear the locked target after attack
-	melee_target_enemy = null
+	# Delay damage to sync with animation (50% through the swing)
+	melee_damage_timer.start()
 
 func get_current_melee_direction() -> Vector2:
 	"""Get the direction for melee attack, prioritizing locked target."""
@@ -545,6 +550,12 @@ func _on_melee_windup_timeout() -> void:
 	"""Called when windup phase completes - execute the attack."""
 	if is_winding_up:
 		perform_melee_attack()
+
+func _on_melee_damage_timeout() -> void:
+	"""Called mid-animation to apply damage in sync with visual swing."""
+	apply_melee_damage_and_knockback()
+	# Clear the locked target after damage is applied
+	melee_target_enemy = null
 
 # =============================================================================
 # DEFENSIVE PULSE SYSTEM

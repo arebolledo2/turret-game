@@ -82,15 +82,20 @@ func reposition_all_turrets() -> void:
 	"""Randomly reposition all existing turrets at the start of a new wave"""
 	turrets = turrets.filter(func(t): return is_instance_valid(t))
 	var player = get_tree().get_first_node_in_group("player")
-	
+
 	# Temporarily clear positions to avoid collision checking against old positions
 	var new_positions: Array[Vector2] = []
-	
+
 	for turret in turrets:
 		var new_pos := find_valid_spawn_position_excluding(player, new_positions)
 		if new_pos != Vector2.INF:
 			turret.global_position = new_pos
 			new_positions.append(new_pos)
+
+	# Update stats for all turrets to refresh proximity-based bonuses
+	for turret in turrets:
+		if turret.has_method("update_stats"):
+			turret.update_stats()
 
 func find_valid_spawn_position_excluding(player: Node2D, existing_positions: Array[Vector2], max_attempts: int = 50) -> Vector2:
 	"""Find a valid position that doesn't conflict with player or provided positions"""
@@ -195,6 +200,11 @@ func spawn_turret_type(turret_id: String) -> void:
 	Globals.turret_counts[turret_id] += 1
 
 	Events.turret_spawned.emit(turret, spawn_pos)
+
+	# Update stats for all existing turrets to refresh proximity-based bonuses
+	for existing_turret in turrets:
+		if existing_turret != turret and is_instance_valid(existing_turret) and existing_turret.has_method("update_stats"):
+			existing_turret.update_stats()
 
 ## Get all turrets within radius of a position (excluding self if position matches a turret)
 func get_turrets_within_radius(position: Vector2, radius: float) -> Array[Node2D]:

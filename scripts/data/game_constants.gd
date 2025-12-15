@@ -14,7 +14,7 @@ const MAX_WAVES: int = 10
 # PLAYER
 # =============================================================================
 const PLAYER_BASE_MAX_HEALTH: float = 100.0
-const PLAYER_SPEED: float = 200.0
+const PLAYER_SPEED: float = 250.0
 const PLAYER_PICKUP_RADIUS: float = 50.0
 const PLAYER_INVINCIBILITY_TIME: float = 0.5
 const PLAYER_WEAPON_DAMAGE: float = 5.0

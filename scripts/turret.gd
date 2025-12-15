@@ -20,6 +20,7 @@ var is_in_pickup_range: bool = false
 @onready var weapon_sprite: Sprite2D = $WeaponSprite
 @onready var icon_label: Label = $IconLabel
 @onready var range_indicator: Node2D = $RangeIndicator
+@onready var status_indicators: HBoxContainer = $StatusIndicators
 
 func _ready() -> void:
 	add_to_group("turrets")
@@ -97,6 +98,9 @@ func update_stats() -> void:
 	if range_indicator and range_indicator.has_method("set_radius"):
 		range_indicator.set_radius(current_range)
 
+	# Update visual status indicators
+	_update_status_indicators()
+
 func _apply_proximity_modifiers() -> void:
 	var turret_manager = get_node_or_null("/root/Main/TurretManager")
 	if not turret_manager:
@@ -135,6 +139,90 @@ func _apply_proximity_modifiers() -> void:
 	if BuffSystem:
 		var fire_rate_buff = BuffSystem.get_buff_multiplier(self, "fire_rate")
 		stats["fire_rate"] = stats.get("fire_rate", 1.0) * fire_rate_buff
+
+func _update_status_indicators() -> void:
+	if not status_indicators:
+		return
+
+	# Clear existing indicators
+	for child in status_indicators.get_children():
+		child.queue_free()
+
+	var turret_manager = get_node_or_null("/root/Main/TurretManager")
+	if not turret_manager:
+		return
+
+	var active_effects: Array[Dictionary] = []
+
+	# Signal Amplifier
+	if ItemRegistry.has_special_effect("signal_amplifier") and Globals.item_counts.get("signal_amplifier", 0) > 0:
+		var nearby = turret_manager.get_turrets_within_radius(global_position, 200.0)
+		var is_buff = nearby.size() > 0
+		active_effects.append({
+			"icon": "📡",
+			"is_buff": is_buff
+		})
+
+	# Isolation Protocol
+	if ItemRegistry.has_special_effect("isolation_protocol") and Globals.item_counts.get("isolation_protocol", 0) > 0:
+		var nearby = turret_manager.get_turrets_within_radius(global_position, 250.0)
+		var is_buff = nearby.size() == 0
+		active_effects.append({
+			"icon": "🛡️",
+			"is_buff": is_buff
+		})
+
+	# Feedback Loop
+	if ItemRegistry.has_special_effect("feedback_loop") and Globals.item_counts.get("feedback_loop", 0) > 0:
+		var nearby = turret_manager.get_turrets_within_radius(global_position, 180.0)
+		var count = nearby.size()
+		active_effects.append({
+			"icon": "🔄",
+			"is_buff": count > 0,
+			"count": count if count > 0 else null
+		})
+
+	# Personal Space (always active as a buff)
+	if ItemRegistry.has_special_effect("personal_space") and Globals.item_counts.get("personal_space", 0) > 0:
+		active_effects.append({
+			"icon": "⭕",
+			"is_buff": true
+		})
+
+	# Chain Reaction (show if buffed)
+	if BuffSystem and ItemRegistry.has_special_effect("chain_reaction") and Globals.item_counts.get("chain_reaction", 0) > 0:
+		var turret_id = get_instance_id()
+		var buffs = BuffSystem.active_buffs.get(turret_id, [])
+		for buff in buffs:
+			if buff.stat == "fire_rate":
+				active_effects.append({
+					"icon": "⚡",
+					"is_buff": true,
+					"count": buff.stack_count
+				})
+				break
+
+	# Create visual indicators
+	for effect in active_effects:
+		var panel = PanelContainer.new()
+		var label = Label.new()
+		label.text = effect.icon
+		label.add_theme_font_size_override("font_size", 16)
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+		# Color based on buff/debuff
+		if effect.is_buff:
+			panel.modulate = Color(0.2, 1.0, 0.2, 0.9)  # Green for buffs
+		else:
+			panel.modulate = Color(1.0, 0.2, 0.2, 0.9)  # Red for debuffs
+
+		# Add count if present
+		if effect.has("count") and effect.count != null:
+			label.text = effect.icon + "x" + str(effect.count)
+
+		panel.add_child(label)
+		status_indicators.add_child(panel)
 
 func _update_timer() -> void:
 	if current_fire_rate > 0:

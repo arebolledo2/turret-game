@@ -44,6 +44,7 @@ var _selected_turret_type: String = ""
 var _selected_item_id: String = ""
 var _turret_buttons: Array[Button] = []
 var _item_buttons: Array[Button] = []
+var _offer_buttons: Array[Button] = []
 
 func _ready() -> void:
 	visible = false
@@ -92,18 +93,22 @@ func _on_offers_generated(offers: Array) -> void:
 	var focused = get_viewport().gui_get_focus_owner()
 	if focused and offers_container.is_ancestor_of(focused):
 		focused.release_focus()
-	
-	# Clear old children
+
+	# Clear old children and offer buttons array
 	for child in offers_container.get_children():
 		child.queue_free()
-	
+	_offer_buttons.clear()
+
 	# Now create new offer slots
 	for i in range(offers.size()):
 		var offer = offers[i]
 		var slot = create_offer_slot(offer, i)
 		offers_container.add_child(slot)
-	
-	# Restore focus to continue button after a frame to ensure layout is updated
+
+	# Set up focus neighbors for offer buttons after a frame (to ensure nodes are ready)
+	call_deferred("_setup_offer_focus_neighbors")
+
+	# Restore focus after layout is updated
 	call_deferred("_restore_focus")
 
 func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
@@ -171,6 +176,9 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 		if Globals.total_gold < offer["price"]:
 			button.disabled = true
 	vbox.add_child(button)
+
+	# Track the button for focus navigation
+	_offer_buttons.append(button)
 
 	return panel
 
@@ -242,7 +250,53 @@ func _on_purchase_pressed(index: int) -> void:
 	if shop_manager:
 		shop_manager.purchase_offer(index)
 
+func _setup_offer_focus_neighbors() -> void:
+	# Set up left/right navigation between offer buttons
+	for i in range(_offer_buttons.size()):
+		var btn := _offer_buttons[i]
+		if not is_instance_valid(btn):
+			continue
+
+		# Left neighbor
+		if i > 0 and is_instance_valid(_offer_buttons[i - 1]):
+			btn.focus_neighbor_left = _offer_buttons[i - 1].get_path()
+
+		# Right neighbor
+		if i < _offer_buttons.size() - 1 and is_instance_valid(_offer_buttons[i + 1]):
+			btn.focus_neighbor_right = _offer_buttons[i + 1].get_path()
+
+		# Down neighbor -> reroll button
+		if reroll_button and is_instance_valid(reroll_button):
+			btn.focus_neighbor_bottom = reroll_button.get_path()
+
+	# Set up reroll button navigation
+	if reroll_button and is_instance_valid(reroll_button):
+		# Up -> first offer button (or stay if none)
+		if not _offer_buttons.is_empty() and is_instance_valid(_offer_buttons[0]):
+			reroll_button.focus_neighbor_top = _offer_buttons[0].get_path()
+		# Down -> continue button
+		if continue_button and is_instance_valid(continue_button):
+			reroll_button.focus_neighbor_bottom = continue_button.get_path()
+
+	# Set up continue button navigation
+	if continue_button and is_instance_valid(continue_button):
+		# Up -> reroll button
+		if reroll_button and is_instance_valid(reroll_button):
+			continue_button.focus_neighbor_top = reroll_button.get_path()
+
 func _restore_focus() -> void:
+	# Try to focus first non-sold offer button
+	for btn in _offer_buttons:
+		if is_instance_valid(btn) and not btn.disabled:
+			btn.grab_focus()
+			return
+
+	# If no purchasable offers, focus reroll if available
+	if reroll_button and not reroll_button.disabled:
+		reroll_button.grab_focus()
+		return
+
+	# Fallback to continue button
 	if continue_button and is_instance_valid(continue_button):
 		continue_button.grab_focus()
 
@@ -272,9 +326,6 @@ func update_reroll_button() -> void:
 		var cost = shop_manager.get_reroll_cost()
 		reroll_button.text = "Reroll (Cost: %d)" % cost
 		reroll_button.disabled = not shop_manager.can_afford_reroll()
-
-		if Globals.shop_reroll_count >= Globals.MAX_REROLLS_PER_WAVE:
-			reroll_button.text = "Max Rerolls Reached"
 
 func _on_continue_pressed() -> void:
 	var game_manager = get_node_or_null("/root/Main/GameManager")
