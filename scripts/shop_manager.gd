@@ -15,7 +15,8 @@ func generate_offers() -> void:
 	var generated_turret_ids: Array[String] = []
 
 	# Roll each slot: 65% item, 35% turret
-	for i in range(Globals.SHOP_OFFER_COUNT):
+	var offer_count = Globals.get_shop_offer_count()
+	for i in range(offer_count):
 		var roll = randf()
 		if roll < GameConstants.SHOP_ITEM_CHANCE:
 			generate_item_offer(generated_item_ids, generated_turret_ids)
@@ -83,14 +84,24 @@ func generate_item_offer(generated_item_ids: Array[String], generated_turret_ids
 	Globals.current_shop_offers.append(offer)
 
 func calculate_turret_price(base_price: int, wave: int) -> int:
-	# Include turret purchase penalty: +25% per turret owned
+	# Include turret purchase penalty: +25% per turret owned (can be reduced by items)
 	var wave_multiplier = 1.0 + Globals.WAVE_PRICE_SCALE * wave
-	var penalty_multiplier = 1.0 + GameConstants.TURRET_PURCHASE_PENALTY * Globals.turrets_purchased
-	return int(base_price * wave_multiplier * penalty_multiplier)
+	var penalty_per_turret = Globals.get_turret_purchase_penalty()
+	var penalty_multiplier = 1.0 + penalty_per_turret * Globals.turrets_purchased
+	var shop_price_mult = Globals.get_shop_price_multiplier()
+	var price = int(base_price * wave_multiplier * penalty_multiplier * shop_price_mult)
+
+	# Apply Quantity Discount: Every 3rd turret costs 50%
+	if ItemRegistry.has_special_effect("quantity_discount") and Globals.item_counts.get("quantity_discount", 0) > 0:
+		# Next purchase will be turrets_purchased + 1
+		if (Globals.turrets_purchased + 1) % 3 == 0:
+			price = int(price * 0.5)
+
+	return price
 
 func calculate_item_price(base_price: int, wave: int, item_id: String = "") -> int:
 	var price := base_price * (1.0 + Globals.WAVE_PRICE_SCALE * wave)
-	
+
 	# Apply Fortune's Favor discount for rare+ items
 	if not item_id.is_empty() and ItemRegistry.has_special_effect("fortunes_favor"):
 		var rarity := ItemRegistry.get_rarity(item_id)
@@ -98,7 +109,11 @@ func calculate_item_price(base_price: int, wave: int, item_id: String = "") -> i
 			# Check if player has Fortune's Favor
 			if Globals.item_counts.get("fortunes_favor", 0) > 0:
 				price *= 0.85  # 15% discount
-	
+
+	# Apply shop price multiplier from items
+	var shop_price_mult = Globals.get_shop_price_multiplier()
+	price *= shop_price_mult
+
 	return int(price)
 
 func purchase_offer(offer_index: int) -> bool:

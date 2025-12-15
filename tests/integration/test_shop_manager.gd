@@ -149,9 +149,9 @@ func test_turret_price_wave_1():
 		shop_manager.generate_offers()
 		for offer in Globals.current_shop_offers:
 			if offer["type"] == "turret":
-				var base_price = Globals.TURRET_BASE_PRICES[offer["turret_id"]]
+				var base_price = TurretRegistry.get_base_price(offer["turret_id"])
 				var expected_wave_mult = 1.0 + Globals.WAVE_PRICE_SCALE * 1
-				var expected_penalty_mult = 1.0 + GameConstants.TURRET_PURCHASE_PENALTY * Globals.turrets_purchased
+				var expected_penalty_mult = 1.0 + Globals.get_turret_purchase_penalty() * Globals.turrets_purchased
 				var expected = int(base_price * expected_wave_mult * expected_penalty_mult)
 				assert_eq(offer["price"], expected,
 					"Wave 1 turret price should include wave and penalty multipliers")
@@ -159,22 +159,22 @@ func test_turret_price_wave_1():
 				break
 		if found_turret:
 			break
-	
+
 	assert_true(found_turret, "Should have found at least one turret offer in 10 attempts")
 
 
 func test_turret_price_scales_with_wave():
 	Globals.current_wave = 5
-	
+
 	# Shop V2: Generate offers multiple times to ensure we get a turret
 	var found_turret = false
 	for _i in range(10):
 		shop_manager.generate_offers()
 		for offer in Globals.current_shop_offers:
 			if offer["type"] == "turret":
-				var base_price = Globals.TURRET_BASE_PRICES[offer["turret_id"]]
+				var base_price = TurretRegistry.get_base_price(offer["turret_id"])
 				var expected_wave_mult = 1.0 + Globals.WAVE_PRICE_SCALE * 5
-				var expected_penalty_mult = 1.0 + GameConstants.TURRET_PURCHASE_PENALTY * Globals.turrets_purchased
+				var expected_penalty_mult = 1.0 + Globals.get_turret_purchase_penalty() * Globals.turrets_purchased
 				var expected = int(base_price * expected_wave_mult * expected_penalty_mult)
 				assert_eq(offer["price"], expected,
 					"Wave 5 turret price should include wave and penalty multipliers")

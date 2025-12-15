@@ -318,6 +318,35 @@ func get_player_luck_display() -> int:
 func get_reroll_cost_multiplier() -> float:
 	return _apply_modifiers_to_stat(1.0, "reroll_cost")
 
+## Get gold earn multiplier (from items like Salvage Optimizer)
+func get_gold_earn_multiplier() -> float:
+	return _apply_modifiers_to_stat(1.0, "gold_earn_mult")
+
+## Get turret purchase penalty (base 0.25, can be reduced/increased by items)
+func get_turret_purchase_penalty() -> float:
+	var penalty = GameConstants.TURRET_PURCHASE_PENALTY
+	# Apply reductions (e.g., Compact Design, Mass Production)
+	penalty = _apply_modifiers_to_stat(penalty, "turret_penalty_reduction")
+	# Apply increases (e.g., Elite Forces, Diversity Matrix)
+	penalty = _apply_modifiers_to_stat(penalty, "turret_penalty_increase")
+	return penalty
+
+## Get enemy count multiplier (from items like Combat Surplus)
+func get_enemy_count_multiplier() -> float:
+	return _apply_modifiers_to_stat(1.0, "enemy_count_mult")
+
+## Get shop price multiplier (from items like Quality Over Quantity)
+func get_shop_price_multiplier() -> float:
+	return _apply_modifiers_to_stat(1.0, "shop_price_mult")
+
+## Get wave completion bonus multiplier (from items like War Profiteer)
+func get_wave_bonus_multiplier() -> float:
+	return _apply_modifiers_to_stat(1.0, "wave_bonus_mult")
+
+## Get shop offer count (from items like Bargain Hunter)
+func get_shop_offer_count() -> int:
+	return int(_apply_modifiers_to_stat(float(SHOP_OFFER_COUNT), "shop_offer_count"))
+
 func _apply_modifiers_to_stat(base_value: float, stat_name: String) -> float:
 	var add_value: float = 0.0
 	var mult_values: Array[float] = []
@@ -372,6 +401,36 @@ func get_total_turret_count() -> int:
 	for count in turret_counts.values():
 		total += count
 	return total
+
+## Get number of different turret types owned (e.g., 3 if you own Normal, Fire, and Sniper)
+func get_turret_type_diversity() -> int:
+	var count := 0
+	for type_count in turret_counts.values():
+		if type_count > 0:
+			count += 1
+	return count
+
+## Get number of different damage types represented in owned turrets
+func get_damage_type_diversity() -> int:
+	var damage_types_seen: Array = []
+	for turret_type in turret_counts.keys():
+		if turret_counts[turret_type] > 0:
+			var turret_def = TurretRegistry.get_type(turret_type)
+			var dtypes = turret_def.get("damage_types", [])
+			for dtype in dtypes:
+				if dtype not in damage_types_seen:
+					damage_types_seen.append(dtype)
+	return damage_types_seen.size()
+
+## Get the most common turret type (returns empty string if no turrets)
+func get_most_common_turret_type() -> String:
+	var max_count := 0
+	var most_common := ""
+	for turret_type in turret_counts.keys():
+		if turret_counts[turret_type] > max_count:
+			max_count = turret_counts[turret_type]
+			most_common = turret_type
+	return most_common
 
 # =============================================================================
 # ENEMY TYPE HELPERS
@@ -566,7 +625,9 @@ func get_wave_duration(wave: int) -> float:
 
 func get_wave_enemy_count(wave: int) -> int:
 	var base_count := WAVE_BASE_ENEMY_COUNT + (wave - 1) * WAVE_ENEMY_INCREMENT
-	return int(base_count * get_difficulty_config()["enemy_count_mult"])
+	var difficulty_mult = get_difficulty_config()["enemy_count_mult"]
+	var item_mult = get_enemy_count_multiplier()
+	return int(base_count * difficulty_mult * item_mult)
 
 func get_enemy_health(wave: int) -> float:
 	var config: Dictionary = get_difficulty_config()

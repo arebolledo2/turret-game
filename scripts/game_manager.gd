@@ -121,8 +121,9 @@ func end_wave() -> void:
 func process_wave_end(delta: float) -> void:
 	pause_timer -= delta
 	if pause_timer <= 0:
-		# Award wave completion bonus
-		var wave_bonus = Globals.GOLD_WAVE_BONUS_BASE + (Globals.current_wave * 5)
+		# Award wave completion bonus with multiplier
+		var wave_bonus_base = Globals.GOLD_WAVE_BONUS_BASE + (Globals.current_wave * 5)
+		var wave_bonus = int(wave_bonus_base * Globals.get_wave_bonus_multiplier())
 		Globals.total_gold += wave_bonus
 		Events.gold_collected.emit(wave_bonus, Globals.total_gold)
 

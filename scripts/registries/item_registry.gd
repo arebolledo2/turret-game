@@ -252,9 +252,345 @@ const ITEMS: Dictionary = {
 	},
 	
 	# ==========================================================================
+	# NEW COMMON ITEMS - Phase 1
+	# ==========================================================================
+
+	"shielded_capacitors": {
+		"name": "Shielded Capacitors",
+		"icon": "⚡",
+		"description": "Electric turrets gain +15% fire rate but -5% range",
+		"rarity": GameEnums.ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "fire_rate", "operation": "multiply", "value": 1.15, "filter": {"damage_type": [GameEnums.DamageType.ELECTRIC]}},
+			{"stat": "range", "operation": "multiply", "value": 0.95, "filter": {"damage_type": [GameEnums.DamageType.ELECTRIC]}}
+		]
+	},
+	"heat_vents": {
+		"name": "Heat Vents",
+		"icon": "🔥",
+		"description": "Fire turrets gain +12% range but -8% fire rate",
+		"rarity": GameEnums.ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "range", "operation": "multiply", "value": 1.12, "filter": {"damage_type": [GameEnums.DamageType.FIRE]}},
+			{"stat": "fire_rate", "operation": "multiply", "value": 0.92, "filter": {"damage_type": [GameEnums.DamageType.FIRE]}}
+		]
+	},
+	"ballistic_plating": {
+		"name": "Ballistic Plating",
+		"icon": "🛡️",
+		"description": "Physical turrets gain +10% damage but -5% projectile speed",
+		"rarity": GameEnums.ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "damage", "operation": "multiply", "value": 1.10, "filter": {"damage_type": [GameEnums.DamageType.PHYSICAL]}},
+			{"stat": "projectile_speed", "operation": "multiply", "value": 0.95, "filter": {"damage_type": [GameEnums.DamageType.PHYSICAL]}}
+		]
+	},
+	"plasma_coils": {
+		"name": "Plasma Coils",
+		"icon": "💠",
+		"description": "Plasma turrets gain +8% projectile speed and fire rate, -6% damage",
+		"rarity": GameEnums.ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "projectile_speed", "operation": "multiply", "value": 1.08, "filter": {"damage_type": [GameEnums.DamageType.PLASMA]}},
+			{"stat": "fire_rate", "operation": "multiply", "value": 1.08, "filter": {"damage_type": [GameEnums.DamageType.PLASMA]}},
+			{"stat": "damage", "operation": "multiply", "value": 0.94, "filter": {"damage_type": [GameEnums.DamageType.PLASMA]}}
+		]
+	},
+	"salvage_optimizer": {
+		"name": "Salvage Optimizer",
+		"icon": "💰",
+		"description": "+15% gold from enemy kills",
+		"rarity": GameEnums.ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "gold_earn_mult", "operation": "multiply", "value": 1.15}
+		]
+	},
+	"budget_capacitor": {
+		"name": "Budget Capacitor",
+		"icon": "🔋",
+		"description": "Reroll costs reduced by 20%. All turrets have -5% fire rate",
+		"rarity": GameEnums.ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "reroll_cost", "operation": "multiply", "value": 0.80},
+			{"stat": "fire_rate", "operation": "multiply", "value": 0.95, "filter": {"turret_type": ["all"]}}
+		]
+	},
+	"ammo_surplus": {
+		"name": "Ammo Surplus",
+		"icon": "📦",
+		"description": "Projectile turrets gain +8% fire rate but -5% damage",
+		"rarity": GameEnums.ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "fire_rate", "operation": "multiply", "value": 1.08, "filter": {"attack_style": [GameEnums.AttackStyle.PROJECTILE]}},
+			{"stat": "damage", "operation": "multiply", "value": 0.95, "filter": {"attack_style": [GameEnums.AttackStyle.PROJECTILE]}}
+		]
+	},
+	"targeting_subroutine": {
+		"name": "Targeting Subroutine",
+		"icon": "🎯",
+		"description": "All turrets gain +12% rotation speed but -6% range",
+		"rarity": GameEnums.ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "rotation_speed", "operation": "multiply", "value": 1.12, "filter": {"turret_type": ["all"]}},
+			{"stat": "range", "operation": "multiply", "value": 0.94, "filter": {"turret_type": ["all"]}}
+		]
+	},
+	"overclock_module": {
+		"name": "Overclock Module",
+		"icon": "⚙️",
+		"description": "All turrets gain +6% fire rate and damage. You have -8% max health",
+		"rarity": GameEnums.ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "fire_rate", "operation": "multiply", "value": 1.06, "filter": {"turret_type": ["all"]}},
+			{"stat": "damage", "operation": "multiply", "value": 1.06, "filter": {"turret_type": ["all"]}},
+			{"stat": "player_max_health", "operation": "multiply", "value": 0.92}
+		]
+	},
+	"compact_design": {
+		"name": "Compact Design",
+		"icon": "📐",
+		"description": "Turret purchase penalty reduced by 3% per turret. All turrets -4% range",
+		"rarity": GameEnums.ItemRarity.COMMON,
+		"max_stacks": 3,
+		"modifiers": [
+			{"stat": "turret_penalty_reduction", "operation": "add", "value": -0.03},
+			{"stat": "range", "operation": "multiply", "value": 0.96, "filter": {"turret_type": ["all"]}}
+		]
+	},
+
+	# ==========================================================================
+	# DAMAGE TYPE SPECIALIZATION ITEMS
+	# ==========================================================================
+
+	"kinetic_enhancer": {
+		"name": "Kinetic Enhancer",
+		"icon": "⚙️",
+		"description": "Physical turrets +25% damage. Electric turrets -10% damage",
+		"rarity": GameEnums.ItemRarity.UNCOMMON,
+		"modifiers": [
+			{"stat": "damage", "operation": "multiply", "value": 1.25, "filter": {"damage_type": [GameEnums.DamageType.PHYSICAL]}},
+			{"stat": "damage", "operation": "multiply", "value": 0.90, "filter": {"damage_type": [GameEnums.DamageType.ELECTRIC]}}
+		]
+	},
+	"insulated_coating": {
+		"name": "Insulated Coating",
+		"icon": "🛡️",
+		"description": "Electric turrets +35% damage and +20% range. Fire turrets -15% fire rate",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"modifiers": [
+			{"stat": "damage", "operation": "multiply", "value": 1.35, "filter": {"damage_type": [GameEnums.DamageType.ELECTRIC]}},
+			{"stat": "range", "operation": "multiply", "value": 1.20, "filter": {"damage_type": [GameEnums.DamageType.ELECTRIC]}},
+			{"stat": "fire_rate", "operation": "multiply", "value": 0.85, "filter": {"damage_type": [GameEnums.DamageType.FIRE]}}
+		]
+	},
+	"thermal_amplifier": {
+		"name": "Thermal Amplifier",
+		"icon": "🔥",
+		"description": "Fire turrets +50% DoT damage and +1.0s DoT duration. All turrets -8% projectile speed",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"max_stacks": 2,
+		"modifiers": [
+			{"stat": "dot_damage", "operation": "multiply", "value": 1.50, "filter": {"damage_type": [GameEnums.DamageType.FIRE]}},
+			{"stat": "dot_duration", "operation": "add", "value": 1.0, "filter": {"damage_type": [GameEnums.DamageType.FIRE]}},
+			{"stat": "projectile_speed", "operation": "multiply", "value": 0.92, "filter": {"turret_type": ["all"]}}
+		]
+	},
+	"plasma_destabilizer": {
+		"name": "Plasma Destabilizer",
+		"icon": "💥",
+		"description": "Plasma turrets +80% knockback and +25% explosion radius. -20% projectile speed, -15% fire rate",
+		"rarity": GameEnums.ItemRarity.EPIC,
+		"modifiers": [
+			{"stat": "knockback_force", "operation": "multiply", "value": 1.80, "filter": {"damage_type": [GameEnums.DamageType.PLASMA]}},
+			{"stat": "aoe_radius", "operation": "multiply", "value": 1.25, "filter": {"damage_type": [GameEnums.DamageType.PLASMA]}},
+			{"stat": "projectile_speed", "operation": "multiply", "value": 0.80, "filter": {"damage_type": [GameEnums.DamageType.PLASMA]}},
+			{"stat": "fire_rate", "operation": "multiply", "value": 0.85, "filter": {"damage_type": [GameEnums.DamageType.PLASMA]}}
+		]
+	},
+	"elemental_conduit": {
+		"name": "Elemental Conduit",
+		"icon": "🌀",
+		"description": "ALL turrets +15% damage per different damage type owned (max +60% with all 4 types)",
+		"rarity": GameEnums.ItemRarity.LEGENDARY,
+		"max_stacks": 1,
+		"special_effect": "elemental_conduit",
+		"modifiers": []
+	},
+
+	# ==========================================================================
+	# ECONOMY ITEMS
+	# ==========================================================================
+
+	"efficient_scavenger": {
+		"name": "Efficient Scavenger",
+		"icon": "🪙",
+		"description": "+30% gold from enemy kills",
+		"rarity": GameEnums.ItemRarity.COMMON,
+		"modifiers": [
+			{"stat": "gold_earn_mult", "operation": "multiply", "value": 1.30}
+		]
+	},
+	"combat_surplus": {
+		"name": "Combat Surplus",
+		"icon": "📦",
+		"description": "Waves spawn +15% more enemies. Gold per enemy +25%",
+		"rarity": GameEnums.ItemRarity.UNCOMMON,
+		"modifiers": [
+			{"stat": "enemy_count_mult", "operation": "multiply", "value": 1.15},
+			{"stat": "gold_earn_mult", "operation": "multiply", "value": 1.25}
+		]
+	},
+	"quality_over_quantity": {
+		"name": "Quality Over Quantity",
+		"icon": "👑",
+		"description": "Waves spawn -30% fewer enemies. Gold per enemy +100%. Turret prices +15%",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"max_stacks": 1,
+		"modifiers": [
+			{"stat": "enemy_count_mult", "operation": "multiply", "value": 0.70},
+			{"stat": "gold_earn_mult", "operation": "multiply", "value": 2.0},
+			{"stat": "shop_price_mult", "operation": "multiply", "value": 1.15}
+		]
+	},
+	"bargain_hunter": {
+		"name": "Bargain Hunter",
+		"icon": "🏷️",
+		"description": "Reroll costs -40%. Shop offers +1 slot. All turrets -8% damage",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"max_stacks": 2,
+		"modifiers": [
+			{"stat": "reroll_cost", "operation": "multiply", "value": 0.60},
+			{"stat": "shop_offer_count", "operation": "add", "value": 1},
+			{"stat": "damage", "operation": "multiply", "value": 0.92, "filter": {"turret_type": ["all"]}}
+		]
+	},
+	"war_profiteer": {
+		"name": "War Profiteer",
+		"icon": "💵",
+		"description": "Wave completion bonus gold +100%. Shop prices +25%",
+		"rarity": GameEnums.ItemRarity.EPIC,
+		"max_stacks": 1,
+		"modifiers": [
+			{"stat": "wave_bonus_mult", "operation": "multiply", "value": 2.0},
+			{"stat": "shop_price_mult", "operation": "multiply", "value": 1.25}
+		]
+	},
+
+	# ==========================================================================
+	# TALL/WIDE ITEMS (Army Size Strategy)
+	# ==========================================================================
+
+	"mass_production": {
+		"name": "Mass Production",
+		"icon": "🏭",
+		"description": "Turret purchase penalty reduced from 25% to 15% per turret. All turrets -10% damage",
+		"rarity": GameEnums.ItemRarity.UNCOMMON,
+		"max_stacks": 2,
+		"modifiers": [
+			{"stat": "turret_penalty_reduction", "operation": "add", "value": -0.10},
+			{"stat": "damage", "operation": "multiply", "value": 0.90, "filter": {"turret_type": ["all"]}}
+		]
+	},
+	"army_doctrine": {
+		"name": "Army Doctrine",
+		"icon": "🪖",
+		"description": "For each turret beyond the 5th, all turrets gain +3% fire rate (max +30%). -10% range",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"max_stacks": 1,
+		"special_effect": "army_doctrine",
+		"modifiers": [
+			{"stat": "range", "operation": "multiply", "value": 0.90, "filter": {"turret_type": ["all"]}}
+		]
+	},
+	"elite_forces": {
+		"name": "Elite Forces",
+		"icon": "⭐",
+		"description": "If you own ≤5 turrets: all turrets +40% damage, +25% range. Penalty increased to 40% per turret",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"max_stacks": 1,
+		"special_effect": "elite_forces",
+		"modifiers": [
+			{"stat": "turret_penalty_increase", "operation": "add", "value": 0.15}
+		]
+	},
+	"quantity_discount": {
+		"name": "Quantity Discount",
+		"icon": "💲",
+		"description": "Every 3rd turret purchased costs only 50% of its calculated price",
+		"rarity": GameEnums.ItemRarity.EPIC,
+		"max_stacks": 1,
+		"special_effect": "quantity_discount",
+		"modifiers": []
+	},
+	"focused_investment": {
+		"name": "Focused Investment",
+		"icon": "🎯",
+		"description": "Your most numerous turret type gains +60% damage, +20% fire rate, +15% range. All others -20% damage",
+		"rarity": GameEnums.ItemRarity.LEGENDARY,
+		"max_stacks": 1,
+		"special_effect": "focused_investment",
+		"modifiers": []
+	},
+
+	# ==========================================================================
+	# TURRET VARIETY ITEMS (Mixing Turret Types)
+	# ==========================================================================
+
+	"diversity_matrix": {
+		"name": "Diversity Matrix",
+		"icon": "🔷",
+		"description": "For each different turret type owned, all turrets gain +8% damage (max +48%). Penalty +5% per turret",
+		"rarity": GameEnums.ItemRarity.UNCOMMON,
+		"max_stacks": 2,
+		"special_effect": "diversity_matrix",
+		"modifiers": [
+			{"stat": "turret_penalty_increase", "operation": "add", "value": 0.05}
+		]
+	},
+	"standardized_parts": {
+		"name": "Standardized Parts",
+		"icon": "🔧",
+		"description": "Owning multiple of the same turret type grants +5% fire rate per duplicate. Mixed types -12% range",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"max_stacks": 1,
+		"special_effect": "standardized_parts",
+		"modifiers": [
+			{"stat": "range", "operation": "multiply", "value": 0.88, "filter": {"turret_type": ["all"]}}
+		]
+	},
+	"cross_training": {
+		"name": "Cross-Training",
+		"icon": "🎓",
+		"description": "For every 2 different turret types owned, all turrets gain +15% rotation speed. -5% damage",
+		"rarity": GameEnums.ItemRarity.RARE,
+		"special_effect": "cross_training",
+		"modifiers": [
+			{"stat": "damage", "operation": "multiply", "value": 0.95, "filter": {"turret_type": ["all"]}}
+		]
+	},
+	"mono_type_mastery": {
+		"name": "Mono-Type Mastery",
+		"icon": "👑",
+		"description": "If you own only ONE turret type, those turrets gain +100% damage and +50% fire rate",
+		"rarity": GameEnums.ItemRarity.EPIC,
+		"max_stacks": 1,
+		"special_effect": "mono_type_mastery",
+		"modifiers": []
+	},
+	"synergy_core": {
+		"name": "Synergy Core",
+		"icon": "✨",
+		"description": "ALL turrets +12% damage per different turret type. +25% bonus if you own all 6 types (max +97%)",
+		"rarity": GameEnums.ItemRarity.LEGENDARY,
+		"max_stacks": 1,
+		"special_effect": "synergy_core",
+		"modifiers": []
+	},
+
+	# ==========================================================================
 	# LUCK ITEMS
 	# ==========================================================================
-	
+
 	"lucky_charm": {
 		"name": "Lucky Charm",
 		"icon": "🍀",
