@@ -290,7 +290,7 @@ func test_melee_damage_default():
 
 
 func test_melee_range_default():
-	assert_eq(player.melee_range, 65.0, "Default melee range should be 65")
+	assert_eq(player.melee_range, 80.0, "Default melee range should be 80")
 
 
 func test_melee_arc_default():
@@ -302,7 +302,7 @@ func test_melee_cooldown_default():
 
 
 func test_melee_windup_default():
-	assert_eq(player.melee_windup_time, 0.2, "Default melee windup should be 0.2")
+	assert_eq(player.melee_windup_time, 0.15, "Default melee windup should be 0.15")
 
 
 # =============================================================================

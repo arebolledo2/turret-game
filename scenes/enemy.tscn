@@ -1,10 +1,18 @@
-[gd_scene load_steps=4 format=3 uid="uid://bq5n7xwk8vh3r"]
+[gd_scene load_steps=7 format=3 uid="uid://bq5n7xwk8vh3r"]
 
 [ext_resource type="Script" path="res://scripts/enemy.gd" id="1_2j3k4"]
 [ext_resource type="Texture2D" path="res://assets/sprites/enemy_tiny/enemy_south.png" id="2_south"]
+[ext_resource type="Script" path="res://scripts/components/enemy_hurtbox.gd" id="3_hurtbox"]
+[ext_resource type="Script" path="res://scripts/components/enemy_damage_zone.gd" id="4_damage_zone"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
 radius = 12.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_Hurtbox"]
+radius = 24.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_DamageZone"]
+radius = 18.0
 
 [node name="Enemy" type="CharacterBody2D"]
 collision_layer = 2
@@ -17,3 +25,19 @@ shape = SubResource("CircleShape2D_1")
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture_filter = 1
 texture = ExtResource("2_south")
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 32
+collision_mask = 0
+script = ExtResource("3_hurtbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("CircleShape2D_Hurtbox")
+
+[node name="DamageZone" type="Area2D" parent="."]
+collision_layer = 64
+collision_mask = 16
+script = ExtResource("4_damage_zone")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageZone"]
+shape = SubResource("CircleShape2D_DamageZone")

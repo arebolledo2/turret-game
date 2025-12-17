@@ -27,6 +27,7 @@ var can_melee: bool = true
 var is_meleeing: bool = false
 var is_winding_up: bool = false
 var melee_target_enemy: Node2D = null  # Track the locked-on target
+var melee_hit_enemies: Array = []  # Track enemies hit in current attack to prevent double-hits
 var melee_timer: Timer
 var melee_animation_timer: Timer
 var melee_windup_timer: Timer
@@ -113,6 +114,11 @@ func _ready() -> void:
 	melee_damage_timer.wait_time = 0.05  # Nearly instant - just enough for visual sync
 	melee_damage_timer.timeout.connect(_on_melee_damage_timeout)
 	add_child(melee_damage_timer)
+
+	# Connect melee hitbox signal
+	var melee_hitbox = $MeleeVisuals/MeleeHitbox
+	if melee_hitbox:
+		melee_hitbox.enemy_hit.connect(_on_melee_hitbox_enemy_hit)
 
 func _physics_process(delta: float) -> void:
 	# Don't process if game hasn't started
@@ -422,14 +428,21 @@ func perform_melee_attack() -> void:
 	melee_timer.start()
 	melee_animation_timer.start()
 
+	# Clear hit tracking for new attack
+	melee_hit_enemies.clear()
+
 	# Calculate attack direction - use locked target if still valid
 	var attack_direction := get_current_melee_direction()
 
+	# Enable and animate the melee hitbox
+	var melee_hitbox = $MeleeVisuals/MeleeHitbox
+	if melee_hitbox:
+		melee_hitbox.update_direction(attack_direction)
+		melee_hitbox.enable_hitbox()
+		melee_hitbox.animate_expansion(melee_animation_duration, 0.3)
+
 	# Visual feedback - attack swing (starts animation)
 	play_melee_swing_animation(attack_direction)
-
-	# Delay damage to sync with animation (50% through the swing)
-	melee_damage_timer.start()
 
 func get_current_melee_direction() -> Vector2:
 	"""Get the direction for melee attack, prioritizing locked target."""
@@ -439,32 +452,38 @@ func get_current_melee_direction() -> Vector2:
 	# Otherwise fall back to facing direction
 	return get_attack_direction_from_facing()
 
-func apply_melee_damage_and_knockback() -> void:
-	"""Apply damage and knockback to enemies in melee range."""
-	# Detect and damage ALL enemies in melee range (360 degrees for reliability)
-	var enemies = get_tree().get_nodes_in_group("enemies")
-	var hit_count := 0
+func _on_melee_hitbox_enemy_hit(enemy: Node2D) -> void:
+	"""Handle enemy hit by melee hitbox (physics-based detection)."""
+	# Prevent double-hits on same enemy
+	if enemy in melee_hit_enemies:
+		return
 
-	for enemy in enemies:
-		if not is_instance_valid(enemy):
-			continue
+	# Check if enemy is dying (don't hit dead enemies)
+	if "is_dying" in enemy and enemy.is_dying:
+		return
 
-		var distance := global_position.distance_to(enemy.global_position)
-		if distance <= melee_range:
-			if enemy.has_method("take_damage"):
-				enemy.take_damage(melee_damage)
-				hit_count += 1
+	melee_hit_enemies.append(enemy)
 
-			# Apply knockback
-			if enemy.has_method("apply_knockback"):
-				var knockback_dir := global_position.direction_to(enemy.global_position)
-				enemy.apply_knockback(Globals.PLAYER_MELEE_KNOCKBACK_FORCE, knockback_dir)
+	# Apply damage
+	if enemy.has_method("take_damage"):
+		enemy.take_damage(melee_damage)
 
-	# Screen shake on successful hit
-	if hit_count > 0:
+	# Apply knockback
+	if enemy.has_method("apply_knockback"):
+		var knockback_dir := global_position.direction_to(enemy.global_position)
+		enemy.apply_knockback(Globals.PLAYER_MELEE_KNOCKBACK_FORCE, knockback_dir)
+
+	# Screen shake on hit (first hit triggers shake)
+	if melee_hit_enemies.size() == 1:
 		var camera = get_node_or_null("Camera2D")
 		if camera and camera.has_method("shake"):
 			camera.shake(0.15, 3)
+
+func apply_melee_damage_and_knockback() -> void:
+	"""Legacy function - now handled by melee hitbox signal.
+	Kept for compatibility but does nothing."""
+	# Damage is now applied via _on_melee_hitbox_enemy_hit signal
+	pass
 
 func is_enemy_in_melee_arc(enemy: Node2D, attack_dir: Vector2) -> bool:
 	# Distance check
@@ -541,6 +560,12 @@ func _on_melee_timer_timeout() -> void:
 
 func _on_melee_animation_timeout() -> void:
 	is_meleeing = false
+
+	# Disable the melee hitbox
+	var melee_hitbox = $MeleeVisuals/MeleeHitbox
+	if melee_hitbox:
+		melee_hitbox.disable_hitbox()
+
 	# Hide the melee arc after animation completes
 	var melee_arc = get_node_or_null("MeleeVisuals/MeleeArc")
 	if melee_arc:
@@ -600,4 +625,3 @@ func spawn_defensive_pulse_visual() -> void:
 	tween.tween_property(viz, "scale", Vector2.ONE * 1.4, 0.3)
 	tween.tween_property(viz, "modulate:a", 0.0, 0.3)
 	tween.chain().tween_callback(viz.queue_free)
-

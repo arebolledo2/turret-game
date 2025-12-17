@@ -1,9 +1,13 @@
-[gd_scene load_steps=5 format=3 uid="uid://tech_drop_scene_001"]
+[gd_scene load_steps=7 format=3 uid="uid://tech_drop_scene_001"]
 
 [ext_resource type="Script" path="res://scripts/tech_drop.gd" id="1_tech_drop"]
+[ext_resource type="Script" path="res://scripts/components/enemy_hurtbox.gd" id="2_hurtbox"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
 radius = 20.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_Hurtbox"]
+radius = 22.0
 
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_1"]
 
@@ -17,7 +21,14 @@ script = ExtResource("1_tech_drop")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_1")
-disabled = true
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 32
+collision_mask = 0
+script = ExtResource("2_hurtbox")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+shape = SubResource("CircleShape2D_Hurtbox")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 modulate = Color(0.3, 0.8, 1, 1)

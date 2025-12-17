@@ -127,6 +127,9 @@ func _apply_type_config(type_id: String) -> void:
 	# Apply visual configuration
 	_apply_visuals()
 
+	# Configure hitboxes if available
+	_configure_hitboxes(type_def)
+
 func _load_sprites(folder_path: String) -> void:
 	"""Load directional sprites from the specified folder."""
 	sprite_south = load(folder_path + "/enemy_south.png")
@@ -152,6 +155,27 @@ func _apply_visuals() -> void:
 		anim_sprite.scale = Vector2(base_scale, base_scale)
 		anim_sprite.modulate = color_tint
 		# AnimatedSprite2D uses sprite_frames, not individual textures
+
+func _configure_hitboxes(type_def: Dictionary) -> void:
+	"""Configure hurtbox and damage zone from type definition."""
+	# Configure hurtbox (for receiving damage)
+	if has_node("Hurtbox") and type_def.has("hurtbox"):
+		var hurtbox_config: Dictionary = type_def.get("hurtbox", {})
+		var hurtbox = $Hurtbox
+		if hurtbox and hurtbox.has_method("configure"):
+			var shape_type: String = hurtbox_config.get("type", "circle")
+			var size: Vector2 = hurtbox_config.get("size", Vector2(24, 24))
+			hurtbox.configure(shape_type, size)
+
+	# Configure damage zone (for dealing contact damage)
+	if has_node("DamageZone") and type_def.has("damage_zone"):
+		var damage_zone_config: Dictionary = type_def.get("damage_zone", {})
+		var damage_zone = $DamageZone
+		if damage_zone and damage_zone.has_method("configure"):
+			var shape_type: String = damage_zone_config.get("type", "circle")
+			var size: float = damage_zone_config.get("size", 18.0)
+			var offset: Vector2 = damage_zone_config.get("offset", Vector2.ZERO)
+			damage_zone.configure(shape_type, size, offset)
 
 func _physics_process(delta: float) -> void:
 	if is_dying:
@@ -189,13 +213,8 @@ func _physics_process(delta: float) -> void:
 	# Update sprite based on velocity (works for all behaviors)
 	if velocity.length() > 0:
 		_update_direction_sprite(velocity.normalized())
-	
-	# Check for collision with player
-	for i in get_slide_collision_count():
-		var collision := get_slide_collision(i)
-		var collider = collision.get_collider()
-		if collider.is_in_group("player") and collider.has_method("take_damage"):
-			collider.take_damage(contact_damage)
+
+	# Contact damage now handled by DamageZone component
 
 func _update_direction_sprite(direction: Vector2) -> void:
 	# AnimatedSprite2D enemies use left/right animations only
