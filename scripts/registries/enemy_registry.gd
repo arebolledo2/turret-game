@@ -24,7 +24,7 @@ const TYPES: Dictionary = {
 		},
 		"damage_zone": {
 			"type": "circle",
-			"size": 18.0,
+			"size": 35.0,
 			"offset": Vector2(0, 0),
 		},
 		"spawn_weight": 100,
@@ -202,6 +202,15 @@ const TYPES: Dictionary = {
 			"xp_value": 12,
 			"scale": 0.15,
 			"mass": 1.0,
+		},
+		"hurtbox": {
+			"type": "circle",
+			"size": Vector2(24, 24),
+		},
+		"damage_zone": {
+			"type": "circle",
+			"size": 50.0,
+			"offset": Vector2(0, 0),
 		},
 		"spawn_weight": 40,
 		"min_wave": 2,

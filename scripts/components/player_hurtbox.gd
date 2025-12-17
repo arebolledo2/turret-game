@@ -9,6 +9,8 @@ func _ready() -> void:
 	# Set collision layer and mask
 	collision_layer = 16  # Layer 5 (player_hurtbox = 2^4 = 16)
 	collision_mask = 64  # Layer 7 (enemy_damage_zone = 2^6 = 64)
+	monitoring = true  # Detect damage zones
+	monitorable = true  # Allow detection by damage zones
 
 	# Add to group for identification
 	add_to_group("player_hurtbox")

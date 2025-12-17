@@ -18,6 +18,8 @@ func _ready() -> void:
 	# Set collision layer and mask
 	collision_layer = 64  # Layer 7 (enemy_damage_zone = 2^6 = 64)
 	collision_mask = 16  # Layer 5 (player_hurtbox = 2^4 = 16)
+	monitoring = true  # Explicit enable
+	monitorable = true  # Allow detection
 
 	# Connect signals
 	area_entered.connect(_on_area_entered)
@@ -29,12 +31,13 @@ func _ready() -> void:
 	damage_timer.timeout.connect(_on_damage_timer_timeout)
 	add_child(damage_timer)
 
-	# Configure collision shape if it doesn't exist
+	# Only configure shape if not already set in scene
 	if not collision_shape:
 		collision_shape = CollisionShape2D.new()
 		add_child(collision_shape)
-
-	_configure_shape()
+		_configure_shape()
+	elif not collision_shape.shape:
+		_configure_shape()
 
 func _configure_shape() -> void:
 	"""Configure the collision shape based on shape_type and shape_size."""
@@ -80,18 +83,34 @@ func _on_area_entered(area: Area2D) -> void:
 
 	# Get the player from the hurtbox's parent
 	var player = area.get_parent()
-	if not player or not player.has_method("take_damage"):
+	if not player:
+		push_warning("[EnemyDamageZone] PlayerHurtbox has no parent")
+		return
+	
+	if not player.is_in_group("player"):
+		push_warning("[EnemyDamageZone] Hurtbox parent not in player group: %s" % player.name)
+		return
+	
+	if not player.has_method("take_damage"):
+		push_warning("[EnemyDamageZone] Player missing take_damage method")
 		return
 
 	# Deal contact damage
 	var enemy = get_parent()
-	if enemy and "contact_damage" in enemy:
-		player.take_damage(enemy.contact_damage)
+	if not enemy:
+		push_warning("[EnemyDamageZone] DamageZone has no parent enemy")
+		return
+	
+	if not "contact_damage" in enemy:
+		push_warning("[EnemyDamageZone] Parent enemy missing contact_damage property")
+		return
+	
+	player.take_damage(enemy.contact_damage)
 
-		# Start cooldown
-		can_damage = false
-		damage_timer.wait_time = damage_cooldown
-		damage_timer.start()
+	# Start cooldown
+	can_damage = false
+	damage_timer.wait_time = damage_cooldown
+	damage_timer.start()
 
 func _on_area_exited(area: Area2D) -> void:
 	"""When player hurtbox exits, reset damage cooldown."""
