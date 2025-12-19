@@ -9,33 +9,35 @@ const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
 @onready var reroll_button: Button = $ShopPanel/VBoxContainer/RerollContainer/RerollButton
 @onready var continue_button: Button = $ShopPanel/VBoxContainer/ButtonContainer/ContinueButton
 
-# Stats grid
-@onready var stats_grid: GridContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/StatsGrid
+# Build tabs
+@onready var build_tabs: TabContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs
+@onready var player_stats_vbox: VBoxContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Player/PlayerStatsVBox
+@onready var economy_stats_vbox: VBoxContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Economy/EconomyStatsVBox
 
-# Turrets section
-@onready var turrets_title: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretsHeader/TurretsTitle
-@onready var turrets_hint: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretsHeader/TurretsHint
-@onready var turret_icons_row: HBoxContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretIconsRow
-@onready var turret_details_panel: PanelContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel
-@onready var turret_name_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/TurretName
-@onready var turret_damage_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats/DamageLabel
-@onready var turret_range_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats/RangeLabel
-@onready var turret_fire_rate_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats/FireRateLabel
-@onready var turret_rotation_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats/RotationLabel
-@onready var turret_proj_speed_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats/ProjSpeedLabel
-@onready var turret_dps_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats/DPSLabel
+# Turrets tab
+@onready var turrets_title: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretsHeader/TurretsTitle
+@onready var turrets_hint: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretsHeader/TurretsHint
+@onready var turret_icons_row: HBoxContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretIconsRow
+@onready var turret_details_panel: PanelContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel
+@onready var turret_name_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/TurretName
+@onready var turret_damage_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats/DamageLabel
+@onready var turret_range_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats/RangeLabel
+@onready var turret_fire_rate_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats/FireRateLabel
+@onready var turret_rotation_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats/RotationLabel
+@onready var turret_proj_speed_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats/ProjSpeedLabel
+@onready var turret_dps_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats/DPSLabel
 
-# Items section
-@onready var items_title: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemsHeader/ItemsTitle
-@onready var items_hint: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemsHeader/ItemsHint
-@onready var items_scroll: ScrollContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemsScrollContainer
-@onready var items_hbox: HBoxContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemsScrollContainer/ItemsHBox
-@onready var no_items_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/NoItemsLabel
-@onready var item_details_panel: PanelContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemDetailsPanel
-@onready var item_icon_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemIcon
-@onready var item_name_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemName
-@onready var item_rarity_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemRarity
-@onready var item_description_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemDescription
+# Items tab
+@onready var items_title: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemsHeader/ItemsTitle
+@onready var items_hint: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemsHeader/ItemsHint
+@onready var items_scroll: ScrollContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemsScrollContainer
+@onready var items_hbox: HBoxContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemsScrollContainer/ItemsHBox
+@onready var no_items_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/NoItemsLabel
+@onready var item_details_panel: PanelContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemDetailsPanel
+@onready var item_icon_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemIcon
+@onready var item_name_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemName
+@onready var item_rarity_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemRarity
+@onready var item_description_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemDescription
 
 var shop_manager: Node
 var regeneration_pending: bool = false
@@ -351,24 +353,34 @@ func update_player_build() -> void:
 	if not is_instance_valid(_player):
 		_player = get_tree().get_first_node_in_group("player")
 
-	_update_stats_display()
-	_update_turrets_panel()
-	_update_items_panel()
+	_update_player_tab()
+	_update_economy_tab()
+	_update_turrets_tab()
+	_update_items_tab()
 	_setup_build_focus_neighbors()
 
 
-func _update_stats_display() -> void:
-	if not stats_grid:
+func _update_player_tab() -> void:
+	if not player_stats_vbox:
 		return
-	
-	var health_current := 100
-	var health_max := 100
-	var speed := 300
 
+	# Clear existing stat labels
+	for child in player_stats_vbox.get_children():
+		child.queue_free()
+
+	# Base player constants (from player.gd defaults)
+	const BASE_MAX_HEALTH := 100.0
+	const BASE_SPEED := 300.0
+
+	# Get modified values
+	var modified_max_health := Globals.get_player_max_health()
+	var modified_speed := Globals.get_player_speed()
+
+	# Get current player health
+	var health_current := 100
+	var health_max := int(modified_max_health)
 	if is_instance_valid(_player):
 		health_current = int(_player.current_health)
-		health_max = int(_player.max_health)
-		speed = int(_player.speed)
 
 	var luck := Globals.get_player_luck_display()
 	var xp := Globals.total_xp
@@ -376,15 +388,140 @@ func _update_stats_display() -> void:
 	var minutes := int(Globals.time_survived) / 60
 	var seconds := int(Globals.time_survived) % 60
 
-	stats_grid.get_node("HealthValue").text = "%d/%d" % [health_current, health_max]
-	stats_grid.get_node("SpeedValue").text = "%d" % speed
-	stats_grid.get_node("LuckValue").text = "%d" % luck
-	stats_grid.get_node("XPValue").text = "%d" % xp
-	stats_grid.get_node("KillsValue").text = "%d" % kills
-	stats_grid.get_node("TimeValue").text = "%d:%02d" % [minutes, seconds]
+	# Create stat labels
+	var health_label := Label.new()
+	health_label.text = "❤ Health: %d/%d" % [health_current, health_max]
+	if not is_equal_approx(modified_max_health, BASE_MAX_HEALTH):
+		health_label.text += " (base: %d)" % int(BASE_MAX_HEALTH)
+		health_label.add_theme_color_override("font_color", Color.GREEN)
+	health_label.add_theme_font_size_override("font_size", 12)
+	player_stats_vbox.add_child(health_label)
+
+	# Speed stat with base/modified
+	var speed_stat := BuildDisplayUIScript.format_stat_with_modifier("⚡ Speed", BASE_SPEED, modified_speed, "%.0f", true)
+	var speed_label := Label.new()
+	speed_label.text = speed_stat["text"]
+	speed_label.add_theme_color_override("font_color", speed_stat["color"])
+	speed_label.add_theme_font_size_override("font_size", 12)
+	player_stats_vbox.add_child(speed_label)
+
+	# Luck
+	var luck_label := Label.new()
+	luck_label.text = "🍀 Luck: %d" % luck
+	luck_label.add_theme_font_size_override("font_size", 12)
+	player_stats_vbox.add_child(luck_label)
+
+	# XP
+	var xp_label := Label.new()
+	xp_label.text = "✨ XP: %d" % xp
+	xp_label.add_theme_font_size_override("font_size", 12)
+	player_stats_vbox.add_child(xp_label)
+
+	# Kills
+	var kills_label := Label.new()
+	kills_label.text = "💀 Kills: %d" % kills
+	kills_label.add_theme_font_size_override("font_size", 12)
+	player_stats_vbox.add_child(kills_label)
+
+	# Time
+	var time_label := Label.new()
+	time_label.text = "⏱ Time: %d:%02d" % [minutes, seconds]
+	time_label.add_theme_font_size_override("font_size", 12)
+	player_stats_vbox.add_child(time_label)
 
 
-func _update_turrets_panel() -> void:
+func _update_economy_tab() -> void:
+	if not economy_stats_vbox:
+		return
+
+	# Clear existing labels
+	for child in economy_stats_vbox.get_children():
+		child.queue_free()
+
+	# Economy section header
+	var economy_header := Label.new()
+	economy_header.text = "💰 ECONOMY STATS"
+	economy_header.add_theme_font_size_override("font_size", 14)
+	economy_header.add_theme_color_override("font_color", Color(1, 0.84, 0, 1))
+	economy_stats_vbox.add_child(economy_header)
+
+	# Current Gold
+	var current_gold_label := Label.new()
+	current_gold_label.text = "Gold: %d" % Globals.total_gold
+	current_gold_label.add_theme_font_size_override("font_size", 12)
+	economy_stats_vbox.add_child(current_gold_label)
+
+	# Gold Earn Multiplier
+	var gold_mult := Globals.get_gold_earn_multiplier()
+	var gold_mult_stat := BuildDisplayUIScript.format_stat_with_modifier("Gold Earn", 100.0, gold_mult * 100.0, "%.0f%%", true)
+	var gold_mult_label := Label.new()
+	gold_mult_label.text = gold_mult_stat["text"]
+	gold_mult_label.add_theme_color_override("font_color", gold_mult_stat["color"])
+	gold_mult_label.add_theme_font_size_override("font_size", 12)
+	economy_stats_vbox.add_child(gold_mult_label)
+
+	# Shop Price Multiplier
+	var price_mult := Globals.get_shop_price_multiplier()
+	var price_mult_stat := BuildDisplayUIScript.format_stat_with_modifier("Shop Prices", 100.0, price_mult * 100.0, "%.0f%%", false)
+	var price_mult_label := Label.new()
+	price_mult_label.text = price_mult_stat["text"]
+	price_mult_label.add_theme_color_override("font_color", price_mult_stat["color"])
+	price_mult_label.add_theme_font_size_override("font_size", 12)
+	economy_stats_vbox.add_child(price_mult_label)
+
+	# Turret Penalty
+	var penalty := Globals.get_turret_purchase_penalty()
+	var penalty_stat := BuildDisplayUIScript.format_stat_with_modifier("Turret Penalty", 25.0, penalty * 100.0, "%.0f%% per turret", false)
+	var penalty_label := Label.new()
+	penalty_label.text = penalty_stat["text"]
+	penalty_label.add_theme_color_override("font_color", penalty_stat["color"])
+	penalty_label.add_theme_font_size_override("font_size", 12)
+	economy_stats_vbox.add_child(penalty_label)
+
+	# Reroll Cost
+	var reroll_cost: int = shop_manager.get_reroll_cost() if shop_manager else 0
+	var reroll_cost_label := Label.new()
+	reroll_cost_label.text = "Reroll Cost: %dg" % reroll_cost
+	reroll_cost_label.add_theme_font_size_override("font_size", 12)
+	economy_stats_vbox.add_child(reroll_cost_label)
+
+	# Separator
+	var sep := HSeparator.new()
+	economy_stats_vbox.add_child(sep)
+
+	# Progress section header
+	var progress_header := Label.new()
+	progress_header.text = "📊 GAME PROGRESS"
+	progress_header.add_theme_font_size_override("font_size", 14)
+	progress_header.add_theme_color_override("font_color", Color(0.7, 0.7, 1, 1))
+	economy_stats_vbox.add_child(progress_header)
+
+	# Wave
+	var wave_label := Label.new()
+	wave_label.text = "Wave: %d" % Globals.current_wave
+	wave_label.add_theme_font_size_override("font_size", 12)
+	economy_stats_vbox.add_child(wave_label)
+
+	# Turrets Owned
+	var turrets_owned_label := Label.new()
+	turrets_owned_label.text = "Turrets Owned: %d" % Globals.get_total_turret_count()
+	turrets_owned_label.add_theme_font_size_override("font_size", 12)
+	economy_stats_vbox.add_child(turrets_owned_label)
+
+	# Items Collected
+	var items_collected_label := Label.new()
+	items_collected_label.text = "Items Collected: %d" % Globals.collected_items.size()
+	items_collected_label.add_theme_font_size_override("font_size", 12)
+	economy_stats_vbox.add_child(items_collected_label)
+
+	# Turrets Purchased (total)
+	var turrets_purchased_label := Label.new()
+	turrets_purchased_label.text = "Turrets Purchased: %d" % Globals.turrets_purchased
+	turrets_purchased_label.add_theme_font_size_override("font_size", 12)
+	economy_stats_vbox.add_child(turrets_purchased_label)
+
+
+func _update_turrets_tab() -> void:
 	var total_turrets := Globals.get_total_turret_count()
 	
 	if turrets_title:
@@ -458,7 +595,7 @@ func _update_turret_details(type: String) -> void:
 	BuildDisplayUIScript.update_turret_details(nodes, type)
 
 
-func _update_items_panel() -> void:
+func _update_items_tab() -> void:
 	var unique_item_count := Globals.item_counts.size()
 	var total_item_count := 0
 	for count in Globals.item_counts.values():
