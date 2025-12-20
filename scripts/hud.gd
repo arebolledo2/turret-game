@@ -36,6 +36,7 @@ const SettingsMenuScript = preload("res://scripts/ui/settings_menu.gd")
 @onready var pause_menu: Control = $PauseMenu
 @onready var settings_menu: Control = $SettingsMenu
 @onready var show_damage_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageCheck
+@onready var show_hitboxes_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowHitboxesCheck
 @onready var settings_back_button: Button = $SettingsMenu/Panel/VBoxContainer/BackButton
 @onready var easy_button: Button = $DifficultySelect/Panel/VBoxContainer/ButtonContainer/EasyButton
 @onready var restart_button: Button = $GameOverScreen/Panel/VBoxContainer/RestartButton
@@ -169,6 +170,7 @@ func _setup_components() -> void:
 	_settings_menu.setup({
 		"container": settings_menu,
 		"show_damage_check": show_damage_check,
+		"show_hitboxes_check": show_hitboxes_check,
 		"back_button": settings_back_button,
 	}, self)
 
@@ -293,6 +295,10 @@ func _on_settings_back_pressed() -> void:
 
 func _on_show_damage_toggled(toggled_on: bool) -> void:
 	_settings_menu.on_show_damage_toggled(toggled_on)
+
+
+func _on_show_hitboxes_toggled(toggled_on: bool) -> void:
+	_settings_menu.on_show_hitboxes_toggled(toggled_on)
 
 
 # =============================================================================

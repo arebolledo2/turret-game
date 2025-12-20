@@ -64,6 +64,7 @@ var current_difficulty: Difficulty = Difficulty.EASY
 var show_damage_numbers: bool = true
 var player_auto_attack_enabled: bool = false
 var show_turret_ranges: bool = false
+var show_debug_hitboxes: bool = false
 
 # =============================================================================
 # TURRET TYPE SYSTEM

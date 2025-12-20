@@ -7,6 +7,11 @@ class_name MeleeHitbox
 
 signal enemy_hit(enemy: Node2D)
 
+## Debug visualization colors
+const DEBUG_COLOR: Color = Color(1.0, 0.0, 1.0, 0.3)  # Magenta, semi-transparent
+const DEBUG_OUTLINE_COLOR: Color = Color(1.0, 0.0, 1.0, 0.8)  # Magenta, opaque
+const DEBUG_OUTLINE_WIDTH: float = 2.0
+
 @export var arc_degrees: float = 120.0
 @export var max_range: float = 80.0
 @export var segments: int = 10
@@ -36,6 +41,11 @@ func _ready() -> void:
 
 	# Start disabled
 	disable_hitbox()
+
+	# Connect to debug toggle event
+	Events.hitbox_debug_toggled.connect(_on_debug_toggled)
+	if Globals.show_debug_hitboxes:
+		queue_redraw()
 
 func _generate_cone_points(arc_deg: float, range: float, seg_count: int) -> PackedVector2Array:
 	"""Generate a fan-shaped cone polygon for the melee hitbox."""
@@ -96,3 +106,29 @@ func _on_area_entered(area: Area2D) -> void:
 	var enemy = area.get_parent()
 	if enemy and enemy.is_in_group("enemies"):
 		enemy_hit.emit(enemy)
+
+
+func _draw() -> void:
+	if not Globals.show_debug_hitboxes:
+		return
+
+	if not collision_polygon or collision_polygon.polygon.size() == 0:
+		return
+
+	var polygon_points = collision_polygon.polygon
+	draw_colored_polygon(polygon_points, DEBUG_COLOR)
+
+	for i in range(polygon_points.size()):
+		var p1 = polygon_points[i]
+		var p2 = polygon_points[(i + 1) % polygon_points.size()]
+		draw_line(p1, p2, DEBUG_OUTLINE_COLOR, DEBUG_OUTLINE_WIDTH)
+
+
+func _on_debug_toggled(_show: bool) -> void:
+	queue_redraw()
+
+
+func _process(_delta: float) -> void:
+	# Continuously redraw during expansion animation
+	if Globals.show_debug_hitboxes and is_active:
+		queue_redraw()

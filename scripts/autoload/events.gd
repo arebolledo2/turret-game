@@ -34,6 +34,7 @@ signal turret_picked_up(turret: Node2D)
 signal turret_placed(turret: Node2D, position: Vector2)
 signal turret_dropped(turret: Node2D, position: Vector2)
 signal turret_range_toggled(show_range: bool)
+signal hitbox_debug_toggled(show_hitboxes: bool)
 
 # Pickup Events
 signal xp_dropped(position: Vector2, amount: int)

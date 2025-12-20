@@ -657,6 +657,18 @@ text = "Show Damage Numbers"
 layout_mode = 2
 button_pressed = true
 
+[node name="ShowHitboxesContainer" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="ShowHitboxesLabel" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowHitboxesContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Show Debug Hitboxes"
+
+[node name="ShowHitboxesCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
 [node name="BackButton" type="Button" parent="SettingsMenu/Panel/VBoxContainer"]
 custom_minimum_size = Vector2(0, 45)
 layout_mode = 2
@@ -671,4 +683,5 @@ text = "Back"
 [connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/SettingsButton" to="." method="_on_settings_pressed"]
 [connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/QuitButton" to="." method="_on_quit_pressed"]
 [connection signal="toggled" from="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageCheck" to="." method="_on_show_damage_toggled"]
+[connection signal="toggled" from="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowHitboxesCheck" to="." method="_on_show_hitboxes_toggled"]
 [connection signal="pressed" from="SettingsMenu/Panel/VBoxContainer/BackButton" to="." method="_on_settings_back_pressed"]
