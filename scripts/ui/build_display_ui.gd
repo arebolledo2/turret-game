@@ -4,18 +4,22 @@ extends RefCounted
 ## Shared UI rendering helpers for player build display (turrets, items, stats)
 ## Used by both PauseMenuUI and ShopScreen
 
-const TURRET_BUTTON_SIZE := Vector2(48, 48)
-const ITEM_BUTTON_SIZE := Vector2(50, 50)
-const ICON_FONT_SIZE := 24
-const BADGE_FONT_SIZE := 10
+const TURRET_BUTTON_SIZE := Vector2(56, 56)
+const ITEM_BUTTON_SIZE := Vector2(60, 60)
+const ICON_FONT_SIZE := 28
+const BADGE_FONT_SIZE := 12
+
+const MAIN_FONT = preload("res://addons/gut/fonts/AnonymousPro-Regular.ttf")
 
 
-## Creates a 48x48 button with icon and count badge for turret display
+## Creates a 56x56 button with icon and count badge for turret display
 static func create_turret_button(turret_type: String, count: int) -> Button:
 	var turret_config: Dictionary = TurretRegistry.get_type(turret_type)
 	
 	var btn := Button.new()
 	btn.custom_minimum_size = TURRET_BUTTON_SIZE
+	btn.add_theme_font_override("font", MAIN_FONT)
+	btn.add_theme_font_size_override("font_size", ICON_FONT_SIZE)
 	btn.text = turret_config.get("icon", "?")
 	btn.tooltip_text = turret_config.get("name", "Unknown Turret")
 	btn.focus_mode = Control.FOCUS_ALL
@@ -27,6 +31,7 @@ static func create_turret_button(turret_type: String, count: int) -> Button:
 	if count > 0:
 		var badge := Label.new()
 		badge.text = str(count)
+		badge.add_theme_font_override("font", MAIN_FONT)
 		badge.add_theme_font_size_override("font_size", BADGE_FONT_SIZE)
 		badge.add_theme_color_override("font_color", Color.WHITE)
 		badge.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -70,10 +75,12 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 	var count: int = Globals.turret_counts.get(turret_type, 0)
 
 	if nodes.has("turret_name_label") and nodes["turret_name_label"]:
+		nodes["turret_name_label"].add_theme_font_override("font", MAIN_FONT)
 		nodes["turret_name_label"].text = "%s %s (x%d)" % [config.get("icon", "?"), config.get("name", "Unknown"), count]
 
 	# Damage with base/modified
 	if nodes.has("damage_label") and nodes["damage_label"]:
+		nodes["damage_label"].add_theme_font_override("font", MAIN_FONT)
 		var base_damage := float(base_stats.get("damage", 0))
 		var mod_damage := float(modified_stats.get("damage", 0))
 		var damage_stat := format_stat_with_modifier("Damage", base_damage, mod_damage, "%.1f", true)
@@ -82,6 +89,7 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 
 	# Range with base/modified
 	if nodes.has("range_label") and nodes["range_label"]:
+		nodes["range_label"].add_theme_font_override("font", MAIN_FONT)
 		var base_range := float(base_stats.get("range", 0))
 		var mod_range := float(modified_stats.get("range", 0))
 		var range_stat := format_stat_with_modifier("Range", base_range, mod_range, "%.0f", true)
@@ -90,6 +98,7 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 
 	# Fire Rate with base/modified
 	if nodes.has("fire_rate_label") and nodes["fire_rate_label"]:
+		nodes["fire_rate_label"].add_theme_font_override("font", MAIN_FONT)
 		var base_fire_rate := float(base_stats.get("fire_rate", 0))
 		var mod_fire_rate := float(modified_stats.get("fire_rate", 0))
 		var fire_rate_stat := format_stat_with_modifier("Fire Rate", base_fire_rate, mod_fire_rate, "%.1f/s", true)
@@ -98,6 +107,7 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 
 	# Rotation Speed with base/modified
 	if nodes.has("rotation_label") and nodes["rotation_label"]:
+		nodes["rotation_label"].add_theme_font_override("font", MAIN_FONT)
 		var base_rotation := float(base_stats.get("rotation_speed", 0))
 		var mod_rotation := float(modified_stats.get("rotation_speed", 0))
 		var rotation_stat := format_stat_with_modifier("Rotation", base_rotation, mod_rotation, "%.0f°/s", true)
@@ -106,6 +116,7 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 
 	# Projectile Speed with base/modified
 	if nodes.has("proj_speed_label") and nodes["proj_speed_label"]:
+		nodes["proj_speed_label"].add_theme_font_override("font", MAIN_FONT)
 		var base_proj_speed := float(base_stats.get("projectile_speed", 0))
 		var mod_proj_speed := float(modified_stats.get("projectile_speed", 0))
 		var proj_speed_stat := format_stat_with_modifier("Proj Speed", base_proj_speed, mod_proj_speed, "%.0f", true)
@@ -114,6 +125,7 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 
 	# DPS with effective calculation
 	if nodes.has("dps_label") and nodes["dps_label"]:
+		nodes["dps_label"].add_theme_font_override("font", MAIN_FONT)
 		var dps_calc := calculate_effective_dps(turret_type, modified_stats)
 		var base_dps: float = float(dps_calc["base_dps"])
 		var effective_dps: float = float(dps_calc["effective_dps"])
@@ -125,7 +137,7 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 		nodes["dps_label"].add_theme_color_override("font_color", Color(1, 0.84, 0, 1))
 
 
-## Creates a 50x50 button with emoji icon, rarity border, and count badge for item display
+## Creates a 60x60 button with emoji icon, rarity border, and count badge for item display
 static func create_item_button(item_id: String, count: int) -> Button:
 	if not ItemRegistry.has_item(item_id):
 		return null
@@ -148,6 +160,7 @@ static func create_item_button(item_id: String, count: int) -> Button:
 	# Add emoji icon label
 	var icon_label := Label.new()
 	icon_label.text = item_data.get("icon", "?")
+	icon_label.add_theme_font_override("font", MAIN_FONT)
 	icon_label.add_theme_font_size_override("font_size", ICON_FONT_SIZE)
 	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -159,6 +172,7 @@ static func create_item_button(item_id: String, count: int) -> Button:
 	if count > 1:
 		var badge := Label.new()
 		badge.text = "x%d" % count
+		badge.add_theme_font_override("font", MAIN_FONT)
 		badge.add_theme_font_size_override("font_size", BADGE_FONT_SIZE)
 		badge.add_theme_color_override("font_color", Color.WHITE)
 		badge.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -213,20 +227,24 @@ static func update_item_details(nodes: Dictionary, item_id: String) -> void:
 	var count: int = Globals.item_counts.get(item_id, 1)
 	
 	if nodes.has("item_icon_label") and nodes["item_icon_label"]:
+		nodes["item_icon_label"].add_theme_font_override("font", MAIN_FONT)
 		nodes["item_icon_label"].text = item_data.get("icon", "?")
 	
 	if nodes.has("item_name_label") and nodes["item_name_label"]:
+		nodes["item_name_label"].add_theme_font_override("font", MAIN_FONT)
 		if count > 1:
 			nodes["item_name_label"].text = "%s (x%d)" % [item_data.get("name", "Unknown Item"), count]
 		else:
 			nodes["item_name_label"].text = item_data.get("name", "Unknown Item")
 	
 	if nodes.has("item_rarity_label") and nodes["item_rarity_label"]:
+		nodes["item_rarity_label"].add_theme_font_override("font", MAIN_FONT)
 		var rarity = item_data.get("rarity", GameEnums.ItemRarity.COMMON)
 		nodes["item_rarity_label"].text = ItemRegistry.RARITY_NAMES.get(rarity, "Common")
 		nodes["item_rarity_label"].add_theme_color_override("font_color", ItemRegistry.get_rarity_color(rarity))
 	
 	if nodes.has("item_description_label") and nodes["item_description_label"]:
+		nodes["item_description_label"].add_theme_font_override("font", MAIN_FONT)
 		if ItemRegistry.should_show_description(item_id):
 			nodes["item_description_label"].text = item_data.get("description", "")
 			nodes["item_description_label"].visible = true

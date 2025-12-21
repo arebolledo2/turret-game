@@ -5,6 +5,8 @@ extends ScalableUIPanel
 
 const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
 
+const MAIN_FONT = preload("res://addons/gut/fonts/AnonymousPro-Regular.ttf")
+
 var resume_button: Button
 var level_label: Label
 var wave_label: Label
@@ -30,11 +32,11 @@ var _turret_buttons: Array[Button] = []
 var _item_buttons: Array[Button] = []
 
 # Base values at 1080p
-const BASE_PANEL_WIDTH: float = 800.0
-const BASE_PANEL_HEIGHT: float = 600.0
-const BASE_TITLE_FONT: int = 24
-const BASE_LABEL_FONT: int = 16
-const BASE_BUTTON_HEIGHT: float = 40.0
+const BASE_PANEL_WIDTH: float = 850.0 # Increased for larger fonts
+const BASE_PANEL_HEIGHT: float = 650.0 # Increased for larger fonts
+const BASE_TITLE_FONT: int = 28
+const BASE_LABEL_FONT: int = 18
+const BASE_BUTTON_HEIGHT: float = 46.0
 
 
 func setup(nodes: Dictionary, owner: Node) -> void:
@@ -65,15 +67,23 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 
 	# Register fonts
 	if level_label:
+		level_label.add_theme_font_override("font", MAIN_FONT)
 		register_font(level_label, BASE_LABEL_FONT)
 	if wave_label:
+		wave_label.add_theme_font_override("font", MAIN_FONT)
 		register_font(wave_label, BASE_LABEL_FONT)
 	if turrets_title:
+		turrets_title.add_theme_font_override("font", MAIN_FONT)
 		register_font(turrets_title, BASE_TITLE_FONT)
 	if items_title:
+		items_title.add_theme_font_override("font", MAIN_FONT)
 		register_font(items_title, BASE_TITLE_FONT)
 	if items_hint:
+		items_hint.add_theme_font_override("font", MAIN_FONT)
 		register_font(items_hint, BASE_LABEL_FONT)
+
+	if resume_button:
+		resume_button.add_theme_font_override("font", MAIN_FONT)
 
 
 func _scale_fonts(scale: float) -> void:
@@ -116,7 +126,13 @@ func update_stats() -> void:
 		wave_label.text = "Wave: %d/%d" % [Globals.current_wave, Globals.MAX_WAVES]
 
 	if _player and stats_grid:
-		stats_grid.get_node("HealthValue").text = "%d/%d" % [_player.current_health, _player.max_health]
+		for child in stats_grid.get_children():
+			if child is Label:
+				child.add_theme_font_override("font", MAIN_FONT)
+				child.add_theme_font_size_override("font_size", UIScaler.scale(BASE_LABEL_FONT))
+		
+		if stats_grid.has_node("HealthValue"):
+			stats_grid.get_node("HealthValue").text = "%d/%d" % [_player.current_health, _player.max_health]
 		stats_grid.get_node("SpeedValue").text = "%d" % _player.speed
 		stats_grid.get_node("XPValue").text = "%d" % Globals.total_xp
 		stats_grid.get_node("KillsValue").text = "%d" % Globals.total_kills

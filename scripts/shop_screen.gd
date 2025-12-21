@@ -2,6 +2,8 @@ extends Control
 
 const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
 
+const MAIN_FONT = preload("res://addons/gut/fonts/AnonymousPro-Regular.ttf")
+
 @onready var shop_panel: PanelContainer = $ShopPanel
 @onready var title_label: Label = $ShopPanel/VBoxContainer/Header/TitleLabel
 @onready var gold_label: Label = $ShopPanel/VBoxContainer/Header/GoldLabel
@@ -69,6 +71,14 @@ func _ready() -> void:
 func _on_shop_opened(wave_number: int) -> void:
 	visible = true
 	get_tree().paused = true  # Pause the game when shop opens
+	
+	title_label.add_theme_font_override("font", MAIN_FONT)
+	title_label.add_theme_font_size_override("font_size", 32)
+	gold_label.add_theme_font_override("font", MAIN_FONT)
+	gold_label.add_theme_font_size_override("font_size", 24)
+	reroll_button.add_theme_font_override("font", MAIN_FONT)
+	continue_button.add_theme_font_override("font", MAIN_FONT)
+	
 	title_label.text = "TURRET SHOP - WAVE %d" % wave_number
 	update_gold_display()
 	update_reroll_button()
@@ -115,7 +125,7 @@ func _on_offers_generated(offers: Array) -> void:
 
 func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(200, 280)
+	panel.custom_minimum_size = Vector2(220, 300)
 	panel.process_mode = PROCESS_MODE_ALWAYS  # Allow interaction when paused
 
 	var vbox = VBoxContainer.new()
@@ -131,13 +141,16 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 		var icon = Label.new()
 		icon.text = turret_config["icon"]
 		icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		icon.add_theme_font_size_override("font_size", 48)
+		icon.add_theme_font_override("font", MAIN_FONT)
+		icon.add_theme_font_size_override("font_size", 56)
 		vbox.add_child(icon)
 
 		# Name
 		var name_label = Label.new()
 		name_label.text = turret_config["name"]
 		name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		name_label.add_theme_font_override("font", MAIN_FONT)
+		name_label.add_theme_font_size_override("font_size", 20)
 		vbox.add_child(name_label)
 
 		# Stats
@@ -148,7 +161,8 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 			turret_stats["fire_rate"]
 		]
 		stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		stats_label.add_theme_font_size_override("font_size", 12)
+		stats_label.add_theme_font_override("font", MAIN_FONT)
+		stats_label.add_theme_font_size_override("font_size", 14)
 		vbox.add_child(stats_label)
 
 		# Spacer
@@ -162,12 +176,14 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	var price_label = Label.new()
 	price_label.text = "%d Gold" % offer["price"]
 	price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	price_label.add_theme_font_size_override("font_size", 16)
+	price_label.add_theme_font_override("font", MAIN_FONT)
+	price_label.add_theme_font_size_override("font_size", 20)
 	price_label.add_theme_color_override("font_color", Color.GOLD)
 	vbox.add_child(price_label)
 
 	# Purchase button (common for both turrets and items)
 	var button = Button.new()
+	button.add_theme_font_override("font", MAIN_FONT)
 	button.process_mode = PROCESS_MODE_ALWAYS  # Allow interaction when paused
 	if offer.get("sold", false):
 		button.text = "SOLD"
@@ -192,14 +208,16 @@ func create_item_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	var icon_label = Label.new()
 	icon_label.text = item_data["icon"]
 	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon_label.add_theme_font_size_override("font_size", 48)
+	icon_label.add_theme_font_override("font", MAIN_FONT)
+	icon_label.add_theme_font_size_override("font_size", 56)
 	container.add_child(icon_label)
 
 	# Name with rarity color
 	var name_label = Label.new()
 	name_label.text = item_data["name"]
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_size_override("font_size", 18)
+	name_label.add_theme_font_override("font", MAIN_FONT)
+	name_label.add_theme_font_size_override("font_size", 22)
 	name_label.add_theme_color_override("font_color", ItemRegistry.get_rarity_color(item_data["rarity"]))
 	container.add_child(name_label)
 
@@ -209,7 +227,8 @@ func create_item_ui(offer: Dictionary, container: VBoxContainer) -> void:
 		desc_label.text = item_data["description"]
 		desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-		desc_label.add_theme_font_size_override("font_size", 12)
+		desc_label.add_theme_font_override("font", MAIN_FONT)
+		desc_label.add_theme_font_size_override("font_size", 14)
 		container.add_child(desc_label)
 
 	# Modifiers display
@@ -217,7 +236,8 @@ func create_item_ui(offer: Dictionary, container: VBoxContainer) -> void:
 		var mod_label = Label.new()
 		mod_label.text = format_modifier(modifier)
 		mod_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		mod_label.add_theme_font_size_override("font_size", 11)
+		mod_label.add_theme_font_override("font", MAIN_FONT)
+		mod_label.add_theme_font_size_override("font_size", 13)
 		# Green for benefits (value > 1.0 for multiply), red for drawbacks
 		var is_benefit = (modifier["operation"] == "multiply" and modifier["value"] > 1.0) or \
 						  (modifier["operation"] == "add" and modifier["value"] > 0.0)
@@ -416,7 +436,8 @@ func _update_player_tab() -> void:
 	if not is_equal_approx(modified_max_health, BASE_MAX_HEALTH):
 		health_label.text += " (base: %d)" % int(BASE_MAX_HEALTH)
 		health_label.add_theme_color_override("font_color", Color.GREEN)
-	health_label.add_theme_font_size_override("font_size", 12)
+	health_label.add_theme_font_override("font", MAIN_FONT)
+	health_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(health_label)
 
 	# Speed stat with base/modified
@@ -424,31 +445,36 @@ func _update_player_tab() -> void:
 	var speed_label := Label.new()
 	speed_label.text = speed_stat["text"]
 	speed_label.add_theme_color_override("font_color", speed_stat["color"])
-	speed_label.add_theme_font_size_override("font_size", 12)
+	speed_label.add_theme_font_override("font", MAIN_FONT)
+	speed_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(speed_label)
 
 	# Luck
 	var luck_label := Label.new()
 	luck_label.text = "🍀 Luck: %d" % luck
-	luck_label.add_theme_font_size_override("font_size", 12)
+	luck_label.add_theme_font_override("font", MAIN_FONT)
+	luck_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(luck_label)
 
 	# XP
 	var xp_label := Label.new()
 	xp_label.text = "✨ XP: %d" % xp
-	xp_label.add_theme_font_size_override("font_size", 12)
+	xp_label.add_theme_font_override("font", MAIN_FONT)
+	xp_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(xp_label)
 
 	# Kills
 	var kills_label := Label.new()
 	kills_label.text = "💀 Kills: %d" % kills
-	kills_label.add_theme_font_size_override("font_size", 12)
+	kills_label.add_theme_font_override("font", MAIN_FONT)
+	kills_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(kills_label)
 
 	# Time
 	var time_label := Label.new()
 	time_label.text = "⏱ Time: %d:%02d" % [minutes, seconds]
-	time_label.add_theme_font_size_override("font_size", 12)
+	time_label.add_theme_font_override("font", MAIN_FONT)
+	time_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(time_label)
 
 
@@ -463,14 +489,16 @@ func _update_economy_tab() -> void:
 	# Economy section header
 	var economy_header := Label.new()
 	economy_header.text = "💰 ECONOMY STATS"
-	economy_header.add_theme_font_size_override("font_size", 14)
+	economy_header.add_theme_font_override("font", MAIN_FONT)
+	economy_header.add_theme_font_size_override("font_size", 18)
 	economy_header.add_theme_color_override("font_color", Color(1, 0.84, 0, 1))
 	economy_stats_vbox.add_child(economy_header)
 
 	# Current Gold
 	var current_gold_label := Label.new()
 	current_gold_label.text = "Gold: %d" % Globals.total_gold
-	current_gold_label.add_theme_font_size_override("font_size", 12)
+	current_gold_label.add_theme_font_override("font", MAIN_FONT)
+	current_gold_label.add_theme_font_size_override("font_size", 15)
 	economy_stats_vbox.add_child(current_gold_label)
 
 	# Gold Earn Multiplier
@@ -479,7 +507,8 @@ func _update_economy_tab() -> void:
 	var gold_mult_label := Label.new()
 	gold_mult_label.text = gold_mult_stat["text"]
 	gold_mult_label.add_theme_color_override("font_color", gold_mult_stat["color"])
-	gold_mult_label.add_theme_font_size_override("font_size", 12)
+	gold_mult_label.add_theme_font_override("font", MAIN_FONT)
+	gold_mult_label.add_theme_font_size_override("font_size", 15)
 	economy_stats_vbox.add_child(gold_mult_label)
 
 	# Shop Price Multiplier
@@ -488,7 +517,8 @@ func _update_economy_tab() -> void:
 	var price_mult_label := Label.new()
 	price_mult_label.text = price_mult_stat["text"]
 	price_mult_label.add_theme_color_override("font_color", price_mult_stat["color"])
-	price_mult_label.add_theme_font_size_override("font_size", 12)
+	price_mult_label.add_theme_font_override("font", MAIN_FONT)
+	price_mult_label.add_theme_font_size_override("font_size", 15)
 	economy_stats_vbox.add_child(price_mult_label)
 
 	# Turret Penalty
@@ -497,14 +527,16 @@ func _update_economy_tab() -> void:
 	var penalty_label := Label.new()
 	penalty_label.text = penalty_stat["text"]
 	penalty_label.add_theme_color_override("font_color", penalty_stat["color"])
-	penalty_label.add_theme_font_size_override("font_size", 12)
+	penalty_label.add_theme_font_override("font", MAIN_FONT)
+	penalty_label.add_theme_font_size_override("font_size", 15)
 	economy_stats_vbox.add_child(penalty_label)
 
 	# Reroll Cost
 	var reroll_cost: int = shop_manager.get_reroll_cost() if shop_manager else 0
 	var reroll_cost_label := Label.new()
 	reroll_cost_label.text = "Reroll Cost: %dg" % reroll_cost
-	reroll_cost_label.add_theme_font_size_override("font_size", 12)
+	reroll_cost_label.add_theme_font_override("font", MAIN_FONT)
+	reroll_cost_label.add_theme_font_size_override("font_size", 15)
 	economy_stats_vbox.add_child(reroll_cost_label)
 
 	# Separator
@@ -514,32 +546,37 @@ func _update_economy_tab() -> void:
 	# Progress section header
 	var progress_header := Label.new()
 	progress_header.text = "📊 GAME PROGRESS"
-	progress_header.add_theme_font_size_override("font_size", 14)
+	progress_header.add_theme_font_override("font", MAIN_FONT)
+	progress_header.add_theme_font_size_override("font_size", 18)
 	progress_header.add_theme_color_override("font_color", Color(0.7, 0.7, 1, 1))
 	economy_stats_vbox.add_child(progress_header)
 
 	# Wave
 	var wave_label := Label.new()
 	wave_label.text = "Wave: %d" % Globals.current_wave
-	wave_label.add_theme_font_size_override("font_size", 12)
+	wave_label.add_theme_font_override("font", MAIN_FONT)
+	wave_label.add_theme_font_size_override("font_size", 15)
 	economy_stats_vbox.add_child(wave_label)
 
 	# Turrets Owned
 	var turrets_owned_label := Label.new()
 	turrets_owned_label.text = "Turrets Owned: %d" % Globals.get_total_turret_count()
-	turrets_owned_label.add_theme_font_size_override("font_size", 12)
+	turrets_owned_label.add_theme_font_override("font", MAIN_FONT)
+	turrets_owned_label.add_theme_font_size_override("font_size", 15)
 	economy_stats_vbox.add_child(turrets_owned_label)
 
 	# Items Collected
 	var items_collected_label := Label.new()
 	items_collected_label.text = "Items Collected: %d" % Globals.collected_items.size()
-	items_collected_label.add_theme_font_size_override("font_size", 12)
+	items_collected_label.add_theme_font_override("font", MAIN_FONT)
+	items_collected_label.add_theme_font_size_override("font_size", 15)
 	economy_stats_vbox.add_child(items_collected_label)
 
 	# Turrets Purchased (total)
 	var turrets_purchased_label := Label.new()
 	turrets_purchased_label.text = "Turrets Purchased: %d" % Globals.turrets_purchased
-	turrets_purchased_label.add_theme_font_size_override("font_size", 12)
+	turrets_purchased_label.add_theme_font_override("font", MAIN_FONT)
+	turrets_purchased_label.add_theme_font_size_override("font_size", 15)
 	economy_stats_vbox.add_child(turrets_purchased_label)
 
 
@@ -547,6 +584,7 @@ func _update_turrets_tab() -> void:
 	var total_turrets := Globals.get_total_turret_count()
 	
 	if turrets_title:
+		turrets_title.add_theme_font_override("font", MAIN_FONT)
 		turrets_title.text = "TURRETS (%d)" % total_turrets
 	
 	_turret_buttons.clear()
@@ -624,6 +662,7 @@ func _update_items_tab() -> void:
 		total_item_count += count
 	
 	if items_title:
+		items_title.add_theme_font_override("font", MAIN_FONT)
 		items_title.text = "ITEMS (%d)" % total_item_count
 	
 	var has_items := unique_item_count > 0
