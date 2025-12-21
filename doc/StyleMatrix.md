@@ -123,6 +123,56 @@ When executing prompts, start from the Style Guide template and append the per-i
 | Angry Enemy | Add "angular ice visor, frosted knuckles" | Add "hover jets emitting snow flurries" | Add "crystal exoskeleton, lime hologram claws" |
 | Main Character | Add "icy chrome drum, frost rimmed LED face, hovering on frost jets" | Add "condensation on antenna, lime hologram socket, crystalline thruster rings" | Add "snow-dusted hover nozzles, aurora vapor trails, crystalline panels" |
 
+### 11. Volcanic Obsidian Forge
+**Palette:** Deep obsidian black, glowing lava orange, sulfur yellow, cooling ash grey.
+**Rendering cues:** Cracked rock textures with internal heat glow, heat haze distortion, occasional floating embers.
+
+| Asset | Iteration 1 | Iteration 2 | Iteration 3 |
+|-------|-------------|-------------|-------------|
+| Basic Turret | Add "obsidian shard base, cracked rock spire with internal lava flow ports" | Add "molten platform, jagged stone tower with glowing sulfur vents" | Add "hardened lava base, ash-dusted spire with pulsing orange firing holes" |
+| Angry Enemy | Add "stone golem limbs, molten core, smoke plumes" | Add "obsidian shell, glowing eye cracks, lava trails" | Add "igneous armor, flaming exhaust, heavy rock fists" |
+| Main Character | Add "obsidian barrel, glowing lava seams, hovering on roaring fire jets" | Add "hardened magma shell, sulfur-yellow LED emoticon, heat shimmer hover wake" | Add "cracked stone panels, floating ember particles, molten exhaust trails" |
+
+### 12. Clockwork Brass Aviary
+**Palette:** Polished brass, weathered copper (green patina), mahogany wood, sapphire lens glass.
+**Rendering cues:** Visible ticking gears, steam vents, intricate filigree, etched leather accents.
+
+| Asset | Iteration 1 | Iteration 2 | Iteration 3 |
+|-------|-------------|-------------|-------------|
+| Basic Turret | Add "stepped brass base, filigree spire with mahogany port rings" | Add "patina-green platform, gear-driven tower with sapphire-glowing holes" | Add "clockface base, telescope-like spire with intricate etched ports" |
+| Angry Enemy | Add "mechanical owl wings, brass beak, clicking gears" | Add "clockwork spider chassis, copper rivets, steam whistle" | Add "leather-wrapped body, sapphire monocle, spring-loaded limbs" |
+| Main Character | Add "polished brass drum, mahogany socket, hovering on hissing steam vents" | Add "etched copper paneling, sapphire LED screen, rotating gear thrusters" | Add "leather trim, brass antenna finial, puffing steam hover plumes" |
+
+### 13. Bioluminescent Abyssal Trench
+**Palette:** Midnight indigo, electric violet, ghostly phosphor green, deep sea black.
+**Rendering cues:** Soft pulsing glows, semi-translucent surfaces, suspended marine snow particles, undulating light trails.
+
+| Asset | Iteration 1 | Iteration 2 | Iteration 3 |
+|-------|-------------|-------------|-------------|
+| Basic Turret | Add "abyssal rock base, translucent spire with pulsing violet port lights" | Add "angler-fish platform, toothy tower with phosphor-green glowing pores" | Add "trench-clay base, gelatinous spire with undulating light-ring ports" |
+| Angry Enemy | Add "deep sea horror face, trailing tentacles, violet lures" | Add "gelatinous translucent body, glowing inner organs, snapping jaws" | Add "phosphor-green warpaint, jagged fin spines, abyssal shadow aura" |
+| Main Character | Add "translucent indigo barrel, pulsing violet LED emoticon, hovering on ghostly light streams" | Add "semi-transparent plating, phosphor-green panel lines, undulating thruster fins" | Add "suspended marine snow particles, biolum bubble exhaust, eerie depth glow" |
+
+### 14. Solar-Powered Solarpunk Oasis
+**Palette:** Terracotta, sage green, pristine white, sunflower yellow, translucent solar glass.
+**Rendering cues:** Integrated living plants, brushed sustainable wood, sleek white polymers, iridescent solar film reflections.
+
+| Asset | Iteration 1 | Iteration 2 | Iteration 3 |
+|-------|-------------|-------------|-------------|
+| Basic Turret | Add "terracotta planter base, white polymer spire with vine-entwined ports" | Add "sage-green platform, wooden tower with solar-glass firing rings" | Add "solar panel base, flower-like spire with sunflower-yellow ports" |
+| Angry Enemy | Add "leafy exoskeleton, wooden joints, glowing nectar core" | Add "recycled white plastic frame, mossy armor, solar-lens eyes" | Add "bamboo-reinforced body, floating petal particles, clean energy hum" |
+| Main Character | Add "pristine white drum, terracotta rim, hovering on silent leaf-patterned thrusters" | Add "sage-green paneling, sustainable wood socket, solar-glass antenna orb" | Add "integrated moss panels, iridescent solar reflections, clean air hover wake" |
+
+### 15. Glitch-Core Datastream
+**Palette:** Terminal green, data-error red, static grey, scanline blue.
+**Rendering cues:** Digital artifacts, pixel tearing, scrolling ASCII textures, chromatic aberration, flickering wireframe overlays.
+
+| Asset | Iteration 1 | Iteration 2 | Iteration 3 |
+|-------|-------------|-------------|-------------|
+| Basic Turret | Add "flickering wireframe base, glitching spire with terminal-green port numbers" | Add "static-texture platform, ASCII tower with error-red glowing holes" | Add "pixel-torn base, scanline spire with chromatic aberration ports" |
+| Angry Enemy | Add "corrupted sprite limbs, binary aura, flickering red visor" | Add "teleporting glitch chassis, data-leak trails, blue scanlines" | Add "low-poly wireframe body, scrolling text armor, error-code sparks" |
+| Main Character | Add "glitching barrel body, terminal-green ASCII emoticon, hovering on pixel-tearing jets" | Add "chromatic aberration seams, wireframe antenna, flickering data-stream exhaust" | Add "pixel-drift panels, blue scanline underglow, corrupted hover plumes" |
+
 
 
 ## Prompt Template
