@@ -203,13 +203,14 @@ func create_item_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	name_label.add_theme_color_override("font_color", ItemRegistry.get_rarity_color(item_data["rarity"]))
 	container.add_child(name_label)
 
-	# Description
-	var desc_label = Label.new()
-	desc_label.text = item_data["description"]
-	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	desc_label.add_theme_font_size_override("font_size", 12)
-	container.add_child(desc_label)
+	# Description (only if it has unique effects)
+	if ItemRegistry.should_show_description(item_id):
+		var desc_label = Label.new()
+		desc_label.text = item_data["description"]
+		desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+		desc_label.add_theme_font_size_override("font_size", 12)
+		container.add_child(desc_label)
 
 	# Modifiers display
 	for modifier in item_data["modifiers"]:
@@ -236,15 +237,36 @@ func format_modifier(modifier: Dictionary) -> String:
 	var stat_name = stat.replace("_", " ").capitalize()
 	var sign_str = "+"
 	var display_value = 0.0
+	var tag = ""
+
+	# Check for filters and create a tag
+	if modifier.has("filter"):
+		var filter: Dictionary = modifier["filter"]
+		if filter.has("turret_type"):
+			var types: Array = filter["turret_type"]
+			if not "all" in types:
+				tag = " [%s]" % ", ".join(types).capitalize()
+		elif filter.has("damage_type"):
+			var d_types: Array = filter["damage_type"]
+			var names = []
+			for dt in d_types:
+				names.append(GameEnums.DamageType.keys()[dt].capitalize())
+			tag = " [%s]" % ", ".join(names)
+		elif filter.has("attack_style"):
+			var a_styles: Array = filter["attack_style"]
+			var names = []
+			for as_idx in a_styles:
+				names.append(GameEnums.AttackStyle.keys()[as_idx].capitalize())
+			tag = " [%s]" % ", ".join(names)
 
 	if operation == "multiply":
 		display_value = (value - 1.0) * 100.0  # Convert to percentage
 		sign_str = "+" if display_value > 0 else ""
-		return "%s%.1f%% %s" % [sign_str, display_value, stat_name]
+		return "%s%.1f%% %s%s" % [sign_str, display_value, stat_name, tag]
 	elif operation == "add":
 		display_value = value
 		sign_str = "+" if value > 0 else ""
-		return "%s%.0f %s" % [sign_str, display_value, stat_name]  # Absolute value (no %)
+		return "%s%.0f %s%s" % [sign_str, display_value, stat_name, tag]  # Absolute value (no %)
 
 	return ""
 

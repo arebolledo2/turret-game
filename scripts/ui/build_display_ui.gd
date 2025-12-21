@@ -227,7 +227,12 @@ static func update_item_details(nodes: Dictionary, item_id: String) -> void:
 		nodes["item_rarity_label"].add_theme_color_override("font_color", ItemRegistry.get_rarity_color(rarity))
 	
 	if nodes.has("item_description_label") and nodes["item_description_label"]:
-		nodes["item_description_label"].text = item_data.get("description", "")
+		if ItemRegistry.should_show_description(item_id):
+			nodes["item_description_label"].text = item_data.get("description", "")
+			nodes["item_description_label"].visible = true
+		else:
+			nodes["item_description_label"].text = ""
+			nodes["item_description_label"].visible = false
 
 
 ## Sets up focus neighbors for a row of buttons

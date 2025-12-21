@@ -43,6 +43,7 @@ const ITEMS: Dictionary = {
 		"icon": "🧲",
 		"description": "Increases pickup radius by 30%",
 		"rarity": GameEnums.ItemRarity.COMMON,
+		"always_show_description": true,
 		"modifiers": [
 			{"stat": "pickup_radius", "operation": "multiply", "value": 1.3}
 		]
@@ -753,6 +754,48 @@ static func get_available_item_ids(item_counts: Dictionary) -> Array:
 		if not is_at_max_stacks(item_id, item_counts):
 			available.append(item_id)
 	return available
+
+
+## Determines if an item's description should be displayed.
+## Descriptions are hidden for simple stat-change items and shown for unique effects.
+static func should_show_description(item_id: String) -> bool:
+	if not ITEMS.has(item_id):
+		return false
+	
+	var item: Dictionary = ITEMS[item_id]
+	
+	# Always show if it has a special effect logic
+	if item.has("special_effect"):
+		return true
+	
+	# Always show if explicitly marked to be shown
+	if item.get("always_show_description", false):
+		return true
+		
+	# Check if it only has simple modifiers
+	var modifiers: Array = item.get("modifiers", [])
+	
+	# If no modifiers and no special effect, we probably need the description 
+	# (e.g. might be a placeholder or flavor-only item)
+	if modifiers.is_empty():
+		return true
+		
+	# If it has more than 2 modifiers, it might be complex enough to deserve a description
+	if modifiers.size() > 2:
+		return true
+		
+	# For common trade-offs, we want to hide it.
+	# We'll use a heuristic: if it's a "boring trade-off" or simple stat boost, hide it.
+	# We've added [Tags] to modifiers in the UI to indicate scope, so we can hide
+	# descriptions for simple filtered stat changes too.
+	for mod in modifiers:
+		if mod.has("filter"):
+			var filter: Dictionary = mod["filter"]
+			# We'll still show descriptions for multi-filtered or very complex items
+			if filter.size() > 1:
+				return true
+				
+	return false
 
 
 ## Check if item has a special effect
