@@ -5,8 +5,8 @@
 [resource]
 script = ExtResource("1")
 physics_shape_type = 0
-physics_size = Vector2(12, 12)
+physics_size = Vector2(8, 8)
 hurtbox_shape_type = 0
-hurtbox_size = Vector2(24, 24)
+hurtbox_size = Vector2(12, 12)
 deals_contact_damage = true
 damage_cooldown = 0.5
