@@ -62,24 +62,25 @@ func setup_visuals() -> void:
 	var turret_config = TurretRegistry.get_type(turret_type)
 	var icon = turret_config.get("icon", "🗼")
 
-	# Set base color - support both AnimatedSprite2D and legacy Sprite2D
-	if animated_sprite:
+	# Set base color
+	if base_sprite:
+		base_sprite.modulate = color
+		# Hide icon if using a custom sprite (like the basic turret now does)
+		if icon_label:
+			icon_label.visible = false
+	elif animated_sprite:
 		animated_sprite.modulate = color
 		# Start idle animation
 		if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("idle"):
 			animated_sprite.play("idle")
-		# Hide icon for animated turrets (they have their own visuals)
+		# Hide icon for animated turrets
 		if icon_label:
 			icon_label.visible = false
-	elif base_sprite:
-		# Legacy path for non-animated turrets
-		base_sprite.modulate = color
-		base_sprite.modulate.v = 0.4  # Darken the base
-		# Show icon for legacy turrets
-		if icon_label:
-			icon_label.visible = true
-			icon_label.text = icon
-			icon_label.add_theme_font_size_override("font_size", 32)
+	elif icon_label:
+		# Fallback to icon for other turret types
+		icon_label.visible = true
+		icon_label.text = icon
+		icon_label.add_theme_font_size_override("font_size", 32)
 
 func update_stats() -> void:
 	stats = Globals.get_turret_stats(turret_type)
@@ -548,7 +549,7 @@ func hide_range() -> void:
 func show_pickup_indicator() -> void:
 	is_in_pickup_range = true
 	# Brighten the turret sprites to indicate it's in pickup range
-	var sprite_node = animated_sprite if animated_sprite else base_sprite
+	var sprite_node = base_sprite if base_sprite else animated_sprite
 	if sprite_node:
 		sprite_node.modulate = sprite_node.modulate.lightened(0.4)
 	if weapon_sprite:
@@ -558,11 +559,8 @@ func hide_pickup_indicator() -> void:
 	is_in_pickup_range = false
 	# Reset sprites to normal brightness
 	var color = TurretRegistry.get_color(turret_type)
-	var sprite_node = animated_sprite if animated_sprite else base_sprite
+	var sprite_node = base_sprite if base_sprite else animated_sprite
 	if sprite_node:
 		sprite_node.modulate = color
-		# Only apply darkening for legacy sprites
-		if sprite_node == base_sprite:
-			sprite_node.modulate.v = 0.4
 	if weapon_sprite:
 		weapon_sprite.modulate = Color.WHITE
