@@ -2,15 +2,17 @@
 # Usage: .\run_tests.ps1 [options]
 #
 # Options:
-#   -unit       Run only unit tests
+#   -unit        Run only unit tests
 #   -integration Run only integration tests
-#   -verbose    Show verbose output
-#   -filter     Filter tests by name pattern
+#   -verbose     Show verbose output
+#   -full        Show full test output (default is quiet)
+#   -filter      Filter tests by name pattern
 
 param(
     [switch]$unit,
     [switch]$integration,
     [switch]$verbose,
+    [switch]$full,
     [string]$filter = ""
 )
 
@@ -65,6 +67,10 @@ if ($unit) {
 # Verbose output
 if ($verbose) {
     $gutArgs += "-glog=3"
+} elseif ($full) {
+    $gutArgs += "-glog=2"
+} else {
+    $gutArgs += "-glog=1"
 }
 
 # Filter by test name
@@ -76,12 +82,40 @@ if ($filter) {
 # Exit after tests complete
 $gutArgs += "-gexit"
 
-Write-Host ""
-Write-Host "Command: $godot $($gutArgs -join ' ')" -ForegroundColor DarkGray
-Write-Host ""
+if ($full -or $verbose) {
+    Write-Host ""
+    Write-Host "Command: $godot $($gutArgs -join ' ')" -ForegroundColor DarkGray
+    Write-Host ""
+}
 
 # Run tests
-& $godot $gutArgs
+if ($full -or $verbose) {
+    & $godot @gutArgs
+} else {
+    # Run and filter output to only show errors, failures, and summary
+    $inSummary = $false
+    & $godot @gutArgs 2>&1 | ForEach-Object {
+        $line = $_.ToString()
+        
+        # Detect start of summary
+        # GUT log level 1 summary often starts with [  Summary  ] or has results
+        if ($line -match "--- GUT Finished ---" -or $line -match "Tests finished" -or $line -match "Passes.*Failures.*Pending" -or $line -match "\[  Summary  \]" -or $line -match "Totals") {
+            $inSummary = $true
+        }
+        
+        # Output logic
+        if ($inSummary) {
+            # In summary, show everything
+            Write-Host $line
+        } elseif ($line -match "\[ERROR\]" -or $line -match "\[FAIL\]" -or $line -match "failed" -or $line -match "error" -or $line -match "PARSE ERROR") {
+            # Show failures and errors in red
+            Write-Host $line -ForegroundColor Red
+        } elseif ($line -match "SCRIPT ERROR") {
+            # Show script errors too
+            Write-Host $line -ForegroundColor Yellow
+        }
+    }
+}
 
 $exitCode = $LASTEXITCODE
 
