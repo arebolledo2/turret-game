@@ -11,6 +11,7 @@ const ZOOM_STEP: float = 0.1
 var target_zoom: float = 1.0
 
 func _ready() -> void:
+	get_viewport().size_changed.connect(setup_camera_limits)
 	setup_camera_limits()
 	target_zoom = zoom.x
 

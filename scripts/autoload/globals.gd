@@ -522,8 +522,8 @@ func get_difficulty_name() -> String:
 # =============================================================================
 # GAME CONSTANTS
 # =============================================================================
-const ARENA_WIDTH: int = 1400
-const ARENA_HEIGHT: int = 900
+var ARENA_WIDTH: int = 1400
+var ARENA_HEIGHT: int = 900
 const MAX_WAVES: int = 10
 
 const PLAYER_BASE_MAX_HEALTH: float = 100.0
