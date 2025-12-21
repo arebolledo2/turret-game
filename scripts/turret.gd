@@ -42,8 +42,7 @@ func _ready() -> void:
 	# Setup range indicator
 	var color = TurretRegistry.get_color(turret_type)
 	if range_indicator:
-		if range_indicator.has_method("set_radius"):
-			range_indicator.set_radius(current_range)
+		_update_range_visual()
 		range_indicator.modulate = color
 		range_indicator.modulate.a = 0.0  # Hidden by default
 	
@@ -100,8 +99,8 @@ func update_stats() -> void:
 	if fire_timer:
 		_update_timer()
 
-	if range_indicator and range_indicator.has_method("set_radius"):
-		range_indicator.set_radius(current_range)
+	if range_indicator:
+		_update_range_visual()
 
 	# Update visual status indicators
 	_update_status_indicators()
@@ -507,6 +506,9 @@ func play_spawn_animation() -> void:
 	tween.set_trans(Tween.TRANS_BACK)
 	tween.tween_property(self, "scale", Vector2(1.5, 1.5), 0.3)
 	
+	# Update range visual as scale changes to keep it accurate
+	tween.parallel().tween_method(func(_v): _update_range_visual(), 0.0, 1.0, 0.3)
+	
 	# Particle burst effect (if we have particles)
 	# spawn_particles()
 
@@ -541,3 +543,13 @@ func hide_pickup_indicator() -> void:
 		sprite_node.modulate = Color.WHITE
 	if weapon_sprite:
 		weapon_sprite.modulate = Color.WHITE
+
+func _update_range_visual() -> void:
+	if range_indicator and range_indicator.has_method("set_radius"):
+		# Compensate for node scale since range indicator is a child
+		# but gameplay distance checks use global coordinates.
+		# play_spawn_animation sets scale to (1.5, 1.5)
+		var visual_radius = current_range
+		if scale.x != 0:
+			visual_radius = current_range / scale.x
+		range_indicator.set_radius(visual_radius)

@@ -12,7 +12,7 @@ script = ExtResource("1_turret")
 [node name="RangeIndicator" type="Node2D" parent="."]
 modulate = Color(1, 1, 1, 0)
 script = ExtResource("2_range")
-radius = 400.0
+radius = 0.0
 
 [node name="BaseSprite" type="Sprite2D" parent="."]
 texture_filter = 1
