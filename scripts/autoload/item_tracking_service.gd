@@ -1,4 +1,3 @@
-class_name ItemTrackingService
 extends Node
 
 ## Item Tracking Service

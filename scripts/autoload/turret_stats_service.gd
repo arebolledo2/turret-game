@@ -1,4 +1,3 @@
-class_name TurretStatsService
 extends Node
 
 ## Turret Stats Service

@@ -1,4 +1,3 @@
-class_name EconomyService
 extends Node
 
 ## Economy Service

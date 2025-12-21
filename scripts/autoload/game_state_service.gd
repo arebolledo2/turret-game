@@ -1,4 +1,3 @@
-class_name GameStateService
 extends Node
 
 ## Game State Service

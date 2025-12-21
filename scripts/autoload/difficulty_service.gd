@@ -1,4 +1,3 @@
-class_name DifficultyService
 extends Node
 
 ## Difficulty Service
