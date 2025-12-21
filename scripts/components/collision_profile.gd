@@ -81,8 +81,12 @@ func _create_shape(shape_type: ShapeType, size: Vector2) -> Shape2D:
 			return rect
 		ShapeType.CAPSULE:
 			var capsule := CapsuleShape2D.new()
+			# CapsuleShape2D is vertical (Y-axis aligned).
+			# We want a horizontal capsule, so we swap X and Y for the shape itself,
+			# then rotate the node that uses it.
 			capsule.radius = size.y / 2.0
-			capsule.height = size.x
+			# Ensure height is at least twice the radius to avoid circle behavior
+			capsule.height = max(size.x, size.y)
 			return capsule
 	return null
 
