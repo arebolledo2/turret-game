@@ -6,15 +6,17 @@
 [ext_resource type="Script" path="res://scripts/components/enemy_hurtbox.gd" id="4_hurtbox"]
 [ext_resource type="Script" path="res://scripts/components/enemy_damage_zone.gd" id="5_damage_zone"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
-radius = 32.0
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_Physics"]
+radius = 12.0
+height = 40.0
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_Hurtbox"]
-radius = 16.0
+radius = 18.0
 height = 48.0
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_DamageZone"]
-radius = 35.0
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_DamageZone"]
+radius = 20.0
+height = 60.0
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_r0"]
 atlas = ExtResource("2_right")
@@ -259,14 +261,15 @@ collision_mask = 1
 script = ExtResource("1_script")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_1")
+rotation = 1.5708
+shape = SubResource("CapsuleShape2D_Physics")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 texture_filter = 1
+scale = Vector2(0.15, 0.15)
 sprite_frames = SubResource("SpriteFrames_1")
 animation = &"move_right"
 autoplay = "move_right"
-frame_progress = 0.1
 
 [node name="Hurtbox" type="Area2D" parent="."]
 collision_layer = 32
@@ -274,6 +277,7 @@ collision_mask = 0
 script = ExtResource("4_hurtbox")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+rotation = 1.5708
 shape = SubResource("CapsuleShape2D_Hurtbox")
 
 [node name="DamageZone" type="Area2D" parent="."]
@@ -282,4 +286,5 @@ collision_mask = 16
 script = ExtResource("5_damage_zone")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="DamageZone"]
-shape = SubResource("CircleShape2D_DamageZone")
+rotation = 1.5708
+shape = SubResource("CapsuleShape2D_DamageZone")

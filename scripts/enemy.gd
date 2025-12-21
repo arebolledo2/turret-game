@@ -145,33 +145,43 @@ func _apply_visuals() -> void:
 	"""Apply scale and color tint to the sprite."""
 	if has_node("Sprite2D"):
 		var sprite = $Sprite2D
-		sprite.scale = Vector2(base_scale, base_scale)
+		sprite.scale *= base_scale
 		sprite.modulate = color_tint
 		# Set initial texture
 		if sprite_south:
 			sprite.texture = sprite_south
 	elif has_node("AnimatedSprite2D"):
 		var anim_sprite = $AnimatedSprite2D
-		anim_sprite.scale = Vector2(base_scale, base_scale)
+		anim_sprite.scale *= base_scale
 		anim_sprite.modulate = color_tint
 		# AnimatedSprite2D uses sprite_frames, not individual textures
 
 func _configure_hitboxes(type_def: Dictionary) -> void:
 	"""Configure hurtbox and damage zone from type definition."""
+	# Set debug colors for accessibility
+	if has_node("CollisionShape2D"):
+		$CollisionShape2D.debug_color = Color(1.0, 1.0, 1.0, 0.4) # White for physics
+	
 	# Configure hurtbox (for receiving damage)
-	if has_node("Hurtbox") and type_def.has("hurtbox"):
-		var hurtbox_config: Dictionary = type_def.get("hurtbox", {})
+	if has_node("Hurtbox"):
 		var hurtbox = $Hurtbox
-		if hurtbox and hurtbox.has_method("configure"):
+		if hurtbox.has_node("CollisionShape2D"):
+			hurtbox.get_node("CollisionShape2D").debug_color = Color(0.0, 1.0, 0.7, 0.4) # Cyan/Green for hurtbox
+			
+		if type_def.has("hurtbox") and hurtbox.has_method("configure"):
+			var hurtbox_config: Dictionary = type_def.get("hurtbox", {})
 			var shape_type: String = hurtbox_config.get("type", "circle")
 			var size: Vector2 = hurtbox_config.get("size", Vector2(24, 24))
 			hurtbox.configure(shape_type, size)
 
 	# Configure damage zone (for dealing contact damage)
-	if has_node("DamageZone") and type_def.has("damage_zone"):
-		var damage_zone_config: Dictionary = type_def.get("damage_zone", {})
+	if has_node("DamageZone"):
 		var damage_zone = $DamageZone
-		if damage_zone and damage_zone.has_method("configure"):
+		if damage_zone.has_node("CollisionShape2D"):
+			damage_zone.get_node("CollisionShape2D").debug_color = Color(1.0, 0.6, 0.0, 0.4) # Orange for danger
+			
+		if type_def.has("damage_zone") and damage_zone.has_method("configure"):
+			var damage_zone_config: Dictionary = type_def.get("damage_zone", {})
 			var shape_type: String = damage_zone_config.get("type", "circle")
 			var size: float = damage_zone_config.get("size", 18.0)
 			var offset: Vector2 = damage_zone_config.get("offset", Vector2.ZERO)

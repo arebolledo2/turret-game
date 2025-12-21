@@ -15,17 +15,8 @@ const TYPES: Dictionary = {
 			"speed": 75.0,
 			"contact_damage": 33.0,
 			"xp_value": 10,
-			"scale": 0.15,
+			"scale": 1.0, # Using 1.0 scale to match normalized scene
 			"mass": 1.0,
-		},
-		"hurtbox": {
-			"type": "capsule",
-			"size": Vector2(48, 32),
-		},
-		"damage_zone": {
-			"type": "circle",
-			"size": 35.0,
-			"offset": Vector2(0, 0),
 		},
 		"spawn_weight": 100,
 		"min_wave": 1,

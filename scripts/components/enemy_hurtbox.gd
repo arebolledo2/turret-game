@@ -38,6 +38,10 @@ func _ready() -> void:
 
 func _configure_shape() -> void:
 	"""Configure the collision shape based on shape_type and shape_size."""
+	# If we already have a shape and didn't provide specific config, keep it
+	if collision_shape and collision_shape.shape and shape_type == "circle" and shape_size == Vector2(24, 24):
+		return
+
 	var shape: Shape2D
 
 	match shape_type:
@@ -54,6 +58,8 @@ func _configure_shape() -> void:
 			capsule.radius = shape_size.y / 2.0
 			capsule.height = shape_size.x
 			shape = capsule
+			# Auto-rotate to horizontal if height > radius and it's a capsule
+			collision_shape.rotation = PI/2
 		_:
 			push_error("Unknown shape_type: %s" % shape_type)
 			return
@@ -62,6 +68,10 @@ func _configure_shape() -> void:
 
 func configure(new_shape_type: String, new_size: Vector2) -> void:
 	"""Dynamically configure the hurtbox shape."""
+	# If called with basic defaults, ignore to preserve scene settings
+	if new_shape_type == "circle" and new_size == Vector2(24, 24):
+		return
+		
 	shape_type = new_shape_type
 	shape_size = new_size
 	if collision_shape:
