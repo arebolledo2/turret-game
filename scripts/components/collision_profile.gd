@@ -48,9 +48,12 @@ func _get_approximate_area(shape_type: ShapeType, size: Vector2) -> float:
 			return size.x * size.y
 		ShapeType.CAPSULE:
 			# Approximate: rectangle + two semicircles
-			var radius := size.y / 2.0
-			var rect_area := size.x * size.y
-			var circle_area := PI * radius * radius
+			# For CapsuleShape2D, height is the total length including caps
+			# and radius is the width / 2.
+			var radius: float = size.y / 2.0
+			var circle_area: float = PI * radius * radius
+			var rect_height: float = max(0.0, size.x - 2.0 * radius)
+			var rect_area: float = rect_height * (2.0 * radius)
 			return rect_area + circle_area
 	return 0.0
 

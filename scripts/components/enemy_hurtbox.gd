@@ -243,8 +243,16 @@ func _draw() -> void:
 		var capsule: CapsuleShape2D = shape
 		var radius = capsule.radius
 		var height = capsule.height
-		var top_center = offset + Vector2(0, -height / 2)
-		var bottom_center = offset + Vector2(0, height / 2)
+		
+		# If the node is rotated 90 degrees, we need to draw it rotated as well
+		# since draw_* functions are in local space.
+		# However, it's easier to just draw it using the node's transform if we're not
+		# already handling rotation in the draw calls.
+		
+		draw_set_transform(offset, collision_shape.rotation, Vector2.ONE)
+		
+		var top_center = Vector2(0, -height / 2 + radius)
+		var bottom_center = Vector2(0, height / 2 - radius)
 
 		draw_arc(top_center, radius, 0, TAU, 32, DEBUG_COLOR_HURTBOX, -1, true)
 		draw_arc(bottom_center, radius, 0, TAU, 32, DEBUG_COLOR_HURTBOX, -1, true)
@@ -261,6 +269,8 @@ func _draw() -> void:
 		draw_arc(bottom_center, radius, 0, TAU, 32, DEBUG_OUTLINE_COLOR, DEBUG_OUTLINE_WIDTH)
 		draw_line(top_center + Vector2(-radius, 0), bottom_center + Vector2(-radius, 0), DEBUG_OUTLINE_COLOR, DEBUG_OUTLINE_WIDTH)
 		draw_line(top_center + Vector2(radius, 0), bottom_center + Vector2(radius, 0), DEBUG_OUTLINE_COLOR, DEBUG_OUTLINE_WIDTH)
+		
+		draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 
 
 func _on_debug_toggled(type: int, _show: bool) -> void:
