@@ -35,13 +35,16 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 		show_damage_check.button_pressed = Globals.show_damage_numbers
 
 	if physics_hitboxes_check:
-		physics_hitboxes_check.button_pressed = Globals.debug_hitbox_flags[Globals.HitboxType.PHYSICS]
+		physics_hitboxes_check.button_pressed = Globals.debug_hitbox_flags[GameEnums.HitboxType.PHYSICS]
+
 	if player_hurtbox_check:
-		player_hurtbox_check.button_pressed = Globals.debug_hitbox_flags[Globals.HitboxType.PLAYER_HURTBOX]
+		player_hurtbox_check.button_pressed = Globals.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_HURTBOX]
+
 	if enemy_hurtbox_check:
-		enemy_hurtbox_check.button_pressed = Globals.debug_hitbox_flags[Globals.HitboxType.ENEMY_HURTBOX]
+		enemy_hurtbox_check.button_pressed = Globals.debug_hitbox_flags[GameEnums.HitboxType.ENEMY_HURTBOX]
+
 	if player_attack_check:
-		player_attack_check.button_pressed = Globals.debug_hitbox_flags[Globals.HitboxType.PLAYER_ATTACK]
+		player_attack_check.button_pressed = Globals.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_ATTACK]
 
 
 func _scale_fonts(scale: float) -> void:
@@ -78,5 +81,5 @@ func on_hitbox_type_toggled(type: int, toggled_on: bool) -> void:
 # Legacy function kept for transition if needed, but not used by new UI
 func on_show_hitboxes_toggled(toggled_on: bool) -> void:
 	# Toggle all for convenience if this is called
-	for type in Globals.HitboxType.values():
+	for type in GameEnums.HitboxType.values():
 		on_hitbox_type_toggled(type, toggled_on)

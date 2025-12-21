@@ -15,7 +15,7 @@ func before_all() -> void:
 
 func before_each() -> void:
 	Globals.reset_stats()
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	Globals.is_game_active = true
 	Globals.turrets_spawned = 0
 	Globals.turret_counts.clear()

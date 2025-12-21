@@ -42,7 +42,7 @@ var is_dying: bool = false
 var is_initialized: bool = false
 
 # Behavior system state
-var current_behavior: Globals.EnemyBehavior = Globals.EnemyBehavior.CHASE
+var current_behavior: GameEnums.EnemyBehavior = GameEnums.EnemyBehavior.CHASE
 var behavior_params: Dictionary = {}
 
 # WANDER behavior state
@@ -84,11 +84,11 @@ func _ready() -> void:
 		current_health = max_health
 
 func _on_debug_toggled(type: int, _enabled: bool) -> void:
-	if type == Globals.HitboxType.PHYSICS:
+	if type == GameEnums.HitboxType.PHYSICS:
 		queue_redraw()
 
 func _draw() -> void:
-	if not Globals.debug_hitbox_flags[Globals.HitboxType.PHYSICS]:
+	if not Globals.debug_hitbox_flags[GameEnums.HitboxType.PHYSICS]:
 		return
 	
 	if has_node("CollisionShape2D"):
@@ -141,15 +141,15 @@ func _apply_type_config(type_id: String) -> void:
 	behavior_params = type_def.get("behavior_params", {})
 
 	# Determine primary behavior
-	var behaviors: Array = type_def.get("behaviors", [Globals.EnemyBehavior.CHASE])
+	var behaviors: Array = type_def.get("behaviors", [GameEnums.EnemyBehavior.CHASE])
 	if behaviors.is_empty():
-		current_behavior = Globals.EnemyBehavior.CHASE
+		current_behavior = GameEnums.EnemyBehavior.CHASE
 	else:
 		# Priority: CHARGE > WANDER > CHASE
-		if Globals.EnemyBehavior.CHARGE in behaviors:
-			current_behavior = Globals.EnemyBehavior.CHARGE
-		elif Globals.EnemyBehavior.WANDER in behaviors:
-			current_behavior = Globals.EnemyBehavior.WANDER
+		if GameEnums.EnemyBehavior.CHARGE in behaviors:
+			current_behavior = GameEnums.EnemyBehavior.CHARGE
+		elif GameEnums.EnemyBehavior.WANDER in behaviors:
+			current_behavior = GameEnums.EnemyBehavior.WANDER
 		else:
 			current_behavior = behaviors[0]
 
@@ -245,7 +245,7 @@ func _physics_process(delta: float) -> void:
 		var effective_speed: float = speed * get_movement_speed_multiplier()
 
 		# Apply charge speed boost if charging
-		if current_behavior == Globals.EnemyBehavior.CHARGE and charge_state == ChargeState.CHARGING:
+		if current_behavior == GameEnums.EnemyBehavior.CHARGE and charge_state == ChargeState.CHARGING:
 			var charge_mult: float = behavior_params.get("charge_speed_multiplier", DEFAULT_BEHAVIOR_PARAMS["charge_speed_multiplier"])
 			effective_speed *= charge_mult
 
@@ -303,11 +303,11 @@ func _update_direction_sprite(direction: Vector2) -> void:
 func _execute_current_behavior(delta: float) -> Vector2:
 	"""Execute the current behavior and return movement direction."""
 	match current_behavior:
-		Globals.EnemyBehavior.CHASE:
+		GameEnums.EnemyBehavior.CHASE:
 			return _behavior_chase()
-		Globals.EnemyBehavior.WANDER:
+		GameEnums.EnemyBehavior.WANDER:
 			return _behavior_wander()
-		Globals.EnemyBehavior.CHARGE:
+		GameEnums.EnemyBehavior.CHARGE:
 			return _behavior_charge(delta)
 		_:
 			return _behavior_chase()
@@ -474,7 +474,7 @@ func die() -> void:
 		charge_alert_indicator = null
 
 	# Handle explosive behavior
-	if Globals.enemy_has_behavior(enemy_type, Globals.EnemyBehavior.EXPLOSIVE):
+	if Globals.enemy_has_behavior(enemy_type, GameEnums.EnemyBehavior.EXPLOSIVE):
 		_explode()
 	
 	# Emit signals for XP drop and kill tracking

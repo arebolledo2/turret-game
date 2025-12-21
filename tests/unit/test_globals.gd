@@ -7,7 +7,7 @@ extends GutTest
 
 func before_each() -> void:
 	Globals.reset_stats()
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 
 
 # =============================================================================
@@ -40,14 +40,14 @@ func test_wave_duration_wave_10():
 # =============================================================================
 
 func test_wave_enemy_count_wave_1_easy():
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	var count = Globals.get_wave_enemy_count(1)
 	# Base = 10, increment = 0 for wave 1, mult = 1.0
 	assert_eq(count, 10, "Wave 1 Easy should have 10 enemies")
 
 
 func test_wave_enemy_count_scales_with_waves():
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	var wave1_count = Globals.get_wave_enemy_count(1)
 	var wave5_count = Globals.get_wave_enemy_count(5)
 	
@@ -59,13 +59,13 @@ func test_wave_enemy_count_scales_with_waves():
 func test_wave_enemy_count_scales_with_difficulty():
 	var wave = 3
 	
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	var easy_count = Globals.get_wave_enemy_count(wave)
 	
-	Globals.current_difficulty = Globals.Difficulty.MEDIUM
+	Globals.current_difficulty = GameEnums.Difficulty.MEDIUM
 	var medium_count = Globals.get_wave_enemy_count(wave)
 	
-	Globals.current_difficulty = Globals.Difficulty.HARD
+	Globals.current_difficulty = GameEnums.Difficulty.HARD
 	var hard_count = Globals.get_wave_enemy_count(wave)
 	
 	assert_gt(medium_count, easy_count, "Medium should spawn more enemies than Easy")
@@ -77,14 +77,14 @@ func test_wave_enemy_count_scales_with_difficulty():
 # =============================================================================
 
 func test_enemy_health_wave_1():
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	var health = Globals.get_enemy_health(1)
 	# Wave 1: base * mult * 1.0^0 = base
 	assert_eq(health, Globals.ENEMY_BASE_HEALTH, "Wave 1 Easy should have base health")
 
 
 func test_enemy_health_scales_exponentially():
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	var wave1_hp = Globals.get_enemy_health(1)
 	var wave5_hp = Globals.get_enemy_health(5)
 	
@@ -98,10 +98,10 @@ func test_enemy_health_scales_exponentially():
 func test_enemy_health_harder_on_hard_mode():
 	var wave = 3
 	
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	var easy_hp = Globals.get_enemy_health(wave)
 	
-	Globals.current_difficulty = Globals.Difficulty.HARD
+	Globals.current_difficulty = GameEnums.Difficulty.HARD
 	var hard_hp = Globals.get_enemy_health(wave)
 	
 	assert_gt(hard_hp, easy_hp, "Hard mode enemies should have more health")
@@ -112,13 +112,13 @@ func test_enemy_health_harder_on_hard_mode():
 # =============================================================================
 
 func test_enemy_speed_wave_1():
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	var speed = Globals.get_enemy_speed(1)
 	assert_eq(speed, Globals.ENEMY_BASE_SPEED, "Wave 1 Easy should have base speed")
 
 
 func test_enemy_speed_scales_with_waves():
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	var wave1_speed = Globals.get_enemy_speed(1)
 	var wave5_speed = Globals.get_enemy_speed(5)
 	
@@ -126,10 +126,10 @@ func test_enemy_speed_scales_with_waves():
 
 
 func test_enemy_speed_faster_on_hard():
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	var easy_speed = Globals.get_enemy_speed(1)
 	
-	Globals.current_difficulty = Globals.Difficulty.HARD
+	Globals.current_difficulty = GameEnums.Difficulty.HARD
 	var hard_speed = Globals.get_enemy_speed(1)
 	
 	assert_eq(hard_speed, easy_speed, "Enemy speed should be the same across difficulties")
@@ -140,7 +140,7 @@ func test_enemy_speed_faster_on_hard():
 # =============================================================================
 
 func test_spawn_interval_calculation():
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	var interval = Globals.get_spawn_interval(1)
 	var duration = Globals.get_wave_duration(1)
 	var count = Globals.get_wave_enemy_count(1)
@@ -150,10 +150,10 @@ func test_spawn_interval_calculation():
 
 
 func test_spawn_interval_decreases_on_hard():
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	var easy_interval = Globals.get_spawn_interval(3)
 	
-	Globals.current_difficulty = Globals.Difficulty.HARD
+	Globals.current_difficulty = GameEnums.Difficulty.HARD
 	var hard_interval = Globals.get_spawn_interval(3)
 	
 	# Hard has more enemies in same time = shorter interval
@@ -165,10 +165,10 @@ func test_spawn_interval_decreases_on_hard():
 # =============================================================================
 
 func test_player_health_reduced_on_hard():
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	var easy_hp = Globals.PLAYER_MAX_HEALTH
 	
-	Globals.current_difficulty = Globals.Difficulty.HARD
+	Globals.current_difficulty = GameEnums.Difficulty.HARD
 	var hard_hp = Globals.PLAYER_MAX_HEALTH
 	
 	assert_lt(hard_hp, easy_hp, "Hard mode should have less player health")
@@ -176,10 +176,10 @@ func test_player_health_reduced_on_hard():
 
 
 func test_turret_damage_reduced_on_hard():
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	var easy_dmg = Globals.TURRET_DAMAGE
 	
-	Globals.current_difficulty = Globals.Difficulty.HARD
+	Globals.current_difficulty = GameEnums.Difficulty.HARD
 	var hard_dmg = Globals.TURRET_DAMAGE
 	
 	assert_lt(hard_dmg, easy_dmg, "Hard mode turrets should deal less damage")

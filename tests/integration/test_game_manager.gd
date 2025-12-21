@@ -16,7 +16,7 @@ func before_all() -> void:
 
 func before_each() -> void:
 	Globals.reset_stats()
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	
 	main = main_scene.instantiate()
 	add_child_autofree(main)
@@ -50,23 +50,23 @@ func test_game_not_active_initially():
 func test_difficulty_selection_starts_game():
 	watch_signals(Events)
 	
-	Events.difficulty_selected.emit(Globals.Difficulty.MEDIUM)
+	Events.difficulty_selected.emit(GameEnums.Difficulty.MEDIUM)
 	await get_tree().process_frame
 	
-	assert_eq(Globals.current_difficulty, Globals.Difficulty.MEDIUM,
+	assert_eq(Globals.current_difficulty, GameEnums.Difficulty.MEDIUM,
 		"Difficulty should be set to MEDIUM")
 	assert_signal_emitted(Events, "game_started", "Should emit game_started signal")
 
 
 func test_difficulty_selection_activates_game():
-	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
 	await get_tree().process_frame
 	
 	assert_true(Globals.is_game_active, "Game should be active after difficulty selected")
 
 
 func test_wave_starts_at_1_after_selection():
-	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
 	await get_tree().process_frame
 	
 	# Wave now starts at 1 immediately (skips initial shop phase in Shop V2)
@@ -78,7 +78,7 @@ func test_wave_starts_at_1_after_selection():
 # =============================================================================
 
 func test_game_enters_wave_announcement_after_difficulty():
-	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
 	await get_tree().process_frame
 	
 	# Shop V2: Skip initial shop, go directly to wave announcement
@@ -89,7 +89,7 @@ func test_game_enters_wave_announcement_after_difficulty():
 func test_wave_announcement_signal_emitted_on_start():
 	watch_signals(Events)
 	
-	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
 	await get_tree().process_frame
 	
 	# Shop V2: Wave announcement emitted immediately after game starts
@@ -103,7 +103,7 @@ func test_wave_announcement_signal_emitted_on_start():
 func test_game_enters_wave_announcement_after_shop():
 	# Shop V2: First need to complete wave 1 to see shop
 	# For this test, we verify the shop -> wave announcement flow AFTER wave 1
-	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
 	await get_tree().process_frame
 	
 	# We should already be in WAVE_ANNOUNCEMENT (Shop V2 skips initial shop)
@@ -117,7 +117,7 @@ func test_game_enters_wave_announcement_after_shop():
 func test_wave_announcement_signal_emitted_after_shop():
 	watch_signals(Events)
 	
-	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
 	await get_tree().process_frame
 	
 	# Shop V2: Wave announcement emitted immediately (no shop phase at start)
@@ -130,7 +130,7 @@ func test_wave_announcement_signal_emitted_after_shop():
 # =============================================================================
 
 func test_combat_starts_after_announcement():
-	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
 	await get_tree().process_frame
 	
 	# Close shop to proceed to wave announcement
@@ -153,7 +153,7 @@ func test_combat_starts_after_announcement():
 func test_wave_started_signal_emitted_during_combat():
 	watch_signals(Events)
 	
-	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
 	await get_tree().process_frame
 	
 	# Close shop to proceed
@@ -178,7 +178,7 @@ func test_wave_started_signal_emitted_during_combat():
 func test_player_death_triggers_game_over():
 	watch_signals(Events)
 	
-	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
 	await get_tree().process_frame
 	Globals.is_game_active = true
 	
@@ -191,7 +191,7 @@ func test_player_death_triggers_game_over():
 
 
 func test_game_deactivates_on_player_death():
-	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
 	await get_tree().process_frame
 	
 	Events.player_died.emit()
@@ -205,7 +205,7 @@ func test_game_deactivates_on_player_death():
 # =============================================================================
 
 func test_time_survived_increments():
-	Events.difficulty_selected.emit(Globals.Difficulty.EASY)
+	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
 	await get_tree().process_frame
 	
 	# Close shop to start the game properly

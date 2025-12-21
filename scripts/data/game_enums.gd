@@ -17,3 +17,6 @@ enum EnemyBehavior { CHASE, RANGED, SWARM, TANK, EXPLOSIVE, WANDER, CHARGE }
 
 # Item rarity levels
 enum ItemRarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, UNIQUE }
+
+# Collision hitbox types
+enum HitboxType { PHYSICS, PLAYER_HURTBOX, ENEMY_HURTBOX, PLAYER_ATTACK }

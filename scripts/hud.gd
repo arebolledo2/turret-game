@@ -262,15 +262,15 @@ func _on_show_difficulty_select() -> void:
 
 
 func _on_easy_pressed() -> void:
-	_difficulty_select.hide_and_emit(Globals.Difficulty.EASY)
+	_difficulty_select.hide_and_emit(GameEnums.Difficulty.EASY)
 
 
 func _on_medium_pressed() -> void:
-	_difficulty_select.hide_and_emit(Globals.Difficulty.MEDIUM)
+	_difficulty_select.hide_and_emit(GameEnums.Difficulty.MEDIUM)
 
 
 func _on_hard_pressed() -> void:
-	_difficulty_select.hide_and_emit(Globals.Difficulty.HARD)
+	_difficulty_select.hide_and_emit(GameEnums.Difficulty.HARD)
 
 
 # =============================================================================
@@ -315,19 +315,19 @@ func _on_show_damage_toggled(toggled_on: bool) -> void:
 
 
 func _on_physics_hitboxes_toggled(toggled_on: bool) -> void:
-	_settings_menu.on_hitbox_type_toggled(Globals.HitboxType.PHYSICS, toggled_on)
+	_settings_menu.on_hitbox_type_toggled(GameEnums.HitboxType.PHYSICS, toggled_on)
 
 
 func _on_player_hurtbox_toggled(toggled_on: bool) -> void:
-	_settings_menu.on_hitbox_type_toggled(Globals.HitboxType.PLAYER_HURTBOX, toggled_on)
+	_settings_menu.on_hitbox_type_toggled(GameEnums.HitboxType.PLAYER_HURTBOX, toggled_on)
 
 
 func _on_enemy_hurtbox_toggled(toggled_on: bool) -> void:
-	_settings_menu.on_hitbox_type_toggled(Globals.HitboxType.ENEMY_HURTBOX, toggled_on)
+	_settings_menu.on_hitbox_type_toggled(GameEnums.HitboxType.ENEMY_HURTBOX, toggled_on)
 
 
 func _on_player_attack_toggled(toggled_on: bool) -> void:
-	_settings_menu.on_hitbox_type_toggled(Globals.HitboxType.PLAYER_ATTACK, toggled_on)
+	_settings_menu.on_hitbox_type_toggled(GameEnums.HitboxType.PLAYER_ATTACK, toggled_on)
 
 
 # =============================================================================

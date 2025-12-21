@@ -124,11 +124,11 @@ func _ready() -> void:
 	Events.hitbox_debug_toggled.connect(_on_debug_toggled)
 
 func _on_debug_toggled(type: int, _enabled: bool) -> void:
-	if type == Globals.HitboxType.PHYSICS:
+	if type == GameEnums.HitboxType.PHYSICS:
 		queue_redraw()
 
 func _draw() -> void:
-	if not Globals.debug_hitbox_flags[Globals.HitboxType.PHYSICS]:
+	if not Globals.debug_hitbox_flags[GameEnums.HitboxType.PHYSICS]:
 		return
 	
 	if has_node("CollisionShape2D"):

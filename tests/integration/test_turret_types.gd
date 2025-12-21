@@ -163,8 +163,8 @@ func test_clear_modifiers():
 # =============================================================================
 
 func test_turret_has_attack_style():
-	assert_true(Globals.turret_has_attack_style("tesla", Globals.AttackStyle.CHAIN))
-	assert_false(Globals.turret_has_attack_style("normal", Globals.AttackStyle.CHAIN))
+	assert_true(Globals.turret_has_attack_style("tesla", GameEnums.AttackStyle.CHAIN))
+	assert_false(Globals.turret_has_attack_style("normal", GameEnums.AttackStyle.CHAIN))
 
 
 func test_turret_has_damage_type():

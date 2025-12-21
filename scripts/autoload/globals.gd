@@ -15,10 +15,10 @@ extends Node
 # =============================================================================
 # DIFFICULTY SYSTEM
 # =============================================================================
-enum Difficulty { EASY, MEDIUM, HARD }
+# Difficulty enum moved to GameEnums
 
 const DIFFICULTY_CONFIG: Dictionary = {
-	Difficulty.EASY: {
+	GameEnums.Difficulty.EASY: {
 		"name": "Easy",
 		"description": "Relaxed gameplay for learning",
 		"enemy_health_mult": 1.0,
@@ -30,7 +30,7 @@ const DIFFICULTY_CONFIG: Dictionary = {
 		"player_health_mult": 1.0,
 		"turret_damage_mult": 1.0,
 	},
-	Difficulty.MEDIUM: {
+	GameEnums.Difficulty.MEDIUM: {
 		"name": "Medium",
 		"description": "Balanced challenge",
 		"enemy_health_mult": 1.25,
@@ -42,7 +42,7 @@ const DIFFICULTY_CONFIG: Dictionary = {
 		"player_health_mult": 1.0,
 		"turret_damage_mult": 1.0,
 	},
-	Difficulty.HARD: {
+	GameEnums.Difficulty.HARD: {
 		"name": "Hard",
 		"description": "For experienced survivors",
 		"enemy_health_mult": 1.5,
@@ -56,7 +56,7 @@ const DIFFICULTY_CONFIG: Dictionary = {
 	},
 }
 
-var current_difficulty: Difficulty = Difficulty.EASY
+var current_difficulty: GameEnums.Difficulty = GameEnums.Difficulty.EASY
 
 # =============================================================================
 # SETTINGS
@@ -65,20 +65,19 @@ var show_damage_numbers: bool = true
 var player_auto_attack_enabled: bool = false
 var show_turret_ranges: bool = false
 
-enum HitboxType { PHYSICS, PLAYER_HURTBOX, ENEMY_HURTBOX, PLAYER_ATTACK }
+# HitboxType moved to GameEnums
 var debug_hitbox_flags: Dictionary = {
-	HitboxType.PHYSICS: false,
-	HitboxType.PLAYER_HURTBOX: false,
-	HitboxType.ENEMY_HURTBOX: false,
-	HitboxType.PLAYER_ATTACK: false
+	GameEnums.HitboxType.PHYSICS: false,
+	GameEnums.HitboxType.PLAYER_HURTBOX: false,
+	GameEnums.HitboxType.ENEMY_HURTBOX: false,
+	GameEnums.HitboxType.PLAYER_ATTACK: false
 }
 
 # =============================================================================
 # TURRET TYPE SYSTEM
 # =============================================================================
-enum AttackStyle { PROJECTILE, INSTANT, AOE, CHAIN }
+# AttackStyle and EnemyBehavior moved to GameEnums
 # DamageType moved to GameEnums
-enum EnemyBehavior { CHASE, RANGED, SWARM, TANK, EXPLOSIVE, WANDER, CHARGE }
 
 # =============================================================================
 # ENEMY TYPE SYSTEM
@@ -88,7 +87,7 @@ const ENEMY_TYPES: Dictionary = {
 		"name": "Robot Grunt",
 		"icon": "🤖",
 		"description": "Standard enemy that chases the player.",
-		"behaviors": [EnemyBehavior.CHASE],
+		"behaviors": [GameEnums.EnemyBehavior.CHASE],
 		"sprite_folder": "res://assets/sprites/enemy_tiny",
 		"base_stats": {
 			"health": 30.0,
@@ -106,7 +105,7 @@ const ENEMY_TYPES: Dictionary = {
 		"name": "Scout Bot",
 		"icon": "⚡",
 		"description": "Quick but fragile enemy.",
-		"behaviors": [EnemyBehavior.CHASE, EnemyBehavior.SWARM],
+		"behaviors": [GameEnums.EnemyBehavior.CHASE, GameEnums.EnemyBehavior.SWARM],
 		"sprite_folder": "res://assets/sprites/enemy_tiny",
 		"color_tint": Color(0.6, 0.9, 1.0),
 		"base_stats": {
@@ -125,7 +124,7 @@ const ENEMY_TYPES: Dictionary = {
 		"name": "Heavy Bot",
 		"icon": "🛡️",
 		"description": "Slow but very tough enemy.",
-		"behaviors": [EnemyBehavior.CHASE, EnemyBehavior.TANK],
+		"behaviors": [GameEnums.EnemyBehavior.CHASE, GameEnums.EnemyBehavior.TANK],
 		"sprite_folder": "res://assets/sprites/enemy_tiny",
 		"color_tint": Color(0.8, 0.5, 0.3),
 		"base_stats": {
@@ -143,7 +142,7 @@ const ENEMY_TYPES: Dictionary = {
 		"name": "Boom Bot",
 		"icon": "💥",
 		"description": "Explodes on death, damaging nearby enemies and player.",
-		"behaviors": [EnemyBehavior.CHASE, EnemyBehavior.EXPLOSIVE],
+		"behaviors": [GameEnums.EnemyBehavior.CHASE, GameEnums.EnemyBehavior.EXPLOSIVE],
 		"sprite_folder": "res://assets/sprites/enemy_tiny",
 		"color_tint": Color(1.0, 0.4, 0.2),
 		"base_stats": {
@@ -164,7 +163,7 @@ const ENEMY_TYPES: Dictionary = {
 		"name": "Lazy Bot",
 		"icon": "😴",
 		"description": "Wanders aimlessly, never chases the player.",
-		"behaviors": [EnemyBehavior.WANDER],
+		"behaviors": [GameEnums.EnemyBehavior.WANDER],
 		"sprite_folder": "res://assets/sprites/enemy_tiny",
 		"color_tint": Color(0.7, 0.7, 0.9),
 		"behavior_params": {
@@ -189,7 +188,7 @@ const ENEMY_TYPES: Dictionary = {
 		"name": "Charger Bot",
 		"icon": "⚡",
 		"description": "Wanders lazily until player is close, then charges aggressively.",
-		"behaviors": [EnemyBehavior.CHARGE],
+		"behaviors": [GameEnums.EnemyBehavior.CHARGE],
 		"sprite_folder": "res://assets/sprites/enemy_tiny",
 		"color_tint": Color(1.0, 0.8, 0.3),
 		"behavior_params": {
@@ -380,20 +379,15 @@ func _apply_modifiers_to_stat(base_value: float, stat_name: String) -> float:
 func get_turret_color(turret_type: String) -> Color:
 	return TurretRegistry.get_color(turret_type)
 
-func turret_has_attack_style(turret_type: String, style: AttackStyle) -> bool:
-	return TurretRegistry.has_attack_style(turret_type, _convert_attack_style(style))
+func turret_has_attack_style(turret_type: String, style: GameEnums.AttackStyle) -> bool:
+	return TurretRegistry.has_attack_style(turret_type, style)
 
 func turret_has_damage_type(turret_type: String, dtype: GameEnums.DamageType) -> bool:
 	return TurretRegistry.has_damage_type(turret_type, dtype)
 
-## Convert Globals.AttackStyle to GameEnums.AttackStyle
-func _convert_attack_style(style: AttackStyle) -> GameEnums.AttackStyle:
-	match style:
-		AttackStyle.PROJECTILE: return GameEnums.AttackStyle.PROJECTILE
-		AttackStyle.INSTANT: return GameEnums.AttackStyle.INSTANT
-		AttackStyle.AOE: return GameEnums.AttackStyle.AOE
-		AttackStyle.CHAIN: return GameEnums.AttackStyle.CHAIN
-		_: return GameEnums.AttackStyle.PROJECTILE
+## Convert GameEnums.AttackStyle to GameEnums.AttackStyle (LEGACY - for backward compatibility)
+func _convert_attack_style(style: int) -> int:
+	return style
 
 func get_total_turret_count() -> int:
 	var total := 0
@@ -451,9 +445,8 @@ func select_random_enemy_type(wave: int) -> String:
 	# Delegate to EnemyRegistry
 	return EnemyRegistry.select_random_type(wave)
 
-func enemy_has_behavior(enemy_type: String, behavior) -> bool:
+func enemy_has_behavior(enemy_type: String, behavior: GameEnums.EnemyBehavior) -> bool:
 	# Delegate to EnemyRegistry
-	# Accepts both Globals.EnemyBehavior and GameEnums.EnemyBehavior (same values, different namespace)
 	return EnemyRegistry.has_behavior(enemy_type, behavior)
 
 func get_enemy_spawn_count(enemy_type: String) -> int:
@@ -471,35 +464,35 @@ func get_enemy_sprite_folder(enemy_type: String) -> String:
 # =============================================================================
 # ITEMS SYSTEM
 # =============================================================================
-enum ItemRarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, UNIQUE }
+# ItemRarity moved to GameEnums
 
 const RARITY_COLORS: Dictionary = {
-	ItemRarity.COMMON: Color.WHITE,
-	ItemRarity.UNCOMMON: Color.GREEN,
-	ItemRarity.RARE: Color.CORNFLOWER_BLUE,
-	ItemRarity.EPIC: Color.PURPLE,
-	ItemRarity.LEGENDARY: Color.ORANGE,
-	ItemRarity.UNIQUE: Color.RED,
+	GameEnums.ItemRarity.COMMON: Color.WHITE,
+	GameEnums.ItemRarity.UNCOMMON: Color.GREEN,
+	GameEnums.ItemRarity.RARE: Color.CORNFLOWER_BLUE,
+	GameEnums.ItemRarity.EPIC: Color.PURPLE,
+	GameEnums.ItemRarity.LEGENDARY: Color.ORANGE,
+	GameEnums.ItemRarity.UNIQUE: Color.RED,
 }
 
 const RARITY_NAMES: Dictionary = {
-	ItemRarity.COMMON: "Common",
-	ItemRarity.UNCOMMON: "Uncommon",
-	ItemRarity.RARE: "Rare",
-	ItemRarity.EPIC: "Epic",
-	ItemRarity.LEGENDARY: "Legendary",
-	ItemRarity.UNIQUE: "Unique",
+	GameEnums.ItemRarity.COMMON: "Common",
+	GameEnums.ItemRarity.UNCOMMON: "Uncommon",
+	GameEnums.ItemRarity.RARE: "Rare",
+	GameEnums.ItemRarity.EPIC: "Epic",
+	GameEnums.ItemRarity.LEGENDARY: "Legendary",
+	GameEnums.ItemRarity.UNIQUE: "Unique",
 }
 
 # Items are now in ItemRegistry - use ItemRegistry.get_item(id) instead
 # Legacy ITEM_BASE_PRICES kept for compatibility
 const ITEM_BASE_PRICES: Dictionary = {
-	ItemRarity.COMMON: 40,
-	ItemRarity.UNCOMMON: 70,
-	ItemRarity.RARE: 110,
-	ItemRarity.EPIC: 160,
-	ItemRarity.LEGENDARY: 240,
-	ItemRarity.UNIQUE: 350,
+	GameEnums.ItemRarity.COMMON: 40,
+	GameEnums.ItemRarity.UNCOMMON: 70,
+	GameEnums.ItemRarity.RARE: 110,
+	GameEnums.ItemRarity.EPIC: 160,
+	GameEnums.ItemRarity.LEGENDARY: 240,
+	GameEnums.ItemRarity.UNIQUE: 350,
 }
 
 var collected_items: Array[String] = []
@@ -650,7 +643,7 @@ func get_spawn_interval(wave: int) -> float:
 	var count := get_wave_enemy_count(wave)
 	return duration / float(count)
 
-func set_difficulty(difficulty: Difficulty) -> void:
+func set_difficulty(difficulty: GameEnums.Difficulty) -> void:
 	current_difficulty = difficulty
 
 func reset_stats() -> void:

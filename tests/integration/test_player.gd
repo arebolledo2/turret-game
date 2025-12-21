@@ -15,7 +15,7 @@ func before_all() -> void:
 
 func before_each() -> void:
 	Globals.reset_stats()
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	Globals.is_game_active = true
 
 	player = player_scene.instantiate()
@@ -74,13 +74,13 @@ func test_player_not_carrying_turret_initially():
 
 func test_health_scales_with_difficulty():
 	var easy_player = player_scene.instantiate()
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	add_child_autofree(easy_player)
 	await get_tree().process_frame
 	var easy_health = easy_player.max_health
 
 	var hard_player = player_scene.instantiate()
-	Globals.current_difficulty = Globals.Difficulty.HARD
+	Globals.current_difficulty = GameEnums.Difficulty.HARD
 	add_child_autofree(hard_player)
 	await get_tree().process_frame
 	var hard_health = hard_player.max_health

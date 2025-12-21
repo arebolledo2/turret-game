@@ -29,7 +29,7 @@ func show_difficulty_select() -> void:
 	Events.show_difficulty_select.emit()
 
 func _on_difficulty_selected(difficulty: int) -> void:
-	Globals.set_difficulty(difficulty as Globals.Difficulty)
+	Globals.set_difficulty(difficulty as GameEnums.Difficulty)
 	start_game()
 
 func start_game() -> void:

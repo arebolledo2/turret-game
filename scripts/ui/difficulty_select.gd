@@ -37,7 +37,7 @@ func show() -> void:
 			easy_button.grab_focus()
 
 
-func hide_and_emit(difficulty: Globals.Difficulty) -> void:
+func hide_and_emit(difficulty: GameEnums.Difficulty) -> void:
 	if container:
 		var tween = _owner.create_tween()
 		tween.tween_property(container, "modulate:a", 0.0, 0.2)

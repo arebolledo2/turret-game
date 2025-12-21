@@ -40,7 +40,7 @@ func _ready() -> void:
 
 	# Connect to debug toggle event
 	Events.hitbox_debug_toggled.connect(_on_debug_toggled)
-	if Globals.debug_hitbox_flags[Globals.HitboxType.PLAYER_HURTBOX]:
+	if Globals.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_HURTBOX]:
 		queue_redraw()
 
 
@@ -79,7 +79,7 @@ func configure(new_shape_type: String, new_size: Vector2) -> void:
 	shape_size = new_size
 	if collision_shape:
 		_configure_shape()
-	if Globals.debug_hitbox_flags[Globals.HitboxType.PLAYER_HURTBOX]:
+	if Globals.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_HURTBOX]:
 		queue_redraw()
 
 
@@ -96,12 +96,12 @@ func configure_from_profile(profile: CollisionProfile) -> void:
 	shape_size = profile.hurtbox_size
 	_configure_shape()
 	
-	if Globals.debug_hitbox_flags[Globals.HitboxType.PLAYER_HURTBOX]:
+	if Globals.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_HURTBOX]:
 		queue_redraw()
 
 
 func _draw() -> void:
-	if not Globals.debug_hitbox_flags[Globals.HitboxType.PLAYER_HURTBOX]:
+	if not Globals.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_HURTBOX]:
 		return
 
 	if not collision_shape or not collision_shape.shape:
@@ -156,5 +156,5 @@ func _draw() -> void:
 
 
 func _on_debug_toggled(type: int, _show: bool) -> void:
-	if type == Globals.HitboxType.PLAYER_HURTBOX:
+	if type == GameEnums.HitboxType.PLAYER_HURTBOX:
 		queue_redraw()

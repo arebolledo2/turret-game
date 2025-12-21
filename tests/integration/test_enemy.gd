@@ -15,7 +15,7 @@ func before_all() -> void:
 
 func before_each() -> void:
 	Globals.reset_stats()
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	Globals.is_game_active = true
 	
 	enemy = enemy_scene.instantiate()
@@ -47,14 +47,14 @@ func test_enemy_contact_damage_from_globals():
 
 
 func test_enemy_harder_on_hard_difficulty():
-	Globals.current_difficulty = Globals.Difficulty.EASY
+	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	enemy.initialize(3)
 	var easy_hp = enemy.max_health
 	
 	# Create new enemy for hard mode
 	var hard_enemy = enemy_scene.instantiate()
 	add_child_autofree(hard_enemy)
-	Globals.current_difficulty = Globals.Difficulty.HARD
+	Globals.current_difficulty = GameEnums.Difficulty.HARD
 	hard_enemy.initialize(3)
 	
 	assert_gt(hard_enemy.max_health, easy_hp, "Hard enemies should have more health")
