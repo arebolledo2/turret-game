@@ -24,8 +24,8 @@ func _ready() -> void:
 	var timer = get_tree().create_timer(lifetime)
 	timer.timeout.connect(queue_free)
 	
-	# Connect body entered signal
-	body_entered.connect(_on_body_entered)
+	# Connect area entered signal for hurtbox detection
+	area_entered.connect(_on_hurtbox_entered)
 
 ## Basic setup for simple projectiles (backwards compatible)
 func setup(dir: Vector2, spd: float, dmg: float, from_player: bool) -> void:
@@ -37,7 +37,7 @@ func setup(dir: Vector2, spd: float, dmg: float, from_player: bool) -> void:
 	
 	# Set collision - use call_deferred to avoid physics query error
 	call_deferred("set_collision_layer", 4)  # projectile layer
-	call_deferred("set_collision_mask", 2)   # enemy layer
+	call_deferred("set_collision_mask", 32)  # enemy_hurtbox layer (layer 6 = 2^5 = 32)
 
 ## Extended setup for turret-typed projectiles
 func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: Globals.DamageType) -> void:
@@ -56,20 +56,26 @@ func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: G
 
 	# Set collision
 	call_deferred("set_collision_layer", 4)  # projectile layer
-	call_deferred("set_collision_mask", 2)   # enemy layer
+	call_deferred("set_collision_mask", 32)  # enemy_hurtbox layer (layer 6 = 2^5 = 32)
 
 func _physics_process(delta: float) -> void:
 	position += direction * speed * delta
 
-func _on_body_entered(body: Node2D) -> void:
-	if not body.is_in_group("enemies"):
+func _on_hurtbox_entered(hurtbox: Area2D) -> void:
+	# Verify this is an enemy hurtbox
+	if not hurtbox.is_in_group("enemy_hurtbox"):
+		return
+	
+	# Get the enemy (parent of hurtbox)
+	var enemy = hurtbox.get_parent()
+	if not enemy or not enemy.is_in_group("enemies"):
 		return
 	
 	# Skip if already hit this enemy (for pierce projectiles)
-	if body in hit_enemies:
+	if enemy in hit_enemies:
 		return
 	
-	hit_enemies.append(body)
+	hit_enemies.append(enemy)
 	
 	# Check for AoE explosion
 	if aoe_radius > 0:
@@ -78,12 +84,12 @@ func _on_body_entered(body: Node2D) -> void:
 		return
 	
 	# Apply direct damage
-	if body.has_method("take_damage"):
-		body.take_damage(damage)
+	if enemy.has_method("take_damage"):
+		enemy.take_damage(damage)
 	
 	# Apply DoT if applicable
-	if dot_damage > 0 and dot_duration > 0 and body.has_method("apply_status_effect"):
-		body.apply_status_effect(damage_type, dot_damage, dot_duration, dot_tick_rate)
+	if dot_damage > 0 and dot_duration > 0 and enemy.has_method("apply_status_effect"):
+		enemy.apply_status_effect(damage_type, dot_damage, dot_duration, dot_tick_rate)
 	
 	# Handle pierce
 	pierce_count += 1

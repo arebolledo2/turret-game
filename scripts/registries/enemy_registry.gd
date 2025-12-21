@@ -41,11 +41,6 @@ const TYPES: Dictionary = {
 			"type": "circle",
 			"size": Vector2(14, 14),
 		},
-		"damage_zone": {
-			"type": "circle",
-			"size": 10.0,
-			"offset": Vector2(0, 0),
-		},
 		"spawn_weight": 60,
 		"min_wave": 2,
 		"spawn_count": 5,
@@ -68,11 +63,6 @@ const TYPES: Dictionary = {
 		"hurtbox": {
 			"type": "rectangle",
 			"size": Vector2(40, 50),
-		},
-		"damage_zone": {
-			"type": "circle",
-			"size": 25.0,
-			"offset": Vector2(0, 0),
 		},
 		"spawn_weight": 20,
 		"min_wave": 3,
@@ -97,11 +87,6 @@ const TYPES: Dictionary = {
 		"hurtbox": {
 			"type": "circle",
 			"size": Vector2(16, 16),
-		},
-		"damage_zone": {
-			"type": "circle",
-			"size": 12.0,
-			"offset": Vector2(0, 0),
 		},
 		"spawn_weight": 0,  # Disabled
 		"min_wave": 4,
@@ -131,11 +116,6 @@ const TYPES: Dictionary = {
 		"hurtbox": {
 			"type": "circle",
 			"size": Vector2(17, 17),
-		},
-		"damage_zone": {
-			"type": "circle",
-			"size": 12.0,
-			"offset": Vector2(0, 0),
 		},
 		"spawn_weight": 80,
 		"min_wave": 2,
@@ -171,11 +151,6 @@ const TYPES: Dictionary = {
 			"type": "circle",
 			"size": Vector2(18, 18),
 		},
-		"damage_zone": {
-			"type": "circle",
-			"size": 13.0,
-			"offset": Vector2(0, 0),
-		},
 		"spawn_weight": 30,
 		"min_wave": 3,
 		"spawn_count": 1,
@@ -197,11 +172,6 @@ const TYPES: Dictionary = {
 		"hurtbox": {
 			"type": "circle",
 			"size": Vector2(24, 24),
-		},
-		"damage_zone": {
-			"type": "circle",
-			"size": 50.0,
-			"offset": Vector2(0, 0),
 		},
 		"spawn_weight": 40,
 		"min_wave": 2,

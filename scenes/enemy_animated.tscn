@@ -1,19 +1,15 @@
-[gd_scene load_steps=26 format=3 uid="uid://bfn1n55feqdb8"]
+[gd_scene load_steps=24 format=3 uid="uid://bfn1n55feqdb8"]
 
 [ext_resource type="Script" path="res://scripts/enemy.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/enemy_neon_drone/neon_drone_right.png" id="2_right"]
 [ext_resource type="Texture2D" path="res://assets/sprites/enemy_neon_drone/neon_drone_left.png" id="3_left"]
 [ext_resource type="Script" path="res://scripts/components/enemy_hurtbox.gd" id="4_hurtbox"]
-[ext_resource type="Script" path="res://scripts/components/enemy_damage_zone.gd" id="5_damage_zone"]
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+[sub_resource type="CircleShape2D" id="CircleShape2D_Physics"]
 radius = 48.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_Hurtbox"]
-radius = 24.0
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_DamageZone"]
-radius = 50.0
+radius = 48.0
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_r0"]
 atlas = ExtResource("2_right")
@@ -146,7 +142,7 @@ collision_mask = 1
 script = ExtResource("1_script")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("CircleShape2D_1")
+shape = SubResource("CircleShape2D_Physics")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
 texture_filter = 1
@@ -157,16 +153,12 @@ frame_progress = 0.1
 
 [node name="Hurtbox" type="Area2D" parent="."]
 collision_layer = 32
-collision_mask = 0
+collision_mask = 16
 script = ExtResource("4_hurtbox")
+shape_type = "circle"
+shape_size = Vector2(48, 48)
+deals_contact_damage = true
+damage_cooldown = 0.5
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
 shape = SubResource("CircleShape2D_Hurtbox")
-
-[node name="DamageZone" type="Area2D" parent="."]
-collision_layer = 64
-collision_mask = 16
-script = ExtResource("5_damage_zone")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageZone"]
-shape = SubResource("CircleShape2D_DamageZone")

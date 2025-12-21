@@ -1,10 +1,9 @@
-[gd_scene load_steps=37 format=3 uid="uid://c8r3m44jtqpa5"]
+[gd_scene load_steps=36 format=3 uid="uid://c8r3m44jtqpa5"]
 
 [ext_resource type="Script" path="res://scripts/enemy.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/enemy_spider_drone/spider_drone_right.png" id="2_right"]
 [ext_resource type="Texture2D" path="res://assets/sprites/enemy_spider_drone/spider_drone_left.png" id="3_left"]
 [ext_resource type="Script" path="res://scripts/components/enemy_hurtbox.gd" id="4_hurtbox"]
-[ext_resource type="Script" path="res://scripts/components/enemy_damage_zone.gd" id="5_damage_zone"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_Physics"]
 radius = 12.0
@@ -13,10 +12,6 @@ height = 40.0
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_Hurtbox"]
 radius = 18.0
 height = 48.0
-
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_DamageZone"]
-radius = 20.0
-height = 60.0
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_r0"]
 atlas = ExtResource("2_right")
@@ -273,18 +268,13 @@ autoplay = "move_right"
 
 [node name="Hurtbox" type="Area2D" parent="."]
 collision_layer = 32
-collision_mask = 0
+collision_mask = 16
 script = ExtResource("4_hurtbox")
+shape_type = "capsule"
+shape_size = Vector2(48, 36)
+deals_contact_damage = true
+damage_cooldown = 0.5
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
 rotation = 1.5708
 shape = SubResource("CapsuleShape2D_Hurtbox")
-
-[node name="DamageZone" type="Area2D" parent="."]
-collision_layer = 64
-collision_mask = 16
-script = ExtResource("5_damage_zone")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="DamageZone"]
-rotation = 1.5708
-shape = SubResource("CapsuleShape2D_DamageZone")
