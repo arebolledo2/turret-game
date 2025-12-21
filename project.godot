@@ -143,7 +143,6 @@ toggle_range={
 2d_physics/layer_4="pickup"
 2d_physics/layer_5="player_hurtbox"
 2d_physics/layer_6="enemy_hurtbox"
-2d_physics/layer_7="enemy_damage_zone"
 2d_physics/layer_8="melee_attack"
 
 [rendering]

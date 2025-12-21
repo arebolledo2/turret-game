@@ -212,7 +212,7 @@ func _physics_process(delta: float) -> void:
 	if velocity.length() > 0:
 		_update_direction_sprite(velocity.normalized())
 
-	# Contact damage now handled by DamageZone component
+	# Contact damage now handled by EnemyHurtbox component
 
 func _update_direction_sprite(direction: Vector2) -> void:
 	# AnimatedSprite2D enemies use left/right animations only

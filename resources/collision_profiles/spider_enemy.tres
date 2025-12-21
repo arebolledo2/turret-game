@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CollisionProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/components/collision_profile.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+physics_shape_type = 2
+physics_size = Vector2(12, 40)
+hurtbox_shape_type = 2
+hurtbox_size = Vector2(18, 48)
+deals_contact_damage = true
+damage_cooldown = 0.5
