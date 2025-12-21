@@ -90,6 +90,13 @@ func update_stats() -> void:
 	current_fire_rate = stats.get("fire_rate", 2.0)
 	current_rotation_speed = stats.get("rotation_speed", 180.0)
 
+	# Ensure slow parameters are in stats if they exist in base stats
+	var base_stats = TurretRegistry.get_base_stats(turret_type)
+	if base_stats.has("slow_intensity") and not stats.has("slow_intensity"):
+		stats["slow_intensity"] = base_stats["slow_intensity"]
+	if base_stats.has("slow_duration") and not stats.has("slow_duration"):
+		stats["slow_duration"] = base_stats["slow_duration"]
+
 	if fire_timer:
 		_update_timer()
 
@@ -370,7 +377,7 @@ func _fire_aoe_pulse() -> void:
 			if slow_intensity > 0 and slow_duration > 0 and enemy.has_method("apply_status_effect"):
 				var turret_def = TurretRegistry.get_type(turret_type)
 				var damage_types = turret_def.get("damage_types", [])
-				var dtype = damage_types[0] if not damage_types.is_empty() else GameEnums.DamageType.ELECTRIC
+				var dtype = damage_types[0] if not damage_types.is_empty() else Globals.DamageType.ELECTRIC
 				enemy.apply_status_effect(dtype, 0.0, slow_duration, 1.0, slow_intensity)
 
 	if hit_count > 0:

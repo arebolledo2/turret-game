@@ -45,12 +45,12 @@ const TYPES: Dictionary = {
 		"description": "Long-range instant-hit turret. High damage, slow fire rate.",
 		"attack_styles": [GameEnums.AttackStyle.INSTANT],
 		"damage_types": [GameEnums.DamageType.PHYSICAL],
-		"targeting": "farthest",
 		"base_stats": {
 			"damage": 70.0,
 			"fire_rate": 0.5,
 			"range": 500.0,
 			"rotation_speed": 0.0,
+			"targeting": "farthest",
 		}
 	},
 	"fire": {
@@ -77,7 +77,6 @@ const TYPES: Dictionary = {
 		"description": "Fires explosive plasma orbs that damage an area.",
 		"attack_styles": [GameEnums.AttackStyle.PROJECTILE, GameEnums.AttackStyle.AOE],
 		"damage_types": [GameEnums.DamageType.PLASMA],
-		"targeting": "cluster",
 		"base_stats": {
 			"damage": 40.0,
 			"fire_rate": 1.0,
@@ -87,6 +86,7 @@ const TYPES: Dictionary = {
 			"pierce": 0,
 			"aoe_radius": 100.0,
 			"knockback_force": 120.0,
+			"targeting": "cluster",
 		}
 	},
 	"shock": {

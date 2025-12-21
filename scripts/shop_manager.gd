@@ -181,6 +181,10 @@ func apply_item(item_id: String) -> void:
 	Events.item_collected.emit(item_data)
 
 func reroll_shop() -> bool:
+	# Check if max rerolls reached
+	if Globals.shop_reroll_count >= Globals.MAX_REROLLS_PER_WAVE:
+		return false
+
 	var reroll_cost = get_reroll_cost()
 
 	if Globals.total_gold < reroll_cost:
@@ -198,11 +202,12 @@ func reroll_shop() -> bool:
 func get_reroll_cost() -> int:
 	# Base cost increases with each reroll this wave
 	var reroll_cost := Globals.REROLL_BASE_COST + (Globals.REROLL_COST_INCREMENT * Globals.shop_reroll_count)
-	# Scale by wave (similar to item prices: +15% per wave)
-	var wave_multiplier := 1.0 + Globals.WAVE_PRICE_SCALE * Globals.current_wave
 	# Apply reroll cost multiplier from modifiers (e.g., Probability Matrix)
 	var item_multiplier := Globals.get_reroll_cost_multiplier()
-	return int(reroll_cost * wave_multiplier * item_multiplier)
+	return int(reroll_cost * item_multiplier)
 
 func can_afford_reroll() -> bool:
+	# Check if max rerolls reached
+	if Globals.shop_reroll_count >= Globals.MAX_REROLLS_PER_WAVE:
+		return false
 	return Globals.total_gold >= get_reroll_cost()
