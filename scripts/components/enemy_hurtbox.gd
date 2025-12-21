@@ -62,7 +62,7 @@ func _ready() -> void:
 
 	# Connect to debug toggle event
 	Events.hitbox_debug_toggled.connect(_on_debug_toggled)
-	if Globals.show_debug_hitboxes:
+	if Globals.debug_hitbox_flags[Globals.HitboxType.ENEMY_HURTBOX]:
 		queue_redraw()
 
 
@@ -103,7 +103,7 @@ func configure(new_shape_type: String, new_size: Vector2) -> void:
 	shape_size = new_size
 	if collision_shape:
 		_configure_shape()
-	if Globals.show_debug_hitboxes:
+	if Globals.debug_hitbox_flags[Globals.HitboxType.ENEMY_HURTBOX]:
 		queue_redraw()
 
 
@@ -128,7 +128,7 @@ func configure_from_profile(collision_profile: Resource) -> void:
 	
 	_configure_shape()
 	
-	if Globals.show_debug_hitboxes:
+	if Globals.debug_hitbox_flags[Globals.HitboxType.ENEMY_HURTBOX]:
 		queue_redraw()
 
 
@@ -209,7 +209,7 @@ func _on_damage_timer_timeout() -> void:
 
 
 func _draw() -> void:
-	if not Globals.show_debug_hitboxes:
+	if not Globals.debug_hitbox_flags[Globals.HitboxType.ENEMY_HURTBOX]:
 		return
 
 	if not collision_shape or not collision_shape.shape:
@@ -263,5 +263,6 @@ func _draw() -> void:
 		draw_line(top_center + Vector2(radius, 0), bottom_center + Vector2(radius, 0), DEBUG_OUTLINE_COLOR, DEBUG_OUTLINE_WIDTH)
 
 
-func _on_debug_toggled(_show: bool) -> void:
-	queue_redraw()
+func _on_debug_toggled(type: int, _show: bool) -> void:
+	if type == Globals.HitboxType.ENEMY_HURTBOX:
+		queue_redraw()

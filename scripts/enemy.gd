@@ -75,10 +75,44 @@ func _ready() -> void:
 	add_to_group("enemies")
 	player = get_tree().get_first_node_in_group("player")
 	
+	# Connect to debug toggle event
+	Events.hitbox_debug_toggled.connect(_on_debug_toggled)
+
 	# If not initialized by spawner, initialize with defaults
 	if not is_initialized:
 		_apply_type_config(enemy_type)
 		current_health = max_health
+
+func _on_debug_toggled(type: int, _enabled: bool) -> void:
+	if type == Globals.HitboxType.PHYSICS:
+		queue_redraw()
+
+func _draw() -> void:
+	if not Globals.debug_hitbox_flags[Globals.HitboxType.PHYSICS]:
+		return
+	
+	if has_node("CollisionShape2D"):
+		var col_shape = $CollisionShape2D
+		if col_shape.shape:
+			var shape = col_shape.shape
+			var offset = col_shape.position
+			var color = Color(1.0, 1.0, 1.0, 0.4) # White for physics
+			var outline_color = Color(1.0, 1.0, 1.0, 0.8)
+
+			if shape is CircleShape2D:
+				draw_circle(offset, shape.radius, color)
+				draw_arc(offset, shape.radius, 0, TAU, 32, outline_color, 1.0)
+			elif shape is RectangleShape2D:
+				var rect = Rect2(offset - shape.size / 2.0, shape.size)
+				draw_rect(rect, color, true)
+				draw_rect(rect, outline_color, false, 1.0)
+			elif shape is CapsuleShape2D:
+				# Simple approximation for capsule drawing in debug
+				var radius = shape.radius
+				var height = shape.height
+				draw_circle(offset + Vector2(0, -height/2 + radius), radius, color)
+				draw_circle(offset + Vector2(0, height/2 - radius), radius, color)
+				draw_rect(Rect2(offset + Vector2(-radius, -height/2 + radius), Vector2(radius * 2, height - radius * 2)), color, true)
 
 func _apply_type_config(type_id: String) -> void:
 	"""Load configuration from EnemyRegistry and apply to this enemy."""
@@ -159,10 +193,6 @@ func _apply_visuals() -> void:
 func _configure_hitboxes(type_def: Dictionary) -> void:
 	"""Configure unified hurtbox from type definition.
 	The hurtbox now handles both receiving AND dealing damage (no separate DamageZone)."""
-	# Set debug colors for accessibility
-	if has_node("CollisionShape2D"):
-		$CollisionShape2D.debug_color = Color(1.0, 1.0, 1.0, 0.4) # White for physics
-	
 	# Configure unified hurtbox (for both receiving and dealing damage)
 	if has_node("Hurtbox"):
 		var hurtbox = $Hurtbox
@@ -174,6 +204,21 @@ func _configure_hitboxes(type_def: Dictionary) -> void:
 			var shape_type: String = hurtbox_config.get("type", "circle")
 			var size: Vector2 = hurtbox_config.get("size", Vector2(24, 24))
 			hurtbox.configure(shape_type, size)
+
+func initialize(wave: int, type_id: String = "basic") -> void:
+	"""Initialize enemy with type and wave-scaled stats."""
+	is_initialized = true
+	
+	# Apply base type configuration
+	_apply_type_config(type_id)
+	
+	# Get wave-scaled stats from Globals
+	var scaled_stats := Globals.get_enemy_stats_for_wave(type_id, wave)
+	max_health = scaled_stats.get("health", max_health)
+	speed = scaled_stats.get("speed", speed)
+	contact_damage = scaled_stats.get("contact_damage", contact_damage)
+	
+	current_health = max_health
 
 func _physics_process(delta: float) -> void:
 	if is_dying:
@@ -398,21 +443,6 @@ func _spawn_charge_alert_indicator() -> void:
 		charge_alert_indicator.get_node("InnerCircle").color = Color(1.0, 0.9, 0.3)
 
 	add_child(charge_alert_indicator)
-
-func initialize(wave: int, type_id: String = "basic") -> void:
-	"""Initialize enemy with type and wave-scaled stats."""
-	is_initialized = true
-	
-	# Apply base type configuration
-	_apply_type_config(type_id)
-	
-	# Get wave-scaled stats from Globals
-	var scaled_stats := Globals.get_enemy_stats_for_wave(type_id, wave)
-	max_health = scaled_stats.get("health", max_health)
-	speed = scaled_stats.get("speed", speed)
-	contact_damage = scaled_stats.get("contact_damage", contact_damage)
-	
-	current_health = max_health
 
 func take_damage(amount: float) -> void:
 	current_health -= amount

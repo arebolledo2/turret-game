@@ -5,7 +5,10 @@ extends RefCounted
 
 var container: Control
 var show_damage_check: CheckButton
-var show_hitboxes_check: CheckButton
+var physics_hitboxes_check: CheckButton
+var player_hurtbox_check: CheckButton
+var enemy_hurtbox_check: CheckButton
+var player_attack_check: CheckButton
 var back_button: Button
 var _owner: Node
 
@@ -13,15 +16,25 @@ var _owner: Node
 func setup(nodes: Dictionary, owner: Node) -> void:
 	container = nodes.get("container")
 	show_damage_check = nodes.get("show_damage_check")
-	show_hitboxes_check = nodes.get("show_hitboxes_check")
+	physics_hitboxes_check = nodes.get("physics_hitboxes_check")
+	player_hurtbox_check = nodes.get("player_hurtbox_check")
+	enemy_hurtbox_check = nodes.get("enemy_hurtbox_check")
+	player_attack_check = nodes.get("player_attack_check")
 	back_button = nodes.get("back_button")
 	_owner = owner
 
-	# Initialize checkbox state
+	# Initialize checkbox states
 	if show_damage_check:
 		show_damage_check.button_pressed = Globals.show_damage_numbers
-	if show_hitboxes_check:
-		show_hitboxes_check.button_pressed = Globals.show_debug_hitboxes
+	
+	if physics_hitboxes_check:
+		physics_hitboxes_check.button_pressed = Globals.debug_hitbox_flags[Globals.HitboxType.PHYSICS]
+	if player_hurtbox_check:
+		player_hurtbox_check.button_pressed = Globals.debug_hitbox_flags[Globals.HitboxType.PLAYER_HURTBOX]
+	if enemy_hurtbox_check:
+		enemy_hurtbox_check.button_pressed = Globals.debug_hitbox_flags[Globals.HitboxType.ENEMY_HURTBOX]
+	if player_attack_check:
+		player_attack_check.button_pressed = Globals.debug_hitbox_flags[Globals.HitboxType.PLAYER_ATTACK]
 
 
 func show() -> void:
@@ -44,6 +57,13 @@ func on_show_damage_toggled(toggled_on: bool) -> void:
 	Globals.show_damage_numbers = toggled_on
 
 
+func on_hitbox_type_toggled(type: int, toggled_on: bool) -> void:
+	Globals.debug_hitbox_flags[type] = toggled_on
+	Events.hitbox_debug_toggled.emit(type, toggled_on)
+
+
+# Legacy function kept for transition if needed, but not used by new UI
 func on_show_hitboxes_toggled(toggled_on: bool) -> void:
-	Globals.show_debug_hitboxes = toggled_on
-	Events.hitbox_debug_toggled.emit(toggled_on)
+	# Toggle all for convenience if this is called
+	for type in Globals.HitboxType.values():
+		on_hitbox_type_toggled(type, toggled_on)

@@ -120,6 +120,33 @@ func _ready() -> void:
 	if melee_hitbox:
 		melee_hitbox.enemy_hit.connect(_on_melee_hitbox_enemy_hit)
 
+	# Connect to debug toggle event
+	Events.hitbox_debug_toggled.connect(_on_debug_toggled)
+
+func _on_debug_toggled(type: int, _enabled: bool) -> void:
+	if type == Globals.HitboxType.PHYSICS:
+		queue_redraw()
+
+func _draw() -> void:
+	if not Globals.debug_hitbox_flags[Globals.HitboxType.PHYSICS]:
+		return
+	
+	if has_node("CollisionShape2D"):
+		var col_shape = $CollisionShape2D
+		if col_shape.shape:
+			var shape = col_shape.shape
+			var offset = col_shape.position
+			var color = Color(1.0, 1.0, 1.0, 0.4) # White for physics
+			var outline_color = Color(1.0, 1.0, 1.0, 0.8)
+
+			if shape is CircleShape2D:
+				draw_circle(offset, shape.radius, color)
+				draw_arc(offset, shape.radius, 0, TAU, 32, outline_color, 1.0)
+			elif shape is RectangleShape2D:
+				var rect = Rect2(offset - shape.size / 2.0, shape.size)
+				draw_rect(rect, color, true)
+				draw_rect(rect, outline_color, false, 1.0)
+
 func _physics_process(delta: float) -> void:
 	# Don't process if game hasn't started
 	if Globals == null or not Globals.is_game_active:

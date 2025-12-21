@@ -657,16 +657,53 @@ text = "Show Damage Numbers"
 layout_mode = 2
 button_pressed = true
 
-[node name="ShowHitboxesContainer" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+[node name="HitboxSettingsTitle" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Debug Hitboxes:"
+
+[node name="PhysicsHitboxes" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 
-[node name="ShowHitboxesLabel" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowHitboxesContainer"]
+[node name="Label" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/PhysicsHitboxes"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 18
-text = "Show Debug Hitboxes"
+text = "Physics Shapes"
 
-[node name="ShowHitboxesCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+[node name="PhysicsHitboxesCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/PhysicsHitboxes"]
+layout_mode = 2
+
+[node name="PlayerHurtbox" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerHurtbox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Player Hurtbox"
+
+[node name="PlayerHurtboxCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerHurtbox"]
+layout_mode = 2
+
+[node name="EnemyHurtbox" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/EnemyHurtbox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Enemy Hurtbox"
+
+[node name="EnemyHurtboxCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/EnemyHurtbox"]
+layout_mode = 2
+
+[node name="PlayerAttack" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAttack"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Player Attack"
+
+[node name="PlayerAttackCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAttack"]
 layout_mode = 2
 
 [node name="BackButton" type="Button" parent="SettingsMenu/Panel/VBoxContainer"]

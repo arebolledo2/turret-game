@@ -44,7 +44,7 @@ func _ready() -> void:
 
 	# Connect to debug toggle event
 	Events.hitbox_debug_toggled.connect(_on_debug_toggled)
-	if Globals.show_debug_hitboxes:
+	if Globals.debug_hitbox_flags[Globals.HitboxType.PLAYER_ATTACK]:
 		queue_redraw()
 
 func _generate_cone_points(arc_deg: float, range: float, seg_count: int) -> PackedVector2Array:
@@ -109,7 +109,7 @@ func _on_area_entered(area: Area2D) -> void:
 
 
 func _draw() -> void:
-	if not Globals.show_debug_hitboxes:
+	if not Globals.debug_hitbox_flags[Globals.HitboxType.PLAYER_ATTACK]:
 		return
 
 	if not collision_polygon or collision_polygon.polygon.size() == 0:
@@ -124,11 +124,12 @@ func _draw() -> void:
 		draw_line(p1, p2, DEBUG_OUTLINE_COLOR, DEBUG_OUTLINE_WIDTH)
 
 
-func _on_debug_toggled(_show: bool) -> void:
-	queue_redraw()
+func _on_debug_toggled(type: int, _show: bool) -> void:
+	if type == Globals.HitboxType.PLAYER_ATTACK:
+		queue_redraw()
 
 
 func _process(_delta: float) -> void:
 	# Continuously redraw during expansion animation
-	if Globals.show_debug_hitboxes and is_active:
+	if Globals.debug_hitbox_flags[Globals.HitboxType.PLAYER_ATTACK] and is_active:
 		queue_redraw()

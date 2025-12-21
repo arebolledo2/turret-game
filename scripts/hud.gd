@@ -36,7 +36,10 @@ const SettingsMenuScript = preload("res://scripts/ui/settings_menu.gd")
 @onready var pause_menu: Control = $PauseMenu
 @onready var settings_menu: Control = $SettingsMenu
 @onready var show_damage_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageCheck
-@onready var show_hitboxes_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowHitboxesCheck
+@onready var physics_hitboxes_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PhysicsHitboxes/PhysicsHitboxesCheck
+@onready var player_hurtbox_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerHurtbox/PlayerHurtboxCheck
+@onready var enemy_hurtbox_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/EnemyHurtbox/EnemyHurtboxCheck
+@onready var player_attack_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAttack/PlayerAttackCheck
 @onready var settings_back_button: Button = $SettingsMenu/Panel/VBoxContainer/BackButton
 @onready var easy_button: Button = $DifficultySelect/Panel/VBoxContainer/ButtonContainer/EasyButton
 @onready var restart_button: Button = $GameOverScreen/Panel/VBoxContainer/RestartButton
@@ -104,6 +107,12 @@ func _ready() -> void:
 	Events.game_started.connect(_on_game_started)
 	Events.damage_dealt.connect(_on_damage_dealt)
 
+	# Connect Granular Hitbox Toggles
+	physics_hitboxes_check.toggled.connect(_on_physics_hitboxes_toggled)
+	player_hurtbox_check.toggled.connect(_on_player_hurtbox_toggled)
+	enemy_hurtbox_check.toggled.connect(_on_enemy_hurtbox_toggled)
+	player_attack_check.toggled.connect(_on_player_attack_toggled)
+
 
 func _setup_components() -> void:
 	# Game HUD component
@@ -170,7 +179,10 @@ func _setup_components() -> void:
 	_settings_menu.setup({
 		"container": settings_menu,
 		"show_damage_check": show_damage_check,
-		"show_hitboxes_check": show_hitboxes_check,
+		"physics_hitboxes_check": physics_hitboxes_check,
+		"player_hurtbox_check": player_hurtbox_check,
+		"enemy_hurtbox_check": enemy_hurtbox_check,
+		"player_attack_check": player_attack_check,
 		"back_button": settings_back_button,
 	}, self)
 
@@ -297,8 +309,20 @@ func _on_show_damage_toggled(toggled_on: bool) -> void:
 	_settings_menu.on_show_damage_toggled(toggled_on)
 
 
-func _on_show_hitboxes_toggled(toggled_on: bool) -> void:
-	_settings_menu.on_show_hitboxes_toggled(toggled_on)
+func _on_physics_hitboxes_toggled(toggled_on: bool) -> void:
+	_settings_menu.on_hitbox_type_toggled(Globals.HitboxType.PHYSICS, toggled_on)
+
+
+func _on_player_hurtbox_toggled(toggled_on: bool) -> void:
+	_settings_menu.on_hitbox_type_toggled(Globals.HitboxType.PLAYER_HURTBOX, toggled_on)
+
+
+func _on_enemy_hurtbox_toggled(toggled_on: bool) -> void:
+	_settings_menu.on_hitbox_type_toggled(Globals.HitboxType.ENEMY_HURTBOX, toggled_on)
+
+
+func _on_player_attack_toggled(toggled_on: bool) -> void:
+	_settings_menu.on_hitbox_type_toggled(Globals.HitboxType.PLAYER_ATTACK, toggled_on)
 
 
 # =============================================================================

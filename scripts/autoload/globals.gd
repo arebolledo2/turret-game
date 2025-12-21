@@ -64,7 +64,14 @@ var current_difficulty: Difficulty = Difficulty.EASY
 var show_damage_numbers: bool = true
 var player_auto_attack_enabled: bool = false
 var show_turret_ranges: bool = false
-var show_debug_hitboxes: bool = false
+
+enum HitboxType { PHYSICS, PLAYER_HURTBOX, ENEMY_HURTBOX, PLAYER_ATTACK }
+var debug_hitbox_flags: Dictionary = {
+	HitboxType.PHYSICS: false,
+	HitboxType.PLAYER_HURTBOX: false,
+	HitboxType.ENEMY_HURTBOX: false,
+	HitboxType.PLAYER_ATTACK: false
+}
 
 # =============================================================================
 # TURRET TYPE SYSTEM
