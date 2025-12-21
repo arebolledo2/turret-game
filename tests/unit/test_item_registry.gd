@@ -25,16 +25,17 @@ func test_get_all_item_ids():
 
 func test_get_item_returns_valid_definition():
 	var item = ItemRegistry.get_item("scrap_magnet")
-	assert_has(item, "name", "Item should have name")
-	assert_has(item, "description", "Item should have description")
-	assert_has(item, "icon", "Item should have icon")
-	assert_has(item, "rarity", "Item should have rarity")
-	assert_has(item, "modifiers", "Item should have modifiers")
+	assert_not_null(item, "Item should exist")
+	assert_not_null(item.name, "Item should have name")
+	assert_not_null(item.description, "Item should have description")
+	assert_not_null(item.icon, "Item should have icon")
+	assert_not_null(item.rarity, "Item should have rarity")
+	assert_not_null(item.modifiers, "Item should have modifiers")
 
 
 func test_get_item_nonexistent_returns_empty():
 	var item = ItemRegistry.get_item("nonexistent_item")
-	assert_true(item.is_empty(), "Non-existent item should return empty dictionary")
+	assert_null(item, "Non-existent item should return null")
 
 
 func test_has_item_returns_true_for_valid():
@@ -48,10 +49,11 @@ func test_has_item_returns_false_for_invalid():
 func test_all_items_have_required_fields():
 	for item_id in ItemRegistry.get_all_item_ids():
 		var item = ItemRegistry.get_item(item_id)
-		assert_has(item, "name", "%s should have name" % item_id)
-		assert_has(item, "description", "%s should have description" % item_id)
-		assert_has(item, "rarity", "%s should have rarity" % item_id)
-		assert_has(item, "modifiers", "%s should have modifiers" % item_id)
+		assert_not_null(item, "%s should exist" % item_id)
+		assert_not_null(item.name, "%s should have name" % item_id)
+		assert_not_null(item.description, "%s should have description" % item_id)
+		assert_typeof(item.rarity, TYPE_INT, "%s should have rarity" % item_id)
+		assert_typeof(item.modifiers, TYPE_ARRAY, "%s should have modifiers" % item_id)
 
 
 func test_all_items_have_at_least_one_modifier():
@@ -59,7 +61,7 @@ func test_all_items_have_at_least_one_modifier():
 	for item_id in ItemRegistry.get_all_item_ids():
 		var item = ItemRegistry.get_item(item_id)
 		var modifiers = ItemRegistry.get_modifiers(item_id)
-		var has_special_effect = item.has("special_effect")
+		var has_special_effect = not item.special_effect.is_empty()
 		assert_true(modifiers.size() > 0 or has_special_effect,
 			"%s should have at least one modifier or a special_effect" % item_id)
 
