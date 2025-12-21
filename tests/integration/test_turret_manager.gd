@@ -21,6 +21,12 @@ func before_each() -> void:
 	Globals.turret_counts.clear()
 	Globals.pending_turret_purchases.clear()
 
+	# Ensure arena dimensions are set for testing (headless mode may have 0x0 viewport)
+	if Globals.ARENA_WIDTH <= 0:
+		Globals.ARENA_WIDTH = 1400
+	if Globals.ARENA_HEIGHT <= 0:
+		Globals.ARENA_HEIGHT = 900
+
 	turret_manager = _turret_manager_script.new()
 	add_child_autofree(turret_manager)
 

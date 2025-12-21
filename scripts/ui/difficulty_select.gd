@@ -1,17 +1,30 @@
 class_name DifficultySelectUI
-extends RefCounted
+extends ScalableUIPanel
 
 ## Handles difficulty selection screen
 
-var container: Control
 var easy_button: Button
-var _owner: Node
+
+# Base values at 1080p
+const BASE_PANEL_WIDTH: float = 500.0
+const BASE_PANEL_HEIGHT: float = 400.0
+const BASE_BUTTON_HEIGHT: float = 50.0
 
 
 func setup(nodes: Dictionary, owner: Node) -> void:
-	container = nodes.get("container")
 	easy_button = nodes.get("easy_button")
-	_owner = owner
+
+	# Set base size
+	base_panel_size = Vector2(BASE_PANEL_WIDTH, BASE_PANEL_HEIGHT)
+
+	# Call parent setup
+	super.setup(nodes, owner)
+
+
+func _scale_fonts(scale: float) -> void:
+	# Scale button heights if needed
+	if easy_button:
+		easy_button.custom_minimum_size.y = UIScaler.scale(BASE_BUTTON_HEIGHT)
 
 
 func show() -> void:

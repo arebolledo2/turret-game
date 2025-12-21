@@ -1,11 +1,10 @@
 class_name PauseMenuUI
-extends RefCounted
+extends ScalableUIPanel
 
 ## Handles pause menu display and interactions
 
 const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
 
-var container: Control
 var resume_button: Button
 var level_label: Label
 var wave_label: Label
@@ -24,16 +23,21 @@ var item_icon_label: Label
 var item_name_label: Label
 var item_rarity_label: Label
 var item_description_label: Label
-var _owner: Node
 var _player: Node2D = null
 var _selected_turret_type: String = ""
 var _selected_item_id: String = ""
 var _turret_buttons: Array[Button] = []
 var _item_buttons: Array[Button] = []
 
+# Base values at 1080p
+const BASE_PANEL_WIDTH: float = 800.0
+const BASE_PANEL_HEIGHT: float = 600.0
+const BASE_TITLE_FONT: int = 24
+const BASE_LABEL_FONT: int = 16
+const BASE_BUTTON_HEIGHT: float = 40.0
+
 
 func setup(nodes: Dictionary, owner: Node) -> void:
-	container = nodes.get("container")
 	resume_button = nodes.get("resume_button")
 	level_label = nodes.get("level_label")
 	wave_label = nodes.get("wave_label")
@@ -52,7 +56,33 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 	item_name_label = nodes.get("item_name_label")
 	item_rarity_label = nodes.get("item_rarity_label")
 	item_description_label = nodes.get("item_description_label")
-	_owner = owner
+
+	# Set base size
+	base_panel_size = Vector2(BASE_PANEL_WIDTH, BASE_PANEL_HEIGHT)
+
+	# Call parent setup
+	super.setup(nodes, owner)
+
+	# Register fonts
+	if level_label:
+		register_font(level_label, BASE_LABEL_FONT)
+	if wave_label:
+		register_font(wave_label, BASE_LABEL_FONT)
+	if turrets_title:
+		register_font(turrets_title, BASE_TITLE_FONT)
+	if items_title:
+		register_font(items_title, BASE_TITLE_FONT)
+	if items_hint:
+		register_font(items_hint, BASE_LABEL_FONT)
+
+
+func _scale_fonts(scale: float) -> void:
+	# Apply registered font scales
+	apply_font_scales(scale)
+
+	# Scale buttons
+	if resume_button:
+		resume_button.custom_minimum_size.y = UIScaler.scale(BASE_BUTTON_HEIGHT)
 
 
 func set_player(player: Node2D) -> void:

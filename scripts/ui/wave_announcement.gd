@@ -1,17 +1,33 @@
 class_name WaveAnnouncementUI
-extends RefCounted
+extends ScalableUIPanel
 
 ## Handles wave announcement overlay display
 
-var container: Control
 var label: Label
-var _owner: Node  # Reference to parent for creating tweens
+
+# Base values at 1080p
+const BASE_PANEL_WIDTH: float = 400.0
+const BASE_PANEL_HEIGHT: float = 100.0
+const BASE_FONT_SIZE: int = 64
 
 
 func setup(nodes: Dictionary, owner: Node) -> void:
-	container = nodes.get("container")
 	label = nodes.get("label")
-	_owner = owner
+
+	# Set base size
+	base_panel_size = Vector2(BASE_PANEL_WIDTH, BASE_PANEL_HEIGHT)
+
+	# Call parent setup
+	super.setup(nodes, owner)
+
+	# Register fonts
+	if label:
+		register_font(label, BASE_FONT_SIZE)
+
+
+func _scale_fonts(scale: float) -> void:
+	if label:
+		label.add_theme_font_size_override("font_size", UIScaler.scale_font(BASE_FONT_SIZE))
 
 
 func show_announcement(wave_number: int) -> void:

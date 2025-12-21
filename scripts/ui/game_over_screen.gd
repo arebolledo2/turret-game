@@ -1,21 +1,47 @@
 class_name GameOverScreenUI
-extends RefCounted
+extends ScalableUIPanel
 
 ## Handles game over / victory screen display
 
-var container: Control
 var title_label: Label
 var stats_label: Label
 var restart_button: Button
-var _owner: Node
+
+# Base values at 1080p
+const BASE_PANEL_WIDTH: float = 400.0
+const BASE_PANEL_HEIGHT: float = 300.0
+const BASE_TITLE_FONT: int = 36
+const BASE_STATS_FONT: int = 16
+const BASE_BUTTON_HEIGHT: float = 40.0
 
 
 func setup(nodes: Dictionary, owner: Node) -> void:
-	container = nodes.get("container")
 	title_label = nodes.get("title")
 	stats_label = nodes.get("stats")
 	restart_button = nodes.get("restart_button")
-	_owner = owner
+
+	# Set base size
+	base_panel_size = Vector2(BASE_PANEL_WIDTH, BASE_PANEL_HEIGHT)
+
+	# Call parent setup
+	super.setup(nodes, owner)
+
+	# Register fonts
+	if title_label:
+		register_font(title_label, BASE_TITLE_FONT)
+	if stats_label:
+		register_font(stats_label, BASE_STATS_FONT)
+
+
+func _scale_fonts(scale: float) -> void:
+	if title_label:
+		title_label.add_theme_font_size_override("font_size", UIScaler.scale_font(BASE_TITLE_FONT))
+	if stats_label:
+		stats_label.add_theme_font_size_override("font_size", UIScaler.scale_font(BASE_STATS_FONT))
+
+	# Scale button
+	if restart_button:
+		restart_button.custom_minimum_size.y = UIScaler.scale(BASE_BUTTON_HEIGHT)
 
 
 func show_game_over(victory: bool) -> void:

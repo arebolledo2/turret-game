@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 Events="*res://scripts/autoload/events.gd"
 Globals="*res://scripts/autoload/globals.gd"
 BuffSystem="*res://scripts/systems/buff_system.gd"
+UIScaler="*res://scripts/autoload/ui_scaler.gd"
 
 [debug]
 
@@ -29,6 +30,8 @@ gdscript/warnings/unused_signal=0
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
+window/size/mode=2
+window/size/resizable=true
 window/stretch/mode="disabled"
 window/stretch/aspect="ignore"
 

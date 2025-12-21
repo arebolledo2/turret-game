@@ -2,25 +2,26 @@ extends Node2D
 
 ## Arena Setup - Configures arena bounds from Globals constants
 ## Attach this to the Arena node in main.tscn
+##
+## The arena size is FIXED for consistent gameplay across all resolutions.
+## Only the camera zoom and UI scale adapt to different window sizes.
+
+# Fixed arena dimensions for consistent gameplay
+const FIXED_ARENA_WIDTH: int = 1920
+const FIXED_ARENA_HEIGHT: int = 1080
 
 @onready var ground: ColorRect = $Ground
 @onready var boundary: ColorRect = $Boundary
 
 func _ready() -> void:
-	get_viewport().size_changed.connect(_on_viewport_size_changed)
-	update_globals_from_viewport()
+	# Arena size is fixed - no need to listen to viewport changes
 	setup_arena()
-
-func _on_viewport_size_changed() -> void:
-	update_globals_from_viewport()
-	setup_arena()
-
-func update_globals_from_viewport() -> void:
-	var viewport_size: Vector2i = DisplayServer.window_get_size()
-	Globals.ARENA_WIDTH = viewport_size.x
-	Globals.ARENA_HEIGHT = viewport_size.y
 
 func setup_arena() -> void:
+	# Use fixed dimensions for consistent gameplay
+	Globals.ARENA_WIDTH = FIXED_ARENA_WIDTH
+	Globals.ARENA_HEIGHT = FIXED_ARENA_HEIGHT
+
 	var half_width := float(Globals.ARENA_WIDTH) / 2.0
 	var half_height := float(Globals.ARENA_HEIGHT) / 2.0
 	var border_thickness := 10.0

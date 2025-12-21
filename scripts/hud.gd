@@ -27,7 +27,7 @@ const SettingsMenuScript = preload("res://scripts/ui/settings_menu.gd")
 @onready var gold_label: Label = $MarginContainer/VBoxContainer/TopRow/StatsContainer/GoldLabel
 @onready var turret_label: Label = $MarginContainer/VBoxContainer/TopRow/StatsContainer/TurretLabel
 @onready var wave_announcement: Control = $WaveAnnouncement
-@onready var wave_announcement_label: Label = $WaveAnnouncement/WaveLabel
+@onready var wave_announcement_label: Label = $WaveAnnouncement/Panel/WaveLabel
 @onready var game_over_screen: Control = $GameOverScreen
 @onready var game_over_title: Label = $GameOverScreen/Panel/VBoxContainer/Title
 @onready var stats_label: Label = $GameOverScreen/Panel/VBoxContainer/StatsLabel
@@ -131,6 +131,7 @@ func _setup_components() -> void:
 	_wave_announcement = WaveAnnouncementScript.new()
 	_wave_announcement.setup({
 		"container": wave_announcement,
+		"panel": $WaveAnnouncement/Panel,
 		"label": wave_announcement_label,
 	}, self)
 
@@ -138,6 +139,7 @@ func _setup_components() -> void:
 	_game_over = GameOverScreenScript.new()
 	_game_over.setup({
 		"container": game_over_screen,
+		"panel": $GameOverScreen/Panel,
 		"title": game_over_title,
 		"stats": stats_label,
 		"restart_button": restart_button,
@@ -147,6 +149,7 @@ func _setup_components() -> void:
 	_difficulty_select = DifficultySelectScript.new()
 	_difficulty_select.setup({
 		"container": difficulty_screen,
+		"panel": $DifficultySelect/Panel,
 		"easy_button": easy_button,
 	}, self)
 
@@ -154,6 +157,7 @@ func _setup_components() -> void:
 	_pause_menu = PauseMenuScript.new()
 	_pause_menu.setup({
 		"container": pause_menu,
+		"panel": $PauseMenu/MainPanel,
 		"resume_button": resume_button,
 		"level_label": level_label,
 		"wave_label": pause_wave_label,
@@ -178,6 +182,7 @@ func _setup_components() -> void:
 	_settings_menu = SettingsMenuScript.new()
 	_settings_menu.setup({
 		"container": settings_menu,
+		"panel": $SettingsMenu/Panel,
 		"show_damage_check": show_damage_check,
 		"physics_hitboxes_check": physics_hitboxes_check,
 		"player_hurtbox_check": player_hurtbox_check,
