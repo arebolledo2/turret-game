@@ -541,7 +541,7 @@ func _process_status_effects(delta: float) -> void:
 		_update_status_visual()
 
 ## Apply a status effect (DoT and/or slow). Uses strongest-per-damage-type logic.
-func apply_status_effect(damage_type: Globals.DamageType, dot_damage: float, dot_duration: float, dot_tick_rate: float = 1.0, slow_intensity: float = 0.0) -> void:
+func apply_status_effect(damage_type: GameEnums.DamageType, dot_damage: float, dot_duration: float, dot_tick_rate: float = 1.0, slow_intensity: float = 0.0) -> void:
 	if is_dying or (dot_damage <= 0 and slow_intensity <= 0) or dot_duration <= 0:
 		return
 
@@ -609,15 +609,15 @@ func _update_status_visual() -> void:
 	# Start with base tint and blend status effect colors
 	var final_color := color_tint
 	
-	if active_effects.has(Globals.DamageType.FIRE):
+	if active_effects.has(GameEnums.DamageType.FIRE):
 		final_color = final_color.lerp(Color(1.0, 0.5, 0.2, 1), 0.4)  # Orange tint
-	if active_effects.has(Globals.DamageType.ELECTRIC):
+	if active_effects.has(GameEnums.DamageType.ELECTRIC):
 		final_color = final_color.lerp(Color(0.5, 0.8, 1.0, 1), 0.4)  # Blue tint
-	if active_effects.has(Globals.DamageType.PLASMA):
+	if active_effects.has(GameEnums.DamageType.PLASMA):
 		final_color = final_color.lerp(Color(0.8, 0.4, 1.0, 1), 0.4)  # Purple tint
 	
 	sprite_node.modulate = final_color
 
 ## Check if enemy has a specific status effect
-func has_status_effect(damage_type: Globals.DamageType) -> bool:
+func has_status_effect(damage_type: GameEnums.DamageType) -> bool:
 	return active_effects.has(damage_type)

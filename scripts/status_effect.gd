@@ -4,7 +4,7 @@ class_name StatusEffect
 ## Represents an active status effect on an enemy.
 ## Tracks DoT damage, duration, and tick timing.
 
-var damage_type: Globals.DamageType
+var damage_type: GameEnums.DamageType
 var dot_damage: float
 var dot_duration: float
 var dot_tick_rate: float
@@ -12,7 +12,7 @@ var time_remaining: float
 var tick_timer: float
 var slow_intensity: float = 0.0  # 0.0 to 1.0 (0.3 = 30% slower = 0.7x speed)
 
-func _init(dtype: Globals.DamageType, damage: float, duration: float, tick_rate: float = 1.0, slow_amount: float = 0.0) -> void:
+func _init(dtype: GameEnums.DamageType, damage: float, duration: float, tick_rate: float = 1.0, slow_amount: float = 0.0) -> void:
 	damage_type = dtype
 	dot_damage = damage
 	dot_duration = duration
@@ -61,11 +61,11 @@ func is_expired() -> bool:
 ## Get damage type name for display
 func get_type_name() -> String:
 	match damage_type:
-		Globals.DamageType.FIRE:
+		GameEnums.DamageType.FIRE:
 			return "Burning"
-		Globals.DamageType.ELECTRIC:
+		GameEnums.DamageType.ELECTRIC:
 			return "Shocked"
-		Globals.DamageType.PLASMA:
+		GameEnums.DamageType.PLASMA:
 			return "Irradiated"
 		_:
 			return "Bleeding"

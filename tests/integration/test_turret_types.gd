@@ -168,8 +168,8 @@ func test_turret_has_attack_style():
 
 
 func test_turret_has_damage_type():
-	assert_true(Globals.turret_has_damage_type("fire", Globals.DamageType.FIRE))
-	assert_false(Globals.turret_has_damage_type("normal", Globals.DamageType.FIRE))
+	assert_true(Globals.turret_has_damage_type("fire", GameEnums.DamageType.FIRE))
+	assert_false(Globals.turret_has_damage_type("normal", GameEnums.DamageType.FIRE))
 
 
 func test_get_turret_color():

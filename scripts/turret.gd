@@ -376,7 +376,7 @@ func _fire_aoe_pulse() -> void:
 			if slow_intensity > 0 and slow_duration > 0 and enemy.has_method("apply_status_effect"):
 				var turret_def = TurretRegistry.get_type(turret_type)
 				var damage_types = turret_def.get("damage_types", [])
-				var dtype = damage_types[0] if not damage_types.is_empty() else Globals.DamageType.ELECTRIC
+				var dtype = damage_types[0] if not damage_types.is_empty() else GameEnums.DamageType.ELECTRIC
 				enemy.apply_status_effect(dtype, 0.0, slow_duration, 1.0, slow_intensity)
 
 	if hit_count > 0:

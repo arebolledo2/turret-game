@@ -12,7 +12,7 @@ var is_setup: bool = false
 var pierce: int = 0  # Number of enemies to pass through (0 = single target)
 var pierce_count: int = 0  # Enemies already hit
 var aoe_radius: float = 0.0  # If > 0, explodes on hit
-var damage_type: Globals.DamageType = Globals.DamageType.PHYSICAL
+var damage_type: GameEnums.DamageType = GameEnums.DamageType.PHYSICAL
 var dot_damage: float = 0.0
 var dot_duration: float = 0.0
 var dot_tick_rate: float = 1.0
@@ -40,7 +40,7 @@ func setup(dir: Vector2, spd: float, dmg: float, from_player: bool) -> void:
 	call_deferred("set_collision_mask", 32)  # enemy_hurtbox layer (layer 6 = 2^5 = 32)
 
 ## Extended setup for turret-typed projectiles
-func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: Globals.DamageType) -> void:
+func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: GameEnums.DamageType) -> void:
 	direction = dir.normalized()
 	speed = stats.get("projectile_speed", 500.0)
 	damage = stats.get("damage", 10.0)
@@ -140,11 +140,11 @@ func _spawn_explosion_effect() -> void:
 	# Color based on damage type (plasma = purple/magenta)
 	var explosion_color: Color
 	match damage_type:
-		Globals.DamageType.PLASMA:
+		GameEnums.DamageType.PLASMA:
 			explosion_color = Color("AA44DD")  # Purple/magenta for plasma
-		Globals.DamageType.FIRE:
+		GameEnums.DamageType.FIRE:
 			explosion_color = Color("FF6633")  # Orange for fire
-		Globals.DamageType.ELECTRIC:
+		GameEnums.DamageType.ELECTRIC:
 			explosion_color = Color("44DDDD")  # Cyan for electric
 		_:
 			explosion_color = Color("FFAA33")  # Default orange/yellow

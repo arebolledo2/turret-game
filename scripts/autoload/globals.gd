@@ -77,7 +77,7 @@ var debug_hitbox_flags: Dictionary = {
 # TURRET TYPE SYSTEM
 # =============================================================================
 enum AttackStyle { PROJECTILE, INSTANT, AOE, CHAIN }
-enum DamageType { PHYSICAL, FIRE, ELECTRIC, PLASMA }
+# DamageType moved to GameEnums
 enum EnemyBehavior { CHASE, RANGED, SWARM, TANK, EXPLOSIVE, WANDER, CHARGE }
 
 # =============================================================================
@@ -383,8 +383,8 @@ func get_turret_color(turret_type: String) -> Color:
 func turret_has_attack_style(turret_type: String, style: AttackStyle) -> bool:
 	return TurretRegistry.has_attack_style(turret_type, _convert_attack_style(style))
 
-func turret_has_damage_type(turret_type: String, dtype: DamageType) -> bool:
-	return TurretRegistry.has_damage_type(turret_type, _convert_damage_type(dtype))
+func turret_has_damage_type(turret_type: String, dtype: GameEnums.DamageType) -> bool:
+	return TurretRegistry.has_damage_type(turret_type, dtype)
 
 ## Convert Globals.AttackStyle to GameEnums.AttackStyle
 func _convert_attack_style(style: AttackStyle) -> GameEnums.AttackStyle:
@@ -394,15 +394,6 @@ func _convert_attack_style(style: AttackStyle) -> GameEnums.AttackStyle:
 		AttackStyle.AOE: return GameEnums.AttackStyle.AOE
 		AttackStyle.CHAIN: return GameEnums.AttackStyle.CHAIN
 		_: return GameEnums.AttackStyle.PROJECTILE
-
-## Convert Globals.DamageType to GameEnums.DamageType
-func _convert_damage_type(dtype: DamageType) -> GameEnums.DamageType:
-	match dtype:
-		DamageType.PHYSICAL: return GameEnums.DamageType.PHYSICAL
-		DamageType.FIRE: return GameEnums.DamageType.FIRE
-		DamageType.PLASMA: return GameEnums.DamageType.PLASMA
-		DamageType.ELECTRIC: return GameEnums.DamageType.ELECTRIC
-		_: return GameEnums.DamageType.PHYSICAL
 
 func get_total_turret_count() -> int:
 	var total := 0
