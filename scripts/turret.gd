@@ -58,18 +58,15 @@ func _ready() -> void:
 	play_spawn_animation()
 
 func setup_visuals() -> void:
-	var color = TurretRegistry.get_color(turret_type)
 	var turret_config = TurretRegistry.get_type(turret_type)
 	var icon = turret_config.get("icon", "🗼")
 
-	# Set base color
+	# Set base visuals
 	if base_sprite:
-		base_sprite.modulate = color
 		# Hide icon if using a custom sprite (like the basic turret now does)
 		if icon_label:
 			icon_label.visible = false
 	elif animated_sprite:
-		animated_sprite.modulate = color
 		# Start idle animation
 		if animated_sprite.sprite_frames and animated_sprite.sprite_frames.has_animation("idle"):
 			animated_sprite.play("idle")
@@ -231,39 +228,13 @@ func _update_timer() -> void:
 	else:
 		fire_timer.wait_time = 1.0
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	find_target()
-	
-	# Track target even if out of range (for rotation)
-	var track_target = find_tracking_target()
-	
-	if track_target and is_instance_valid(track_target):
-		# Rotate the whole turret toward target if it has rotation speed
-		if current_rotation_speed > 0:
-			var direction_to_target := global_position.direction_to(track_target.global_position)
-			var target_angle: float = direction_to_target.angle()
-			var current_angle: float = rotation
-			var angle_diff: float = angle_difference(current_angle, target_angle)
-			
-			var max_rotation: float = deg_to_rad(current_rotation_speed) * delta
-			var rotation_amount: float = clampf(angle_diff, -max_rotation, max_rotation)
-			rotation += rotation_amount
 	
 	# Only fire at targets in range
 	if target and is_instance_valid(target):
-		# Check if we should fire
-		var should_fire = false
-		if current_rotation_speed <= 0:
-			# Non-rotating turrets (like Shock) fire if target is in range
-			should_fire = true
-		else:
-			# Rotating turrets need to be aimed
-			var direction_to_target := global_position.direction_to(target.global_position)
-			var target_angle: float = direction_to_target.angle()
-			var aim_diff: float = absf(angle_difference(rotation, target_angle))
-			should_fire = aim_diff < deg_to_rad(20)
-			
-		if should_fire and can_fire:
+		# Now that turrets don't rotate, they fire if target is in range
+		if can_fire:
 			fire()
 
 # Find the closest enemy regardless of range (for tracking/rotation)
@@ -527,7 +498,7 @@ func play_spawn_animation() -> void:
 	var tween = create_tween()
 	tween.set_ease(Tween.EASE_OUT)
 	tween.set_trans(Tween.TRANS_BACK)
-	tween.tween_property(self, "scale", Vector2.ONE, 0.3)
+	tween.tween_property(self, "scale", Vector2(1.5, 1.5), 0.3)
 	
 	# Particle burst effect (if we have particles)
 	# spawn_particles()
@@ -551,16 +522,15 @@ func show_pickup_indicator() -> void:
 	# Brighten the turret sprites to indicate it's in pickup range
 	var sprite_node = base_sprite if base_sprite else animated_sprite
 	if sprite_node:
-		sprite_node.modulate = sprite_node.modulate.lightened(0.4)
+		sprite_node.modulate = Color.WHITE.lightened(0.4)
 	if weapon_sprite:
-		weapon_sprite.modulate = weapon_sprite.modulate.lightened(0.4)
+		weapon_sprite.modulate = Color.WHITE.lightened(0.4)
 
 func hide_pickup_indicator() -> void:
 	is_in_pickup_range = false
 	# Reset sprites to normal brightness
-	var color = TurretRegistry.get_color(turret_type)
 	var sprite_node = base_sprite if base_sprite else animated_sprite
 	if sprite_node:
-		sprite_node.modulate = color
+		sprite_node.modulate = Color.WHITE
 	if weapon_sprite:
 		weapon_sprite.modulate = Color.WHITE
