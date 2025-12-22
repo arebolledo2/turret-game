@@ -351,6 +351,9 @@ func test_aoe_turret_applies_slow_effect():
 	add_child_autofree(shock_turret)
 	shock_turret.global_position = Vector2.ZERO
 	
+	# Disable automatic firing to control when damage is applied
+	shock_turret.can_fire = false
+	
 	# Create enemy in range
 	var enemy = enemy_scene.instantiate()
 	add_child_autofree(enemy)
@@ -360,34 +363,18 @@ func test_aoe_turret_applies_slow_effect():
 	await get_tree().physics_frame
 	
 	var initial_speed = enemy.speed
+	var initial_health = enemy.current_health
 	
-	# Debug: Check turret stats
-	gut.p("DEBUG: shock_turret.stats = %s" % [shock_turret.stats])
-	gut.p("DEBUG: shock_turret.current_range = %s" % [shock_turret.current_range])
-	gut.p("DEBUG: slow_intensity from stats = %s" % [shock_turret.stats.get("slow_intensity", "NOT FOUND")])
-	gut.p("DEBUG: slow_duration from stats = %s" % [shock_turret.stats.get("slow_duration", "NOT FOUND")])
-	gut.p("DEBUG: enemy.global_position = %s" % [enemy.global_position])
-	gut.p("DEBUG: distance to enemy = %s" % [shock_turret.global_position.distance_to(enemy.global_position)])
-	gut.p("DEBUG: enemy is in group 'enemies' = %s" % [enemy.is_in_group("enemies")])
-	gut.p("DEBUG: enemies in group = %s" % [get_tree().get_nodes_in_group("enemies")])
-	
-	# Fire AOE pulse
+	# Fire AOE pulse - this should apply both damage and slow effect
 	shock_turret._fire_aoe_pulse()
 	
-	await get_tree().physics_frame
+	# Check that enemy is still alive (didn't die from one hit)
+	assert_false(enemy.is_dying, "Enemy should survive a single AOE pulse to test slow effect")
 	
-	# Debug: Check if effect was applied
-	gut.p("DEBUG: enemy.active_effects after pulse = %s" % [enemy.active_effects])
-	gut.p("DEBUG: enemy.speed after = %s, initial_speed = %s" % [enemy.speed, initial_speed])
+	# Check if slow effect was applied - enemy should have active status effects
+	var has_slow = not enemy.active_effects.is_empty()
 	
-	# Check if slow effect was applied - enemy should have reduced speed
-	# or have active status effects
-	var has_slow = false
-	if enemy.has_method("has_status_effect"):
-		# Status effects use dtype as key, not the slow type
-		has_slow = not enemy.active_effects.is_empty()
-	
-	assert_true(has_slow or enemy.speed < initial_speed, "Shock turret should apply slow effect to enemies")
+	assert_true(has_slow, "Shock turret should apply slow effect to enemies")
 
 
 func test_chain_lightning_chains_between_enemies():
