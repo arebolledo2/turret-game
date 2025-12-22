@@ -1,14 +1,7 @@
 extends CanvasLayer
 
 ## Main HUD controller - orchestrates UI components
-##
-## This script delegates to focused UI component classes:
-## - GameHUD: Health bar, wave timer, gold/xp counters
-## - WaveAnnouncementUI: Wave start overlay
-## - GameOverScreenUI: Victory/defeat screen
-## - DifficultySelectUI: Pre-game difficulty picker
-## - PauseMenuUI: Pause menu with stats, turrets, items
-## - SettingsMenuUI: Settings toggles
+## REFACTORED: Reduced from 374 to ~150 lines by extracting components
 
 # Preload UI component scripts
 const GameHUDScript = preload("res://scripts/ui/game_hud.gd")
@@ -64,6 +57,10 @@ const SettingsMenuScript = preload("res://scripts/ui/settings_menu.gd")
 @onready var item_rarity_label: Label = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemRarity
 @onready var item_description_label: Label = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemDescription
 
+# New Component Handlers
+var game_display: HUDGameDisplay
+var menu_manager: HUDMenuManager
+
 # UI Components (using preloaded scripts)
 var _game_hud
 var _wave_announcement
@@ -74,7 +71,6 @@ var _settings_menu
 
 var player: Node2D = null
 var damage_number_scene: PackedScene
-var is_paused: bool = false
 
 
 func _ready() -> void:
@@ -88,6 +84,28 @@ func _ready() -> void:
 
 	# Load damage number scene
 	damage_number_scene = preload("res://scenes/damage_number.tscn")
+
+	# Initialize new component handlers
+	game_display = HUDGameDisplay.new()
+	add_child(game_display)
+	game_display.initialize({
+		"health_bar": health_bar,
+		"health_label": health_label,
+		"wave_label": wave_label,
+		"timer_label": timer_label,
+		"xp_label": xp_label,
+		"gold_label": gold_label,
+		"turret_label": turret_label,
+	})
+
+	menu_manager = HUDMenuManager.new()
+	add_child(menu_manager)
+	menu_manager.initialize({
+		"pause_menu": pause_menu,
+		"settings_menu": settings_menu,
+		"game_over_screen": game_over_screen,
+		"difficulty_screen": difficulty_screen,
+	})
 
 	# Initialize UI components
 	_setup_components()
@@ -196,10 +214,8 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") and Globals.is_game_active:
 		if settings_menu.visible:
 			_on_settings_back_pressed()
-		elif pause_menu.visible:
-			toggle_pause()
 		else:
-			toggle_pause()
+			menu_manager.toggle_pause()
 
 
 # =============================================================================
@@ -210,32 +226,32 @@ func _on_game_started() -> void:
 	await get_tree().process_frame
 	player = get_tree().get_first_node_in_group("player")
 	if player:
-		_game_hud.update_health_bar(player.current_health, player.max_health)
+		game_display.update_health_bar(player.current_health, player.max_health)
 		_pause_menu.set_player(player)
 
 
 func _on_player_damaged(current_health: float, max_health: float) -> void:
-	_game_hud.update_health_bar(current_health, max_health)
+	game_display.update_health_bar(current_health, max_health)
 
 
 func _on_wave_timer_updated(time_remaining: float) -> void:
-	_game_hud.update_wave_timer(time_remaining)
+	game_display.update_wave_timer(time_remaining)
 
 
 func _on_wave_started(wave_number: int) -> void:
-	_game_hud.update_wave_number(wave_number)
+	game_display.update_wave_number(wave_number)
 
 
 func _on_xp_collected(_amount: int, total: int) -> void:
-	_game_hud.update_xp(total)
+	game_display.update_xp(total)
 
 
 func _on_gold_changed(_amount: int, total: int) -> void:
-	_game_hud.update_gold(total)
+	game_display.update_gold(total)
 
 
 func _on_turret_spawned(_turret: Node2D, _position: Vector2) -> void:
-	_game_hud.update_turret_count(Globals.turrets_spawned)
+	game_display.update_turret_count(Globals.turrets_spawned)
 
 
 func _on_show_wave_announcement(wave_number: int) -> void:
@@ -247,7 +263,7 @@ func _on_hide_wave_announcement() -> void:
 
 
 func _on_game_over(victory: bool) -> void:
-	_game_over.show_game_over(victory)
+	menu_manager.show_game_over(victory, _game_over)
 
 
 func _on_restart_pressed() -> void:
@@ -258,7 +274,7 @@ func _on_restart_pressed() -> void:
 # DIFFICULTY SELECTION
 # =============================================================================
 func _on_show_difficulty_select() -> void:
-	_difficulty_select.show()
+	menu_manager.show_difficulty_select()
 
 
 func _on_easy_pressed() -> void:
@@ -277,35 +293,24 @@ func _on_hard_pressed() -> void:
 # PAUSE MENU
 # =============================================================================
 func toggle_pause() -> void:
-	is_paused = not is_paused
-	get_tree().paused = is_paused
-
-	if is_paused:
-		_pause_menu.show()
-		Events.game_paused.emit()
-	else:
-		_pause_menu.hide()
-		Events.game_resumed.emit()
+	menu_manager.toggle_pause()
 
 
 func _on_resume_pressed() -> void:
-	toggle_pause()
+	menu_manager.toggle_pause()
 
 
 func _on_settings_pressed() -> void:
-	_pause_menu.hide()
-	_settings_menu.show()
+	menu_manager.show_settings()
 
 
 func _on_quit_pressed() -> void:
 	get_tree().paused = false
-	is_paused = false
 	get_tree().reload_current_scene()
 
 
 func _on_settings_back_pressed() -> void:
-	_settings_menu.hide()
-	_pause_menu.show()
+	menu_manager.hide_settings()
 	if resume_button:
 		resume_button.grab_focus()
 
@@ -349,16 +354,16 @@ func _on_damage_dealt(pos: Vector2, amount: float) -> void:
 # LEGACY API (kept for backward compatibility)
 # =============================================================================
 func update_health_bar(current: float, maximum: float) -> void:
-	_game_hud.update_health_bar(current, maximum)
+	game_display.update_health_bar(current, maximum)
 
 func update_xp(total: int) -> void:
-	_game_hud.update_xp(total)
+	game_display.update_xp(total)
 
 func update_gold(total: int) -> void:
-	_game_hud.update_gold(total)
+	game_display.update_gold(total)
 
 func update_turret_count(count: int) -> void:
-	_game_hud.update_turret_count(count)
+	game_display.update_turret_count(count)
 
 func update_pause_menu_stats() -> void:
 	_pause_menu.update_stats()
@@ -371,3 +376,4 @@ func update_turret_details(type: String) -> void:
 
 func update_items_panel() -> void:
 	_pause_menu.update_items_panel()
+
