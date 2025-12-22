@@ -11,16 +11,11 @@ extends CharacterBody2D
 @export var projectile_speed: float = 600.0
 
 var current_health: float
-var closest_enemy: Node2D = null
 var is_invincible: bool = false
 var is_dead: bool = false
-var can_fire: bool = true
-var fire_timer: Timer
 var invincibility_timer: Timer
 var animation_timer: Timer
 var current_frame: int = 0
-var is_moving: bool = false
-var facing_direction: int = 0  # 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE
 
 # Melee attack system
 var can_melee: bool = true
@@ -41,17 +36,17 @@ var melee_damage_timer: Timer
 @export var melee_windup_time: float = 0.15  # Reduced for snappier feel
 @export var melee_animation_duration: float = 0.15  # Reduced for snappier feel
 
-# Turret pickup system
-var carried_turret: Node2D = null
-var nearby_turret: Node2D = null
-var pickup_action_just_pressed: bool = false
-
 # Projectile scene (will be set up)
 var projectile_scene: PackedScene
 
 @onready var weapon_pivot: Node2D = $WeaponPivot
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var anim_timer: Timer = $AnimationTimer
+
+# Components
+@onready var turret_handler: PlayerTurretHandler = $Components/PlayerTurretHandler
+@onready var movement: PlayerMovement = $Components/PlayerMovement
+@onready var combat: PlayerCombat = $Components/PlayerCombat
 
 func _ready() -> void:
 	# Initialize from Globals if available
@@ -67,17 +62,7 @@ func _ready() -> void:
 
 	current_health = max_health
 	add_to_group("player")
-	
-	# Load projectile scene
-	projectile_scene = preload("res://scenes/projectile.tscn")
-	
-	# Setup fire rate timer
-	fire_timer = Timer.new()
-	fire_timer.one_shot = true
-	fire_timer.wait_time = 1.0 / weapon_fire_rate
-	fire_timer.timeout.connect(_on_fire_timer_timeout)
-	add_child(fire_timer)
-	
+
 	# Setup invincibility timer
 	invincibility_timer = Timer.new()
 	invincibility_timer.one_shot = true
@@ -123,6 +108,11 @@ func _ready() -> void:
 	# Connect to debug toggle event
 	Events.hitbox_debug_toggled.connect(_on_debug_toggled)
 
+	# Initialize components
+	turret_handler.initialize(self)
+	movement.initialize(self, sprite)
+	combat.initialize(self, weapon_pivot)
+
 func _on_debug_toggled(type: int, _enabled: bool) -> void:
 	if type == GameEnums.HitboxType.PHYSICS:
 		queue_redraw()
@@ -152,27 +142,24 @@ func _physics_process(delta: float) -> void:
 	if Globals == null or not Globals.is_game_active:
 		return
 	
-	handle_movement(delta)
+	velocity = movement.process(delta)
 	clamp_to_arena()
 	move_and_slide()
 
 	# Turret pickup/placement system
-	handle_turret_interactions()
+	turret_handler.process(delta)
 	
 	# Turret range toggle (Tab / Y button)
 	if Input.is_action_just_pressed("toggle_range"):
 		Globals.show_turret_ranges = not Globals.show_turret_ranges
 		Events.turret_range_toggled.emit(Globals.show_turret_ranges)
 
-	# Melee auto-attack (only when not carrying turret)
-	if can_melee and carried_turret == null:
-		attempt_melee_attack()
+	# Ranged combat
+	combat.process(delta)
 
-	# Auto-aim and fire at closest enemy (only if enabled)
-	if Globals.player_auto_attack_enabled:
-		find_closest_enemy()
-		if closest_enemy and can_fire:
-			fire_at_enemy()
+	# Melee auto-attack (only when not carrying turret)
+	if can_melee and not turret_handler.is_carrying_turret():
+		attempt_melee_attack()
 	
 	# Handle invincibility visual
 	if is_invincible:
@@ -180,180 +167,66 @@ func _physics_process(delta: float) -> void:
 	else:
 		sprite.modulate.a = 1.0
 
-func handle_movement(_delta: float) -> void:
-	var input_vector := Vector2.ZERO
-	
-	# Keyboard input
-	input_vector.x = Input.get_action_strength("move_right") - Input.get_action_strength("move_left")
-	input_vector.y = Input.get_action_strength("move_down") - Input.get_action_strength("move_up")
-	
-	# Gamepad input (left stick)
-	var gamepad_input := Input.get_vector("gamepad_left", "gamepad_right", "gamepad_up", "gamepad_down")
-	if gamepad_input.length() > 0.1:
-		input_vector = gamepad_input
-	
-	# Normalize and apply speed (instant response, no acceleration)
-	input_vector = input_vector.normalized()
+# Temporary facades for tests (will be removed later)
+var facing_direction: int:
+	get:
+		return movement.facing_direction if movement else 0
+	set(value):
+		if movement:
+			movement.facing_direction = value
 
-	# Apply speed penalty if carrying turret
-	var effective_speed := speed
-	if carried_turret and is_instance_valid(carried_turret):
-		effective_speed *= Globals.TURRET_CARRY_SPEED_PENALTY
-
-	velocity = input_vector * effective_speed
-	
-	# Handle 8-direction sprite based on movement
-	if input_vector.length() > 0.1:
-		is_moving = true
-		facing_direction = get_direction_from_vector(input_vector)
-		sprite.frame = facing_direction
-		sprite.flip_h = false  # No flip needed with 8-dir sprites
-	else:
-		is_moving = false
-		# Keep facing last direction when stopped
-		sprite.frame = facing_direction
+var is_moving: bool:
+	get:
+		return movement.is_moving if movement else false
 
 func get_direction_from_vector(dir: Vector2) -> int:
-	# Convert movement vector to 8-direction index
-	# Frame order: S(0), SW(1), W(2), NW(3), N(4), NE(5), E(6), SE(7)
-	var angle := dir.angle()
-	# Normalize angle to 0-2PI range
-	if angle < 0:
-		angle += TAU
-	# Divide circle into 8 sectors (each 45 degrees = PI/4)
-	# Offset by 22.5 degrees so each direction is centered
-	var sector := int(round(angle / (TAU / 8))) % 8
-	# Map: 0=E, 1=SE, 2=S, 3=SW, 4=W, 5=NW, 6=N, 7=NE
-	# We need: 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE
-	var direction_map := [6, 7, 0, 1, 2, 3, 4, 5]  # Maps angle sector to frame index
-	return direction_map[sector]
+	return movement.get_direction_from_vector(dir)
 
-func handle_turret_interactions() -> void:
-	# Detect input (check for just_pressed to toggle)
-	if Input.is_action_just_pressed("pickup_turret"):
-		pickup_action_just_pressed = true
+var can_fire: bool:
+	get:
+		return combat.can_fire if combat else true
 
-	# If carrying a turret, update its position
-	if carried_turret and is_instance_valid(carried_turret):
-		update_carried_turret_position()
+var closest_enemy: Node2D:
+	get:
+		return combat.closest_enemy if combat else null
 
-		# Check for placement input
-		if pickup_action_just_pressed:
-			place_turret()
-			pickup_action_just_pressed = false
-	else:
-		# Not carrying - look for nearby turrets
-		find_nearby_turret()
-		update_nearby_turret_indicator()
+var carried_turret: Node2D:
+	get:
+		return turret_handler.carried_turret if turret_handler else null
+	set(value):
+		if turret_handler:
+			turret_handler.carried_turret = value
 
-		# Check for pickup input
-		if pickup_action_just_pressed and nearby_turret and is_instance_valid(nearby_turret):
-			pickup_turret(nearby_turret)
-			pickup_action_just_pressed = false
-
-func find_nearby_turret() -> void:
-	var turrets = get_tree().get_nodes_in_group("turrets")
-	var closest_distance: float = Globals.TURRET_PICKUP_RANGE
-	var previous_nearby := nearby_turret
-	nearby_turret = null
-
-	for turret in turrets:
-		if not is_instance_valid(turret):
-			continue
-		var distance := global_position.distance_to(turret.global_position)
-		if distance < closest_distance:
-			closest_distance = distance
-			nearby_turret = turret
-
-	# Manage indicator state changes
-	if previous_nearby != nearby_turret:
-		if previous_nearby and is_instance_valid(previous_nearby):
-			if previous_nearby.has_method("hide_pickup_indicator"):
-				previous_nearby.hide_pickup_indicator()
-		if nearby_turret and is_instance_valid(nearby_turret):
-			if nearby_turret.has_method("show_pickup_indicator"):
-				nearby_turret.show_pickup_indicator()
-
-func update_nearby_turret_indicator() -> void:
-	pass  # Handled by find_nearby_turret()
+var nearby_turret: Node2D:
+	get:
+		return turret_handler.nearby_turret if turret_handler else null
+	set(value):
+		if turret_handler:
+			turret_handler.nearby_turret = value
 
 func pickup_turret(turret: Node2D) -> void:
-	# Quick swap: drop current turret first
-	if carried_turret and is_instance_valid(carried_turret):
-		place_turret()
+	turret_handler.pickup_turret(turret)
 
-	carried_turret = turret
-
-	if turret.has_method("hide_pickup_indicator"):
-		turret.hide_pickup_indicator()
-
-	Events.turret_picked_up.emit(turret)
+func find_nearby_turret() -> void:
+	turret_handler.find_nearby_turret()
 
 func place_turret() -> void:
-	if not carried_turret or not is_instance_valid(carried_turret):
-		carried_turret = null
-		return
-
-	var placement_pos := carried_turret.global_position
-	Events.turret_placed.emit(carried_turret, placement_pos)
-
-	carried_turret = null
+	turret_handler.place_turret()
 
 func update_carried_turret_position() -> void:
-	if not carried_turret or not is_instance_valid(carried_turret):
-		carried_turret = null
-		return
-
-	carried_turret.global_position = global_position + Globals.TURRET_CARRY_OFFSET
+	turret_handler.update_carried_turret_position()
 
 func drop_carried_turret() -> void:
-	if carried_turret and is_instance_valid(carried_turret):
-		Events.turret_dropped.emit(carried_turret, carried_turret.global_position)
-		carried_turret = null
+	turret_handler.force_drop()
 
 func clamp_to_arena() -> void:
 	# Keep player within arena bounds
 	var half_width := Globals.ARENA_WIDTH / 2.0
 	var half_height := Globals.ARENA_HEIGHT / 2.0
 	var margin := 20.0  # Player collision radius
-	
+
 	global_position.x = clamp(global_position.x, -half_width + margin, half_width - margin)
 	global_position.y = clamp(global_position.y, -half_height + margin, half_height - margin)
-
-func find_closest_enemy() -> void:
-	var enemies = get_tree().get_nodes_in_group("enemies")
-	if enemies.is_empty():
-		closest_enemy = null
-		return
-	
-	var closest_distance := weapon_range
-	closest_enemy = null
-	
-	for enemy in enemies:
-		var distance := global_position.distance_to(enemy.global_position)
-		if distance < closest_distance:
-			closest_distance = distance
-			closest_enemy = enemy
-
-func fire_at_enemy() -> void:
-	if closest_enemy == null or projectile_scene == null:
-		return
-	
-	can_fire = false
-	fire_timer.start()
-	
-	# Create projectile
-	var projectile = projectile_scene.instantiate()
-	get_tree().current_scene.add_child(projectile)
-	projectile.global_position = global_position
-	var dir = global_position.direction_to(closest_enemy.global_position)
-	projectile.setup(dir, projectile_speed, weapon_damage, true)
-	
-	# Rotate weapon pivot to face enemy
-	weapon_pivot.look_at(closest_enemy.global_position)
-
-func _on_fire_timer_timeout() -> void:
-	can_fire = true
 
 func take_damage(amount: float) -> void:
 	if is_invincible or is_dead:
