@@ -1,9 +1,9 @@
 extends CharacterBody2D
 
-# Preload behavior classes
-const ChaseBehavior = preload("res://scripts/components/behaviors/chase_behavior.gd")
-const WanderBehavior = preload("res://scripts/components/behaviors/wander_behavior.gd")
-const ChargeBehavior = preload("res://scripts/components/behaviors/charge_behavior.gd")
+# Behavior classes are globally available via class_name declarations
+# - ChaseBehavior: res://scripts/components/behaviors/chase_behavior.gd
+# - WanderBehavior: res://scripts/components/behaviors/wander_behavior.gd
+# - ChargeBehavior: res://scripts/components/behaviors/charge_behavior.gd
 
 # =============================================================================
 # ENEMY TYPE CONFIGURATION
