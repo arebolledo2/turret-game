@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://c8yqvh3xwn5n5"]
+[gd_scene load_steps=11 format=3 uid="uid://c8yqvh3xwn5n5"]
 
 [ext_resource type="Script" path="res://scripts/player.gd" id="1_1j2k3"]
 [ext_resource type="Texture2D" path="res://assets/sprites/player/player_base.png" id="2_sprite"]
@@ -7,6 +7,7 @@
 [ext_resource type="Script" path="res://scripts/components/player_turret_handler.gd" id="5_turret"]
 [ext_resource type="Script" path="res://scripts/components/player_movement.gd" id="6_movement"]
 [ext_resource type="Script" path="res://scripts/components/player_combat.gd" id="7_combat"]
+[ext_resource type="Script" path="res://scripts/components/player_melee_combat.gd" id="8_melee_combat"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_Physics"]
 radius = 16.0
@@ -53,6 +54,9 @@ script = ExtResource("6_movement")
 
 [node name="PlayerCombat" type="Node" parent="Components"]
 script = ExtResource("7_combat")
+
+[node name="PlayerMeleeCombat" type="Node" parent="Components"]
+script = ExtResource("8_melee_combat")
 
 [node name="MeleeVisuals" type="Node2D" parent="."]
 z_index = 10
