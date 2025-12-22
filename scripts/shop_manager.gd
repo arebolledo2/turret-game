@@ -68,7 +68,6 @@ func generate_item_offer(generated_item_ids: Array[String], generated_turret_ids
 		generate_turret_offer(generated_turret_ids)
 		return
 	
-	var item_data = ItemRegistry.get_item(random_item_id)
 	var base_price = ItemRegistry.get_item_price(random_item_id)
 	var scaled_price = calculate_item_price(base_price, Globals.current_wave, random_item_id)
 
@@ -156,9 +155,9 @@ func apply_item(item_id: String) -> void:
 		push_error("Invalid item ID: " + item_id)
 		return
 
-	var item_data = ItemRegistry.get_item(item_id)
+	var item_data = ItemRegistry.get_item_dict(item_id)
 	Globals.collected_items.append(item_id)
-	
+
 	# Track item counts for max_stacks
 	if not Globals.item_counts.has(item_id):
 		Globals.item_counts[item_id] = 0

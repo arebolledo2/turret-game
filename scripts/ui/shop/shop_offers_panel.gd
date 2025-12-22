@@ -127,7 +127,7 @@ func _create_turret_offer_ui(offer: Dictionary, container: VBoxContainer) -> voi
 
 func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	var item_id = offer["item_id"]
-	var item_data = ItemRegistry.get_item(item_id)
+	var item_data = ItemRegistry.get_item_dict(item_id)
 
 	# Icon
 	var icon_label = Label.new()

@@ -12,8 +12,8 @@ const MAIN_FONT = preload("res://addons/gut/fonts/AnonymousPro-Regular.ttf")
 static func create_item_button(item_id: String, count: int) -> Button:
 	if not ItemRegistry.has_item(item_id):
 		return null
-	
-	var item_data: Dictionary = ItemRegistry.get_item(item_id)
+
+	var item_data: Dictionary = ItemRegistry.get_item_dict(item_id)
 	
 	var btn := Button.new()
 	btn.custom_minimum_size = ITEM_BUTTON_SIZE
@@ -66,8 +66,8 @@ static func create_item_button(item_id: String, count: int) -> Button:
 static func style_item_button(btn: Button, item_id: String) -> void:
 	if not ItemRegistry.has_item(item_id):
 		return
-	
-	var item_data: Dictionary = ItemRegistry.get_item(item_id)
+
+	var item_data: Dictionary = ItemRegistry.get_item_dict(item_id)
 	var rarity_color := ItemRegistry.get_rarity_color(item_data.get("rarity", 0))
 	
 	var style := StyleBoxFlat.new()
@@ -91,8 +91,8 @@ static func style_item_button(btn: Button, item_id: String) -> void:
 static func update_item_details(nodes: Dictionary, item_id: String) -> void:
 	if not ItemRegistry.has_item(item_id):
 		return
-	
-	var item_data: Dictionary = ItemRegistry.get_item(item_id)
+
+	var item_data: Dictionary = ItemRegistry.get_item_dict(item_id)
 	var count: int = Globals.item_counts.get(item_id, 1)
 	
 	if nodes.has("item_icon_label") and nodes["item_icon_label"]:
