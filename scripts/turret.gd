@@ -491,7 +491,7 @@ func _on_fire_timer_timeout() -> void:
 
 func flash_muzzle() -> void:
 	# Flash the sprite when firing
-	var sprite_node = animated_sprite if animated_sprite else base_sprite
+	var sprite_node: CanvasItem = animated_sprite if animated_sprite else base_sprite
 	if sprite_node:
 		var original_color = sprite_node.modulate
 		sprite_node.modulate = Color.WHITE
@@ -529,7 +529,7 @@ func hide_range() -> void:
 func show_pickup_indicator() -> void:
 	is_in_pickup_range = true
 	# Brighten the turret sprites to indicate it's in pickup range
-	var sprite_node = base_sprite if base_sprite else animated_sprite
+	var sprite_node: CanvasItem = base_sprite if base_sprite else animated_sprite
 	if sprite_node:
 		sprite_node.modulate = Color.WHITE.lightened(0.4)
 	if weapon_sprite:
@@ -538,7 +538,7 @@ func show_pickup_indicator() -> void:
 func hide_pickup_indicator() -> void:
 	is_in_pickup_range = false
 	# Reset sprites to normal brightness
-	var sprite_node = base_sprite if base_sprite else animated_sprite
+	var sprite_node: CanvasItem = base_sprite if base_sprite else animated_sprite
 	if sprite_node:
 		sprite_node.modulate = Color.WHITE
 	if weapon_sprite:

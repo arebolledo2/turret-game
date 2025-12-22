@@ -332,7 +332,7 @@ func test_aoe_turret_hits_multiple_enemies():
 	
 	var initial_health1 = enemy1.current_health
 	var initial_health2 = enemy2.current_health
-	var initial_health3 = enemy3.current_health
+	var _initial_health3 = enemy3.current_health
 	
 	# Fire AOE pulse
 	shock_turret._fire_aoe_pulse()
@@ -342,7 +342,7 @@ func test_aoe_turret_hits_multiple_enemies():
 	# All enemies in range should be damaged
 	assert_lt(enemy1.current_health, initial_health1, "Enemy 1 should be damaged by AOE")
 	assert_lt(enemy2.current_health, initial_health2, "Enemy 2 should be damaged by AOE")
-	assert_lt(enemy3.current_health, initial_health3, "Enemy 3 should be damaged by AOE")
+	assert_lt(enemy3.current_health, _initial_health3, "Enemy 3 should be damaged by AOE")
 
 
 func test_aoe_turret_applies_slow_effect():
@@ -362,8 +362,8 @@ func test_aoe_turret_applies_slow_effect():
 	
 	await get_tree().physics_frame
 	
-	var initial_speed = enemy.speed
-	var initial_health = enemy.current_health
+	var _initial_speed = enemy.speed
+	var _initial_health = enemy.current_health
 	
 	# Fire AOE pulse - this should apply both damage and slow effect
 	shock_turret._fire_aoe_pulse()

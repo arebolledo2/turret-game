@@ -1,7 +1,5 @@
 extends CharacterBody2D
 
-const StatusEffect = preload("res://scripts/status_effect.gd")
-
 # =============================================================================
 # ENEMY TYPE CONFIGURATION
 # =============================================================================
@@ -524,7 +522,7 @@ func _process_status_effects(delta: float) -> void:
 	var total_dot_damage: float = 0.0
 	
 	for dtype in active_effects:
-		var effect: StatusEffect = active_effects[dtype]
+		var effect: StatusEffect = active_effects[dtype] as StatusEffect
 		var tick_damage: float = effect.process(delta)
 		if tick_damage > 0:
 			total_dot_damage += tick_damage
@@ -548,7 +546,7 @@ func apply_status_effect(damage_type: GameEnums.DamageType, dot_damage: float, d
 	var new_effect := StatusEffect.new(damage_type, dot_damage, dot_duration, dot_tick_rate, slow_intensity)
 
 	if active_effects.has(damage_type):
-		var existing: StatusEffect = active_effects[damage_type]
+		var existing: StatusEffect = active_effects[damage_type] as StatusEffect
 		# Refresh with potentially stronger damage/slow
 		existing.refresh(dot_damage, dot_duration, slow_intensity)
 	else:
