@@ -24,30 +24,21 @@ var explosion_damage: float = 0.0
 
 # Knockback and slow mechanics
 var mass: float = 1.0  # Resistance to knockback
-var knockback_velocity: Vector2 = Vector2.ZERO  # Current knockback impulse
-
-# Directional sprite textures (loaded dynamically from type)
-var sprite_south: Texture2D
-var sprite_north: Texture2D
-var sprite_east: Texture2D
-var sprite_west: Texture2D
-var sprite_south_east: Texture2D
-var sprite_south_west: Texture2D
-var sprite_north_east: Texture2D
-var sprite_north_west: Texture2D
 
 var current_health: float
 var player: Node2D = null
 
-# Status effects - keyed by DamageType, only strongest of each type is active
-var active_effects: Dictionary = {}  # DamageType -> StatusEffect
 var is_dying: bool = false
 var is_initialized: bool = false
 
-# Behavior system - using strategy pattern
+# Behavior system - using strategy pattern (managed by EnemyMovement)
 var current_behavior_type: GameEnums.EnemyBehavior = GameEnums.EnemyBehavior.CHASE
 var behavior_params: Dictionary = {}
-var behavior_instance: EnemyBehavior = null  # Current active behavior strategy
+
+# Components
+@onready var movement: EnemyMovement = $Components/EnemyMovement
+@onready var visuals: EnemyVisuals = $Components/EnemyVisuals
+@onready var status_effects: EnemyStatusEffects = $Components/EnemyStatusEffects
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -60,9 +51,10 @@ func _ready() -> void:
 	if not is_initialized:
 		_apply_type_config(enemy_type)
 		current_health = max_health
+		is_initialized = true
 
-	# Initialize behavior instance
-	_create_behavior_instance()
+	# Initialize components (must be done in _ready when @onready vars are available)
+	_initialize_components()
 
 func _on_debug_toggled(type: int, _enabled: bool) -> void:
 	if type == GameEnums.HitboxType.PHYSICS:
@@ -134,42 +126,37 @@ func _apply_type_config(type_id: String) -> void:
 		else:
 			current_behavior_type = behaviors[0]
 
-	# Load sprites from sprite folder (only for non-animated enemies)
-	if type_def.has("sprite_folder") and has_node("Sprite2D"):
-		var sprite_folder: String = type_def.get("sprite_folder", "res://assets/sprites/enemy_tiny")
-		_load_sprites(sprite_folder)
-
-	# Apply visual configuration
-	_apply_visuals()
+	# Note: Sprite loading and visual configuration now handled by EnemyVisuals component
 
 	# Configure hitboxes if available
 	_configure_hitboxes(type_def)
 
-func _load_sprites(folder_path: String) -> void:
-	"""Load directional sprites from the specified folder."""
-	sprite_south = load(folder_path + "/enemy_south.png")
-	sprite_north = load(folder_path + "/enemy_north.png")
-	sprite_east = load(folder_path + "/enemy_east.png")
-	sprite_west = load(folder_path + "/enemy_west.png")
-	sprite_south_east = load(folder_path + "/enemy_south_east.png")
-	sprite_south_west = load(folder_path + "/enemy_south_west.png")
-	sprite_north_east = load(folder_path + "/enemy_north_east.png")
-	sprite_north_west = load(folder_path + "/enemy_north_west.png")
+func _initialize_components() -> void:
+	"""Initialize all components with their dependencies."""
+	# Safety check - ensure components are loaded
+	if not movement or not visuals or not status_effects:
+		push_error("Enemy components not found! Ensure Components node structure exists in scene.")
+		return
 
-func _apply_visuals() -> void:
-	"""Apply scale and color tint to the sprite."""
-	if has_node("Sprite2D"):
-		var sprite = $Sprite2D
-		sprite.scale *= base_scale
-		sprite.modulate = color_tint
-		# Set initial texture
-		if sprite_south:
-			sprite.texture = sprite_south
-	elif has_node("AnimatedSprite2D"):
-		var anim_sprite = $AnimatedSprite2D
-		anim_sprite.scale *= base_scale
-		anim_sprite.modulate = color_tint
-		# AnimatedSprite2D uses sprite_frames, not individual textures
+	# Initialize movement component
+	movement.initialize(self, speed, mass, current_behavior_type, behavior_params)
+
+	# Initialize visuals component (with sprite folder if applicable)
+	var sprite_folder := ""
+	var type_def := EnemyRegistry.get_type(enemy_type)
+	if type_def.has("sprite_folder"):
+		sprite_folder = type_def.get("sprite_folder", "")
+	visuals.initialize(self, base_scale, color_tint, sprite_folder)
+
+	# Initialize status effects component
+	status_effects.initialize(self)
+
+	# Connect status effect visual updates
+	status_effects.status_visual_changed.connect(_on_status_visual_changed)
+
+func _on_status_visual_changed(effects: Dictionary) -> void:
+	"""Handle status effect visual updates from component."""
+	visuals.update_status_visual(effects)
 
 func _configure_hitboxes(type_def: Dictionary) -> void:
 	"""Configure unified hurtbox from type definition.
@@ -205,127 +192,37 @@ func _physics_process(delta: float) -> void:
 	if is_dying:
 		return
 
-	# Process status effects
-	_process_status_effects(delta)
+	# Process status effects and get DoT damage
+	var dot_damage: float = status_effects.process(delta)
+	if dot_damage > 0:
+		take_dot_damage(dot_damage)
 
 	if player == null or not is_instance_valid(player):
 		player = get_tree().get_first_node_in_group("player")
 		if player == null:
 			return
 
-	# Execute behavior to get movement direction
-	var movement_direction: Vector2 = _execute_current_behavior(delta)
-
-	# Apply knockback first (overrides AI movement temporarily)
-	if knockback_velocity.length() > Globals.KNOCKBACK_MIN_VELOCITY:
-		velocity = knockback_velocity
-		knockback_velocity *= (1.0 - Globals.KNOCKBACK_DECAY_RATE * delta)
-	else:
-		knockback_velocity = Vector2.ZERO
-		# Normal AI movement with behavior-based direction
-		var effective_speed: float = speed * get_movement_speed_multiplier()
-
-		# Apply charge speed boost if charging
-		if current_behavior_type == GameEnums.EnemyBehavior.CHARGE and behavior_instance is ChargeBehavior:
-			var charge_behavior := behavior_instance as ChargeBehavior
-			effective_speed *= charge_behavior.get_speed_multiplier()
-
-		velocity = movement_direction.normalized() * effective_speed
+	# Get movement velocity from component (includes knockback, AI, and speed modifiers)
+	var speed_multiplier: float = status_effects.get_movement_speed_multiplier()
+	velocity = movement.process(delta, speed_multiplier)
 
 	move_and_slide()
 
 	# Update sprite based on velocity (works for all behaviors)
 	if velocity.length() > 0:
-		_update_direction_sprite(velocity.normalized())
+		visuals.update_direction_sprite(velocity.normalized())
 
 	# Contact damage now handled by EnemyHurtbox component
 
-func _update_direction_sprite(direction: Vector2) -> void:
-	# AnimatedSprite2D enemies use left/right animations only
-	if has_node("AnimatedSprite2D"):
-		var anim_sprite = $AnimatedSprite2D
-		if direction.x < 0:
-			anim_sprite.play("move_left")
-		else:
-			anim_sprite.play("move_right")
-		return
-
-	# Sprite2D enemies use 8-directional sprites
-	if not has_node("Sprite2D"):
-		return
-
-	# Get angle and convert to 8-direction
-	var angle := direction.angle()
-	var sprite := $Sprite2D
-
-	# Normalize angle to 0-2PI range
-	if angle < 0:
-		angle += TAU
-
-	# Divide into 8 segments (each 45 degrees = PI/4)
-	# Offset by 22.5 degrees (PI/8) to center segments
-	var segment := int((angle + PI / 8) / (PI / 4)) % 8
-
-	# Map segment to sprite (0 = east, going counter-clockwise)
-	match segment:
-		0: sprite.texture = sprite_east
-		1: sprite.texture = sprite_north_east
-		2: sprite.texture = sprite_north
-		3: sprite.texture = sprite_north_west
-		4: sprite.texture = sprite_west
-		5: sprite.texture = sprite_south_west
-		6: sprite.texture = sprite_south
-		7: sprite.texture = sprite_south_east
-
-# =============================================================================
-# BEHAVIOR SYSTEM - Strategy Pattern
-# =============================================================================
-
-## Create behavior instance based on current behavior type
-func _create_behavior_instance() -> void:
-	# Clean up old behavior
-	if behavior_instance:
-		behavior_instance.exit()
-		behavior_instance = null
-
-	# Create new behavior instance
-	match current_behavior_type:
-		GameEnums.EnemyBehavior.CHASE:
-			behavior_instance = ChaseBehavior.new(self, behavior_params)
-		GameEnums.EnemyBehavior.WANDER:
-			behavior_instance = WanderBehavior.new(self, behavior_params)
-		GameEnums.EnemyBehavior.CHARGE:
-			behavior_instance = ChargeBehavior.new(self, behavior_params)
-		_:
-			behavior_instance = ChaseBehavior.new(self, behavior_params)
-
-	# Call enter() to initialize behavior state
-	if behavior_instance:
-		behavior_instance.enter()
-
-## Execute the current behavior and return movement direction
-func _execute_current_behavior(delta: float) -> Vector2:
-	if not behavior_instance:
-		_create_behavior_instance()
-
-	if behavior_instance:
-		return behavior_instance.execute(delta)
-
-	return Vector2.ZERO
-
 func take_damage(amount: float) -> void:
 	current_health -= amount
-	
+
 	# Emit damage event for damage numbers
 	Events.damage_dealt.emit(global_position, amount)
-	
-	# Visual feedback - flash white then return to base tint
-	var sprite_node = get_node_or_null("Sprite2D") if has_node("Sprite2D") else get_node_or_null("AnimatedSprite2D")
-	if sprite_node:
-		sprite_node.modulate = Color.WHITE
-		var tween = create_tween()
-		tween.tween_property(sprite_node, "modulate", color_tint, 0.1)
-	
+
+	# Visual feedback - flash white
+	visuals.apply_damage_flash()
+
 	if current_health <= 0:
 		die()
 
@@ -333,34 +230,24 @@ func die() -> void:
 	if is_dying:
 		return
 	is_dying = true
-	
+
 	# Clear status effects
-	active_effects.clear()
+	status_effects.clear_all_effects()
 
 	# Clean up behavior instance (handles charge alert cleanup if needed)
-	if behavior_instance:
-		behavior_instance.exit()
-		behavior_instance = null
+	movement.cleanup()
 
 	# Handle explosive behavior
 	if Globals.enemy_has_behavior(enemy_type, GameEnums.EnemyBehavior.EXPLOSIVE):
 		_explode()
-	
+
 	# Emit signals for XP drop and kill tracking
 	Events.enemy_killed.emit(self, global_position)
 	Events.xp_dropped.emit(global_position, xp_value)
 	Globals.total_kills += 1
-	
+
 	# Death effect (scale down and fade)
-	var sprite_node = get_node_or_null("Sprite2D") if has_node("Sprite2D") else get_node_or_null("AnimatedSprite2D")
-	if sprite_node:
-		var tween = create_tween()
-		tween.set_parallel(true)
-		tween.tween_property(sprite_node, "scale", Vector2.ZERO, 0.15)
-		tween.tween_property(sprite_node, "modulate:a", 0.0, 0.15)
-		tween.chain().tween_callback(queue_free)
-	else:
-		queue_free()
+	visuals.play_death_animation(queue_free)
 
 func _explode() -> void:
 	"""Handle explosion on death for EXPLOSIVE behavior enemies."""
@@ -385,74 +272,23 @@ func _explode() -> void:
 			enemy.take_damage(explosion_damage * 0.5)  # Half damage to other enemies
 
 # =============================================================================
-# STATUS EFFECT SYSTEM
+# DELEGATED METHODS - Facades for components (test compatibility)
 # =============================================================================
 
-func _process_status_effects(delta: float) -> void:
-	var expired_types: Array = []
-	var total_dot_damage: float = 0.0
-	
-	for dtype in active_effects:
-		var effect: StatusEffect = active_effects[dtype] as StatusEffect
-		var tick_damage: float = effect.process(delta)
-		if tick_damage > 0:
-			total_dot_damage += tick_damage
-		if effect.is_expired():
-			expired_types.append(dtype)
-	
-	# Apply accumulated DoT damage
-	if total_dot_damage > 0:
-		take_dot_damage(total_dot_damage)
-	
-	# Remove expired effects
-	for dtype in expired_types:
-		active_effects.erase(dtype)
-		_update_status_visual()
-
-## Apply a status effect (DoT and/or slow). Uses strongest-per-damage-type logic.
 func apply_status_effect(damage_type: GameEnums.DamageType, dot_damage: float, dot_duration: float, dot_tick_rate: float = 1.0, slow_intensity: float = 0.0) -> void:
-	if is_dying or (dot_damage <= 0 and slow_intensity <= 0) or dot_duration <= 0:
+	"""Apply a status effect via component."""
+	if is_dying:
 		return
+	status_effects.apply_status_effect(damage_type, dot_damage, dot_duration, dot_tick_rate, slow_intensity)
 
-	var new_effect := StatusEffect.new(damage_type, dot_damage, dot_duration, dot_tick_rate, slow_intensity)
-
-	if active_effects.has(damage_type):
-		var existing: StatusEffect = active_effects[damage_type] as StatusEffect
-		# Refresh with potentially stronger damage/slow
-		existing.refresh(dot_damage, dot_duration, slow_intensity)
-	else:
-		active_effects[damage_type] = new_effect
-		Events.status_effect_applied.emit(self, damage_type)
-
-	_update_status_visual()
-
-## Get movement speed multiplier from status effects (slow)
-func get_movement_speed_multiplier() -> float:
-	var multiplier: float = 1.0
-
-	# Apply strongest slow effect
-	var strongest_slow: float = 0.0
-	for effect in active_effects.values():
-		if effect.slow_intensity > strongest_slow:
-			strongest_slow = effect.slow_intensity
-
-	# Slow intensity reduces speed: 0.3 slow = 0.7x speed
-	if strongest_slow > 0:
-		multiplier *= (1.0 - strongest_slow)
-
-	return multiplier
-
-## Apply knockback impulse
 func apply_knockback(force: float, direction: Vector2) -> void:
-	if is_dying or mass <= 0:
+	"""Apply knockback via movement component."""
+	if is_dying:
 		return
+	movement.apply_knockback(force, direction)
 
-	# F = ma → a = F/m → velocity (instant impulse)
-	var knockback_magnitude: float = force / mass
-	knockback_velocity = direction.normalized() * knockback_magnitude
-
-## Take DoT damage (separate from regular damage for potential future differentiation)
 func take_dot_damage(amount: float) -> void:
+	"""Take DoT damage (separate from regular damage for potential future differentiation)."""
 	if is_dying:
 		return
 
@@ -464,29 +300,22 @@ func take_dot_damage(amount: float) -> void:
 	if current_health <= 0:
 		die()
 
-## Update visual tint based on active status effects
-func _update_status_visual() -> void:
-	var sprite_node = get_node_or_null("Sprite2D") if has_node("Sprite2D") else get_node_or_null("AnimatedSprite2D")
-	if not sprite_node:
-		return
-	
-	if active_effects.is_empty():
-		# Reset to base color tint
-		sprite_node.modulate = color_tint
-		return
-	
-	# Start with base tint and blend status effect colors
-	var final_color := color_tint
-	
-	if active_effects.has(GameEnums.DamageType.FIRE):
-		final_color = final_color.lerp(Color(1.0, 0.5, 0.2, 1), 0.4)  # Orange tint
-	if active_effects.has(GameEnums.DamageType.ELECTRIC):
-		final_color = final_color.lerp(Color(0.5, 0.8, 1.0, 1), 0.4)  # Blue tint
-	if active_effects.has(GameEnums.DamageType.PLASMA):
-		final_color = final_color.lerp(Color(0.8, 0.4, 1.0, 1), 0.4)  # Purple tint
-	
-	sprite_node.modulate = final_color
-
-## Check if enemy has a specific status effect
 func has_status_effect(damage_type: GameEnums.DamageType) -> bool:
-	return active_effects.has(damage_type)
+	"""Check if enemy has a specific status effect."""
+	return status_effects.has_status_effect(damage_type)
+
+# Property facades for test compatibility
+var active_effects: Dictionary:
+	get:
+		return status_effects.get_active_effects() if status_effects else {}
+
+var knockback_velocity: Vector2:
+	get:
+		return movement.knockback_velocity if movement else Vector2.ZERO
+	set(value):
+		if movement:
+			movement.knockback_velocity = value
+
+var behavior_instance: EnemyBehavior:
+	get:
+		return movement.behavior_instance if movement else null

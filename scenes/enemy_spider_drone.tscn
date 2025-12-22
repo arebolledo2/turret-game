@@ -1,4 +1,4 @@
-[gd_scene load_steps=38 format=3 uid="uid://c8r3m44jtqpa5"]
+[gd_scene load_steps=41 format=3 uid="uid://c8r3m44jtqpa5"]
 
 [ext_resource type="Script" path="res://scripts/enemy.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/sprites/enemy_spider_drone/spider_drone_right.png" id="2_right"]
@@ -6,6 +6,9 @@
 [ext_resource type="Script" path="res://scripts/components/enemy_hurtbox.gd" id="4_hurtbox"]
 [ext_resource type="Script" path="res://scripts/components/collision_manager.gd" id="5_collision_manager"]
 [ext_resource type="Resource" path="res://resources/collision_profiles/spider_enemy.tres" id="6_profile"]
+[ext_resource type="Script" path="res://scripts/components/enemy_movement.gd" id="7_movement"]
+[ext_resource type="Script" path="res://scripts/components/enemy_visuals.gd" id="8_visuals"]
+[ext_resource type="Script" path="res://scripts/components/enemy_status_effects.gd" id="9_status"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_Hurtbox"]
 radius = 18.0
@@ -275,3 +278,14 @@ script = ExtResource("4_hurtbox")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
 shape = SubResource("CapsuleShape2D_Hurtbox")
+
+[node name="Components" type="Node" parent="."]
+
+[node name="EnemyMovement" type="Node" parent="Components"]
+script = ExtResource("7_movement")
+
+[node name="EnemyVisuals" type="Node" parent="Components"]
+script = ExtResource("8_visuals")
+
+[node name="EnemyStatusEffects" type="Node" parent="Components"]
+script = ExtResource("9_status")
