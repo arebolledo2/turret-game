@@ -53,10 +53,13 @@ func apply_buff(turret: Node2D, buff: Buff) -> void:
 
 	# Check for existing buff of same type
 	var existing = _find_matching_buff(turret_id, buff.stat)
-	if existing and existing.stack_count < existing.max_stacks:
-		existing.stack_count += 1
-		existing.time_remaining = buff.duration  # Refresh duration
-	elif not existing:
+	if existing:
+		# Stack if not at max
+		if existing.stack_count < existing.max_stacks:
+			existing.stack_count += 1
+		# Always refresh duration when reapplying
+		existing.time_remaining = buff.duration
+	else:
 		active_buffs[turret_id].append(buff)
 
 	# Trigger stat update
