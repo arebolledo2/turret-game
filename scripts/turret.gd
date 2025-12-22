@@ -60,6 +60,11 @@ func setup_visuals() -> void:
 	var turret_config = TurretRegistry.get_type(turret_type)
 	var icon = turret_config.get("icon", "🗼")
 
+	# Plasma turret specialized visuals
+	if turret_type == "plasma" and animated_sprite:
+		_setup_plasma_visuals()
+		return
+
 	# Set base visuals
 	if base_sprite:
 		# Hide icon if using a custom sprite (like the basic turret now does)
@@ -77,6 +82,39 @@ func setup_visuals() -> void:
 		icon_label.visible = true
 		icon_label.text = icon
 		icon_label.add_theme_font_size_override("font_size", 32)
+
+func _setup_plasma_visuals() -> void:
+	if not animated_sprite:
+		return
+		
+	# Hide base static sprite
+	if base_sprite:
+		base_sprite.visible = false
+	if icon_label:
+		icon_label.visible = false
+		
+	animated_sprite.visible = true
+	
+	# Create SpriteFrames programmatically for the plasma turret
+	var frames = SpriteFrames.new()
+	var tex = load("res://assets/sprites/turret_plasma/plasma_turret_spritesheet.png")
+	
+	# 8 frames in the spritesheet
+	frames.add_animation("idle")
+	frames.set_animation_loop("idle", true)
+	frames.set_animation_speed("idle", 8.0)
+	
+	var frame_width = tex.get_width() / 8
+	var frame_height = tex.get_height()
+	
+	for i in range(8):
+		var atlas = AtlasTexture.new()
+		atlas.atlas = tex
+		atlas.region = Rect2(i * frame_width, 0, frame_width, frame_height)
+		frames.add_frame("idle", atlas)
+		
+	animated_sprite.sprite_frames = frames
+	animated_sprite.play("idle")
 
 func update_stats() -> void:
 	stats = Globals.get_turret_stats(turret_type)
