@@ -12,7 +12,7 @@ var shop_manager: Node
 
 func initialize(vbox: VBoxContainer) -> void:
 	economy_stats_vbox = vbox
-	shop_manager = get_node_or_null("/root/Main/ShopManager")
+	shop_manager = Globals.shop_manager
 
 func update_display() -> void:
 	if not economy_stats_vbox:

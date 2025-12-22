@@ -64,7 +64,7 @@ var regeneration_pending: bool = false
 
 func _ready() -> void:
 	visible = false
-	shop_manager = get_node_or_null("/root/Main/ShopManager")
+	shop_manager = Globals.shop_manager
 
 	# Initialize panel handlers
 	offers_panel = ShopOffersPanelScript.new()
@@ -180,7 +180,7 @@ func _on_reroll_pressed() -> void:
 	offers_panel.update_reroll_button()
 
 func _on_continue_pressed() -> void:
-	var game_manager = get_node_or_null("/root/Main/GameManager")
+	var game_manager = Globals.game_manager
 	if game_manager and game_manager.has_method("end_shop_phase"):
 		game_manager.end_shop_phase()
 

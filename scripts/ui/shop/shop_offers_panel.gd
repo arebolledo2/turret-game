@@ -18,7 +18,7 @@ signal focus_restored()
 func initialize(offers_cont: HBoxContainer, reroll_btn: Button) -> void:
 	offers_container = offers_cont
 	reroll_button = reroll_btn
-	shop_manager = get_node_or_null("/root/Main/ShopManager")
+	shop_manager = Globals.shop_manager
 	
 	if reroll_button:
 		reroll_button.pressed.connect(_on_reroll_pressed)

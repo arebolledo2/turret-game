@@ -33,7 +33,7 @@ func _on_turret_fired(turret: Node2D) -> void:
 	if Globals.item_counts.get("chain_reaction", 0) == 0:
 		return
 
-	var turret_manager = get_node_or_null("/root/Main/TurretManager")
+	var turret_manager = Globals.turret_manager
 	if not turret_manager:
 		return
 

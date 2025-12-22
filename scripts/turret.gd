@@ -106,7 +106,7 @@ func update_stats() -> void:
 	_update_status_indicators()
 
 func _apply_proximity_modifiers() -> void:
-	var turret_manager = get_node_or_null("/root/Main/TurretManager")
+	var turret_manager = Globals.turret_manager
 	if not turret_manager:
 		return
 
@@ -152,7 +152,7 @@ func _update_status_indicators() -> void:
 	for child in status_indicators.get_children():
 		child.queue_free()
 
-	var turret_manager = get_node_or_null("/root/Main/TurretManager")
+	var turret_manager = Globals.turret_manager
 	if not turret_manager:
 		return
 

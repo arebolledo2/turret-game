@@ -1,9 +1,22 @@
 extends Node
 
 ## Autoload singleton for global game state
-## REFACTORED: Now delegates to focused service singletons
+## REFACTORED: Now delegates to focused service singletons using facade pattern
 ##
-## Service architecture:
+## ARCHITECTURE OVERVIEW:
+## This file acts as a unified facade providing convenient access to:
+## 1. Service layer (autoloaded singletons in /root/)
+## 2. Scene managers (nodes in /root/Main/ scene tree)
+## 3. Legacy constants (forwarded from GameConstants)
+## 4. Runtime settings (UI preferences, debug flags)
+##
+## WHY USE THIS FACADE?
+## - Simplifies access: Use Globals.shop_manager instead of get_node("/root/Main/ShopManager")
+## - Lazy loading: Services/managers loaded only when first accessed
+## - Single point of change: If service paths change, update only here
+## - Backwards compatibility: Gradual migration from old Globals to services
+##
+## SERVICE ARCHITECTURE:
 ## - DifficultyService: Difficulty settings and multipliers
 ## - GameStateService: Wave, XP, kills, time tracking
 ## - EconomyService: Gold, shop, rerolls, turret purchases
@@ -11,6 +24,17 @@ extends Node
 ## - TurretStatsService: Turret counts, stats, calculations
 ## - ItemTrackingService: Items collected, item-based modifiers
 ## - ModifierService: Active modifiers system
+##
+## SCENE MANAGERS (in /root/Main/ scene):
+## - ShopManager: Shop offers, rerolls, purchases
+## - TurretManager: Turret spawning, tracking, proximity queries
+## - GameManager: Game phases, wave transitions
+##
+## USAGE GUIDELINES:
+## - For services: Use Globals.property or Globals.method() (facade forwards)
+## - For scene managers: Use Globals.shop_manager, Globals.turret_manager, etc.
+## - For constants: Prefer GameConstants directly unless runtime-mutable (like ARENA_WIDTH)
+## - Never use hard-coded paths like get_node("/root/Main/...") - use this facade instead
 
 # Service references (lazy loaded on first access)
 var _difficulty_service: DifficultyService = null
@@ -20,6 +44,11 @@ var _player_stats_service: PlayerStatsService = null
 var _turret_stats_service: TurretStatsService = null
 var _item_tracking_service: ItemTrackingService = null
 var _modifier_service: ModifierService = null
+
+# Scene manager references (lazy loaded on first access)
+var _shop_manager: Node = null
+var _turret_manager: Node = null
+var _game_manager: Node = null
 
 # Lazy getters for services
 func _get_difficulty_service() -> DifficultyService:
@@ -56,6 +85,22 @@ func _get_modifier_service() -> ModifierService:
 	if _modifier_service == null:
 		_modifier_service = get_node("/root/ModifierService")
 	return _modifier_service
+
+# Lazy getters for scene managers
+func _get_shop_manager() -> Node:
+	if _shop_manager == null:
+		_shop_manager = get_node_or_null("/root/Main/ShopManager")
+	return _shop_manager
+
+func _get_turret_manager() -> Node:
+	if _turret_manager == null:
+		_turret_manager = get_node_or_null("/root/Main/TurretManager")
+	return _turret_manager
+
+func _get_game_manager() -> Node:
+	if _game_manager == null:
+		_game_manager = get_node_or_null("/root/Main/GameManager")
+	return _game_manager
 
 
 # =============================================================================
@@ -546,6 +591,18 @@ var ENEMY_CONTACT_DAMAGE: float:
 
 var TURRET_DAMAGE: float:
 	get: return GameConstants.TURRET_BASE_DAMAGE * get_difficulty_config()["turret_damage_mult"]
+
+# =============================================================================
+# SCENE MANAGER FACADES (for nodes in /root/Main scene tree)
+# =============================================================================
+var shop_manager: Node:
+	get: return _get_shop_manager()
+
+var turret_manager: Node:
+	get: return _get_turret_manager()
+
+var game_manager: Node:
+	get: return _get_game_manager()
 
 # =============================================================================
 # RESET FUNCTION
