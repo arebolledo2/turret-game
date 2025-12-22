@@ -209,9 +209,19 @@ func _format_modifier(modifier: Dictionary) -> String:
 		sign_str = "+" if display_value > 0 else ""
 		return "%s%.1f%% %s%s" % [sign_str, display_value, stat_name, tag]
 	elif operation == "add":
-		display_value = value
-		sign_str = "+" if value > 0 else ""
-		return "%s%.0f %s%s" % [sign_str, display_value, stat_name, tag]
+		# Stats stored as decimals (0.0-1.0 range) that represent percentages
+		var percentage_stats = ["player_luck", "turret_penalty_reduction"]
+
+		if stat in percentage_stats:
+			# Convert decimal to percentage (0.10 -> 10%)
+			display_value = value * 100.0
+			sign_str = "+" if display_value > 0 else ""
+			return "%s%.0f%% %s%s" % [sign_str, display_value, stat_name, tag]
+		else:
+			# Absolute value stats (damage, health, range, etc.)
+			display_value = value
+			sign_str = "+" if value > 0 else ""
+			return "%s%.0f %s%s" % [sign_str, display_value, stat_name, tag]
 
 	return ""
 
