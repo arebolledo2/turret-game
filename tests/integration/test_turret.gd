@@ -330,8 +330,8 @@ func test_aoe_turret_hits_multiple_enemies():
 	
 	await get_tree().physics_frame
 	
-	var initial_health1 = enemy1.current_health
-	var initial_health2 = enemy2.current_health
+	var _initial_health1 = enemy1.current_health
+	var _initial_health2 = enemy2.current_health
 	var _initial_health3 = enemy3.current_health
 	
 	# Fire AOE pulse
@@ -340,8 +340,8 @@ func test_aoe_turret_hits_multiple_enemies():
 	await get_tree().physics_frame
 	
 	# All enemies in range should be damaged
-	assert_lt(enemy1.current_health, initial_health1, "Enemy 1 should be damaged by AOE")
-	assert_lt(enemy2.current_health, initial_health2, "Enemy 2 should be damaged by AOE")
+	assert_lt(enemy1.current_health, _initial_health1, "Enemy 1 should be damaged by AOE")
+	assert_lt(enemy2.current_health, _initial_health2, "Enemy 2 should be damaged by AOE")
 	assert_lt(enemy3.current_health, _initial_health3, "Enemy 3 should be damaged by AOE")
 
 

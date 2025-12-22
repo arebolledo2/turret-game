@@ -6,6 +6,13 @@ extends Control
 const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
 const MAIN_FONT = preload("res://addons/gut/fonts/AnonymousPro-Regular.ttf")
 
+# Preload component scripts to ensure they are found
+const ShopOffersPanelScript = preload("res://scripts/ui/shop/shop_offers_panel.gd")
+const ShopBuildTabsPlayerScript = preload("res://scripts/ui/shop/shop_build_tabs/player_tab.gd")
+const ShopBuildTabsEconomyScript = preload("res://scripts/ui/shop/shop_build_tabs/economy_tab.gd")
+const ShopBuildTabsTurretsScript = preload("res://scripts/ui/shop/shop_build_tabs/turrets_tab.gd")
+const ShopBuildTabsItemsScript = preload("res://scripts/ui/shop/shop_build_tabs/items_tab.gd")
+
 # UI References
 @onready var shop_panel: PanelContainer = $ShopPanel
 @onready var title_label: Label = $ShopPanel/VBoxContainer/Header/TitleLabel
@@ -45,11 +52,11 @@ const MAIN_FONT = preload("res://addons/gut/fonts/AnonymousPro-Regular.ttf")
 @onready var item_description_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemDescription
 
 # Panel handlers (delegate complex logic to these)
-var offers_panel: ShopOffersPanel
-var player_tab: ShopBuildTabsPlayer
-var economy_tab: ShopBuildTabsEconomy
-var turrets_tab: ShopBuildTabsTurrets
-var items_tab: ShopBuildTabsItems
+var offers_panel
+var player_tab
+var economy_tab
+var turrets_tab
+var items_tab
 
 var shop_manager: Node
 var regeneration_pending: bool = false
@@ -60,19 +67,19 @@ func _ready() -> void:
 	shop_manager = get_node_or_null("/root/Main/ShopManager")
 
 	# Initialize panel handlers
-	offers_panel = ShopOffersPanel.new()
+	offers_panel = ShopOffersPanelScript.new()
 	add_child(offers_panel)
 	offers_panel.initialize(offers_container, reroll_button)
 	
-	player_tab = ShopBuildTabsPlayer.new()
+	player_tab = ShopBuildTabsPlayerScript.new()
 	add_child(player_tab)
 	player_tab.initialize(player_stats_vbox)
 	
-	economy_tab = ShopBuildTabsEconomy.new()
+	economy_tab = ShopBuildTabsEconomyScript.new()
 	add_child(economy_tab)
 	economy_tab.initialize(economy_stats_vbox)
 	
-	turrets_tab = ShopBuildTabsTurrets.new()
+	turrets_tab = ShopBuildTabsTurretsScript.new()
 	add_child(turrets_tab)
 	turrets_tab.initialize({
 		"turrets_title": turrets_title,
@@ -88,7 +95,7 @@ func _ready() -> void:
 		"turret_dps_label": turret_dps_label,
 	})
 	
-	items_tab = ShopBuildTabsItems.new()
+	items_tab = ShopBuildTabsItemsScript.new()
 	add_child(items_tab)
 	items_tab.initialize({
 		"items_title": items_title,
@@ -200,7 +207,7 @@ func _setup_build_focus_neighbors() -> void:
 	var turret_buttons = turrets_tab.get_turret_buttons()
 	var item_buttons = items_tab.get_item_buttons()
 	var offer_buttons = offers_panel.get_offer_buttons()
-	
+
 	# Set up turret button focus
 	if not turret_buttons.is_empty():
 		var down_target: Control = item_buttons[0] if not item_buttons.is_empty() else continue_button
@@ -222,6 +229,3 @@ func _setup_build_focus_neighbors() -> void:
 		continue_button.focus_neighbor_top = reroll_button.get_path()
 		if reroll_button:
 			reroll_button.focus_neighbor_bottom = continue_button.get_path()
-
-
-# End of script

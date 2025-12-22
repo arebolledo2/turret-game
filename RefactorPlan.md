@@ -2,22 +2,25 @@
 
 ## Target: Reduce file sizes from 500+ lines to 150-250 lines for AI agent optimization
 
-### Phase 1 - UI Components (High Impact) 🎯 [COMPLETED]
-- [x] shop_screen.gd (630→150 lines) - Extract to shop panels
+### Phase 1 - UI Components (High Impact) 🎯 [COMPLETED & VERIFIED]
+- [x] shop_screen.gd (734→230 lines) - Extract to shop panels
   - [x] Create scripts/ui/shop/shop_offers_panel.gd
-  - [x] Create scripts/ui/shop/shop_player_build_panel.gd
+  - [x] Create scripts/ui/shop/shop_build_tabs/player_tab.gd
+  - [x] Create scripts/ui/shop/shop_build_tabs/economy_tab.gd
   - [x] Create scripts/ui/shop/shop_build_tabs/turrets_tab.gd
   - [x] Create scripts/ui/shop/shop_build_tabs/items_tab.gd
   - [x] Refactor main shop_screen.gd to orchestrate panels
-- [x] hud.gd (289→100 lines) - Split into controller + displays
+- [x] hud.gd (374→150 lines) - Split into controller + displays
   - [x] Create scripts/ui/hud/hud_game_display.gd
   - [x] Create scripts/ui/hud/hud_menu_manager.gd
   - [x] Refactor main hud.gd as orchestrator
-- [x] build_display_ui.gd (333→200 lines) - Extract tab logic
+- [x] build_display_ui.gd (381→42 lines) - Extract tab logic
   - [x] Create scripts/ui/ui_helpers.gd
   - [x] Create scripts/ui/turret_display_ui.gd
   - [x] Create scripts/ui/item_display_ui.gd
   - [x] Refactor build_display_ui.gd as facade
+- [x] Fixed parse errors and integration test typos introduced during refactor.
+- [x] Verified with full test suite (489 tests passing).
 
 ### Phase 2 - Core Entities 🎮
 - [ ] player.gd (545→150 lines) - Component-based architecture
