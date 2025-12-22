@@ -361,10 +361,24 @@ func test_aoe_turret_applies_slow_effect():
 	
 	var initial_speed = enemy.speed
 	
+	# Debug: Check turret stats
+	gut.p("DEBUG: shock_turret.stats = %s" % [shock_turret.stats])
+	gut.p("DEBUG: shock_turret.current_range = %s" % [shock_turret.current_range])
+	gut.p("DEBUG: slow_intensity from stats = %s" % [shock_turret.stats.get("slow_intensity", "NOT FOUND")])
+	gut.p("DEBUG: slow_duration from stats = %s" % [shock_turret.stats.get("slow_duration", "NOT FOUND")])
+	gut.p("DEBUG: enemy.global_position = %s" % [enemy.global_position])
+	gut.p("DEBUG: distance to enemy = %s" % [shock_turret.global_position.distance_to(enemy.global_position)])
+	gut.p("DEBUG: enemy is in group 'enemies' = %s" % [enemy.is_in_group("enemies")])
+	gut.p("DEBUG: enemies in group = %s" % [get_tree().get_nodes_in_group("enemies")])
+	
 	# Fire AOE pulse
 	shock_turret._fire_aoe_pulse()
 	
 	await get_tree().physics_frame
+	
+	# Debug: Check if effect was applied
+	gut.p("DEBUG: enemy.active_effects after pulse = %s" % [enemy.active_effects])
+	gut.p("DEBUG: enemy.speed after = %s, initial_speed = %s" % [enemy.speed, initial_speed])
 	
 	# Check if slow effect was applied - enemy should have reduced speed
 	# or have active status effects
