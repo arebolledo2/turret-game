@@ -25,7 +25,7 @@ func set_mode(mode_id: GameEnums.GameMode) -> void:
 	var group = config.get("group")
 	active_modes[group] = mode_id
 	
-	print("Game Mode Set: ", config.get("name"), " (Group: ", group, ") - ID: ", mode_id)
+	print("Game Mode Set: ", config.get("name"), " (Group: ", group, ")")
 
 func is_mode_active(mode_id: GameEnums.GameMode) -> bool:
 	for group in active_modes:

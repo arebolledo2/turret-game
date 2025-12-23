@@ -54,7 +54,6 @@ func show() -> void:
 
 
 func hide_and_emit(mode: GameEnums.GameMode) -> void:
-	print("DEBUG: GameModeSelectUI emitting mode: ", mode)
 	if container:
 		var tween = _owner.create_tween()
 		tween.tween_property(container, "modulate:a", 0.0, 0.2)
