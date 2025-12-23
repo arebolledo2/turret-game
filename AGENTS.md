@@ -25,6 +25,7 @@ Game logic split into **7 focused service singletons** in `scripts/autoload/`:
 5. **TurretStatsService** - Turret counts, stat calculation
 6. **ItemTrackingService** - Item collection tracking
 7. **ModifierService** - Active modifiers management
+8. **GameModeService** - Active game mode and mode-specific logic hooks
 
 **Globals as Facade**: `scripts/autoload/globals.gd` provides compatibility layer that delegates to services. Use services directly for new code, Globals for legacy compatibility.
 
@@ -61,6 +62,7 @@ Type definitions stored in **static registry classes** (extends RefCounted):
 - **EnemyRegistry** (`scripts/registries/enemy_registry.gd`) - 7 enemy types with behaviors, stats, spawn rules
 - **TurretRegistry** (`scripts/registries/turret_registry.gd`) - 6 turret types with attack styles, damage types, stats
 - **ItemRegistry** (`scripts/registries/item_registry.gd`) - 60 items across 5 rarity tiers (see Modular Item System)
+- **GameModeRegistry** (`scripts/registries/game_mode_registry.gd`) - Game mode definitions grouped by category (e.g., spawn_location)
 
 ```gdscript
 # Get type definitions
@@ -169,13 +171,14 @@ Items split across **5 rarity-tier files** in `scripts/registries/items/`:
 `GameManager` (`scripts/game_manager.gd`) controls flow via enum:
 
 ```
-IDLE → DIFFICULTY_SELECT → WAVE_ANNOUNCEMENT → COMBAT → WAVE_END → SHOP → (loop or VICTORY/GAME_OVER)
+IDLE → DIFFICULTY_SELECT → GAME_MODE_SELECT → WAVE_ANNOUNCEMENT → COMBAT → WAVE_END → SHOP → (loop or VICTORY/GAME_OVER)
 ```
 
 **Startup Flow**:
 1. `show_difficulty_select()` - Player chooses Easy/Medium/Hard
-2. `_on_difficulty_selected()` - Sets difficulty, spawns free starting turret
-3. Proceeds directly to wave 1 announcement
+2. `show_game_mode_select()` - Player chooses game mode (e.g., Sentinel/Invasion)
+3. `start_game()` - Resets stats, spawns free starting turret
+4. Proceeds directly to wave 1 announcement
 
 **Wave Cycle**:
 1. `WAVE_ANNOUNCEMENT` (1.5s) - Shows wave number
@@ -337,6 +340,8 @@ var turrets = get_tree().get_nodes_in_group("turrets")
 |------|-------|
 | State machine transitions | `scripts/game_manager.gd` |
 | Wave spawning logic | `scripts/enemy_spawner.gd` |
+| Game Mode logic hooks | `scripts/autoload/game_mode_service.gd` |
+| Game Mode definitions | `scripts/registries/game_mode_registry.gd` |
 | Shop system | `scripts/shop_manager.gd` |
 | Turret spawning/placement | `scripts/turret_manager.gd` |
 
