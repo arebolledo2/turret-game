@@ -15,12 +15,24 @@ const BASE_BUTTON_HEIGHT: float = 60.0
 func setup(nodes: Dictionary, owner: Node) -> void:
 	sentinel_button = nodes.get("sentinel_button")
 	invasion_button = nodes.get("invasion_button")
+	
+	if sentinel_button and not sentinel_button.pressed.is_connected(_on_sentinel_pressed):
+		sentinel_button.pressed.connect(_on_sentinel_pressed)
+	if invasion_button and not invasion_button.pressed.is_connected(_on_invasion_pressed):
+		invasion_button.pressed.connect(_on_invasion_pressed)
 
-	# Set base size
 	base_panel_size = Vector2(BASE_PANEL_WIDTH, BASE_PANEL_HEIGHT)
 
 	# Call parent setup
 	super.setup(nodes, owner)
+
+
+func _on_sentinel_pressed() -> void:
+	hide_and_emit(GameEnums.GameMode.SENTINEL)
+
+
+func _on_invasion_pressed() -> void:
+	hide_and_emit(GameEnums.GameMode.INVASION)
 
 
 func _scale_fonts(scale: float) -> void:
@@ -42,6 +54,7 @@ func show() -> void:
 
 
 func hide_and_emit(mode: GameEnums.GameMode) -> void:
+	print("DEBUG: GameModeSelectUI emitting mode: ", mode)
 	if container:
 		var tween = _owner.create_tween()
 		tween.tween_property(container, "modulate:a", 0.0, 0.2)

@@ -42,7 +42,15 @@ func _on_game_mode_selected(game_mode: int) -> void:
 	start_game()
 
 func start_game() -> void:
+	# Store the current mode before reset if we want to preserve it
+	var current_mode = Globals.game_mode_service.active_modes.get("spawn_location")
+	
 	Globals.reset_stats()
+	
+	# Restore the mode after reset
+	if current_mode != null:
+		Globals.set_game_mode(current_mode as GameEnums.GameMode)
+		
 	Globals.is_game_active = true
 	Events.game_started.emit()
 	

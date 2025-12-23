@@ -19,12 +19,13 @@ func _initialize_defaults() -> void:
 func set_mode(mode_id: GameEnums.GameMode) -> void:
 	var config = GameModeRegistry.get_mode_config(mode_id)
 	if config.is_empty():
+		print("ERROR: Game mode config not found for ID: ", mode_id)
 		return
 		
 	var group = config.get("group")
 	active_modes[group] = mode_id
 	
-	print("Game Mode Set: ", config.get("name"), " (Group: ", group, ")")
+	print("Game Mode Set: ", config.get("name"), " (Group: ", group, ") - ID: ", mode_id)
 
 func is_mode_active(mode_id: GameEnums.GameMode) -> bool:
 	for group in active_modes:
