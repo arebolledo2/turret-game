@@ -189,5 +189,23 @@ func _on_player_died() -> void:
 
 	Events.game_over.emit(false)
 
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT:
+		_auto_pause()
+
+func _auto_pause() -> void:
+	# Only auto-pause if the game is active and not already paused
+	if Globals.is_game_active and not get_tree().paused:
+		# We use the event system to trigger pause if possible, 
+		# or we can rely on HUD to listen to focus loss.
+		# For now, let's emit a pause request if we had one, 
+		# but since we don't, we'll use Events.game_paused.emit() 
+		# and hope HUD handles it, OR better: trigger HUD directly if we can find it.
+		var hud = get_tree().get_first_node_in_group("hud")
+		if hud and hud.has_method("pause_game"):
+			hud.pause_game()
+		elif hud and hud.has_method("toggle_pause"):
+			hud.toggle_pause()
+
 func restart_game() -> void:
 	get_tree().reload_current_scene()

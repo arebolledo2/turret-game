@@ -74,6 +74,9 @@ var damage_number_scene: PackedScene
 
 
 func _ready() -> void:
+	# Add to "hud" group so GameManager can find us for auto-pause
+	add_to_group("hud")
+
 	# Hide overlays and HUD initially
 	wave_announcement.visible = false
 	game_over_screen.visible = false
@@ -296,6 +299,10 @@ func toggle_pause() -> void:
 	menu_manager.toggle_pause()
 
 
+func pause_game() -> void:
+	menu_manager.pause()
+
+
 func _on_resume_pressed() -> void:
 	menu_manager.toggle_pause()
 
@@ -376,4 +383,3 @@ func update_turret_details(type: String) -> void:
 
 func update_items_panel() -> void:
 	_pause_menu.update_items_panel()
-

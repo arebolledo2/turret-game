@@ -19,18 +19,36 @@ func initialize(nodes: Dictionary) -> void:
 	difficulty_screen = nodes.get("difficulty_screen")
 
 func toggle_pause() -> void:
-	is_paused = not is_paused
-	get_tree().paused = is_paused
-
 	if is_paused:
-		if pause_menu: pause_menu.visible = true
-		Events.game_paused.emit()
+		resume()
 	else:
-		if pause_menu: pause_menu.visible = false
-		if settings_menu: settings_menu.visible = false
-		Events.game_resumed.emit()
+		pause()
+
+func pause() -> void:
+	if is_paused:
+		return
 	
-	pause_toggled.emit(is_paused)
+	is_paused = true
+	get_tree().paused = true
+	if pause_menu:
+		pause_menu.visible = true
+	
+	Events.game_paused.emit()
+	pause_toggled.emit(true)
+
+func resume() -> void:
+	if not is_paused:
+		return
+		
+	is_paused = false
+	get_tree().paused = false
+	if pause_menu:
+		pause_menu.visible = false
+	if settings_menu:
+		settings_menu.visible = false
+		
+	Events.game_resumed.emit()
+	pause_toggled.emit(false)
 
 func show_settings() -> void:
 	if pause_menu: pause_menu.visible = false
