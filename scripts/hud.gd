@@ -134,6 +134,7 @@ func _ready() -> void:
 	Events.show_game_mode_select.connect(_on_show_game_mode_select)
 	Events.game_started.connect(_on_game_started)
 	Events.damage_dealt.connect(_on_damage_dealt)
+	Events.dot_damage_dealt.connect(_on_dot_damage_dealt)
 
 	# Connect Granular Hitbox Toggles
 	physics_hitboxes_check.toggled.connect(_on_physics_hitboxes_toggled)
@@ -385,6 +386,24 @@ func _on_damage_dealt(pos: Vector2, amount: float) -> void:
 	get_tree().current_scene.add_child(damage_number)
 	damage_number.global_position = pos + Vector2(randf_range(-10, 10), -20)
 	damage_number.setup(amount)
+
+
+func _on_dot_damage_dealt(pos: Vector2, amount: float) -> void:
+	"""Handle DoT damage numbers with orange color for fire damage."""
+	if not Globals.show_damage_numbers:
+		return
+	if damage_number_scene == null:
+		return
+
+	var damage_number = damage_number_scene.instantiate()
+	get_tree().current_scene.add_child(damage_number)
+	damage_number.global_position = pos + Vector2(randf_range(-10, 10), -20)
+	damage_number.setup(amount)
+	
+	# Set orange color for DoT damage
+	if damage_number.has_node("Label"):
+		var label = damage_number.get_node("Label")
+		label.modulate = Color(1.0, 0.6, 0.2, 1.0)  # Orange for fire DoT
 
 
 # =============================================================================

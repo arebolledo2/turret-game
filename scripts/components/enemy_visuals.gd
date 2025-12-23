@@ -8,6 +8,7 @@ class_name EnemyVisuals
 ## - Update sprite based on movement direction
 ## - Apply color tints and scale
 ## - Handle status effect visual overlays
+## - Handle status effect particle effects
 
 # Directional sprite textures
 var sprite_south: Texture2D
@@ -27,6 +28,9 @@ var is_animated: bool = false
 # Config
 var base_scale: float = 1.0
 var color_tint: Color = Color.WHITE
+
+# Status effect particles
+var fire_particles: GPUParticles2D = null
 
 func initialize(p_enemy: CharacterBody2D, p_base_scale: float, p_color_tint: Color, sprite_folder: String = "") -> void:
 	"""Initialize component with required references."""
@@ -119,13 +123,14 @@ func apply_damage_flash() -> void:
 	tween.tween_property(sprite_node, "modulate", color_tint, 0.1)
 
 func update_status_visual(active_effects: Dictionary) -> void:
-	"""Update visual tint based on active status effects."""
+	"""Update visual tint and particle effects based on active status effects."""
 	if not sprite_node:
 		return
 
 	if active_effects.is_empty():
 		# Reset to base color tint
 		sprite_node.modulate = color_tint
+		_clear_fire_particles()
 		return
 
 	# Start with base tint and blend status effect colors
@@ -133,12 +138,17 @@ func update_status_visual(active_effects: Dictionary) -> void:
 
 	if active_effects.has(GameEnums.DamageType.FIRE):
 		final_color = final_color.lerp(Color(1.0, 0.5, 0.2, 1), 0.4)  # Orange tint
+		_show_fire_particles()
 	if active_effects.has(GameEnums.DamageType.ELECTRIC):
 		final_color = final_color.lerp(Color(0.5, 0.8, 1.0, 1), 0.4)  # Blue tint
 	if active_effects.has(GameEnums.DamageType.PLASMA):
 		final_color = final_color.lerp(Color(0.8, 0.4, 1.0, 1), 0.4)  # Purple tint
 
 	sprite_node.modulate = final_color
+	
+	# Clear fire particles if not burning
+	if not active_effects.has(GameEnums.DamageType.FIRE):
+		_clear_fire_particles()
 
 func play_death_animation(callback: Callable) -> void:
 	"""Animate death effect - scale down and fade."""
@@ -146,8 +156,75 @@ func play_death_animation(callback: Callable) -> void:
 		callback.call()
 		return
 
+	# Clear fire particles on death
+	_clear_fire_particles()
+
 	var tween = enemy.create_tween()
 	tween.set_parallel(true)
 	tween.tween_property(sprite_node, "scale", Vector2.ZERO, 0.15)
 	tween.tween_property(sprite_node, "modulate:a", 0.0, 0.15)
 	tween.chain().tween_callback(callback)
+
+
+# =============================================================================
+# STATUS EFFECT PARTICLES
+# =============================================================================
+
+func _show_fire_particles() -> void:
+	"""Show fire particles around the enemy."""
+	if fire_particles != null:
+		return  # Already showing
+	
+	fire_particles = GPUParticles2D.new()
+	
+	# Configure fire particle system
+	fire_particles.emitting = true
+	fire_particles.amount = 20
+	fire_particles.lifetime = 0.8
+	fire_particles.process_material = _create_fire_particle_material()
+	
+	# Position particles around the enemy
+	fire_particles.position = Vector2.ZERO
+	
+	enemy.add_child(fire_particles)
+
+
+func _clear_fire_particles() -> void:
+	"""Remove fire particles if they exist."""
+	if fire_particles != null:
+		fire_particles.queue_free()
+		fire_particles = null
+
+
+func _create_fire_particle_material() -> ParticleProcessMaterial:
+	"""Create a simple fire particle material."""
+	var material = ParticleProcessMaterial.new()
+	
+	# Emission shape - emit from a circle around the enemy
+	material.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_SPHERE
+	material.emission_sphere_radius = 15.0
+	
+	# Particle direction - upward with some spread
+	material.direction = Vector3(0, -1, 0)
+	material.spread = 0.5
+	
+	# Initial velocity
+	material.initial_velocity_min = 20.0
+	material.initial_velocity_max = 40.0
+	
+	# Gravity - particles float upward
+	material.gravity = Vector3(0, -30.0, 0)
+	
+	# Scale - particles start small and grow
+	material.scale_min = 0.3
+	material.scale_max = 0.6
+	
+	# Color gradient - orange to red to transparent
+	var gradient = Gradient.new()
+	gradient.add_point(0.0, Color(1.0, 0.8, 0.3, 1.0))  # Yellow-orange
+	gradient.add_point(0.3, Color(1.0, 0.5, 0.1, 0.8))  # Orange
+	gradient.add_point(0.7, Color(0.8, 0.2, 0.0, 0.4))  # Red-orange
+	gradient.add_point(1.0, Color(0.5, 0.1, 0.0, 0.0))  # Dark red, transparent
+	material.color_ramp = gradient
+	
+	return material
