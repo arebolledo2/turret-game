@@ -73,6 +73,11 @@ func setup_visuals() -> void:
 		_setup_plasma_visuals()
 		return
 
+	# Normal turret specialized visuals
+	if turret_type == "normal" and animated_sprite:
+		_setup_normal_visuals()
+		return
+
 	# Set base visuals
 	if base_sprite:
 		# Hide icon if using a custom sprite
@@ -117,6 +122,42 @@ func _setup_plasma_visuals() -> void:
 	var frame_height = tex.get_height()
 
 	for i in range(8):
+		var atlas = AtlasTexture.new()
+		atlas.atlas = tex
+		atlas.region = Rect2(i * frame_width, 0, frame_width, frame_height)
+		frames.add_frame("idle", atlas)
+
+	animated_sprite.sprite_frames = frames
+	animated_sprite.play("idle")
+
+func _setup_normal_visuals() -> void:
+	"""Setup normal turret animation from 16-frame horizontal spritesheet."""
+	if not animated_sprite:
+		return
+
+	# Hide base static sprite
+	if base_sprite:
+		base_sprite.visible = false
+	if icon_label:
+		icon_label.visible = false
+
+	animated_sprite.visible = true
+
+	# Create SpriteFrames programmatically for the normal turret
+	var frames = SpriteFrames.new()
+	var tex = load("res://assets/sprites/turret_basic/turret_idle_spritesheet_4x4.png")
+
+	# Configure animation (16 frames in a single row)
+	frames.add_animation("idle")
+	frames.set_animation_loop("idle", true)
+	frames.set_animation_speed("idle", 8.0)  # 8 FPS
+
+	# Calculate frame dimensions (16 columns, 1 row)
+	var frame_width = tex.get_width() / 16
+	var frame_height = tex.get_height()
+
+	# Extract all 16 frames from horizontal strip
+	for i in range(16):
 		var atlas = AtlasTexture.new()
 		atlas.atlas = tex
 		atlas.region = Rect2(i * frame_width, 0, frame_width, frame_height)
