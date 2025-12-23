@@ -10,6 +10,7 @@ const GameOverScreenScript = preload("res://scripts/ui/game_over_screen.gd")
 const DifficultySelectScript = preload("res://scripts/ui/difficulty_select.gd")
 const PauseMenuScript = preload("res://scripts/ui/pause_menu.gd")
 const SettingsMenuScript = preload("res://scripts/ui/settings_menu.gd")
+const GameModeSelectScript = preload("res://scripts/ui/game_mode_select.gd")
 
 # Node references
 @onready var health_bar: ProgressBar = $MarginContainer/VBoxContainer/TopRow/HealthBar
@@ -25,6 +26,7 @@ const SettingsMenuScript = preload("res://scripts/ui/settings_menu.gd")
 @onready var game_over_title: Label = $GameOverScreen/Panel/VBoxContainer/Title
 @onready var stats_label: Label = $GameOverScreen/Panel/VBoxContainer/StatsLabel
 @onready var difficulty_screen: Control = $DifficultySelect
+@onready var game_mode_screen: Control = $GameModeSelect
 @onready var hud_container: MarginContainer = $MarginContainer
 @onready var pause_menu: Control = $PauseMenu
 @onready var settings_menu: Control = $SettingsMenu
@@ -35,6 +37,8 @@ const SettingsMenuScript = preload("res://scripts/ui/settings_menu.gd")
 @onready var player_attack_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAttack/PlayerAttackCheck
 @onready var settings_back_button: Button = $SettingsMenu/Panel/VBoxContainer/BackButton
 @onready var easy_button: Button = $DifficultySelect/Panel/VBoxContainer/ButtonContainer/EasyButton
+@onready var sentinel_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/SentinelButton
+@onready var invasion_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/InvasionButton
 @onready var restart_button: Button = $GameOverScreen/Panel/VBoxContainer/RestartButton
 
 # Pause Menu References
@@ -66,6 +70,7 @@ var _game_hud
 var _wave_announcement
 var _game_over
 var _difficulty_select
+var _game_mode_select
 var _pause_menu
 var _settings_menu
 
@@ -108,6 +113,7 @@ func _ready() -> void:
 		"settings_menu": settings_menu,
 		"game_over_screen": game_over_screen,
 		"difficulty_screen": difficulty_screen,
+		"game_mode_screen": game_mode_screen,
 	})
 
 	# Initialize UI components
@@ -125,6 +131,7 @@ func _ready() -> void:
 	Events.hide_wave_announcement.connect(_on_hide_wave_announcement)
 	Events.game_over.connect(_on_game_over)
 	Events.show_difficulty_select.connect(_on_show_difficulty_select)
+	Events.show_game_mode_select.connect(_on_show_game_mode_select)
 	Events.game_started.connect(_on_game_started)
 	Events.damage_dealt.connect(_on_damage_dealt)
 
@@ -172,6 +179,14 @@ func _setup_components() -> void:
 		"container": difficulty_screen,
 		"panel": $DifficultySelect/Panel,
 		"easy_button": easy_button,
+	}, self)
+
+	_game_mode_select = GameModeSelectScript.new()
+	_game_mode_select.setup({
+		"container": game_mode_screen,
+		"panel": $GameModeSelect/Panel,
+		"sentinel_button": sentinel_button,
+		"invasion_button": invasion_button,
 	}, self)
 
 	# Pause menu component
@@ -290,6 +305,21 @@ func _on_medium_pressed() -> void:
 
 func _on_hard_pressed() -> void:
 	_difficulty_select.hide_and_emit(GameEnums.Difficulty.HARD)
+
+
+# =============================================================================
+# GAME MODE SELECTION
+# =============================================================================
+func _on_show_game_mode_select() -> void:
+	_game_mode_select.show()
+
+
+func _on_sentinel_pressed() -> void:
+	_game_mode_select.hide_and_emit(GameEnums.GameMode.SENTINEL)
+
+
+func _on_invasion_pressed() -> void:
+	_game_mode_select.hide_and_emit(GameEnums.GameMode.INVASION)
 
 
 # =============================================================================

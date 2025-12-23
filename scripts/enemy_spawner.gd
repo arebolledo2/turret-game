@@ -140,12 +140,8 @@ func _spawn_random_enemy() -> void:
 		enemies_spawned_by_type[enemy_type] = enemies_spawned_by_type.get(enemy_type, 0) + 1
 
 func _get_random_spawn_position() -> Vector2:
-	"""Get a random spawn position from a random zone."""
-	var zone := spawn_zones[randi() % spawn_zones.size()]
-	return Vector2(
-		zone.position.x + randf() * zone.size.x,
-		zone.position.y + randf() * zone.size.y
-	)
+	"""Get a random spawn position from the game mode service."""
+	return Globals.game_mode_service.get_random_spawn_position(spawn_zones)
 
 func _queue_spawn_with_alert(enemy_type: String) -> void:
 	"""Queue an enemy spawn with a visual alert indicator at a random position."""

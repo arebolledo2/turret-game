@@ -8,6 +8,7 @@ var pause_menu: Control
 var settings_menu: Control
 var game_over_screen: Control
 var difficulty_screen: Control
+var game_mode_screen: Control
 var is_paused: bool = false
 
 signal pause_toggled(paused: bool)
@@ -17,6 +18,7 @@ func initialize(nodes: Dictionary) -> void:
 	settings_menu = nodes.get("settings_menu")
 	game_over_screen = nodes.get("game_over_screen")
 	difficulty_screen = nodes.get("difficulty_screen")
+	game_mode_screen = nodes.get("game_mode_screen")
 
 func toggle_pause() -> void:
 	if is_paused:
@@ -66,3 +68,7 @@ func show_game_over(victory: bool, game_over_handler: Object) -> void:
 func show_difficulty_select() -> void:
 	if difficulty_screen:
 		difficulty_screen.visible = true
+
+func show_game_mode_select() -> void:
+	if game_mode_screen:
+		game_mode_screen.visible = true

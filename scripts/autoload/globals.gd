@@ -44,6 +44,7 @@ var _player_stats_service: PlayerStatsService = null
 var _turret_stats_service: TurretStatsService = null
 var _item_tracking_service: ItemTrackingService = null
 var _modifier_service: ModifierService = null
+var _game_mode_service: Node = null
 
 # Scene manager references (lazy loaded on first access)
 var _shop_manager: Node = null
@@ -85,6 +86,11 @@ func _get_modifier_service() -> ModifierService:
 	if _modifier_service == null:
 		_modifier_service = get_node("/root/ModifierService")
 	return _modifier_service
+
+func _get_game_mode_service() -> Node:
+	if _game_mode_service == null:
+		_game_mode_service = get_node("/root/GameModeService")
+	return _game_mode_service
 
 # Lazy getters for scene managers
 func _get_shop_manager() -> Node:
@@ -540,6 +546,18 @@ func clear_modifiers() -> void:
 	(_get_modifier_service()).clear_modifiers()
 
 # =============================================================================
+# GAME MODE SERVICE FORWARDS
+# =============================================================================
+var game_mode_service: Node:
+	get: return _get_game_mode_service()
+
+func set_game_mode(mode: GameEnums.GameMode) -> void:
+	(_get_game_mode_service()).set_mode(mode)
+
+func is_game_mode_active(mode: GameEnums.GameMode) -> bool:
+	return (_get_game_mode_service()).is_mode_active(mode)
+
+# =============================================================================
 # ENEMY HELPERS (delegate to EnemyRegistry)
 # =============================================================================
 func get_enemy_type_stats(enemy_type: String) -> Dictionary:
@@ -615,4 +633,4 @@ func reset_stats() -> void:
 	(_get_turret_stats_service()).reset_state()
 	(_get_item_tracking_service()).reset_state()
 	(_get_modifier_service()).clear_modifiers()
-
+	(_get_game_mode_service()).reset_state()

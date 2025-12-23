@@ -66,6 +66,8 @@ signal show_wave_announcement(wave_number: int)
 signal hide_wave_announcement()
 signal show_difficulty_select()
 signal difficulty_selected(difficulty: int)
+signal show_game_mode_select()
+signal game_mode_selected(game_mode: int)
 signal update_hud()
 
 # Player Progression Events

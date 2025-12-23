@@ -1,6 +1,6 @@
 extends Node
 
-enum GameState { IDLE, DIFFICULTY_SELECT, SHOP, WAVE_ANNOUNCEMENT, COMBAT, WAVE_END, VICTORY, GAME_OVER }
+enum GameState { IDLE, DIFFICULTY_SELECT, GAME_MODE_SELECT, SHOP, WAVE_ANNOUNCEMENT, COMBAT, WAVE_END, VICTORY, GAME_OVER }
 
 var current_state = GameState.IDLE
 var wave_timer: float = 0.0
@@ -20,6 +20,7 @@ func _ready() -> void:
 	# Connect to player death
 	Events.player_died.connect(_on_player_died)
 	Events.difficulty_selected.connect(_on_difficulty_selected)
+	Events.game_mode_selected.connect(_on_game_mode_selected)
 	
 	# Show difficulty selection
 	call_deferred("show_difficulty_select")
@@ -30,6 +31,14 @@ func show_difficulty_select() -> void:
 
 func _on_difficulty_selected(difficulty: int) -> void:
 	Globals.set_difficulty(difficulty as GameEnums.Difficulty)
+	show_game_mode_select()
+
+func show_game_mode_select() -> void:
+	current_state = GameState.GAME_MODE_SELECT
+	Events.show_game_mode_select.emit()
+
+func _on_game_mode_selected(game_mode: int) -> void:
+	Globals.set_game_mode(game_mode as GameEnums.GameMode)
 	start_game()
 
 func start_game() -> void:

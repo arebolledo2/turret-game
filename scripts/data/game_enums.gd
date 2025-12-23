@@ -20,3 +20,9 @@ enum ItemRarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, UNIQUE }
 
 # Collision hitbox types
 enum HitboxType { PHYSICS, PLAYER_HURTBOX, ENEMY_HURTBOX, PLAYER_ATTACK }
+
+# Game Mode IDs
+enum GameMode {
+	SENTINEL, # Near edges
+	INVASION, # Anywhere
+}
