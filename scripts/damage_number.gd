@@ -7,6 +7,9 @@ var elapsed: float = 0.0
 @onready var label: Label = $Label
 
 func _ready() -> void:
+	# Render above all gameplay entities
+	z_index = 10000
+
 	# Start animation
 	var tween = create_tween()
 	tween.set_parallel(true)

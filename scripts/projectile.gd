@@ -61,6 +61,9 @@ func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: G
 func _physics_process(delta: float) -> void:
 	position += direction * speed * delta
 
+	# Y-based depth sorting (offset by 1000 to handle negative Y values)
+	z_index = int(global_position.y) + 1000
+
 func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 	# Verify this is an enemy hurtbox
 	if not hurtbox.is_in_group("enemy_hurtbox"):

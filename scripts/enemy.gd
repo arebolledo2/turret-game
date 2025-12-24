@@ -208,6 +208,9 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	# Y-based depth sorting (offset by 1000 to handle negative Y values)
+	z_index = int(global_position.y) + 1000
+
 	# Update sprite based on velocity (works for all behaviors)
 	if velocity.length() > 0:
 		visuals.update_direction_sprite(velocity.normalized())

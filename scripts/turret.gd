@@ -102,6 +102,9 @@ func _apply_proximity_modifiers() -> void:
 
 func _physics_process(_delta: float) -> void:
 	"""Main turret update loop."""
+	# Y-based depth sorting (offset by 1000 to handle negative Y values)
+	z_index = int(global_position.y) + 1000
+
 	if combat:
 		combat.process()
 
