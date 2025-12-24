@@ -18,12 +18,12 @@ script = ExtResource("2_range")
 radius = 0.0
 
 [node name="BaseSprite" type="Sprite2D" parent="."]
-position = Vector2(0, -16)
+position = Vector2(0, -28)
 scale = Vector2(0.08, 0.08)
 texture = ExtResource("3_static_sprite")
 
 [node name="AnimatedSprite" type="AnimatedSprite2D" parent="."]
-position = Vector2(0, -16)
+position = Vector2(0, -28)
 visible = false
 scale = Vector2(0.125, 0.125)
 
