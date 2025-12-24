@@ -19,9 +19,6 @@ func _ready() -> void:
 	tween.tween_property(self, "scale", Vector2.ONE, 0.2)
 
 func _physics_process(delta: float) -> void:
-	# Y-based depth sorting (offset by 1000 to handle negative Y values)
-	z_index = int(global_position.y) + 1000
-
 	if is_being_collected and target_player and is_instance_valid(target_player):
 		# Accelerate toward player
 		current_speed = min(current_speed + magnet_acceleration * delta, magnet_speed)

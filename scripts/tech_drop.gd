@@ -52,9 +52,6 @@ func _ready() -> void:
 		start_glow_pulse()
 
 func _physics_process(delta: float) -> void:
-	# Y-based depth sorting (offset by 1000 to handle negative Y values)
-	z_index = int(global_position.y) + 1000
-
 	# Tech drop doesn't move, but keep physics active for collision
 	velocity = Vector2.ZERO
 	move_and_slide()

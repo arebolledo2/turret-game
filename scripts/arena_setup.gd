@@ -18,6 +18,9 @@ func _ready() -> void:
 	setup_arena()
 
 func setup_arena() -> void:
+	# Ensure arena is behind all gameplay entities
+	z_index = -10
+	
 	# Use fixed dimensions for consistent gameplay
 	Globals.ARENA_WIDTH = FIXED_ARENA_WIDTH
 	Globals.ARENA_HEIGHT = FIXED_ARENA_HEIGHT

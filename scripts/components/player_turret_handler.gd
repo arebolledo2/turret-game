@@ -76,6 +76,9 @@ func pickup_turret(turret: Node2D) -> void:
 		place_turret()
 
 	carried_turret = turret
+	
+	# Render on top of player platform
+	carried_turret.z_index = 1
 
 	if turret.has_method("hide_pickup_indicator"):
 		turret.hide_pickup_indicator()
@@ -89,6 +92,10 @@ func place_turret() -> void:
 		return
 
 	var placement_pos := carried_turret.global_position
+	
+	# Reset z_index for normal Y-sorting
+	carried_turret.z_index = 0
+	
 	Events.turret_placed.emit(carried_turret, placement_pos)
 
 	carried_turret = null

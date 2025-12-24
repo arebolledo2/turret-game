@@ -8,7 +8,7 @@ var elapsed: float = 0.0
 
 func _ready() -> void:
 	# Render above all gameplay entities
-	z_index = 10000
+	z_index = 100
 
 	# Start animation
 	var tween = create_tween()

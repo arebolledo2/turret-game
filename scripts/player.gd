@@ -100,9 +100,6 @@ func _physics_process(delta: float) -> void:
 	clamp_to_arena()
 	move_and_slide()
 
-	# Y-based depth sorting (offset by 1000 to handle negative Y values)
-	z_index = int(global_position.y) + 1000
-
 	# Turret pickup/placement system
 	turret_handler.process(delta)
 	

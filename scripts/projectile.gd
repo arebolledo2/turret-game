@@ -20,6 +20,9 @@ var knockback_force: float = 0.0  # Knockback force for explosions
 var hit_enemies: Array = []  # Track enemies hit (for pierce)
 
 func _ready() -> void:
+	# Render above all gameplay entities
+	z_index = 5
+
 	# Auto-destroy after lifetime
 	var timer = get_tree().create_timer(lifetime)
 	timer.timeout.connect(queue_free)
@@ -60,9 +63,6 @@ func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: G
 
 func _physics_process(delta: float) -> void:
 	position += direction * speed * delta
-
-	# Y-based depth sorting (offset by 1000 to handle negative Y values)
-	z_index = int(global_position.y) + 1000
 
 func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 	# Verify this is an enemy hurtbox

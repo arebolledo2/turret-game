@@ -11,7 +11,7 @@ var inner_circle: Polygon2D
 
 func _ready() -> void:
 	# Render above all gameplay entities
-	z_index = 10000
+	z_index = 100
 
 	outer_circle = $OuterCircle
 	inner_circle = $InnerCircle

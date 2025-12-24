@@ -15,6 +15,7 @@
 [ext_resource type="PackedScene" uid="uid://shop_screen_001" path="res://scenes/ui/shop_screen.tscn" id="9_shop_screen"]
 
 [node name="Main" type="Node2D"]
+y_sort_enabled = true
 
 [node name="Arena" type="Node2D" parent="."]
 script = ExtResource("1_arena_setup")
@@ -35,12 +36,16 @@ color = Color(0.3, 0.35, 0.3, 1)
 z_index = -1
 
 [node name="TurretContainer" type="Node2D" parent="."]
+y_sort_enabled = true
 
 [node name="EnemyContainer" type="Node2D" parent="."]
+y_sort_enabled = true
 
 [node name="DropContainer" type="Node2D" parent="."]
+y_sort_enabled = true
 
 [node name="TechDropContainer" type="Node2D" parent="."]
+y_sort_enabled = true
 
 [node name="Player" parent="." instance=ExtResource("1_1a2b3")]
 position = Vector2(0, 0)
