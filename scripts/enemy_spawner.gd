@@ -8,11 +8,8 @@ const SPAWN_ALERT_TIME: float = 1.5
 # Spawn zones (4 fixed zones, one per edge)
 var spawn_zones: Array[Rect2] = []
 var spawn_timer: Timer
-var enemies_to_spawn: int = 0
-var enemies_spawned: int = 0
 var current_wave: int = 0
 var is_spawning: bool = false
-var wave_duration: float = 0.0
 
 # Enemy type spawning stats
 var enemies_spawned_by_type: Dictionary = {}  # Track spawns per type
@@ -62,13 +59,10 @@ func setup_spawn_zones() -> void:
 
 func start_spawning(wave: int) -> void:
 	current_wave = wave
-	enemies_to_spawn = Globals.get_wave_enemy_count(wave)
-	enemies_spawned = 0
-	wave_duration = Globals.get_wave_duration(wave)
 	enemies_spawned_by_type.clear()
 	is_spawning = true
 
-	# Start with initial spawn interval (will dynamically adjust)
+	# Set constant spawn interval for the wave
 	_update_spawn_interval()
 	spawn_timer.start()
 
@@ -78,30 +72,17 @@ func start_spawning(wave: int) -> void:
 func stop_spawning() -> void:
 	is_spawning = false
 	spawn_timer.stop()
-	enemies_to_spawn = 0
 	queued_spawns.clear()
 
-func update_spawn_rate(wave_time_remaining: float) -> void:
-	"""Called by game manager to update spawn rate based on wave progress."""
-	if not is_spawning or wave_duration <= 0:
-		return
-
-	# Calculate progress: starts at 0 (beginning) and goes to 1 (end)
-	var wave_elapsed := wave_duration - wave_time_remaining
-	var progress := clampf(wave_elapsed / wave_duration, 0.0, 1.0)
-
-	# Ramping spawn rate: starts slow, ends fast
-	# At progress 0: spawn slower (3.0s interval)
-	# At progress 1: spawn faster (0.15s interval)
-	# Linear interpolation from slow to fast
-	var spawn_interval: float = lerpf(3.0, 0.15, progress)
-
-	# Update the spawn timer
-	spawn_timer.wait_time = spawn_interval
-
 func _update_spawn_interval() -> void:
-	"""Initialize spawn interval at wave start."""
-	spawn_timer.wait_time = 3.0  # Start slow
+	"""Set a constant spawn interval for the current wave with some randomness."""
+	# Calculate base interval based on wave (faster each wave)
+	# Wave 1: ~2.5s, Wave 10: ~1.0s (adjust as needed for balance)
+	var base_interval := lerpf(2.5, 0.8, clampf((current_wave - 1) / 9.0, 0.0, 1.0))
+	
+	# Add randomness (e.g. +/- 20%)
+	var random_factor := randf_range(0.8, 1.2)
+	spawn_timer.wait_time = base_interval * random_factor
 
 func _process(delta: float) -> void:
 	# Process queued spawns
@@ -121,6 +102,9 @@ func _on_spawn_timer_timeout() -> void:
 		return
 
 	_spawn_random_enemy()
+	
+	# Re-randomize next spawn interval to keep it feeling natural
+	_update_spawn_interval()
 
 func _spawn_random_enemy() -> void:
 	"""Select a random enemy type and spawn it (possibly multiple for swarm types)."""
@@ -134,7 +118,6 @@ func _spawn_random_enemy() -> void:
 	# Spawn the enemy (or multiple for swarm types)
 	for i in range(spawn_count):
 		_queue_spawn_with_alert_at_position(enemy_type, base_pos, i)
-		enemies_spawned += 1
 
 		# Track spawn counts
 		enemies_spawned_by_type[enemy_type] = enemies_spawned_by_type.get(enemy_type, 0) + 1

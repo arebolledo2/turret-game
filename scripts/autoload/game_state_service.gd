@@ -31,7 +31,19 @@ func reset_state() -> void:
 
 ## Get wave duration in seconds
 func get_wave_duration(wave: int) -> float:
-	return GameConstants.WAVE_BASE_DURATION + (wave - 1) * GameConstants.WAVE_DURATION_INCREMENT
+	# Wave 1: 25s
+	# Wave 5: 50s
+	# Wave 7+: 60s (capped)
+	if wave <= 1:
+		return 25.0
+	elif wave < 5:
+		# Linear interpolation between 25 and 50 over waves 1 to 5
+		return lerpf(25.0, 50.0, (wave - 1) / 4.0)
+	elif wave < 7:
+		# Linear interpolation between 50 and 60 over waves 5 to 7
+		return lerpf(50.0, 60.0, (wave - 5) / 2.0)
+	else:
+		return 60.0
 
 
 ## Get total enemy count for a wave (includes difficulty and item modifiers)

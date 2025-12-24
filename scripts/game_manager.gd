@@ -113,9 +113,7 @@ func process_combat(delta: float) -> void:
 	wave_timer -= delta
 	Events.wave_timer_updated.emit(wave_timer)
 
-	# Update spawn rate based on remaining time
-	if enemy_spawner and enemy_spawner.has_method("update_spawn_rate"):
-		enemy_spawner.update_spawn_rate(wave_timer)
+	# Spawn rate is now handled internally by enemy_spawner with constant rate + randomness
 
 	if wave_timer <= 0:
 		end_wave()
