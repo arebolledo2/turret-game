@@ -2,11 +2,24 @@ extends Node
 
 func _ready() -> void:
 	Events.shop_opened.connect(_on_shop_opened)
+	Events.shop_closed.connect(_on_shop_closed)
 
 func _on_shop_opened(wave_number: int) -> void:
 	generate_offers()
 
+func _on_shop_closed() -> void:
+	# Clear all locks when shop closes (between waves)
+	for offer in Globals.current_shop_offers:
+		if offer.get("locked", false):
+			offer["locked"] = false
+
 func generate_offers() -> void:
+	# Preserve locked offers before clearing
+	var locked_offers: Array = []
+	for offer in Globals.current_shop_offers:
+		if offer.get("locked", false) and not offer.get("sold", false):
+			locked_offers.append(offer)
+	
 	Globals.current_shop_offers.clear()
 
 	# Track generated items to avoid duplicates
@@ -15,13 +28,20 @@ func generate_offers() -> void:
 	var generated_turret_ids: Array[String] = []
 
 	# Roll each slot: 65% item, 35% turret
-	var offer_count = Globals.get_shop_offer_count()
-	for i in range(offer_count):
+	# Reduce offer count by number of locked offers
+	var base_offer_count = Globals.get_shop_offer_count()
+	var new_offer_count = base_offer_count - locked_offers.size()
+	
+	for i in range(new_offer_count):
 		var roll = randf()
 		if roll < GameConstants.SHOP_ITEM_CHANCE:
 			generate_item_offer(generated_item_ids, generated_turret_ids)
 		else:
 			generate_turret_offer(generated_turret_ids)
+	
+	# Merge locked offers back into the offer list
+	for locked_offer in locked_offers:
+		Globals.current_shop_offers.append(locked_offer)
 
 	Events.shop_offers_generated.emit(Globals.current_shop_offers)
 
@@ -51,6 +71,7 @@ func generate_turret_offer(generated_turret_ids: Array[String]) -> void:
 		"turret_id": random_type,
 		"price": scaled_price,
 		"sold": false,
+		"locked": false,
 	}
 	Globals.current_shop_offers.append(offer)
 
@@ -79,6 +100,7 @@ func generate_item_offer(generated_item_ids: Array[String], generated_turret_ids
 		"item_id": random_item_id,
 		"price": scaled_price,
 		"sold": false,
+		"locked": false,
 	}
 	Globals.current_shop_offers.append(offer)
 
@@ -210,3 +232,37 @@ func can_afford_reroll() -> bool:
 	if Globals.shop_reroll_count >= Globals.MAX_REROLLS_PER_WAVE:
 		return false
 	return Globals.total_gold >= get_reroll_cost()
+
+func lock_offer(offer_index: int) -> bool:
+	"""Lock an offer so it persists to next reroll/wave"""
+	if offer_index < 0 or offer_index >= Globals.current_shop_offers.size():
+		return false
+	
+	var offer = Globals.current_shop_offers[offer_index]
+	
+	# Can't lock sold offers
+	if offer.get("sold", false):
+		return false
+	
+	# Can't lock already locked offers
+	if offer.get("locked", false):
+		return false
+	
+	offer["locked"] = true
+	Events.offer_locked.emit(offer_index)
+	return true
+
+func unlock_offer(offer_index: int) -> bool:
+	"""Unlock an offer"""
+	if offer_index < 0 or offer_index >= Globals.current_shop_offers.size():
+		return false
+	
+	var offer = Globals.current_shop_offers[offer_index]
+	
+	# Can't unlock non-locked offers
+	if not offer.get("locked", false):
+		return false
+	
+	offer["locked"] = false
+	Events.offer_unlocked.emit(offer_index)
+	return true

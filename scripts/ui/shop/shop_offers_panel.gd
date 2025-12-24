@@ -25,6 +25,8 @@ func initialize(offers_cont: HBoxContainer, reroll_btn: Button) -> void:
 		reroll_button.add_theme_font_override("font", MAIN_FONT)
 	
 	Events.shop_offers_generated.connect(_on_offers_generated)
+	Events.offer_locked.connect(_on_offer_locked)
+	Events.offer_unlocked.connect(_on_offer_unlocked)
 
 func _on_offers_generated(offers: Array) -> void:
 	# Release focus from current offer if present
@@ -70,21 +72,44 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	price_label.add_theme_color_override("font_color", Color.GOLD)
 	vbox.add_child(price_label)
 
-	# Purchase button (common for both types)
-	var button = Button.new()
-	button.add_theme_font_override("font", MAIN_FONT)
-	button.process_mode = Control.PROCESS_MODE_ALWAYS
+	# Button container (for purchase + lock buttons)
+	var button_hbox = HBoxContainer.new()
+	button_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_child(button_hbox)
+	
+	# Purchase button
+	var purchase_button = Button.new()
+	purchase_button.add_theme_font_override("font", MAIN_FONT)
+	purchase_button.process_mode = Control.PROCESS_MODE_ALWAYS
+	purchase_button.custom_minimum_size.x = 120
 	if offer.get("sold", false):
-		button.text = "SOLD"
-		button.disabled = true
+		purchase_button.text = "SOLD"
+		purchase_button.disabled = true
+	elif offer.get("locked", false):
+		purchase_button.text = "Purchase"
+		purchase_button.disabled = true
 	else:
-		button.text = "Purchase"
-		button.pressed.connect(func(): purchase_requested.emit(index))
+		purchase_button.text = "Purchase"
+		purchase_button.pressed.connect(func(): purchase_requested.emit(index))
 		if Globals.total_gold < offer["price"]:
-			button.disabled = true
-	vbox.add_child(button)
-
-	_offer_buttons.append(button)
+			purchase_button.disabled = true
+	button_hbox.add_child(purchase_button)
+	
+	# Lock button (show only if not sold)
+	if not offer.get("sold", false):
+		var lock_button = Button.new()
+		lock_button.add_theme_font_override("font", MAIN_FONT)
+		lock_button.process_mode = Control.PROCESS_MODE_ALWAYS
+		lock_button.custom_minimum_size.x = 60
+		if offer.get("locked", false):
+			lock_button.text = "🔓"
+			lock_button.pressed.connect(func(): shop_manager.unlock_offer(index))
+		else:
+			lock_button.text = "🔒"
+			lock_button.pressed.connect(func(): shop_manager.lock_offer(index))
+		button_hbox.add_child(lock_button)
+	
+	_offer_buttons.append(purchase_button)
 	return panel
 
 func _create_turret_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
@@ -276,3 +301,11 @@ func regenerate_offers() -> void:
 
 func get_offer_buttons() -> Array[Button]:
 	return _offer_buttons
+
+func _on_offer_locked(offer_index: int) -> void:
+	"""Refresh UI when an offer is locked"""
+	regenerate_offers()
+
+func _on_offer_unlocked(offer_index: int) -> void:
+	"""Refresh UI when an offer is unlocked"""
+	regenerate_offers()

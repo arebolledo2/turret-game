@@ -57,6 +57,8 @@ signal shop_offers_generated(offers: Array)
 signal shop_purchase_made(offer: Dictionary)
 signal shop_rerolled(new_offers: Array, cost: int)
 signal shop_insufficient_funds(required: int, current: int)
+signal offer_locked(offer_index: int)
+signal offer_unlocked(offer_index: int)
 
 # Item Events
 signal item_collected(item_data: Dictionary)
