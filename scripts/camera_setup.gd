@@ -51,7 +51,7 @@ func calculate_base_zoom() -> void:
 	var zoom_for_height = viewport_size.y / float(Globals.ARENA_HEIGHT)
 
 	# Use the smaller zoom to ensure entire arena fits
-	base_zoom = min(zoom_for_width, zoom_for_height)
+	base_zoom = min(zoom_for_width, zoom_for_height) * GameConstants.CAMERA_DEFAULT_ZOOM_BOOST
 
 	# Set initial zoom
 	zoom = Vector2(base_zoom, base_zoom)

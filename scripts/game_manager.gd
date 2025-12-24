@@ -17,10 +17,13 @@ func _ready() -> void:
 	turret_manager = get_node_or_null("../TurretManager")
 	tech_drop_spawner = get_node_or_null("../TechDropSpawner")
 	
-	# Connect to player death
-	Events.player_died.connect(_on_player_died)
-	Events.difficulty_selected.connect(_on_difficulty_selected)
-	Events.game_mode_selected.connect(_on_game_mode_selected)
+	# Connect to player death (guard against duplicate connections)
+	if not Events.player_died.is_connected(_on_player_died):
+		Events.player_died.connect(_on_player_died)
+	if not Events.difficulty_selected.is_connected(_on_difficulty_selected):
+		Events.difficulty_selected.connect(_on_difficulty_selected)
+	if not Events.game_mode_selected.is_connected(_on_game_mode_selected):
+		Events.game_mode_selected.connect(_on_game_mode_selected)
 	
 	# Show difficulty selection
 	call_deferred("show_difficulty_select")
