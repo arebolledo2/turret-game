@@ -35,7 +35,7 @@ func test_game_starts_in_difficulty_select():
 	await get_tree().process_frame
 	await get_tree().process_frame
 	
-	assert_eq(game_manager.current_state, game_manager.GameState.DIFFICULTY_SELECT,
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.DIFFICULTY_SELECT,
 		"Game should start in DIFFICULTY_SELECT state")
 
 
@@ -47,30 +47,26 @@ func test_game_not_active_initially():
 # DIFFICULTY SELECTION TESTS
 # =============================================================================
 
-func test_difficulty_selection_shows_game_mode():
+func test_start_settings_applied_starts_game():
 	watch_signals(Events)
 	
-	Events.difficulty_selected.emit(GameEnums.Difficulty.MEDIUM)
+	Events.start_settings_applied.emit(
+		GameEnums.Difficulty.MEDIUM,
+		GameEnums.GameMode.SENTINEL,
+		GameEnums.GameMode.TECH_DEFENSE,
+		GameEnums.GameMode.ARENA_ISOMETRIC
+	)
 	await get_tree().process_frame
 	
 	assert_eq(Globals.current_difficulty, GameEnums.Difficulty.MEDIUM,
 		"Difficulty should be set to MEDIUM")
-	assert_signal_emitted(Events, "show_game_mode_select", "Should emit show_game_mode_select signal after difficulty")
-	assert_eq(game_manager.current_state, game_manager.GameState.GAME_MODE_SELECT,
-		"Game should be in GAME_MODE_SELECT state after difficulty")
+	assert_signal_emitted(Events, "game_started", "Should emit game_started signal after settings applied")
+	assert_true(Globals.is_game_active, "Game should be active after settings applied")
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_ANNOUNCEMENT,
+		"Game should be in WAVE_ANNOUNCEMENT state after settings applied")
 
 
-func test_game_mode_selection_starts_game():
-	watch_signals(Events)
-	
-	Events.difficulty_selected.emit(GameEnums.Difficulty.MEDIUM)
-	await get_tree().process_frame
-	
-	Events.game_mode_selected.emit(GameEnums.GameMode.SENTINEL)
-	await get_tree().process_frame
-	
-	assert_signal_emitted(Events, "game_started", "Should emit game_started signal after game mode selected")
-	assert_true(Globals.is_game_active, "Game should be active after game mode selected")
+# Removed multi-step selection tests as they are now consolidated
 
 
 func test_wave_starts_at_1_after_selection():
@@ -94,8 +90,8 @@ func test_game_enters_wave_announcement_after_mode_select():
 	await get_tree().process_frame
 	
 	# Shop V2: Skip initial shop, go directly to wave announcement
-	assert_eq(game_manager.current_state, game_manager.GameState.WAVE_ANNOUNCEMENT,
-		"Should enter WAVE_ANNOUNCEMENT after game mode selected (Shop V2)")
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_ANNOUNCEMENT,
+		"Should enter WAVE_ANNOUNCEMENT after settings applied")
 
 
 func test_wave_announcement_signal_emitted_on_start():
@@ -123,8 +119,8 @@ func test_game_enters_wave_announcement_after_shop():
 	await get_tree().process_frame
 	
 	# We should already be in WAVE_ANNOUNCEMENT (Shop V2 skips initial shop)
-	assert_eq(game_manager.current_state, game_manager.GameState.WAVE_ANNOUNCEMENT,
-		"Should be in WAVE_ANNOUNCEMENT after game mode selected (Shop V2)")
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_ANNOUNCEMENT,
+		"Should be in WAVE_ANNOUNCEMENT after settings applied")
 	
 	# Can't test shop->wave_announcement flow here since shop only opens after waves
 	# This test now verifies the initial game start flow instead
@@ -159,14 +155,14 @@ func test_combat_starts_after_announcement():
 	
 	# Wait for announcement timer to finish (1.5 seconds + buffer)
 	var start_time = Time.get_ticks_msec()
-	var max_wait_ms = 3000  # 3 seconds max
+	var max_wait_ms = 3000 # 3 seconds max
 	
 	while game_manager.current_state == game_manager.GameState.WAVE_ANNOUNCEMENT:
 		await get_tree().process_frame
 		if Time.get_ticks_msec() - start_time > max_wait_ms:
 			break
 	
-	assert_eq(game_manager.current_state, game_manager.GameState.COMBAT,
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.COMBAT,
 		"Should enter COMBAT after announcement timer")
 
 
@@ -185,7 +181,7 @@ func test_wave_started_signal_emitted_during_combat():
 	var start_time = Time.get_ticks_msec()
 	var max_wait_ms = 3000
 	
-	while game_manager.current_state != game_manager.GameState.COMBAT:
+	while GameStateMachine.current_state != GameStateMachine.GameState.COMBAT:
 		await get_tree().process_frame
 		if Time.get_ticks_msec() - start_time > max_wait_ms:
 			break
@@ -210,8 +206,8 @@ func test_player_death_triggers_game_over():
 	Events.player_died.emit()
 	await get_tree().process_frame
 	
-	assert_eq(game_manager.current_state, game_manager.GameState.GAME_OVER,
-		"Should be GAME_OVER after player death")
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.GAME_OVER,
+		"Should be in GAME_OVER after player death")
 	assert_signal_emitted(Events, "game_over")
 
 

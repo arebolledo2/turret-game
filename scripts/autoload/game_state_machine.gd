@@ -27,7 +27,7 @@ var current_state: GameState = GameState.IDLE
 
 const VALID_TRANSITIONS: Dictionary = {
 	GameState.IDLE: [GameState.DIFFICULTY_SELECT],
-	GameState.DIFFICULTY_SELECT: [GameState.GAME_MODE_SELECT],
+	GameState.DIFFICULTY_SELECT: [GameState.GAME_MODE_SELECT, GameState.WAVE_ANNOUNCEMENT],
 	GameState.GAME_MODE_SELECT: [GameState.WAVE_ANNOUNCEMENT],
 	GameState.WAVE_ANNOUNCEMENT: [GameState.COMBAT],
 	GameState.COMBAT: [GameState.WAVE_END, GameState.VICTORY, GameState.GAME_OVER],

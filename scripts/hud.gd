@@ -11,6 +11,7 @@ const DifficultySelectScript = preload("res://scripts/ui/difficulty_select.gd")
 const PauseMenuScript = preload("res://scripts/ui/pause_menu.gd")
 const SettingsMenuScript = preload("res://scripts/ui/settings_menu.gd")
 const GameModeSelectScript = preload("res://scripts/ui/game_mode_select.gd")
+const StartSettingsScript = preload("res://scripts/ui/start_settings.gd")
 
 # Node references
 @onready var health_bar: ProgressBar = $MarginContainer/VBoxContainer/TopRow/HealthBar
@@ -27,6 +28,7 @@ const GameModeSelectScript = preload("res://scripts/ui/game_mode_select.gd")
 @onready var stats_label: Label = $GameOverScreen/Panel/VBoxContainer/StatsLabel
 @onready var difficulty_screen: Control = $DifficultySelect
 @onready var game_mode_screen: Control = $GameModeSelect
+@onready var start_settings_screen: Control = $StartSettings
 @onready var hud_container: MarginContainer = $MarginContainer
 @onready var pause_menu: Control = $PauseMenu
 @onready var settings_menu: Control = $SettingsMenu
@@ -78,6 +80,7 @@ var _wave_announcement
 var _game_over
 var _difficulty_select
 var _game_mode_select
+var _start_settings
 var _pause_menu
 var _settings_menu
 
@@ -139,6 +142,7 @@ func _ready() -> void:
 	Events.game_over.connect(_on_game_over)
 	Events.show_difficulty_select.connect(_on_show_difficulty_select)
 	Events.show_game_mode_select.connect(_on_show_game_mode_select)
+	Events.show_start_settings.connect(_on_show_start_settings)
 	Events.game_started.connect(_on_game_started)
 	Events.damage_dealt.connect(_on_damage_dealt)
 	Events.dot_damage_dealt.connect(_on_dot_damage_dealt)
@@ -204,6 +208,16 @@ func _setup_components() -> void:
 		"tunneling_alert_button": tunneling_alert_button,
 		"classic_arena_button": classic_arena_button,
 		"isometric_arena_button": isometric_arena_button,
+	}, self)
+
+	_start_settings = StartSettingsScript.new()
+	_start_settings.setup({
+		"container": start_settings_screen,
+		"panel": $StartSettings/Panel,
+		"difficulty_dropdown": $StartSettings/Panel/VBoxContainer/SettingsGrid/DifficultyDropdown,
+		"mode_dropdown": $StartSettings/Panel/VBoxContainer/SettingsGrid/ModeDropdown,
+		"arena_dropdown": $StartSettings/Panel/VBoxContainer/SettingsGrid/ArenaDropdown,
+		"start_button": $StartSettings/Panel/VBoxContainer/StartButton,
 	}, self)
 
 	# Pause menu component
@@ -362,6 +376,13 @@ func _on_classic_arena_pressed() -> void:
 
 func _on_isometric_arena_pressed() -> void:
 	_game_mode_select.on_arena_type_selected(GameEnums.GameMode.ARENA_ISOMETRIC)
+
+
+# =============================================================================
+# START SETTINGS
+# =============================================================================
+func _on_show_start_settings() -> void:
+	_start_settings.show()
 
 
 # =============================================================================

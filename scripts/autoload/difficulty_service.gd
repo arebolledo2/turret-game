@@ -42,7 +42,7 @@ const DIFFICULTY_CONFIG: Dictionary = {
 	},
 }
 
-var current_difficulty: GameEnums.Difficulty = GameEnums.Difficulty.EASY
+var current_difficulty: GameEnums.Difficulty = GameEnums.Difficulty.MEDIUM
 
 
 func reset_state() -> void:

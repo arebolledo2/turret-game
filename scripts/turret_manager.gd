@@ -43,20 +43,15 @@ func spawn_turret() -> void:
 	Events.turret_spawned.emit(turret, spawn_pos)
 
 func find_valid_spawn_position(player: Node2D, max_attempts: int = 50) -> Vector2:
-	var half_width := Globals.ARENA_WIDTH / 2.0
-	var half_height := Globals.ARENA_HEIGHT / 2.0
 	var margin := 50.0  # Keep away from edges
-	
+
 	for i in max_attempts:
-		# Random position within arena
-		var pos := Vector2(
-			randf_range(-half_width + margin, half_width - margin),
-			randf_range(-half_height + margin, half_height - margin)
-		)
-		
+		# Random position within arena (handles both rectangular and isometric modes)
+		var pos := ArenaBoundsService.get_random_arena_position(margin)
+
 		if is_position_valid(pos, player):
 			return pos
-	
+
 	return Vector2.INF  # Failed to find valid position
 
 func is_position_valid(pos: Vector2, player: Node2D) -> bool:
@@ -99,15 +94,11 @@ func reposition_all_turrets() -> void:
 
 func find_valid_spawn_position_excluding(player: Node2D, existing_positions: Array[Vector2], max_attempts: int = 50) -> Vector2:
 	"""Find a valid position that doesn't conflict with player or provided positions"""
-	var half_width := Globals.ARENA_WIDTH / 2.0
-	var half_height := Globals.ARENA_HEIGHT / 2.0
 	var margin := 50.0
-	
+
 	for i in max_attempts:
-		var pos := Vector2(
-			randf_range(-half_width + margin, half_width - margin),
-			randf_range(-half_height + margin, half_height - margin)
-		)
+		# Random position within arena (handles both rectangular and isometric modes)
+		var pos := ArenaBoundsService.get_random_arena_position(margin)
 
 		# Check distance from player
 		if player and pos.distance_to(player.global_position) < Globals.TURRET_PLAYER_EXCLUSION:
@@ -123,7 +114,7 @@ func find_valid_spawn_position_excluding(player: Node2D, existing_positions: Arr
 
 		if valid:
 			return pos
-	
+
 	return Vector2.INF
 
 func spawn_starting_turret() -> void:

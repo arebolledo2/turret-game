@@ -20,13 +20,13 @@ const MODES = {
 	GameEnums.GameMode.SURVIVAL: {
 		"name": "Survival",
 		"description": "Classic mode - survive all waves.",
-		"group": "win_condition",
-		"is_default": true
+		"group": "win_condition"
 	},
 	GameEnums.GameMode.TECH_DEFENSE: {
 		"name": "Tech Defense",
 		"description": "Defend the power core from enemies. If it's destroyed, you lose!",
-		"group": "win_condition"
+		"group": "win_condition",
+		"is_default": true
 	},
 	GameEnums.GameMode.TUNNELING_TIMED: {
 		"name": "Tunneling (Timed)",
@@ -42,13 +42,13 @@ const MODES = {
 	GameEnums.GameMode.ARENA_RECTANGULAR: {
 		"name": "Classic Arena",
 		"description": "Standard rectangular arena.",
-		"group": "arena_type",
-		"is_default": true
+		"group": "arena_type"
 	},
 	GameEnums.GameMode.ARENA_ISOMETRIC: {
 		"name": "Isometric Arena",
 		"description": "Diamond-shaped isometric arena for AI backgrounds.",
-		"group": "arena_type"
+		"group": "arena_type",
+		"is_default": true
 	},
 }
 

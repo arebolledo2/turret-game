@@ -40,11 +40,12 @@ func _ready() -> void:
 	Events.player_died.connect(_on_player_died)
 	Events.difficulty_selected.connect(_on_difficulty_selected)
 	Events.game_mode_selected.connect(_on_game_mode_selected)
+	Events.start_settings_applied.connect(_on_start_settings_applied)
 	Events.defense_target_destroyed.connect(_on_defense_target_destroyed)
 	Events.tunnel_door_breached.connect(_on_tunnel_door_breached)
 
 	# Start game flow
-	call_deferred("show_difficulty_select")
+	call_deferred("show_start_settings")
 
 
 # =============================================================================
@@ -64,6 +65,23 @@ func _on_difficulty_selected(difficulty: int) -> void:
 
 func _on_game_mode_selected(game_mode: int) -> void:
 	Globals.set_game_mode(game_mode as GameEnums.GameMode)
+	start_game()
+
+
+func show_start_settings() -> void:
+	GameStateMachine.force_transition(GameStateMachine.GameState.DIFFICULTY_SELECT) # Reuse state for now
+	Events.show_start_settings.emit()
+
+
+func _on_start_settings_applied(difficulty: int, spawn_mode: int, win_mode: int, arena_mode: int) -> void:
+	Globals.set_difficulty(difficulty as GameEnums.Difficulty)
+	GameModeService.set_mode(spawn_mode as GameEnums.GameMode)
+	GameModeService.set_mode(win_mode as GameEnums.GameMode)
+	GameModeService.set_mode(arena_mode as GameEnums.GameMode)
+	
+	# Notify systems that depend on game mode (like ArenaSetup)
+	Events.game_mode_selected.emit(win_mode)
+	
 	start_game()
 
 
