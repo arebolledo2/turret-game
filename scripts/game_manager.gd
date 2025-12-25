@@ -1,8 +1,8 @@
 extends Node
 
-enum GameState { IDLE, DIFFICULTY_SELECT, GAME_MODE_SELECT, SHOP, WAVE_ANNOUNCEMENT, COMBAT, WAVE_END, VICTORY, GAME_OVER }
+enum GameState {IDLE, DIFFICULTY_SELECT, GAME_MODE_SELECT, SHOP, WAVE_ANNOUNCEMENT, COMBAT, WAVE_END, VICTORY, GAME_OVER}
 
-var current_state = GameState.IDLE
+var current_state: GameState = GameState.IDLE
 var wave_timer: float = 0.0
 var announcement_timer: float = 0.0
 var pause_timer: float = 0.0
@@ -78,7 +78,7 @@ func _process(delta: float) -> void:
 		GameState.WAVE_END:
 			process_wave_end(delta)
 		GameState.SHOP:
-			pass  # Shop is UI-driven, no processing needed
+			pass # Shop is UI-driven, no processing needed
 
 func start_wave_announcement() -> void:
 	Globals.current_wave += 1
@@ -164,9 +164,8 @@ func end_shop_phase() -> void:
 	reset_wave_state()
 
 	# Spawn purchased turrets before wave starts
-	var turret_mgr = get_node_or_null("../TurretManager")
-	if turret_mgr and turret_mgr.has_method("spawn_pending_turrets"):
-		turret_mgr.spawn_pending_turrets()
+	if turret_manager and turret_manager.has_method("spawn_pending_turrets"):
+		turret_manager.spawn_pending_turrets()
 
 	start_wave_announcement()
 

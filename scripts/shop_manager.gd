@@ -4,7 +4,7 @@ func _ready() -> void:
 	Events.shop_opened.connect(_on_shop_opened)
 	Events.shop_closed.connect(_on_shop_closed)
 
-func _on_shop_opened(wave_number: int) -> void:
+func _on_shop_opened(_wave_number: int) -> void:
 	generate_offers()
 
 func _on_shop_closed() -> void:
@@ -33,7 +33,7 @@ func generate_offers() -> void:
 	var new_offer_count = base_offer_count - locked_offers.size()
 	
 	for i in range(new_offer_count):
-		var roll = randf()
+		var roll: float = randf()
 		if roll < GameConstants.SHOP_ITEM_CHANCE:
 			generate_item_offer(generated_item_ids, generated_turret_ids)
 		else:
@@ -46,7 +46,7 @@ func generate_offers() -> void:
 	Events.shop_offers_generated.emit(Globals.current_shop_offers)
 
 func generate_turret_offer(generated_turret_ids: Array[String]) -> void:
-	var turret_types = TurretRegistry.get_all_type_ids()
+	var turret_types: Array = TurretRegistry.get_all_type_ids()
 
 	# Filter out already generated turrets
 	var available_turrets: Array[String] = []
@@ -58,15 +58,15 @@ func generate_turret_offer(generated_turret_ids: Array[String]) -> void:
 	if available_turrets.is_empty():
 		available_turrets = turret_types
 
-	var random_type = available_turrets[randi() % available_turrets.size()]
+	var random_type: String = available_turrets[randi() % available_turrets.size()]
 
 	# Track this turret as generated
 	generated_turret_ids.append(random_type)
 
-	var base_price = TurretRegistry.get_base_price(random_type)
-	var scaled_price = calculate_turret_price(base_price, Globals.current_wave)
+	var base_price: int = TurretRegistry.get_base_price(random_type)
+	var scaled_price: int = calculate_turret_price(base_price, Globals.current_wave)
 
-	var offer = {
+	var offer: Dictionary = {
 		"type": "turret",
 		"turret_id": random_type,
 		"price": scaled_price,
@@ -89,13 +89,13 @@ func generate_item_offer(generated_item_ids: Array[String], generated_turret_ids
 		generate_turret_offer(generated_turret_ids)
 		return
 	
-	var base_price = ItemRegistry.get_item_price(random_item_id)
-	var scaled_price = calculate_item_price(base_price, Globals.current_wave, random_item_id)
+	var base_price: int = ItemRegistry.get_item_price(random_item_id)
+	var scaled_price: int = calculate_item_price(base_price, Globals.current_wave, random_item_id)
 
 	# Track this item as generated
 	generated_item_ids.append(random_item_id)
 
-	var offer = {
+	var offer: Dictionary = {
 		"type": "item",
 		"item_id": random_item_id,
 		"price": scaled_price,
@@ -106,11 +106,11 @@ func generate_item_offer(generated_item_ids: Array[String], generated_turret_ids
 
 func calculate_turret_price(base_price: int, wave: int) -> int:
 	# Include turret purchase penalty: +25% per turret owned (can be reduced by items)
-	var wave_multiplier = 1.0 + Globals.WAVE_PRICE_SCALE * wave
-	var penalty_per_turret = Globals.get_turret_purchase_penalty()
-	var penalty_multiplier = 1.0 + penalty_per_turret * Globals.turrets_purchased
-	var shop_price_mult = Globals.get_shop_price_multiplier()
-	var price = int(base_price * wave_multiplier * penalty_multiplier * shop_price_mult)
+	var wave_multiplier: float = 1.0 + Globals.WAVE_PRICE_SCALE * wave
+	var penalty_per_turret: float = Globals.get_turret_purchase_penalty()
+	var penalty_multiplier: float = 1.0 + penalty_per_turret * Globals.turrets_purchased
+	var shop_price_mult: float = Globals.get_shop_price_multiplier()
+	var price: int = int(base_price * wave_multiplier * penalty_multiplier * shop_price_mult)
 
 	# Apply Quantity Discount: Every 3rd turret costs 50%
 	if ItemRegistry.has_special_effect("quantity_discount") and Globals.item_counts.get("quantity_discount", 0) > 0:
@@ -129,10 +129,10 @@ func calculate_item_price(base_price: int, wave: int, item_id: String = "") -> i
 		if rarity >= GameEnums.ItemRarity.RARE:
 			# Check if player has Fortune's Favor
 			if Globals.item_counts.get("fortunes_favor", 0) > 0:
-				price *= 0.85  # 15% discount
+				price *= 0.85 # 15% discount
 
 	# Apply shop price multiplier from items
-	var shop_price_mult = Globals.get_shop_price_multiplier()
+	var shop_price_mult: float = Globals.get_shop_price_multiplier()
 	price *= shop_price_mult
 
 	return int(price)
@@ -141,7 +141,7 @@ func purchase_offer(offer_index: int) -> bool:
 	if offer_index < 0 or offer_index >= Globals.current_shop_offers.size():
 		return false
 
-	var offer = Globals.current_shop_offers[offer_index]
+	var offer: Dictionary = Globals.current_shop_offers[offer_index]
 
 	if offer.get("sold", false):
 		return false
@@ -154,7 +154,7 @@ func purchase_offer(offer_index: int) -> bool:
 	Events.gold_spent.emit(offer["price"], Globals.total_gold)
 
 	offer["sold"] = true
-	offer["locked"] = false  # Clear lock when purchased
+	offer["locked"] = false # Clear lock when purchased
 
 	if offer["type"] == "turret":
 		# Queue turret for spawning at wave start
