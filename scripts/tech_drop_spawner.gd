@@ -1,7 +1,7 @@
 extends Node2D
 
 var spawn_timer: Timer
-var active_tech_drops: Array[Node2D] = []  # Track for cleanup only
+var active_tech_drops: Array[Node2D] = [] # Track for cleanup only
 var is_active: bool = false
 var tech_drop_scene: PackedScene
 var current_wave: int = 1
@@ -69,34 +69,30 @@ func attempt_spawn() -> void:
 	var spawn_pos = find_valid_spawn_position()
 
 	if spawn_pos == Vector2.INF:
-		return  # Failed to find valid position
+		return # Failed to find valid position
 
 	# Queue spawn with alert
 	_queue_spawn_with_alert(spawn_pos)
 
 func find_valid_spawn_position() -> Vector2:
-	"""Find a valid spawn position in the arena."""
-	var half_width = Globals.ARENA_WIDTH / 2.0
-	var half_height = Globals.ARENA_HEIGHT / 2.0
-	var margin = 100.0  # Keep away from edges
-
-	for i in 30:  # Max 30 attempts
-		var pos = Vector2(
-			randf_range(-half_width + margin, half_width - margin),
-			randf_range(-half_height + margin, half_height - margin)
-		)
-
+	"""Find a valid spawn position in the arena (supports isometric bounds)."""
+	var margin = 100.0 # Keep away from edges
+	
+	for i in 30: # Max 30 attempts
+		# Use ArenaBoundsService for isometric-aware position
+		var pos := ArenaBoundsService.get_random_arena_position(margin)
+		
 		# Check distance from other tech drops (min 150 units apart)
 		var valid = true
 		for drop in active_tech_drops:
 			if is_instance_valid(drop) and pos.distance_to(drop.global_position) < 150.0:
 				valid = false
 				break
-
+		
 		if valid:
 			return pos
-
-	return Vector2.INF  # Failed to find valid position
+	
+	return Vector2.INF # Failed to find valid position
 
 func _queue_spawn_with_alert(spawn_pos: Vector2) -> void:
 	"""Queue a spawn with a visual alert."""
@@ -117,7 +113,7 @@ func create_tech_drop_alert(pos: Vector2) -> Node2D:
 
 	# Outer circle (cyan)
 	var outer = Polygon2D.new()
-	outer.color = Color(0.3, 0.8, 1.0, 0.5)  # Cyan with transparency
+	outer.color = Color(0.3, 0.8, 1.0, 0.5) # Cyan with transparency
 	var outer_points = PackedVector2Array()
 	for i in range(32):
 		var angle = i * TAU / 32.0

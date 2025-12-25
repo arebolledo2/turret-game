@@ -87,8 +87,11 @@ func test_isometric_clamp_inside_unchanged() -> void:
 
 func test_isometric_clamp_corner_to_edge() -> void:
 	ArenaBoundsService.set_arena_type(GameEnums.ArenaType.ISOMETRIC)
-	var half_w: float = FIXED_ARENA_WIDTH / 2.0
-	var half_h: float = FIXED_ARENA_HEIGHT / 2.0
+	
+	# Get actual dimensions from service (isometric has different size)
+	var half_dims := ArenaBoundsService.get_half_dimensions()
+	var half_w: float = half_dims.x
+	var half_h: float = half_dims.y
 	
 	# Point in top-right corner (outside diamond)
 	var outside := Vector2(half_w, -half_h)

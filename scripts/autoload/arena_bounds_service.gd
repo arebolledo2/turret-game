@@ -13,13 +13,18 @@ extends Node
 # Current arena type
 var _arena_type: GameEnums.ArenaType = GameEnums.ArenaType.RECTANGULAR
 
-# Fixed arena dimensions (must match arena_setup.gd)
-const FIXED_ARENA_WIDTH: int = 1920
-const FIXED_ARENA_HEIGHT: int = 1080
+# Fixed arena dimensions for rectangular (must match arena_setup.gd)
+const FIXED_RECT_WIDTH: int = 1920
+const FIXED_RECT_HEIGHT: int = 1080
+
+# Isometric dimensions scaled by sqrt(2) for equal surface area
+# Diamond area = W*H/2, so we need W*H*sqrt(2) to match rectangle
+const FIXED_ISO_WIDTH: int = 2716 # 1920 * 1.414
+const FIXED_ISO_HEIGHT: int = 1527 # 1080 * 1.414
 
 # Arena dimensions (half-sizes for centered coordinate system)
-var _half_width: float = FIXED_ARENA_WIDTH / 2.0
-var _half_height: float = FIXED_ARENA_HEIGHT / 2.0
+var _half_width: float = FIXED_RECT_WIDTH / 2.0
+var _half_height: float = FIXED_RECT_HEIGHT / 2.0
 
 # =============================================================================
 # ARENA TYPE MANAGEMENT
@@ -30,7 +35,16 @@ func get_arena_type() -> GameEnums.ArenaType:
 
 func set_arena_type(type: GameEnums.ArenaType) -> void:
 	_arena_type = type
-	print("Arena type set to: ", "ISOMETRIC" if type == GameEnums.ArenaType.ISOMETRIC else "RECTANGULAR")
+	
+	# Update dimensions based on arena type
+	if type == GameEnums.ArenaType.ISOMETRIC:
+		_half_width = FIXED_ISO_WIDTH / 2.0
+		_half_height = FIXED_ISO_HEIGHT / 2.0
+	else:
+		_half_width = FIXED_RECT_WIDTH / 2.0
+		_half_height = FIXED_RECT_HEIGHT / 2.0
+	
+	print("Arena type set to: ", "ISOMETRIC" if type == GameEnums.ArenaType.ISOMETRIC else "RECTANGULAR", " (", _half_width * 2, "x", _half_height * 2, ")")
 
 func is_isometric() -> bool:
 	return _arena_type == GameEnums.ArenaType.ISOMETRIC
@@ -271,5 +285,5 @@ func update_dimensions(width: float, height: float) -> void:
 func reset_state() -> void:
 	"""Reset to default state."""
 	_arena_type = GameEnums.ArenaType.RECTANGULAR
-	_half_width = FIXED_ARENA_WIDTH / 2.0
-	_half_height = FIXED_ARENA_HEIGHT / 2.0
+	_half_width = FIXED_RECT_WIDTH / 2.0
+	_half_height = FIXED_RECT_HEIGHT / 2.0

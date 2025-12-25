@@ -48,15 +48,14 @@ func setup_arena() -> void:
 	# Ensure arena is behind all gameplay entities
 	z_index = -10
 	
-	# Use fixed dimensions for consistent gameplay
-	Globals.ARENA_WIDTH = FIXED_ARENA_WIDTH
-	Globals.ARENA_HEIGHT = FIXED_ARENA_HEIGHT
+	# Get dimensions from ArenaBoundsService (it handles different sizes for isometric)
+	var half_dims := ArenaBoundsService.get_half_dimensions()
+	var half_width := half_dims.x
+	var half_height := half_dims.y
 	
-	# Update ArenaBoundsService with dimensions
-	ArenaBoundsService.update_dimensions(FIXED_ARENA_WIDTH, FIXED_ARENA_HEIGHT)
-	
-	var half_width := float(Globals.ARENA_WIDTH) / 2.0
-	var half_height := float(Globals.ARENA_HEIGHT) / 2.0
+	# Update Globals for legacy code
+	Globals.ARENA_WIDTH = int(half_width * 2)
+	Globals.ARENA_HEIGHT = int(half_height * 2)
 	
 	if ArenaBoundsService.is_isometric():
 		_setup_isometric_arena(half_width, half_height)
