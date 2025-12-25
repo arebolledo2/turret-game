@@ -43,7 +43,7 @@ signal xp_collected(amount: int, total: int)
 # Tech Drop Events
 signal tech_drop_spawned(tech_drop: Node2D, position: Vector2)
 signal tech_drop_destroyed(tech_drop: Node2D, position: Vector2)
-signal tech_drop_despawned(tech_drop: Node2D)  # Wave ended
+signal tech_drop_despawned(tech_drop: Node2D) # Wave ended
 
 # Economy Events
 signal gold_dropped(position: Vector2, amount: int)
@@ -74,3 +74,11 @@ signal update_hud()
 
 # Player Progression Events
 signal player_leveled_up(new_level: int)
+
+# Game Mode Events
+signal defense_target_spawned(target: Node2D, position: Vector2)
+signal defense_target_hp_changed(current_hp: float, max_hp: float)
+signal defense_target_destroyed()
+signal tunnel_door_spawned(door: Node2D, position: Vector2)
+signal tunnel_door_progress_changed(current_hp: float, max_hp: float)
+signal tunnel_door_breached()

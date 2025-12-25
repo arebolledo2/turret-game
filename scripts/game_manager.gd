@@ -11,6 +11,12 @@ var enemy_spawner: Node2D
 var turret_manager: Node
 var tech_drop_spawner: Node2D
 
+# Game mode entities
+var defense_target_scene = preload("res://scenes/defense_target.tscn")
+var tunnel_door_scene = preload("res://scenes/tunnel_door.tscn")
+var current_defense_target: Node2D = null
+var current_tunnel_door: Node2D = null
+
 func _ready() -> void:
 	# Get node references (siblings in scene tree)
 	enemy_spawner = get_node_or_null("../EnemySpawner")
@@ -24,6 +30,12 @@ func _ready() -> void:
 		Events.difficulty_selected.connect(_on_difficulty_selected)
 	if not Events.game_mode_selected.is_connected(_on_game_mode_selected):
 		Events.game_mode_selected.connect(_on_game_mode_selected)
+	
+	# Connect game mode entity events
+	if not Events.defense_target_destroyed.is_connected(_on_defense_target_destroyed):
+		Events.defense_target_destroyed.connect(_on_defense_target_destroyed)
+	if not Events.tunnel_door_breached.is_connected(_on_tunnel_door_breached):
+		Events.tunnel_door_breached.connect(_on_tunnel_door_breached)
 	
 	# Show difficulty selection
 	call_deferred("show_difficulty_select")
@@ -60,6 +72,9 @@ func start_game() -> void:
 	# Spawn free starting turret (skip initial shop phase)
 	if turret_manager and turret_manager.has_method("spawn_starting_turret"):
 		turret_manager.spawn_starting_turret()
+	
+	# Spawn game mode entities based on active win_condition mode
+	_spawn_game_mode_entities()
 	
 	# Go directly to wave 1
 	start_wave_announcement()
@@ -226,3 +241,47 @@ func _auto_pause() -> void:
 
 func restart_game() -> void:
 	get_tree().reload_current_scene()
+
+# =============================================================================
+# GAME MODE ENTITY MANAGEMENT
+# =============================================================================
+
+func _spawn_game_mode_entities() -> void:
+	"""Spawn entities based on the active win_condition game mode."""
+	var difficulty_config = Globals.get_difficulty_config()
+	
+	# Tech Defense Mode - spawn defense target
+	if GameModeService.should_spawn_defense_target():
+		current_defense_target = defense_target_scene.instantiate()
+		get_tree().current_scene.add_child(current_defense_target)
+		current_defense_target.global_position = Vector2.ZERO # Center of arena
+		current_defense_target.initialize(Globals.current_wave, difficulty_config)
+		Events.defense_target_spawned.emit(current_defense_target, Vector2.ZERO)
+	
+	# Tunneling Modes - spawn door
+	if GameModeService.should_spawn_tunnel_door():
+		current_tunnel_door = tunnel_door_scene.instantiate()
+		get_tree().current_scene.add_child(current_tunnel_door)
+		# Position door at right edge of arena
+		var door_x = GameConstants.ARENA_WIDTH / 2.0 - 100
+		current_tunnel_door.global_position = Vector2(door_x, 0)
+		current_tunnel_door.initialize(Globals.current_wave, difficulty_config)
+
+func _on_defense_target_destroyed() -> void:
+	"""Handle defense target destruction - trigger game over."""
+	current_state = GameState.GAME_OVER
+	Globals.is_game_active = false
+	
+	# Stop spawning
+	if enemy_spawner:
+		enemy_spawner.stop_spawning()
+	if tech_drop_spawner and tech_drop_spawner.has_method("stop_spawning"):
+		tech_drop_spawner.stop_spawning()
+	
+	Events.game_over.emit(false)
+
+func _on_tunnel_door_breached() -> void:
+	"""Handle tunnel door breached - complete wave early."""
+	# Only trigger if we're in COMBAT state
+	if current_state == GameState.COMBAT:
+		end_wave()

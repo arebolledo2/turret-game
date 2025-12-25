@@ -106,6 +106,19 @@ const TECH_DROP_SCATTER_COUNT: int = 5
 const TECH_DROP_SCATTER_RADIUS: float = 80.0
 
 # =============================================================================
+# GAME MODE ENTITIES
+# =============================================================================
+# Tech Defense
+const DEFENSE_TARGET_BASE_HEALTH: float = 500.0
+
+# Tunneling
+const TUNNEL_DOOR_BASE_HEALTH: float = 200.0 # HP that must be damaged by turrets
+const TUNNEL_DOOR_HEALTH_SCALE_PER_WAVE: float = 50.0 # +50 HP per wave
+const TUNNELING_ALERT_SOFT_TIMER_MULTIPLIER: float = 1.5 # Alert starts at 150% of normal wave time
+const TUNNELING_ALERT_ESCALATION_RATE: float = 0.30 # +30% spawn rate
+const TUNNELING_ALERT_ESCALATION_INTERVAL: float = 8.0 # Every 8 seconds
+
+# =============================================================================
 # RARITY / LUCK SYSTEM
 # =============================================================================
 
