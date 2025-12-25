@@ -77,10 +77,10 @@ const WAVE_ENEMY_INCREMENT: int = 4
 # =============================================================================
 const STARTING_GOLD: int = 0
 const GOLD_PER_ENEMY: int = 1
-const GOLD_WAVE_BONUS_BASE: int = 20
+const GOLD_WAVE_BONUS_BASE: int = 0
 const SHOP_OFFER_COUNT: int = 4
-const REROLL_BASE_COST: int = 5
-const REROLL_COST_INCREMENT: int = 3
+const REROLL_BASE_COST: int = 1
+const REROLL_COST_INCREMENT: int = 1
 # Removed MAX_REROLLS_PER_WAVE - infinite rerolls allowed (cost still scales)
 const WAVE_PRICE_SCALE: float = 0.15
 const TURRET_PURCHASE_PENALTY: float = 0.25  # +25% per turret owned
@@ -93,7 +93,7 @@ const TECH_DROP_SPAWN_INTERVAL: float = 5.0
 const TECH_DROP_SPAWN_CHANCE: float = 0.20
 const TECH_DROP_BASE_HEALTH: float = 60.0
 const TECH_DROP_XP_REWARD: int = 100
-const TECH_DROP_GOLD_REWARD: int = 25
+const TECH_DROP_GOLD_REWARD: int = 0
 const TECH_DROP_SCATTER_COUNT: int = 5
 const TECH_DROP_SCATTER_RADIUS: float = 80.0
 

@@ -339,12 +339,12 @@ const RARITY_NAMES: Dictionary = {
 }
 
 const ITEM_BASE_PRICES: Dictionary = {
-	GameEnums.ItemRarity.COMMON: 40,
-	GameEnums.ItemRarity.UNCOMMON: 70,
-	GameEnums.ItemRarity.RARE: 110,
-	GameEnums.ItemRarity.EPIC: 160,
-	GameEnums.ItemRarity.LEGENDARY: 240,
-	GameEnums.ItemRarity.UNIQUE: 350,
+	GameEnums.ItemRarity.COMMON: 10,
+	GameEnums.ItemRarity.UNCOMMON: 17,
+	GameEnums.ItemRarity.RARE: 27,
+	GameEnums.ItemRarity.EPIC: 40,
+	GameEnums.ItemRarity.LEGENDARY: 60,
+	GameEnums.ItemRarity.UNIQUE: 87,
 }
 
 # =============================================================================
