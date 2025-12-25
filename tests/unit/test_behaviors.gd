@@ -11,6 +11,7 @@ extends GutTest
 # =============================================================================
 
 class MockEnemy extends CharacterBody2D:
+	var player = null  # Add this property to match Enemy class behavior
 	# CharacterBody2D already has global_position and get_tree() from base class
 	pass
 
