@@ -167,9 +167,27 @@ Items split across **5 rarity-tier files** in `scripts/registries/items/`:
 
 ## Core Systems
 
-### Game State Machine
+### Game State Machine (Refactored Dec 2025)
 
-`GameManager` (`scripts/game_manager.gd`) controls flow via enum:
+Game flow is managed by **3 components**:
+
+1. **GameStateMachine** (`scripts/autoload/game_state_machine.gd`) - Autoload singleton
+   - State enum: IDLE, DIFFICULTY_SELECT, GAME_MODE_SELECT, WAVE_ANNOUNCEMENT, COMBAT, WAVE_END, SHOP, VICTORY, GAME_OVER
+   - Validates state transitions
+   - Emits `state_changed` signal
+
+2. **WaveController** (`scripts/wave_controller.gd`) - Wave timing & spawning
+   - Wave announcement, combat, and end-of-wave timers
+   - Coordinates enemy/tech drop spawning
+   - Wave duration and enemy count calculations
+
+3. **GameModeEntitySpawner** (`scripts/game_mode_entity_spawner.gd`) - Mode-specific entities
+   - Spawns defense targets (Tech Defense mode)
+   - Spawns tunnel doors (Tunneling modes)
+
+4. **GameManager** (`scripts/game_manager.gd`) - Coordinator
+   - Creates and wires WaveController and GameModeEntitySpawner
+   - Handles event connections and game start/restart
 
 ```
 IDLE → DIFFICULTY_SELECT → GAME_MODE_SELECT → WAVE_ANNOUNCEMENT → COMBAT → WAVE_END → SHOP → (loop or VICTORY/GAME_OVER)
@@ -192,17 +210,11 @@ IDLE → DIFFICULTY_SELECT → GAME_MODE_SELECT → WAVE_ANNOUNCEMENT → COMBAT
 - Victory: Complete wave 10
 - Game Over: Player health reaches 0
 
-**Wave Scaling**:
-```gdscript
-# Wave duration
-duration = 25 + (wave - 1) * 4  # seconds
-
-# Enemy count
-count = (10 + (wave - 1) * 4) * difficulty_mult * item_mult
-
-# Spawn interval
-interval = duration / count
-```
+**Wave Scaling** (non-linear):
+- Wave 1: 25s duration
+- Waves 2-4: Scales to 50s (MID)
+- Waves 5-6: Scales to 60s (LATE)
+- Wave 7+: Capped at 60s
 
 ### Economy System
 
@@ -339,7 +351,10 @@ var turrets = get_tree().get_nodes_in_group("turrets")
 ### Modifying Game Flow
 | What | Files |
 |------|-------|
-| State machine transitions | `scripts/game_manager.gd` |
+| State machine transitions | `scripts/autoload/game_state_machine.gd` |
+| Wave timing/progression | `scripts/wave_controller.gd` |
+| Game mode entities (defense targets, doors) | `scripts/game_mode_entity_spawner.gd` |
+| Game flow coordination | `scripts/game_manager.gd` |
 | Wave spawning logic | `scripts/enemy_spawner.gd` |
 | Game Mode logic hooks | `scripts/autoload/game_mode_service.gd` |
 | Game Mode definitions | `scripts/registries/game_mode_registry.gd` |

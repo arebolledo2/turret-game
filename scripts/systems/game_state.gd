@@ -34,7 +34,7 @@ var show_damage_numbers: bool = true
 var player_auto_attack_enabled: bool = false
 var show_turret_ranges: bool = false
 
-# Modifier system instance
+# Modifier system instance (for isolated state, e.g., save games)
 var modifiers: ModifierSystem = ModifierSystem.new()
 
 

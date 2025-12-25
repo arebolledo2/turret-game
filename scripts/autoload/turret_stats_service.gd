@@ -22,69 +22,14 @@ func reset_state() -> void:
 
 
 ## Get turret stats with all modifiers applied
+## Delegates to ModifierService for consistent stat calculation
 func get_turret_stats(turret_type: String, difficulty_turret_damage_mult: float) -> Dictionary:
 	if not TurretRegistry.TYPES.has(turret_type):
 		return {}
 
-	var base_stats: Dictionary = TurretRegistry.get_base_stats(turret_type)
-	base_stats["damage"] = base_stats["damage"] * difficulty_turret_damage_mult
-
-	var add_mods: Dictionary = {}
-	var mult_mods: Dictionary = {}
-
-	for modifier in _get_modifier_service().active_modifiers:
-		if not _modifier_matches_turret(modifier, turret_type):
-			continue
-
-		var stat: String = modifier.get("stat", "")
-		var operation: String = modifier.get("operation", "add")
-		var value: float = modifier.get("value", 0.0)
-
-		if operation == "add":
-			add_mods[stat] = add_mods.get(stat, 0.0) + value
-		elif operation == "multiply":
-			if not mult_mods.has(stat):
-				mult_mods[stat] = []
-			mult_mods[stat].append(value)
-
-	for stat in add_mods:
-		base_stats[stat] = base_stats.get(stat, 0.0) + add_mods[stat]
-
-	for stat in mult_mods:
-		var combined_mult: float = 1.0
-		for mult in mult_mods[stat]:
-			combined_mult *= mult
-		base_stats[stat] = base_stats.get(stat, 0.0) * combined_mult
-
-	return base_stats
-
-
-func _modifier_matches_turret(modifier: Dictionary, turret_type: String) -> bool:
-	if not TurretRegistry.TYPES.has(turret_type):
-		return false
-
-	var turret_def: Dictionary = TurretRegistry.get_type(turret_type)
-	var filter: Dictionary = modifier.get("filter", {})
-
-	if filter.is_empty():
-		return true
-
-	if filter.has("turret_type") and not filter["turret_type"].is_empty():
-		if turret_type in filter["turret_type"]:
-			return true
-
-	if filter.has("damage_type") and not filter["damage_type"].is_empty():
-		for dtype in filter["damage_type"]:
-			if dtype in turret_def.get("damage_types", []):
-				return true
-
-	if filter.has("attack_style") and not filter["attack_style"].is_empty():
-		for astyle in filter["attack_style"]:
-			if astyle in turret_def.get("attack_styles", []):
-				return true
-
-	var has_filters := filter.has("turret_type") or filter.has("damage_type") or filter.has("attack_style")
-	return not has_filters
+	# Build a minimal difficulty config with the damage mult
+	var difficulty_config := {"turret_damage_mult": difficulty_turret_damage_mult}
+	return _get_modifier_service().get_turret_stats(turret_type, difficulty_config)
 
 
 ## Get turret color
