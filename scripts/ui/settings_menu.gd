@@ -8,11 +8,12 @@ var physics_hitboxes_check: CheckButton
 var player_hurtbox_check: CheckButton
 var enemy_hurtbox_check: CheckButton
 var player_attack_check: CheckButton
+var isometric_debug_check: CheckButton
 var back_button: Button
 
 # Base values at 1080p
 const BASE_PANEL_WIDTH: float = 400.0
-const BASE_PANEL_HEIGHT: float = 300.0
+const BASE_PANEL_HEIGHT: float = 350.0 # Increased height for new option
 const BASE_BUTTON_HEIGHT: float = 40.0
 
 
@@ -22,6 +23,7 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 	player_hurtbox_check = nodes.get("player_hurtbox_check")
 	enemy_hurtbox_check = nodes.get("enemy_hurtbox_check")
 	player_attack_check = nodes.get("player_attack_check")
+	isometric_debug_check = nodes.get("isometric_debug_check")
 	back_button = nodes.get("back_button")
 
 	# Set base size
@@ -33,6 +35,10 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 	# Initialize checkbox states
 	if show_damage_check:
 		show_damage_check.button_pressed = Globals.show_damage_numbers
+		
+	if isometric_debug_check:
+		isometric_debug_check.button_pressed = Globals.isometric_debug_enabled
+		isometric_debug_check.toggled.connect(on_isometric_debug_toggled)
 
 	if physics_hitboxes_check:
 		physics_hitboxes_check.button_pressed = Globals.debug_hitbox_flags[GameEnums.HitboxType.PHYSICS]
@@ -71,6 +77,11 @@ func hide() -> void:
 
 func on_show_damage_toggled(toggled_on: bool) -> void:
 	Globals.show_damage_numbers = toggled_on
+
+
+func on_isometric_debug_toggled(toggled_on: bool) -> void:
+	Globals.isometric_debug_enabled = toggled_on
+	Events.isometric_debug_toggled.emit(toggled_on)
 
 
 func on_hitbox_type_toggled(type: int, toggled_on: bool) -> void:

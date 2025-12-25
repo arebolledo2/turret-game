@@ -665,6 +665,20 @@ text = "Show Damage Numbers"
 layout_mode = 2
 button_pressed = true
 
+[node name="IsometricDebugContainer" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="IsometricDebugLabel" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/IsometricDebugContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Edit Isometric BG"
+
+[node name="IsometricDebugCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+button_pressed = false
+
+
 [node name="HitboxSettingsTitle" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18

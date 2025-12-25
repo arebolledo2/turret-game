@@ -115,6 +115,8 @@ func _get_game_manager() -> Node:
 var show_damage_numbers: bool = true
 var player_auto_attack_enabled: bool = false
 var show_turret_ranges: bool = false
+var isometric_debug_enabled: bool = false
+
 
 var debug_hitbox_flags: Dictionary = {
 	GameEnums.HitboxType.PHYSICS: false,

@@ -171,11 +171,27 @@ func _setup_isometric_arena(half_width: float, half_height: float) -> void:
 	var outline_points = ground_points.duplicate()
 	outline_points.append(ground_points[0]) # Close loop
 	debug_outline.points = outline_points
-	debug_outline.visible = true
+	debug_outline.visible = Globals.isometric_debug_enabled # HIDE by default (unless enabled)
+	
+	# Connect to debug event
+	if not Events.isometric_debug_toggled.is_connected(_on_isometric_debug_toggled):
+		Events.isometric_debug_toggled.connect(_on_isometric_debug_toggled)
+
+
+func _on_isometric_debug_toggled(enabled: bool) -> void:
+	if debug_outline:
+		debug_outline.visible = enabled
+	
+	# Print status to console
+	if enabled:
+		print("ISOMETRIC EDIT MODE: ENABLED (Use Arrows/Shift/Plus/Minus/S)")
+	else:
+		print("ISOMETRIC EDIT MODE: DISABLED")
 
 
 func _process(delta: float) -> void:
-	if not visible or not bg_sprite:
+	# Only run if visible, sprite exists, AND DEBUG MODE IS ENABLED
+	if not visible or not bg_sprite or not Globals.isometric_debug_enabled:
 		return
 		
 	# Simple Runtime Alignment Tool
@@ -231,6 +247,7 @@ func _process(delta: float) -> void:
 		bg_sprite.position = bg_offset
 		bg_sprite.scale = bg_zoom
 		print("BG Alignment | Offset: ", bg_offset, " | Scale: ", bg_zoom)
+
 
 const CONFIG_PATH = "user://isometric_bg_config.cfg"
 
