@@ -277,6 +277,15 @@ func get_half_dimensions() -> Vector2:
 	"""Return the half dimensions (half_width, half_height)."""
 	return Vector2(_half_width, _half_height)
 
+func get_bounds_rect() -> Rect2:
+	"""Return the full arena bounds as a Rect2 centered on origin."""
+	return Rect2(
+		- _half_width,
+		- _half_height,
+		_half_width * 2.0,
+		_half_height * 2.0
+	)
+
 func update_dimensions(width: float, height: float) -> void:
 	"""Update arena dimensions (called by arena_setup.gd)."""
 	_half_width = width / 2.0

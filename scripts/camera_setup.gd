@@ -10,7 +10,7 @@ const ZOOM_SPEED: float = 10.0
 const ZOOM_STEP: float = 0.1
 
 var target_zoom: float = 1.0
-var base_zoom: float = 1.0  # Auto-calculated zoom to fit arena
+var base_zoom: float = 1.0 # Auto-calculated zoom to fit arena
 
 func _ready() -> void:
 	get_viewport().size_changed.connect(_on_viewport_changed)
@@ -33,14 +33,18 @@ func _on_viewport_changed() -> void:
 	setup_camera_limits()
 	calculate_base_zoom()
 
-func setup_camera_limits() -> void:
-	var half_width := Globals.ARENA_WIDTH / 2.0
-	var half_height := Globals.ARENA_HEIGHT / 2.0
+const CAMERA_LIMIT_PADDING: int = 1000
 
-	limit_left = int(-half_width)
-	limit_top = int(-half_height)
-	limit_right = int(half_width)
-	limit_bottom = int(half_height)
+func setup_camera_limits() -> void:
+	# Use ArenaBoundsService to get accurate bounds for current mode (Rectangle or Isometric)
+	var bounds_rect := ArenaBoundsService.get_bounds_rect()
+	
+	# Add padding so we can see the surroundings (and center the camera on player at edges)
+	limit_left = int(bounds_rect.position.x - CAMERA_LIMIT_PADDING)
+	limit_top = int(bounds_rect.position.y - CAMERA_LIMIT_PADDING)
+	limit_right = int(bounds_rect.end.x + CAMERA_LIMIT_PADDING)
+	limit_bottom = int(bounds_rect.end.y + CAMERA_LIMIT_PADDING)
+
 
 func calculate_base_zoom() -> void:
 	# Calculate zoom to fit the arena in the viewport
