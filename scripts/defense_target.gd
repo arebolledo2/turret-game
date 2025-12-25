@@ -14,26 +14,46 @@ var current_health: float
 var is_destroyed: bool = false
 
 func _ready() -> void:
+	print("DEBUG DefenseTarget: _ready() called")
 	add_to_group("defense_targets")
 	current_health = max_health
+	
+	print("DEBUG DefenseTarget: Position = ", global_position)
+	print("DEBUG DefenseTarget: Visible = ", visible)
+	print("DEBUG DefenseTarget: Sprite exists = ", sprite != null)
+	if sprite:
+		print("DEBUG DefenseTarget: Sprite visible = ", sprite.visible)
+		print("DEBUG DefenseTarget: Sprite modulate = ", sprite.modulate)
+		print("DEBUG DefenseTarget: Sprite scale = ", sprite.scale)
 	
 	# Connect area signals for enemy collision
 	if area:
 		area.body_entered.connect(_on_body_entered)
+		print("DEBUG DefenseTarget: Area connected")
+	else:
+		print("DEBUG DefenseTarget: WARNING - Area2D not found!")
 
 func initialize(_wave: int, difficulty_config: Dictionary) -> void:
 	"""
 	Initialize the defense target with wave and difficulty scaling.
 	User decision: 500 HP base, scaled by difficulty.
 	"""
+	print("DEBUG DefenseTarget: initialize() called")
+	print("DEBUG DefenseTarget: Wave = ", _wave)
+	print("DEBUG DefenseTarget: Difficulty config = ", difficulty_config)
+	
 	# Scale HP by difficulty
 	var health_mult = difficulty_config.get("enemy_health_mult", 1.0) # Use enemy mult as inverse
 	max_health = GameConstants.DEFENSE_TARGET_BASE_HEALTH / health_mult # Harder difficulty = less HP
 	
 	current_health = max_health
 	
+	print("DEBUG DefenseTarget: Max HP = ", max_health)
+	print("DEBUG DefenseTarget: Current HP = ", current_health)
+	
 	# Emit initial HP for UI
 	Events.defense_target_hp_changed.emit(current_health, max_health)
+	print("DEBUG DefenseTarget: HP changed event emitted")
 
 func _on_body_entered(body: Node) -> void:
 	"""Handle enemies reaching the target."""

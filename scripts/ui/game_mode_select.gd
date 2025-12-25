@@ -160,11 +160,3 @@ func hide_screen() -> void:
 		tween.tween_callback(func():
 			container.visible = false
 		)
-
-
-func hide_and_emit(mode: GameEnums.GameMode) -> void:
-	"""Legacy method for compatibility - redirects to proper handlers."""
-	if mode == GameEnums.GameMode.SENTINEL or mode == GameEnums.GameMode.INVASION:
-		on_spawn_mode_selected(mode)
-	else:
-		on_win_condition_selected(mode)

@@ -327,11 +327,11 @@ func _on_show_game_mode_select() -> void:
 
 
 func _on_sentinel_pressed() -> void:
-	_game_mode_select.hide_and_emit(GameEnums.GameMode.SENTINEL)
+	_game_mode_select.on_spawn_mode_selected(GameEnums.GameMode.SENTINEL)
 
 
 func _on_invasion_pressed() -> void:
-	_game_mode_select.hide_and_emit(GameEnums.GameMode.INVASION)
+	_game_mode_select.on_spawn_mode_selected(GameEnums.GameMode.INVASION)
 
 
 func _on_survival_pressed() -> void:
