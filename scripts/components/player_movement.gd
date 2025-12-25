@@ -1,12 +1,12 @@
 extends Node
 class_name PlayerMovement
 
-## Handles player movement, input, and sprite direction.
+## Handles player movement, input, and sprite flipping.
 ##
 ## Responsibilities:
 ## - Collect input (WASD + gamepad)
 ## - Calculate velocity with speed modifiers
-## - Update 8-directional sprite frames
+## - Flip sprite horizontally based on movement direction
 ## - Clamp to arena bounds
 ## - Check turret carry speed penalty
 
@@ -52,16 +52,22 @@ func process(_delta: float) -> Vector2:
 
 	velocity = input_vector * effective_speed
 
-	# Handle 8-direction sprite based on movement
+	# Handle sprite flip based on movement direction
 	if input_vector.length() > 0.1:
 		is_moving = true
 		facing_direction = get_direction_from_vector(input_vector)
-		sprite.frame = facing_direction
-		sprite.flip_h = false  # No flip needed with 8-dir sprites
+
+		# Flip sprite based on horizontal direction
+		# West-facing directions: show original left-facing sprite (no flip)
+		if facing_direction in [2, 3, 1]:  # West(2), Northwest(3), Southwest(1)
+			sprite.flip_h = false
+		# East-facing directions: flip sprite to face right
+		elif facing_direction in [6, 5, 7]:  # East(6), Northeast(5), Southeast(7)
+			sprite.flip_h = true
+		# North(4) and South(0): Keep current flip state (last horizontal direction)
 	else:
 		is_moving = false
-		# Keep facing last direction when stopped
-		sprite.frame = facing_direction
+		# Keep facing and flip state when idle
 
 	return velocity
 
