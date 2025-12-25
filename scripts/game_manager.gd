@@ -65,7 +65,6 @@ func _on_difficulty_selected(difficulty: int) -> void:
 
 func _on_game_mode_selected(game_mode: int) -> void:
 	Globals.set_game_mode(game_mode as GameEnums.GameMode)
-	start_game()
 
 
 func show_start_settings() -> void:
@@ -73,14 +72,15 @@ func show_start_settings() -> void:
 	Events.show_start_settings.emit()
 
 
-func _on_start_settings_applied(difficulty: int, spawn_mode: int, win_mode: int, arena_mode: int) -> void:
+func _on_start_settings_applied(difficulty: int, spawn_mode: int, win_mode: int, arena_mode: int, bg_index: int) -> void:
 	Globals.set_difficulty(difficulty as GameEnums.Difficulty)
 	GameModeService.set_mode(spawn_mode as GameEnums.GameMode)
 	GameModeService.set_mode(win_mode as GameEnums.GameMode)
 	GameModeService.set_mode(arena_mode as GameEnums.GameMode)
 	
-	# Notify systems that depend on game mode (like ArenaSetup)
+	# Notify systems that depend on game mode
 	Events.game_mode_selected.emit(win_mode)
+	Events.arena_background_selected.emit(bg_index)
 	
 	start_game()
 
@@ -90,6 +90,10 @@ func _on_start_settings_applied(difficulty: int, spawn_mode: int, win_mode: int,
 # =============================================================================
 
 func start_game() -> void:
+	# Guard against double-starting within the same process
+	if Globals.is_game_active:
+		return
+		
 	# Store modes before reset
 	var spawn_mode = Globals.game_mode_service.active_modes.get("spawn_location")
 	var win_mode = Globals.game_mode_service.active_modes.get("win_condition")

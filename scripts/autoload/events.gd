@@ -73,7 +73,7 @@ signal difficulty_selected(difficulty: int)
 signal show_game_mode_select()
 signal game_mode_selected(game_mode: int)
 signal show_start_settings()
-signal start_settings_applied(difficulty: int, spawn_mode: int, win_mode: int, arena_mode: int)
+signal start_settings_applied(difficulty: int, spawn_mode: int, win_mode: int, arena_mode: int, bg_index: int)
 signal update_hud()
 
 # Player Progression Events
@@ -86,3 +86,4 @@ signal defense_target_destroyed()
 signal tunnel_door_spawned(door: Node2D, position: Vector2)
 signal tunnel_door_progress_changed(current_hp: float, max_hp: float)
 signal tunnel_door_breached()
+signal arena_background_selected(index: int)

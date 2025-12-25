@@ -48,8 +48,9 @@ func _ready() -> void:
 	if not Events.isometric_debug_toggled.is_connected(_on_isometric_debug_toggled):
 		Events.isometric_debug_toggled.connect(_on_isometric_debug_toggled)
 		print("DEBUG: Arena connected to isometric_debug_toggled signal")
-	else:
-		print("DEBUG: Arena ALREADY connected to isometric_debug_toggled signal")
+
+	if not Events.arena_background_selected.is_connected(_on_arena_background_selected):
+		Events.arena_background_selected.connect(_on_arena_background_selected)
 	
 	# Wait for game mode to be set before configuring arena
 	# If game is already started, setup now; otherwise wait for signal
@@ -74,6 +75,12 @@ func _on_game_mode_selected(_mode: GameEnums.GameMode) -> void:
 func _on_difficulty_selected(_difficulty: int) -> void:
 	# Setup with default (rectangular) - will be updated when game mode selected
 	pass
+
+
+func _on_arena_background_selected(index: int) -> void:
+	current_bg_index = index
+	if ArenaBoundsService.is_isometric():
+		_apply_current_background()
 
 
 func setup_arena() -> void:

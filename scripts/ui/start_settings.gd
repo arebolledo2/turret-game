@@ -4,8 +4,10 @@ extends ScalableUIPanel
 ## Handles consolidated start settings screen
 
 var difficulty_dropdown: OptionButton
+var spawn_dropdown: OptionButton
 var mode_dropdown: OptionButton
 var arena_dropdown: OptionButton
+var bg_dropdown: OptionButton
 var start_button: Button
 
 # Base values at 1080p
@@ -16,8 +18,10 @@ const BASE_ELEMENT_HEIGHT: float = 50.0
 
 func setup(nodes: Dictionary, owner: Node) -> void:
 	difficulty_dropdown = nodes.get("difficulty_dropdown")
+	spawn_dropdown = nodes.get("spawn_dropdown")
 	mode_dropdown = nodes.get("mode_dropdown")
 	arena_dropdown = nodes.get("arena_dropdown")
+	bg_dropdown = nodes.get("bg_dropdown")
 	start_button = nodes.get("start_button")
 
 	_setup_options()
@@ -43,6 +47,14 @@ func _setup_options() -> void:
 		# Default to Medium
 		difficulty_dropdown.select(1)
 
+	# Spawn Mode (Wave Structure) Options
+	if spawn_dropdown:
+		spawn_dropdown.clear()
+		spawn_dropdown.add_item("Sentinel (Edges)", GameEnums.GameMode.SENTINEL)
+		spawn_dropdown.add_item("Invasion (Anywhere)", GameEnums.GameMode.INVASION)
+		# Default to Invasion
+		spawn_dropdown.select(1)
+
 	# Game Mode (Win Condition) Options
 	if mode_dropdown:
 		mode_dropdown.clear()
@@ -53,18 +65,29 @@ func _setup_options() -> void:
 		# Default to Defense (Tech Defense is index 1)
 		mode_dropdown.select(1)
 
-	# Arena Options
+	# Arena Type Options
 	if arena_dropdown:
 		arena_dropdown.clear()
 		arena_dropdown.add_item("Classic", GameEnums.GameMode.ARENA_RECTANGULAR)
 		arena_dropdown.add_item("Isometric", GameEnums.GameMode.ARENA_ISOMETRIC)
 		# Default to Isometric
 		arena_dropdown.select(1)
+		arena_dropdown.item_selected.connect(_on_arena_type_selected)
+
+	# Background Options
+	if bg_dropdown:
+		bg_dropdown.clear()
+		bg_dropdown.add_item("Factory Ruins", 0)
+		bg_dropdown.add_item("Desert Outpost", 1)
+		# Default to first
+		bg_dropdown.select(0)
+		# Initially visible only if isometric is selected (which is default)
+		bg_dropdown.disabled = false
 
 
 func _scale_fonts(scale: float) -> void:
 	# Scale elements if needed
-	for element in [difficulty_dropdown, mode_dropdown, arena_dropdown, start_button]:
+	for element in [difficulty_dropdown, spawn_dropdown, mode_dropdown, arena_dropdown, bg_dropdown, start_button]:
 		if element:
 			element.custom_minimum_size.y = UIScaler.scale(BASE_ELEMENT_HEIGHT)
 
@@ -90,10 +113,16 @@ func hide_screen() -> void:
 
 func _on_start_pressed() -> void:
 	var difficulty = difficulty_dropdown.get_selected_id()
+	var spawn_mode = spawn_dropdown.get_selected_id()
 	var win_mode = mode_dropdown.get_selected_id()
 	var arena_mode = arena_dropdown.get_selected_id()
-	# Spawn location is currently simplified to SENTINEL by default in this flow
-	var spawn_mode = GameEnums.GameMode.SENTINEL
+	var bg_index = bg_dropdown.get_selected_id()
 	
-	Events.start_settings_applied.emit(difficulty, spawn_mode, win_mode, arena_mode)
+	Events.start_settings_applied.emit(difficulty, spawn_mode, win_mode, arena_mode, bg_index)
 	hide_screen()
+
+
+func _on_arena_type_selected(index: int) -> void:
+	var arena_mode = arena_dropdown.get_item_id(index)
+	if bg_dropdown:
+		bg_dropdown.disabled = (arena_mode != GameEnums.GameMode.ARENA_ISOMETRIC)

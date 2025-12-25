@@ -215,8 +215,10 @@ func _setup_components() -> void:
 		"container": start_settings_screen,
 		"panel": $StartSettings/Panel,
 		"difficulty_dropdown": $StartSettings/Panel/VBoxContainer/SettingsGrid/DifficultyDropdown,
+		"spawn_dropdown": $StartSettings/Panel/VBoxContainer/SettingsGrid/SpawnDropdown,
 		"mode_dropdown": $StartSettings/Panel/VBoxContainer/SettingsGrid/ModeDropdown,
 		"arena_dropdown": $StartSettings/Panel/VBoxContainer/SettingsGrid/ArenaDropdown,
+		"bg_dropdown": $StartSettings/Panel/VBoxContainer/SettingsGrid/BGDropdown,
 		"start_button": $StartSettings/Panel/VBoxContainer/StartButton,
 	}, self)
 

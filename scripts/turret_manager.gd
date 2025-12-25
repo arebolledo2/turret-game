@@ -43,7 +43,7 @@ func spawn_turret() -> void:
 	Events.turret_spawned.emit(turret, spawn_pos)
 
 func find_valid_spawn_position(player: Node2D, max_attempts: int = 50) -> Vector2:
-	var margin := 50.0  # Keep away from edges
+	var margin := 50.0 # Keep away from edges
 
 	for i in max_attempts:
 		# Random position within arena (handles both rectangular and isometric modes)
@@ -52,7 +52,7 @@ func find_valid_spawn_position(player: Node2D, max_attempts: int = 50) -> Vector
 		if is_position_valid(pos, player):
 			return pos
 
-	return Vector2.INF  # Failed to find valid position
+	return Vector2.INF # Failed to find valid position
 
 func is_position_valid(pos: Vector2, player: Node2D) -> bool:
 	# Check distance from player
@@ -123,6 +123,15 @@ func spawn_starting_turret() -> void:
 		push_error("Turret scene not loaded!")
 		return
 	
+	# Prevent double spawning
+	if not turrets.is_empty():
+		for t in turrets:
+			if is_instance_valid(t):
+				t.queue_free()
+		turrets.clear()
+		Globals.turret_counts.clear()
+		Globals.turrets_spawned = 0
+	
 	# Spawn at arena center (0, 0)
 	var spawn_pos := Vector2.ZERO
 	
@@ -165,7 +174,7 @@ func spawn_turret_type(turret_id: String) -> void:
 
 	# First turret of the game spawns next to player
 	if Globals.turrets_spawned == 0 and player:
-		spawn_pos = player.global_position + Vector2(80, 0)  # 80 pixels to the right
+		spawn_pos = player.global_position + Vector2(80, 0) # 80 pixels to the right
 	else:
 		spawn_pos = find_valid_spawn_position(player)
 
@@ -204,7 +213,7 @@ func get_turrets_within_radius(position: Vector2, radius: float) -> Array[Node2D
 		if not is_instance_valid(turret):
 			continue
 		var distance := position.distance_to(turret.global_position)
-		if distance <= radius and distance > 0.1:  # Exclude self (small epsilon for floating point)
+		if distance <= radius and distance > 0.1: # Exclude self (small epsilon for floating point)
 			nearby.append(turret)
 	return nearby
 

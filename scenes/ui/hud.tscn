@@ -798,6 +798,16 @@ custom_minimum_size = Vector2(300, 50)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 
+[node name="SpawnLabel" type="Label" parent="StartSettings/Panel/VBoxContainer/SettingsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Wave Structure:"
+
+[node name="SpawnDropdown" type="OptionButton" parent="StartSettings/Panel/VBoxContainer/SettingsGrid"]
+custom_minimum_size = Vector2(300, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
 [node name="ModeLabel" type="Label" parent="StartSettings/Panel/VBoxContainer/SettingsGrid"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
@@ -814,6 +824,16 @@ theme_override_font_sizes/font_size = 20
 text = "Arena Type:"
 
 [node name="ArenaDropdown" type="OptionButton" parent="StartSettings/Panel/VBoxContainer/SettingsGrid"]
+custom_minimum_size = Vector2(300, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+
+[node name="BGLabel" type="Label" parent="StartSettings/Panel/VBoxContainer/SettingsGrid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Background:"
+
+[node name="BGDropdown" type="OptionButton" parent="StartSettings/Panel/VBoxContainer/SettingsGrid"]
 custom_minimum_size = Vector2(300, 50)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
