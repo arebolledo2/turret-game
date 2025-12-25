@@ -20,9 +20,17 @@ var diamond_border: Polygon2D = null
 var bg_sprite: Sprite2D = null
 var debug_outline: Line2D = null
 
-# Alignment (Adjustable at runtime)
+# Available background images (hardcoded list)
+const AVAILABLE_BACKGROUNDS: Array[String] = [
+	"res://assets/sprites/isometric_arena_bg.jpeg",
+	# Add more background paths here as needed
+]
+var current_bg_index: int = 0
+
+# Alignment (Adjustable at runtime, stored per-background)
 var bg_zoom: Vector2 = Vector2.ONE
 var bg_offset: Vector2 = Vector2.ZERO
+var bg_configs: Dictionary = {} # Stores {path: {offset: Vector2, scale: Vector2}}
 
 
 func _ready() -> void:
@@ -135,14 +143,8 @@ func _setup_isometric_arena(half_width: float, half_height: float) -> void:
 		bg_sprite.z_index = -1 # Just behind entities (which are 0)
 		add_child(bg_sprite)
 	
-	var texture = load("res://assets/sprites/isometric_arena_bg.jpeg")
-	if texture:
-		bg_sprite.texture = texture
-		bg_sprite.visible = true
-		_load_alignment_config() # Load saved settings
-		print("DEBUG: Arena BG Texture Loaded. Size: ", texture.get_size())
-	else:
-		print("ERROR: Arena BG Texture FAILED to load!")
+	_load_all_bg_configs() # Load all saved background configs
+	_apply_current_background() # Apply the current background
 
 	
 	# Configure diamond border - slightly larger
@@ -241,32 +243,114 @@ func _process(delta: float) -> void:
 		
 	# Save (S)
 	if Input.is_physical_key_pressed(KEY_S):
-		_save_alignment_config()
+		_save_all_bg_configs()
+	
+	# Switch backgrounds ([ and ])
+	if Input.is_action_just_pressed("ui_focus_prev") or Input.is_physical_key_pressed(KEY_BRACKETLEFT):
+		_switch_background(-1)
+	if Input.is_action_just_pressed("ui_focus_next") or Input.is_physical_key_pressed(KEY_BRACKETRIGHT):
+		_switch_background(1)
 		
 	if changed:
 		bg_sprite.position = bg_offset
 		bg_sprite.scale = bg_zoom
+		_store_current_bg_config() # Update in-memory config
 		print("BG Alignment | Offset: ", bg_offset, " | Scale: ", bg_zoom)
 
 
 const CONFIG_PATH = "user://isometric_bg_config.cfg"
 
-func _save_alignment_config() -> void:
-	# Ensure directory exists (user:// always exists but good practice if using subdirs)
-	var config = ConfigFile.new()
-	config.set_value("alignment", "offset", bg_offset)
-	config.set_value("alignment", "scale", bg_zoom)
-	config.save(CONFIG_PATH)
-	
-	var global_path = ProjectSettings.globalize_path(CONFIG_PATH)
-	print("SAVED Alignment to: ", global_path)
 
-func _load_alignment_config() -> void:
-	var config = ConfigFile.new()
-	var err = config.load(CONFIG_PATH)
-	if err == OK:
-		bg_offset = config.get_value("alignment", "offset", Vector2.ZERO)
-		bg_zoom = config.get_value("alignment", "scale", Vector2.ONE)
+## Switch to next/previous background
+func _switch_background(direction: int) -> void:
+	if AVAILABLE_BACKGROUNDS.size() <= 1:
+		return
+	
+	# Store current config before switching
+	_store_current_bg_config()
+	
+	# Change index with wraparound
+	current_bg_index = (current_bg_index + direction) % AVAILABLE_BACKGROUNDS.size()
+	if current_bg_index < 0:
+		current_bg_index = AVAILABLE_BACKGROUNDS.size() - 1
+	
+	_apply_current_background()
+	var bg_name := _get_bg_filename(AVAILABLE_BACKGROUNDS[current_bg_index])
+	print("SWITCHED to background: ", bg_name, " [", current_bg_index + 1, "/", AVAILABLE_BACKGROUNDS.size(), "]")
+
+
+## Apply the current background texture and load its saved config
+func _apply_current_background() -> void:
+	if current_bg_index < 0 or current_bg_index >= AVAILABLE_BACKGROUNDS.size():
+		return
+	
+	var bg_path := AVAILABLE_BACKGROUNDS[current_bg_index]
+	var texture = load(bg_path)
+	
+	if texture:
+		bg_sprite.texture = texture
+		bg_sprite.visible = true
+		
+		# Load config for this specific background
+		if bg_configs.has(bg_path):
+			bg_offset = bg_configs[bg_path].get("offset", Vector2.ZERO)
+			bg_zoom = bg_configs[bg_path].get("scale", Vector2.ONE)
+		else:
+			bg_offset = Vector2.ZERO
+			bg_zoom = Vector2.ONE
+		
 		bg_sprite.position = bg_offset
 		bg_sprite.scale = bg_zoom
-		print("LOADED Alignment from: ", ProjectSettings.globalize_path(CONFIG_PATH))
+		print("DEBUG: Arena BG Loaded: ", _get_bg_filename(bg_path), " | Size: ", texture.get_size())
+	else:
+		print("ERROR: Failed to load background: ", bg_path)
+
+
+## Store current background's config in memory
+func _store_current_bg_config() -> void:
+	if current_bg_index < 0 or current_bg_index >= AVAILABLE_BACKGROUNDS.size():
+		return
+	var bg_path := AVAILABLE_BACKGROUNDS[current_bg_index]
+	bg_configs[bg_path] = {"offset": bg_offset, "scale": bg_zoom}
+
+
+## Get just the filename from a path for display
+func _get_bg_filename(path: String) -> String:
+	return path.get_file()
+
+
+## Save all background configs to file
+func _save_all_bg_configs() -> void:
+	_store_current_bg_config() # Ensure current is saved
+	
+	var config = ConfigFile.new()
+	for bg_path in bg_configs.keys():
+		var section := _get_bg_filename(bg_path)
+		config.set_value(section, "offset", bg_configs[bg_path]["offset"])
+		config.set_value(section, "scale", bg_configs[bg_path]["scale"])
+	
+	config.save(CONFIG_PATH)
+	var global_path = ProjectSettings.globalize_path(CONFIG_PATH)
+	print("SAVED all background configs to: ", global_path)
+
+
+## Load all background configs from file
+func _load_all_bg_configs() -> void:
+	bg_configs.clear()
+	var config = ConfigFile.new()
+	var err = config.load(CONFIG_PATH)
+	
+	if err != OK:
+		print("No saved background configs found, using defaults.")
+		return
+	
+	# Load configs for each available background
+	for bg_path in AVAILABLE_BACKGROUNDS:
+		var section := _get_bg_filename(bg_path)
+		if config.has_section(section):
+			bg_configs[bg_path] = {
+				"offset": config.get_value(section, "offset", Vector2.ZERO),
+				"scale": config.get_value(section, "scale", Vector2.ONE)
+			}
+	
+	print("LOADED background configs from: ", ProjectSettings.globalize_path(CONFIG_PATH))
