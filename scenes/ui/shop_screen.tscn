@@ -64,6 +64,7 @@ alignment = 1
 
 [node name="RerollContainer" type="HBoxContainer" parent="ShopPanel/VBoxContainer"]
 layout_mode = 2
+theme_override_constants/separation = 15
 alignment = 1
 
 [node name="RerollButton" type="Button" parent="ShopPanel/VBoxContainer/RerollContainer"]
@@ -71,6 +72,12 @@ custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Reroll (Cost: 10)"
+
+[node name="ContinueButton" type="Button" parent="ShopPanel/VBoxContainer/RerollContainer"]
+custom_minimum_size = Vector2(250, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Continue to Wave"
 
 [node name="PlayerBuildSection" type="PanelContainer" parent="ShopPanel/VBoxContainer"]
 layout_mode = 2
@@ -90,6 +97,7 @@ layout_mode = 2
 [node name="BuildTabs" type="TabContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox"]
 custom_minimum_size = Vector2(0, 250)
 layout_mode = 2
+theme_override_font_sizes/font_size = 18
 tab_alignment = 1
 
 [node name="Player" type="ScrollContainer" parent="ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs"]
@@ -288,13 +296,3 @@ theme_override_font_sizes/font_size = 11
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 text = "Item description goes here"
 autowrap_mode = 2
-
-[node name="ButtonContainer" type="HBoxContainer" parent="ShopPanel/VBoxContainer"]
-layout_mode = 2
-alignment = 1
-
-[node name="ContinueButton" type="Button" parent="ShopPanel/VBoxContainer/ButtonContainer"]
-custom_minimum_size = Vector2(250, 60)
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Continue to Wave"

@@ -88,6 +88,7 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	if offer.get("sold", false):
 		purchase_button.text = "SOLD"
 		purchase_button.disabled = true
+		purchase_button.focus_mode = Control.FOCUS_NONE  # Make SOLD items non-focusable
 	else:
 		purchase_button.text = "Purchase"
 		purchase_button.pressed.connect(func(): purchase_requested.emit(index))
@@ -252,19 +253,31 @@ func _format_modifier(modifier: Dictionary) -> String:
 	return ""
 
 func _setup_offer_focus_neighbors() -> void:
+	# Find first focusable purchase button (skip SOLD)
+	var first_focusable_purchase: Button = null
+	for btn in _offer_buttons:
+		if is_instance_valid(btn) and btn.focus_mode != Control.FOCUS_NONE:
+			if first_focusable_purchase == null:
+				first_focusable_purchase = btn
+				break
+
 	# Setup horizontal navigation for purchase buttons
 	for i in range(_offer_buttons.size()):
 		var purchase_btn := _offer_buttons[i]
-		if not is_instance_valid(purchase_btn):
+		if not is_instance_valid(purchase_btn) or purchase_btn.focus_mode == Control.FOCUS_NONE:
 			continue
 
-		# Left neighbor
-		if i > 0 and is_instance_valid(_offer_buttons[i - 1]):
-			purchase_btn.focus_neighbor_left = _offer_buttons[i - 1].get_path()
+		# Find next focusable button to the left
+		for j in range(i - 1, -1, -1):
+			if is_instance_valid(_offer_buttons[j]) and _offer_buttons[j].focus_mode != Control.FOCUS_NONE:
+				purchase_btn.focus_neighbor_left = _offer_buttons[j].get_path()
+				break
 
-		# Right neighbor
-		if i < _offer_buttons.size() - 1 and is_instance_valid(_offer_buttons[i + 1]):
-			purchase_btn.focus_neighbor_right = _offer_buttons[i + 1].get_path()
+		# Find next focusable button to the right
+		for j in range(i + 1, _offer_buttons.size()):
+			if is_instance_valid(_offer_buttons[j]) and _offer_buttons[j].focus_mode != Control.FOCUS_NONE:
+				purchase_btn.focus_neighbor_right = _offer_buttons[j].get_path()
+				break
 
 		# Down neighbor -> corresponding lock button (if exists) or reroll button
 		if i < _lock_buttons.size() and is_instance_valid(_lock_buttons[i]):
@@ -278,9 +291,13 @@ func _setup_offer_focus_neighbors() -> void:
 		if not is_instance_valid(lock_btn):
 			continue
 
-		# Up neighbor -> corresponding purchase button
+		# Up neighbor -> corresponding purchase button (skip if SOLD)
 		if i < _offer_buttons.size() and is_instance_valid(_offer_buttons[i]):
-			lock_btn.focus_neighbor_top = _offer_buttons[i].get_path()
+			if _offer_buttons[i].focus_mode != Control.FOCUS_NONE:
+				lock_btn.focus_neighbor_top = _offer_buttons[i].get_path()
+			elif first_focusable_purchase:
+				# SOLD button - skip to first focusable purchase button
+				lock_btn.focus_neighbor_top = first_focusable_purchase.get_path()
 
 		# Left neighbor
 		if i > 0 and is_instance_valid(_lock_buttons[i - 1]):
@@ -294,13 +311,13 @@ func _setup_offer_focus_neighbors() -> void:
 		if reroll_button and is_instance_valid(reroll_button):
 			lock_btn.focus_neighbor_bottom = reroll_button.get_path()
 
-	# Set up reroll button navigation
+	# Set up reroll button UP navigation to last row of buttons
 	if reroll_button and is_instance_valid(reroll_button):
-		# Top neighbor -> first lock button (or first purchase button if no locks)
+		# Try lock buttons first, then purchase buttons
 		if not _lock_buttons.is_empty() and is_instance_valid(_lock_buttons[0]):
 			reroll_button.focus_neighbor_top = _lock_buttons[0].get_path()
-		elif not _offer_buttons.is_empty() and is_instance_valid(_offer_buttons[0]):
-			reroll_button.focus_neighbor_top = _offer_buttons[0].get_path()
+		elif first_focusable_purchase:
+			reroll_button.focus_neighbor_top = first_focusable_purchase.get_path()
 
 func _restore_focus() -> void:
 	# Try to focus first non-sold offer button

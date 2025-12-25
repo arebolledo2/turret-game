@@ -19,7 +19,7 @@ const ShopBuildTabsItemsScript = preload("res://scripts/ui/shop/shop_build_tabs/
 @onready var gold_label: Label = $ShopPanel/VBoxContainer/Header/GoldLabel
 @onready var offers_container: HBoxContainer = $ShopPanel/VBoxContainer/OffersContainer
 @onready var reroll_button: Button = $ShopPanel/VBoxContainer/RerollContainer/RerollButton
-@onready var continue_button: Button = $ShopPanel/VBoxContainer/ButtonContainer/ContinueButton
+@onready var continue_button: Button = $ShopPanel/VBoxContainer/RerollContainer/ContinueButton
 
 # Build tab containers
 @onready var build_tabs: TabContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs
@@ -160,6 +160,7 @@ func _on_shop_opened(wave_number: int) -> void:
 	title_label.add_theme_font_size_override("font_size", 32)
 	gold_label.add_theme_font_override("font", MAIN_FONT)
 	gold_label.add_theme_font_size_override("font_size", 24)
+	reroll_button.add_theme_font_override("font", MAIN_FONT)
 	continue_button.add_theme_font_override("font", MAIN_FONT)
 	
 	title_label.text = "TURRET SHOP - WAVE %d" % wave_number
@@ -250,8 +251,19 @@ func _setup_build_focus_neighbors() -> void:
 				var item_idx := mini(i, item_buttons.size() - 1)
 				turret_buttons[i].focus_neighbor_bottom = item_buttons[item_idx].get_path()
 	
-	# Connect continue button back to offers
-	if continue_button and not offer_buttons.is_empty():
-		continue_button.focus_neighbor_top = reroll_button.get_path()
-		if reroll_button:
-			reroll_button.focus_neighbor_bottom = continue_button.get_path()
+	# Connect reroll and continue buttons (horizontal navigation)
+	if reroll_button and continue_button:
+		reroll_button.focus_neighbor_right = continue_button.get_path()
+		continue_button.focus_neighbor_left = reroll_button.get_path()
+
+		# Connect to offers above (find last focusable offer)
+		if not offer_buttons.is_empty():
+			# Reroll already has UP navigation setup in offers_panel
+			# Continue button goes to last focusable offer
+			var last_focusable: Button = null
+			for i in range(offer_buttons.size() - 1, -1, -1):
+				if is_instance_valid(offer_buttons[i]) and offer_buttons[i].focus_mode != Control.FOCUS_NONE:
+					last_focusable = offer_buttons[i]
+					break
+			if last_focusable:
+				continue_button.focus_neighbor_top = last_focusable.get_path()
