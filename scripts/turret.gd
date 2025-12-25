@@ -96,9 +96,8 @@ func _apply_proximity_modifiers() -> void:
 		stats["fire_rate"] = stats.get("fire_rate", 1.0) * (1.0 + fire_rate_bonus)
 
 	# Apply temporary buffs from Chain Reaction
-	if BuffSystem:
-		var fire_rate_buff = BuffSystem.get_buff_multiplier(self, "fire_rate")
-		stats["fire_rate"] = stats.get("fire_rate", 1.0) * fire_rate_buff
+	var fire_rate_buff: float = BuffSystem.get_buff_multiplier(self, "fire_rate")
+	stats["fire_rate"] = stats.get("fire_rate", 1.0) * fire_rate_buff
 
 func _physics_process(_delta: float) -> void:
 	"""Main turret update loop."""

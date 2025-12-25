@@ -31,19 +31,23 @@ func reset_state() -> void:
 
 ## Get wave duration in seconds
 func get_wave_duration(wave: int) -> float:
-	# Wave 1: 25s
-	# Wave 5: 50s
-	# Wave 7+: 60s (capped)
+	# Uses non-linear scaling defined in GameConstants:
+	# Wave 1: EARLY (25s)
+	# Waves 2-4: lerp to MID (50s)
+	# Waves 5-6: lerp to LATE (60s)
+	# Wave 7+: CAP (60s)
 	if wave <= 1:
-		return 25.0
-	elif wave < 5:
-		# Linear interpolation between 25 and 50 over waves 1 to 5
-		return lerpf(25.0, 50.0, (wave - 1) / 4.0)
-	elif wave < 7:
-		# Linear interpolation between 50 and 60 over waves 5 to 7
-		return lerpf(50.0, 60.0, (wave - 5) / 2.0)
+		return GameConstants.WAVE_DURATION_EARLY
+	elif wave < GameConstants.WAVE_DURATION_MID_THRESHOLD:
+		# Linear interpolation between EARLY and MID over waves 1 to MID_THRESHOLD
+		var t: float = float(wave - 1) / float(GameConstants.WAVE_DURATION_MID_THRESHOLD - 1)
+		return lerpf(GameConstants.WAVE_DURATION_EARLY, GameConstants.WAVE_DURATION_MID, t)
+	elif wave < GameConstants.WAVE_DURATION_LATE_THRESHOLD:
+		# Linear interpolation between MID and LATE over waves MID_THRESHOLD to LATE_THRESHOLD
+		var t: float = float(wave - GameConstants.WAVE_DURATION_MID_THRESHOLD) / float(GameConstants.WAVE_DURATION_LATE_THRESHOLD - GameConstants.WAVE_DURATION_MID_THRESHOLD)
+		return lerpf(GameConstants.WAVE_DURATION_MID, GameConstants.WAVE_DURATION_LATE, t)
 	else:
-		return 60.0
+		return GameConstants.WAVE_DURATION_CAP
 
 
 ## Get total enemy count for a wave (includes difficulty and item modifiers)

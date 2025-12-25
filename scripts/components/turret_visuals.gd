@@ -51,7 +51,7 @@ func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary) ->
 		var color = TurretRegistry.get_color(turret_type)
 		_update_range_visual()
 		range_indicator.modulate = color
-		range_indicator.modulate.a = 0.0  # Hidden by default
+		range_indicator.modulate.a = 0.0 # Hidden by default
 
 	# Listen for range toggle event
 	Events.turret_range_toggled.connect(_on_range_toggled)
@@ -150,7 +150,7 @@ func _setup_normal_visuals() -> void:
 	# Configure animation (16 frames in a single row)
 	frames.add_animation("idle")
 	frames.set_animation_loop("idle", true)
-	frames.set_animation_speed("idle", 8.0)  # 8 FPS
+	frames.set_animation_speed("idle", 8.0) # 8 FPS
 
 	# Calculate frame dimensions (16 columns, 1 row)
 	var frame_width = tex.get_width() / 16
@@ -235,9 +235,9 @@ func _update_status_indicators() -> void:
 		})
 
 	# Chain Reaction (show if buffed)
-	if BuffSystem and ItemRegistry.has_special_effect("chain_reaction") and Globals.item_counts.get("chain_reaction", 0) > 0:
-		var turret_id = turret.get_instance_id()
-		var buffs = BuffSystem.active_buffs.get(turret_id, [])
+	if ItemRegistry.has_special_effect("chain_reaction") and Globals.item_counts.get("chain_reaction", 0) > 0:
+		var turret_id: int = turret.get_instance_id()
+		var buffs: Array = BuffSystem.active_buffs.get(turret_id, [])
 		for buff in buffs:
 			if buff.stat == "fire_rate":
 				active_effects.append({
@@ -258,9 +258,9 @@ func _update_status_indicators() -> void:
 
 		# Color based on buff/debuff
 		if effect.is_buff:
-			panel.modulate = Color(0.2, 1.0, 0.2, 0.9)  # Green for buffs
+			panel.modulate = Color(0.2, 1.0, 0.2, 0.9) # Green for buffs
 		else:
-			panel.modulate = Color(1.0, 0.2, 0.2, 0.9)  # Red for debuffs
+			panel.modulate = Color(1.0, 0.2, 0.2, 0.9) # Red for debuffs
 
 		# Add count if present
 		if effect.has("count") and effect.count != null:
