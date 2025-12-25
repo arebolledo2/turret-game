@@ -4,25 +4,31 @@ extends RefCounted
 ## All game enumerations in one place for easy reference and type safety
 
 # Difficulty levels for the game
-enum Difficulty { EASY, MEDIUM, HARD }
+enum Difficulty {EASY, MEDIUM, HARD}
 
 # Attack style tags - how damage is delivered
-enum AttackStyle { PROJECTILE, INSTANT, AOE, CHAIN }
+enum AttackStyle {PROJECTILE, INSTANT, AOE, CHAIN}
 
 # Damage type tags - elemental classification
-enum DamageType { PHYSICAL, FIRE, ELECTRIC, PLASMA }
+enum DamageType {PHYSICAL, FIRE, ELECTRIC, PLASMA}
 
 # Enemy behavior tags - how enemies move/attack
-enum EnemyBehavior { CHASE, RANGED, SWARM, TANK, EXPLOSIVE, WANDER, CHARGE }
+enum EnemyBehavior {CHASE, RANGED, SWARM, TANK, EXPLOSIVE, WANDER, CHARGE}
 
 # Item rarity levels
-enum ItemRarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, UNIQUE }
+enum ItemRarity {COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, UNIQUE}
 
 # Collision hitbox types
-enum HitboxType { PHYSICS, PLAYER_HURTBOX, ENEMY_HURTBOX, PLAYER_ATTACK }
+enum HitboxType {PHYSICS, PLAYER_HURTBOX, ENEMY_HURTBOX, PLAYER_ATTACK}
 
 # Game Mode IDs
 enum GameMode {
+	# Spawn location modes
 	SENTINEL, # Near edges
 	INVASION, # Anywhere
+	# Win condition modes
+	SURVIVAL, # Classic mode (default) - survive all waves
+	TECH_DEFENSE, # Defend static target with HP
+	TUNNELING_TIMED, # Unlock door within wave timer
+	TUNNELING_ALERT, # Unlock door, spawn rate escalates if slow
 }

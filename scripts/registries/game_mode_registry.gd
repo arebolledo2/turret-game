@@ -4,6 +4,7 @@ extends RefCounted
 ## Definitions for all game modes
 
 const MODES = {
+	# Spawn location modes
 	GameEnums.GameMode.SENTINEL: {
 		"name": "Sentinel",
 		"description": "Enemies spawn near the arena edges.",
@@ -14,6 +15,28 @@ const MODES = {
 		"name": "Invasion",
 		"description": "Enemies can spawn anywhere in the arena.",
 		"group": "spawn_location"
+	},
+	# Win condition modes
+	GameEnums.GameMode.SURVIVAL: {
+		"name": "Survival",
+		"description": "Classic mode - survive all waves.",
+		"group": "win_condition",
+		"is_default": true
+	},
+	GameEnums.GameMode.TECH_DEFENSE: {
+		"name": "Tech Defense",
+		"description": "Defend the power core from enemies. If it's destroyed, you lose!",
+		"group": "win_condition"
+	},
+	GameEnums.GameMode.TUNNELING_TIMED: {
+		"name": "Tunneling (Timed)",
+		"description": "Use turrets to breach the exit door before time runs out.",
+		"group": "win_condition"
+	},
+	GameEnums.GameMode.TUNNELING_ALERT: {
+		"name": "Tunneling (Alert)",
+		"description": "Breach the exit door. Spawn rate escalates until you do!",
+		"group": "win_condition"
 	}
 }
 

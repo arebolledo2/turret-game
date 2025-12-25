@@ -11,10 +11,13 @@ func _ready() -> void:
 
 func _initialize_defaults() -> void:
 	# For each group in registry, set the default mode
-	# For now we only have one group: spawn_location
 	var spawn_mode = GameModeRegistry.get_default_mode_for_group("spawn_location")
 	if spawn_mode != -1:
 		active_modes["spawn_location"] = spawn_mode
+	
+	var win_mode = GameModeRegistry.get_default_mode_for_group("win_condition")
+	if win_mode != -1:
+		active_modes["win_condition"] = win_mode
 
 func set_mode(mode_id: GameEnums.GameMode) -> void:
 	var config = GameModeRegistry.get_mode_config(mode_id)
@@ -70,3 +73,53 @@ func get_random_spawn_position(spawn_zones: Array[Rect2]) -> Vector2:
 			)
 			
 	return Vector2.ZERO
+
+# =============================================================================
+# WIN CONDITION MODE HOOKS
+# =============================================================================
+
+func get_win_condition_mode() -> GameEnums.GameMode:
+	"""
+	Returns the active win condition mode.
+	"""
+	return active_modes.get("win_condition", GameEnums.GameMode.SURVIVAL)
+
+func should_spawn_defense_target() -> bool:
+	"""
+	Returns true if the TECH_DEFENSE mode is active and requires a defense target.
+	"""
+	return is_mode_active(GameEnums.GameMode.TECH_DEFENSE)
+
+func should_spawn_tunnel_door() -> bool:
+	"""
+	Returns true if any tunneling mode is active and requires a door entity.
+	"""
+	return is_mode_active(GameEnums.GameMode.TUNNELING_TIMED) or is_mode_active(GameEnums.GameMode.TUNNELING_ALERT)
+
+func is_alert_mode_active() -> bool:
+	"""
+	Returns true if TUNNELING_ALERT mode is active (spawn escalation behavior).
+	"""
+	return is_mode_active(GameEnums.GameMode.TUNNELING_ALERT)
+
+func get_spawn_rate_multiplier(time_since_alert: float) -> float:
+	"""
+	Calculates spawn rate multiplier for TUNNELING_ALERT mode.
+	User decision: More aggressive than +20% every 10s.
+	Implementation: +30% every 8 seconds after alert starts.
+	
+	Args:
+		time_since_alert: Seconds since alert mode activated (soft timer expired)
+	
+	Returns:
+		Multiplier for spawn rate (1.0 = normal, 1.3 = 30% faster, etc.)
+	"""
+	if not is_alert_mode_active():
+		return 1.0
+	
+	if time_since_alert <= 0:
+		return 1.0
+	
+	# +30% every 8 seconds
+	var intervals_passed = floor(time_since_alert / 8.0)
+	return 1.0 + (intervals_passed * 0.3)
