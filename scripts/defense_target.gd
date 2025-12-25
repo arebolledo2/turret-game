@@ -57,18 +57,26 @@ func initialize(_wave: int, difficulty_config: Dictionary) -> void:
 
 func _on_body_entered(body: Node) -> void:
 	"""Handle enemies reaching the target."""
+	print("DEBUG DefenseTarget: Body entered: ", body)
+	print("DEBUG DefenseTarget: Is in enemies group: ", body.is_in_group("enemies"))
+	
 	if is_destroyed:
 		return
 		
 	if body.is_in_group("enemies"):
 		var enemy = body as CharacterBody2D
-		if enemy and enemy.has_method("get_contact_damage"):
-			var damage = enemy.contact_damage
+		if enemy:
+			# Get contact damage from enemy property (not method)
+			var damage: float = enemy.contact_damage if "contact_damage" in enemy else 33.0
+			print("DEBUG DefenseTarget: Taking ", damage, " damage from enemy")
 			take_damage(damage)
 			
-			# Optionally kill the enemy on contact
-			if enemy.has_method("die"):
-				enemy.die()
+			# Apply knockback to the enemy (push them away from target)
+			if enemy.has_method("apply_knockback"):
+				var knockback_direction = (enemy.global_position - global_position).normalized()
+				var knockback_force = 300.0 # Adjust as needed
+				enemy.apply_knockback(knockback_force, knockback_direction)
+				print("DEBUG DefenseTarget: Applied knockback to enemy")
 
 func take_damage(amount: float) -> void:
 	"""Take damage and emit events."""

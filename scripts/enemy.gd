@@ -23,7 +23,7 @@ var explosion_radius: float = 0.0
 var explosion_damage: float = 0.0
 
 # Knockback and slow mechanics
-var mass: float = 1.0  # Resistance to knockback
+var mass: float = 1.0 # Resistance to knockback
 
 var current_health: float
 var player: Node2D = null
@@ -41,20 +41,43 @@ var behavior_params: Dictionary = {}
 @onready var status_effects: EnemyStatusEffects = $Components/EnemyStatusEffects
 
 func _ready() -> void:
+	print("DEBUG Enemy: _ready() START")
 	add_to_group("enemies")
-	player = get_tree().get_first_node_in_group("player")
+	
+	print("DEBUG Enemy: Checking game mode for targeting...")
+	# In Tech Defense mode, target the defense target instead of player
+	if GameModeService.should_spawn_defense_target():
+		print("DEBUG Enemy: Tech Defense mode - looking for defense target")
+		var defense_target = get_tree().get_first_node_in_group("defense_targets")
+		if defense_target:
+			player = defense_target
+			print("DEBUG Enemy: Defense target found!")
+		else:
+			# Fallback to player if defense target doesn't exist yet
+			player = get_tree().get_first_node_in_group("player")
+			print("DEBUG Enemy: Defense target NOT found, using player")
+	else:
+		player = get_tree().get_first_node_in_group("player")
+		print("DEBUG Enemy: Normal mode - using player")
 
+	print("DEBUG Enemy: About to connect debug toggle...")
 	# Connect to debug toggle event
-	Events.hitbox_debug_toggled.connect(_on_debug_toggled)
+	if not Events.hitbox_debug_toggled.is_connected(_on_debug_toggled):
+		Events.hitbox_debug_toggled.connect(_on_debug_toggled)
+	print("DEBUG Enemy: Debug toggle connected")
 
-	# If not initialized by spawner, initialize with defaults
-	if not is_initialized:
-		_apply_type_config(enemy_type)
-		current_health = max_health
-		is_initialized = true
-
+	print("DEBUG Enemy: Checking if components already initialized...")
+	# Components must be initialized in _ready (when @onready vars are available)
+	# Even if enemy stats were initialized by spawner, we still need to init components
+	if movement != null and movement.enemy != null:
+		print("DEBUG Enemy: Components already initialized, skipping")
+		return
+	
+	print("DEBUG Enemy: About to initialize components...")
 	# Initialize components (must be done in _ready when @onready vars are available)
 	_initialize_components()
+	
+	print("DEBUG Enemy _ready complete: player target = ", player)
 
 func _on_debug_toggled(type: int, _enabled: bool) -> void:
 	if type == GameEnums.HitboxType.PHYSICS:
@@ -83,9 +106,9 @@ func _draw() -> void:
 				# Simple approximation for capsule drawing in debug
 				var radius = shape.radius
 				var height = shape.height
-				draw_circle(offset + Vector2(0, -height/2 + radius), radius, color)
-				draw_circle(offset + Vector2(0, height/2 - radius), radius, color)
-				draw_rect(Rect2(offset + Vector2(-radius, -height/2 + radius), Vector2(radius * 2, height - radius * 2)), color, true)
+				draw_circle(offset + Vector2(0, -height / 2 + radius), radius, color)
+				draw_circle(offset + Vector2(0, height / 2 - radius), radius, color)
+				draw_rect(Rect2(offset + Vector2(-radius, -height / 2 + radius), Vector2(radius * 2, height - radius * 2)), color, true)
 
 func _apply_type_config(type_id: String) -> void:
 	"""Load configuration from EnemyRegistry and apply to this enemy."""
@@ -198,7 +221,11 @@ func _physics_process(delta: float) -> void:
 		take_dot_damage(dot_damage)
 
 	if player == null or not is_instance_valid(player):
-		player = get_tree().get_first_node_in_group("player")
+		# Re-acquire target (defense target in Tech Defense, otherwise player)
+		if GameModeService.should_spawn_defense_target():
+			player = get_tree().get_first_node_in_group("defense_targets")
+		if player == null: # Fallback to player if no defense target
+			player = get_tree().get_first_node_in_group("player")
 		if player == null:
 			return
 
@@ -269,7 +296,7 @@ func _explode() -> void:
 			continue
 		var dist := global_position.distance_to(enemy.global_position)
 		if dist <= explosion_radius and enemy.has_method("take_damage"):
-			enemy.take_damage(explosion_damage * 0.5)  # Half damage to other enemies
+			enemy.take_damage(explosion_damage * 0.5) # Half damage to other enemies
 
 # =============================================================================
 # DELEGATED METHODS - Facades for components (test compatibility)

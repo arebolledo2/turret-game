@@ -13,7 +13,7 @@ class_name EnemyMovement
 var knockback_velocity: Vector2 = Vector2.ZERO
 var current_behavior_type: GameEnums.EnemyBehavior = GameEnums.EnemyBehavior.CHASE
 var behavior_params: Dictionary = {}
-var behavior_instance: EnemyBehavior = null  # Current active behavior strategy
+var behavior_instance: EnemyBehavior = null # Current active behavior strategy
 
 # Dependencies (set via initialize)
 var enemy: CharacterBody2D = null
@@ -21,7 +21,7 @@ var player: Node2D = null
 
 # Config
 var speed: float = 150.0
-var mass: float = 1.0  # Resistance to knockback
+var mass: float = 1.0 # Resistance to knockback
 
 func initialize(p_enemy: CharacterBody2D, p_speed: float, p_mass: float, p_behavior_type: GameEnums.EnemyBehavior, p_behavior_params: Dictionary) -> void:
 	"""Initialize component with required references."""
@@ -32,17 +32,30 @@ func initialize(p_enemy: CharacterBody2D, p_speed: float, p_mass: float, p_behav
 	behavior_params = p_behavior_params
 	assert(enemy != null, "EnemyMovement: enemy reference required")
 
-	# Get player reference
-	player = enemy.get_tree().get_first_node_in_group("player")
-
+	# Get player reference (or defense target in Tech Defense mode)
+	if enemy and is_instance_valid(enemy):
+		if GameModeService.should_spawn_defense_target():
+			player = enemy.get_tree().get_first_node_in_group("defense_targets")
+		if player == null: # Fallback to player
+			player = enemy.get_tree().get_first_node_in_group("player")
+	
+	print("DEBUG EnemyMovement: Target = ", player, " at pos ", player.global_position if player else "null")
+	
 	# Create behavior instance
 	_create_behavior_instance()
 
 func process(delta: float, speed_multiplier: float) -> Vector2:
 	"""Main update function - returns velocity for move_and_slide."""
-	# Find player if not valid
+	# Find player/target if not valid
 	if player == null or not is_instance_valid(player):
-		player = enemy.get_tree().get_first_node_in_group("player")
+		if enemy == null or not is_instance_valid(enemy):
+			return Vector2.ZERO
+		
+		# Re-acquire target (defense target in Tech Defense, otherwise player)
+		if GameModeService.should_spawn_defense_target():
+			player = enemy.get_tree().get_first_node_in_group("defense_targets")
+		if player == null: # Fallback to player
+			player = enemy.get_tree().get_first_node_in_group("player")
 		if player == null:
 			return Vector2.ZERO
 

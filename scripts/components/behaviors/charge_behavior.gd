@@ -5,7 +5,7 @@ extends EnemyBehavior
 ## Uses a state machine with four states: IDLE, ALERT, CHARGING, COOLDOWN
 
 ## Charge state machine
-enum ChargeState { IDLE, ALERT, CHARGING, COOLDOWN }
+enum ChargeState {IDLE, ALERT, CHARGING, COOLDOWN}
 var charge_state: ChargeState = ChargeState.IDLE
 var charge_timer: float = 0.0
 var charge_target_pos: Vector2 = Vector2.ZERO
@@ -54,9 +54,9 @@ func execute(delta: float) -> Vector2:
 
 	match charge_state:
 		ChargeState.IDLE:
-			var player = enemy.get_tree().get_first_node_in_group("player")
-			if player and is_instance_valid(player):
-				var dist := enemy.global_position.distance_to(player.global_position)
+			var target = enemy.player # Can be defense target in Tech Defense mode
+			if target and is_instance_valid(target):
+				var dist := enemy.global_position.distance_to(target.global_position)
 				if dist <= detect_radius:
 					_enter_alert_state()
 			return wander_behavior.execute(delta)
@@ -90,12 +90,12 @@ func _enter_charging_state() -> void:
 	charge_state = ChargeState.CHARGING
 	charge_timer = params.get("charge_duration", get_default_params()["charge_duration"])
 
-	var player = enemy.get_tree().get_first_node_in_group("player")
-	if player and is_instance_valid(player):
-		charge_target_pos = player.global_position
+	var target = enemy.player # Can be defense target in Tech Defense mode
+	if target and is_instance_valid(target):
+		charge_target_pos = target.global_position
 		charge_direction = enemy.global_position.direction_to(charge_target_pos)
 	else:
-		# If player disappeared, charge in random direction
+		# If target disappeared, charge in random direction
 		charge_direction = Vector2.RIGHT.rotated(randf() * TAU)
 
 	_cleanup_alert_indicator()
