@@ -9,15 +9,15 @@ var is_player_projectile: bool = true
 var is_setup: bool = false
 
 # Extended stats for turret types
-var pierce: int = 0  # Number of enemies to pass through (0 = single target)
-var pierce_count: int = 0  # Enemies already hit
-var aoe_radius: float = 0.0  # If > 0, explodes on hit
+var pierce: int = 0 # Number of enemies to pass through (0 = single target)
+var pierce_count: int = 0 # Enemies already hit
+var aoe_radius: float = 0.0 # If > 0, explodes on hit
 var damage_type: GameEnums.DamageType = GameEnums.DamageType.PHYSICAL
 var dot_damage: float = 0.0
 var dot_duration: float = 0.0
 var dot_tick_rate: float = 1.0
-var knockback_force: float = 0.0  # Knockback force for explosions
-var hit_enemies: Array = []  # Track enemies hit (for pierce)
+var knockback_force: float = 0.0 # Knockback force for explosions
+var hit_enemies: Array = [] # Track enemies hit (for pierce)
 
 func _ready() -> void:
 	# Render above all gameplay entities
@@ -39,8 +39,8 @@ func setup(dir: Vector2, spd: float, dmg: float, from_player: bool) -> void:
 	is_setup = true
 	
 	# Set collision - use call_deferred to avoid physics query error
-	call_deferred("set_collision_layer", 4)  # projectile layer
-	call_deferred("set_collision_mask", 32)  # enemy_hurtbox layer (layer 6 = 2^5 = 32)
+	call_deferred("set_collision_layer", 4) # projectile layer
+	call_deferred("set_collision_mask", 96) # enemy_hurtbox (32) + tunnel_door (64)
 
 ## Extended setup for turret-typed projectiles
 func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: GameEnums.DamageType) -> void:
@@ -58,13 +58,26 @@ func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: G
 	is_setup = true
 
 	# Set collision
-	call_deferred("set_collision_layer", 4)  # projectile layer
-	call_deferred("set_collision_mask", 32)  # enemy_hurtbox layer (layer 6 = 2^5 = 32)
+	call_deferred("set_collision_layer", 4) # projectile layer
+	call_deferred("set_collision_mask", 96) # enemy_hurtbox (32) + tunnel_door (64)
 
 func _physics_process(delta: float) -> void:
 	position += direction * speed * delta
 
 func _on_hurtbox_entered(hurtbox: Area2D) -> void:
+	print("DEBUG Projectile: Collision with area: ", hurtbox, " name: ", hurtbox.name)
+	print("DEBUG Projectile: Is enemy_hurtbox: ", hurtbox.is_in_group("enemy_hurtbox"))
+	print("DEBUG Projectile: Is tunnel_door: ", hurtbox.is_in_group("tunnel_doors"))
+	
+	# Check if this is a tunnel door - handle specially
+	var parent = hurtbox.get_parent()
+	if parent and parent.is_in_group("tunnel_doors"):
+		print("DEBUG Projectile: Hit tunnel door!")
+		if parent.has_method("take_damage"):
+			parent.take_damage(damage)
+			queue_free()
+		return
+	
 	# Verify this is an enemy hurtbox
 	if not hurtbox.is_in_group("enemy_hurtbox"):
 		return
@@ -144,13 +157,13 @@ func _spawn_explosion_effect() -> void:
 	var explosion_color: Color
 	match damage_type:
 		GameEnums.DamageType.PLASMA:
-			explosion_color = Color("AA44DD")  # Purple/magenta for plasma
+			explosion_color = Color("AA44DD") # Purple/magenta for plasma
 		GameEnums.DamageType.FIRE:
-			explosion_color = Color("FF6633")  # Orange for fire
+			explosion_color = Color("FF6633") # Orange for fire
 		GameEnums.DamageType.ELECTRIC:
-			explosion_color = Color("44DDDD")  # Cyan for electric
+			explosion_color = Color("44DDDD") # Cyan for electric
 		_:
-			explosion_color = Color("FFAA33")  # Default orange/yellow
+			explosion_color = Color("FFAA33") # Default orange/yellow
 	
 	viz.color = explosion_color
 	viz.color.a = 0.5

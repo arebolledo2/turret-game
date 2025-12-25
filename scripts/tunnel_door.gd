@@ -21,24 +21,36 @@ func _ready() -> void:
 	# Connect area signals for turret projectile collision
 	if area:
 		area.area_entered.connect(_on_area_entered)
+		print("DEBUG TunnelDoor: Area signals connected")
+		print("DEBUG TunnelDoor: Area collision layer = ", area.collision_layer)
+		print("DEBUG TunnelDoor: Area collision mask = ", area.collision_mask)
+	else:
+		print("DEBUG TunnelDoor: WARNING - Area2D not found!")
 
 func _on_area_entered(other_area: Area2D) -> void:
 	"""Handle projectiles hitting the door."""
+	print("DEBUG TunnelDoor: Area entered: ", other_area)
+	
 	if is_breached:
 		return
 	
-	# Check if it's a projectile from a turret (not player)
-	var projectile = other_area.get_parent()
+	# The projectile IS the Area2D (not its parent)
+	var projectile = other_area
+	
+	# Check if it's a projectile with damage
 	if projectile and "damage" in projectile:
 		var damage = projectile.damage
-		var is_player_proj = projectile.get("is_player_projectile") if "is_player_projectile" in projectile else true
+		print("DEBUG TunnelDoor: Projectile damage = ", damage)
 		
-		# Only turret projectiles can damage the door
-		if not is_player_proj and damage > 0:
+		# Allow BOTH player and turret projectiles to damage the door
+		if damage > 0:
 			take_damage(damage)
+			print("DEBUG TunnelDoor: Took ", damage, " damage. Current HP: ", current_health)
 			# Destroy the projectile
 			if projectile.has_method("queue_free"):
 				projectile.queue_free()
+	else:
+		print("DEBUG TunnelDoor: No damage property on area: ", other_area.name)
 
 func initialize(wave: int, difficulty_config: Dictionary) -> void:
 	"""

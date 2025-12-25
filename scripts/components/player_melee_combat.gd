@@ -14,8 +14,8 @@ class_name PlayerMeleeCombat
 var can_melee: bool = true
 var is_meleeing: bool = false
 var is_winding_up: bool = false
-var melee_target_enemy: Node2D = null  # Locked-on target
-var melee_hit_enemies: Array = []  # Track hit enemies to prevent double-hits
+var melee_target_enemy: Node2D = null # Locked-on target
+var melee_hit_enemies: Array = [] # Track hit enemies to prevent double-hits
 
 # Timers (5 total!)
 var melee_timer: Timer
@@ -39,7 +39,7 @@ var melee_windup_time: float = 0.15
 var melee_animation_duration: float = 0.15
 
 # Signals
-signal melee_hit()  # Parent handles camera shake
+signal melee_hit() # Parent handles camera shake
 
 func initialize(p_player: CharacterBody2D, p_sprite: Sprite2D, p_movement: PlayerMovement) -> void:
 	"""Initialize component with required references."""
@@ -86,7 +86,7 @@ func initialize(p_player: CharacterBody2D, p_sprite: Sprite2D, p_movement: Playe
 
 	melee_damage_timer = Timer.new()
 	melee_damage_timer.one_shot = true
-	melee_damage_timer.wait_time = 0.05  # Nearly instant - just enough for visual sync
+	melee_damage_timer.wait_time = 0.05 # Nearly instant - just enough for visual sync
 	melee_damage_timer.timeout.connect(_on_melee_damage_timeout)
 	add_child(melee_damage_timer)
 
@@ -96,15 +96,27 @@ func process(_delta: float, can_attack: bool) -> void:
 		attempt_melee_attack()
 
 func attempt_melee_attack() -> void:
-	"""Try to start a melee attack if an enemy is in range."""
+	"""Try to start a melee attack if an enemy or tunnel door is in range."""
 	# Don't start windup if already winding up or attacking
 	if is_winding_up or is_meleeing:
 		return
 
+	var closest_target: Node2D = null
+	var closest_distance := melee_range
+	
+	# In Tunneling mode, also check for tunnel door as a target
+	if GameModeService.should_spawn_tunnel_door():
+		var doors = player.get_tree().get_nodes_in_group("tunnel_doors")
+		for door in doors:
+			if not is_instance_valid(door):
+				continue
+			var distance := player.global_position.distance_to(door.global_position)
+			if distance <= melee_range and distance < closest_distance:
+				closest_distance = distance
+				closest_target = door
+
 	# Find closest enemy in melee range (any direction for auto-attack)
 	var enemies = player.get_tree().get_nodes_in_group("enemies")
-	var closest_enemy_in_range: Node2D = null
-	var closest_distance := melee_range
 
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
@@ -112,15 +124,15 @@ func attempt_melee_attack() -> void:
 		var distance := player.global_position.distance_to(enemy.global_position)
 		if distance <= melee_range and distance < closest_distance:
 			closest_distance = distance
-			closest_enemy_in_range = enemy
+			closest_target = enemy
 
-	# Start windup if any enemy is in range
-	if closest_enemy_in_range:
+	# Start windup if any target is in range
+	if closest_target:
 		# Lock onto this target for the entire attack
-		melee_target_enemy = closest_enemy_in_range
-		# Update facing direction to face the enemy
-		var to_enemy := player.global_position.direction_to(closest_enemy_in_range.global_position)
-		movement.facing_direction = movement.get_direction_from_vector(to_enemy)
+		melee_target_enemy = closest_target
+		# Update facing direction to face the target
+		var to_target := player.global_position.direction_to(closest_target.global_position)
+		movement.facing_direction = movement.get_direction_from_vector(to_target)
 		start_melee_windup()
 
 func start_melee_windup() -> void:
@@ -205,13 +217,17 @@ func play_melee_swing_animation(attack_dir: Vector2) -> void:
 	sprite_tween.tween_property(sprite, "modulate", Color.WHITE, 0.15)
 
 func _on_melee_hitbox_enemy_hit(enemy: Node2D) -> void:
-	"""Handle enemy hit by melee hitbox (physics-based detection)."""
-	# Prevent double-hits on same enemy
+	"""Handle enemy or tunnel door hit by melee hitbox (physics-based detection)."""
+	# Prevent double-hits on same target
 	if enemy in melee_hit_enemies:
 		return
 
-	# Check if enemy is dying (don't hit dead enemies)
+	# Check if enemy is dying (don't hit dead enemies) - skip for tunnel doors
 	if "is_dying" in enemy and enemy.is_dying:
+		return
+	
+	# Skip tunnel doors that are already breached
+	if "is_breached" in enemy and enemy.is_breached:
 		return
 
 	melee_hit_enemies.append(enemy)
@@ -220,8 +236,8 @@ func _on_melee_hitbox_enemy_hit(enemy: Node2D) -> void:
 	if enemy.has_method("take_damage"):
 		enemy.take_damage(melee_damage)
 
-	# Apply knockback
-	if enemy.has_method("apply_knockback"):
+	# Apply knockback (only for enemies, not doors)
+	if enemy.has_method("apply_knockback") and enemy.is_in_group("enemies"):
 		var knockback_dir := player.global_position.direction_to(enemy.global_position)
 		enemy.apply_knockback(Globals.PLAYER_MELEE_KNOCKBACK_FORCE, knockback_dir)
 

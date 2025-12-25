@@ -64,15 +64,28 @@ func process() -> void:
 
 func find_target() -> void:
 	"""Find target in range for firing."""
-	var enemies = turret.get_tree().get_nodes_in_group("enemies")
-	if enemies.is_empty():
-		target = null
-		return
-
 	var current_range: float = stats.get("range", 250.0)
 	var targeting = stats.get("targeting", "nearest")
 	var best_target: Node2D = null
 	var best_dist: float = -1.0
+	
+	# In Tunneling mode, also check for tunnel door as a valid target
+	if GameModeService.should_spawn_tunnel_door():
+		var doors = turret.get_tree().get_nodes_in_group("tunnel_doors")
+		for door in doors:
+			if not is_instance_valid(door):
+				continue
+			var dist := turret.global_position.distance_to(door.global_position)
+			if dist <= current_range:
+				# Door is highest priority target
+				target = door
+				return
+	
+	# Standard enemy targeting
+	var enemies = turret.get_tree().get_nodes_in_group("enemies")
+	if enemies.is_empty():
+		target = null
+		return
 
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
