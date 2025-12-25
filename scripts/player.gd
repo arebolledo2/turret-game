@@ -97,8 +97,8 @@ func _physics_process(delta: float) -> void:
 		return
 	
 	velocity = movement.process(delta)
-	clamp_to_arena()
 	move_and_slide()
+	clamp_to_arena() # Clamp AFTER moving to prevent escaping bounds
 
 	# Turret pickup/placement system
 	turret_handler.process(delta)
@@ -202,13 +202,8 @@ var melee_windup_time: float:
 		return melee_combat.melee_windup_time if melee_combat else 0.15
 
 func clamp_to_arena() -> void:
-	# Keep player within arena bounds
-	var half_width := Globals.ARENA_WIDTH / 2.0
-	var half_height := Globals.ARENA_HEIGHT / 2.0
-	var margin := 20.0  # Player collision radius
-
-	global_position.x = clamp(global_position.x, -half_width + margin, half_width - margin)
-	global_position.y = clamp(global_position.y, -half_height + margin, half_height - margin)
+	# Keep player within arena bounds (delegates to ArenaBoundsService for isometric support)
+	global_position = ArenaBoundsService.clamp_to_arena(global_position, 20.0)
 
 func _on_melee_hit_occurred() -> void:
 	"""Handle melee hit for camera shake."""
@@ -244,7 +239,7 @@ func take_damage(amount: float) -> void:
 
 func _on_invincibility_timeout() -> void:
 	is_invincible = false
-	sprite.modulate = Color.WHITE  # Reset to normal color
+	sprite.modulate = Color.WHITE # Reset to normal color
 
 func _on_animation_timer_timeout() -> void:
 	# Cycle through walk animation frames (0-15 for 4x4 grid)
@@ -304,7 +299,7 @@ func spawn_defensive_pulse_visual() -> void:
 		var angle = i * TAU / float(segments)
 		points.append(Vector2(cos(angle), sin(angle)) * Globals.PLAYER_DEFENSIVE_PULSE_RADIUS)
 	viz.polygon = points
-	viz.color = Color(1.0, 0.8, 0.3)  # Golden defensive color
+	viz.color = Color(1.0, 0.8, 0.3) # Golden defensive color
 	viz.color.a = 0.5
 	viz.global_position = global_position
 

@@ -31,4 +31,10 @@ enum GameMode {
 	TECH_DEFENSE, # Defend static target with HP
 	TUNNELING_TIMED, # Unlock door within wave timer
 	TUNNELING_ALERT, # Unlock door, spawn rate escalates if slow
+	# Arena type modes
+	ARENA_RECTANGULAR, # Classic rectangular arena (default)
+	ARENA_ISOMETRIC, # Isometric diamond arena for AI backgrounds
 }
+
+# Arena geometry types
+enum ArenaType {RECTANGULAR, ISOMETRIC}

@@ -16,7 +16,7 @@ Wave-based survival tower defense game built in **Godot 4.5** using GDScript. Pl
 
 ### Service-Oriented Architecture (Dec 2025 Refactor)
 
-Game logic split into **8 focused service singletons** in `scripts/autoload/`:
+Game logic split into **9 focused service singletons** in `scripts/autoload/`:
 
 1. **DifficultyService** - Difficulty config and multipliers
 2. **GameStateService** - Wave number, XP, kills, time, level
@@ -26,6 +26,7 @@ Game logic split into **8 focused service singletons** in `scripts/autoload/`:
 6. **ItemTrackingService** - Item collection tracking
 7. **ModifierService** - Active modifiers management
 8. **GameModeService** - Active game mode and mode-specific logic hooks
+9. **ArenaBoundsService** - Arena geometry (rectangular vs isometric diamond bounds)
 
 **Globals as Facade**: `scripts/autoload/globals.gd` provides compatibility layer that delegates to services. Use services directly for new code, Globals for legacy compatibility.
 
@@ -450,11 +451,24 @@ tween.finished.connect(queue_free)
 
 ### Arena Bounds
 
-**Always use constants** - never hardcode dimensions:
+**Use ArenaBoundsService** for bounds checks (supports rectangular + isometric):
 ```gdscript
-var bounds_x = GameConstants.ARENA_WIDTH
-var bounds_y = GameConstants.ARENA_HEIGHT
+# Check if position is inside arena (works for both rectangular and isometric diamond)
+if ArenaBoundsService.is_inside_arena(position):
+    # Valid position
+
+# Clamp position to arena bounds
+position = ArenaBoundsService.clamp_to_arena(position, margin)
+
+# Get random spawn position
+var spawn_pos = ArenaBoundsService.get_random_edge_spawn_position()
+
+# Check arena type
+if ArenaBoundsService.is_isometric():
+    # Isometric diamond arena
 ```
+
+**Arena Types**: Set via `GameModeService.set_mode(GameEnums.GameMode.ARENA_ISOMETRIC)`.
 
 Auto-configured systems:
 - `arena_setup.gd` - Visual bounds

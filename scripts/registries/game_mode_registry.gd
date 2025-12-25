@@ -37,7 +37,19 @@ const MODES = {
 		"name": "Tunneling (Alert)",
 		"description": "Breach the exit door. Spawn rate escalates until you do!",
 		"group": "win_condition"
-	}
+	},
+	# Arena type modes
+	GameEnums.GameMode.ARENA_RECTANGULAR: {
+		"name": "Classic Arena",
+		"description": "Standard rectangular arena.",
+		"group": "arena_type",
+		"is_default": true
+	},
+	GameEnums.GameMode.ARENA_ISOMETRIC: {
+		"name": "Isometric Arena",
+		"description": "Diamond-shaped isometric arena for AI backgrounds.",
+		"group": "arena_type"
+	},
 }
 
 static func get_mode_config(mode: GameEnums.GameMode) -> Dictionary:

@@ -1,22 +1,27 @@
 class_name GameModeSelectUI
 extends ScalableUIPanel
 
-## Handles game mode selection screen (two-stage: spawn + win condition)
+## Handles game mode selection screen (three-stage: spawn + win condition + arena type)
 
 # Spawn location buttons
 var sentinel_button: Button
 var invasion_button: Button
 
-# Win condition buttons (to be added to scene)
+# Win condition buttons
 var survival_button: Button
 var tech_defense_button: Button
 var tunneling_timed_button: Button
 var tunneling_alert_button: Button
 
+# Arena type buttons
+var classic_arena_button: Button
+var isometric_arena_button: Button
+
 # UI state
 var selected_spawn_mode: GameEnums.GameMode = GameEnums.GameMode.SENTINEL
 var selected_win_mode: GameEnums.GameMode = GameEnums.GameMode.SURVIVAL
-var current_stage: int = 1 # 1 = spawn location, 2 = win condition
+var selected_arena_mode: GameEnums.GameMode = GameEnums.GameMode.ARENA_RECTANGULAR
+var current_stage: int = 1 # 1 = spawn location, 2 = win condition, 3 = arena type
 
 var title_label: Label
 var subtitle_label: Label
@@ -32,11 +37,15 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 	sentinel_button = nodes.get("sentinel_button")
 	invasion_button = nodes.get("invasion_button")
 	
-	# Get new win condition buttons (if they exist)
+	# Get win condition buttons
 	survival_button = nodes.get("survival_button")
 	tech_defense_button = nodes.get("tech_defense_button")
 	tunneling_timed_button = nodes.get("tunneling_timed_button")
 	tunneling_alert_button = nodes.get("tunneling_alert_button")
+	
+	# Get arena type buttons
+	classic_arena_button = nodes.get("classic_arena_button")
+	isometric_arena_button = nodes.get("isometric_arena_button")
 	
 	# Get UI elements
 	title_label = nodes.get("title_label")
@@ -44,7 +53,6 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 	button_container = nodes.get("button_container")
 	
 	# Note: Button connections are handled in hud.tscn scene file
-	# No need to connect them here to avoid duplicate signal emissions
 	
 	base_panel_size = Vector2(BASE_PANEL_WIDTH, BASE_PANEL_HEIGHT)
 	
@@ -54,7 +62,8 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 
 func _scale_fonts(scale: float) -> void:
 	# Scale button heights if needed
-	for button in [sentinel_button, invasion_button, survival_button, tech_defense_button, tunneling_timed_button, tunneling_alert_button]:
+	for button in [sentinel_button, invasion_button, survival_button, tech_defense_button,
+			tunneling_timed_button, tunneling_alert_button, classic_arena_button, isometric_arena_button]:
 		if button:
 			button.custom_minimum_size.y = UIScaler.scale(BASE_BUTTON_HEIGHT)
 
@@ -70,6 +79,14 @@ func show() -> void:
 		tween.tween_property(container, "modulate:a", 1.0, 0.3)
 
 
+func _hide_all_buttons() -> void:
+	"""Helper to hide all selection buttons."""
+	for button in [sentinel_button, invasion_button, survival_button, tech_defense_button,
+			tunneling_timed_button, tunneling_alert_button, classic_arena_button, isometric_arena_button]:
+		if button:
+			button.visible = false
+
+
 func _show_spawn_location_selection() -> void:
 	"""Show stage 1: spawn location selection."""
 	current_stage = 1
@@ -79,32 +96,25 @@ func _show_spawn_location_selection() -> void:
 	if subtitle_label:
 		subtitle_label.text = "Where should enemies spawn?"
 	
+	_hide_all_buttons()
+	
 	# Show only spawn location buttons
 	if sentinel_button:
 		sentinel_button.visible = true
 		sentinel_button.grab_focus()
 	if invasion_button:
 		invasion_button.visible = true
-	
-	# Hide win condition buttons
-	if survival_button:
-		survival_button.visible = false
-	if tech_defense_button:
-		tech_defense_button.visible = false
-	if tunneling_timed_button:
-		tunneling_timed_button.visible = false
-	if tunneling_alert_button:
-		tunneling_alert_button.visible = false
 
 
 func _show_win_condition_selection() -> void:
 	"""Show stage 2: win condition selection."""
 	current_stage = 2
 	
-	# TEMPORARY: If win condition buttons don't exist in scene yet, auto-select SURVIVAL
+	# TEMPORARY: If win condition buttons don't exist in scene yet, skip to arena
 	if not survival_button and not tech_defense_button:
 		print("Win condition buttons not in scene - auto-selecting SURVIVAL mode")
-		on_win_condition_selected(GameEnums.GameMode.SURVIVAL)
+		selected_win_mode = GameEnums.GameMode.SURVIVAL
+		_show_arena_type_selection()
 		return
 	
 	if title_label:
@@ -112,11 +122,7 @@ func _show_win_condition_selection() -> void:
 	if subtitle_label:
 		subtitle_label.text = "How do you want to win?"
 	
-	# Hide spawn location buttons
-	if sentinel_button:
-		sentinel_button.visible = false
-	if invasion_button:
-		invasion_button.visible = false
+	_hide_all_buttons()
 	
 	# Show win condition buttons
 	if survival_button:
@@ -130,6 +136,31 @@ func _show_win_condition_selection() -> void:
 		tunneling_alert_button.visible = true
 
 
+func _show_arena_type_selection() -> void:
+	"""Show stage 3: arena type selection."""
+	current_stage = 3
+	
+	# Skip if arena buttons don't exist
+	if not classic_arena_button and not isometric_arena_button:
+		print("Arena type buttons not in scene - auto-selecting RECTANGULAR")
+		on_arena_type_selected(GameEnums.GameMode.ARENA_RECTANGULAR)
+		return
+	
+	if title_label:
+		title_label.text = "SELECT ARENA TYPE"
+	if subtitle_label:
+		subtitle_label.text = "Choose your arena shape"
+	
+	_hide_all_buttons()
+	
+	# Show arena type buttons
+	if classic_arena_button:
+		classic_arena_button.visible = true
+		classic_arena_button.grab_focus()
+	if isometric_arena_button:
+		isometric_arena_button.visible = true
+
+
 func on_spawn_mode_selected(mode: GameEnums.GameMode) -> void:
 	"""Called when a spawn location mode is selected."""
 	selected_spawn_mode = mode
@@ -137,15 +168,21 @@ func on_spawn_mode_selected(mode: GameEnums.GameMode) -> void:
 
 
 func on_win_condition_selected(mode: GameEnums.GameMode) -> void:
-	"""Called when a win condition mode is selected. Sets both modes and starts game."""
+	"""Called when a win condition mode is selected. Advances to arena selection."""
 	selected_win_mode = mode
+	_show_arena_type_selection()
+
+
+func on_arena_type_selected(mode: GameEnums.GameMode) -> void:
+	"""Called when an arena type is selected. Sets all modes and starts game."""
+	selected_arena_mode = mode
 	
-	# Set both modes directly via GameModeService (don't trigger game start yet)
+	# Set all three modes via GameModeService
 	GameModeService.set_mode(selected_spawn_mode)
 	GameModeService.set_mode(selected_win_mode)
+	GameModeService.set_mode(selected_arena_mode)
 	
-	# Now emit game_mode_selected with the win mode to trigger game start
-	# (game_manager will see both modes are already set)
+	# Emit game_mode_selected with the win mode to trigger game start
 	Events.game_mode_selected.emit(selected_win_mode)
 	
 	# Hide the screen

@@ -43,6 +43,8 @@ const GameModeSelectScript = preload("res://scripts/ui/game_mode_select.gd")
 @onready var tech_defense_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/TechDefenseButton
 @onready var tunneling_timed_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/TunnelingTimedButton
 @onready var tunneling_alert_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/TunnelingAlertButton
+@onready var classic_arena_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/ClassicArenaButton
+@onready var isometric_arena_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/IsometricArenaButton
 @onready var restart_button: Button = $GameOverScreen/Panel/VBoxContainer/RestartButton
 
 # Pause Menu References
@@ -199,6 +201,8 @@ func _setup_components() -> void:
 		"tech_defense_button": tech_defense_button,
 		"tunneling_timed_button": tunneling_timed_button,
 		"tunneling_alert_button": tunneling_alert_button,
+		"classic_arena_button": classic_arena_button,
+		"isometric_arena_button": isometric_arena_button,
 	}, self)
 
 	# Pause menu component
@@ -348,6 +352,14 @@ func _on_tunneling_timed_pressed() -> void:
 
 func _on_tunneling_alert_pressed() -> void:
 	_game_mode_select.on_win_condition_selected(GameEnums.GameMode.TUNNELING_ALERT)
+
+
+func _on_classic_arena_pressed() -> void:
+	_game_mode_select.on_arena_type_selected(GameEnums.GameMode.ARENA_RECTANGULAR)
+
+
+func _on_isometric_arena_pressed() -> void:
+	_game_mode_select.on_arena_type_selected(GameEnums.GameMode.ARENA_ISOMETRIC)
 
 
 # =============================================================================

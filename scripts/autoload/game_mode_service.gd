@@ -11,30 +11,52 @@ func _ready() -> void:
 
 func _initialize_defaults() -> void:
 	# For each group in registry, set the default mode
-	var spawn_mode = GameModeRegistry.get_default_mode_for_group("spawn_location")
+	var spawn_mode: int = GameModeRegistry.get_default_mode_for_group("spawn_location")
 	if spawn_mode != -1:
 		active_modes["spawn_location"] = spawn_mode
 	
-	var win_mode = GameModeRegistry.get_default_mode_for_group("win_condition")
+	var win_mode: int = GameModeRegistry.get_default_mode_for_group("win_condition")
 	if win_mode != -1:
 		active_modes["win_condition"] = win_mode
+	
+	var arena_mode: int = GameModeRegistry.get_default_mode_for_group("arena_type")
+	if arena_mode != -1:
+		active_modes["arena_type"] = arena_mode
+		_update_arena_bounds()
 
 func set_mode(mode_id: GameEnums.GameMode) -> void:
-	var config = GameModeRegistry.get_mode_config(mode_id)
+	var config: Dictionary = GameModeRegistry.get_mode_config(mode_id)
 	if config.is_empty():
 		print("ERROR: Game mode config not found for ID: ", mode_id)
 		return
 		
-	var group = config.get("group")
+	var group: String = config.get("group")
 	active_modes[group] = mode_id
 	
+	# Update arena bounds if arena type changed
+	if group == "arena_type":
+		_update_arena_bounds()
+	
 	print("Game Mode Set: ", config.get("name"), " (Group: ", group, ")")
+
+func _update_arena_bounds() -> void:
+	"""Synchronize ArenaBoundsService with selected arena type mode."""
+	var mode: int = active_modes.get("arena_type", GameEnums.GameMode.ARENA_RECTANGULAR)
+	match mode:
+		GameEnums.GameMode.ARENA_ISOMETRIC:
+			ArenaBoundsService.set_arena_type(GameEnums.ArenaType.ISOMETRIC)
+		_:
+			ArenaBoundsService.set_arena_type(GameEnums.ArenaType.RECTANGULAR)
 
 func is_mode_active(mode_id: GameEnums.GameMode) -> bool:
 	for group in active_modes:
 		if active_modes[group] == mode_id:
 			return true
 	return false
+
+func get_arena_type_mode() -> GameEnums.GameMode:
+	"""Returns the active arena type mode."""
+	return active_modes.get("arena_type", GameEnums.GameMode.ARENA_RECTANGULAR)
 
 func reset_state() -> void:
 	active_modes.clear()
@@ -48,11 +70,14 @@ func get_random_spawn_position(spawn_zones: Array[Rect2]) -> Vector2:
 	"""
 	Calculates a random spawn position based on the active spawn_location mode.
 	"""
-	var mode = active_modes.get("spawn_location", GameEnums.GameMode.SENTINEL)
+	var mode: int = active_modes.get("spawn_location", GameEnums.GameMode.SENTINEL)
 	
 	match mode:
 		GameEnums.GameMode.SENTINEL:
-			# Original behavior: pick from edge zones
+			# Original behavior: pick from edge zones (uses ArenaBoundsService for isometric)
+			if ArenaBoundsService.is_isometric():
+				return ArenaBoundsService.get_random_edge_spawn_position()
+			# Rectangular: use legacy zones
 			if spawn_zones.is_empty():
 				return Vector2.ZERO
 			var zone := spawn_zones[randi() % spawn_zones.size()]
@@ -62,15 +87,8 @@ func get_random_spawn_position(spawn_zones: Array[Rect2]) -> Vector2:
 			)
 			
 		GameEnums.GameMode.INVASION:
-			# New behavior: pick anywhere in the arena
-			var half_width := GameConstants.ARENA_WIDTH / 2.0
-			var half_height := GameConstants.ARENA_HEIGHT / 2.0
-			var inset := 40.0 # Keep slightly away from the absolute walls
-			
-			return Vector2(
-				randf_range(-half_width + inset, half_width - inset),
-				randf_range(-half_height + inset, half_height - inset)
-			)
+			# Spawn anywhere in the arena
+			return ArenaBoundsService.get_random_arena_position()
 			
 	return Vector2.ZERO
 
@@ -121,5 +139,5 @@ func get_spawn_rate_multiplier(time_since_alert: float) -> float:
 		return 1.0
 	
 	# +30% every 8 seconds
-	var intervals_passed = floor(time_since_alert / 8.0)
+	var intervals_passed: int = int(floor(time_since_alert / 8.0))
 	return 1.0 + (intervals_passed * 0.3)

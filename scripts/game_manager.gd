@@ -57,21 +57,24 @@ func _on_game_mode_selected(game_mode: int) -> void:
 	start_game()
 
 func start_game() -> void:
-	# Store BOTH mode groups before reset
+	# Store ALL mode groups before reset
 	var spawn_mode = Globals.game_mode_service.active_modes.get("spawn_location")
 	var win_mode = Globals.game_mode_service.active_modes.get("win_condition")
+	var arena_mode = Globals.game_mode_service.active_modes.get("arena_type")
 	
-	print("DEBUG start_game: Preserving modes - spawn:", spawn_mode, " win:", win_mode)
+	print("DEBUG start_game: Preserving modes - spawn:", spawn_mode, " win:", win_mode, " arena:", arena_mode)
 	
 	Globals.reset_stats()
 	
-	# Restore BOTH modes after reset
+	# Restore ALL modes after reset
 	if spawn_mode != null:
 		GameModeService.set_mode(spawn_mode as GameEnums.GameMode)
 	if win_mode != null:
 		GameModeService.set_mode(win_mode as GameEnums.GameMode)
+	if arena_mode != null:
+		GameModeService.set_mode(arena_mode as GameEnums.GameMode)
 	
-	print("DEBUG start_game: After restore - spawn:", GameModeService.active_modes.get("spawn_location"), " win:", GameModeService.active_modes.get("win_condition"))
+	print("DEBUG start_game: After restore - spawn:", GameModeService.active_modes.get("spawn_location"), " win:", GameModeService.active_modes.get("win_condition"), " arena:", GameModeService.active_modes.get("arena_type"))
 		
 	Globals.is_game_active = true
 	Events.game_started.emit()
