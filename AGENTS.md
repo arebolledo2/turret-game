@@ -16,7 +16,7 @@ Wave-based survival tower defense game built in **Godot 4.5** using GDScript. Pl
 
 ### Service-Oriented Architecture (Dec 2025 Refactor)
 
-Game logic split into **7 focused service singletons** in `scripts/autoload/`:
+Game logic split into **8 focused service singletons** in `scripts/autoload/`:
 
 1. **DifficultyService** - Difficulty config and multipliers
 2. **GameStateService** - Wave number, XP, kills, time, level
@@ -53,7 +53,7 @@ Events.gold_collected.emit(amount)
 Events.player_damaged.connect(_on_player_damaged)
 ```
 
-**73 signals across 8 categories**: Game State, Waves, Combat, Turrets, Pickups, Economy, Shop, UI, Progression
+**37 signals across 9 categories**: Game State, Waves, Combat, Turrets, Pickups, Tech Drops, Economy, Shop, UI, Progression
 
 ### Registry Pattern
 
@@ -61,7 +61,7 @@ Type definitions stored in **static registry classes** (extends RefCounted):
 
 - **EnemyRegistry** (`scripts/registries/enemy_registry.gd`) - 7 enemy types with behaviors, stats, spawn rules
 - **TurretRegistry** (`scripts/registries/turret_registry.gd`) - 6 turret types with attack styles, damage types, stats
-- **ItemRegistry** (`scripts/registries/item_registry.gd`) - 60 items across 5 rarity tiers (see Modular Item System)
+- **ItemRegistry** (`scripts/registries/item_registry.gd`) - 54 items across 5 rarity tiers (see Modular Item System)
 - **GameModeRegistry** (`scripts/registries/game_mode_registry.gd`) - Game mode definitions grouped by category (e.g., spawn_location)
 
 ```gdscript
@@ -117,7 +117,7 @@ var stats = TurretStatsService.get_turret_stats(turret_type)  # Includes modifie
 
 ### Buff System (Temporary Modifiers)
 
-**Time-based buffs** managed by `BuffSystem` autoload (`scripts/autoload/buff_system.gd`):
+**Time-based buffs** managed by `BuffSystem` (`scripts/systems/buff_system.gd`):
 
 - **Instance-based**: Track buffs per turret_id
 - **Stacking support**: Max stacks per buff type (e.g., Chain Reaction: 5 stacks)
@@ -138,9 +138,9 @@ BuffSystem.apply_buff(turret_id, "chain_reaction_fire_rate", {
 
 Items split across **5 rarity-tier files** in `scripts/registries/items/`:
 
-- `common_items.gd` - 20 items
+- `common_items.gd` - 17 items
 - `uncommon_items.gd` - 10 items
-- `rare_items.gd` - 17 items
+- `rare_items.gd` - 14 items
 - `epic_items.gd` - 9 items
 - `legendary_items.gd` - 4 items
 
