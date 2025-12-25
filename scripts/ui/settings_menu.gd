@@ -18,6 +18,7 @@ const BASE_BUTTON_HEIGHT: float = 40.0
 
 
 func setup(nodes: Dictionary, owner: Node) -> void:
+	print("DEBUG: SettingsMenuUI setup called. Nodes: ", nodes.keys())
 	show_damage_check = nodes.get("show_damage_check")
 	physics_hitboxes_check = nodes.get("physics_hitboxes_check")
 	player_hurtbox_check = nodes.get("player_hurtbox_check")
@@ -25,6 +26,11 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 	player_attack_check = nodes.get("player_attack_check")
 	isometric_debug_check = nodes.get("isometric_debug_check")
 	back_button = nodes.get("back_button")
+	
+	back_button = nodes.get("back_button")
+	
+	if container:
+		container.process_mode = Node.PROCESS_MODE_ALWAYS # Ensure settings menu works when paused
 
 	# Set base size
 	base_panel_size = Vector2(BASE_PANEL_WIDTH, BASE_PANEL_HEIGHT)
@@ -37,8 +43,12 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 		show_damage_check.button_pressed = Globals.show_damage_numbers
 		
 	if isometric_debug_check:
+		print("DEBUG: Connecting isometric_debug_check")
 		isometric_debug_check.button_pressed = Globals.isometric_debug_enabled
-		isometric_debug_check.toggled.connect(on_isometric_debug_toggled)
+		if not isometric_debug_check.toggled.is_connected(on_isometric_debug_toggled):
+			isometric_debug_check.toggled.connect(on_isometric_debug_toggled)
+	else:
+		print("ERROR: isometric_debug_check node NOT FOUND in SettingsMenuUI")
 
 	if physics_hitboxes_check:
 		physics_hitboxes_check.button_pressed = Globals.debug_hitbox_flags[GameEnums.HitboxType.PHYSICS]
@@ -60,6 +70,7 @@ func _scale_fonts(scale: float) -> void:
 
 
 func show() -> void:
+	print("DEBUG: SettingsMenuUI show() called")
 	if container:
 		container.modulate.a = 0.0
 		container.visible = true
@@ -80,6 +91,7 @@ func on_show_damage_toggled(toggled_on: bool) -> void:
 
 
 func on_isometric_debug_toggled(toggled_on: bool) -> void:
+	print("DEBUG: on_isometric_debug_toggled triggered. Value: ", toggled_on)
 	Globals.isometric_debug_enabled = toggled_on
 	Events.isometric_debug_toggled.emit(toggled_on)
 

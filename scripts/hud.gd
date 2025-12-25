@@ -31,6 +31,7 @@ const GameModeSelectScript = preload("res://scripts/ui/game_mode_select.gd")
 @onready var pause_menu: Control = $PauseMenu
 @onready var settings_menu: Control = $SettingsMenu
 @onready var show_damage_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageCheck
+@onready var isometric_debug_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/IsometricDebugCheck
 @onready var physics_hitboxes_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PhysicsHitboxes/PhysicsHitboxesCheck
 @onready var player_hurtbox_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerHurtbox/PlayerHurtboxCheck
 @onready var enemy_hurtbox_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/EnemyHurtbox/EnemyHurtboxCheck
@@ -236,6 +237,7 @@ func _setup_components() -> void:
 		"container": settings_menu,
 		"panel": $SettingsMenu/Panel,
 		"show_damage_check": show_damage_check,
+		"isometric_debug_check": isometric_debug_check,
 		"physics_hitboxes_check": physics_hitboxes_check,
 		"player_hurtbox_check": player_hurtbox_check,
 		"enemy_hurtbox_check": enemy_hurtbox_check,

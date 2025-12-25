@@ -23,7 +23,7 @@ var debug_outline: Line2D = null
 # Available background images (hardcoded list)
 const AVAILABLE_BACKGROUNDS: Array[String] = [
 	"res://assets/sprites/isometric_arena_bg.jpeg",
-	# Add more background paths here as needed
+	"res://assets/sprites/isometric_arena_bg_2.jpeg",
 ]
 var current_bg_index: int = 0
 
@@ -32,8 +32,25 @@ var bg_zoom: Vector2 = Vector2.ONE
 var bg_offset: Vector2 = Vector2.ZERO
 var bg_configs: Dictionary = {} # Stores {path: {offset: Vector2, scale: Vector2}}
 
+# Key state tracking for debounce
+var _prev_bracket_left: bool = false
+var _prev_bracket_right: bool = false
+var _prev_save_key: bool = false
+var start_time: int = 0 # For debug print throttling
+
 
 func _ready() -> void:
+	# Ensure this script runs even when game is paused (for debug editing)
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	print("DEBUG: Arena _ready called. Process Mode set to ALWAYS. Visible: ", visible)
+	
+	# Connect to debug signal early so it works regardless of arena setup timing
+	if not Events.isometric_debug_toggled.is_connected(_on_isometric_debug_toggled):
+		Events.isometric_debug_toggled.connect(_on_isometric_debug_toggled)
+		print("DEBUG: Arena connected to isometric_debug_toggled signal")
+	else:
+		print("DEBUG: Arena ALREADY connected to isometric_debug_toggled signal")
+	
 	# Wait for game mode to be set before configuring arena
 	# If game is already started, setup now; otherwise wait for signal
 	if Globals.is_game_active:
@@ -174,13 +191,10 @@ func _setup_isometric_arena(half_width: float, half_height: float) -> void:
 	outline_points.append(ground_points[0]) # Close loop
 	debug_outline.points = outline_points
 	debug_outline.visible = Globals.isometric_debug_enabled # HIDE by default (unless enabled)
-	
-	# Connect to debug event
-	if not Events.isometric_debug_toggled.is_connected(_on_isometric_debug_toggled):
-		Events.isometric_debug_toggled.connect(_on_isometric_debug_toggled)
 
 
 func _on_isometric_debug_toggled(enabled: bool) -> void:
+	print("DEBUG: _on_isometric_debug_toggled called. Enabled: ", enabled, " | Outline exists: ", debug_outline != null)
 	if debug_outline:
 		debug_outline.visible = enabled
 	
@@ -192,8 +206,18 @@ func _on_isometric_debug_toggled(enabled: bool) -> void:
 
 
 func _process(delta: float) -> void:
+	# Debug print to verify process is running (throttled)
+	if start_time == 0: start_time = Time.get_ticks_msec()
+	if Time.get_ticks_msec() - start_time > 2000: # Print every 2s if running
+		print("DEBUG: Arena _process running. Paused: ", get_tree().paused, " | Visible: ", visible, " | Sprite: ", bg_sprite != null, " | GlobalDebug: ", Globals.isometric_debug_enabled)
+		start_time = Time.get_ticks_msec()
+
 	# Only run if visible, sprite exists, AND DEBUG MODE IS ENABLED
-	if not visible or not bg_sprite or not Globals.isometric_debug_enabled:
+	if not visible:
+		return
+	if not bg_sprite:
+		return
+	if not Globals.isometric_debug_enabled:
 		return
 		
 	# Simple Runtime Alignment Tool
@@ -237,25 +261,38 @@ func _process(delta: float) -> void:
 	if Input.is_key_pressed(KEY_EQUAL) or Input.is_key_pressed(KEY_KP_ADD):
 		bg_zoom += Vector2(scale_speed, scale_speed)
 		changed = true
+		print("DEBUG: Plus pressed. New Zoom: ", bg_zoom)
 	if Input.is_key_pressed(KEY_MINUS) or Input.is_key_pressed(KEY_KP_SUBTRACT):
 		bg_zoom -= Vector2(scale_speed, scale_speed)
 		changed = true
+		print("DEBUG: Minus pressed. New Zoom: ", bg_zoom)
 		
-	# Save (S)
-	if Input.is_physical_key_pressed(KEY_S):
+	# Save (S) - with debounce
+	var save_pressed := Input.is_physical_key_pressed(KEY_S)
+	if save_pressed and not _prev_save_key:
+		print("DEBUG: Save key pressed")
 		_save_all_bg_configs()
+	_prev_save_key = save_pressed
 	
-	# Switch backgrounds ([ and ])
-	if Input.is_action_just_pressed("ui_focus_prev") or Input.is_physical_key_pressed(KEY_BRACKETLEFT):
+	# Switch backgrounds ([ and ]) - with debounce (just-pressed detection)
+	var bracket_left := Input.is_physical_key_pressed(KEY_BRACKETLEFT)
+	var bracket_right := Input.is_physical_key_pressed(KEY_BRACKETRIGHT)
+	
+	if bracket_left and not _prev_bracket_left:
+		print("DEBUG: [ pressed")
 		_switch_background(-1)
-	if Input.is_action_just_pressed("ui_focus_next") or Input.is_physical_key_pressed(KEY_BRACKETRIGHT):
+	if bracket_right and not _prev_bracket_right:
+		print("DEBUG: ] pressed")
 		_switch_background(1)
+	
+	_prev_bracket_left = bracket_left
+	_prev_bracket_right = bracket_right
 		
 	if changed:
 		bg_sprite.position = bg_offset
 		bg_sprite.scale = bg_zoom
 		_store_current_bg_config() # Update in-memory config
-		print("BG Alignment | Offset: ", bg_offset, " | Scale: ", bg_zoom)
+		# print("BG Alignment | Offset: ", bg_offset, " | Scale: ", bg_zoom)
 
 
 const CONFIG_PATH = "user://isometric_bg_config.cfg"
@@ -344,7 +381,18 @@ func _load_all_bg_configs() -> void:
 		print("No saved background configs found, using defaults.")
 		return
 	
-	# Load configs for each available background
+	# Migration: Check for old [alignment] section format
+	if config.has_section("alignment"):
+		var old_offset = config.get_value("alignment", "offset", Vector2.ZERO)
+		var old_scale = config.get_value("alignment", "scale", Vector2.ONE)
+		# Apply old settings to the first (original) background
+		if AVAILABLE_BACKGROUNDS.size() > 0:
+			var first_bg := AVAILABLE_BACKGROUNDS[0]
+			bg_configs[first_bg] = {"offset": old_offset, "scale": old_scale}
+			print("MIGRATED old alignment config to: ", _get_bg_filename(first_bg))
+		return # Skip new format loading if migrating
+	
+	# Load configs for each available background (new format)
 	for bg_path in AVAILABLE_BACKGROUNDS:
 		var section := _get_bg_filename(bg_path)
 		if config.has_section(section):
