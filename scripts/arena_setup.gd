@@ -10,7 +10,7 @@ extends Node2D
 const FIXED_ARENA_WIDTH: int = 1920
 const FIXED_ARENA_HEIGHT: int = 1080
 
-@onready var ground: ColorRect = $Ground
+@onready var ground: TextureRect = $Ground
 @onready var boundary: ColorRect = $Boundary
 
 func _ready() -> void:
@@ -31,14 +31,14 @@ func setup_arena() -> void:
 
 	# Setup ground (playable area)
 	if ground:
-		ground.offset_left = -half_width
-		ground.offset_top = -half_height
+		ground.offset_left = - half_width
+		ground.offset_top = - half_height
 		ground.offset_right = half_width
 		ground.offset_bottom = half_height
 
 	# Setup boundary (border around ground)
 	if boundary:
-		boundary.offset_left = -half_width - border_thickness
-		boundary.offset_top = -half_height - border_thickness
+		boundary.offset_left = - half_width - border_thickness
+		boundary.offset_top = - half_height - border_thickness
 		boundary.offset_right = half_width + border_thickness
 		boundary.offset_bottom = half_height + border_thickness

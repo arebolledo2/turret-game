@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" uid="uid://hud_scene_001" path="res://scenes/ui/hud.tscn" id="7_hud"]
 [ext_resource type="Script" path="res://scripts/shop_manager.gd" id="8_shop_mgr"]
 [ext_resource type="PackedScene" uid="uid://shop_screen_001" path="res://scenes/ui/shop_screen.tscn" id="9_shop_screen"]
+[ext_resource type="Texture2D" uid="uid://arena_bg_001" path="res://assets/sprites/arena_background.png" id="10_arena_bg"]
 
 [node name="Main" type="Node2D"]
 y_sort_enabled = true
@@ -20,12 +21,13 @@ y_sort_enabled = true
 [node name="Arena" type="Node2D" parent="."]
 script = ExtResource("1_arena_setup")
 
-[node name="Ground" type="ColorRect" parent="Arena"]
+[node name="Ground" type="TextureRect" parent="Arena"]
 offset_left = -700.0
 offset_top = -450.0
 offset_right = 700.0
 offset_bottom = 450.0
-color = Color(0.12, 0.15, 0.12, 1)
+texture = ExtResource("10_arena_bg")
+expand_mode = 1
 
 [node name="Boundary" type="ColorRect" parent="Arena"]
 offset_left = -710.0
