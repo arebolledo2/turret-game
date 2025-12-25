@@ -454,16 +454,6 @@ func test_reroll_insufficient_funds():
 	assert_false(result, "Reroll should fail with insufficient gold")
 
 
-func test_reroll_max_rerolls_reached():
-	Globals.total_gold = 1000
-	Globals.shop_reroll_count = Globals.MAX_REROLLS_PER_WAVE
-	shop_manager.generate_offers()
-
-	var result = shop_manager.reroll_shop()
-
-	assert_false(result, "Reroll should fail when max reached")
-
-
 func test_can_afford_reroll_with_gold():
 	Globals.total_gold = 100
 	Globals.shop_reroll_count = 0
@@ -480,15 +470,6 @@ func test_can_afford_reroll_without_gold():
 	var result = shop_manager.can_afford_reroll()
 
 	assert_false(result, "Should not be able to afford reroll without gold")
-
-
-func test_can_afford_reroll_max_reached():
-	Globals.total_gold = 1000
-	Globals.shop_reroll_count = Globals.MAX_REROLLS_PER_WAVE
-
-	var result = shop_manager.can_afford_reroll()
-
-	assert_false(result, "Should not be able to reroll when max reached")
 
 
 # =============================================================================

@@ -5,6 +5,7 @@ extends Area2D
 @export var magnet_acceleration: float = 800.0
 
 var is_being_collected: bool = false
+var is_collected: bool = false  # Guard against multiple collect() calls
 var current_speed: float = 0.0
 var target_player: Node2D = null
 
@@ -40,6 +41,10 @@ func start_collection(player: Node2D) -> void:
 	current_speed = 100.0  # Initial speed
 
 func collect() -> void:
+	if is_collected:
+		return
+	is_collected = true
+
 	Globals.total_xp += xp_value
 	Events.xp_collected.emit(xp_value, Globals.total_xp)
 

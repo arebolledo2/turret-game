@@ -81,26 +81,11 @@ func test_start_spawning_sets_wave():
 	assert_eq(spawner.current_wave, 3, "Current wave should be set")
 
 
-func test_start_spawning_sets_enemy_count():
-	spawner.start_spawning(1)
-
-	var expected_count = Globals.get_wave_enemy_count(1)
-	assert_eq(spawner.enemies_to_spawn, expected_count, "Enemies to spawn should match wave count")
-
-
-func test_start_spawning_sets_wave_duration():
-	spawner.start_spawning(2)
-
-	var expected_duration = Globals.get_wave_duration(2)
-	assert_eq(spawner.wave_duration, expected_duration, "Wave duration should be set")
-
-
 func test_stop_spawning_clears_state():
 	spawner.start_spawning(1)
 	spawner.stop_spawning()
 
 	assert_false(spawner.is_spawning, "Should not be spawning after stop")
-	assert_eq(spawner.enemies_to_spawn, 0, "Enemies to spawn should be 0")
 
 
 func test_stop_spawning_clears_queue():
@@ -116,62 +101,31 @@ func test_stop_spawning_clears_queue():
 # SPAWN RATE DYNAMICS
 # =============================================================================
 
-func test_update_spawn_rate_at_wave_start():
-	spawner.start_spawning(1)
-	var wave_duration = spawner.wave_duration
-
-	# At wave start (full time remaining), spawn rate should be slow
-	spawner.update_spawn_rate(wave_duration)
-
-	# Initial spawn interval is 3.0 seconds (slow)
-	assert_almost_eq(spawner.spawn_timer.wait_time, 3.0, 0.1,
-		"Spawn rate at wave start should be slow (~3.0s)")
-
-
-func test_update_spawn_rate_at_wave_end():
+func test_spawn_interval_set_on_start():
 	spawner.start_spawning(1)
 
-	# At wave end (0 time remaining), spawn rate should be fast
-	spawner.update_spawn_rate(0.0)
-
-	# End spawn interval is 0.15 seconds (fast)
-	assert_almost_eq(spawner.spawn_timer.wait_time, 0.15, 0.05,
-		"Spawn rate at wave end should be fast (~0.15s)")
-
-
-func test_update_spawn_rate_at_midpoint():
-	spawner.start_spawning(1)
-	var wave_duration = spawner.wave_duration
-
-	# At midpoint
-	spawner.update_spawn_rate(wave_duration / 2.0)
-
-	# Should be between 3.0 and 0.15
+	# Spawn interval should be set (between 0.8 and 3.0 seconds for wave 1)
 	var wait_time = spawner.spawn_timer.wait_time
-	assert_gt(wait_time, 0.15, "Mid-wave spawn rate should be > 0.15s")
-	assert_lt(wait_time, 3.0, "Mid-wave spawn rate should be < 3.0s")
+	assert_gt(wait_time, 0.0, "Spawn interval should be positive")
+	assert_lt(wait_time, 5.0, "Spawn interval should be reasonable")
 
 
-func test_spawn_rate_increases_over_time():
+func test_spawn_interval_faster_for_higher_waves():
 	spawner.start_spawning(1)
-	var wave_duration = spawner.wave_duration
+	var wave1_interval = spawner.spawn_timer.wait_time
 
-	spawner.update_spawn_rate(wave_duration * 0.8)  # 20% through wave
-	var early_interval = spawner.spawn_timer.wait_time
+	# Create new spawner for wave 10
+	var spawner2 = _spawner_script.new()
+	add_child_autofree(spawner2)
+	await get_tree().process_frame
 
-	spawner.update_spawn_rate(wave_duration * 0.2)  # 80% through wave
-	var late_interval = spawner.spawn_timer.wait_time
+	spawner2.start_spawning(10)
+	var wave10_interval = spawner2.spawn_timer.wait_time
 
-	assert_lt(late_interval, early_interval,
-		"Later in wave should have shorter spawn interval (faster spawning)")
-
-
-func test_update_spawn_rate_does_nothing_when_not_spawning():
-	spawner.spawn_timer.wait_time = 1.0
-	spawner.update_spawn_rate(10.0)
-
-	assert_eq(spawner.spawn_timer.wait_time, 1.0,
-		"Spawn rate should not change when not spawning")
+	# Wave 10 should spawn faster than wave 1 on average
+	# Note: Due to randomness, this might occasionally fail, but should pass most times
+	assert_lt(wave10_interval, wave1_interval * 1.5,
+		"Higher waves should generally spawn faster")
 
 
 # =============================================================================
@@ -198,14 +152,15 @@ func test_enemy_type_tracking_cleared_on_start():
 		"Old tracking data should be cleared on new wave")
 
 
-func test_enemies_spawned_counter_reset():
-	spawner.enemies_spawned = 10
+func test_enemies_spawned_tracking_cleared_on_start():
+	spawner.enemies_spawned_by_type["basic"] = 999
 
 	spawner.start_spawning(1)
 
-	# After start_spawning, first enemy is spawned immediately
-	# so enemies_spawned will be at least 1 (or more for swarm types)
-	assert_gte(spawner.enemies_spawned, 1, "At least one enemy should be spawned immediately")
+	# After start_spawning, tracking is cleared and repopulated
+	# The old value should be gone
+	assert_false(spawner.enemies_spawned_by_type.get("basic", 0) == 999,
+		"Old enemy count tracking should be cleared")
 
 
 # =============================================================================

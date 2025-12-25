@@ -15,24 +15,21 @@ func before_each() -> void:
 # =============================================================================
 
 func test_wave_duration_wave_1():
-	# Wave 1 should be base duration (20 seconds)
+	# Wave 1 should be 25 seconds
 	var duration = Globals.get_wave_duration(1)
-	assert_eq(duration, Globals.WAVE_BASE_DURATION, "Wave 1 should equal base duration")
+	assert_eq(duration, 25.0, "Wave 1 should be 25 seconds")
 
 
 func test_wave_duration_scales_correctly():
-	# Wave duration = base + (wave - 1) * increment
-	# Wave 5 = 20 + 4 * 4 = 36
+	# Wave 5 = 50 seconds (using lerp-based scaling in game_state_service)
 	var duration = Globals.get_wave_duration(5)
-	var expected = Globals.WAVE_BASE_DURATION + 4 * Globals.WAVE_DURATION_INCREMENT
-	assert_eq(duration, expected, "Wave 5 duration should be 36 seconds")
+	assert_eq(duration, 50.0, "Wave 5 duration should be 50 seconds")
 
 
 func test_wave_duration_wave_10():
-	# Final wave: 20 + 9 * 4 = 56 seconds
+	# Wave 7+ is capped at 60 seconds
 	var duration = Globals.get_wave_duration(10)
-	var expected = Globals.WAVE_BASE_DURATION + 9 * Globals.WAVE_DURATION_INCREMENT
-	assert_eq(duration, expected, "Wave 10 should be max duration")
+	assert_eq(duration, 60.0, "Wave 10 should be capped at 60 seconds")
 
 
 # =============================================================================
