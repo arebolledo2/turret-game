@@ -154,6 +154,7 @@ func purchase_offer(offer_index: int) -> bool:
 	Events.gold_spent.emit(offer["price"], Globals.total_gold)
 
 	offer["sold"] = true
+	offer["locked"] = false  # Clear lock when purchased
 
 	if offer["type"] == "turret":
 		# Queue turret for spawning at wave start
@@ -202,10 +203,7 @@ func apply_item(item_id: String) -> void:
 	Events.item_collected.emit(item_data)
 
 func reroll_shop() -> bool:
-	# Check if max rerolls reached
-	if Globals.shop_reroll_count >= Globals.MAX_REROLLS_PER_WAVE:
-		return false
-
+	# Removed max reroll limit - infinite rerolls allowed
 	var reroll_cost = get_reroll_cost()
 
 	if Globals.total_gold < reroll_cost:
@@ -228,9 +226,7 @@ func get_reroll_cost() -> int:
 	return int(reroll_cost * item_multiplier)
 
 func can_afford_reroll() -> bool:
-	# Check if max rerolls reached
-	if Globals.shop_reroll_count >= Globals.MAX_REROLLS_PER_WAVE:
-		return false
+	# Only check if player has enough gold (no max reroll limit)
 	return Globals.total_gold >= get_reroll_cost()
 
 func lock_offer(offer_index: int) -> bool:

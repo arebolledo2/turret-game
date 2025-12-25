@@ -170,7 +170,7 @@ const GOLD_WAVE_BONUS_BASE: int = GameConstants.GOLD_WAVE_BONUS_BASE
 const SHOP_OFFER_COUNT: int = GameConstants.SHOP_OFFER_COUNT
 const REROLL_BASE_COST: int = GameConstants.REROLL_BASE_COST
 const REROLL_COST_INCREMENT: int = GameConstants.REROLL_COST_INCREMENT
-const MAX_REROLLS_PER_WAVE: int = GameConstants.MAX_REROLLS_PER_WAVE
+# Removed MAX_REROLLS_PER_WAVE - infinite rerolls allowed
 const WAVE_PRICE_SCALE: float = GameConstants.WAVE_PRICE_SCALE
 const TECH_DROP_SPAWN_INTERVAL: float = GameConstants.TECH_DROP_SPAWN_INTERVAL
 const TECH_DROP_SPAWN_CHANCE: float = GameConstants.TECH_DROP_SPAWN_CHANCE

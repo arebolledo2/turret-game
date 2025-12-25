@@ -121,8 +121,34 @@ func _ready() -> void:
 	# Connect panel signals
 	offers_panel.purchase_requested.connect(_on_purchase_pressed)
 	offers_panel.reroll_requested.connect(_on_reroll_pressed)
-	
+
 	continue_button.pressed.connect(_on_continue_pressed)
+
+func _unhandled_input(event: InputEvent) -> void:
+	# Only handle tab navigation when shop is visible
+	if not visible:
+		return
+
+	if event.is_action_pressed("tab_left"):
+		_change_tab(-1)
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("tab_right"):
+		_change_tab(1)
+		get_viewport().set_input_as_handled()
+
+func _change_tab(direction: int) -> void:
+	if not build_tabs:
+		return
+
+	var current_idx := build_tabs.current_tab
+	var tab_count := build_tabs.get_tab_count()
+
+	# Wrap around: Items -> Player -> Economy -> Turrets -> Items
+	var new_idx := (current_idx + direction) % tab_count
+	if new_idx < 0:
+		new_idx = tab_count - 1
+
+	build_tabs.current_tab = new_idx
 
 
 func _on_shop_opened(wave_number: int) -> void:

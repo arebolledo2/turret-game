@@ -10,6 +10,7 @@ var offers_container: HBoxContainer
 var reroll_button: Button
 var shop_manager: Node
 var _offer_buttons: Array[Button] = []
+var _lock_buttons: Array[Button] = []
 
 signal purchase_requested(index: int)
 signal reroll_requested()
@@ -38,6 +39,7 @@ func _on_offers_generated(offers: Array) -> void:
 	for child in offers_container.get_children():
 		child.queue_free()
 	_offer_buttons.clear()
+	_lock_buttons.clear()
 
 	# Create new offer slots
 	for i in range(offers.size()):
@@ -72,42 +74,41 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	price_label.add_theme_color_override("font_color", Color.GOLD)
 	vbox.add_child(price_label)
 
-	# Button container (for purchase + lock buttons)
-	var button_hbox = HBoxContainer.new()
-	button_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_child(button_hbox)
-	
+	# Button container (vertical layout for gamepad navigation)
+	var button_vbox = VBoxContainer.new()
+	button_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	button_vbox.add_theme_constant_override("separation", 5)
+	vbox.add_child(button_vbox)
+
 	# Purchase button
 	var purchase_button = Button.new()
 	purchase_button.add_theme_font_override("font", MAIN_FONT)
 	purchase_button.process_mode = Control.PROCESS_MODE_ALWAYS
-	purchase_button.custom_minimum_size.x = 120
+	purchase_button.custom_minimum_size.x = 140
 	if offer.get("sold", false):
 		purchase_button.text = "SOLD"
-		purchase_button.disabled = true
-	elif offer.get("locked", false):
-		purchase_button.text = "Purchase"
 		purchase_button.disabled = true
 	else:
 		purchase_button.text = "Purchase"
 		purchase_button.pressed.connect(func(): purchase_requested.emit(index))
 		if Globals.total_gold < offer["price"]:
 			purchase_button.disabled = true
-	button_hbox.add_child(purchase_button)
-	
+	button_vbox.add_child(purchase_button)
+
 	# Lock button (show only if not sold)
 	if not offer.get("sold", false):
 		var lock_button = Button.new()
 		lock_button.add_theme_font_override("font", MAIN_FONT)
 		lock_button.process_mode = Control.PROCESS_MODE_ALWAYS
-		lock_button.custom_minimum_size.x = 60
+		lock_button.custom_minimum_size.x = 140
 		if offer.get("locked", false):
-			lock_button.text = "🔓"
+			lock_button.text = "🔓 Unlock"
 			lock_button.pressed.connect(func(): shop_manager.unlock_offer(index))
 		else:
-			lock_button.text = "🔒"
+			lock_button.text = "🔒 Lock"
 			lock_button.pressed.connect(func(): shop_manager.lock_offer(index))
-		button_hbox.add_child(lock_button)
+		button_vbox.add_child(lock_button)
+		_lock_buttons.append(lock_button)
 	
 	_offer_buttons.append(purchase_button)
 	return panel
@@ -251,26 +252,54 @@ func _format_modifier(modifier: Dictionary) -> String:
 	return ""
 
 func _setup_offer_focus_neighbors() -> void:
+	# Setup horizontal navigation for purchase buttons
 	for i in range(_offer_buttons.size()):
-		var btn := _offer_buttons[i]
-		if not is_instance_valid(btn):
+		var purchase_btn := _offer_buttons[i]
+		if not is_instance_valid(purchase_btn):
 			continue
 
 		# Left neighbor
 		if i > 0 and is_instance_valid(_offer_buttons[i - 1]):
-			btn.focus_neighbor_left = _offer_buttons[i - 1].get_path()
+			purchase_btn.focus_neighbor_left = _offer_buttons[i - 1].get_path()
 
 		# Right neighbor
 		if i < _offer_buttons.size() - 1 and is_instance_valid(_offer_buttons[i + 1]):
-			btn.focus_neighbor_right = _offer_buttons[i + 1].get_path()
+			purchase_btn.focus_neighbor_right = _offer_buttons[i + 1].get_path()
+
+		# Down neighbor -> corresponding lock button (if exists) or reroll button
+		if i < _lock_buttons.size() and is_instance_valid(_lock_buttons[i]):
+			purchase_btn.focus_neighbor_bottom = _lock_buttons[i].get_path()
+		elif reroll_button and is_instance_valid(reroll_button):
+			purchase_btn.focus_neighbor_bottom = reroll_button.get_path()
+
+	# Setup horizontal navigation for lock buttons
+	for i in range(_lock_buttons.size()):
+		var lock_btn := _lock_buttons[i]
+		if not is_instance_valid(lock_btn):
+			continue
+
+		# Up neighbor -> corresponding purchase button
+		if i < _offer_buttons.size() and is_instance_valid(_offer_buttons[i]):
+			lock_btn.focus_neighbor_top = _offer_buttons[i].get_path()
+
+		# Left neighbor
+		if i > 0 and is_instance_valid(_lock_buttons[i - 1]):
+			lock_btn.focus_neighbor_left = _lock_buttons[i - 1].get_path()
+
+		# Right neighbor
+		if i < _lock_buttons.size() - 1 and is_instance_valid(_lock_buttons[i + 1]):
+			lock_btn.focus_neighbor_right = _lock_buttons[i + 1].get_path()
 
 		# Down neighbor -> reroll button
 		if reroll_button and is_instance_valid(reroll_button):
-			btn.focus_neighbor_bottom = reroll_button.get_path()
+			lock_btn.focus_neighbor_bottom = reroll_button.get_path()
 
 	# Set up reroll button navigation
 	if reroll_button and is_instance_valid(reroll_button):
-		if not _offer_buttons.is_empty() and is_instance_valid(_offer_buttons[0]):
+		# Top neighbor -> first lock button (or first purchase button if no locks)
+		if not _lock_buttons.is_empty() and is_instance_valid(_lock_buttons[0]):
+			reroll_button.focus_neighbor_top = _lock_buttons[0].get_path()
+		elif not _offer_buttons.is_empty() and is_instance_valid(_offer_buttons[0]):
 			reroll_button.focus_neighbor_top = _offer_buttons[0].get_path()
 
 func _restore_focus() -> void:
@@ -302,10 +331,10 @@ func regenerate_offers() -> void:
 func get_offer_buttons() -> Array[Button]:
 	return _offer_buttons
 
-func _on_offer_locked(offer_index: int) -> void:
+func _on_offer_locked(_offer_index: int) -> void:
 	"""Refresh UI when an offer is locked"""
 	regenerate_offers()
 
-func _on_offer_unlocked(offer_index: int) -> void:
+func _on_offer_unlocked(_offer_index: int) -> void:
 	"""Refresh UI when an offer is unlocked"""
 	regenerate_offers()
