@@ -39,6 +39,10 @@ const GameModeSelectScript = preload("res://scripts/ui/game_mode_select.gd")
 @onready var easy_button: Button = $DifficultySelect/Panel/VBoxContainer/ButtonContainer/EasyButton
 @onready var sentinel_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/SentinelButton
 @onready var invasion_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/InvasionButton
+@onready var survival_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/SurvivalButton
+@onready var tech_defense_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/TechDefenseButton
+@onready var tunneling_timed_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/TunnelingTimedButton
+@onready var tunneling_alert_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/TunnelingAlertButton
 @onready var restart_button: Button = $GameOverScreen/Panel/VBoxContainer/RestartButton
 
 # Pause Menu References
@@ -186,8 +190,15 @@ func _setup_components() -> void:
 	_game_mode_select.setup({
 		"container": game_mode_screen,
 		"panel": $GameModeSelect/Panel,
+		"title_label": $GameModeSelect/Panel/VBoxContainer/Title,
+		"subtitle_label": $GameModeSelect/Panel/VBoxContainer/Subtitle,
+		"button_container": $GameModeSelect/Panel/VBoxContainer/ButtonContainer,
 		"sentinel_button": sentinel_button,
 		"invasion_button": invasion_button,
+		"survival_button": survival_button,
+		"tech_defense_button": tech_defense_button,
+		"tunneling_timed_button": tunneling_timed_button,
+		"tunneling_alert_button": tunneling_alert_button,
 	}, self)
 
 	# Pause menu component
@@ -323,6 +334,22 @@ func _on_invasion_pressed() -> void:
 	_game_mode_select.hide_and_emit(GameEnums.GameMode.INVASION)
 
 
+func _on_survival_pressed() -> void:
+	_game_mode_select.on_win_condition_selected(GameEnums.GameMode.SURVIVAL)
+
+
+func _on_tech_defense_pressed() -> void:
+	_game_mode_select.on_win_condition_selected(GameEnums.GameMode.TECH_DEFENSE)
+
+
+func _on_tunneling_timed_pressed() -> void:
+	_game_mode_select.on_win_condition_selected(GameEnums.GameMode.TUNNELING_TIMED)
+
+
+func _on_tunneling_alert_pressed() -> void:
+	_game_mode_select.on_win_condition_selected(GameEnums.GameMode.TUNNELING_ALERT)
+
+
 # =============================================================================
 # PAUSE MENU
 # =============================================================================
@@ -403,7 +430,7 @@ func _on_dot_damage_dealt(pos: Vector2, amount: float) -> void:
 	# Set orange color for DoT damage
 	if damage_number.has_node("Label"):
 		var label = damage_number.get_node("Label")
-		label.modulate = Color(1.0, 0.6, 0.2, 1.0)  # Orange for fire DoT
+		label.modulate = Color(1.0, 0.6, 0.2, 1.0) # Orange for fire DoT
 
 
 # =============================================================================

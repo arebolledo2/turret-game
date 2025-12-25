@@ -73,9 +73,6 @@ func start_game() -> void:
 	if turret_manager and turret_manager.has_method("spawn_starting_turret"):
 		turret_manager.spawn_starting_turret()
 	
-	# Spawn game mode entities based on active win_condition mode
-	_spawn_game_mode_entities()
-	
 	# Go directly to wave 1
 	start_wave_announcement()
 
@@ -115,6 +112,10 @@ func start_combat() -> void:
 
 	Events.hide_wave_announcement.emit()
 	Events.wave_started.emit(Globals.current_wave)
+	
+	# Spawn game mode entities on wave 1 (now current_wave is set correctly)
+	if Globals.current_wave == 1:
+		_spawn_game_mode_entities()
 
 	# Start enemy spawning
 	if enemy_spawner:
@@ -250,22 +251,32 @@ func _spawn_game_mode_entities() -> void:
 	"""Spawn entities based on the active win_condition game mode."""
 	var difficulty_config = Globals.get_difficulty_config()
 	
+	print("DEBUG: _spawn_game_mode_entities called")
+	print("DEBUG: Win condition mode: ", GameModeService.get_win_condition_mode())
+	print("DEBUG: Should spawn defense target: ", GameModeService.should_spawn_defense_target())
+	print("DEBUG: Should spawn tunnel door: ", GameModeService.should_spawn_tunnel_door())
+	
 	# Tech Defense Mode - spawn defense target
 	if GameModeService.should_spawn_defense_target():
+		print("DEBUG: Spawning defense target...")
 		current_defense_target = defense_target_scene.instantiate()
 		get_tree().current_scene.add_child(current_defense_target)
 		current_defense_target.global_position = Vector2.ZERO # Center of arena
 		current_defense_target.initialize(Globals.current_wave, difficulty_config)
 		Events.defense_target_spawned.emit(current_defense_target, Vector2.ZERO)
+		print("DEBUG: Defense target spawned at: ", current_defense_target.global_position)
+		print("DEBUG: Defense target visible: ", current_defense_target.visible)
 	
 	# Tunneling Modes - spawn door
 	if GameModeService.should_spawn_tunnel_door():
+		print("DEBUG: Spawning tunnel door...")
 		current_tunnel_door = tunnel_door_scene.instantiate()
 		get_tree().current_scene.add_child(current_tunnel_door)
 		# Position door at right edge of arena
 		var door_x = GameConstants.ARENA_WIDTH / 2.0 - 100
 		current_tunnel_door.global_position = Vector2(door_x, 0)
 		current_tunnel_door.initialize(Globals.current_wave, difficulty_config)
+		print("DEBUG: Tunnel door spawned at: ", current_tunnel_door.global_position)
 
 func _on_defense_target_destroyed() -> void:
 	"""Handle defense target destruction - trigger game over."""

@@ -784,12 +784,44 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 20
 text = "Invasion - Enemies spawn anywhere"
 
+[node name="SurvivalButton" type="Button" parent="GameModeSelect/Panel/VBoxContainer/ButtonContainer"]
+visible = false
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Survival - Classic wave survival"
+
+[node name="TechDefenseButton" type="Button" parent="GameModeSelect/Panel/VBoxContainer/ButtonContainer"]
+visible = false
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Tech Defense - Protect the core"
+
+[node name="TunnelingTimedButton" type="Button" parent="GameModeSelect/Panel/VBoxContainer/ButtonContainer"]
+visible = false
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Tunneling (Timed) - Breach before timer ends"
+
+[node name="TunnelingAlertButton" type="Button" parent="GameModeSelect/Panel/VBoxContainer/ButtonContainer"]
+visible = false
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Tunneling (Alert) - Breach as spawns escalate"
+
 [connection signal="pressed" from="GameOverScreen/Panel/VBoxContainer/RestartButton" to="." method="_on_restart_pressed"]
 [connection signal="pressed" from="DifficultySelect/Panel/VBoxContainer/ButtonContainer/EasyButton" to="." method="_on_easy_pressed"]
 [connection signal="pressed" from="DifficultySelect/Panel/VBoxContainer/ButtonContainer/MediumButton" to="." method="_on_medium_pressed"]
 [connection signal="pressed" from="DifficultySelect/Panel/VBoxContainer/ButtonContainer/HardButton" to="." method="_on_hard_pressed"]
 [connection signal="pressed" from="GameModeSelect/Panel/VBoxContainer/ButtonContainer/SentinelButton" to="." method="_on_sentinel_pressed"]
 [connection signal="pressed" from="GameModeSelect/Panel/VBoxContainer/ButtonContainer/InvasionButton" to="." method="_on_invasion_pressed"]
+[connection signal="pressed" from="GameModeSelect/Panel/VBoxContainer/ButtonContainer/SurvivalButton" to="." method="_on_survival_pressed"]
+[connection signal="pressed" from="GameModeSelect/Panel/VBoxContainer/ButtonContainer/TechDefenseButton" to="." method="_on_tech_defense_pressed"]
+[connection signal="pressed" from="GameModeSelect/Panel/VBoxContainer/ButtonContainer/TunnelingTimedButton" to="." method="_on_tunneling_timed_pressed"]
+[connection signal="pressed" from="GameModeSelect/Panel/VBoxContainer/ButtonContainer/TunnelingAlertButton" to="." method="_on_tunneling_alert_pressed"]
 [connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/ResumeButton" to="." method="_on_resume_pressed"]
 [connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/SettingsButton" to="." method="_on_settings_pressed"]
 [connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/QuitButton" to="." method="_on_quit_pressed"]
