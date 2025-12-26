@@ -64,6 +64,7 @@ signal offer_unlocked(offer_index: int)
 
 # Item Events
 signal item_collected(item_data: Dictionary)
+signal modifiers_changed() # Emitted when items are purchased/modifiers added
 
 # UI Events
 signal show_wave_announcement(wave_number: int)

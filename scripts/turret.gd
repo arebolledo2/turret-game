@@ -38,6 +38,8 @@ func _initialize_components() -> void:
 
 func update_stats() -> void:
 	"""Update turret stats from registry and apply modifiers."""
+	var old_fire_rate = current_fire_rate
+
 	stats = Globals.get_turret_stats(turret_type)
 
 	# Apply proximity-based modifiers from items
@@ -47,6 +49,10 @@ func update_stats() -> void:
 	current_range = stats.get("range", 250.0)
 	current_fire_rate = stats.get("fire_rate", 2.0)
 	current_rotation_speed = stats.get("rotation_speed", 180.0)
+
+	# Show visual feedback if fire rate increased significantly
+	if old_fire_rate > 0 and current_fire_rate > old_fire_rate * 1.05:
+		_show_stat_boost_effect()
 
 	# Ensure slow parameters are in stats if they exist in base stats
 	var base_stats = TurretRegistry.get_base_stats(turret_type)
@@ -98,6 +104,14 @@ func _apply_proximity_modifiers() -> void:
 	# Apply temporary buffs from Chain Reaction
 	var fire_rate_buff: float = BuffSystem.get_buff_multiplier(self, "fire_rate")
 	stats["fire_rate"] = stats.get("fire_rate", 1.0) * fire_rate_buff
+
+func _show_stat_boost_effect() -> void:
+	"""Brief visual effect indicating stat boost."""
+	var tween = create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_ELASTIC)
+	tween.tween_property(self, "scale", Vector2(1.2, 1.2), 0.15)
+	tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.15)
 
 func _physics_process(_delta: float) -> void:
 	"""Main turret update loop."""

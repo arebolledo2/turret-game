@@ -206,6 +206,9 @@ func apply_item(item_id: String) -> void:
 		mod_with_id["id"] = item_id + "_" + str(Globals.active_modifiers.size())
 		Globals.active_modifiers.append(mod_with_id)
 
+	# Emit event to notify systems of modifier change
+	Events.modifiers_changed.emit()
+
 	# Update player health if max health changed
 	var player = get_tree().get_first_node_in_group("player")
 	if player:

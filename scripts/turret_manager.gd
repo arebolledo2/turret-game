@@ -7,6 +7,17 @@ var turrets: Array[Node2D] = []
 
 func _ready() -> void:
 	turret_scene = preload("res://scenes/turret.tscn")
+	Events.modifiers_changed.connect(_on_modifiers_changed)
+
+func _on_modifiers_changed() -> void:
+	"""Called when items are purchased and modifiers change"""
+	update_all_turret_stats()
+
+func update_all_turret_stats() -> void:
+	"""Force all active turrets to recalculate their stats"""
+	for turret in turrets:
+		if is_instance_valid(turret) and turret.has_method("update_stats"):
+			turret.update_stats()
 
 func spawn_turret() -> void:
 	if turret_scene == null:
