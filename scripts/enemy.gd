@@ -327,6 +327,12 @@ func take_dot_damage(amount: float) -> void:
 	if current_health <= 0:
 		die()
 
+func get_health_percent() -> float:
+	"""Get current health as a percentage (0.0 to 1.0)."""
+	if max_health <= 0:
+		return 0.0
+	return current_health / max_health
+
 func has_status_effect(damage_type: GameEnums.DamageType) -> bool:
 	"""Check if enemy has a specific status effect."""
 	return status_effects.has_status_effect(damage_type)

@@ -5,7 +5,7 @@ extends Area2D
 @export var magnet_acceleration: float = 800.0
 
 var is_being_collected: bool = false
-var is_collected: bool = false  # Guard against multiple collect() calls
+var is_collected: bool = false # Guard against multiple collect() calls
 var current_speed: float = 0.0
 var target_player: Node2D = null
 
@@ -32,13 +32,13 @@ func _physics_process(delta: float) -> void:
 	else:
 		# Check for nearby player to start magnet effect
 		var player = get_tree().get_first_node_in_group("player")
-		if player and global_position.distance_to(player.global_position) < Globals.PLAYER_PICKUP_RADIUS:
+		if player and global_position.distance_to(player.global_position) < Globals.get_pickup_radius():
 			start_collection(player)
 
 func start_collection(player: Node2D) -> void:
 	is_being_collected = true
 	target_player = player
-	current_speed = 100.0  # Initial speed
+	current_speed = 100.0 # Initial speed
 
 func collect() -> void:
 	if is_collected:

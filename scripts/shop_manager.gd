@@ -124,7 +124,7 @@ func calculate_item_price(base_price: int, wave: int, item_id: String = "") -> i
 	var price := base_price * (1.0 + Globals.WAVE_PRICE_SCALE * wave)
 
 	# Apply Fortune's Favor discount for rare+ items
-	if not item_id.is_empty() and ItemRegistry.has_special_effect("fortunes_favor"):
+	if not item_id.is_empty() and ItemRegistry.has_special_effect("fortune_discount"):
 		var rarity := ItemRegistry.get_rarity(item_id)
 		if rarity >= GameEnums.ItemRarity.RARE:
 			# Check if player has Fortune's Favor

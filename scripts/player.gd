@@ -36,7 +36,7 @@ func _ready() -> void:
 	if Globals:
 		max_health = Globals.get_player_max_health()
 		speed = Globals.get_player_speed()
-		pickup_radius = Globals.PLAYER_PICKUP_RADIUS
+		pickup_radius = Globals.get_pickup_radius()
 		invincibility_time = Globals.PLAYER_INVINCIBILITY_TIME
 		weapon_damage = Globals.get_player_weapon_damage()
 		weapon_fire_rate = Globals.PLAYER_WEAPON_FIRE_RATE

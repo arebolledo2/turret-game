@@ -78,6 +78,12 @@ func setup_visuals() -> void:
 		_setup_normal_visuals()
 		return
 
+	# Fire turret specialized visuals
+	if turret_type == "fire":
+		_setup_fire_visuals()
+		return
+
+
 	# Set base visuals
 	if base_sprite:
 		# Hide icon if using a custom sprite
@@ -325,3 +331,20 @@ func hide_range() -> void:
 	"""Hide range indicator."""
 	if range_indicator:
 		range_indicator.modulate.a = 0.0
+
+
+func _setup_fire_visuals() -> void:
+	"""Setup fire turret visuals with custom sprite."""
+	if not base_sprite:
+		return
+
+	# Hide alternatives
+	if animated_sprite:
+		animated_sprite.visible = false
+	if icon_label:
+		icon_label.visible = false
+
+	base_sprite.visible = true
+	base_sprite.texture = load("res://assets/sprites/turrets/turret_flame.png")
+	base_sprite.scale = Vector2(0.125, 0.125)
+	base_sprite.modulate = Color.WHITE

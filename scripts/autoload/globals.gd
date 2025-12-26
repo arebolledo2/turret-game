@@ -305,6 +305,9 @@ func get_player_luck() -> float:
 func get_player_luck_display() -> int:
 	return (_get_player_stats_service()).get_player_luck_display()
 
+func get_pickup_radius() -> float:
+	return (_get_player_stats_service()).get_pickup_radius()
+
 # =============================================================================
 # TURRET STATS SERVICE FORWARDS
 # =============================================================================

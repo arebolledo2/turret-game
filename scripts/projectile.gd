@@ -99,9 +99,19 @@ func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 		queue_free()
 		return
 	
-	# Apply direct damage
+	# Apply direct damage (with Executioner's Mark bonus)
 	if enemy.has_method("take_damage"):
-		enemy.take_damage(damage)
+		var final_damage := damage
+		# Executioner's Mark: +50% damage to enemies below 25% HP
+		if ItemRegistry.has_special_effect("executioner") and Globals.item_counts.get("executioners_mark", 0) > 0:
+			var health_percent := 1.0
+			if enemy.has_method("get_health_percent"):
+				health_percent = enemy.get_health_percent()
+			elif "current_health" in enemy and "max_health" in enemy:
+				health_percent = enemy.current_health / enemy.max_health
+			if health_percent < 0.25:
+				final_damage *= 1.5
+		enemy.take_damage(final_damage)
 	
 	# Apply DoT if applicable
 	if dot_damage > 0 and dot_duration > 0 and enemy.has_method("apply_status_effect"):
@@ -126,7 +136,15 @@ func _do_aoe_explosion() -> void:
 		var distance = explosion_pos.distance_to(enemy.global_position)
 		if distance <= aoe_radius:
 			if enemy.has_method("take_damage"):
-				enemy.take_damage(damage)
+				var aoe_damage := damage
+				# Executioner's Mark: +50% damage to enemies below 25% HP
+				if ItemRegistry.has_special_effect("executioner") and Globals.item_counts.get("executioners_mark", 0) > 0:
+					var health_percent := 1.0
+					if enemy.has_method("get_health_percent"):
+						health_percent = enemy.get_health_percent()
+					if health_percent < 0.25:
+						aoe_damage *= 1.5
+				enemy.take_damage(aoe_damage)
 
 			# Apply DoT to all enemies in AoE
 			if dot_damage > 0 and dot_duration > 0 and enemy.has_method("apply_status_effect"):
