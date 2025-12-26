@@ -9,7 +9,8 @@ static func get_all() -> Dictionary:
 		# Interesting unique effects
 		"volatile_rounds": _create_volatile_rounds(),
 		"incendiary_gel": _create_incendiary_gel(),
-		"targeting_matrix": _create_targeting_matrix(),
+		# TODO: Turrets don't currently use rotation mechanics - consider repurposing or implementing rotation
+		# "targeting_matrix": _create_targeting_matrix(),
 		"plasma_capacitor": _create_plasma_capacitor(),
 		"insulated_coating": _create_insulated_coating(),
 		"thermal_amplifier": _create_thermal_amplifier(),
@@ -25,11 +26,13 @@ static func get_all() -> Dictionary:
 
 		# Turret variety
 		"standardized_parts": _create_standardized_parts(),
-		"cross_training": _create_cross_training(),
+		# TODO: cross_training uses rotation_speed which turrets don't implement
+		# "cross_training": _create_cross_training(),
 
 		# Trade-offs
 		"fortified_core": _create_fortified_core(),
-		"overclocked_motors": _create_overclocked_motors(),
+		# TODO: overclocked_motors uses rotation_speed which turrets don't implement
+		# "overclocked_motors": _create_overclocked_motors(),
 
 		# Proximity
 		"isolation_protocol": _create_isolation_protocol(),

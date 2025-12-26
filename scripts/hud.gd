@@ -38,6 +38,8 @@ const StartSettingsScript = preload("res://scripts/ui/start_settings.gd")
 @onready var player_hurtbox_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerHurtbox/PlayerHurtboxCheck
 @onready var enemy_hurtbox_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/EnemyHurtbox/EnemyHurtboxCheck
 @onready var player_attack_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAttack/PlayerAttackCheck
+@onready var add_item_dropdown: OptionButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/DebugItemContainer/AddItemDropdown
+@onready var add_item_button: Button = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/DebugItemContainer/AddItemButton
 @onready var settings_back_button: Button = $SettingsMenu/Panel/VBoxContainer/BackButton
 @onready var easy_button: Button = $DifficultySelect/Panel/VBoxContainer/ButtonContainer/EasyButton
 @onready var sentinel_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/SentinelButton
@@ -258,6 +260,8 @@ func _setup_components() -> void:
 		"player_hurtbox_check": player_hurtbox_check,
 		"enemy_hurtbox_check": enemy_hurtbox_check,
 		"player_attack_check": player_attack_check,
+		"add_item_dropdown": add_item_dropdown,
+		"add_item_button": add_item_button,
 		"back_button": settings_back_button,
 	}, self)
 

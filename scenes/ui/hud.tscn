@@ -632,9 +632,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -200.0
-offset_top = -150.0
+offset_top = -200.0
 offset_right = 200.0
-offset_bottom = 150.0
+offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -727,6 +727,28 @@ text = "Player Attack"
 
 [node name="PlayerAttackCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAttack"]
 layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="DebugItemsTitle" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Debug - Add Item:"
+
+[node name="DebugItemContainer" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="AddItemDropdown" type="OptionButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/DebugItemContainer"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AddItemButton" type="Button" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/DebugItemContainer"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "Add"
 
 [node name="BackButton" type="Button" parent="SettingsMenu/Panel/VBoxContainer"]
 custom_minimum_size = Vector2(0, 45)

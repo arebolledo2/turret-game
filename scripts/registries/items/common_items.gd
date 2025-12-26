@@ -39,7 +39,8 @@ static func get_all() -> Dictionary:
 
 		"budget_capacitor": _create_budget_capacitor(),
 		"ammo_surplus": _create_ammo_surplus(),
-		"targeting_subroutine": _create_targeting_subroutine(),
+		# TODO: Turrets don't currently use rotation mechanics - consider repurposing or implementing rotation
+		# "targeting_subroutine": _create_targeting_subroutine(),
 		"overclock_module": _create_overclock_module(),
 		"compact_design": _create_compact_design(),
 	}
