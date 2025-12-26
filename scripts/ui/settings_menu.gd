@@ -152,5 +152,9 @@ func _on_add_item_pressed() -> void:
 	if shop_manager and shop_manager.has_method("apply_item"):
 		shop_manager.apply_item(item_id)
 		print("DEBUG: Added item for free: ", item_id)
+		
+		# Update pause menu items panel if HUD is available
+		if _owner and _owner.has_method("update_items_panel"):
+			_owner.update_items_panel()
 	else:
 		push_error("Could not find shop_manager to apply item")
