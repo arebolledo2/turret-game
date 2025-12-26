@@ -41,7 +41,7 @@ func _update_player_stats() -> void:
 		child.queue_free()
 
 	# Section header
-	var header := _create_label("🎮 PLAYER STATS", 16, Color(0.5, 0.8, 1.0))
+	var header := _create_label("🎮 PLAYER STATS", 20, Color(0.5, 0.8, 1.0))
 	player_section.add_child(header)
 
 	# Get modified values
@@ -54,7 +54,7 @@ func _update_player_stats() -> void:
 	if is_instance_valid(_player):
 		health_current = int(_player.current_health)
 
-	var health_label := _create_label("❤ Health: %d/%d" % [health_current, health_max], 14)
+	var health_label := _create_label("❤ Health: %d/%d" % [health_current, health_max], 16)
 	if not is_equal_approx(modified_max_health, BASE_MAX_HEALTH):
 		var diff := modified_max_health - BASE_MAX_HEALTH
 		health_label.text += " (+%d)" % int(diff)
@@ -63,23 +63,23 @@ func _update_player_stats() -> void:
 
 	# Speed
 	var speed_stat := BuildDisplayUIScript.format_stat_with_modifier("⚡ Speed", BASE_SPEED, modified_speed, "%.0f", true)
-	var speed_label := _create_label(speed_stat["text"], 14, speed_stat["color"])
+	var speed_label := _create_label(speed_stat["text"], 16, speed_stat["color"])
 	player_section.add_child(speed_label)
 
 	# Luck
 	var luck := Globals.get_player_luck_display()
-	player_section.add_child(_create_label("🍀 Luck: %d" % luck, 14))
+	player_section.add_child(_create_label("🍀 Luck: %d" % luck, 16))
 
 	# XP
-	player_section.add_child(_create_label("✨ XP: %d" % Globals.total_xp, 14))
+	player_section.add_child(_create_label("✨ XP: %d" % Globals.total_xp, 16))
 
 	# Kills
-	player_section.add_child(_create_label("💀 Kills: %d" % Globals.total_kills, 14))
+	player_section.add_child(_create_label("💀 Kills: %d" % Globals.total_kills, 16))
 
 	# Time
 	var minutes := int(Globals.time_survived) / 60
 	var seconds := int(Globals.time_survived) % 60
-	player_section.add_child(_create_label("⏱ Time: %d:%02d" % [minutes, seconds], 14))
+	player_section.add_child(_create_label("⏱ Time: %d:%02d" % [minutes, seconds], 16))
 
 
 func _update_economy_stats() -> void:
@@ -91,39 +91,39 @@ func _update_economy_stats() -> void:
 		child.queue_free()
 
 	# Section header
-	economy_section.add_child(_create_label("💰 ECONOMY", 16, Color(1, 0.84, 0, 1)))
+	economy_section.add_child(_create_label("💰 ECONOMY", 20, Color(1, 0.84, 0, 1)))
 
 	# Current Gold
-	economy_section.add_child(_create_label("Gold: %d" % Globals.total_gold, 14))
+	economy_section.add_child(_create_label("Gold: %d" % Globals.total_gold, 16))
 
 	# Gold Earn Multiplier
 	var gold_mult := Globals.get_gold_earn_multiplier()
 	var gold_stat := BuildDisplayUIScript.format_stat_with_modifier("Earn Rate", 100.0, gold_mult * 100.0, "%.0f%%", true)
-	economy_section.add_child(_create_label(gold_stat["text"], 14, gold_stat["color"]))
+	economy_section.add_child(_create_label(gold_stat["text"], 16, gold_stat["color"]))
 
 	# Shop Prices
 	var price_mult := Globals.get_shop_price_multiplier()
 	var price_stat := BuildDisplayUIScript.format_stat_with_modifier("Shop Prices", 100.0, price_mult * 100.0, "%.0f%%", false)
-	economy_section.add_child(_create_label(price_stat["text"], 14, price_stat["color"]))
+	economy_section.add_child(_create_label(price_stat["text"], 16, price_stat["color"]))
 
 	# Reroll Cost
 	var reroll_cost: int = shop_manager.get_reroll_cost() if shop_manager else 0
-	economy_section.add_child(_create_label("Reroll: %dg" % reroll_cost, 14))
+	economy_section.add_child(_create_label("Reroll: %dg" % reroll_cost, 16))
 
 	# Separator
 	economy_section.add_child(HSeparator.new())
 
 	# Progress header
-	economy_section.add_child(_create_label("📊 PROGRESS", 16, Color(0.7, 0.7, 1, 1)))
+	economy_section.add_child(_create_label("📊 PROGRESS", 20, Color(0.7, 0.7, 1, 1)))
 
 	# Wave
-	economy_section.add_child(_create_label("Wave: %d" % Globals.current_wave, 14))
+	economy_section.add_child(_create_label("Wave: %d" % Globals.current_wave, 16))
 
 	# Turrets Owned
-	economy_section.add_child(_create_label("Turrets: %d" % Globals.get_total_turret_count(), 14))
+	economy_section.add_child(_create_label("Turrets: %d" % Globals.get_total_turret_count(), 16))
 
 	# Items Collected
-	economy_section.add_child(_create_label("Items: %d" % Globals.collected_items.size(), 14))
+	economy_section.add_child(_create_label("Items: %d" % Globals.collected_items.size(), 16))
 
 
 func _create_label(text: String, font_size: int, color: Color = Color.WHITE) -> Label:
