@@ -40,6 +40,7 @@ const StartSettingsScript = preload("res://scripts/ui/start_settings.gd")
 @onready var player_attack_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAttack/PlayerAttackCheck
 @onready var add_item_dropdown: OptionButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/DebugItemContainer/AddItemDropdown
 @onready var add_item_button: Button = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/DebugItemContainer/AddItemButton
+@onready var debug_item_description_label: Label = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ItemDescriptionLabel
 @onready var settings_back_button: Button = $SettingsMenu/Panel/VBoxContainer/BackButton
 @onready var easy_button: Button = $DifficultySelect/Panel/VBoxContainer/ButtonContainer/EasyButton
 @onready var sentinel_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/SentinelButton
@@ -262,6 +263,7 @@ func _setup_components() -> void:
 		"player_attack_check": player_attack_check,
 		"add_item_dropdown": add_item_dropdown,
 		"add_item_button": add_item_button,
+		"item_description_label": debug_item_description_label,
 		"back_button": settings_back_button,
 	}, self)
 

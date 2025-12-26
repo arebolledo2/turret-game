@@ -8,10 +8,8 @@ func _on_shop_opened(_wave_number: int) -> void:
 	generate_offers()
 
 func _on_shop_closed() -> void:
-	# Clear all locks when shop closes (between waves)
-	for offer in Globals.current_shop_offers:
-		if offer.get("locked", false):
-			offer["locked"] = false
+	# Locks persist between waves - they will be preserved by generate_offers()
+	pass
 
 func generate_offers() -> void:
 	# Preserve locked offers before clearing

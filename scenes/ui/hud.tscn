@@ -750,6 +750,14 @@ custom_minimum_size = Vector2(60, 0)
 layout_mode = 2
 text = "Add"
 
+[node name="ItemDescriptionLabel" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+text = "Select an item to see its description"
+autowrap_mode = 2
+
 [node name="BackButton" type="Button" parent="SettingsMenu/Panel/VBoxContainer"]
 custom_minimum_size = Vector2(0, 45)
 layout_mode = 2

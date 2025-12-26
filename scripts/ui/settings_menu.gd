@@ -11,6 +11,7 @@ var player_attack_check: CheckButton
 var isometric_debug_check: CheckButton
 var add_item_dropdown: OptionButton
 var add_item_button: Button
+var item_description_label: Label
 var back_button: Button
 
 # Base values at 1080p
@@ -71,6 +72,10 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 		_populate_item_dropdown()
 		if not add_item_button.pressed.is_connected(_on_add_item_pressed):
 			add_item_button.pressed.connect(_on_add_item_pressed)
+		if not add_item_dropdown.item_selected.is_connected(_on_item_dropdown_selected):
+			add_item_dropdown.item_selected.connect(_on_item_dropdown_selected)
+	
+	item_description_label = nodes.get("item_description_label")
 
 
 func _scale_fonts(scale: float) -> void:
@@ -158,3 +163,41 @@ func _on_add_item_pressed() -> void:
 			_owner.update_items_panel()
 	else:
 		push_error("Could not find shop_manager to apply item")
+
+
+func _on_item_dropdown_selected(idx: int) -> void:
+	"""Update the description label when an item is selected."""
+	if not item_description_label:
+		return
+	
+	if idx < 0:
+		item_description_label.text = "Select an item to see its description"
+		return
+	
+	var item_id = add_item_dropdown.get_item_metadata(idx)
+	if item_id == null or item_id.is_empty():
+		item_description_label.text = "Select an item to see its description"
+		return
+	
+	var item = ItemRegistry.get_item(item_id)
+	if not item:
+		item_description_label.text = "Item not found"
+		return
+	
+	# Build description similar to shop display
+	var description = item.description if item.description else ""
+	
+	# Add modifier info if description is empty
+	if description.is_empty() and item.modifiers.size() > 0:
+		var mod_texts = []
+		for mod in item.modifiers:
+			var stat = mod.get("stat", "unknown")
+			var value = mod.get("value", 0)
+			var operation = mod.get("operation", "add")
+			if operation == "multiply":
+				mod_texts.append("%s: %+.0f%%" % [stat.replace("_", " "), (value - 1.0) * 100])
+			else:
+				mod_texts.append("%s: %+.1f" % [stat.replace("_", " "), value])
+		description = ", ".join(mod_texts)
+	
+	item_description_label.text = description if not description.is_empty() else "No description available"
