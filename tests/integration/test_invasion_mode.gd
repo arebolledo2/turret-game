@@ -4,6 +4,8 @@ func before_each() -> void:
 	GameStateService.reset_state()
 	GameModeService.reset_state()
 	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
+	# Set rectangular arena mode for consistent test expectations
+	GameModeService.set_mode(GameEnums.GameMode.ARENA_RECTANGULAR)
 
 func test_sentinel_mode_spawn_positions():
 	# Sentinel is default

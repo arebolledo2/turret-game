@@ -3,8 +3,8 @@ extends GutTest
 ## Unit tests for ArenaBoundsService
 
 # Get the service's fixed dimensions for testing
-const FIXED_ARENA_WIDTH: int = 1920
-const FIXED_ARENA_HEIGHT: int = 1080
+const FIXED_ARENA_WIDTH: int = 1400  # GameConstants.ARENA_WIDTH
+const FIXED_ARENA_HEIGHT: int = 900  # GameConstants.ARENA_HEIGHT
 
 func before_each() -> void:
 	ArenaBoundsService.reset_state()

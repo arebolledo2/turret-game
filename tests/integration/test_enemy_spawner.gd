@@ -18,6 +18,8 @@ func before_each() -> void:
 	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	Globals.current_wave = 1
 	Globals.is_game_active = true
+	# Set rectangular arena mode for consistent test expectations
+	GameModeService.set_mode(GameEnums.GameMode.ARENA_RECTANGULAR)
 
 	spawner = _spawner_script.new()
 	add_child_autofree(spawner)

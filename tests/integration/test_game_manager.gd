@@ -54,7 +54,8 @@ func test_start_settings_applied_starts_game():
 		GameEnums.Difficulty.MEDIUM,
 		GameEnums.GameMode.SENTINEL,
 		GameEnums.GameMode.TECH_DEFENSE,
-		GameEnums.GameMode.ARENA_ISOMETRIC
+		GameEnums.GameMode.ARENA_ISOMETRIC,
+		0  # bg_index
 	)
 	await get_tree().process_frame
 	
