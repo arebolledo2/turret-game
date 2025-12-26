@@ -13,6 +13,7 @@ enum GameState {
 	WAVE_ANNOUNCEMENT,
 	COMBAT,
 	WAVE_END,
+	LOOT_REVIEW,
 	SHOP,
 	VICTORY,
 	GAME_OVER
@@ -31,7 +32,8 @@ const VALID_TRANSITIONS: Dictionary = {
 	GameState.GAME_MODE_SELECT: [GameState.WAVE_ANNOUNCEMENT],
 	GameState.WAVE_ANNOUNCEMENT: [GameState.COMBAT],
 	GameState.COMBAT: [GameState.WAVE_END, GameState.VICTORY, GameState.GAME_OVER],
-	GameState.WAVE_END: [GameState.SHOP, GameState.VICTORY],
+	GameState.WAVE_END: [GameState.LOOT_REVIEW, GameState.SHOP, GameState.VICTORY],
+	GameState.LOOT_REVIEW: [GameState.SHOP],
 	GameState.SHOP: [GameState.WAVE_ANNOUNCEMENT],
 	GameState.VICTORY: [GameState.IDLE],
 	GameState.GAME_OVER: [GameState.IDLE]
@@ -86,6 +88,7 @@ func is_playing() -> bool:
 		GameState.WAVE_ANNOUNCEMENT,
 		GameState.COMBAT,
 		GameState.WAVE_END,
+		GameState.LOOT_REVIEW,
 		GameState.SHOP
 	]
 
@@ -122,6 +125,7 @@ func get_state_name(state: GameState) -> String:
 		GameState.WAVE_ANNOUNCEMENT: return "WAVE_ANNOUNCEMENT"
 		GameState.COMBAT: return "COMBAT"
 		GameState.WAVE_END: return "WAVE_END"
+		GameState.LOOT_REVIEW: return "LOOT_REVIEW"
 		GameState.SHOP: return "SHOP"
 		GameState.VICTORY: return "VICTORY"
 		GameState.GAME_OVER: return "GAME_OVER"

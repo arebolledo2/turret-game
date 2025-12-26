@@ -12,6 +12,7 @@ const PauseMenuScript = preload("res://scripts/ui/pause_menu.gd")
 const SettingsMenuScript = preload("res://scripts/ui/settings_menu.gd")
 const GameModeSelectScript = preload("res://scripts/ui/game_mode_select.gd")
 const StartSettingsScript = preload("res://scripts/ui/start_settings.gd")
+const LootReviewScreenScript = preload("res://scripts/ui/loot_review_screen.gd")
 
 # Node references
 @onready var health_bar: ProgressBar = $MarginContainer/VBoxContainer/TopRow/HealthBar
@@ -52,6 +53,7 @@ const StartSettingsScript = preload("res://scripts/ui/start_settings.gd")
 @onready var classic_arena_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/ClassicArenaButton
 @onready var isometric_arena_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/IsometricArenaButton
 @onready var restart_button: Button = $GameOverScreen/Panel/VBoxContainer/RestartButton
+@onready var loot_review_screen: Control = $LootReview
 
 # Pause Menu References
 @onready var resume_button: Button = $PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/ResumeButton
@@ -86,6 +88,7 @@ var _game_mode_select
 var _start_settings
 var _pause_menu
 var _settings_menu
+var _loot_review
 
 var player: Node2D = null
 var damage_number_scene: PackedScene
@@ -102,6 +105,7 @@ func _ready() -> void:
 	hud_container.visible = false
 	pause_menu.visible = false
 	settings_menu.visible = false
+	loot_review_screen.visible = false
 
 	# Load damage number scene
 	damage_number_scene = preload("res://scenes/damage_number.tscn")
@@ -149,6 +153,7 @@ func _ready() -> void:
 	Events.game_started.connect(_on_game_started)
 	Events.damage_dealt.connect(_on_damage_dealt)
 	Events.dot_damage_dealt.connect(_on_dot_damage_dealt)
+	Events.loot_review_started.connect(_on_loot_review_started)
 
 	# Connect Granular Hitbox Toggles
 	physics_hitboxes_check.toggled.connect(_on_physics_hitboxes_toggled)
@@ -267,6 +272,21 @@ func _setup_components() -> void:
 		"back_button": settings_back_button,
 	}, self)
 
+	# Loot review screen component
+	_loot_review = LootReviewScreenScript.new()
+	_loot_review.setup({
+		"container": loot_review_screen,
+		"panel": loot_review_screen.get_node("CenterContainer/Panel"),
+		"title_label": loot_review_screen.get_node("CenterContainer/Panel/MarginContainer/VBoxContainer/TitleLabel"),
+		"item_name_label": loot_review_screen.get_node("CenterContainer/Panel/MarginContainer/VBoxContainer/ItemCard/ItemVBox/ItemNameLabel"),
+		"item_description_label": loot_review_screen.get_node("CenterContainer/Panel/MarginContainer/VBoxContainer/ItemCard/ItemVBox/ItemDescriptionLabel"),
+		"item_rarity_label": loot_review_screen.get_node("CenterContainer/Panel/MarginContainer/VBoxContainer/ItemCard/ItemVBox/RarityLabel"),
+		"counter_label": loot_review_screen.get_node("CenterContainer/Panel/MarginContainer/VBoxContainer/CounterLabel"),
+		"keep_button": loot_review_screen.get_node("CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer/KeepButton"),
+		"discard_button": loot_review_screen.get_node("CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer/DiscardButton"),
+		"shop_manager": get_node_or_null("../ShopManager"),
+	}, self)
+
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") and Globals.is_game_active:
@@ -322,6 +342,10 @@ func _on_hide_wave_announcement() -> void:
 
 func _on_game_over(victory: bool) -> void:
 	menu_manager.show_game_over(victory, _game_over)
+
+
+func _on_loot_review_started(item_ids: Array) -> void:
+	_loot_review.show_review(item_ids)
 
 
 func _on_restart_pressed() -> void:

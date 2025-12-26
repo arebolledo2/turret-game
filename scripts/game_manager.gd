@@ -43,6 +43,7 @@ func _ready() -> void:
 	Events.start_settings_applied.connect(_on_start_settings_applied)
 	Events.defense_target_destroyed.connect(_on_defense_target_destroyed)
 	Events.tunnel_door_breached.connect(_on_tunnel_door_breached)
+	Events.loot_review_completed.connect(_on_loot_review_completed)
 
 	# Start game flow
 	call_deferred("show_start_settings")
@@ -173,6 +174,26 @@ func _end_wave() -> void:
 
 func _finish_wave_end() -> void:
 	wave_controller.award_wave_bonus()
+	_start_loot_review_or_shop()
+
+
+func _start_loot_review_or_shop() -> void:
+	"""Check for pending loot before opening shop."""
+	if LootService.has_pending_loot():
+		_start_loot_review()
+	else:
+		_start_shop_phase()
+
+
+func _start_loot_review() -> void:
+	"""Show loot review screen for found items."""
+	GameStateMachine.transition_to(GameStateMachine.GameState.LOOT_REVIEW)
+	Events.loot_review_started.emit(LootService.get_found_items())
+
+
+func _on_loot_review_completed() -> void:
+	"""Called when player finishes reviewing loot."""
+	LootService.clear_found_items()
 	_start_shop_phase()
 
 

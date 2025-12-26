@@ -104,6 +104,7 @@ const TECH_DROP_XP_REWARD: int = 100
 const TECH_DROP_GOLD_REWARD: int = 0
 const TECH_DROP_SCATTER_COUNT: int = 5
 const TECH_DROP_SCATTER_RADIUS: float = 80.0
+const TECH_DROP_ITEM_DROP_CHANCE: float = 0.30 # 30% chance to drop item when destroyed
 
 # =============================================================================
 # GAME MODE ENTITIES

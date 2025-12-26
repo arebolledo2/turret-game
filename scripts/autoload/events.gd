@@ -64,6 +64,13 @@ signal offer_unlocked(offer_index: int)
 
 # Item Events
 signal item_collected(item_data: Dictionary)
+
+# Loot Events
+signal loot_item_found(item_id: String)
+signal loot_review_started(item_ids: Array)
+signal loot_item_accepted(item_id: String)
+signal loot_item_discarded(item_id: String)
+signal loot_review_completed()
 signal modifiers_changed() # Emitted when items are purchased/modifiers added
 
 # UI Events

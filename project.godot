@@ -29,6 +29,7 @@ PlayerStatsService="*res://scripts/autoload/player_stats_service.gd"
 TurretStatsService="*res://scripts/autoload/turret_stats_service.gd"
 ItemTrackingService="*res://scripts/autoload/item_tracking_service.gd"
 Globals="*res://scripts/autoload/globals.gd"
+LootService="*res://scripts/autoload/loot_service.gd"
 BuffSystem="*res://scripts/systems/buff_system.gd"
 UIScaler="*res://scripts/autoload/ui_scaler.gd"
 

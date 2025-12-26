@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://hud_scene_001"]
+[gd_scene load_steps=3 format=3 uid="uid://hud_scene_001"]
 
 [ext_resource type="Script" path="res://scripts/hud.gd" id="1_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/loot_review.tscn" id="2_loot_review"]
 
 [node name="HUD" type="CanvasLayer"]
 layer = 10
@@ -877,6 +878,9 @@ custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "START GAME"
+
+[node name="LootReview" parent="." instance=ExtResource("2_loot_review")]
+visible = false
 
 [node name="GameModeSelect" type="Control" parent="."]
 visible = false

@@ -95,6 +95,9 @@ func die_from_destruction() -> void:
 	# Scatter XP/gold drops
 	scatter_rewards()
 
+	# Roll for item drop
+	_try_drop_item()
+
 	# Emit signal
 	Events.tech_drop_destroyed.emit(self, global_position)
 
@@ -102,6 +105,14 @@ func die_from_destruction() -> void:
 	play_destruction_effect()
 
 	queue_free()
+
+
+func _try_drop_item() -> void:
+	"""Roll for a random item drop based on luck."""
+	var item_id := LootService.roll_for_item_drop(wave)
+	if not item_id.is_empty():
+		LootService.add_found_item(item_id)
+		Events.loot_item_found.emit(item_id)
 
 func scatter_rewards() -> void:
 	"""Emit xp_dropped signals to spawn XP pickups in scattered positions."""
