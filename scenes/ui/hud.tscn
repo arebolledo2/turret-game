@@ -27,7 +27,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="HealthBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopRow"]
-custom_minimum_size = Vector2(200, 25)
+custom_minimum_size = Vector2(250, 30)
 layout_mode = 2
 max_value = 100.0
 value = 100.0
@@ -40,7 +40,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 18
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 2
@@ -57,7 +57,7 @@ layout_mode = 2
 
 [node name="WaveLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/WaveInfo"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 32
 text = "Wave 1"
 horizontal_alignment = 1
 
@@ -126,8 +126,8 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 64
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 80
 text = "Wave 1"
 horizontal_alignment = 1
 vertical_alignment = 1
