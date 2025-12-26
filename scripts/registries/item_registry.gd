@@ -41,12 +41,12 @@ const RARITY_NAMES: Dictionary = {
 }
 
 const BASE_PRICES: Dictionary = {
-	GameEnums.ItemRarity.COMMON: 40,
-	GameEnums.ItemRarity.UNCOMMON: 70,
-	GameEnums.ItemRarity.RARE: 110,
-	GameEnums.ItemRarity.EPIC: 160,
-	GameEnums.ItemRarity.LEGENDARY: 240,
-	GameEnums.ItemRarity.UNIQUE: 350,
+	GameEnums.ItemRarity.COMMON: 20,
+	GameEnums.ItemRarity.UNCOMMON: 35,
+	GameEnums.ItemRarity.RARE: 55,
+	GameEnums.ItemRarity.EPIC: 80,
+	GameEnums.ItemRarity.LEGENDARY: 120,
+	GameEnums.ItemRarity.UNIQUE: 175,
 }
 
 # Cached item dictionaries (lazy loaded)
@@ -148,7 +148,7 @@ static func get_max_stacks(item_id: String) -> int:
 static func is_at_max_stacks(item_id: String, item_counts: Dictionary) -> bool:
 	var max_stacks := get_max_stacks(item_id)
 	if max_stacks == 0:
-		return false  # Unlimited stacking
+		return false # Unlimited stacking
 	var current_count := item_counts.get(item_id, 0) as int
 	return current_count >= max_stacks
 

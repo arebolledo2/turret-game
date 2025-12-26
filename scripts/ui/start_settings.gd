@@ -52,8 +52,8 @@ func _setup_options() -> void:
 		spawn_dropdown.clear()
 		spawn_dropdown.add_item("Sentinel (Edges)", GameEnums.GameMode.SENTINEL)
 		spawn_dropdown.add_item("Invasion (Anywhere)", GameEnums.GameMode.INVASION)
-		# Default to Invasion
-		spawn_dropdown.select(1)
+		# Default to Sentinel
+		spawn_dropdown.select(0)
 
 	# Game Mode (Win Condition) Options
 	if mode_dropdown:
@@ -79,8 +79,8 @@ func _setup_options() -> void:
 		bg_dropdown.clear()
 		bg_dropdown.add_item("Factory Ruins", 0)
 		bg_dropdown.add_item("Desert Outpost", 1)
-		# Default to first
-		bg_dropdown.select(0)
+		# Default to Desert Outpost
+		bg_dropdown.select(1)
 		# Initially visible only if isometric is selected (which is default)
 		bg_dropdown.disabled = false
 

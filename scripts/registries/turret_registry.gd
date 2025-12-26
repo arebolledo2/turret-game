@@ -15,12 +15,12 @@ const COLORS: Dictionary = {
 
 # Base prices for turret types
 const BASE_PRICES: Dictionary = {
-	"normal": 16,
-	"sniper": 37,
-	"fire": 26,
-	"plasma": 32,
-	"shock": 29,
-	"tesla": 35,
+	"normal": 8,
+	"sniper": 18,
+	"fire": 13,
+	"plasma": 16,
+	"shock": 14,
+	"tesla": 17,
 }
 
 const TYPES: Dictionary = {

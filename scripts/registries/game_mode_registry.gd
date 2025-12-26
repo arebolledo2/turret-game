@@ -8,13 +8,13 @@ const MODES = {
 	GameEnums.GameMode.SENTINEL: {
 		"name": "Sentinel",
 		"description": "Enemies spawn near the arena edges.",
-		"group": "spawn_location"
+		"group": "spawn_location",
+		"is_default": true
 	},
 	GameEnums.GameMode.INVASION: {
 		"name": "Invasion",
 		"description": "Enemies can spawn anywhere in the arena.",
-		"group": "spawn_location",
-		"is_default": true
+		"group": "spawn_location"
 	},
 	# Win condition modes
 	GameEnums.GameMode.SURVIVAL: {

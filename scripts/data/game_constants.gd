@@ -69,7 +69,7 @@ const TURRET_SPAWN_TIME: float = 0.5
 const BETWEEN_WAVE_PAUSE: float = 0.5
 const WAVE_BASE_DURATION: float = 25.0 # wave 1
 const WAVE_DURATION_INCREMENT: float = 4.0 # per wave
-const WAVE_BASE_ENEMY_COUNT: int = 10
+const WAVE_BASE_ENEMY_COUNT: int = 12
 const WAVE_ENEMY_INCREMENT: int = 4
 
 # Wave duration scaling (non-linear curve)
@@ -83,7 +83,7 @@ const WAVE_DURATION_LATE_THRESHOLD: int = 7
 # =============================================================================
 # ECONOMY
 # =============================================================================
-const STARTING_GOLD: int = 0
+const STARTING_GOLD: int = 20
 const GOLD_PER_ENEMY: int = 1
 const GOLD_WAVE_BONUS_BASE: int = 0
 const SHOP_OFFER_COUNT: int = 4

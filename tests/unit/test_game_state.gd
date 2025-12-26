@@ -140,7 +140,7 @@ func test_enemy_count_wave_1_easy():
 	game_state.current_difficulty = GameEnums.Difficulty.EASY
 	var count = game_state.get_wave_enemy_count(1)
 
-	var expected = int(GameConstants.WAVE_BASE_ENEMY_COUNT * 1.0)  # Easy mult is 1.0
+	var expected = int(GameConstants.WAVE_BASE_ENEMY_COUNT * 1.0) # Easy mult is 1.0
 	assert_eq(count, expected, "Wave 1 Easy should have base enemy count")
 
 
@@ -168,7 +168,7 @@ func test_enemy_count_formula():
 	game_state.current_difficulty = GameEnums.Difficulty.EASY
 	var wave = 5
 	var base = GameConstants.WAVE_BASE_ENEMY_COUNT + (wave - 1) * GameConstants.WAVE_ENEMY_INCREMENT
-	var expected = int(base * 1.0)  # Easy mult
+	var expected = int(base * 1.0) # Easy mult
 	var actual = game_state.get_wave_enemy_count(wave)
 
 	assert_eq(actual, expected, "Enemy count formula: (base + increment) * difficulty_mult")
@@ -302,7 +302,7 @@ func test_player_max_health_no_modifiers():
 	game_state.current_difficulty = GameEnums.Difficulty.EASY
 	var health = game_state.get_player_max_health()
 
-	var expected = GameConstants.PLAYER_BASE_MAX_HEALTH * 1.0  # Easy mult
+	var expected = GameConstants.PLAYER_BASE_MAX_HEALTH * 1.0 # Easy mult
 	assert_eq(health, expected, "Base player health with no modifiers")
 
 

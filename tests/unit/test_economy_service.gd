@@ -32,7 +32,7 @@ func test_reset_state_clears_shop_rerolls():
 
 
 func test_reset_state_clears_shop_offers():
-	economy_service.current_shop_offers = [{"type": "turret"}]
+	economy_service.current_shop_offers = [ {"type": "turret"}]
 	economy_service.reset_state()
 	assert_eq(economy_service.current_shop_offers.size(), 0,
 		"Reset should clear shop offers")
@@ -73,7 +73,7 @@ func test_add_gold_with_multiplier():
 
 func test_add_gold_rounds_down():
 	economy_service.total_gold = 100
-	economy_service.add_gold(10, 1.25)  # 10 * 1.25 = 12.5
+	economy_service.add_gold(10, 1.25) # 10 * 1.25 = 12.5
 	assert_eq(economy_service.total_gold, 112,
 		"Should round down to 12 gold (int)")
 
@@ -160,8 +160,8 @@ func test_get_reroll_cost_discount():
 
 func test_get_wave_gold_bonus_wave_1():
 	var bonus = economy_service.get_wave_gold_bonus(1, 1.0)
-	var expected = GameConstants.GOLD_WAVE_BONUS_BASE
-	assert_eq(bonus, expected,
+	var expected_val = GameConstants.GOLD_WAVE_BONUS_BASE
+	assert_eq(bonus, expected_val,
 		"Wave 1 should get base bonus")
 
 
