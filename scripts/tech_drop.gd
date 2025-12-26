@@ -15,7 +15,7 @@ var scatter_radius: float = 80.0
 var is_dying: bool = false
 
 # Visuals
-var base_color: Color = Color(0.3, 0.8, 1.0)  # Cyan/tech blue
+var base_color: Color = Color.WHITE # Preserve original sprite colors
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var health_bar: ProgressBar = $HealthBar
@@ -24,7 +24,7 @@ var base_color: Color = Color(0.3, 0.8, 1.0)  # Cyan/tech blue
 
 func _ready() -> void:
 	add_to_group("tech_drops")
-	add_to_group("enemies")  # So turrets can target them
+	add_to_group("enemies") # So turrets can target them
 
 	# Load constants from Globals
 	scatter_count = Globals.TECH_DROP_SCATTER_COUNT
@@ -37,8 +37,8 @@ func _ready() -> void:
 		sprite.modulate = base_color
 
 	if icon_label:
-		icon_label.text = "💎"
-		icon_label.add_theme_font_size_override("font_size", 32)
+		icon_label.visible = false
+
 
 	if health_bar:
 		health_bar.max_value = max_health
@@ -62,7 +62,7 @@ func initialize(spawn_wave: int) -> void:
 
 	# Use tank enemy HP as baseline and apply wave scaling
 	var scaled_stats = Globals.get_enemy_stats_for_wave("tank", wave)
-	max_health = scaled_stats["health"] * 0.5  # 50% of tank HP
+	max_health = scaled_stats["health"] * 0.5 # 50% of tank HP
 	current_health = max_health
 
 	if health_bar:
