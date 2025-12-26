@@ -108,11 +108,19 @@ func die_from_destruction() -> void:
 
 
 func _try_drop_item() -> void:
-	"""Roll for a random item drop based on luck."""
+	"""Roll for a random item drop based on luck and spawn visual pickup."""
 	var item_id := LootService.roll_for_item_drop(wave)
 	if not item_id.is_empty():
-		LootService.add_found_item(item_id)
-		Events.loot_item_found.emit(item_id)
+		_spawn_item_pickup(item_id)
+
+
+func _spawn_item_pickup(item_id: String) -> void:
+	"""Spawn a visual item pickup at this position."""
+	var pickup_scene := preload("res://scenes/item_pickup.tscn")
+	var pickup := pickup_scene.instantiate()
+	pickup.global_position = global_position
+	get_tree().current_scene.add_child(pickup)
+	pickup.initialize(item_id)
 
 func scatter_rewards() -> void:
 	"""Emit xp_dropped signals to spawn XP pickups in scattered positions."""

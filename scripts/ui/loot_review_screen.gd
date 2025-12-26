@@ -17,6 +17,7 @@ var parent_node: Node
 var pending_items: Array = []
 var current_index: int = 0
 var shop_manager: Node = null
+var tree_ref: SceneTree = null # Reference to pause/unpause
 
 
 func setup(refs: Dictionary, parent: Node) -> void:
@@ -50,6 +51,12 @@ func show_review(item_ids: Array) -> void:
 	if pending_items.is_empty():
 		_finish_review()
 		return
+
+	# Pause the game while reviewing loot
+	if parent_node:
+		tree_ref = parent_node.get_tree()
+		if tree_ref:
+			tree_ref.paused = true
 
 	if container:
 		container.visible = true
@@ -122,6 +129,11 @@ func _finish_review() -> void:
 	"""All items reviewed, proceed to shop."""
 	if container:
 		container.visible = false
+
+	# Unpause the game
+	if tree_ref:
+		tree_ref.paused = false
+		tree_ref = null
 
 	pending_items.clear()
 	current_index = 0
