@@ -30,15 +30,31 @@ func spawn_game_mode_entities() -> void:
 
 func _spawn_defense_target(wave: int, difficulty_config: Dictionary) -> void:
 	current_defense_target = defense_target_scene.instantiate()
-	get_tree().current_scene.add_child(current_defense_target)
-	current_defense_target.global_position = Vector2.ZERO  # Center of arena
+	# Use current_scene if available, otherwise add to self (for tests)
+	var parent = get_tree().current_scene if get_tree().current_scene else get_parent()
+	if parent:
+		parent.add_child(current_defense_target)
+	else:
+		push_warning("No valid parent for defense target spawn")
+		current_defense_target.queue_free()
+		current_defense_target = null
+		return
+	current_defense_target.global_position = Vector2.ZERO # Center of arena
 	current_defense_target.initialize(wave, difficulty_config)
 	Events.defense_target_spawned.emit(current_defense_target, Vector2.ZERO)
 
 
 func _spawn_tunnel_door(wave: int, difficulty_config: Dictionary) -> void:
 	current_tunnel_door = tunnel_door_scene.instantiate()
-	get_tree().current_scene.add_child(current_tunnel_door)
+	# Use current_scene if available, otherwise add to parent (for tests)
+	var parent = get_tree().current_scene if get_tree().current_scene else get_parent()
+	if parent:
+		parent.add_child(current_tunnel_door)
+	else:
+		push_warning("No valid parent for tunnel door spawn")
+		current_tunnel_door.queue_free()
+		current_tunnel_door = null
+		return
 	# Position door at right edge of arena
 	var door_x = GameConstants.ARENA_WIDTH / 2.0 - 100
 	current_tunnel_door.global_position = Vector2(door_x, 0)

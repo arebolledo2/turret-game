@@ -87,15 +87,15 @@ func test_spawn_rate_multiplier_alert_mode() -> void:
 	assert_eq(GameModeService.get_spawn_rate_multiplier(15.9), 1.3, "Partial second interval should be 1.3")
 
 func test_reset_state_restores_defaults() -> void:
-	# Change modes
+	# Change modes away from defaults
 	GameModeService.set_mode(GameEnums.GameMode.INVASION)
-	GameModeService.set_mode(GameEnums.GameMode.TECH_DEFENSE)
+	GameModeService.set_mode(GameEnums.GameMode.SURVIVAL) # Change away from default TECH_DEFENSE
 	
 	# Reset
 	GameModeService.reset_state()
 	
-	# Should be back to defaults
-	assert_true(GameModeService.is_mode_active(GameEnums.GameMode.SENTINEL))
-	assert_true(GameModeService.is_mode_active(GameEnums.GameMode.SURVIVAL))
-	assert_false(GameModeService.is_mode_active(GameEnums.GameMode.INVASION))
-	assert_false(GameModeService.is_mode_active(GameEnums.GameMode.TECH_DEFENSE))
+	# Should be back to defaults (SENTINEL for spawn_location, TECH_DEFENSE for win_condition)
+	assert_true(GameModeService.is_mode_active(GameEnums.GameMode.SENTINEL), "Default spawn_location should be SENTINEL")
+	assert_true(GameModeService.is_mode_active(GameEnums.GameMode.TECH_DEFENSE), "Default win_condition should be TECH_DEFENSE")
+	assert_false(GameModeService.is_mode_active(GameEnums.GameMode.INVASION), "INVASION should not be active after reset")
+	assert_false(GameModeService.is_mode_active(GameEnums.GameMode.SURVIVAL), "SURVIVAL should not be active after reset")
