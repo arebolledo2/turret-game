@@ -176,4 +176,4 @@ textures/canvas_textures/default_texture_filter=0
 
 [gui]
 
-theme/custom="res://resources/ui_theme.theme"
+theme/custom="res://resources/ui_theme.tres"
