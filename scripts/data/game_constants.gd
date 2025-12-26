@@ -111,6 +111,12 @@ const TECH_DROP_ITEM_DROP_CHANCE: float = 0.30 # 30% chance to drop item when de
 # =============================================================================
 # Tech Defense
 const DEFENSE_TARGET_BASE_HEALTH: float = 500.0
+const DEFENSE_TARGET_REFLECT_PERCENT: float = 0.50  # 50% damage reflected
+const DEFENSE_TARGET_KNOCKBACK_MULTIPLIER: float = 1.5  # 1.5x base knockback
+const DEFENSE_TARGET_SLOW_INTENSITY: float = 0.30  # 30% slow
+const DEFENSE_TARGET_SLOW_DURATION: float = 3.0  # 3 seconds
+const DEFENSE_TARGET_BARRIER_DURATION: float = 5.0  # 5 seconds immunity
+const DEFENSE_TARGET_BARRIER_COOLDOWN: float = 10.0  # 10 seconds between barriers
 
 # Tunneling
 const TUNNEL_DOOR_BASE_HEALTH: float = 200.0 # HP that must be damaged by turrets
