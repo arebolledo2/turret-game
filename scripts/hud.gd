@@ -60,20 +60,6 @@ const LootReviewScreenScript = preload("res://scripts/ui/loot_review_screen.gd")
 @onready var level_label: Label = $PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/LevelLabel
 @onready var pause_wave_label: Label = $PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/WaveLabel
 @onready var stats_grid: GridContainer = $PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid
-@onready var turrets_title: Label = $PauseMenu/MainPanel/MainVBox/TurretsSection/TurretsHeader/TurretsTitle
-@onready var turret_icons_row: HBoxContainer = $PauseMenu/MainPanel/MainVBox/TurretsSection/TurretIconsRow
-@onready var turret_details_panel: PanelContainer = $PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel
-@onready var turret_name_label: Label = $PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/TurretName
-@onready var turret_stats_container: HBoxContainer = $PauseMenu/MainPanel/MainVBox/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox
-@onready var items_title: Label = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemsTitle
-@onready var items_hint: Label = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemsHint
-@onready var items_scroll: ScrollContainer = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemsScrollContainer
-@onready var items_hbox: HBoxContainer = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemsScrollContainer/ItemsHBox
-@onready var item_details_panel: PanelContainer = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel
-@onready var item_icon_label: Label = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemIcon
-@onready var item_name_label: Label = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemName
-@onready var item_rarity_label: Label = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemRarity
-@onready var item_description_label: Label = $PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemDescription
 
 # New Component Handlers
 var game_display: HUDGameDisplay
@@ -239,20 +225,7 @@ func _setup_components() -> void:
 		"level_label": level_label,
 		"wave_label": pause_wave_label,
 		"stats_grid": stats_grid,
-		"turrets_title": turrets_title,
-		"turret_icons_row": turret_icons_row,
-		"turret_details_panel": turret_details_panel,
-		"turret_name_label": turret_name_label,
-		"turret_stats_container": turret_stats_container,
-		"items_title": items_title,
-		"items_hint": items_hint,
-		"items_scroll": items_scroll,
-		"items_hbox": items_hbox,
-		"item_details_panel": item_details_panel,
-		"item_icon_label": item_icon_label,
-		"item_name_label": item_name_label,
-		"item_rarity_label": item_rarity_label,
-		"item_description_label": item_description_label,
+		"inventory_section": $PauseMenu/MainPanel/MainVBox/TurretsSection,
 	}, self)
 
 	# Settings menu component

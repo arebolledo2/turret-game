@@ -19,15 +19,18 @@ static func format_stat_with_modifier(
 	var color := Color.WHITE
 
 	if has_change:
-		text = "%s: %s (%s)" % [
+		var diff := modified_value - base_value
+		var diff_sign := "+" if diff > 0 else ""
+		text = "%s: %s (%s%s)" % [
 			stat_name,
-			format_string % base_value,
-			format_string % modified_value
+			format_string % modified_value,
+			diff_sign,
+			format_string % diff
 		]
 		var is_improved := (modified_value > base_value) == is_higher_better
 		color = Color.GREEN if is_improved else Color.RED
 	else:
-		text = "%s: %s" % [stat_name, format_string % base_value]
+		text = "%s: %s" % [stat_name, format_string % modified_value]
 
 	return {"text": text, "color": color}
 

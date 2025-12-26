@@ -1,63 +1,26 @@
 extends Control
 
-## Shop screen orchestrator - delegates to specialized panels
-## REFACTORED: Reduced from 734 to ~200 lines by extracting panels
+## Shop screen orchestrator - uses StatsPanel and InventoryPanel components
 
-const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
 const MAIN_FONT = preload("res://addons/gut/fonts/AnonymousPro-Regular.ttf")
+const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
 
-# Preload component scripts to ensure they are found
+# Preload shop offers panel script
 const ShopOffersPanelScript = preload("res://scripts/ui/shop/shop_offers_panel.gd")
-const ShopBuildTabsPlayerScript = preload("res://scripts/ui/shop/shop_build_tabs/player_tab.gd")
-const ShopBuildTabsEconomyScript = preload("res://scripts/ui/shop/shop_build_tabs/economy_tab.gd")
-const ShopBuildTabsTurretsScript = preload("res://scripts/ui/shop/shop_build_tabs/turrets_tab.gd")
-const ShopBuildTabsItemsScript = preload("res://scripts/ui/shop/shop_build_tabs/items_tab.gd")
 
 # UI References
-@onready var shop_panel: PanelContainer = $ShopPanel
-@onready var title_label: Label = $ShopPanel/VBoxContainer/Header/TitleLabel
-@onready var gold_label: Label = $ShopPanel/VBoxContainer/Header/GoldLabel
-@onready var offers_container: HBoxContainer = $ShopPanel/VBoxContainer/OffersContainer
-@onready var reroll_button: Button = $ShopPanel/VBoxContainer/RerollContainer/RerollButton
-@onready var continue_button: Button = $ShopPanel/VBoxContainer/RerollContainer/ContinueButton
+@onready var title_label: Label = $MainContainer/ContentVBox/Header/TitleLabel
+@onready var gold_label: Label = $MainContainer/ContentVBox/Header/GoldLabel
+@onready var offers_container: HBoxContainer = $MainContainer/ContentVBox/MainHBox/LeftPanel/OffersContainer
+@onready var reroll_button: Button = $MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer/RerollButton
+@onready var continue_button: Button = $MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer/ContinueButton
 
-# Build tab containers
-@onready var build_tabs: TabContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs
-@onready var player_stats_vbox: VBoxContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Player/PlayerStatsVBox
-@onready var economy_stats_vbox: VBoxContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Economy/EconomyStatsVBox
+# Component references
+@onready var stats_panel: VBoxContainer = $MainContainer/ContentVBox/MainHBox/RightPanel/StatsPanel
+@onready var inventory_panel: VBoxContainer = $MainContainer/ContentVBox/BottomPanel/InventoryPanel
 
-# Turrets tab nodes
-@onready var turrets_title: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretsHeader/TurretsTitle
-@onready var turrets_hint: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretsHeader/TurretsHint
-@onready var turret_icons_row: HBoxContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretIconsRow
-@onready var turret_details_panel: PanelContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel
-@onready var turret_name_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/TurretName
-@onready var turret_damage_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats/DamageLabel
-@onready var turret_range_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats/RangeLabel
-@onready var turret_fire_rate_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats/FireRateLabel
-@onready var turret_rotation_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats/RotationLabel
-@onready var turret_proj_speed_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats/ProjSpeedLabel
-@onready var turret_dps_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Turrets/TurretsSection/TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats/DPSLabel
-
-# Items tab nodes
-@onready var items_title: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemsHeader/ItemsTitle
-@onready var items_hint: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemsHeader/ItemsHint
-@onready var items_scroll: ScrollContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemsScrollContainer
-@onready var items_hbox: HBoxContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemsScrollContainer/ItemsHBox
-@onready var no_items_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/NoItemsLabel
-@onready var item_details_panel: PanelContainer = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemDetailsPanel
-@onready var item_icon_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemIcon
-@onready var item_name_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemName
-@onready var item_rarity_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader/ItemRarity
-@onready var item_description_label: Label = $ShopPanel/VBoxContainer/PlayerBuildSection/PlayerBuildVBox/BuildTabs/Items/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemDescription
-
-# Panel handlers (delegate complex logic to these)
+# Panel handler for shop offers
 var offers_panel
-var player_tab
-var economy_tab
-var turrets_tab
-var items_tab
-
 var shop_manager: Node
 var regeneration_pending: bool = false
 
@@ -66,49 +29,10 @@ func _ready() -> void:
 	visible = false
 	shop_manager = Globals.shop_manager
 
-	# Initialize panel handlers
+	# Initialize offers panel handler
 	offers_panel = ShopOffersPanelScript.new()
 	add_child(offers_panel)
 	offers_panel.initialize(offers_container, reroll_button)
-	
-	player_tab = ShopBuildTabsPlayerScript.new()
-	add_child(player_tab)
-	player_tab.initialize(player_stats_vbox)
-	
-	economy_tab = ShopBuildTabsEconomyScript.new()
-	add_child(economy_tab)
-	economy_tab.initialize(economy_stats_vbox)
-	
-	turrets_tab = ShopBuildTabsTurretsScript.new()
-	add_child(turrets_tab)
-	turrets_tab.initialize({
-		"turrets_title": turrets_title,
-		"turrets_hint": turrets_hint,
-		"turret_icons_row": turret_icons_row,
-		"turret_details_panel": turret_details_panel,
-		"turret_name_label": turret_name_label,
-		"turret_damage_label": turret_damage_label,
-		"turret_range_label": turret_range_label,
-		"turret_fire_rate_label": turret_fire_rate_label,
-		"turret_rotation_label": turret_rotation_label,
-		"turret_proj_speed_label": turret_proj_speed_label,
-		"turret_dps_label": turret_dps_label,
-	})
-	
-	items_tab = ShopBuildTabsItemsScript.new()
-	add_child(items_tab)
-	items_tab.initialize({
-		"items_title": items_title,
-		"items_hint": items_hint,
-		"items_scroll": items_scroll,
-		"items_hbox": items_hbox,
-		"no_items_label": no_items_label,
-		"item_details_panel": item_details_panel,
-		"item_icon_label": item_icon_label,
-		"item_name_label": item_name_label,
-		"item_rarity_label": item_rarity_label,
-		"item_description_label": item_description_label,
-	})
 
 	# Connect events
 	Events.shop_opened.connect(_on_shop_opened)
@@ -124,31 +48,11 @@ func _ready() -> void:
 
 	continue_button.pressed.connect(_on_continue_pressed)
 
-func _unhandled_input(event: InputEvent) -> void:
-	# Only handle tab navigation when shop is visible
+
+func _unhandled_input(_event: InputEvent) -> void:
 	if not visible:
 		return
-
-	if event.is_action_pressed("tab_left"):
-		_change_tab(-1)
-		get_viewport().set_input_as_handled()
-	elif event.is_action_pressed("tab_right"):
-		_change_tab(1)
-		get_viewport().set_input_as_handled()
-
-func _change_tab(direction: int) -> void:
-	if not build_tabs:
-		return
-
-	var current_idx := build_tabs.current_tab
-	var tab_count := build_tabs.get_tab_count()
-
-	# Wrap around: Items -> Player -> Economy -> Turrets -> Items
-	var new_idx := (current_idx + direction) % tab_count
-	if new_idx < 0:
-		new_idx = tab_count - 1
-
-	build_tabs.current_tab = new_idx
+	# Can add tab navigation for stats/inventory if needed later
 
 
 func _on_shop_opened(wave_number: int) -> void:
@@ -166,7 +70,7 @@ func _on_shop_opened(wave_number: int) -> void:
 	title_label.text = "TURRET SHOP - WAVE %d" % wave_number
 	update_gold_display()
 	offers_panel.update_reroll_button()
-	update_player_build()
+	_update_panels()
 
 	# Fade in animation
 	modulate.a = 0.0
@@ -174,6 +78,7 @@ func _on_shop_opened(wave_number: int) -> void:
 	tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
 	tween.tween_property(self, "modulate:a", 1.0, 0.3)
 	continue_button.grab_focus()
+
 
 func _on_shop_closed() -> void:
 	get_tree().paused = false
@@ -183,57 +88,95 @@ func _on_shop_closed() -> void:
 	tween.tween_property(self, "modulate:a", 0.0, 0.2)
 	tween.tween_callback(func(): visible = false)
 
+
 func _on_purchase_pressed(index: int) -> void:
 	if shop_manager:
 		shop_manager.purchase_offer(index)
 
+
 func _on_purchase_made(_offer: Dictionary) -> void:
 	_request_regeneration()
 	offers_panel.update_reroll_button()
-	update_player_build()
+	_update_panels()
+
 
 func _request_regeneration() -> void:
 	if not regeneration_pending:
 		regeneration_pending = true
 		call_deferred("_regenerate_offers")
 
+
 func _regenerate_offers() -> void:
 	regeneration_pending = false
 	offers_panel.regenerate_offers()
+
 
 func _on_reroll_pressed() -> void:
 	if shop_manager:
 		shop_manager.reroll_shop()
 	offers_panel.update_reroll_button()
 
+
 func _on_continue_pressed() -> void:
 	var game_manager = Globals.game_manager
 	if game_manager and game_manager.has_method("end_shop_phase"):
 		game_manager.end_shop_phase()
 
+
 func _on_gold_changed(_amount: int, _total: int) -> void:
 	update_gold_display()
 	_request_regeneration()
 
+
 func update_gold_display() -> void:
 	gold_label.text = "Gold: %d" % Globals.total_gold
+
 
 func _on_insufficient_funds(_required: int, _current: int) -> void:
 	var tween = create_tween()
 	tween.tween_property(gold_label, "modulate", Color.RED, 0.1)
 	tween.tween_property(gold_label, "modulate", Color.WHITE, 0.1)
 
-func update_player_build() -> void:
-	player_tab.update_display()
-	economy_tab.update_display()
-	turrets_tab.update_display()
-	items_tab.update_display()
-	_setup_build_focus_neighbors()
 
-func _setup_build_focus_neighbors() -> void:
-	var turret_buttons = turrets_tab.get_turret_buttons()
-	var item_buttons = items_tab.get_item_buttons()
+func _update_panels() -> void:
+	if stats_panel and stats_panel.has_method("refresh"):
+		stats_panel.refresh()
+	if inventory_panel and inventory_panel.has_method("refresh"):
+		inventory_panel.refresh()
+	_setup_focus_neighbors()
+
+
+func _setup_focus_neighbors() -> void:
 	var offer_buttons = offers_panel.get_offer_buttons()
+	var turret_buttons = inventory_panel.get_turret_buttons() if inventory_panel else []
+	var item_buttons = inventory_panel.get_item_buttons() if inventory_panel else []
+
+	# Connect reroll and continue buttons (horizontal navigation)
+	if reroll_button and continue_button:
+		reroll_button.focus_neighbor_right = continue_button.get_path()
+		continue_button.focus_neighbor_left = reroll_button.get_path()
+
+		# Connect to offers above
+		if not offer_buttons.is_empty():
+			var last_focusable: Button = null
+			for i in range(offer_buttons.size() - 1, -1, -1):
+				if is_instance_valid(offer_buttons[i]) and offer_buttons[i].focus_mode != Control.FOCUS_NONE:
+					last_focusable = offer_buttons[i]
+					break
+			if last_focusable:
+				continue_button.focus_neighbor_top = last_focusable.get_path()
+				reroll_button.focus_neighbor_top = last_focusable.get_path()
+
+		# Connect down to turrets or items
+		var down_target: Control = null
+		if not turret_buttons.is_empty():
+			down_target = turret_buttons[0]
+		elif not item_buttons.is_empty():
+			down_target = item_buttons[0]
+		
+		if down_target:
+			reroll_button.focus_neighbor_bottom = down_target.get_path()
+			continue_button.focus_neighbor_bottom = down_target.get_path()
 
 	# Set up turret button focus
 	if not turret_buttons.is_empty():
@@ -250,20 +193,3 @@ func _setup_build_focus_neighbors() -> void:
 			if item_buttons.size() > 0:
 				var item_idx := mini(i, item_buttons.size() - 1)
 				turret_buttons[i].focus_neighbor_bottom = item_buttons[item_idx].get_path()
-	
-	# Connect reroll and continue buttons (horizontal navigation)
-	if reroll_button and continue_button:
-		reroll_button.focus_neighbor_right = continue_button.get_path()
-		continue_button.focus_neighbor_left = reroll_button.get_path()
-
-		# Connect to offers above (find last focusable offer)
-		if not offer_buttons.is_empty():
-			# Reroll already has UP navigation setup in offers_panel
-			# Continue button goes to last focusable offer
-			var last_focusable: Button = null
-			for i in range(offer_buttons.size() - 1, -1, -1):
-				if is_instance_valid(offer_buttons[i]) and offer_buttons[i].focus_mode != Control.FOCUS_NONE:
-					last_focusable = offer_buttons[i]
-					break
-			if last_focusable:
-				continue_button.focus_neighbor_top = last_focusable.get_path()
