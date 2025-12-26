@@ -19,7 +19,16 @@ func generate_offers() -> void:
 	for offer in Globals.current_shop_offers:
 		if offer.get("locked", false) and not offer.get("sold", false):
 			locked_offers.append(offer)
-	
+
+	# Extract locked item and turret IDs to exclude from duplicates
+	var locked_item_ids: Array[String] = []
+	var locked_turret_ids: Array[String] = []
+	for locked_offer in locked_offers:
+		if locked_offer["type"] == "item":
+			locked_item_ids.append(locked_offer["item_id"])
+		elif locked_offer["type"] == "turret":
+			locked_turret_ids.append(locked_offer["turret_id"])
+
 	Globals.current_shop_offers.clear()
 
 	# Track generated items to avoid duplicates
@@ -31,27 +40,30 @@ func generate_offers() -> void:
 	# Reduce offer count by number of locked offers
 	var base_offer_count = Globals.get_shop_offer_count()
 	var new_offer_count = base_offer_count - locked_offers.size()
-	
+
 	for i in range(new_offer_count):
 		var roll: float = randf()
 		if roll < GameConstants.SHOP_ITEM_CHANCE:
-			generate_item_offer(generated_item_ids, generated_turret_ids)
+			generate_item_offer(generated_item_ids, generated_turret_ids, locked_item_ids, locked_turret_ids)
 		else:
-			generate_turret_offer(generated_turret_ids)
-	
+			generate_turret_offer(generated_turret_ids, locked_turret_ids)
+
 	# Merge locked offers back into the offer list
 	for locked_offer in locked_offers:
 		Globals.current_shop_offers.append(locked_offer)
 
 	Events.shop_offers_generated.emit(Globals.current_shop_offers)
 
-func generate_turret_offer(generated_turret_ids: Array[String]) -> void:
+func generate_turret_offer(generated_turret_ids: Array[String], locked_turret_ids: Array[String] = []) -> void:
 	var turret_types: Array = TurretRegistry.get_all_type_ids()
 
-	# Filter out already generated turrets
+	# Combine newly generated turrets + locked turrets to avoid duplicates
+	var all_excluded_turret_ids = generated_turret_ids + locked_turret_ids
+
+	# Filter out already generated AND locked turrets
 	var available_turrets: Array[String] = []
 	for turret_id in turret_types:
-		if turret_id not in generated_turret_ids:
+		if turret_id not in all_excluded_turret_ids:
 			available_turrets.append(turret_id)
 
 	# If all turrets are already generated, allow duplicates
@@ -75,18 +87,21 @@ func generate_turret_offer(generated_turret_ids: Array[String]) -> void:
 	}
 	Globals.current_shop_offers.append(offer)
 
-func generate_item_offer(generated_item_ids: Array[String], generated_turret_ids: Array[String]) -> void:
+func generate_item_offer(generated_item_ids: Array[String], generated_turret_ids: Array[String], locked_item_ids: Array[String] = [], locked_turret_ids: Array[String] = []) -> void:
+	# Combine newly generated items + locked items to avoid duplicates
+	var all_excluded_item_ids = generated_item_ids + locked_item_ids
+
 	# Use weighted rarity selection based on wave and luck
 	var random_item_id := ItemRegistry.get_weighted_random_item(
 		Globals.current_wave,
 		Globals.get_player_luck(),
 		Globals.item_counts,
-		generated_item_ids
+		all_excluded_item_ids
 	)
 
 	if random_item_id.is_empty():
 		# Fallback to turret if no items available
-		generate_turret_offer(generated_turret_ids)
+		generate_turret_offer(generated_turret_ids, locked_turret_ids)
 		return
 	
 	var base_price: int = ItemRegistry.get_item_price(random_item_id)
