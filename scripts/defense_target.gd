@@ -28,7 +28,7 @@ func _ready() -> void:
 	add_to_group("defense_targets")
 	current_health = max_health
 	_setup_timers()
-	
+
 	print("DEBUG DefenseTarget: Position = ", global_position)
 	print("DEBUG DefenseTarget: Visible = ", visible)
 	print("DEBUG DefenseTarget: Sprite exists = ", sprite != null)
@@ -36,13 +36,16 @@ func _ready() -> void:
 		print("DEBUG DefenseTarget: Sprite visible = ", sprite.visible)
 		print("DEBUG DefenseTarget: Sprite modulate = ", sprite.modulate)
 		print("DEBUG DefenseTarget: Sprite scale = ", sprite.scale)
-	
+
 	# Connect area signals for enemy collision
 	if area:
 		area.body_entered.connect(_on_body_entered)
 		print("DEBUG DefenseTarget: Area connected")
 	else:
 		print("DEBUG DefenseTarget: WARNING - Area2D not found!")
+
+	# Connect to wave_ended event for healing between rounds
+	Events.wave_ended.connect(_on_wave_ended)
 
 func initialize(_wave: int, difficulty_config: Dictionary) -> void:
 	"""
@@ -243,3 +246,31 @@ func _apply_status_effects(enemy: Node) -> void:
 		1.0,  # tick_rate (irrelevant for slow-only)
 		GameConstants.DEFENSE_TARGET_SLOW_INTENSITY
 	)
+
+func heal(amount: float) -> void:
+	"""Heal the defense target by the specified amount."""
+	if is_destroyed:
+		return
+
+	var old_health = current_health
+	current_health = min(current_health + amount, max_health)
+	var actual_heal = current_health - old_health
+
+	if actual_heal > 0:
+		# Update health bar
+		if health_bar:
+			health_bar.value = current_health
+
+		# Emit events
+		Events.defense_target_hp_changed.emit(current_health, max_health)
+		Events.defense_target_healed.emit(current_health, max_health, actual_heal)
+
+		print("DEBUG DefenseTarget: Healed ", actual_heal, " HP (", current_health, "/", max_health, ")")
+
+func _on_wave_ended(_wave_number: int) -> void:
+	"""Heal the defense target between waves."""
+	if is_destroyed:
+		return
+
+	heal(GameConstants.DEFENSE_TARGET_HEAL_BETWEEN_WAVES)
+	print("DEBUG DefenseTarget: Wave ", _wave_number, " ended - healing between rounds")

@@ -117,6 +117,7 @@ const DEFENSE_TARGET_SLOW_INTENSITY: float = 0.30  # 30% slow
 const DEFENSE_TARGET_SLOW_DURATION: float = 3.0  # 3 seconds
 const DEFENSE_TARGET_BARRIER_DURATION: float = 5.0  # 5 seconds immunity
 const DEFENSE_TARGET_BARRIER_COOLDOWN: float = 10.0  # 10 seconds between barriers
+const DEFENSE_TARGET_HEAL_BETWEEN_WAVES: float = 100.0  # HP healed between waves
 
 # Tunneling
 const TUNNEL_DOOR_BASE_HEALTH: float = 200.0 # HP that must be damaged by turrets
