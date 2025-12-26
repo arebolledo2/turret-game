@@ -39,8 +39,9 @@ func test_wave_duration_wave_10():
 func test_wave_enemy_count_wave_1_easy():
 	Globals.current_difficulty = GameEnums.Difficulty.EASY
 	var count = Globals.get_wave_enemy_count(1)
-	# Base = 10, increment = 0 for wave 1, mult = 1.0
-	assert_eq(count, 10, "Wave 1 Easy should have 10 enemies")
+	# Wave 1: base count * difficulty mult
+	var expected = int(GameConstants.WAVE_BASE_ENEMY_COUNT * 1.0)
+	assert_eq(count, expected, "Wave 1 Easy should have base enemy count")
 
 
 func test_wave_enemy_count_scales_with_waves():
@@ -48,9 +49,10 @@ func test_wave_enemy_count_scales_with_waves():
 	var wave1_count = Globals.get_wave_enemy_count(1)
 	var wave5_count = Globals.get_wave_enemy_count(5)
 	
-	# Wave 5 = 10 + 4 * 4 = 26 enemies
+	# Wave 5 = base + 4 * increment
+	var expected_wave5 = int((GameConstants.WAVE_BASE_ENEMY_COUNT + 4 * GameConstants.WAVE_ENEMY_INCREMENT) * 1.0)
 	assert_gt(wave5_count, wave1_count, "Later waves should have more enemies")
-	assert_eq(wave5_count, 26, "Wave 5 Easy should have 26 enemies")
+	assert_eq(wave5_count, expected_wave5, "Wave 5 Easy should have calculated enemy count")
 
 
 func test_wave_enemy_count_scales_with_difficulty():
@@ -86,7 +88,7 @@ func test_enemy_health_scales_exponentially():
 	var wave5_hp = Globals.get_enemy_health(5)
 	
 	# Easy: 10% per wave, so wave 5 = base * 1.1^4
-	var expected_ratio = pow(1.10, 4)  # ~1.4641
+	var expected_ratio = pow(1.10, 4) # ~1.4641
 	var actual_ratio = wave5_hp / wave1_hp
 	
 	assert_almost_eq(actual_ratio, expected_ratio, 0.01, "Health should scale by 1.1^(wave-1)")

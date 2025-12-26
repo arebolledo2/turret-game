@@ -9,7 +9,7 @@ func before_each() -> void:
 func test_default_modes_initialized() -> void:
 	# Both groups should have defaults set
 	assert_true(GameModeService.is_mode_active(GameEnums.GameMode.SENTINEL), "spawn_location should default to SENTINEL")
-	assert_true(GameModeService.is_mode_active(GameEnums.GameMode.SURVIVAL), "win_condition should default to SURVIVAL")
+	assert_true(GameModeService.is_mode_active(GameEnums.GameMode.TECH_DEFENSE), "win_condition should default to TECH_DEFENSE")
 
 func test_mode_group_exclusivity() -> void:
 	# Setting TECH_DEFENSE should not affect spawn_location
@@ -36,16 +36,16 @@ func test_spawn_location_mutual_exclusivity() -> void:
 	assert_false(GameModeService.is_mode_active(GameEnums.GameMode.SENTINEL))
 
 func test_get_win_condition_mode() -> void:
-	assert_eq(GameModeService.get_win_condition_mode(), GameEnums.GameMode.SURVIVAL, "Should default to SURVIVAL")
+	assert_eq(GameModeService.get_win_condition_mode(), GameEnums.GameMode.TECH_DEFENSE, "Should default to TECH_DEFENSE")
 	
-	GameModeService.set_mode(GameEnums.GameMode.TECH_DEFENSE)
-	assert_eq(GameModeService.get_win_condition_mode(), GameEnums.GameMode.TECH_DEFENSE)
+	GameModeService.set_mode(GameEnums.GameMode.SURVIVAL)
+	assert_eq(GameModeService.get_win_condition_mode(), GameEnums.GameMode.SURVIVAL)
 
 func test_should_spawn_defense_target() -> void:
-	assert_false(GameModeService.should_spawn_defense_target(), "SURVIVAL mode should not spawn target")
+	assert_true(GameModeService.should_spawn_defense_target(), "TECH_DEFENSE mode (default) should spawn target")
 	
-	GameModeService.set_mode(GameEnums.GameMode.TECH_DEFENSE)
-	assert_true(GameModeService.should_spawn_defense_target(), "TECH_DEFENSE should spawn target")
+	GameModeService.set_mode(GameEnums.GameMode.SURVIVAL)
+	assert_false(GameModeService.should_spawn_defense_target(), "SURVIVAL should not spawn target")
 
 func test_should_spawn_tunnel_door() -> void:
 	assert_false(GameModeService.should_spawn_tunnel_door(), "SURVIVAL mode should not spawn door")

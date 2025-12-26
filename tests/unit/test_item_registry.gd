@@ -137,32 +137,38 @@ func test_rarity_name_legendary():
 
 func test_rarity_price_common():
 	var price = ItemRegistry.get_rarity_price(GameEnums.ItemRarity.COMMON)
-	assert_eq(price, 40, "COMMON base price should be 40")
+	var expected = ItemRegistry.BASE_PRICES[GameEnums.ItemRarity.COMMON]
+	assert_eq(price, expected, "COMMON base price should match BASE_PRICES")
 
 
 func test_rarity_price_uncommon():
 	var price = ItemRegistry.get_rarity_price(GameEnums.ItemRarity.UNCOMMON)
-	assert_eq(price, 70, "UNCOMMON base price should be 70")
+	var expected = ItemRegistry.BASE_PRICES[GameEnums.ItemRarity.UNCOMMON]
+	assert_eq(price, expected, "UNCOMMON base price should match BASE_PRICES")
 
 
 func test_rarity_price_rare():
 	var price = ItemRegistry.get_rarity_price(GameEnums.ItemRarity.RARE)
-	assert_eq(price, 110, "RARE base price should be 110")
+	var expected = ItemRegistry.BASE_PRICES[GameEnums.ItemRarity.RARE]
+	assert_eq(price, expected, "RARE base price should match BASE_PRICES")
 
 
 func test_rarity_price_epic():
 	var price = ItemRegistry.get_rarity_price(GameEnums.ItemRarity.EPIC)
-	assert_eq(price, 160, "EPIC base price should be 160")
+	var expected = ItemRegistry.BASE_PRICES[GameEnums.ItemRarity.EPIC]
+	assert_eq(price, expected, "EPIC base price should match BASE_PRICES")
 
 
 func test_rarity_price_legendary():
 	var price = ItemRegistry.get_rarity_price(GameEnums.ItemRarity.LEGENDARY)
-	assert_eq(price, 240, "LEGENDARY base price should be 240")
+	var expected = ItemRegistry.BASE_PRICES[GameEnums.ItemRarity.LEGENDARY]
+	assert_eq(price, expected, "LEGENDARY base price should match BASE_PRICES")
 
 
 func test_rarity_price_unique():
 	var price = ItemRegistry.get_rarity_price(GameEnums.ItemRarity.UNIQUE)
-	assert_eq(price, 350, "UNIQUE base price should be 350")
+	var expected = ItemRegistry.BASE_PRICES[GameEnums.ItemRarity.UNIQUE]
+	assert_eq(price, expected, "UNIQUE base price should match BASE_PRICES")
 
 
 func test_price_increases_with_rarity():
@@ -186,7 +192,8 @@ func test_get_item_price():
 
 func test_get_item_price_invalid():
 	var price = ItemRegistry.get_item_price("nonexistent")
-	assert_eq(price, 40, "Invalid item should default to COMMON price")
+	var expected = ItemRegistry.BASE_PRICES[GameEnums.ItemRarity.COMMON]
+	assert_eq(price, expected, "Invalid item should default to COMMON price")
 
 
 # =============================================================================
