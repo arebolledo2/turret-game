@@ -33,9 +33,9 @@ func before_each() -> void:
 func test_generate_offers_creates_correct_count():
 	shop_manager.generate_offers()
 
-	# Shop V2: 4 offers with 65% item / 35% turret chance per slot
-	assert_eq(Globals.current_shop_offers.size(), 4,
-		"Should generate exactly 4 offers")
+	# Shop V2: configurable offers with 65% item / 35% turret chance per slot
+	assert_eq(Globals.current_shop_offers.size(), GameConstants.SHOP_OFFER_COUNT,
+		"Should generate exactly %d offers" % GameConstants.SHOP_OFFER_COUNT)
 
 
 func test_generate_offers_has_turret_offers():
@@ -131,8 +131,8 @@ func test_generate_offers_clears_previous():
 	# Generate again
 	shop_manager.generate_offers()
 
-	# Should still have exactly 4 offers (not 8)
-	assert_eq(Globals.current_shop_offers.size(), 4,
+	# Should still have exactly SHOP_OFFER_COUNT offers (not doubled)
+	assert_eq(Globals.current_shop_offers.size(), GameConstants.SHOP_OFFER_COUNT,
 		"generate_offers should clear previous offers")
 
 
@@ -192,9 +192,10 @@ func test_calculate_turret_price_formula():
 	var base_price = 100
 	var wave = 3
 	Globals.turrets_purchased = 2  # Simulate having bought 2 turrets
-	
+
 	var wave_mult = 1.0 + Globals.WAVE_PRICE_SCALE * wave
-	var penalty_mult = 1.0 + GameConstants.TURRET_PURCHASE_PENALTY * Globals.turrets_purchased
+	# Use Globals.get_turret_purchase_penalty() as shop_manager does (can be modified by items)
+	var penalty_mult = 1.0 + Globals.get_turret_purchase_penalty() * Globals.turrets_purchased
 	var expected = int(base_price * wave_mult * penalty_mult)
 
 	var result = shop_manager.calculate_turret_price(base_price, wave)
@@ -440,8 +441,8 @@ func test_reroll_shop_generates_new_offers():
 
 	shop_manager.reroll_shop()
 
-	# At minimum, still should have 4 offers
-	assert_eq(Globals.current_shop_offers.size(), 4,
+	# At minimum, still should have SHOP_OFFER_COUNT offers
+	assert_eq(Globals.current_shop_offers.size(), GameConstants.SHOP_OFFER_COUNT,
 		"Reroll should generate new offers")
 
 
@@ -552,7 +553,7 @@ func test_multiple_purchases_in_one_shop():
 		if offer["sold"]:
 			sold_count += 1
 
-	assert_eq(sold_count, 4, "Should be able to buy all offers with enough gold")
+	assert_eq(sold_count, GameConstants.SHOP_OFFER_COUNT, "Should be able to buy all offers with enough gold")
 
 
 func test_gold_exactly_enough():

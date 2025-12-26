@@ -17,12 +17,24 @@ func before_all() -> void:
 func before_each() -> void:
 	Globals.reset_stats()
 	Globals.current_difficulty = GameEnums.Difficulty.EASY
-	
+
 	main = main_scene.instantiate()
 	add_child_autofree(main)
 	game_manager = main.get_node("GameManager")
-	
+
 	# Wait for scene to be ready
+	await get_tree().process_frame
+
+
+# Helper to start game with the new consolidated settings flow
+func _start_game_with_settings(difficulty := GameEnums.Difficulty.EASY) -> void:
+	Events.start_settings_applied.emit(
+		difficulty,
+		GameEnums.GameMode.SENTINEL,
+		GameEnums.GameMode.TECH_DEFENSE,
+		GameEnums.GameMode.ARENA_ISOMETRIC,
+		0  # bg_index
+	)
 	await get_tree().process_frame
 
 
@@ -71,13 +83,10 @@ func test_start_settings_applied_starts_game():
 
 
 func test_wave_starts_at_1_after_selection():
-	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
-	await get_tree().process_frame
-	Events.game_mode_selected.emit(GameEnums.GameMode.SENTINEL)
-	await get_tree().process_frame
-	
-	# Wave now starts at 1 immediately (skips initial shop phase in Shop V2)
-	assert_eq(Globals.current_wave, 1, "Wave should be 1 after game starts (Shop V2 skips initial shop)")
+	await _start_game_with_settings()
+
+	# Wave is set to 1 when wave announcement starts (incremented in start_wave_announcement)
+	assert_eq(Globals.current_wave, 1, "Wave should be 1 after game starts")
 
 
 # =============================================================================
@@ -85,25 +94,19 @@ func test_wave_starts_at_1_after_selection():
 # =============================================================================
 
 func test_game_enters_wave_announcement_after_mode_select():
-	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
-	await get_tree().process_frame
-	Events.game_mode_selected.emit(GameEnums.GameMode.SENTINEL)
-	await get_tree().process_frame
-	
-	# Shop V2: Skip initial shop, go directly to wave announcement
+	await _start_game_with_settings()
+
+	# Game goes directly to wave announcement after settings applied
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_ANNOUNCEMENT,
 		"Should enter WAVE_ANNOUNCEMENT after settings applied")
 
 
 func test_wave_announcement_signal_emitted_on_start():
 	watch_signals(Events)
-	
-	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
-	await get_tree().process_frame
-	Events.game_mode_selected.emit(GameEnums.GameMode.SENTINEL)
-	await get_tree().process_frame
-	
-	# Shop V2: Wave announcement emitted immediately after game starts
+
+	await _start_game_with_settings()
+
+	# Wave announcement emitted immediately after game starts
 	assert_signal_emitted(Events, "wave_announcement_started")
 
 
@@ -112,30 +115,19 @@ func test_wave_announcement_signal_emitted_on_start():
 # =============================================================================
 
 func test_game_enters_wave_announcement_after_shop():
-	# Shop V2: First need to complete wave 1 to see shop
-	# For this test, we verify the shop -> wave announcement flow AFTER wave 1
-	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
-	await get_tree().process_frame
-	Events.game_mode_selected.emit(GameEnums.GameMode.SENTINEL)
-	await get_tree().process_frame
-	
-	# We should already be in WAVE_ANNOUNCEMENT (Shop V2 skips initial shop)
+	await _start_game_with_settings()
+
+	# We should be in WAVE_ANNOUNCEMENT after game starts
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_ANNOUNCEMENT,
 		"Should be in WAVE_ANNOUNCEMENT after settings applied")
-	
-	# Can't test shop->wave_announcement flow here since shop only opens after waves
-	# This test now verifies the initial game start flow instead
 
 
 func test_wave_announcement_signal_emitted_after_shop():
 	watch_signals(Events)
-	
-	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
-	await get_tree().process_frame
-	Events.game_mode_selected.emit(GameEnums.GameMode.SENTINEL)
-	await get_tree().process_frame
-	
-	# Shop V2: Wave announcement emitted immediately (no shop phase at start)
+
+	await _start_game_with_settings()
+
+	# Wave announcement signals emitted when game starts
 	assert_signal_emitted(Events, "wave_announcement_started")
 	assert_signal_emitted(Events, "show_wave_announcement")
 
@@ -145,48 +137,35 @@ func test_wave_announcement_signal_emitted_after_shop():
 # =============================================================================
 
 func test_combat_starts_after_announcement():
-	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
-	await get_tree().process_frame
-	Events.game_mode_selected.emit(GameEnums.GameMode.SENTINEL)
-	await get_tree().process_frame
-	
-	# Close shop to proceed to wave announcement
-	game_manager.end_shop_phase()
-	await get_tree().process_frame
-	
-	# Wait for announcement timer to finish (1.5 seconds + buffer)
+	await _start_game_with_settings()
+
+	# Wait for announcement timer to finish (uses GameConstants.WAVE_ANNOUNCEMENT_TIME)
 	var start_time = Time.get_ticks_msec()
-	var max_wait_ms = 3000 # 3 seconds max
-	
-	while game_manager.current_state == game_manager.GameState.WAVE_ANNOUNCEMENT:
+	var max_wait_ms = int((GameConstants.WAVE_ANNOUNCEMENT_TIME + 1.0) * 1000)
+
+	while GameStateMachine.current_state == GameStateMachine.GameState.WAVE_ANNOUNCEMENT:
 		await get_tree().process_frame
 		if Time.get_ticks_msec() - start_time > max_wait_ms:
 			break
-	
+
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.COMBAT,
 		"Should enter COMBAT after announcement timer")
 
 
 func test_wave_started_signal_emitted_during_combat():
 	watch_signals(Events)
-	
-	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
-	await get_tree().process_frame
-	Events.game_mode_selected.emit(GameEnums.GameMode.SENTINEL)
-	await get_tree().process_frame
-	
-	# Close shop to proceed
-	game_manager.end_shop_phase()
-	
+
+	await _start_game_with_settings()
+
 	# Wait for combat to start
 	var start_time = Time.get_ticks_msec()
-	var max_wait_ms = 3000
-	
+	var max_wait_ms = int((GameConstants.WAVE_ANNOUNCEMENT_TIME + 1.0) * 1000)
+
 	while GameStateMachine.current_state != GameStateMachine.GameState.COMBAT:
 		await get_tree().process_frame
 		if Time.get_ticks_msec() - start_time > max_wait_ms:
 			break
-	
+
 	assert_signal_emitted(Events, "wave_started", "wave_started should be emitted when combat begins")
 
 
@@ -196,31 +175,25 @@ func test_wave_started_signal_emitted_during_combat():
 
 func test_player_death_triggers_game_over():
 	watch_signals(Events)
-	
-	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
-	await get_tree().process_frame
-	Events.game_mode_selected.emit(GameEnums.GameMode.SENTINEL)
-	await get_tree().process_frame
-	
-	Globals.is_game_active = true
-	
+
+	await _start_game_with_settings()
+
+	# Game is already active after _start_game_with_settings
+
 	Events.player_died.emit()
 	await get_tree().process_frame
-	
+
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.GAME_OVER,
 		"Should be in GAME_OVER after player death")
 	assert_signal_emitted(Events, "game_over")
 
 
 func test_game_deactivates_on_player_death():
-	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
-	await get_tree().process_frame
-	Events.game_mode_selected.emit(GameEnums.GameMode.SENTINEL)
-	await get_tree().process_frame
-	
+	await _start_game_with_settings()
+
 	Events.player_died.emit()
 	await get_tree().process_frame
-	
+
 	assert_false(Globals.is_game_active, "Game should be inactive after death")
 
 
@@ -229,19 +202,12 @@ func test_game_deactivates_on_player_death():
 # =============================================================================
 
 func test_time_survived_increments():
-	Events.difficulty_selected.emit(GameEnums.Difficulty.EASY)
-	await get_tree().process_frame
-	Events.game_mode_selected.emit(GameEnums.GameMode.SENTINEL)
-	await get_tree().process_frame
-	
-	# Close shop to start the game properly
-	game_manager.end_shop_phase()
-	await get_tree().process_frame
-	
+	await _start_game_with_settings()
+
 	Globals.time_survived = 0.0
-	
+
 	# Process some frames while game is active
 	for i in range(10):
 		await get_tree().process_frame
-	
+
 	assert_gt(Globals.time_survived, 0.0, "Time survived should increment during game")
