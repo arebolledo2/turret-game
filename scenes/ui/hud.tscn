@@ -919,6 +919,7 @@ theme_override_constants/separation = 25
 
 [node name="Title" type="Label" parent="GameModeSelect/Panel/VBoxContainer"]
 layout_mode = 2
+theme_type_variation = &"HeaderLabel"
 theme_override_font_sizes/font_size = 42
 text = "SELECT MODE"
 horizontal_alignment = 1
