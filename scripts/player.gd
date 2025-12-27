@@ -15,6 +15,7 @@ var is_invincible: bool = false
 var is_dead: bool = false
 var invincibility_timer: Timer
 var animation_timer: Timer
+var heal_timer: Timer
 var current_frame: int = 0
 
 
@@ -54,6 +55,12 @@ func _ready() -> void:
 	
 	# Setup animation timer
 	anim_timer.timeout.connect(_on_animation_timer_timeout)
+
+	# Setup heal timer for health regeneration
+	heal_timer = Timer.new()
+	heal_timer.one_shot = false
+	heal_timer.timeout.connect(_on_heal_timer_timeout)
+	add_child(heal_timer)
 
 	# Connect to debug toggle event
 	Events.hitbox_debug_toggled.connect(_on_debug_toggled)
@@ -106,7 +113,7 @@ func _physics_process(delta: float) -> void:
 	var clamped_pos := ArenaBoundsService.clamp_to_arena(global_position, 20.0)
 	if not global_position.is_equal_approx(clamped_pos):
 		global_position = clamped_pos
-		velocity = Vector2.ZERO  # Stop movement when hitting boundary
+		velocity = Vector2.ZERO # Stop movement when hitting boundary
 
 	# Turret pickup/placement system
 	turret_handler.process(delta)
@@ -125,6 +132,9 @@ func _physics_process(delta: float) -> void:
 		sprite.modulate.a = 0.5 if fmod(Time.get_ticks_msec(), 100) < 50 else 1.0
 	else:
 		sprite.modulate.a = 1.0
+
+	# Health regeneration
+	update_heal_timer()
 
 # Temporary facades for tests (will be removed later)
 var facing_direction: int:
@@ -274,6 +284,35 @@ func reset_health() -> void:
 
 func get_health_percent() -> float:
 	return current_health / max_health
+
+
+## Update heal timer based on current health regen
+func update_heal_timer() -> void:
+	var interval := Globals.get_heal_interval()
+	
+	# No regen or at full health - stop timer
+	if interval < 0 or current_health >= max_health:
+		if not heal_timer.is_stopped():
+			heal_timer.stop()
+		return
+	
+	# Start or update timer
+	if heal_timer.is_stopped():
+		heal_timer.wait_time = interval
+		heal_timer.start()
+	elif not is_equal_approx(heal_timer.wait_time, interval):
+		# Regen value changed, update timer
+		heal_timer.wait_time = interval
+
+
+func _on_heal_timer_timeout() -> void:
+	if current_health < max_health:
+		heal(GameConstants.PLAYER_HEAL_AMOUNT)
+	
+	# Check if we should stop (now at full health)
+	if current_health >= max_health:
+		heal_timer.stop()
+
 
 # =============================================================================
 # DEFENSIVE PULSE SYSTEM

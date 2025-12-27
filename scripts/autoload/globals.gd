@@ -314,6 +314,12 @@ func get_player_luck_display() -> int:
 func get_pickup_radius() -> float:
 	return (_get_player_stats_service()).get_pickup_radius()
 
+func get_player_health_regen() -> int:
+	return (_get_player_stats_service()).get_player_health_regen()
+
+func get_heal_interval() -> float:
+	return (_get_player_stats_service()).get_heal_interval()
+
 # =============================================================================
 # TURRET STATS SERVICE FORWARDS
 # =============================================================================

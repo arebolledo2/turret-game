@@ -56,6 +56,16 @@ func update_display() -> void:
 	health_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(health_label)
 
+	# Health Regen (only show if > 0)
+	var health_regen := Globals.get_player_health_regen()
+	if health_regen > 0:
+		var regen_label := Label.new()
+		regen_label.text = "💚 Regen: +%d" % health_regen
+		regen_label.add_theme_color_override("font_color", Color.GREEN)
+		regen_label.add_theme_font_override("font", MAIN_FONT)
+		regen_label.add_theme_font_size_override("font_size", 15)
+		player_stats_vbox.add_child(regen_label)
+
 	# Speed stat with base/modified
 	var speed_stat := BuildDisplayUIScript.format_stat_with_modifier("⚡ Speed", BASE_SPEED, modified_speed, "%.0f", true)
 	var speed_label := Label.new()

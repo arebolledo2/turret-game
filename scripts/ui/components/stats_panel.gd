@@ -61,6 +61,11 @@ func _update_player_stats() -> void:
 		health_label.add_theme_color_override("font_color", Color.GREEN)
 	player_section.add_child(health_label)
 
+	# Health Regen (only show if > 0)
+	var health_regen := Globals.get_player_health_regen()
+	if health_regen > 0:
+		player_section.add_child(_create_label("💚 Regen: +%d" % health_regen, 16, Color.GREEN))
+
 	# Speed
 	var speed_stat := BuildDisplayUIScript.format_stat_with_modifier("⚡ Speed", BASE_SPEED, modified_speed, "%.0f", true)
 	var speed_label := _create_label(speed_stat["text"], 16, speed_stat["color"])

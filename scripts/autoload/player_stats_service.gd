@@ -69,3 +69,19 @@ func roll_player_crit() -> bool:
 ## Calculate crit damage
 func calculate_player_crit_damage(base_damage: float) -> float:
 	return base_damage * get_player_crit_multiplier()
+
+
+## Get player health regen with modifiers applied (whole number)
+func get_player_health_regen() -> int:
+	var modified := _get_modifier_service().apply_modifiers_to_stat(
+		float(GameConstants.PLAYER_BASE_HEALTH_REGEN), "player_health_regen"
+	)
+	return int(modified)
+
+
+## Get healing interval in seconds (-1 if no healing)
+func get_heal_interval() -> float:
+	var regen := get_player_health_regen()
+	if regen <= 0:
+		return -1.0
+	return GameConstants.PLAYER_BASE_HEAL_INTERVAL / float(regen)

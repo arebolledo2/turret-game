@@ -33,6 +33,11 @@ const PLAYER_MELEE_COOLDOWN: float = 1.4 # Decreased speed by 50% (doubled coold
 const PLAYER_MELEE_WINDUP_TIME: float = 0.15
 const PLAYER_MELEE_ANIMATION_DURATION: float = 0.15
 
+# Health Regeneration
+const PLAYER_BASE_HEALTH_REGEN: int = 0 # Whole number, 0 = no healing
+const PLAYER_BASE_HEAL_INTERVAL: float = 10.0 # Seconds at regen=1
+const PLAYER_HEAL_AMOUNT: float = 1.0 # HP per healing pip
+
 # =============================================================================
 # KNOCKBACK
 # =============================================================================
@@ -46,10 +51,10 @@ const KNOCKBACK_MIN_VELOCITY: float = 5.0 # Stop when below this
 # =============================================================================
 # CRITICAL HIT SYSTEM
 # =============================================================================
-const PLAYER_BASE_CRIT_CHANCE: float = 0.05  # 5%
-const PLAYER_BASE_CRIT_MULTIPLIER: float = 2.0  # 200% damage (100% bonus)
-const TURRET_BASE_CRIT_CHANCE: float = 0.05  # 5%
-const TURRET_BASE_CRIT_MULTIPLIER: float = 2.0  # 200% damage (100% bonus)
+const PLAYER_BASE_CRIT_CHANCE: float = 0.05 # 5%
+const PLAYER_BASE_CRIT_MULTIPLIER: float = 2.0 # 200% damage (100% bonus)
+const TURRET_BASE_CRIT_CHANCE: float = 0.05 # 5%
+const TURRET_BASE_CRIT_MULTIPLIER: float = 2.0 # 200% damage (100% bonus)
 
 # =============================================================================
 # TURRET

@@ -181,7 +181,7 @@ func test_get_player_luck_clamped_to_max():
 	modifier_service.add_modifier({
 		"stat": "player_luck",
 		"operation": "add",
-		"value": 0.5,  # 1.8 + 0.5 = 2.3, should clamp to 2.0
+		"value": 0.5, # 1.8 + 0.5 = 2.3, should clamp to 2.0
 		"source": "luck_item"
 	})
 	var luck = player_stats_service.get_player_luck()
@@ -194,7 +194,7 @@ func test_get_player_luck_clamped_to_zero():
 	modifier_service.add_modifier({
 		"stat": "player_luck",
 		"operation": "add",
-		"value": -0.2,
+		"value": - 0.2,
 		"source": "luck_penalty"
 	})
 	var luck = player_stats_service.get_player_luck()
@@ -326,3 +326,41 @@ func test_luck_display_rounds_down():
 	var display = player_stats_service.get_player_luck_display()
 	assert_eq(display, 15,
 		"Should round down 15.9 to 15")
+
+
+# =============================================================================
+# HEALTH REGEN
+# =============================================================================
+
+func test_get_player_health_regen_base():
+	var regen = player_stats_service.get_player_health_regen()
+	assert_eq(regen, GameConstants.PLAYER_BASE_HEALTH_REGEN,
+		"Should return base health regen (0)")
+
+
+func test_get_player_health_regen_with_modifier():
+	modifier_service.add_modifier({
+		"stat": "player_health_regen",
+		"operation": "add",
+		"value": 2.0,
+		"source": "regen_item"
+	})
+	var regen = player_stats_service.get_player_health_regen()
+	assert_eq(regen, 2, "Should apply regen modifier and return int")
+
+
+func test_get_heal_interval_no_regen():
+	var interval = player_stats_service.get_heal_interval()
+	assert_eq(interval, -1.0, "No healing when regen is 0")
+
+
+func test_get_heal_interval_with_regen():
+	modifier_service.add_modifier({
+		"stat": "player_health_regen",
+		"operation": "add",
+		"value": 2.0,
+		"source": "regen_item"
+	})
+	var interval = player_stats_service.get_heal_interval()
+	var expected = GameConstants.PLAYER_BASE_HEAL_INTERVAL / 2.0
+	assert_eq(interval, expected, "Should calculate interval from regen (10.0 / 2 = 5.0)")
