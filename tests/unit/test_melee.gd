@@ -7,7 +7,7 @@ extends GutTest
 
 
 func before_each() -> void:
-	Globals.reset_stats()
+	GameStateService.reset_state()
 
 
 # =============================================================================

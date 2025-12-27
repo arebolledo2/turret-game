@@ -14,13 +14,13 @@ func before_all() -> void:
 
 
 func before_each() -> void:
-	Globals.reset_stats()
-	Globals.current_difficulty = GameEnums.Difficulty.EASY
-	Globals.current_wave = 1
-	Globals.total_gold = Globals.STARTING_GOLD
-	Globals.shop_reroll_count = 0
+	GameStateService.reset_state()
+	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
+	GameStateService.current_wave = 1
+	EconomyService.total_gold = GameConstants.STARTING_GOLD
+	EconomyService.shop_reroll_count = 0
 	EconomyService.current_shop_offers.clear()
-	Globals.pending_turret_purchases.clear()
+	EconomyService.pending_turret_purchases.clear()
 	# Create a fresh instance for each test
 	shop_manager = _shop_manager_script.new()
 	add_child_autofree(shop_manager)
@@ -141,7 +141,7 @@ func test_generate_offers_clears_previous():
 # =============================================================================
 
 func test_turret_price_wave_1():
-	Globals.current_wave = 1
+	GameStateService.current_wave = 1
 	
 	# Shop V2: Generate offers multiple times to ensure we get a turret
 	var found_turret = false
@@ -150,8 +150,8 @@ func test_turret_price_wave_1():
 		for offer in EconomyService.current_shop_offers:
 			if offer["type"] == "turret":
 				var base_price = TurretRegistry.get_base_price(offer["turret_id"])
-				var expected_wave_mult = 1.0 + Globals.WAVE_PRICE_SCALE * 1
-				var expected_penalty_mult = 1.0 + Globals.get_turret_purchase_penalty() * Globals.turrets_purchased
+				var expected_wave_mult = 1.0 + GameConstants.WAVE_PRICE_SCALE * 1
+				var expected_penalty_mult = 1.0 + EconomyService.get_turret_purchase_penalty() * TurretStatsService.turrets_purchased
 				var expected = int(base_price * expected_wave_mult * expected_penalty_mult)
 				assert_eq(offer["price"], expected,
 					"Wave 1 turret price should include wave and penalty multipliers")
@@ -164,7 +164,7 @@ func test_turret_price_wave_1():
 
 
 func test_turret_price_scales_with_wave():
-	Globals.current_wave = 5
+	GameStateService.current_wave = 5
 
 	# Shop V2: Generate offers multiple times to ensure we get a turret
 	var found_turret = false
@@ -173,8 +173,8 @@ func test_turret_price_scales_with_wave():
 		for offer in EconomyService.current_shop_offers:
 			if offer["type"] == "turret":
 				var base_price = TurretRegistry.get_base_price(offer["turret_id"])
-				var expected_wave_mult = 1.0 + Globals.WAVE_PRICE_SCALE * 5
-				var expected_penalty_mult = 1.0 + Globals.get_turret_purchase_penalty() * Globals.turrets_purchased
+				var expected_wave_mult = 1.0 + GameConstants.WAVE_PRICE_SCALE * 5
+				var expected_penalty_mult = 1.0 + EconomyService.get_turret_purchase_penalty() * TurretStatsService.turrets_purchased
 				var expected = int(base_price * expected_wave_mult * expected_penalty_mult)
 				assert_eq(offer["price"], expected,
 					"Wave 5 turret price should include wave and penalty multipliers")
@@ -191,11 +191,11 @@ func test_calculate_turret_price_formula():
 	# Shop V2: Price includes wave scaling + turret purchase penalty
 	var base_price = 100
 	var wave = 3
-	Globals.turrets_purchased = 2  # Simulate having bought 2 turrets
+	TurretStatsService.turrets_purchased = 2  # Simulate having bought 2 turrets
 
-	var wave_mult = 1.0 + Globals.WAVE_PRICE_SCALE * wave
-	# Use Globals.get_turret_purchase_penalty() as shop_manager does (can be modified by items)
-	var penalty_mult = 1.0 + Globals.get_turret_purchase_penalty() * Globals.turrets_purchased
+	var wave_mult = 1.0 + GameConstants.WAVE_PRICE_SCALE * wave
+	# Use EconomyService.get_turret_purchase_penalty() as shop_manager does (can be modified by items)
+	var penalty_mult = 1.0 + EconomyService.get_turret_purchase_penalty() * TurretStatsService.turrets_purchased
 	var expected = int(base_price * wave_mult * penalty_mult)
 
 	var result = shop_manager.calculate_turret_price(base_price, wave)
@@ -203,13 +203,13 @@ func test_calculate_turret_price_formula():
 
 
 func test_item_price_scales_with_wave():
-	Globals.current_wave = 5
+	GameStateService.current_wave = 5
 	shop_manager.generate_offers()
 
 	for offer in EconomyService.current_shop_offers:
 		if offer["type"] == "item":
 			var base_price = ItemRegistry.get_item_price(offer["item_id"])
-			var expected = int(base_price * (1.0 + Globals.WAVE_PRICE_SCALE * 5))
+			var expected = int(base_price * (1.0 + GameConstants.WAVE_PRICE_SCALE * 5))
 			assert_eq(offer["price"], expected,
 				"Item price should scale with wave")
 
@@ -219,7 +219,7 @@ func test_item_price_scales_with_wave():
 # =============================================================================
 
 func test_purchase_turret_success():
-	Globals.total_gold = 500
+	EconomyService.total_gold = 500
 	shop_manager.generate_offers()
 
 	var result = shop_manager.purchase_offer(0)
@@ -228,18 +228,18 @@ func test_purchase_turret_success():
 
 
 func test_purchase_turret_deducts_gold():
-	Globals.total_gold = 500
+	EconomyService.total_gold = 500
 	shop_manager.generate_offers()
 	var price = EconomyService.current_shop_offers[0]["price"]
 
 	shop_manager.purchase_offer(0)
 
-	assert_eq(Globals.total_gold, 500 - price,
+	assert_eq(EconomyService.total_gold, 500 - price,
 		"Purchase should deduct correct gold amount")
 
 
 func test_purchase_turret_marks_sold():
-	Globals.total_gold = 500
+	EconomyService.total_gold = 500
 	shop_manager.generate_offers()
 
 	shop_manager.purchase_offer(0)
@@ -249,7 +249,7 @@ func test_purchase_turret_marks_sold():
 
 
 func test_purchase_turret_adds_to_pending():
-	Globals.total_gold = 500
+	EconomyService.total_gold = 500
 	
 	# Shop V2: Generate offers multiple times to ensure we get a turret
 	var turret_index = -1
@@ -266,7 +266,7 @@ func test_purchase_turret_adds_to_pending():
 	
 	if turret_index >= 0:
 		shop_manager.purchase_offer(turret_index)
-		assert_has(Globals.pending_turret_purchases, turret_id,
+		assert_has(EconomyService.pending_turret_purchases, turret_id,
 			"Purchased turret should be added to pending purchases")
 	else:
 		# This shouldn't happen with 35% turret chance over 10 generations
@@ -274,7 +274,7 @@ func test_purchase_turret_adds_to_pending():
 
 
 func test_purchase_insufficient_funds():
-	Globals.total_gold = 1  # Very low gold
+	EconomyService.total_gold = 1  # Very low gold
 	shop_manager.generate_offers()
 
 	var result = shop_manager.purchase_offer(0)
@@ -283,30 +283,30 @@ func test_purchase_insufficient_funds():
 
 
 func test_purchase_insufficient_funds_keeps_gold():
-	Globals.total_gold = 1
+	EconomyService.total_gold = 1
 	shop_manager.generate_offers()
 
 	shop_manager.purchase_offer(0)
 
-	assert_eq(Globals.total_gold, 1, "Failed purchase should not deduct gold")
+	assert_eq(EconomyService.total_gold, 1, "Failed purchase should not deduct gold")
 
 
 func test_purchase_already_sold_fails():
-	Globals.total_gold = 1000
+	EconomyService.total_gold = 1000
 	shop_manager.generate_offers()
 
 	shop_manager.purchase_offer(0)
-	var gold_after_first = Globals.total_gold
+	var gold_after_first = EconomyService.total_gold
 
 	var result = shop_manager.purchase_offer(0)
 
 	assert_false(result, "Cannot purchase already sold offer")
-	assert_eq(Globals.total_gold, gold_after_first,
+	assert_eq(EconomyService.total_gold, gold_after_first,
 		"Failed purchase should not deduct gold")
 
 
 func test_purchase_invalid_index_negative():
-	Globals.total_gold = 500
+	EconomyService.total_gold = 500
 	shop_manager.generate_offers()
 
 	var result = shop_manager.purchase_offer(-1)
@@ -315,7 +315,7 @@ func test_purchase_invalid_index_negative():
 
 
 func test_purchase_invalid_index_too_high():
-	Globals.total_gold = 500
+	EconomyService.total_gold = 500
 	shop_manager.generate_offers()
 
 	var result = shop_manager.purchase_offer(100)
@@ -328,7 +328,7 @@ func test_purchase_invalid_index_too_high():
 # =============================================================================
 
 func test_purchase_item_adds_to_collected():
-	Globals.total_gold = 500
+	EconomyService.total_gold = 500
 	shop_manager.generate_offers()
 
 	# Find item offer
@@ -342,15 +342,15 @@ func test_purchase_item_adds_to_collected():
 
 	if item_index >= 0:
 		shop_manager.purchase_offer(item_index)
-		assert_has(Globals.collected_items, item_id,
+		assert_has(ItemTrackingService.collected_items, item_id,
 			"Purchased item should be added to collected items")
 
 
 func test_purchase_item_adds_modifiers():
-	Globals.total_gold = 500
+	EconomyService.total_gold = 500
 	shop_manager.generate_offers()
 
-	var initial_modifier_count = Globals.active_modifiers.size()
+	var initial_modifier_count = ModifierService.active_modifiers.size()
 
 	# Find item offer
 	var item_index = -1
@@ -365,7 +365,7 @@ func test_purchase_item_adds_modifiers():
 		return
 	
 	shop_manager.purchase_offer(item_index)
-	assert_gt(Globals.active_modifiers.size(), initial_modifier_count,
+	assert_gt(ModifierService.active_modifiers.size(), initial_modifier_count,
 		"Purchased item should add modifiers")
 
 
@@ -374,21 +374,21 @@ func test_purchase_item_adds_modifiers():
 # =============================================================================
 
 func test_get_reroll_cost_initial():
-	Globals.shop_reroll_count = 0
+	EconomyService.shop_reroll_count = 0
 	var cost = shop_manager.get_reroll_cost()
 
-	var expected = Globals.REROLL_BASE_COST + (Globals.REROLL_COST_INCREMENT * 0)
+	var expected = GameConstants.REROLL_BASE_COST + (GameConstants.REROLL_COST_INCREMENT * 0)
 	assert_eq(cost, expected, "First reroll should cost base cost")
 
 
 func test_get_reroll_cost_increases():
-	Globals.shop_reroll_count = 0
+	EconomyService.shop_reroll_count = 0
 	var cost0 = shop_manager.get_reroll_cost()
 
-	Globals.shop_reroll_count = 1
+	EconomyService.shop_reroll_count = 1
 	var cost1 = shop_manager.get_reroll_cost()
 
-	Globals.shop_reroll_count = 2
+	EconomyService.shop_reroll_count = 2
 	var cost2 = shop_manager.get_reroll_cost()
 
 	assert_lt(cost0, cost1, "Reroll cost should increase")
@@ -397,14 +397,14 @@ func test_get_reroll_cost_increases():
 
 func test_get_reroll_cost_formula():
 	for i in range(5):
-		Globals.shop_reroll_count = i
+		EconomyService.shop_reroll_count = i
 		var cost = shop_manager.get_reroll_cost()
-		var expected = Globals.REROLL_BASE_COST + (Globals.REROLL_COST_INCREMENT * i)
+		var expected = GameConstants.REROLL_BASE_COST + (GameConstants.REROLL_COST_INCREMENT * i)
 		assert_eq(cost, expected, "Reroll %d cost should be %d" % [i, expected])
 
 
 func test_reroll_shop_success():
-	Globals.total_gold = 100
+	EconomyService.total_gold = 100
 	shop_manager.generate_offers()
 
 	var result = shop_manager.reroll_shop()
@@ -413,29 +413,29 @@ func test_reroll_shop_success():
 
 
 func test_reroll_shop_deducts_gold():
-	Globals.total_gold = 100
-	Globals.shop_reroll_count = 0
+	EconomyService.total_gold = 100
+	EconomyService.shop_reroll_count = 0
 	shop_manager.generate_offers()
 
 	var reroll_cost = shop_manager.get_reroll_cost()
 	shop_manager.reroll_shop()
 
-	assert_eq(Globals.total_gold, 100 - reroll_cost,
+	assert_eq(EconomyService.total_gold, 100 - reroll_cost,
 		"Reroll should deduct correct gold amount")
 
 
 func test_reroll_shop_increments_count():
-	Globals.total_gold = 100
-	Globals.shop_reroll_count = 0
+	EconomyService.total_gold = 100
+	EconomyService.shop_reroll_count = 0
 	shop_manager.generate_offers()
 
 	shop_manager.reroll_shop()
 
-	assert_eq(Globals.shop_reroll_count, 1, "Reroll count should increment")
+	assert_eq(EconomyService.shop_reroll_count, 1, "Reroll count should increment")
 
 
 func test_reroll_shop_generates_new_offers():
-	Globals.total_gold = 100
+	EconomyService.total_gold = 100
 	shop_manager.generate_offers()
 	var old_offers = EconomyService.current_shop_offers.duplicate(true)
 
@@ -447,7 +447,7 @@ func test_reroll_shop_generates_new_offers():
 
 
 func test_reroll_insufficient_funds():
-	Globals.total_gold = 0
+	EconomyService.total_gold = 0
 	shop_manager.generate_offers()
 
 	var result = shop_manager.reroll_shop()
@@ -456,8 +456,8 @@ func test_reroll_insufficient_funds():
 
 
 func test_can_afford_reroll_with_gold():
-	Globals.total_gold = 100
-	Globals.shop_reroll_count = 0
+	EconomyService.total_gold = 100
+	EconomyService.shop_reroll_count = 0
 
 	var result = shop_manager.can_afford_reroll()
 
@@ -465,8 +465,8 @@ func test_can_afford_reroll_with_gold():
 
 
 func test_can_afford_reroll_without_gold():
-	Globals.total_gold = 0
-	Globals.shop_reroll_count = 0
+	EconomyService.total_gold = 0
+	EconomyService.shop_reroll_count = 0
 
 	var result = shop_manager.can_afford_reroll()
 
@@ -478,7 +478,7 @@ func test_can_afford_reroll_without_gold():
 # =============================================================================
 
 func test_purchase_emits_gold_spent_signal():
-	Globals.total_gold = 500
+	EconomyService.total_gold = 500
 	shop_manager.generate_offers()
 	watch_signals(Events)
 
@@ -488,7 +488,7 @@ func test_purchase_emits_gold_spent_signal():
 
 
 func test_purchase_emits_shop_purchase_made_signal():
-	Globals.total_gold = 500
+	EconomyService.total_gold = 500
 	shop_manager.generate_offers()
 	watch_signals(Events)
 
@@ -498,7 +498,7 @@ func test_purchase_emits_shop_purchase_made_signal():
 
 
 func test_insufficient_funds_emits_signal():
-	Globals.total_gold = 1
+	EconomyService.total_gold = 1
 	shop_manager.generate_offers()
 	watch_signals(Events)
 
@@ -508,7 +508,7 @@ func test_insufficient_funds_emits_signal():
 
 
 func test_reroll_emits_gold_spent_signal():
-	Globals.total_gold = 100
+	EconomyService.total_gold = 100
 	shop_manager.generate_offers()
 	watch_signals(Events)
 
@@ -518,7 +518,7 @@ func test_reroll_emits_gold_spent_signal():
 
 
 func test_reroll_emits_shop_rerolled_signal():
-	Globals.total_gold = 100
+	EconomyService.total_gold = 100
 	shop_manager.generate_offers()
 	watch_signals(Events)
 
@@ -540,7 +540,7 @@ func test_generate_offers_emits_signal():
 # =============================================================================
 
 func test_multiple_purchases_in_one_shop():
-	Globals.total_gold = 2000
+	EconomyService.total_gold = 2000
 	shop_manager.generate_offers()
 
 	# Buy all offers
@@ -559,16 +559,16 @@ func test_multiple_purchases_in_one_shop():
 func test_gold_exactly_enough():
 	shop_manager.generate_offers()
 	var price = EconomyService.current_shop_offers[0]["price"]
-	Globals.total_gold = price
+	EconomyService.total_gold = price
 
 	var result = shop_manager.purchase_offer(0)
 
 	assert_true(result, "Should be able to purchase with exact gold amount")
-	assert_eq(Globals.total_gold, 0, "Should have zero gold after purchase")
+	assert_eq(EconomyService.total_gold, 0, "Should have zero gold after purchase")
 
 
 func test_reroll_then_purchase():
-	Globals.total_gold = 500
+	EconomyService.total_gold = 500
 	shop_manager.generate_offers()
 
 	# Reroll

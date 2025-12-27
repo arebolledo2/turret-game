@@ -23,13 +23,13 @@ func test_spawn_alert_time_defined():
 # =============================================================================
 
 func test_spawn_chance_reasonable():
-	var chance = Globals.TECH_DROP_SPAWN_CHANCE
+	var chance = GameConstants.TECH_DROP_SPAWN_CHANCE
 	assert_gt(chance, 0.0, "Spawn chance should be positive")
 	assert_lt(chance, 1.0, "Spawn chance should be less than 100%")
 
 
 func test_spawn_interval_reasonable():
-	var interval = Globals.TECH_DROP_SPAWN_INTERVAL
+	var interval = GameConstants.TECH_DROP_SPAWN_INTERVAL
 	assert_gt(interval, 0.0, "Spawn interval should be positive")
 	assert_lte(interval, 30.0, "Spawn interval should be reasonable")
 
@@ -61,18 +61,18 @@ func test_spawn_margin_within_arena():
 # =============================================================================
 
 func test_tech_drop_xp_reward_positive():
-	var xp = Globals.TECH_DROP_XP_REWARD
+	var xp = GameConstants.TECH_DROP_XP_REWARD
 	assert_gt(xp, 0, "XP reward should be positive")
 
 
 func test_tech_drop_base_health_positive():
-	var health = Globals.TECH_DROP_BASE_HEALTH
+	var health = GameConstants.TECH_DROP_BASE_HEALTH
 	assert_gt(health, 0.0, "Base health should be positive")
 
 
 func test_tech_drop_scatter_configuration():
-	var count = Globals.TECH_DROP_SCATTER_COUNT
-	var radius = Globals.TECH_DROP_SCATTER_RADIUS
+	var count = GameConstants.TECH_DROP_SCATTER_COUNT
+	var radius = GameConstants.TECH_DROP_SCATTER_RADIUS
 	
 	assert_gt(count, 0, "Scatter count should be positive")
 	assert_gt(radius, 0.0, "Scatter radius should be positive")

@@ -15,8 +15,8 @@ func before_all() -> void:
 
 
 func before_each() -> void:
-	Globals.reset_stats()
-	Globals.current_difficulty = GameEnums.Difficulty.EASY
+	GameStateService.reset_state()
+	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
 
 	main = main_scene.instantiate()
 	add_child_autofree(main)
@@ -52,7 +52,7 @@ func test_game_starts_in_difficulty_select():
 
 
 func test_game_not_active_initially():
-	assert_false(Globals.is_game_active, "Game should not be active at start")
+	assert_false(GameStateService.is_game_active, "Game should not be active at start")
 
 
 # =============================================================================
@@ -74,7 +74,7 @@ func test_start_settings_applied_starts_game():
 	assert_eq(Globals.current_difficulty, GameEnums.Difficulty.MEDIUM,
 		"Difficulty should be set to MEDIUM")
 	assert_signal_emitted(Events, "game_started", "Should emit game_started signal after settings applied")
-	assert_true(Globals.is_game_active, "Game should be active after settings applied")
+	assert_true(GameStateService.is_game_active, "Game should be active after settings applied")
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_ANNOUNCEMENT,
 		"Game should be in WAVE_ANNOUNCEMENT state after settings applied")
 
@@ -86,7 +86,7 @@ func test_wave_starts_at_1_after_selection():
 	await _start_game_with_settings()
 
 	# Wave is set to 1 when wave announcement starts (incremented in start_wave_announcement)
-	assert_eq(Globals.current_wave, 1, "Wave should be 1 after game starts")
+	assert_eq(GameStateService.current_wave, 1, "Wave should be 1 after game starts")
 
 
 # =============================================================================
@@ -194,7 +194,7 @@ func test_game_deactivates_on_player_death():
 	Events.player_died.emit()
 	await get_tree().process_frame
 
-	assert_false(Globals.is_game_active, "Game should be inactive after death")
+	assert_false(GameStateService.is_game_active, "Game should be inactive after death")
 
 
 # =============================================================================
@@ -204,10 +204,10 @@ func test_game_deactivates_on_player_death():
 func test_time_survived_increments():
 	await _start_game_with_settings()
 
-	Globals.time_survived = 0.0
+	GameStateService.time_survived = 0.0
 
 	# Process some frames while game is active
 	for i in range(10):
 		await get_tree().process_frame
 
-	assert_gt(Globals.time_survived, 0.0, "Time survived should increment during game")
+	assert_gt(GameStateService.time_survived, 0.0, "Time survived should increment during game")

@@ -14,10 +14,10 @@ func before_all() -> void:
 
 
 func before_each() -> void:
-	Globals.reset_stats()
-	Globals.current_difficulty = GameEnums.Difficulty.EASY
-	Globals.current_wave = 1
-	Globals.is_game_active = true
+	GameStateService.reset_state()
+	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
+	GameStateService.current_wave = 1
+	GameStateService.is_game_active = true
 	# Set rectangular arena mode for consistent test expectations
 	GameModeService.set_mode(GameEnums.GameMode.ARENA_RECTANGULAR)
 

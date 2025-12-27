@@ -4,8 +4,8 @@ extends GutTest
 ## Focus on data/configuration rather than full integration behavior
 
 func before_each():
-	Globals.reset_stats()
-	Globals.active_modifiers.clear()
+	GameStateService.reset_state()
+	ModifierService.active_modifiers.clear()
 
 
 # =============================================================================
@@ -87,7 +87,7 @@ func test_shock_turret_is_aoe_electric():
 # =============================================================================
 
 func test_modifier_affects_matching_turret():
-	Globals.add_modifier({
+	ModifierService.add_modifier({
 		"id": "test_fire_boost",
 		"stat": "damage",
 		"operation": "multiply",
@@ -97,13 +97,13 @@ func test_modifier_affects_matching_turret():
 	
 	var fire_stats = Globals.get_turret_stats("fire")
 	var base_damage = TurretRegistry.get_base_stats("fire")["damage"]
-	var expected = base_damage * Globals.get_difficulty_config()["turret_damage_mult"] * 1.5
+	var expected = base_damage * DifficultyService.get_config()["turret_damage_mult"] * 1.5
 	
 	assert_almost_eq(fire_stats["damage"], expected, 0.01, "Fire damage should be boosted 50%")
 
 
 func test_modifier_does_not_affect_unmatched_turret():
-	Globals.add_modifier({
+	ModifierService.add_modifier({
 		"id": "test_fire_boost",
 		"stat": "damage",
 		"operation": "multiply",
@@ -113,13 +113,13 @@ func test_modifier_does_not_affect_unmatched_turret():
 	
 	var normal_stats = Globals.get_turret_stats("normal")
 	var base_damage = TurretRegistry.get_base_stats("normal")["damage"]
-	var expected = base_damage * Globals.get_difficulty_config()["turret_damage_mult"]
+	var expected = base_damage * DifficultyService.get_config()["turret_damage_mult"]
 	
 	assert_almost_eq(normal_stats["damage"], expected, 0.01, "Normal damage should NOT be boosted")
 
 
 func test_add_modifier_for_chain():
-	Globals.add_modifier({
+	ModifierService.add_modifier({
 		"id": "test_chain_boost",
 		"stat": "chain_count",
 		"operation": "add",
@@ -134,7 +134,7 @@ func test_add_modifier_for_chain():
 
 
 func test_remove_modifier():
-	Globals.add_modifier({
+	ModifierService.add_modifier({
 		"id": "temp_boost",
 		"stat": "damage",
 		"operation": "multiply",
@@ -143,19 +143,19 @@ func test_remove_modifier():
 	})
 	
 	var before = Globals.get_turret_stats("normal")["damage"]
-	Globals.remove_modifier("temp_boost")
+	ModifierService.remove_modifier("temp_boost")
 	var after = Globals.get_turret_stats("normal")["damage"]
 	
 	assert_lt(after, before, "Damage should decrease after removing boost")
 
 
 func test_clear_modifiers():
-	Globals.add_modifier({"id": "m1", "stat": "damage", "operation": "add", "value": 10, "filter": {}})
-	Globals.add_modifier({"id": "m2", "stat": "range", "operation": "add", "value": 50, "filter": {}})
+	ModifierService.add_modifier({"id": "m1", "stat": "damage", "operation": "add", "value": 10, "filter": {}})
+	ModifierService.add_modifier({"id": "m2", "stat": "range", "operation": "add", "value": 50, "filter": {}})
 	
-	Globals.clear_modifiers()
+	ModifierService.clear_modifiers()
 	
-	assert_eq(Globals.active_modifiers.size(), 0, "All modifiers should be cleared")
+	assert_eq(ModifierService.active_modifiers.size(), 0, "All modifiers should be cleared")
 
 
 # =============================================================================

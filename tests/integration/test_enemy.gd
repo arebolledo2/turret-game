@@ -14,9 +14,9 @@ func before_all() -> void:
 
 
 func before_each() -> void:
-	Globals.reset_stats()
-	Globals.current_difficulty = GameEnums.Difficulty.EASY
-	Globals.is_game_active = true
+	GameStateService.reset_state()
+	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
+	GameStateService.is_game_active = true
 	
 	enemy = enemy_scene.instantiate()
 	add_child_autofree(enemy)
@@ -42,19 +42,19 @@ func test_enemy_initializes_with_wave_scaling():
 func test_enemy_contact_damage_from_globals():
 	enemy.initialize(1)
 	
-	var expected_damage = Globals.ENEMY_CONTACT_DAMAGE
+	var expected_damage = GameConstants.ENEMY_BASE_CONTACT_DAMAGE
 	assert_eq(enemy.contact_damage, expected_damage, "Contact damage should match Globals")
 
 
 func test_enemy_harder_on_hard_difficulty():
-	Globals.current_difficulty = GameEnums.Difficulty.EASY
+	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
 	enemy.initialize(3)
 	var easy_hp = enemy.max_health
 	
 	# Create new enemy for hard mode
 	var hard_enemy = enemy_scene.instantiate()
 	add_child_autofree(hard_enemy)
-	Globals.current_difficulty = GameEnums.Difficulty.HARD
+	DifficultyService.set_difficulty(GameEnums.Difficulty.HARD)
 	hard_enemy.initialize(3)
 	
 	assert_gt(hard_enemy.max_health, easy_hp, "Hard enemies should have more health")
@@ -104,16 +104,16 @@ func test_enemy_emits_xp_dropped_signal_on_death():
 
 
 func test_enemy_increments_kill_counter():
-	Globals.total_kills = 0
+	GameStateService.total_kills = 0
 	enemy.initialize(1)
 	
 	enemy.take_damage(1000)
 	
-	assert_eq(Globals.total_kills, 1, "Kill counter should increment")
+	assert_eq(GameStateService.total_kills, 1, "Kill counter should increment")
 
 
 func test_multiple_kills_increment_counter():
-	Globals.total_kills = 0
+	GameStateService.total_kills = 0
 	
 	for i in range(3):
 		var e = enemy_scene.instantiate()
@@ -121,7 +121,7 @@ func test_multiple_kills_increment_counter():
 		e.initialize(1)
 		e.take_damage(1000)
 	
-	assert_eq(Globals.total_kills, 3, "Kill counter should be 3 after 3 kills")
+	assert_eq(GameStateService.total_kills, 3, "Kill counter should be 3 after 3 kills")
 
 
 # =============================================================================

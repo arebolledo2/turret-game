@@ -16,9 +16,9 @@ func before_all() -> void:
 
 
 func before_each() -> void:
-	Globals.reset_stats()
-	Globals.current_difficulty = GameEnums.Difficulty.EASY
-	Globals.is_game_active = true
+	GameStateService.reset_state()
+	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
+	GameStateService.is_game_active = true
 
 	turret = turret_scene.instantiate()
 	add_child_autofree(turret)
@@ -154,13 +154,13 @@ func test_fire_cooldown_disables_can_fire():
 
 func test_turret_damage_reduced_on_hard():
 	# Easy turret damage
-	Globals.current_difficulty = GameEnums.Difficulty.EASY
+	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
 	var easy_turret = turret_scene.instantiate()
 	add_child_autofree(easy_turret)
 	var easy_damage = easy_turret.current_damage
 	
 	# Hard turret damage
-	Globals.current_difficulty = GameEnums.Difficulty.HARD
+	DifficultyService.set_difficulty(GameEnums.Difficulty.HARD)
 	var hard_turret = turret_scene.instantiate()
 	add_child_autofree(hard_turret)
 	var hard_damage = hard_turret.current_damage

@@ -9,7 +9,7 @@ extends GutTest
 func before_each() -> void:
 	# Reset service state
 	LootService.reset()
-	Globals.reset_stats()
+	GameStateService.reset_state()
 	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
 
 

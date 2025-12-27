@@ -16,9 +16,9 @@ func before_all() -> void:
 
 
 func before_each() -> void:
-	Globals.reset_stats()
-	Globals.current_difficulty = GameEnums.Difficulty.EASY
-	Globals.is_game_active = true
+	GameStateService.reset_state()
+	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
+	GameStateService.is_game_active = true
 
 	defense_target = defense_target_scene.instantiate()
 	add_child_autofree(defense_target)

@@ -60,7 +60,7 @@ func test_process_announcement_returns_false_during_timer():
 	wave_controller.start_wave_announcement()
 
 	# Process for half the announcement time
-	var half_time = Globals.WAVE_ANNOUNCEMENT_TIME / 2.0
+	var half_time = GameConstants.WAVE_ANNOUNCEMENT_TIME / 2.0
 	var done = wave_controller.process_announcement(half_time)
 
 	assert_false(done, "Should return false while announcement timer is running")
@@ -70,7 +70,7 @@ func test_process_announcement_returns_true_when_complete():
 	wave_controller.start_wave_announcement()
 
 	# Process for full announcement time
-	var done = wave_controller.process_announcement(Globals.WAVE_ANNOUNCEMENT_TIME + 0.1)
+	var done = wave_controller.process_announcement(GameConstants.WAVE_ANNOUNCEMENT_TIME + 0.1)
 
 	assert_true(done, "Should return true when announcement timer expires")
 
@@ -122,7 +122,7 @@ func test_process_wave_end_returns_false_during_pause():
 	wave_controller.end_wave()
 
 	# Process for half the pause time
-	var half_time = Globals.BETWEEN_WAVE_PAUSE / 2.0
+	var half_time = GameConstants.BETWEEN_WAVE_PAUSE / 2.0
 	var done = wave_controller.process_wave_end(half_time)
 
 	assert_false(done, "Should return false while pause timer is running")
@@ -132,7 +132,7 @@ func test_process_wave_end_returns_true_when_complete():
 	wave_controller.end_wave()
 
 	# Process for full pause time
-	var done = wave_controller.process_wave_end(Globals.BETWEEN_WAVE_PAUSE + 0.1)
+	var done = wave_controller.process_wave_end(GameConstants.BETWEEN_WAVE_PAUSE + 0.1)
 
 	assert_true(done, "Should return true when pause timer expires")
 
@@ -147,12 +147,12 @@ func test_is_final_wave_returns_false_on_wave_1():
 
 
 func test_is_final_wave_returns_true_on_max_wave():
-	GameStateService.current_wave = Globals.MAX_WAVES
+	GameStateService.current_wave = GameConstants.MAX_WAVES
 	assert_true(wave_controller.is_final_wave())
 
 
 func test_is_final_wave_returns_false_before_max():
-	GameStateService.current_wave = Globals.MAX_WAVES - 1
+	GameStateService.current_wave = GameConstants.MAX_WAVES - 1
 	assert_false(wave_controller.is_final_wave())
 
 

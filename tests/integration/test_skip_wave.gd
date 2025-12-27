@@ -13,7 +13,7 @@ func before_all() -> void:
     main_scene = load("res://scenes/main.tscn")
 
 func before_each() -> void:
-    Globals.reset_stats()
+    GameStateService.reset_state()
     main = main_scene.instantiate()
     add_child_autofree(main)
     game_manager = main.get_node("GameManager")

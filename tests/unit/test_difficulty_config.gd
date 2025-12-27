@@ -19,7 +19,7 @@ const REQUIRED_KEYS := [
 ]
 
 func before_each() -> void:
-	Globals.reset_stats()
+	GameStateService.reset_state()
 
 
 # =============================================================================
@@ -101,19 +101,19 @@ func test_player_health_mult_decreases_with_difficulty():
 # =============================================================================
 
 func test_set_difficulty():
-	Globals.set_difficulty(GameEnums.Difficulty.HARD)
+	DifficultyService.set_difficulty(GameEnums.Difficulty.HARD)
 	assert_eq(Globals.current_difficulty, GameEnums.Difficulty.HARD)
 
 
 func test_get_difficulty_config_returns_correct_config():
-	Globals.current_difficulty = GameEnums.Difficulty.MEDIUM
-	var config = Globals.get_difficulty_config()
+	DifficultyService.set_difficulty(GameEnums.Difficulty.MEDIUM)
+	var config = DifficultyService.get_config()
 	
 	assert_eq(config["name"], "Medium", "Should return Medium config")
 
 
 func test_get_difficulty_name():
-	Globals.current_difficulty = GameEnums.Difficulty.HARD
-	var name = Globals.get_difficulty_name()
+	DifficultyService.set_difficulty(GameEnums.Difficulty.HARD)
+	var name = DifficultyService.get_name()
 	
 	assert_eq(name, "Hard", "Should return 'Hard'")

@@ -6,8 +6,8 @@ extends GutTest
 # =============================================================================
 
 func before_each() -> void:
-	Globals.reset_stats()
-	Globals.current_difficulty = GameEnums.Difficulty.EASY
+	GameStateService.reset_state()
+	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
 	SettingsService.reset_state()
 
 
@@ -51,24 +51,24 @@ func test_player_auto_attack_can_be_enabled():
 # =============================================================================
 
 func test_turret_pickup_range_exists():
-	assert_gt(Globals.TURRET_PICKUP_RANGE, 0.0, 
+	assert_gt(GameConstants.TURRET_PICKUP_RANGE, 0.0, 
 		"Turret pickup range should be positive")
 
 
 func test_turret_carry_speed_penalty_exists():
-	assert_gt(Globals.TURRET_CARRY_SPEED_PENALTY, 0.0, 
+	assert_gt(GameConstants.TURRET_CARRY_SPEED_PENALTY, 0.0, 
 		"Speed penalty should be positive")
-	assert_lt(Globals.TURRET_CARRY_SPEED_PENALTY, 1.0, 
+	assert_lt(GameConstants.TURRET_CARRY_SPEED_PENALTY, 1.0, 
 		"Speed penalty should be less than 1.0 (reduces speed)")
 
 
 func test_turret_carry_offset_exists():
-	assert_typeof(Globals.TURRET_CARRY_OFFSET, TYPE_VECTOR2, 
+	assert_typeof(GameConstants.TURRET_CARRY_OFFSET, TYPE_VECTOR2, 
 		"Carry offset should be a Vector2")
 
 
 func test_turret_in_range_indicator_alpha_exists():
-	assert_gte(Globals.TURRET_IN_RANGE_INDICATOR_ALPHA, 0.0, 
+	assert_gte(GameConstants.TURRET_IN_RANGE_INDICATOR_ALPHA, 0.0, 
 		"Indicator alpha should be >= 0")
-	assert_lte(Globals.TURRET_IN_RANGE_INDICATOR_ALPHA, 1.0, 
+	assert_lte(GameConstants.TURRET_IN_RANGE_INDICATOR_ALPHA, 1.0, 
 		"Indicator alpha should be <= 1")

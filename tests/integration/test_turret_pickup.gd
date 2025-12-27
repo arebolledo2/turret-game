@@ -17,9 +17,9 @@ func before_all() -> void:
 
 
 func before_each() -> void:
-	Globals.reset_stats()
-	Globals.current_difficulty = GameEnums.Difficulty.EASY
-	Globals.is_game_active = true
+	GameStateService.reset_state()
+	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
+	GameStateService.is_game_active = true
 	
 	player = player_scene.instantiate()
 	add_child_autofree(player)
@@ -89,7 +89,7 @@ func test_carried_turret_follows_player():
 	player.global_position = Vector2(200, 100)
 	player.update_carried_turret_position()
 	
-	var expected_pos = player.global_position + Globals.TURRET_CARRY_OFFSET
+	var expected_pos = player.global_position + GameConstants.TURRET_CARRY_OFFSET
 	assert_eq(turret.global_position, expected_pos, 
 		"Carried turret should follow player with offset")
 
@@ -100,9 +100,9 @@ func test_carried_turret_follows_player():
 
 func test_speed_penalty_constant_is_reasonable():
 	# Speed penalty should slow player (0.5 to 0.9 is reasonable range)
-	assert_gt(Globals.TURRET_CARRY_SPEED_PENALTY, 0.4, 
+	assert_gt(GameConstants.TURRET_CARRY_SPEED_PENALTY, 0.4, 
 		"Speed penalty shouldn't make player too slow")
-	assert_lt(Globals.TURRET_CARRY_SPEED_PENALTY, 1.0, 
+	assert_lt(GameConstants.TURRET_CARRY_SPEED_PENALTY, 1.0, 
 		"Speed penalty should actually reduce speed")
 
 

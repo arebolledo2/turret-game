@@ -14,12 +14,12 @@ func before_all() -> void:
 
 
 func before_each() -> void:
-	Globals.reset_stats()
-	Globals.current_difficulty = GameEnums.Difficulty.EASY
-	Globals.is_game_active = true
-	Globals.turrets_spawned = 0
-	Globals.turret_counts.clear()
-	Globals.pending_turret_purchases.clear()
+	GameStateService.reset_state()
+	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
+	GameStateService.is_game_active = true
+	GameStateService.turrets_spawned = 0
+	TurretStatsService.turret_counts.clear()
+	EconomyService.pending_turret_purchases.clear()
 
 	# Ensure arena dimensions are set for testing (headless mode may have 0x0 viewport)
 	if ArenaBoundsService.arena_width <= 0:
@@ -134,7 +134,7 @@ func test_find_valid_spawn_position_excludes_player():
 
 	if pos != Vector2.INF:
 		var distance = pos.distance_to(player.global_position)
-		assert_gte(distance, Globals.TURRET_PLAYER_EXCLUSION,
+		assert_gte(distance, GameConstants.TURRET_PLAYER_EXCLUSION,
 			"Spawn position should be outside player exclusion zone")
 
 
@@ -149,7 +149,7 @@ func test_find_valid_spawn_position_excluding_works():
 	if pos != Vector2.INF:
 		for existing in existing_positions:
 			var distance = pos.distance_to(existing)
-			assert_gte(distance, Globals.TURRET_MIN_DISTANCE,
+			assert_gte(distance, GameConstants.TURRET_MIN_DISTANCE,
 				"Should respect minimum distance from existing positions")
 
 
@@ -230,14 +230,14 @@ func test_reposition_turrets_cleans_invalid():
 # =============================================================================
 
 func test_spawn_pending_clears_queue():
-	Globals.pending_turret_purchases.append("normal")
-	Globals.pending_turret_purchases.append("fire")
+	EconomyService.pending_turret_purchases.append("normal")
+	EconomyService.pending_turret_purchases.append("fire")
 
 	# We can't fully test spawning without a scene tree setup,
 	# but we can verify the queue gets cleared
 	# Note: This will fail gracefully if turret_scene is null
 
-	var initial_count = Globals.pending_turret_purchases.size()
+	var initial_count = EconomyService.pending_turret_purchases.size()
 	assert_eq(initial_count, 2, "Should have 2 pending purchases initially")
 
 
@@ -246,17 +246,17 @@ func test_spawn_pending_clears_queue():
 # =============================================================================
 
 func test_turret_player_exclusion_is_positive():
-	assert_gt(Globals.TURRET_PLAYER_EXCLUSION, 0.0,
+	assert_gt(GameConstants.TURRET_PLAYER_EXCLUSION, 0.0,
 		"Player exclusion zone should be positive")
 
 
 func test_turret_min_distance_is_positive():
-	assert_gt(Globals.TURRET_MIN_DISTANCE, 0.0,
+	assert_gt(GameConstants.TURRET_MIN_DISTANCE, 0.0,
 		"Minimum turret distance should be positive")
 
 
 func test_turret_min_distance_less_than_exclusion():
 	# Min distance between turrets should be less than player exclusion
 	# to allow turrets near each other
-	assert_lt(Globals.TURRET_MIN_DISTANCE, Globals.TURRET_PLAYER_EXCLUSION,
+	assert_lt(GameConstants.TURRET_MIN_DISTANCE, GameConstants.TURRET_PLAYER_EXCLUSION,
 		"Turret min distance should be less than player exclusion")
