@@ -158,6 +158,13 @@ func _fire_projectile() -> void:
 	if target == null or projectile_scene == null:
 		return
 
+	# Roll for crit
+	var is_crit := TurretStatsService.roll_turret_crit()
+	var base_damage := float(stats.get("damage", 15.0))
+	var final_damage := base_damage
+	if is_crit:
+		final_damage = TurretStatsService.calculate_turret_crit_damage(base_damage)
+
 	var projectile = projectile_scene.instantiate()
 	var parent = turret.get_tree().current_scene if turret.get_tree().current_scene else turret.get_tree().root
 	parent.add_child(projectile)
@@ -170,17 +177,28 @@ func _fire_projectile() -> void:
 
 	# Calculate direction to target
 	var direction = turret.global_position.direction_to(target.global_position)
-	projectile.setup_extended(stats, direction, true, dtype)
+
+	# Create modified stats with crit damage
+	var modified_stats := stats.duplicate()
+	modified_stats["damage"] = final_damage
+
+	projectile.setup_extended(modified_stats, direction, true, dtype, is_crit)
 
 func _fire_instant() -> void:
 	"""Apply instant hitscan damage to target."""
 	if target == null or not is_instance_valid(target):
 		return
 
+	# Roll for crit
+	var is_crit := TurretStatsService.roll_turret_crit()
+	var base_damage := float(stats.get("damage", 15.0))
+	var final_damage := base_damage
+	if is_crit:
+		final_damage = TurretStatsService.calculate_turret_crit_damage(base_damage)
+
 	# Apply damage immediately
-	var current_damage: float = stats.get("damage", 15.0)
 	if target.has_method("take_damage"):
-		target.take_damage(current_damage)
+		target.take_damage(final_damage, is_crit)
 
 	# Visual tracer
 	_draw_tracer(target.global_position)
@@ -190,7 +208,7 @@ func _fire_aoe_pulse() -> void:
 	var enemies = turret.get_tree().get_nodes_in_group("enemies")
 	var hit_count = 0
 	var current_range: float = stats.get("range", 250.0)
-	var current_damage: float = stats.get("damage", 15.0)
+	var base_damage: float = stats.get("damage", 15.0)
 
 	# Visual pulse
 	_spawn_pulse_effect()
@@ -199,6 +217,12 @@ func _fire_aoe_pulse() -> void:
 	var slow_intensity: float = stats.get("slow_intensity", 0.0)
 	var slow_duration: float = stats.get("slow_duration", 0.0)
 
+	# Roll crit once for entire pulse (all enemies get same crit state)
+	var is_crit := TurretStatsService.roll_turret_crit()
+	var final_damage := base_damage
+	if is_crit:
+		final_damage = TurretStatsService.calculate_turret_crit_damage(base_damage)
+
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
 			continue
@@ -206,7 +230,7 @@ func _fire_aoe_pulse() -> void:
 		var dist = turret.global_position.distance_to(enemy.global_position)
 		if dist <= current_range:
 			if enemy.has_method("take_damage"):
-				enemy.take_damage(current_damage)
+				enemy.take_damage(final_damage, is_crit)
 				hit_count += 1
 
 			# Apply slow effect if configured
@@ -217,7 +241,7 @@ func _fire_aoe_pulse() -> void:
 				enemy.apply_status_effect(dtype, 0.0, slow_duration, 1.0, slow_intensity)
 
 	if hit_count > 0:
-		Events.aoe_explosion.emit(turret.global_position, current_range, current_damage)
+		Events.aoe_explosion.emit(turret.global_position, current_range, final_damage)
 
 func _fire_chain() -> void:
 	"""Fire chain lightning that bounces between enemies."""
@@ -227,9 +251,15 @@ func _fire_chain() -> void:
 	var chain_count = int(stats.get("chain_count", 3))
 	var chain_range = stats.get("chain_range", 150.0)
 	var chain_decay = stats.get("chain_decay", 0.7)
-	var current_damage: float = stats.get("damage", 15.0)
-	var dmg = current_damage
+	var base_damage: float = stats.get("damage", 15.0)
 
+	# Roll crit once for initial hit
+	var is_crit := TurretStatsService.roll_turret_crit()
+	var initial_damage := base_damage
+	if is_crit:
+		initial_damage = TurretStatsService.calculate_turret_crit_damage(base_damage)
+
+	var dmg = initial_damage
 	var current_target = target
 	var hit_enemies = []
 	var last_pos = turret.global_position
@@ -239,9 +269,10 @@ func _fire_chain() -> void:
 		if not is_instance_valid(current_target):
 			break
 
-		# Hit current target
+		# Hit current target (only first hit is crit, subsequent decay from crit damage)
 		if current_target.has_method("take_damage"):
-			current_target.take_damage(dmg)
+			var this_is_crit := (i == 0 and is_crit)  # Only first hit displays as crit
+			current_target.take_damage(dmg, this_is_crit)
 
 		hit_enemies.append(current_target)
 

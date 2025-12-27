@@ -443,7 +443,7 @@ func _on_player_attack_toggled(toggled_on: bool) -> void:
 # =============================================================================
 # DAMAGE NUMBERS
 # =============================================================================
-func _on_damage_dealt(pos: Vector2, amount: float) -> void:
+func _on_damage_dealt(pos: Vector2, amount: float, is_crit: bool = false) -> void:
 	if not Globals.show_damage_numbers:
 		return
 	if damage_number_scene == null:
@@ -452,7 +452,7 @@ func _on_damage_dealt(pos: Vector2, amount: float) -> void:
 	var damage_number = damage_number_scene.instantiate()
 	get_tree().current_scene.add_child(damage_number)
 	damage_number.global_position = pos + Vector2(randf_range(-10, 10), -20)
-	damage_number.setup(amount)
+	damage_number.setup(amount, is_crit)
 
 
 func _on_dot_damage_dealt(pos: Vector2, amount: float) -> void:

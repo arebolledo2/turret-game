@@ -49,3 +49,23 @@ func get_player_luck_display() -> int:
 ## Get pickup radius with modifiers applied
 func get_pickup_radius() -> float:
 	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.PLAYER_PICKUP_RADIUS, "pickup_radius")
+
+
+## Get player crit chance with modifiers applied
+func get_player_crit_chance() -> float:
+	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.PLAYER_BASE_CRIT_CHANCE, "player_crit_chance")
+
+
+## Get player crit multiplier with modifiers applied
+func get_player_crit_multiplier() -> float:
+	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.PLAYER_BASE_CRIT_MULTIPLIER, "player_crit_multiplier")
+
+
+## Roll for critical hit (returns true if crit)
+func roll_player_crit() -> bool:
+	return randf() < get_player_crit_chance()
+
+
+## Calculate crit damage
+func calculate_player_crit_damage(base_damage: float) -> float:
+	return base_damage * get_player_crit_multiplier()

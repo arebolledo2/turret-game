@@ -233,9 +233,13 @@ func _on_melee_hitbox_enemy_hit(enemy: Node2D) -> void:
 
 	melee_hit_enemies.append(enemy)
 
-	# Apply damage
+	# Apply damage with crit roll
 	if enemy.has_method("take_damage"):
-		enemy.take_damage(melee_damage)
+		var is_crit := PlayerStatsService.roll_player_crit()
+		var final_damage := melee_damage
+		if is_crit:
+			final_damage = PlayerStatsService.calculate_player_crit_damage(melee_damage)
+		enemy.take_damage(final_damage, is_crit)
 
 	# Apply knockback (only for enemies, not doors)
 	if enemy.has_method("apply_knockback") and enemy.is_in_group("enemies"):

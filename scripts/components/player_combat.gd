@@ -86,12 +86,18 @@ func fire_at_enemy() -> void:
 	can_fire = false
 	fire_timer.start()
 
+	# Roll for crit
+	var is_crit := PlayerStatsService.roll_player_crit()
+	var final_damage := weapon_damage
+	if is_crit:
+		final_damage = PlayerStatsService.calculate_player_crit_damage(weapon_damage)
+
 	# Create projectile
 	var projectile = projectile_scene.instantiate()
 	player.get_tree().current_scene.add_child(projectile)
 	projectile.global_position = player.global_position
 	var dir = player.global_position.direction_to(closest_enemy.global_position)
-	projectile.setup(dir, projectile_speed, weapon_damage, true)
+	projectile.setup(dir, projectile_speed, final_damage, true, is_crit)
 
 	# Rotate weapon pivot to face enemy
 	weapon_pivot.look_at(closest_enemy.global_position)

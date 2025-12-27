@@ -47,6 +47,26 @@ func turret_has_damage_type(turret_type: String, dtype: GameEnums.DamageType) ->
 	return TurretRegistry.has_damage_type(turret_type, dtype)
 
 
+## Get turret crit chance with modifiers applied
+func get_turret_crit_chance() -> float:
+	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.TURRET_BASE_CRIT_CHANCE, "turret_crit_chance")
+
+
+## Get turret crit multiplier with modifiers applied
+func get_turret_crit_multiplier() -> float:
+	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.TURRET_BASE_CRIT_MULTIPLIER, "turret_crit_multiplier")
+
+
+## Roll for critical hit (returns true if crit)
+func roll_turret_crit() -> bool:
+	return randf() < get_turret_crit_chance()
+
+
+## Calculate crit damage
+func calculate_turret_crit_damage(base_damage: float) -> float:
+	return base_damage * get_turret_crit_multiplier()
+
+
 ## Get total number of turrets owned
 func get_total_turret_count() -> int:
 	var total := 0

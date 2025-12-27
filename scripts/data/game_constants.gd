@@ -44,6 +44,14 @@ const KNOCKBACK_DECAY_RATE: float = 8.0 # Per second
 const KNOCKBACK_MIN_VELOCITY: float = 5.0 # Stop when below this
 
 # =============================================================================
+# CRITICAL HIT SYSTEM
+# =============================================================================
+const PLAYER_BASE_CRIT_CHANCE: float = 0.05  # 5%
+const PLAYER_BASE_CRIT_MULTIPLIER: float = 2.0  # 200% damage (100% bonus)
+const TURRET_BASE_CRIT_CHANCE: float = 0.05  # 5%
+const TURRET_BASE_CRIT_MULTIPLIER: float = 2.0  # 200% damage (100% bonus)
+
+# =============================================================================
 # TURRET
 # =============================================================================
 const TURRET_BASE_DAMAGE: float = 15.0

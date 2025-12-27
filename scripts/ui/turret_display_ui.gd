@@ -129,6 +129,24 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 			nodes["dps_label"].text = "• DPS: %.1f (eff: %.1f)" % [base_dps, effective_dps]
 		nodes["dps_label"].add_theme_color_override("font_color", Color(1, 0.84, 0, 1))
 
+	# Crit Chance
+	if nodes.has("crit_chance_label") and nodes["crit_chance_label"]:
+		nodes["crit_chance_label"].add_theme_font_override("font", MAIN_FONT)
+		var base_crit_chance := GameConstants.TURRET_BASE_CRIT_CHANCE * 100.0
+		var mod_crit_chance := TurretStatsService.get_turret_crit_chance() * 100.0
+		var crit_chance_stat := UIHelpers.format_stat_with_modifier("Crit Chance", base_crit_chance, mod_crit_chance, "%.1f%%", true)
+		nodes["crit_chance_label"].text = "• " + crit_chance_stat["text"]
+		nodes["crit_chance_label"].add_theme_color_override("font_color", crit_chance_stat["color"])
+
+	# Crit Multiplier
+	if nodes.has("crit_mult_label") and nodes["crit_mult_label"]:
+		nodes["crit_mult_label"].add_theme_font_override("font", MAIN_FONT)
+		var base_crit_mult := GameConstants.TURRET_BASE_CRIT_MULTIPLIER
+		var mod_crit_mult := TurretStatsService.get_turret_crit_multiplier()
+		var crit_mult_stat := UIHelpers.format_stat_with_modifier("Crit Damage", base_crit_mult, mod_crit_mult, "%.1fx", true)
+		nodes["crit_mult_label"].text = "• " + crit_mult_stat["text"]
+		nodes["crit_mult_label"].add_theme_color_override("font_color", crit_mult_stat["color"])
+
 
 ## Calculate effective DPS for a turret type including special effects
 static func calculate_effective_dps(turret_type: String, stats: Dictionary) -> Dictionary:

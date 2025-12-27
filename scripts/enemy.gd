@@ -241,11 +241,11 @@ func _physics_process(delta: float) -> void:
 
 	# Contact damage now handled by EnemyHurtbox component
 
-func take_damage(amount: float) -> void:
+func take_damage(amount: float, is_crit: bool = false) -> void:
 	current_health -= amount
 
-	# Emit damage event for damage numbers
-	Events.damage_dealt.emit(global_position, amount)
+	# Emit damage event for damage numbers with crit flag
+	Events.damage_dealt.emit(global_position, amount, is_crit)
 
 	# Visual feedback - flash white
 	visuals.apply_damage_flash()

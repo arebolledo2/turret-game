@@ -18,6 +18,19 @@ func _ready() -> void:
 	tween.tween_property(self, "scale", Vector2(0.8, 0.8), duration).set_ease(Tween.EASE_IN).set_delay(duration * 0.3)
 	tween.chain().tween_callback(queue_free)
 
-func setup(amount: float) -> void:
+func setup(amount: float, is_crit: bool = false) -> void:
 	if label:
 		label.text = str(int(amount))
+
+		# Apply crit styling
+		if is_crit:
+			# Gold color for crits
+			label.add_theme_color_override("font_color", Color("#FFD700"))
+			# Larger size for crits (22 vs 16)
+			label.add_theme_font_size_override("font_size", 22)
+			# Slightly more dramatic spawn scale
+			scale = Vector2(1.2, 1.2)
+		else:
+			# Normal white color
+			label.add_theme_color_override("font_color", Color.WHITE)
+			label.add_theme_font_size_override("font_size", 16)

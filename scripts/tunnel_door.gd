@@ -72,20 +72,20 @@ func initialize(wave: int, difficulty_config: Dictionary) -> void:
 	Events.tunnel_door_progress_changed.emit(current_health, max_health)
 	Events.tunnel_door_spawned.emit(self, global_position)
 
-func take_damage(amount: float) -> void:
+func take_damage(amount: float, is_crit: bool = false) -> void:
 	"""
 	Take damage from turret projectiles.
 	User decision: Only turrets can damage the door (not player or enemies).
 	"""
 	if is_breached:
 		return
-	
+
 	current_health -= amount
 	current_health = max(current_health, 0.0)
-	
+
 	# Update progress (inverse: HP goes down = progress goes up)
 	Events.tunnel_door_progress_changed.emit(current_health, max_health)
-	Events.damage_dealt.emit(global_position, amount)
+	Events.damage_dealt.emit(global_position, amount, is_crit)
 	
 	# Visual feedback
 	_apply_damage_flash()

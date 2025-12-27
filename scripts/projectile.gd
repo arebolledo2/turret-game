@@ -7,6 +7,7 @@ extends Area2D
 var direction: Vector2 = Vector2.RIGHT
 var is_player_projectile: bool = true
 var is_setup: bool = false
+var is_crit: bool = false
 
 # Extended stats for turret types
 var pierce: int = 0 # Number of enemies to pass through (0 = single target)
@@ -31,19 +32,20 @@ func _ready() -> void:
 	area_entered.connect(_on_hurtbox_entered)
 
 ## Basic setup for simple projectiles (backwards compatible)
-func setup(dir: Vector2, spd: float, dmg: float, from_player: bool) -> void:
+func setup(dir: Vector2, spd: float, dmg: float, from_player: bool, crit: bool = false) -> void:
 	direction = dir.normalized()
 	speed = spd
 	damage = dmg
 	is_player_projectile = from_player
+	is_crit = crit
 	is_setup = true
-	
+
 	# Set collision - use call_deferred to avoid physics query error
 	call_deferred("set_collision_layer", 4) # projectile layer
 	call_deferred("set_collision_mask", 96) # enemy_hurtbox (32) + tunnel_door (64)
 
 ## Extended setup for turret-typed projectiles
-func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: GameEnums.DamageType) -> void:
+func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: GameEnums.DamageType, crit: bool = false) -> void:
 	direction = dir.normalized()
 	speed = stats.get("projectile_speed", 500.0)
 	damage = stats.get("damage", 10.0)
@@ -55,6 +57,7 @@ func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: G
 	knockback_force = stats.get("knockback_force", 0.0)
 	damage_type = dtype
 	is_player_projectile = from_player
+	is_crit = crit
 	is_setup = true
 
 	# Set collision
@@ -111,7 +114,7 @@ func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 				health_percent = enemy.current_health / enemy.max_health
 			if health_percent < 0.25:
 				final_damage *= 1.5
-		enemy.take_damage(final_damage)
+		enemy.take_damage(final_damage, is_crit)
 	
 	# Apply DoT if applicable
 	if dot_damage > 0 and dot_duration > 0 and enemy.has_method("apply_status_effect"):
@@ -144,7 +147,7 @@ func _do_aoe_explosion() -> void:
 						health_percent = enemy.get_health_percent()
 					if health_percent < 0.25:
 						aoe_damage *= 1.5
-				enemy.take_damage(aoe_damage)
+				enemy.take_damage(aoe_damage, is_crit)
 
 			# Apply DoT to all enemies in AoE
 			if dot_damage > 0 and dot_duration > 0 and enemy.has_method("apply_status_effect"):

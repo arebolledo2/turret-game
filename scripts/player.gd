@@ -219,7 +219,7 @@ func _on_melee_hit_occurred() -> void:
 	if camera and camera.has_method("shake"):
 		camera.shake(0.15, 3)
 
-func take_damage(amount: float) -> void:
+func take_damage(amount: float, is_crit: bool = false) -> void:
 	if is_invincible or is_dead:
 		return
 

@@ -70,6 +70,20 @@ func _update_player_stats() -> void:
 	var luck := Globals.get_player_luck_display()
 	player_section.add_child(_create_label("🍀 Luck: %d" % luck, 16))
 
+	# Crit Chance
+	var base_crit_chance := GameConstants.PLAYER_BASE_CRIT_CHANCE * 100.0
+	var modified_crit_chance := PlayerStatsService.get_player_crit_chance() * 100.0
+	var crit_chance_stat := BuildDisplayUIScript.format_stat_with_modifier("💥 Crit Chance", base_crit_chance, modified_crit_chance, "%.1f%%", true)
+	var crit_chance_label := _create_label(crit_chance_stat["text"], 16, crit_chance_stat["color"])
+	player_section.add_child(crit_chance_label)
+
+	# Crit Multiplier
+	var base_crit_mult := GameConstants.PLAYER_BASE_CRIT_MULTIPLIER
+	var modified_crit_mult := PlayerStatsService.get_player_crit_multiplier()
+	var crit_mult_stat := BuildDisplayUIScript.format_stat_with_modifier("⚡ Crit Damage", base_crit_mult, modified_crit_mult, "%.1fx", true)
+	var crit_mult_label := _create_label(crit_mult_stat["text"], 16, crit_mult_stat["color"])
+	player_section.add_child(crit_mult_label)
+
 	# XP
 	player_section.add_child(_create_label("✨ XP: %d" % Globals.total_xp, 16))
 

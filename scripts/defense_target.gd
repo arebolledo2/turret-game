@@ -114,7 +114,7 @@ func _on_body_entered(body: Node) -> void:
 			# Take damage and activate barrier
 			take_damage(damage)
 
-func take_damage(amount: float) -> void:
+func take_damage(amount: float, is_crit: bool = false) -> void:
 	"""Take damage and emit events."""
 	if is_destroyed or barrier_active:
 		return
@@ -128,7 +128,7 @@ func take_damage(amount: float) -> void:
 
 	# Emit damage event for UI update
 	Events.defense_target_hp_changed.emit(current_health, max_health)
-	Events.damage_dealt.emit(global_position, amount)
+	Events.damage_dealt.emit(global_position, amount, is_crit)
 
 	# Visual feedback
 	_apply_damage_flash()

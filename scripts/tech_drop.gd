@@ -69,7 +69,7 @@ func initialize(spawn_wave: int) -> void:
 		health_bar.max_value = max_health
 		health_bar.value = current_health
 
-func take_damage(amount: float) -> void:
+func take_damage(amount: float, is_crit: bool = false) -> void:
 	"""Handle damage from projectiles."""
 	if is_dying:
 		return
@@ -80,7 +80,7 @@ func take_damage(amount: float) -> void:
 		health_bar.value = current_health
 
 	# Visual feedback
-	Events.damage_dealt.emit(global_position, amount)
+	Events.damage_dealt.emit(global_position, amount, is_crit)
 	flash_damage()
 
 	if current_health <= 0:
