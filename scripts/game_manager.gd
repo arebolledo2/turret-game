@@ -265,3 +265,32 @@ func _auto_pause() -> void:
 
 func restart_game() -> void:
 	get_tree().reload_current_scene()
+
+
+func skip_wave() -> void:
+	"""Debug method to skip the current wave and get gold."""
+	if not GameStateMachine.is_in_combat():
+		return
+	
+	# Estimate gold reward based on remaining time
+	var wave = GameStateService.current_wave
+	var duration = wave_controller.get_wave_duration(wave)
+	var enemy_count = Globals.get_wave_enemy_count(wave)
+	
+	# Rate of enemies per second
+	var enemy_rate = float(enemy_count) / max(duration, 1.0)
+	
+	# Give slightly more gold than time left would normally give (bonus for skipping)
+	var gold_to_give = int(wave_controller.wave_timer * enemy_rate * 1.5)
+	
+	# Minimum gold based on wave number
+	gold_to_give = max(gold_to_give, wave * 5)
+	
+	EconomyService.total_gold += gold_to_give
+	Events.gold_collected.emit(gold_to_give, EconomyService.total_gold)
+	
+	# Force end combat
+	_end_wave()
+	
+	# Resume game (if called from pause menu)
+	get_tree().paused = false

@@ -41,18 +41,18 @@ gdscript/warnings/unused_signal=0
 
 window/size/viewport_width=1920
 window/size/viewport_height=1080
-window/size/mode=0
-window/size/resizable=true
-window/size/window_width_override=0
-window/size/window_height_override=0
-window/size/initial_screen_mode=0
 window/size/initial_position_type=0
-window/stretch/aspect="ignore"
 window/stretch/mode="canvas_items"
+window/stretch/aspect="ignore"
+window/size/initial_screen_mode=0
 
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gut/plugin.cfg")
+
+[gui]
+
+theme/custom="res://resources/ui_theme.tres"
 
 [input]
 
@@ -179,7 +179,3 @@ tab_right={
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
-
-[gui]
-
-theme/custom="res://resources/ui_theme.tres"

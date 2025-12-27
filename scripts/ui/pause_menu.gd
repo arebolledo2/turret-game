@@ -7,6 +7,7 @@ extends ScalableUIPanel
 const MAIN_FONT = preload("res://assets/fonts/NunitoSans-Regular.ttf")
 
 var resume_button: Button
+var skip_wave_button: Button
 var level_label: Label
 var wave_label: Label
 var stats_grid: GridContainer
@@ -26,6 +27,7 @@ const BASE_BUTTON_HEIGHT: float = 46.0
 
 func setup(nodes: Dictionary, owner: Node) -> void:
 	resume_button = nodes.get("resume_button")
+	skip_wave_button = nodes.get("skip_wave_button")
 	level_label = nodes.get("level_label")
 	wave_label = nodes.get("wave_label")
 	stats_grid = nodes.get("stats_grid")
@@ -48,6 +50,10 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 		register_font(wave_label, BASE_LABEL_FONT)
 	if resume_button:
 		resume_button.add_theme_font_override("font", MAIN_FONT)
+	if skip_wave_button:
+		skip_wave_button.add_theme_font_override("font", MAIN_FONT)
+		if _owner and _owner.has_method("_on_skip_wave_pressed"):
+			skip_wave_button.pressed.connect(_owner._on_skip_wave_pressed)
 	
 	# Create and add InventoryPanel
 	_create_inventory_panel()
@@ -76,6 +82,8 @@ func _scale_fonts(scale: float) -> void:
 	# Scale buttons
 	if resume_button:
 		resume_button.custom_minimum_size.y = UIScaler.scale(BASE_BUTTON_HEIGHT)
+	if skip_wave_button:
+		skip_wave_button.custom_minimum_size.y = UIScaler.scale(BASE_BUTTON_HEIGHT)
 
 
 func set_player(player: Node2D) -> void:
@@ -94,6 +102,10 @@ func show() -> void:
 		tween.tween_property(container, "modulate:a", 1.0, 0.15)
 		if resume_button:
 			resume_button.grab_focus()
+		
+		# Only show skip wave button during combat
+		if skip_wave_button:
+			skip_wave_button.visible = GameStateMachine.is_in_combat()
 
 
 func hide() -> void:

@@ -59,6 +59,7 @@ const LootReviewScreenScript = preload("res://scripts/ui/loot_review_screen.gd")
 @onready var resume_button: Button = $PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/ResumeButton
 @onready var level_label: Label = $PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/LevelLabel
 @onready var pause_wave_label: Label = $PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/WaveLabel
+@onready var skip_wave_button: Button = $PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/SkipWaveButton
 @onready var stats_grid: GridContainer = $PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid
 
 # New Component Handlers
@@ -222,6 +223,7 @@ func _setup_components() -> void:
 		"container": pause_menu,
 		"panel": $PauseMenu/MainPanel,
 		"resume_button": resume_button,
+		"skip_wave_button": skip_wave_button,
 		"level_label": level_label,
 		"wave_label": pause_wave_label,
 		"stats_grid": stats_grid,
@@ -412,6 +414,12 @@ func _on_settings_pressed() -> void:
 func _on_quit_pressed() -> void:
 	get_tree().paused = false
 	get_tree().reload_current_scene()
+
+
+func _on_skip_wave_pressed() -> void:
+	if Globals.game_manager and Globals.game_manager.has_method("skip_wave"):
+		Globals.game_manager.skip_wave()
+	menu_manager.toggle_pause()
 
 
 func _on_settings_back_pressed() -> void:

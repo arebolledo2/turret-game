@@ -333,6 +333,12 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "Resume"
 
+[node name="SkipWaveButton" type="Button" parent="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Skip Wave (Debug)"
+
 [node name="SettingsButton" type="Button" parent="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel"]
 custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
