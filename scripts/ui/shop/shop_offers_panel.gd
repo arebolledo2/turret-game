@@ -110,6 +110,8 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 			lock_button.pressed.connect(func(): shop_manager.lock_offer(index))
 		button_vbox.add_child(lock_button)
 		_lock_buttons.append(lock_button)
+	else:
+		_lock_buttons.append(null)
 	
 	_offer_buttons.append(purchase_button)
 	return panel
@@ -311,13 +313,8 @@ func _setup_offer_focus_neighbors() -> void:
 		if reroll_button and is_instance_valid(reroll_button):
 			lock_btn.focus_neighbor_bottom = reroll_button.get_path()
 
-	# Set up reroll button UP navigation to last row of buttons
-	if reroll_button and is_instance_valid(reroll_button):
-		# Try lock buttons first, then purchase buttons
-		if not _lock_buttons.is_empty() and is_instance_valid(_lock_buttons[0]):
-			reroll_button.focus_neighbor_top = _lock_buttons[0].get_path()
-		elif first_focusable_purchase:
-			reroll_button.focus_neighbor_top = first_focusable_purchase.get_path()
+	# Horizontal navigation for lock buttons and other focus logic continues...
+	# Set up reroll button UP navigation is now handled by shop_screen.gd
 
 func _restore_focus() -> void:
 	# Try to focus first non-sold offer button
@@ -347,6 +344,23 @@ func regenerate_offers() -> void:
 
 func get_offer_buttons() -> Array[Button]:
 	return _offer_buttons
+
+
+func get_bottom_row_buttons() -> Array:
+	"""Returns the bottom-most focusable button for each offer slot (fixed size array)."""
+	var bottom_buttons: Array = []
+	for i in range(_offer_buttons.size()):
+		var slot_bottom: Button = null
+		
+		# Check lock button first as it's below purchase
+		if i < _lock_buttons.size() and is_instance_valid(_lock_buttons[i]) and _lock_buttons[i].focus_mode != Control.FOCUS_NONE:
+			slot_bottom = _lock_buttons[i]
+		# Fallback to purchase button if lock button doesn't exist or isn't focusable
+		elif i < _offer_buttons.size() and is_instance_valid(_offer_buttons[i]) and _offer_buttons[i].focus_mode != Control.FOCUS_NONE:
+			slot_bottom = _offer_buttons[i]
+			
+		bottom_buttons.append(slot_bottom)
+	return bottom_buttons
 
 func _on_offer_locked(_offer_index: int) -> void:
 	"""Refresh UI when an offer is locked"""

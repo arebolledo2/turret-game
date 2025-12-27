@@ -45,6 +45,7 @@ func _ready() -> void:
 	# Connect panel signals
 	offers_panel.purchase_requested.connect(_on_purchase_pressed)
 	offers_panel.reroll_requested.connect(_on_reroll_pressed)
+	offers_panel.focus_restored.connect(_setup_focus_neighbors)
 
 	continue_button.pressed.connect(_on_continue_pressed)
 
@@ -147,7 +148,6 @@ func _update_panels() -> void:
 
 
 func _setup_focus_neighbors() -> void:
-	var offer_buttons = offers_panel.get_offer_buttons()
 	var turret_buttons = inventory_panel.get_turret_buttons() if inventory_panel else []
 	var item_buttons = inventory_panel.get_item_buttons() if inventory_panel else []
 
@@ -156,16 +156,32 @@ func _setup_focus_neighbors() -> void:
 		reroll_button.focus_neighbor_right = continue_button.get_path()
 		continue_button.focus_neighbor_left = reroll_button.get_path()
 
-		# Connect to offers above
-		if not offer_buttons.is_empty():
-			var last_focusable: Button = null
-			for i in range(offer_buttons.size() - 1, -1, -1):
-				if is_instance_valid(offer_buttons[i]) and offer_buttons[i].focus_mode != Control.FOCUS_NONE:
-					last_focusable = offer_buttons[i]
-					break
-			if last_focusable:
-				continue_button.focus_neighbor_top = last_focusable.get_path()
-				reroll_button.focus_neighbor_top = last_focusable.get_path()
+		# Connect to offers above (Biased Navigation)
+		var offer_buttons_bottom = offers_panel.get_bottom_row_buttons()
+		if not offer_buttons_bottom.is_empty():
+			# Reroll (left side) favors: 2nd item -> 1st -> 3rd -> 4th
+			var reroll_search_order = [1, 0, 2, 3]
+			var reroll_target = null
+			for idx in reroll_search_order:
+				if idx < offer_buttons_bottom.size() and is_instance_valid(offer_buttons_bottom[idx]):
+					var btn = offer_buttons_bottom[idx]
+					if not btn.disabled:
+						reroll_target = btn
+						break
+			if reroll_target:
+				reroll_button.focus_neighbor_top = reroll_target.get_path()
+
+			# Continue (right side) favors: 3rd item -> 4th -> 2nd -> 1st
+			var continue_search_order = [2, 3, 1, 0]
+			var continue_target = null
+			for idx in continue_search_order:
+				if idx < offer_buttons_bottom.size() and is_instance_valid(offer_buttons_bottom[idx]):
+					var btn = offer_buttons_bottom[idx]
+					if not btn.disabled:
+						continue_target = btn
+						break
+			if continue_target:
+				continue_button.focus_neighbor_top = continue_target.get_path()
 
 		# Connect down to turrets or items
 		var down_target: Control = null
