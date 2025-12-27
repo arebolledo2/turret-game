@@ -271,7 +271,7 @@ func _fire_chain() -> void:
 
 		# Hit current target (only first hit is crit, subsequent decay from crit damage)
 		if current_target.has_method("take_damage"):
-			var this_is_crit := (i == 0 and is_crit)  # Only first hit displays as crit
+			var this_is_crit := (i == 0 and is_crit) # Only first hit displays as crit
 			current_target.take_damage(dmg, this_is_crit)
 
 		hit_enemies.append(current_target)
@@ -409,9 +409,10 @@ func _spawn_pulse_effect() -> void:
 	viz.color.a = 0.3
 
 	turret.add_child(viz)
+	viz.scale = Vector2.ZERO
 
 	var tween = turret.create_tween()
-	tween.tween_property(viz, "scale", Vector2.ONE * 1.2, 0.2)
+	tween.tween_property(viz, "scale", Vector2.ONE, 0.2)
 	tween.parallel().tween_property(viz, "modulate:a", 0.0, 0.2)
 	tween.tween_callback(viz.queue_free)
 

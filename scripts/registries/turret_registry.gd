@@ -96,9 +96,9 @@ const TYPES: Dictionary = {
 		"attack_styles": [GameEnums.AttackStyle.AOE],
 		"damage_types": [GameEnums.DamageType.ELECTRIC],
 		"base_stats": {
-			"damage": 25.0,
+			"damage": 14.0,
 			"fire_rate": 1.5,
-			"range": 100.0,
+			"range": 160.0,
 			"rotation_speed": 0.0,
 			"slow_intensity": 0.25,
 			"slow_duration": 0.5,
