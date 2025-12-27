@@ -40,6 +40,8 @@ var behavior_params: Dictionary = {}
 @onready var visuals: EnemyVisuals = $Components/EnemyVisuals
 @onready var status_effects: EnemyStatusEffects = $Components/EnemyStatusEffects
 
+var combat: Node = null  # Optional combat component for ranged enemies
+
 func _ready() -> void:
 	print("DEBUG Enemy: _ready() START")
 	add_to_group("enemies")
@@ -177,6 +179,13 @@ func _initialize_components() -> void:
 	# Connect status effect visual updates
 	status_effects.status_visual_changed.connect(_on_status_visual_changed)
 
+	# Initialize combat component if available
+	if has_node("Components/EnemyCombat"):
+		combat = $Components/EnemyCombat
+		var combat_params: Dictionary = type_def.get("combat_params", {}) as Dictionary
+		if not combat_params.is_empty() and combat.has_method("initialize"):
+			combat.initialize(self, combat_params)
+
 func _on_status_visual_changed(effects: Dictionary) -> void:
 	"""Handle status effect visual updates from component."""
 	visuals.update_status_visual(effects)
@@ -239,6 +248,10 @@ func _physics_process(delta: float) -> void:
 	if velocity.length() > 0:
 		visuals.update_direction_sprite(velocity.normalized())
 
+	# Process combat component if available
+	if combat:
+		combat.process(delta)
+
 	# Contact damage now handled by EnemyHurtbox component
 
 func take_damage(amount: float, is_crit: bool = false) -> void:
@@ -263,6 +276,10 @@ func die() -> void:
 
 	# Clean up behavior instance (handles charge alert cleanup if needed)
 	movement.cleanup()
+
+	# Clean up combat component if available
+	if combat and combat.has_method("cleanup"):
+		combat.cleanup()
 
 	# Handle explosive behavior
 	if Globals.enemy_has_behavior(enemy_type, GameEnums.EnemyBehavior.EXPLOSIVE):

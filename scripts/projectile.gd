@@ -42,7 +42,10 @@ func setup(dir: Vector2, spd: float, dmg: float, from_player: bool, crit: bool =
 
 	# Set collision - use call_deferred to avoid physics query error
 	call_deferred("set_collision_layer", 4) # projectile layer
-	call_deferred("set_collision_mask", 96) # enemy_hurtbox (32) + tunnel_door (64)
+	if is_player_projectile:
+		call_deferred("set_collision_mask", 96) # enemy_hurtbox (32) + tunnel_door (64)
+	else:
+		call_deferred("set_collision_mask", 16) # player_hurtbox only
 
 ## Extended setup for turret-typed projectiles
 func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: GameEnums.DamageType, crit: bool = false) -> void:
@@ -62,7 +65,10 @@ func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: G
 
 	# Set collision
 	call_deferred("set_collision_layer", 4) # projectile layer
-	call_deferred("set_collision_mask", 96) # enemy_hurtbox (32) + tunnel_door (64)
+	if is_player_projectile:
+		call_deferred("set_collision_mask", 96) # enemy_hurtbox (32) + tunnel_door (64)
+	else:
+		call_deferred("set_collision_mask", 16) # player_hurtbox only
 
 func _physics_process(delta: float) -> void:
 	position += direction * speed * delta
@@ -71,7 +77,17 @@ func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 	print("DEBUG Projectile: Collision with area: ", hurtbox, " name: ", hurtbox.name)
 	print("DEBUG Projectile: Is enemy_hurtbox: ", hurtbox.is_in_group("enemy_hurtbox"))
 	print("DEBUG Projectile: Is tunnel_door: ", hurtbox.is_in_group("tunnel_doors"))
-	
+	print("DEBUG Projectile: Is player_hurtbox: ", hurtbox.is_in_group("player_hurtbox"))
+
+	# Handle enemy projectiles hitting player
+	if not is_player_projectile and hurtbox.is_in_group("player_hurtbox"):
+		print("DEBUG Projectile: Enemy projectile hit player!")
+		var player = hurtbox.get_parent()
+		if player and player.has_method("take_damage"):
+			player.take_damage(damage)
+			queue_free()
+		return
+
 	# Check if this is a tunnel door - handle specially
 	var parent = hurtbox.get_parent()
 	if parent and parent.is_in_group("tunnel_doors"):
@@ -80,11 +96,11 @@ func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 			parent.take_damage(damage)
 			queue_free()
 		return
-	
+
 	# Verify this is an enemy hurtbox
 	if not hurtbox.is_in_group("enemy_hurtbox"):
 		return
-	
+
 	# Get the enemy (parent of hurtbox)
 	var enemy = hurtbox.get_parent()
 	if not enemy or not enemy.is_in_group("enemies"):

@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://scripts/components/enemy_movement.gd" id="6_movement"]
 [ext_resource type="Script" path="res://scripts/components/enemy_visuals.gd" id="7_visuals"]
 [ext_resource type="Script" path="res://scripts/components/enemy_status_effects.gd" id="8_status"]
+[ext_resource type="Script" path="res://scripts/components/enemy_combat.gd" id="9_combat"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_Hurtbox"]
 radius = 24.0
@@ -47,3 +48,6 @@ script = ExtResource("7_visuals")
 
 [node name="EnemyStatusEffects" type="Node" parent="Components"]
 script = ExtResource("8_status")
+
+[node name="EnemyCombat" type="Node" parent="Components"]
+script = ExtResource("9_combat")

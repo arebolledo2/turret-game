@@ -177,6 +177,41 @@ const TYPES: Dictionary = {
 		"min_wave": 2,
 		"spawn_count": 2,
 	},
+	"lazy_shooter": {
+		"name": "Lazy Shooter",
+		"icon": "🔫",
+		"description": "Wanders aimlessly while taking potshots at distant targets.",
+		"behaviors": [GameEnums.EnemyBehavior.WANDER],
+		"sprite_folder": "res://assets/sprites/enemy_tiny",
+		"color_tint": Color(0.9, 0.7, 0.5),  # Orange/tan
+		"behavior_params": {
+			"wander_pause_min": 0.0,  # No pauses (like lazy_wanderer)
+			"wander_pause_max": 0.0,
+			"wander_move_min": 2.0,
+			"wander_move_max": 4.0,
+		},
+		"combat_params": {
+			"fire_rate": 0.25,          # Every 4 seconds
+			"projectile_speed": 175.0,  # Slow, telegraphed
+			"projectile_damage": 8.0,   # Moderate damage
+			"firing_range": 350.0,      # Outranges player (200)
+		},
+		"base_stats": {
+			"health": 8.0,
+			"speed": 40.0,              # Lazy movement speed
+			"contact_damage": 6.0,      # Low melee damage
+			"xp_value": 12,             # Slightly more than basic
+			"scale": 1.3,
+			"mass": 1.0,
+		},
+		"hurtbox": {
+			"type": "circle",
+			"size": Vector2(16, 16),
+		},
+		"spawn_weight": 50,             # Moderate spawn rate
+		"min_wave": 3,                  # Appears wave 3+
+		"spawn_count": 2,               # Spawn in pairs
+	},
 }
 
 
