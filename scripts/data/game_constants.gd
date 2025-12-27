@@ -91,13 +91,13 @@ const WAVE_DURATION_INCREMENT: float = 4.0 # per wave
 const WAVE_BASE_ENEMY_COUNT: int = 12
 const WAVE_ENEMY_INCREMENT: int = 4
 
-# Wave duration scaling (non-linear curve)
-const WAVE_DURATION_EARLY: float = 25.0 # Waves 1
-const WAVE_DURATION_MID: float = 50.0 # Waves 2-4 target
-const WAVE_DURATION_LATE: float = 60.0 # Waves 5-6 target
-const WAVE_DURATION_CAP: float = 60.0 # Wave 7+ cap
-const WAVE_DURATION_MID_THRESHOLD: int = 5
-const WAVE_DURATION_LATE_THRESHOLD: int = 7
+# Wave duration scaling (linear progression: 40s, 45s, 50s, 55s, 60s, 60s+)
+const WAVE_DURATION_EARLY: float = 40.0 # Wave 1
+const WAVE_DURATION_MID: float = 50.0 # Wave 3 target
+const WAVE_DURATION_LATE: float = 60.0 # Wave 5+ target
+const WAVE_DURATION_CAP: float = 60.0 # Wave 5+ cap
+const WAVE_DURATION_MID_THRESHOLD: int = 3
+const WAVE_DURATION_LATE_THRESHOLD: int = 5
 
 # =============================================================================
 # ECONOMY

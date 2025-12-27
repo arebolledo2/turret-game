@@ -31,11 +31,12 @@ func reset_state() -> void:
 
 ## Get wave duration in seconds
 func get_wave_duration(wave: int) -> float:
-	# Uses non-linear scaling defined in GameConstants:
-	# Wave 1: EARLY (25s)
-	# Waves 2-4: lerp to MID (50s)
-	# Waves 5-6: lerp to LATE (60s)
-	# Wave 7+: CAP (60s)
+	# Uses linear scaling defined in GameConstants:
+	# Wave 1: EARLY (40s)
+	# Waves 2: lerp to MID (45s)
+	# Wave 3: MID (50s)
+	# Wave 4: lerp to LATE (55s)
+	# Wave 5+: CAP (60s)
 	if wave <= 1:
 		return GameConstants.WAVE_DURATION_EARLY
 	elif wave < GameConstants.WAVE_DURATION_MID_THRESHOLD:
