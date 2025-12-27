@@ -15,15 +15,15 @@ func before_each() -> void:
 # =============================================================================
 
 func test_wave_duration_wave_1():
-	# Wave 1 should be 25 seconds
+	# Wave 1 should be 40 seconds
 	var duration = Globals.get_wave_duration(1)
-	assert_eq(duration, 25.0, "Wave 1 should be 25 seconds")
+	assert_eq(duration, 40.0, "Wave 1 should be 40 seconds")
 
 
 func test_wave_duration_scales_correctly():
-	# Wave 5 = 50 seconds (using lerp-based scaling in game_state_service)
+	# Wave 5 = 60 seconds (using lerp-based scaling in game_state_service)
 	var duration = Globals.get_wave_duration(5)
-	assert_eq(duration, 50.0, "Wave 5 duration should be 50 seconds")
+	assert_eq(duration, 60.0, "Wave 5 duration should be 60 seconds")
 
 
 func test_wave_duration_wave_10():

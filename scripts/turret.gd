@@ -191,6 +191,9 @@ func hide_range() -> void:
 var target: Node2D:
 	get:
 		return combat.target if combat else null
+	set(value):
+		if combat:
+			combat.target = value
 
 var can_fire: bool:
 	get:

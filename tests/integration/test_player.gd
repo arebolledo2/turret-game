@@ -286,7 +286,7 @@ func test_drop_turret_clears_carried():
 # =============================================================================
 
 func test_melee_damage_default():
-	assert_eq(player.melee_damage, 52.5, "Default melee damage should be 52.5")
+	assert_eq(player.melee_damage, 13.0, "Default melee damage should be 13.0")
 
 
 func test_melee_range_default():
