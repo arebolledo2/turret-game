@@ -39,7 +39,6 @@ func test_skip_wave_logic():
     await get_tree().process_frame
 
     var initial_gold = EconomyService.total_gold
-    var _initial_wave = GameStateService.current_wave
     
     # Trigger skip wave
     game_manager.skip_wave()

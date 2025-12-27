@@ -269,7 +269,8 @@ func restart_game() -> void:
 
 func skip_wave() -> void:
 	"""Debug method to skip the current wave and get gold."""
-	if not GameStateMachine.is_in_combat():
+	var is_announcement = GameStateMachine.current_state == GameStateMachine.GameState.WAVE_ANNOUNCEMENT
+	if not (GameStateMachine.is_in_combat() or is_announcement):
 		return
 	
 	# Estimate gold reward based on remaining time
@@ -280,8 +281,11 @@ func skip_wave() -> void:
 	# Rate of enemies per second
 	var enemy_rate = float(enemy_count) / max(duration, 1.0)
 	
+	# Use full duration if in announcement, otherwise use remaining timer
+	var timer_for_gold = duration if is_announcement else wave_controller.wave_timer
+	
 	# Give slightly more gold than time left would normally give (bonus for skipping)
-	var gold_to_give = int(wave_controller.wave_timer * enemy_rate * 1.5)
+	var gold_to_give = int(timer_for_gold * enemy_rate * 1.5)
 	
 	# Minimum gold based on wave number
 	gold_to_give = max(gold_to_give, wave * 5)

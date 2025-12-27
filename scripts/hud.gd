@@ -112,13 +112,6 @@ func _ready() -> void:
 
 	menu_manager = HUDMenuManager.new()
 	add_child(menu_manager)
-	menu_manager.initialize({
-		"pause_menu": pause_menu,
-		"settings_menu": settings_menu,
-		"game_over_screen": game_over_screen,
-		"difficulty_screen": difficulty_screen,
-		"game_mode_screen": game_mode_screen,
-	})
 
 	# Initialize UI components
 	_setup_components()
@@ -261,6 +254,19 @@ func _setup_components() -> void:
 		"discard_button": loot_review_screen.get_node("CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer/DiscardButton"),
 		"shop_manager": get_node_or_null("../ShopManager"),
 	}, self)
+
+	# Initialize menu manager with all nodes and controllers
+	menu_manager.initialize({
+		"pause_menu": pause_menu,
+		"settings_menu": settings_menu,
+		"game_over_screen": game_over_screen,
+		"difficulty_screen": difficulty_screen,
+		"game_mode_screen": game_mode_screen,
+		"pause_controller": _pause_menu,
+		"settings_controller": _settings_menu,
+		"difficulty_controller": _difficulty_select,
+		"game_mode_controller": _game_mode_select,
+	})
 
 
 func _input(event: InputEvent) -> void:

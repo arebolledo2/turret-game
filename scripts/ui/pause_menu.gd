@@ -103,9 +103,9 @@ func show() -> void:
 		if resume_button:
 			resume_button.grab_focus()
 		
-		# Only show skip wave button during combat
+		# Only show skip wave button during combat or announcement
 		if skip_wave_button:
-			skip_wave_button.visible = GameStateMachine.is_in_combat()
+			skip_wave_button.visible = GameStateMachine.is_in_combat() or GameStateMachine.current_state == GameStateMachine.GameState.WAVE_ANNOUNCEMENT
 
 
 func hide() -> void:
