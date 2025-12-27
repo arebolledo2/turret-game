@@ -31,8 +31,9 @@ func update_display() -> void:
 	const BASE_SPEED := 300.0
 
 	# Get modified values
-	var modified_max_health := Globals.get_player_max_health()
-	var modified_speed := Globals.get_player_speed()
+	var difficulty_config = DifficultyService.get_difficulty_config()
+	var modified_max_health := PlayerStatsService.get_player_max_health(difficulty_config["player_health_mult"])
+	var modified_speed := PlayerStatsService.get_player_speed()
 
 	# Get current player health
 	var health_current := 100
@@ -40,11 +41,11 @@ func update_display() -> void:
 	if is_instance_valid(_player):
 		health_current = int(_player.current_health)
 
-	var luck := Globals.get_player_luck_display()
-	var xp := Globals.total_xp
-	var kills := Globals.total_kills
-	var minutes := int(Globals.time_survived) / 60
-	var seconds := int(Globals.time_survived) % 60
+	var luck := PlayerStatsService.get_player_luck_display()
+	var xp := GameStateService.total_xp
+	var kills := GameStateService.total_kills
+	var minutes := int(GameStateService.time_survived) / 60
+	var seconds := int(GameStateService.time_survived) % 60
 
 	# Create stat labels
 	var health_label := Label.new()
@@ -57,7 +58,7 @@ func update_display() -> void:
 	player_stats_vbox.add_child(health_label)
 
 	# Health Regen (only show if > 0)
-	var health_regen := Globals.get_player_health_regen()
+	var health_regen := PlayerStatsService.get_player_health_regen()
 	if health_regen > 0:
 		var regen_label := Label.new()
 		regen_label.text = "💚 Regen: +%d" % health_regen

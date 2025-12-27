@@ -9,13 +9,13 @@ class_name PlayerHurtbox
 ## The actual damage dealing is handled by EnemyHurtbox when it detects this area.
 
 ## Debug visualization colors
-const DEBUG_COLOR: Color = Color(0.0, 1.0, 0.0, 0.3)  # Green, semi-transparent
-const DEBUG_OUTLINE_COLOR: Color = Color(0.0, 1.0, 0.0, 0.8)  # Green, opaque
+const DEBUG_COLOR: Color = Color(0.0, 1.0, 0.0, 0.3) # Green, semi-transparent
+const DEBUG_OUTLINE_COLOR: Color = Color(0.0, 1.0, 0.0, 0.8) # Green, opaque
 const DEBUG_OUTLINE_WIDTH: float = 2.0
 
 ## Shape configuration
 @export var shape_type: String = "circle"
-@export var shape_size: Vector2 = Vector2(14, 14)  # For circle: x = radius
+@export var shape_size: Vector2 = Vector2(14, 14) # For circle: x = radius
 
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
@@ -25,8 +25,8 @@ func _ready() -> void:
 	# No mask needed - we don't detect anything, we're just detectable
 	collision_layer = 16
 	collision_mask = 0
-	monitoring = false  # Don't need to detect anything
-	monitorable = true  # Allow detection by enemy hurtboxes
+	monitoring = false # Don't need to detect anything
+	monitorable = true # Allow detection by enemy hurtboxes
 
 	# Add to group for identification
 	add_to_group("player_hurtbox")
@@ -40,7 +40,7 @@ func _ready() -> void:
 
 	# Connect to debug toggle event
 	Events.hitbox_debug_toggled.connect(_on_debug_toggled)
-	if Globals.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_HURTBOX]:
+	if SettingsService.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_HURTBOX]:
 		queue_redraw()
 
 
@@ -79,7 +79,7 @@ func configure(new_shape_type: String, new_size: Vector2) -> void:
 	shape_size = new_size
 	if collision_shape:
 		_configure_shape()
-	if Globals.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_HURTBOX]:
+	if SettingsService.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_HURTBOX]:
 		queue_redraw()
 
 
@@ -96,12 +96,12 @@ func configure_from_profile(profile: CollisionProfile) -> void:
 	shape_size = profile.hurtbox_size
 	_configure_shape()
 	
-	if Globals.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_HURTBOX]:
+	if SettingsService.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_HURTBOX]:
 		queue_redraw()
 
 
 func _draw() -> void:
-	if not Globals.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_HURTBOX]:
+	if not SettingsService.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_HURTBOX]:
 		return
 
 	if not collision_shape or not collision_shape.shape:

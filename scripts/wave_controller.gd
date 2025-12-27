@@ -26,7 +26,7 @@ var turret_manager: Node = null
 
 func start_wave_announcement() -> void:
 	GameStateService.current_wave += 1
-	announcement_timer = Globals.WAVE_ANNOUNCEMENT_TIME
+	announcement_timer = GameConstants.WAVE_ANNOUNCEMENT_TIME
 
 	Events.wave_announcement_started.emit(GameStateService.current_wave)
 	Events.show_wave_announcement.emit(GameStateService.current_wave)
@@ -71,7 +71,7 @@ func process_combat(delta: float) -> bool:
 # =============================================================================
 
 func end_wave() -> void:
-	pause_timer = Globals.BETWEEN_WAVE_PAUSE
+	pause_timer = GameConstants.BETWEEN_WAVE_PAUSE
 	stop_spawning()
 	Events.wave_ended.emit(GameStateService.current_wave)
 
@@ -84,8 +84,8 @@ func process_wave_end(delta: float) -> bool:
 
 func award_wave_bonus() -> void:
 	"""Award gold for completing the wave."""
-	var wave_bonus_base = Globals.GOLD_WAVE_BONUS_BASE + (GameStateService.current_wave * 5)
-	var wave_bonus = int(wave_bonus_base * Globals.get_wave_bonus_multiplier())
+	var wave_bonus_base = GameConstants.GOLD_WAVE_BONUS_BASE + (GameStateService.current_wave * 5)
+	var wave_bonus = int(wave_bonus_base * ItemTrackingService.get_wave_bonus_multiplier())
 	EconomyService.total_gold += wave_bonus
 	Events.gold_collected.emit(wave_bonus, EconomyService.total_gold)
 	wave_completed.emit(GameStateService.current_wave)
@@ -133,7 +133,7 @@ func get_wave_duration(wave: int) -> float:
 
 
 func is_final_wave() -> bool:
-	return GameStateService.current_wave >= Globals.MAX_WAVES
+	return GameStateService.current_wave >= GameConstants.MAX_WAVES
 
 
 func get_current_wave() -> int:

@@ -36,12 +36,11 @@ func initialize(p_player: CharacterBody2D, p_weapon_pivot: Node2D) -> void:
 	assert(player != null, "PlayerCombat: player reference required")
 	assert(weapon_pivot != null, "PlayerCombat: weapon_pivot reference required")
 
-	# Load stats from Globals
-	if Globals:
-		weapon_damage = Globals.get_player_weapon_damage()
-		weapon_fire_rate = Globals.PLAYER_WEAPON_FIRE_RATE
-		weapon_range = Globals.PLAYER_WEAPON_RANGE
-		projectile_speed = Globals.PLAYER_PROJECTILE_SPEED
+	# Load stats
+	weapon_damage = PlayerStatsService.get_player_weapon_damage()
+	weapon_fire_rate = GameConstants.PLAYER_WEAPON_FIRE_RATE
+	weapon_range = GameConstants.PLAYER_WEAPON_RANGE
+	projectile_speed = GameConstants.PLAYER_PROJECTILE_SPEED
 
 	# Load projectile scene
 	projectile_scene = preload("res://scenes/projectile.tscn")
@@ -55,7 +54,7 @@ func initialize(p_player: CharacterBody2D, p_weapon_pivot: Node2D) -> void:
 
 func process(_delta: float) -> void:
 	"""Main update function - call from player's _physics_process."""
-	if not Globals.player_auto_attack_enabled:
+	if not SettingsService.player_auto_attack_enabled:
 		return
 
 	find_closest_enemy()

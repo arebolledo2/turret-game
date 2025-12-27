@@ -77,9 +77,10 @@ func process(delta: float, speed_multiplier: float) -> Vector2:
 	var movement_direction: Vector2 = _execute_current_behavior(delta)
 
 	# Apply knockback first (overrides AI movement temporarily)
-	if knockback_velocity.length() > Globals.KNOCKBACK_MIN_VELOCITY:
+	if knockback_velocity.length() > GameConstants.KNOCKBACK_MIN_VELOCITY:
 		var velocity := knockback_velocity
-		knockback_velocity *= (1.0 - Globals.KNOCKBACK_DECAY_RATE * delta)
+		# Decay knockback over time
+		knockback_velocity *= (1.0 - GameConstants.KNOCKBACK_DECAY_RATE * delta)
 		return velocity
 	else:
 		knockback_velocity = Vector2.ZERO

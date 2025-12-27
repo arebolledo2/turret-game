@@ -27,7 +27,7 @@ var regeneration_pending: bool = false
 
 func _ready() -> void:
 	visible = false
-	shop_manager = Globals.shop_manager
+	shop_manager = get_node_or_null("/root/Main/ShopManager")
 
 	# Initialize offers panel handler
 	offers_panel = ShopOffersPanelScript.new()
@@ -126,7 +126,7 @@ func _on_reroll_pressed() -> void:
 
 
 func _on_continue_pressed() -> void:
-	var game_manager = Globals.game_manager
+	var game_manager = get_node_or_null("/root/Main/GameManager")
 	if game_manager and game_manager.has_method("end_shop_phase"):
 		game_manager.end_shop_phase()
 
@@ -137,7 +137,7 @@ func _on_gold_changed(_amount: int, _total: int) -> void:
 
 
 func update_gold_display() -> void:
-	gold_label.text = "Gold: %d" % Globals.total_gold
+	gold_label.text = "Gold: %d" % EconomyService.total_gold
 
 
 func _on_insufficient_funds(_required: int, _current: int) -> void:

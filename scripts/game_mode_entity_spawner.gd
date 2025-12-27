@@ -16,7 +16,7 @@ var current_tunnel_door: Node2D = null
 
 func spawn_game_mode_entities() -> void:
 	"""Spawn entities based on the active win_condition game mode."""
-	var difficulty_config = Globals.get_difficulty_config()
+	var difficulty_config = DifficultyService.get_difficulty_config()
 	var current_wave = GameStateService.current_wave
 
 	# Tech Defense Mode - spawn defense target

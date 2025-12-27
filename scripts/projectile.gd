@@ -122,7 +122,7 @@ func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 	if enemy.has_method("take_damage"):
 		var final_damage := damage
 		# Executioner's Mark: +50% damage to enemies below 25% HP
-		if ItemRegistry.has_special_effect("executioner") and Globals.item_counts.get("executioners_mark", 0) > 0:
+		if ItemRegistry.has_special_effect("executioner") and ItemTrackingService.item_counts.get("executioners_mark", 0) > 0:
 			var health_percent := 1.0
 			if enemy.has_method("get_health_percent"):
 				health_percent = enemy.get_health_percent()

@@ -124,4 +124,3 @@ func get_turret_purchase_penalty() -> float:
 	# Apply increases (e.g., Elite Forces, Diversity Matrix)
 	penalty = _get_modifier_service().apply_modifiers_to_stat(penalty, "turret_penalty_increase")
 	return penalty
-

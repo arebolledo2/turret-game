@@ -57,7 +57,7 @@ func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary) ->
 	Events.turret_range_toggled.connect(_on_range_toggled)
 
 	# Apply current range visibility state
-	if Globals.show_turret_ranges:
+	if SettingsService.show_turret_ranges:
 		show_range()
 
 	# Spawn animation
@@ -200,14 +200,14 @@ func _update_status_indicators() -> void:
 		status_indicators.remove_child(child)
 		child.queue_free()
 
-	var turret_manager = Globals.turret_manager
+	var turret_manager = get_node_or_null("/root/Main/TurretManager")
 	if not turret_manager:
 		return
 
 	var active_effects: Array[Dictionary] = []
 
 	# Signal Amplifier
-	if ItemRegistry.has_special_effect("signal_amplifier") and Globals.item_counts.get("signal_amplifier", 0) > 0:
+	if ItemRegistry.has_special_effect("signal_amplifier") and ItemTrackingService.item_counts.get("signal_amplifier", 0) > 0:
 		var nearby = turret_manager.get_turrets_within_radius(turret.global_position, 200.0)
 		var is_buff = nearby.size() > 0
 		active_effects.append({
@@ -216,7 +216,7 @@ func _update_status_indicators() -> void:
 		})
 
 	# Isolation Protocol
-	if ItemRegistry.has_special_effect("isolation_protocol") and Globals.item_counts.get("isolation_protocol", 0) > 0:
+	if ItemRegistry.has_special_effect("isolation_protocol") and ItemTrackingService.item_counts.get("isolation_protocol", 0) > 0:
 		var nearby = turret_manager.get_turrets_within_radius(turret.global_position, 250.0)
 		var is_buff = nearby.size() == 0
 		active_effects.append({
@@ -225,7 +225,7 @@ func _update_status_indicators() -> void:
 		})
 
 	# Feedback Loop
-	if ItemRegistry.has_special_effect("feedback_loop") and Globals.item_counts.get("feedback_loop", 0) > 0:
+	if ItemRegistry.has_special_effect("feedback_loop") and ItemTrackingService.item_counts.get("feedback_loop", 0) > 0:
 		var nearby = turret_manager.get_turrets_within_radius(turret.global_position, 180.0)
 		var count = nearby.size()
 		active_effects.append({
@@ -235,14 +235,14 @@ func _update_status_indicators() -> void:
 		})
 
 	# Personal Space (always active as a buff)
-	if ItemRegistry.has_special_effect("personal_space") and Globals.item_counts.get("personal_space", 0) > 0:
+	if ItemRegistry.has_special_effect("personal_space") and ItemTrackingService.item_counts.get("personal_space", 0) > 0:
 		active_effects.append({
 			"icon": "⭕",
 			"is_buff": true
 		})
 
 	# Chain Reaction (show if buffed)
-	if ItemRegistry.has_special_effect("chain_reaction") and Globals.item_counts.get("chain_reaction", 0) > 0:
+	if ItemRegistry.has_special_effect("chain_reaction") and ItemTrackingService.item_counts.get("chain_reaction", 0) > 0:
 		var turret_id: int = turret.get_instance_id()
 		var buffs: Array = BuffSystem.active_buffs.get(turret_id, [])
 		for buff in buffs:

@@ -59,13 +59,13 @@ func show_difficulty_select() -> void:
 
 
 func _on_difficulty_selected(difficulty: int) -> void:
-	Globals.set_difficulty(difficulty as GameEnums.Difficulty)
+	DifficultyService.set_difficulty(difficulty as GameEnums.Difficulty)
 	GameStateMachine.transition_to(GameStateMachine.GameState.GAME_MODE_SELECT)
 	Events.show_game_mode_select.emit()
 
 
 func _on_game_mode_selected(game_mode: int) -> void:
-	Globals.set_game_mode(game_mode as GameEnums.GameMode)
+	GameModeService.set_mode(game_mode as GameEnums.GameMode)
 
 
 func show_start_settings() -> void:
@@ -74,7 +74,7 @@ func show_start_settings() -> void:
 
 
 func _on_start_settings_applied(difficulty: int, spawn_mode: int, win_mode: int, arena_mode: int, bg_index: int) -> void:
-	Globals.set_difficulty(difficulty as GameEnums.Difficulty)
+	DifficultyService.set_difficulty(difficulty as GameEnums.Difficulty)
 	GameModeService.set_mode(spawn_mode as GameEnums.GameMode)
 	GameModeService.set_mode(win_mode as GameEnums.GameMode)
 	GameModeService.set_mode(arena_mode as GameEnums.GameMode)
@@ -91,16 +91,12 @@ func _on_start_settings_applied(difficulty: int, spawn_mode: int, win_mode: int,
 # =============================================================================
 
 func start_game() -> void:
-	# Guard against double-starting within the same process
-	if Globals.is_game_active:
-		return
-		
 	# Store modes before reset
-	var spawn_mode = Globals.game_mode_service.active_modes.get("spawn_location")
-	var win_mode = Globals.game_mode_service.active_modes.get("win_condition")
-	var arena_mode = Globals.game_mode_service.active_modes.get("arena_type")
+	var spawn_mode = GameModeService.active_modes.get("spawn_location")
+	var win_mode = GameModeService.active_modes.get("win_condition")
+	var arena_mode = GameModeService.active_modes.get("arena_type")
 
-	Globals.reset_stats()
+	_reset_all_services()
 
 	# Restore modes after reset
 	if spawn_mode != null:
@@ -110,7 +106,7 @@ func start_game() -> void:
 	if arena_mode != null:
 		GameModeService.set_mode(arena_mode as GameEnums.GameMode)
 
-	Globals.is_game_active = true
+	GameStateService.is_game_active = true
 	Events.game_started.emit()
 
 	# Spawn free starting turret
@@ -126,10 +122,10 @@ func start_game() -> void:
 # =============================================================================
 
 func _process(delta: float) -> void:
-	if not Globals.is_game_active:
+	if not GameStateService.is_game_active:
 		return
 
-	Globals.time_survived += delta
+	GameStateService.time_survived += delta
 
 	match GameStateMachine.current_state:
 		GameStateMachine.GameState.WAVE_ANNOUNCEMENT:
@@ -199,7 +195,7 @@ func _on_loot_review_completed() -> void:
 
 func _start_shop_phase() -> void:
 	GameStateMachine.transition_to(GameStateMachine.GameState.SHOP)
-	Globals.shop_reroll_count = 0
+	EconomyService.shop_reroll_count = 0
 	Events.shop_opened.emit(GameStateService.current_wave)
 
 
@@ -221,13 +217,13 @@ func end_shop_phase() -> void:
 
 func _trigger_victory() -> void:
 	GameStateMachine.force_transition(GameStateMachine.GameState.VICTORY)
-	Globals.is_game_active = false
+	GameStateService.is_game_active = false
 	Events.game_over.emit(true)
 
 
 func _trigger_game_over() -> void:
 	GameStateMachine.force_transition(GameStateMachine.GameState.GAME_OVER)
-	Globals.is_game_active = false
+	GameStateService.is_game_active = false
 	wave_controller.stop_spawning()
 	Events.game_over.emit(false)
 
@@ -255,7 +251,7 @@ func _notification(what: int) -> void:
 
 
 func _auto_pause() -> void:
-	if Globals.is_game_active and not get_tree().paused:
+	if GameStateService.is_game_active and not get_tree().paused:
 		var hud = get_tree().get_first_node_in_group("hud")
 		if hud and hud.has_method("pause_game"):
 			hud.pause_game()
@@ -276,7 +272,9 @@ func skip_wave() -> void:
 	# Estimate gold reward based on remaining time
 	var wave = GameStateService.current_wave
 	var duration = wave_controller.get_wave_duration(wave)
-	var enemy_count = Globals.get_wave_enemy_count(wave)
+	var difficulty_mult = DifficultyService.get_difficulty_config()["enemy_count_mult"]
+	var item_mult = ItemTrackingService.get_enemy_count_multiplier()
+	var enemy_count = GameStateService.get_wave_enemy_count(wave, difficulty_mult, item_mult)
 	
 	# Rate of enemies per second
 	var enemy_rate = float(enemy_count) / max(duration, 1.0)
@@ -298,3 +296,15 @@ func skip_wave() -> void:
 	
 	# Resume game (if called from pause menu)
 	get_tree().paused = false
+
+
+func _reset_all_services() -> void:
+	DifficultyService.reset_state()
+	GameStateService.reset_state()
+	EconomyService.reset_state()
+	PlayerStatsService.reset_state()
+	TurretStatsService.reset_state()
+	ItemTrackingService.reset_state()
+	ModifierService.clear_modifiers()
+	GameModeService.reset_state()
+	SettingsService.reset_state()

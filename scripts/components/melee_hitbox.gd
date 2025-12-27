@@ -8,8 +8,8 @@ class_name MeleeHitbox
 signal enemy_hit(enemy: Node2D)
 
 ## Debug visualization colors
-const DEBUG_COLOR: Color = Color(1.0, 0.0, 1.0, 0.3)  # Magenta, semi-transparent
-const DEBUG_OUTLINE_COLOR: Color = Color(1.0, 0.0, 1.0, 0.8)  # Magenta, opaque
+const DEBUG_COLOR: Color = Color(1.0, 0.0, 1.0, 0.3) # Magenta, semi-transparent
+const DEBUG_OUTLINE_COLOR: Color = Color(1.0, 0.0, 1.0, 0.8) # Magenta, opaque
 const DEBUG_OUTLINE_WIDTH: float = 2.0
 
 @export var arc_degrees: float = 120.0
@@ -24,8 +24,8 @@ var is_active := false
 
 func _ready() -> void:
 	# Set collision layer and mask
-	collision_layer = 128  # Layer 8 (melee_attack = 2^7 = 128)
-	collision_mask = 32  # Layer 6 (enemy_hurtbox = 2^5 = 32)
+	collision_layer = 128 # Layer 8 (melee_attack = 2^7 = 128)
+	collision_mask = 32 # Layer 6 (enemy_hurtbox = 2^5 = 32)
 
 	# Connect signals
 	area_entered.connect(_on_area_entered)
@@ -44,20 +44,20 @@ func _ready() -> void:
 
 	# Connect to debug toggle event
 	Events.hitbox_debug_toggled.connect(_on_debug_toggled)
-	if Globals.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_ATTACK]:
+	if SettingsService.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_ATTACK]:
 		queue_redraw()
 
 func _generate_cone_points(arc_deg: float, range: float, seg_count: int) -> PackedVector2Array:
 	"""Generate a fan-shaped cone polygon for the melee hitbox."""
 	var points = PackedVector2Array()
-	points.append(Vector2.ZERO)  # Origin point at player position
+	points.append(Vector2.ZERO) # Origin point at player position
 
 	var half_arc = deg_to_rad(arc_deg / 2.0)
 
 	# Generate points along the arc
 	for i in range(seg_count + 1):
 		var t = float(i) / float(seg_count)
-		var angle = -half_arc + (t * 2.0 * half_arc)
+		var angle = - half_arc + (t * 2.0 * half_arc)
 		var point = Vector2(cos(angle), sin(angle)) * range
 		points.append(point)
 
@@ -109,7 +109,7 @@ func _on_area_entered(area: Area2D) -> void:
 
 
 func _draw() -> void:
-	if not Globals.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_ATTACK]:
+	if not SettingsService.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_ATTACK]:
 		return
 
 	if not collision_polygon or collision_polygon.polygon.size() == 0:

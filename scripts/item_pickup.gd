@@ -56,7 +56,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		# Check for nearby player to start magnet effect
 		var player = get_tree().get_first_node_in_group("player")
-		if player and global_position.distance_to(player.global_position) < Globals.get_pickup_radius():
+		if player and global_position.distance_to(player.global_position) < PlayerStatsService.get_pickup_radius():
 			start_collection(player)
 
 

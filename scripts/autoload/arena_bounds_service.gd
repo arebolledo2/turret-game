@@ -13,9 +13,9 @@ extends Node
 # Current arena type
 var _arena_type: GameEnums.ArenaType = GameEnums.ArenaType.RECTANGULAR
 
-# Fixed arena dimensions for rectangular (must match arena_setup.gd)
-const FIXED_RECT_WIDTH: int = 1920
-const FIXED_RECT_HEIGHT: int = 1080
+# Fixed arena dimensions for rectangular (must match arena_setup.gd and GameConstants)
+const FIXED_RECT_WIDTH: int = GameConstants.ARENA_WIDTH
+const FIXED_RECT_HEIGHT: int = GameConstants.ARENA_HEIGHT
 
 # Isometric dimensions scaled by sqrt(2) for equal surface area
 # Diamond area = W*H/2, so we need W*H*sqrt(2) to match rectangle

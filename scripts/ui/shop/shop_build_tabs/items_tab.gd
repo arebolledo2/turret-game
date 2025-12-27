@@ -34,9 +34,9 @@ func initialize(nodes: Dictionary) -> void:
 	item_description_label = nodes.get("item_description_label")
 
 func update_display() -> void:
-	var unique_item_count := Globals.item_counts.size()
+	var unique_item_count := ItemTrackingService.item_counts.size()
 	var total_item_count := 0
-	for count in Globals.item_counts.values():
+	for count in ItemTrackingService.item_counts.values():
 		total_item_count += count
 	
 	if items_title:
@@ -63,10 +63,10 @@ func update_display() -> void:
 			child.queue_free()
 		
 		# Add item buttons using shared helper
-		for item_id in Globals.item_counts.keys():
+		for item_id in ItemTrackingService.item_counts.keys():
 			if not ItemRegistry.has_item(item_id):
 				continue
-			var count: int = Globals.item_counts[item_id]
+			var count: int = ItemTrackingService.item_counts[item_id]
 			
 			var btn: Button = BuildDisplayUIScript.create_item_button(item_id, count)
 			if btn:

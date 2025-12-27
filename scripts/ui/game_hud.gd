@@ -23,7 +23,7 @@ func setup(nodes: Dictionary) -> void:
 
 	# Initialize labels
 	update_xp(0)
-	update_gold(Globals.total_gold)
+	update_gold(EconomyService.total_gold)
 	update_turret_count(0)
 
 
@@ -48,7 +48,7 @@ func update_health_bar(current: float, maximum: float) -> void:
 
 func update_wave_timer(time_remaining: float) -> void:
 	if timer_label:
-		var minutes := int(time_remaining) / 60
+		var minutes := int(time_remaining / 60.0)
 		var seconds := int(time_remaining) % 60
 		timer_label.text = "%d:%02d" % [minutes, seconds]
 

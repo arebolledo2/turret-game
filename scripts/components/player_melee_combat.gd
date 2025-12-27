@@ -51,13 +51,13 @@ func initialize(p_player: CharacterBody2D, p_sprite: Sprite2D, p_movement: Playe
 	assert(movement != null, "PlayerMeleeCombat: movement reference required")
 
 	# Load stats from Globals (facade provides access to GameConstants defaults)
-	if Globals:
-		melee_damage = Globals.PLAYER_MELEE_DAMAGE
-		melee_range = Globals.PLAYER_MELEE_RANGE
-		melee_arc_degrees = Globals.PLAYER_MELEE_ARC_DEGREES
-		melee_cooldown = Globals.PLAYER_MELEE_COOLDOWN
-		melee_windup_time = Globals.PLAYER_MELEE_WINDUP_TIME
-		melee_animation_duration = Globals.PLAYER_MELEE_ANIMATION_DURATION
+	melee_damage = GameConstants.PLAYER_MELEE_DAMAGE
+	melee_range = GameConstants.PLAYER_MELEE_RANGE
+	melee_arc_degrees = GameConstants.PLAYER_MELEE_ARC_DEGREES
+	melee_cooldown = GameConstants.PLAYER_MELEE_COOLDOWN
+	melee_windup_time = GameConstants.PLAYER_MELEE_WINDUP_TIME
+	melee_animation_duration = GameConstants.PLAYER_MELEE_ANIMATION_DURATION
+# ... (rest of the file uses GameConstants)
 
 	# Get MeleeVisuals nodes (sibling to Components)
 	melee_hitbox = player.get_node_or_null("MeleeVisuals/MeleeHitbox")

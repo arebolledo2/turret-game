@@ -5,7 +5,7 @@ extends Node
 class Buff:
 	var stat: String
 	var value: float
-	var operation: String  # "add" or "multiply"
+	var operation: String # "add" or "multiply"
 	var duration: float
 	var time_remaining: float
 	var stack_count: int = 1
@@ -30,10 +30,10 @@ func _on_turret_fired(turret: Node2D) -> void:
 	# Chain Reaction: When a turret fires, turrets within 150px +8% fire rate for 2s (stacks 5x)
 	if not ItemRegistry.has_special_effect("chain_reaction"):
 		return
-	if Globals.item_counts.get("chain_reaction", 0) == 0:
+	if ItemTrackingService.item_counts.get("chain_reaction", 0) == 0:
 		return
 
-	var turret_manager = Globals.turret_manager
+	var turret_manager = get_node_or_null("/root/Main/TurretManager")
 	if not turret_manager:
 		return
 

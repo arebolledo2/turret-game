@@ -115,9 +115,9 @@ func hide() -> void:
 
 func update_stats() -> void:
 	if level_label:
-		level_label.text = "Level: %d" % Globals.player_level
+		level_label.text = "Level: %d" % GameStateService.player_level
 	if wave_label:
-		wave_label.text = "Wave: %d/%d" % [Globals.current_wave, Globals.MAX_WAVES]
+		wave_label.text = "Wave: %d/%d" % [GameStateService.current_wave, GameConstants.MAX_WAVES]
 
 	if _player and stats_grid:
 		for child in stats_grid.get_children():
@@ -128,21 +128,22 @@ func update_stats() -> void:
 		if stats_grid.has_node("HealthValue"):
 			stats_grid.get_node("HealthValue").text = "%d/%d" % [_player.current_health, _player.max_health]
 		if stats_grid.has_node("SpeedValue"):
-			stats_grid.get_node("SpeedValue").text = "%d" % Globals.get_player_speed()
+			stats_grid.get_node("SpeedValue").text = "%d" % PlayerStatsService.get_player_speed()
 		if stats_grid.has_node("XPValue"):
-			stats_grid.get_node("XPValue").text = "%d" % Globals.total_xp
+			stats_grid.get_node("XPValue").text = "%d" % GameStateService.total_xp
 		if stats_grid.has_node("KillsValue"):
-			stats_grid.get_node("KillsValue").text = "%d" % Globals.total_kills
+			stats_grid.get_node("KillsValue").text = "%d" % GameStateService.total_kills
 
-		var minutes := int(Globals.time_survived) / 60
-		var seconds := int(Globals.time_survived) % 60
+		var total_time = GameStateService.time_survived
+		var minutes := int(total_time / 60.0)
+		var seconds := int(total_time) % 60
 		if stats_grid.has_node("TimeValue"):
 			stats_grid.get_node("TimeValue").text = "%d:%02d" % [minutes, seconds]
 
 		if stats_grid.has_node("TurretsValue"):
-			stats_grid.get_node("TurretsValue").text = "%d" % Globals.get_total_turret_count()
+			stats_grid.get_node("TurretsValue").text = "%d" % TurretStatsService.get_total_turret_count()
 		if stats_grid.has_node("LuckValue"):
-			stats_grid.get_node("LuckValue").text = "%d" % Globals.get_player_luck_display()
+			stats_grid.get_node("LuckValue").text = "%d" % PlayerStatsService.get_player_luck_display()
 
 
 func _refresh_inventory() -> void:

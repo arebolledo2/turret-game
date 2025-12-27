@@ -93,7 +93,7 @@ static func update_item_details(nodes: Dictionary, item_id: String) -> void:
 		return
 
 	var item_data: Dictionary = ItemRegistry.get_item_dict(item_id)
-	var count: int = Globals.item_counts.get(item_id, 1)
+	var count: int = ItemTrackingService.item_counts.get(item_id, 1)
 	
 	if nodes.has("item_icon_label") and nodes["item_icon_label"]:
 		nodes["item_icon_label"].add_theme_font_override("font", MAIN_FONT)

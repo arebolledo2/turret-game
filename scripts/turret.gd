@@ -24,10 +24,16 @@ func _ready() -> void:
 
 func _initialize_components() -> void:
 	"""Initialize all components with their dependencies."""
-	# Safety check - ensure components are loaded
-	if not combat or not visuals:
-		push_error("Turret components not found! Ensure Components node structure exists in scene.")
+	# Safety check - ensure components are loaded (skip error if in unit tests without scene tree)
+	if not has_node("Components/TurretCombat") or not has_node("Components/TurretVisuals"):
+		# Only error if we are supposed to have these (i.e. not in a bare unit test)
+		if get_tree() and get_tree().current_scene:
+			push_error("Turret components not found! Ensure Components node structure exists in scene.")
 		return
+
+	# Re-assign if null (handles cases where @onready missed them or script was added dynamically)
+	if not combat: combat = $Components/TurretCombat
+	if not visuals: visuals = $Components/TurretVisuals
 
 	# Initialize combat component
 	combat.initialize(self, turret_type, stats)
@@ -40,7 +46,8 @@ func update_stats() -> void:
 	"""Update turret stats from registry and apply modifiers."""
 	var old_fire_rate = current_fire_rate
 
-	stats = Globals.get_turret_stats(turret_type)
+	var damage_mult = DifficultyService.get_difficulty_config()["turret_damage_mult"]
+	stats = TurretStatsService.get_turret_stats(turret_type, damage_mult)
 
 	# Apply proximity-based modifiers from items
 	_apply_proximity_modifiers()
@@ -68,13 +75,13 @@ func update_stats() -> void:
 		visuals.update_stats(stats)
 
 func _apply_proximity_modifiers() -> void:
-	var turret_manager = Globals.turret_manager
+	var turret_manager = get_node_or_null("/root/Main/TurretManager")
 	if not turret_manager:
 		return
 
 	# Signal Amplifier: +15% range if clustered, -10% fire rate if isolated
-	if ItemRegistry.has_special_effect("signal_amplifier") and Globals.item_counts.get("signal_amplifier", 0) > 0:
-		var stacks = Globals.item_counts.get("signal_amplifier", 0)
+	if ItemRegistry.has_special_effect("signal_amplifier") and ItemTrackingService.item_counts.get("signal_amplifier", 0) > 0:
+		var stacks = ItemTrackingService.item_counts.get("signal_amplifier", 0)
 		var nearby = turret_manager.get_turrets_within_radius(global_position, 200.0)
 		if nearby.size() > 0:
 			# Clustered: +15% range per stack
@@ -86,8 +93,8 @@ func _apply_proximity_modifiers() -> void:
 			stats["fire_rate"] = stats.get("fire_rate", 1.0) * fire_rate_mult
 
 	# Isolation Protocol: +40% damage if isolated, -15% damage if clustered
-	if ItemRegistry.has_special_effect("isolation_protocol") and Globals.item_counts.get("isolation_protocol", 0) > 0:
-		var stacks = Globals.item_counts.get("isolation_protocol", 0)
+	if ItemRegistry.has_special_effect("isolation_protocol") and ItemTrackingService.item_counts.get("isolation_protocol", 0) > 0:
+		var stacks = ItemTrackingService.item_counts.get("isolation_protocol", 0)
 		var nearby = turret_manager.get_turrets_within_radius(global_position, 250.0)
 		if nearby.size() == 0:
 			# Isolated: +40% damage per stack
@@ -99,8 +106,8 @@ func _apply_proximity_modifiers() -> void:
 			stats["damage"] = stats.get("damage", 0.0) * damage_mult
 
 	# Feedback Loop: +6% fire rate per nearby turret (max +30% per stack)
-	if ItemRegistry.has_special_effect("feedback_loop") and Globals.item_counts.get("feedback_loop", 0) > 0:
-		var stacks = Globals.item_counts.get("feedback_loop", 0)
+	if ItemRegistry.has_special_effect("feedback_loop") and ItemTrackingService.item_counts.get("feedback_loop", 0) > 0:
+		var stacks = ItemTrackingService.item_counts.get("feedback_loop", 0)
 		var nearby = turret_manager.get_turrets_within_radius(global_position, 180.0)
 		var fire_rate_bonus = min(nearby.size() * 0.06, 0.30) * stacks
 		stats["fire_rate"] = stats.get("fire_rate", 1.0) * (1.0 + fire_rate_bonus)

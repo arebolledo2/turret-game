@@ -270,7 +270,7 @@ func _setup_components() -> void:
 
 
 func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("pause") and Globals.is_game_active:
+	if event.is_action_pressed("pause") and GameStateService.is_game_active:
 		if settings_menu.visible:
 			_on_settings_back_pressed()
 		else:
@@ -310,7 +310,7 @@ func _on_gold_changed(_amount: int, total: int) -> void:
 
 
 func _on_turret_spawned(_turret: Node2D, _position: Vector2) -> void:
-	game_display.update_turret_count(Globals.turrets_spawned)
+	game_display.update_turret_count(GameStateService.turrets_spawned)
 
 
 func _on_show_wave_announcement(wave_number: int) -> void:
@@ -423,8 +423,9 @@ func _on_quit_pressed() -> void:
 
 
 func _on_skip_wave_pressed() -> void:
-	if Globals.game_manager and Globals.game_manager.has_method("skip_wave"):
-		Globals.game_manager.skip_wave()
+	var game_manager = get_node_or_null("/root/Main/GameManager")
+	if game_manager and game_manager.has_method("skip_wave"):
+		game_manager.skip_wave()
 	menu_manager.toggle_pause()
 
 
@@ -458,7 +459,7 @@ func _on_player_attack_toggled(toggled_on: bool) -> void:
 # DAMAGE NUMBERS
 # =============================================================================
 func _on_damage_dealt(pos: Vector2, amount: float, is_crit: bool = false) -> void:
-	if not Globals.show_damage_numbers:
+	if not SettingsService.show_damage_numbers:
 		return
 	if damage_number_scene == null:
 		return
@@ -471,7 +472,7 @@ func _on_damage_dealt(pos: Vector2, amount: float, is_crit: bool = false) -> voi
 
 func _on_dot_damage_dealt(pos: Vector2, amount: float) -> void:
 	"""Handle DoT damage numbers with orange color for fire damage."""
-	if not Globals.show_damage_numbers:
+	if not SettingsService.show_damage_numbers:
 		return
 	if damage_number_scene == null:
 		return

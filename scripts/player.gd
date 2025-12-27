@@ -1,6 +1,6 @@
 extends CharacterBody2D
 
-# Stats from Globals (can be overridden in editor)
+# Stats from Services (can be overridden in editor)
 @export var max_health: float = 100.0
 @export var speed: float = 300.0
 @export var pickup_radius: float = 50.0
@@ -33,16 +33,15 @@ var projectile_scene: PackedScene
 @onready var melee_combat: PlayerMeleeCombat = $Components/PlayerMeleeCombat
 
 func _ready() -> void:
-	# Initialize from Globals if available
-	if Globals:
-		max_health = Globals.get_player_max_health()
-		speed = Globals.get_player_speed()
-		pickup_radius = Globals.get_pickup_radius()
-		invincibility_time = Globals.PLAYER_INVINCIBILITY_TIME
-		weapon_damage = Globals.get_player_weapon_damage()
-		weapon_fire_rate = Globals.PLAYER_WEAPON_FIRE_RATE
-		weapon_range = Globals.PLAYER_WEAPON_RANGE
-		projectile_speed = Globals.PLAYER_PROJECTILE_SPEED
+	# Initialize from services
+	max_health = PlayerStatsService.get_player_max_health(DifficultyService.get_difficulty_config()["player_health_mult"])
+	speed = PlayerStatsService.get_player_speed()
+	pickup_radius = PlayerStatsService.get_pickup_radius()
+	invincibility_time = GameConstants.PLAYER_INVINCIBILITY_TIME
+	weapon_damage = PlayerStatsService.get_player_weapon_damage()
+	weapon_fire_rate = GameConstants.PLAYER_WEAPON_FIRE_RATE
+	weapon_range = GameConstants.PLAYER_WEAPON_RANGE
+	projectile_speed = GameConstants.PLAYER_PROJECTILE_SPEED
 
 	current_health = max_health
 	add_to_group("player")
@@ -79,7 +78,7 @@ func _on_debug_toggled(type: int, _enabled: bool) -> void:
 		queue_redraw()
 
 func _draw() -> void:
-	if not Globals.debug_hitbox_flags[GameEnums.HitboxType.PHYSICS]:
+	if not SettingsService.debug_hitbox_flags[GameEnums.HitboxType.PHYSICS]:
 		return
 	
 	if has_node("CollisionShape2D"):
@@ -100,7 +99,7 @@ func _draw() -> void:
 
 func _physics_process(delta: float) -> void:
 	# Don't process if game hasn't started
-	if Globals == null or not Globals.is_game_active:
+	if not GameStateService.is_game_active:
 		return
 
 	velocity = movement.process(delta)
@@ -120,8 +119,8 @@ func _physics_process(delta: float) -> void:
 	
 	# Turret range toggle (Tab / Y button)
 	if Input.is_action_just_pressed("toggle_range"):
-		Globals.show_turret_ranges = not Globals.show_turret_ranges
-		Events.turret_range_toggled.emit(Globals.show_turret_ranges)
+		SettingsService.show_turret_ranges = not SettingsService.show_turret_ranges
+		Events.turret_range_toggled.emit(SettingsService.show_turret_ranges)
 
 	# Combat systems
 	combat.process(delta)
@@ -288,7 +287,7 @@ func get_health_percent() -> float:
 
 ## Update heal timer based on current health regen
 func update_heal_timer() -> void:
-	var interval := Globals.get_heal_interval()
+	var interval := PlayerStatsService.get_heal_interval()
 	
 	# No regen or at full health - stop timer
 	if interval < 0 or current_health >= max_health:
@@ -321,8 +320,8 @@ func _on_heal_timer_timeout() -> void:
 func apply_defensive_pulse() -> void:
 	"""Knockback enemies when player takes damage."""
 	var enemies = get_tree().get_nodes_in_group("enemies")
-	var pulse_radius: float = Globals.PLAYER_DEFENSIVE_PULSE_RADIUS
-	var pulse_force: float = Globals.PLAYER_DEFENSIVE_PULSE_KNOCKBACK_FORCE
+	var pulse_radius: float = GameConstants.PLAYER_DEFENSIVE_PULSE_RADIUS
+	var pulse_force: float = GameConstants.PLAYER_DEFENSIVE_PULSE_KNOCKBACK_FORCE
 
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
@@ -344,7 +343,7 @@ func spawn_defensive_pulse_visual() -> void:
 	var segments = 32
 	for i in range(segments):
 		var angle = i * TAU / float(segments)
-		points.append(Vector2(cos(angle), sin(angle)) * Globals.PLAYER_DEFENSIVE_PULSE_RADIUS)
+		points.append(Vector2(cos(angle), sin(angle)) * GameConstants.PLAYER_DEFENSIVE_PULSE_RADIUS)
 	viz.polygon = points
 	viz.color = Color(1.0, 0.8, 0.3) # Golden defensive color
 	viz.color.a = 0.5

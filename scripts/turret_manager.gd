@@ -53,13 +53,13 @@ func spawn_turret() -> void:
 		get_parent().add_child(turret)
 	
 	turrets.append(turret)
-	Globals.turrets_spawned += 1
+	GameStateService.turrets_spawned += 1
 	
 	# Track count by type (default to basic for MVP)
 	var type = "basic"
-	if not Globals.turret_counts.has(type):
-		Globals.turret_counts[type] = 0
-	Globals.turret_counts[type] += 1
+	if not TurretStatsService.turret_counts.has(type):
+		TurretStatsService.turret_counts[type] = 0
+	TurretStatsService.turret_counts[type] += 1
 	
 	Events.turret_spawned.emit(turret, spawn_pos)
 
@@ -77,11 +77,11 @@ func find_valid_spawn_position(player: Node2D, max_attempts: int = 50) -> Vector
 
 func is_position_valid(pos: Vector2, player: Node2D) -> bool:
 	# Check distance from player
-	if player and pos.distance_to(player.global_position) < Globals.TURRET_PLAYER_EXCLUSION:
+	if player and pos.distance_to(player.global_position) < GameConstants.TURRET_PLAYER_EXCLUSION:
 		return false
 
 	# Check distance from other turrets (modified by Personal Space item)
-	var min_distance = Globals.get_turret_min_distance()
+	var min_distance = TurretStatsService.get_turret_min_distance(ItemTrackingService.item_counts)
 	for turret in turrets:
 		if is_instance_valid(turret):
 			if pos.distance_to(turret.global_position) < min_distance:
@@ -122,11 +122,11 @@ func find_valid_spawn_position_excluding(player: Node2D, existing_positions: Arr
 		var pos := ArenaBoundsService.get_random_arena_position(margin)
 
 		# Check distance from player
-		if player and pos.distance_to(player.global_position) < Globals.TURRET_PLAYER_EXCLUSION:
+		if player and pos.distance_to(player.global_position) < GameConstants.TURRET_PLAYER_EXCLUSION:
 			continue
 
 		# Check distance from existing positions (modified by Personal Space item)
-		var min_distance = Globals.get_turret_min_distance()
+		var min_distance = TurretStatsService.get_turret_min_distance(ItemTrackingService.item_counts)
 		var valid := true
 		for existing_pos in existing_positions:
 			if pos.distance_to(existing_pos) < min_distance:
@@ -150,8 +150,8 @@ func spawn_starting_turret() -> void:
 			if is_instance_valid(t):
 				t.queue_free()
 		turrets.clear()
-		Globals.turret_counts.clear()
-		Globals.turrets_spawned = 0
+		TurretStatsService.turret_counts.clear()
+		GameStateService.turrets_spawned = 0
 	
 	# Spawn at arena center (0, 0)
 	var spawn_pos := Vector2.ZERO
@@ -167,19 +167,19 @@ func spawn_starting_turret() -> void:
 		get_parent().add_child(turret)
 	
 	turrets.append(turret)
-	Globals.turrets_spawned += 1
+	GameStateService.turrets_spawned += 1
 	
-	if not Globals.turret_counts.has("normal"):
-		Globals.turret_counts["normal"] = 0
-	Globals.turret_counts["normal"] += 1
+	if not TurretStatsService.turret_counts.has("normal"):
+		TurretStatsService.turret_counts["normal"] = 0
+	TurretStatsService.turret_counts["normal"] += 1
 	
 	Events.turret_spawned.emit(turret, spawn_pos)
 
 func spawn_pending_turrets() -> void:
 	"""Spawn all turrets from pending purchases queue"""
-	for turret_id in Globals.pending_turret_purchases:
+	for turret_id in EconomyService.pending_turret_purchases:
 		spawn_turret_type(turret_id)
-	Globals.pending_turret_purchases.clear()
+	EconomyService.pending_turret_purchases.clear()
 
 func spawn_turret_type(turret_id: String) -> void:
 	if turret_scene == null:
@@ -194,7 +194,7 @@ func spawn_turret_type(turret_id: String) -> void:
 	var spawn_pos: Vector2
 
 	# First turret of the game spawns next to player
-	if Globals.turrets_spawned == 0 and player:
+	if GameStateService.turrets_spawned == 0 and player:
 		spawn_pos = player.global_position + Vector2(80, 0) # 80 pixels to the right
 	else:
 		spawn_pos = find_valid_spawn_position(player)
@@ -214,11 +214,11 @@ func spawn_turret_type(turret_id: String) -> void:
 		get_parent().add_child(turret)
 
 	turrets.append(turret)
-	Globals.turrets_spawned += 1
+	GameStateService.turrets_spawned += 1
 
-	if not Globals.turret_counts.has(turret_id):
-		Globals.turret_counts[turret_id] = 0
-	Globals.turret_counts[turret_id] += 1
+	if not TurretStatsService.turret_counts.has(turret_id):
+		TurretStatsService.turret_counts[turret_id] = 0
+	TurretStatsService.turret_counts[turret_id] += 1
 
 	Events.turret_spawned.emit(turret, spawn_pos)
 

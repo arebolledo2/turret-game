@@ -6,9 +6,9 @@ extends Node2D
 ## The arena size is FIXED for consistent gameplay across all resolutions.
 ## Supports both rectangular and isometric diamond shapes.
 
-# Fixed arena dimensions for consistent gameplay
-const FIXED_ARENA_WIDTH: int = 1920
-const FIXED_ARENA_HEIGHT: int = 1080
+# Fixed arena dimensions for consistent gameplay (from GameConstants)
+const FIXED_ARENA_WIDTH: int = GameConstants.ARENA_WIDTH
+const FIXED_ARENA_HEIGHT: int = GameConstants.ARENA_HEIGHT
 
 # Original rectangular nodes (from scene)
 @onready var ground: TextureRect = $Ground

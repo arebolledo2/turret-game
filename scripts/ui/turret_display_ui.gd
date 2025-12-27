@@ -64,8 +64,9 @@ static func style_turret_button(btn: Button, turret_type: String) -> void:
 static func update_turret_details(nodes: Dictionary, turret_type: String) -> void:
 	var config: Dictionary = TurretRegistry.get_type(turret_type)
 	var base_stats: Dictionary = TurretRegistry.get_base_stats(turret_type)
-	var modified_stats: Dictionary = Globals.get_turret_stats(turret_type)
-	var count: int = Globals.turret_counts.get(turret_type, 0)
+	var difficulty_mult: float = DifficultyService.get_difficulty_config()["turret_damage_mult"]
+	var modified_stats: Dictionary = TurretStatsService.get_turret_stats(turret_type, difficulty_mult)
+	var count: int = TurretStatsService.turret_counts.get(turret_type, 0)
 
 	if nodes.has("turret_name_label") and nodes["turret_name_label"]:
 		nodes["turret_name_label"].add_theme_font_override("font", MAIN_FONT)

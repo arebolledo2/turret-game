@@ -36,7 +36,7 @@ func initialize(nodes: Dictionary) -> void:
 	turret_dps_label = nodes.get("turret_dps_label")
 
 func update_display() -> void:
-	var total_turrets := Globals.get_total_turret_count()
+	var total_turrets := TurretStatsService.get_total_turret_count()
 	
 	if turrets_title:
 		turrets_title.add_theme_font_override("font", MAIN_FONT)
@@ -70,7 +70,7 @@ func update_display() -> void:
 	# Create icons for each turret type
 	var first_type: String = ""
 	for type in TurretRegistry.get_all_type_ids():
-		var count: int = Globals.turret_counts.get(type, 0)
+		var count: int = TurretStatsService.turret_counts.get(type, 0)
 		if count > 0:
 			if first_type.is_empty():
 				first_type = type
@@ -85,7 +85,7 @@ func update_display() -> void:
 			_turret_buttons.append(btn)
 	
 	# Auto-select first turret if nothing selected
-	if _selected_turret_type.is_empty() or Globals.turret_counts.get(_selected_turret_type, 0) == 0:
+	if _selected_turret_type.is_empty() or TurretStatsService.turret_counts.get(_selected_turret_type, 0) == 0:
 		_selected_turret_type = first_type
 	
 	if not _selected_turret_type.is_empty():

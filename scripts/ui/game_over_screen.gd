@@ -53,17 +53,18 @@ func show_game_over(victory: bool) -> void:
 	title_label.modulate = Color.GREEN if victory else Color.RED
 
 	# Format stats
-	var time_minutes := int(Globals.time_survived) / 60
-	var time_seconds := int(Globals.time_survived) % 60
+	var total_time = GameStateService.time_survived
+	var time_minutes := int(total_time / 60.0)
+	var time_seconds := int(total_time) % 60
 	stats_label.text = """Wave Reached: %d
 Enemies Killed: %d
 XP Collected: %d
 Turrets Spawned: %d
 Time Survived: %d:%02d""" % [
-		Globals.current_wave,
-		Globals.total_kills,
-		Globals.total_xp,
-		Globals.turrets_spawned,
+		GameStateService.current_wave,
+		GameStateService.total_kills,
+		GameStateService.total_xp,
+		GameStateService.turrets_spawned,
 		time_minutes, time_seconds
 	]
 

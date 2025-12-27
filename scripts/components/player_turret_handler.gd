@@ -48,7 +48,7 @@ func process(_delta: float) -> void:
 func find_nearby_turret() -> void:
 	"""Find the nearest turret within pickup range and manage indicators."""
 	var turrets = player.get_tree().get_nodes_in_group("turrets")
-	var closest_distance: float = Globals.TURRET_PICKUP_RANGE
+	var closest_distance: float = GameConstants.TURRET_PICKUP_RANGE
 	var previous_nearby := nearby_turret
 	nearby_turret = null
 
@@ -106,7 +106,7 @@ func update_carried_turret_position() -> void:
 		carried_turret = null
 		return
 
-	carried_turret.global_position = player.global_position + Globals.TURRET_CARRY_OFFSET
+	carried_turret.global_position = player.global_position + GameConstants.TURRET_CARRY_OFFSET
 
 func force_drop() -> void:
 	"""Force drop the carried turret (called on player death)."""

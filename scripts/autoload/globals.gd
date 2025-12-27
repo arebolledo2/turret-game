@@ -37,13 +37,13 @@ extends Node
 ## - Never use hard-coded paths like get_node("/root/Main/...") - use this facade instead
 
 # Service references (lazy loaded on first access)
-var _difficulty_service: DifficultyService = null
-var _game_state_service: GameStateService = null
-var _economy_service: EconomyService = null
-var _player_stats_service: PlayerStatsService = null
-var _turret_stats_service: TurretStatsService = null
-var _item_tracking_service: ItemTrackingService = null
-var _modifier_service: ModifierService = null
+var _difficulty_service: Node = null
+var _game_state_service: Node = null
+var _economy_service: Node = null
+var _player_stats_service: Node = null
+var _turret_stats_service: Node = null
+var _item_tracking_service: Node = null
+var _modifier_service: Node = null
 var _game_mode_service: Node = null
 
 # Scene manager references (lazy loaded on first access)
@@ -52,37 +52,37 @@ var _turret_manager: Node = null
 var _game_manager: Node = null
 
 # Lazy getters for services
-func _get_difficulty_service() -> DifficultyService:
+func _get_difficulty_service() -> Node:
 	if _difficulty_service == null:
 		_difficulty_service = get_node("/root/DifficultyService")
 	return _difficulty_service
 
-func _get_game_state_service() -> GameStateService:
+func _get_game_state_service() -> Node:
 	if _game_state_service == null:
 		_game_state_service = get_node("/root/GameStateService")
 	return _game_state_service
 
-func _get_economy_service() -> EconomyService:
+func _get_economy_service() -> Node:
 	if _economy_service == null:
 		_economy_service = get_node("/root/EconomyService")
 	return _economy_service
 
-func _get_player_stats_service() -> PlayerStatsService:
+func _get_player_stats_service() -> Node:
 	if _player_stats_service == null:
 		_player_stats_service = get_node("/root/PlayerStatsService")
 	return _player_stats_service
 
-func _get_turret_stats_service() -> TurretStatsService:
+func _get_turret_stats_service() -> Node:
 	if _turret_stats_service == null:
 		_turret_stats_service = get_node("/root/TurretStatsService")
 	return _turret_stats_service
 
-func _get_item_tracking_service() -> ItemTrackingService:
+func _get_item_tracking_service() -> Node:
 	if _item_tracking_service == null:
 		_item_tracking_service = get_node("/root/ItemTrackingService")
 	return _item_tracking_service
 
-func _get_modifier_service() -> ModifierService:
+func _get_modifier_service() -> Node:
 	if _modifier_service == null:
 		_modifier_service = get_node("/root/ModifierService")
 	return _modifier_service

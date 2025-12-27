@@ -40,7 +40,7 @@ var behavior_params: Dictionary = {}
 @onready var visuals: EnemyVisuals = $Components/EnemyVisuals
 @onready var status_effects: EnemyStatusEffects = $Components/EnemyStatusEffects
 
-var combat: Node = null  # Optional combat component for ranged enemies
+var combat: Node = null # Optional combat component for ranged enemies
 
 func _ready() -> void:
 	print("DEBUG Enemy: _ready() START")
@@ -86,7 +86,7 @@ func _on_debug_toggled(type: int, _enabled: bool) -> void:
 		queue_redraw()
 
 func _draw() -> void:
-	if not Globals.debug_hitbox_flags[GameEnums.HitboxType.PHYSICS]:
+	if not SettingsService.debug_hitbox_flags[GameEnums.HitboxType.PHYSICS]:
 		return
 	
 	if has_node("CollisionShape2D"):
@@ -212,8 +212,9 @@ func initialize(wave: int, type_id: String = "basic") -> void:
 	# Apply base type configuration
 	_apply_type_config(type_id)
 	
-	# Get wave-scaled stats from Globals
-	var scaled_stats := Globals.get_enemy_stats_for_wave(type_id, wave)
+	# Get wave-scaled stats from EnemyRegistry
+	var config: Dictionary = DifficultyService.get_difficulty_config()
+	var scaled_stats := EnemyRegistry.get_stats_for_wave(type_id, wave, config)
 	max_health = scaled_stats.get("health", max_health)
 	speed = scaled_stats.get("speed", speed)
 	contact_damage = scaled_stats.get("contact_damage", contact_damage)
@@ -282,13 +283,13 @@ func die() -> void:
 		combat.cleanup()
 
 	# Handle explosive behavior
-	if Globals.enemy_has_behavior(enemy_type, GameEnums.EnemyBehavior.EXPLOSIVE):
+	if EnemyRegistry.has_behavior(enemy_type, GameEnums.EnemyBehavior.EXPLOSIVE):
 		_explode()
 
 	# Emit signals for XP drop and kill tracking
 	Events.enemy_killed.emit(self, global_position)
 	Events.xp_dropped.emit(global_position, xp_value)
-	Globals.total_kills += 1
+	GameStateService.total_kills += 1
 
 	# Death effect (scale down and fade)
 	visuals.play_death_animation(queue_free)

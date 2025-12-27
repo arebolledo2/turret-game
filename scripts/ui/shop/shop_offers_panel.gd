@@ -19,7 +19,7 @@ signal focus_restored()
 func initialize(offers_cont: HBoxContainer, reroll_btn: Button) -> void:
 	offers_container = offers_cont
 	reroll_button = reroll_btn
-	shop_manager = Globals.shop_manager
+	shop_manager = get_node_or_null("/root/Main/ShopManager")
 	
 	if reroll_button:
 		reroll_button.pressed.connect(_on_reroll_pressed)
@@ -96,7 +96,7 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	else:
 		purchase_button.text = "Purchase"
 		purchase_button.pressed.connect(func(): purchase_requested.emit(index))
-		if Globals.total_gold < offer["price"]:
+		if EconomyService.total_gold < offer["price"]:
 			purchase_button.disabled = true
 	button_vbox.add_child(purchase_button)
 
@@ -126,7 +126,8 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 func _create_turret_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	var turret_id = offer["turret_id"]
 	var turret_config = TurretRegistry.get_type(turret_id)
-	var turret_stats = Globals.get_turret_stats(turret_id)
+	var damage_mult = DifficultyService.get_difficulty_config()["turret_damage_mult"]
+	var turret_stats = TurretStatsService.get_turret_stats(turret_id, damage_mult)
 
 	# Icon
 	var icon = Label.new()
@@ -339,7 +340,7 @@ func update_reroll_button() -> void:
 		reroll_button.disabled = not shop_manager.can_afford_reroll()
 
 func regenerate_offers() -> void:
-	_on_offers_generated(Globals.current_shop_offers)
+	_on_offers_generated(EconomyService.current_shop_offers)
 
 func get_offer_buttons() -> Array[Button]:
 	return _offer_buttons

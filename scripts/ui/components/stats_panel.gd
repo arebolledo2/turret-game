@@ -20,7 +20,7 @@ var shop_manager: Node = null
 
 func _ready() -> void:
 	_player = get_tree().get_first_node_in_group("player")
-	shop_manager = Globals.shop_manager
+	shop_manager = get_node_or_null("/root/Main/ShopManager")
 
 
 func refresh() -> void:
@@ -45,8 +45,9 @@ func _update_player_stats() -> void:
 	player_section.add_child(header)
 
 	# Get modified values
-	var modified_max_health := Globals.get_player_max_health()
-	var modified_speed := Globals.get_player_speed()
+	var difficulty_config = DifficultyService.get_difficulty_config()
+	var modified_max_health := PlayerStatsService.get_player_max_health(difficulty_config["player_health_mult"])
+	var modified_speed := PlayerStatsService.get_player_speed()
 
 	# Health
 	var health_current := 100
@@ -62,7 +63,7 @@ func _update_player_stats() -> void:
 	player_section.add_child(health_label)
 
 	# Health Regen (only show if > 0)
-	var health_regen := Globals.get_player_health_regen()
+	var health_regen := PlayerStatsService.get_player_health_regen()
 	if health_regen > 0:
 		player_section.add_child(_create_label("💚 Regen: +%d" % health_regen, 16, Color.GREEN))
 
@@ -72,7 +73,7 @@ func _update_player_stats() -> void:
 	player_section.add_child(speed_label)
 
 	# Luck
-	var luck := Globals.get_player_luck_display()
+	var luck := PlayerStatsService.get_player_luck_display()
 	player_section.add_child(_create_label("🍀 Luck: %d" % luck, 16))
 
 	# Crit Chance
@@ -90,14 +91,14 @@ func _update_player_stats() -> void:
 	player_section.add_child(crit_mult_label)
 
 	# XP
-	player_section.add_child(_create_label("✨ XP: %d" % Globals.total_xp, 16))
+	player_section.add_child(_create_label("✨ XP: %d" % GameStateService.total_xp, 16))
 
 	# Kills
-	player_section.add_child(_create_label("💀 Kills: %d" % Globals.total_kills, 16))
+	player_section.add_child(_create_label("💀 Kills: %d" % GameStateService.total_kills, 16))
 
 	# Time
-	var minutes := int(Globals.time_survived) / 60
-	var seconds := int(Globals.time_survived) % 60
+	var minutes := int(GameStateService.time_survived) / 60
+	var seconds := int(GameStateService.time_survived) % 60
 	player_section.add_child(_create_label("⏱ Time: %d:%02d" % [minutes, seconds], 16))
 
 
@@ -113,20 +114,21 @@ func _update_economy_stats() -> void:
 	economy_section.add_child(_create_label("💰 ECONOMY", 20, Color(1, 0.84, 0, 1)))
 
 	# Current Gold
-	economy_section.add_child(_create_label("Gold: %d" % Globals.total_gold, 16))
+	economy_section.add_child(_create_label("Gold: %d" % EconomyService.total_gold, 16))
 
 	# Gold Earn Multiplier
-	var gold_mult := Globals.get_gold_earn_multiplier()
+	var gold_mult := ItemTrackingService.get_gold_earn_multiplier()
 	var gold_stat := BuildDisplayUIScript.format_stat_with_modifier("Earn Rate", 100.0, gold_mult * 100.0, "%.0f%%", true)
 	economy_section.add_child(_create_label(gold_stat["text"], 16, gold_stat["color"]))
 
 	# Shop Prices
-	var price_mult := Globals.get_shop_price_multiplier()
+	var price_mult := ItemTrackingService.get_shop_price_multiplier()
 	var price_stat := BuildDisplayUIScript.format_stat_with_modifier("Shop Prices", 100.0, price_mult * 100.0, "%.0f%%", false)
 	economy_section.add_child(_create_label(price_stat["text"], 16, price_stat["color"]))
 
 	# Reroll Cost
-	var reroll_cost: int = shop_manager.get_reroll_cost() if shop_manager else 0
+	var reroll_mult := ItemTrackingService.get_reroll_cost_multiplier()
+	var reroll_cost: int = shop_manager.get_reroll_cost(reroll_mult) if shop_manager else 0
 	economy_section.add_child(_create_label("Reroll: %dg" % reroll_cost, 16))
 
 	# Separator
@@ -136,13 +138,13 @@ func _update_economy_stats() -> void:
 	economy_section.add_child(_create_label("📊 PROGRESS", 20, Color(0.7, 0.7, 1, 1)))
 
 	# Wave
-	economy_section.add_child(_create_label("Wave: %d" % Globals.current_wave, 16))
+	economy_section.add_child(_create_label("Wave: %d" % GameStateService.current_wave, 16))
 
 	# Turrets Owned
-	economy_section.add_child(_create_label("Turrets: %d" % Globals.get_total_turret_count(), 16))
+	economy_section.add_child(_create_label("Turrets: %d" % TurretStatsService.get_total_turret_count(), 16))
 
 	# Items Collected
-	economy_section.add_child(_create_label("Items: %d" % Globals.collected_items.size(), 16))
+	economy_section.add_child(_create_label("Items: %d" % ItemTrackingService.collected_items.size(), 16))
 
 
 func _create_label(text: String, font_size: int, color: Color = Color.WHITE) -> Label:

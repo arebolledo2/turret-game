@@ -45,27 +45,27 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 
 	# Initialize checkbox states
 	if show_damage_check:
-		show_damage_check.button_pressed = Globals.show_damage_numbers
+		show_damage_check.button_pressed = SettingsService.show_damage_numbers
 		
 	if isometric_debug_check:
 		print("DEBUG: Connecting isometric_debug_check")
-		isometric_debug_check.button_pressed = Globals.isometric_debug_enabled
+		isometric_debug_check.button_pressed = SettingsService.isometric_debug_enabled
 		if not isometric_debug_check.toggled.is_connected(on_isometric_debug_toggled):
 			isometric_debug_check.toggled.connect(on_isometric_debug_toggled)
 	else:
 		print("ERROR: isometric_debug_check node NOT FOUND in SettingsMenuUI")
 
 	if physics_hitboxes_check:
-		physics_hitboxes_check.button_pressed = Globals.debug_hitbox_flags[GameEnums.HitboxType.PHYSICS]
+		physics_hitboxes_check.button_pressed = SettingsService.debug_hitbox_flags[GameEnums.HitboxType.PHYSICS]
 
 	if player_hurtbox_check:
-		player_hurtbox_check.button_pressed = Globals.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_HURTBOX]
+		player_hurtbox_check.button_pressed = SettingsService.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_HURTBOX]
 
 	if enemy_hurtbox_check:
-		enemy_hurtbox_check.button_pressed = Globals.debug_hitbox_flags[GameEnums.HitboxType.ENEMY_HURTBOX]
+		enemy_hurtbox_check.button_pressed = SettingsService.debug_hitbox_flags[GameEnums.HitboxType.ENEMY_HURTBOX]
 
 	if player_attack_check:
-		player_attack_check.button_pressed = Globals.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_ATTACK]
+		player_attack_check.button_pressed = SettingsService.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_ATTACK]
 
 	# Setup debug item dropdown
 	if add_item_dropdown and add_item_button:
@@ -102,17 +102,17 @@ func hide() -> void:
 
 
 func on_show_damage_toggled(toggled_on: bool) -> void:
-	Globals.show_damage_numbers = toggled_on
+	SettingsService.show_damage_numbers = toggled_on
 
 
 func on_isometric_debug_toggled(toggled_on: bool) -> void:
 	print("DEBUG: on_isometric_debug_toggled triggered. Value: ", toggled_on)
-	Globals.isometric_debug_enabled = toggled_on
+	SettingsService.isometric_debug_enabled = toggled_on
 	Events.isometric_debug_toggled.emit(toggled_on)
 
 
 func on_hitbox_type_toggled(type: int, toggled_on: bool) -> void:
-	Globals.debug_hitbox_flags[type] = toggled_on
+	SettingsService.debug_hitbox_flags[type] = toggled_on
 	Events.hitbox_debug_toggled.emit(type, toggled_on)
 
 
@@ -153,7 +153,7 @@ func _on_add_item_pressed() -> void:
 		return
 	
 	# Use shop_manager to apply item (reuses all existing item application logic)
-	var shop_manager = Globals.shop_manager
+	var shop_manager = _owner.get_node_or_null("/root/Main/ShopManager")
 	if shop_manager and shop_manager.has_method("apply_item"):
 		shop_manager.apply_item(item_id)
 		print("DEBUG: Added item for free: ", item_id)

@@ -32,7 +32,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		# Check for nearby player to start magnet effect
 		var player = get_tree().get_first_node_in_group("player")
-		if player and global_position.distance_to(player.global_position) < Globals.get_pickup_radius():
+		if player and global_position.distance_to(player.global_position) < PlayerStatsService.get_pickup_radius():
 			start_collection(player)
 
 func start_collection(player: Node2D) -> void:
@@ -45,14 +45,14 @@ func collect() -> void:
 		return
 	is_collected = true
 
-	Globals.total_xp += xp_value
-	Events.xp_collected.emit(xp_value, Globals.total_xp)
+	GameStateService.total_xp += xp_value
+	Events.xp_collected.emit(xp_value, GameStateService.total_xp)
 
 	# Also award gold from same drop with modifier
-	var gold_mult = Globals.get_gold_earn_multiplier()
-	var gold_amount = int(Globals.GOLD_PER_ENEMY * gold_mult)
-	Globals.total_gold += gold_amount
-	Events.gold_collected.emit(gold_amount, Globals.total_gold)
+	var gold_mult = ItemTrackingService.get_gold_earn_multiplier()
+	var gold_amount = int(GameConstants.GOLD_PER_ENEMY * gold_mult)
+	EconomyService.total_gold += gold_amount
+	Events.gold_collected.emit(gold_amount, EconomyService.total_gold)
 
 	# Collection effect
 	var tween = create_tween()

@@ -60,7 +60,7 @@ func get_item_buttons() -> Array[Button]:
 
 
 func _update_turrets() -> void:
-	var total_turrets := Globals.get_total_turret_count()
+	var total_turrets := TurretStatsService.get_total_turret_count()
 	
 	if turrets_title:
 		turrets_title.add_theme_font_override("font", MAIN_FONT)
@@ -92,7 +92,7 @@ func _update_turrets() -> void:
 	# Create icons for each turret type
 	var first_type: String = ""
 	for type in TurretRegistry.get_all_type_ids():
-		var count: int = Globals.turret_counts.get(type, 0)
+		var count: int = TurretStatsService.turret_counts.get(type, 0)
 		if count > 0:
 			if first_type.is_empty():
 				first_type = type
@@ -107,7 +107,7 @@ func _update_turrets() -> void:
 			_turret_buttons.append(btn)
 	
 	# Auto-select first turret
-	if _selected_turret_type.is_empty() or Globals.turret_counts.get(_selected_turret_type, 0) == 0:
+	if _selected_turret_type.is_empty() or TurretStatsService.turret_counts.get(_selected_turret_type, 0) == 0:
 		_selected_turret_type = first_type
 	
 	if not _selected_turret_type.is_empty():
@@ -143,9 +143,9 @@ func _hide_turret_stats() -> void:
 
 func _update_items() -> void:
 	var total_item_count := 0
-	for count in Globals.item_counts.values():
+	for count in ItemTrackingService.item_counts.values():
 		total_item_count += count
-	var unique_item_count := Globals.item_counts.size()
+	var unique_item_count := ItemTrackingService.item_counts.size()
 	
 	if items_title:
 		items_title.add_theme_font_override("font", MAIN_FONT)
@@ -182,10 +182,10 @@ func _update_items() -> void:
 			return
 		
 		# Add item buttons
-		for item_id in Globals.item_counts.keys():
+		for item_id in ItemTrackingService.item_counts.keys():
 			if not ItemRegistry.has_item(item_id):
 				continue
-			var count: int = Globals.item_counts[item_id]
+			var count: int = ItemTrackingService.item_counts[item_id]
 			
 			var btn: Button = BuildDisplayUIScript.create_item_button(item_id, count)
 			if btn:

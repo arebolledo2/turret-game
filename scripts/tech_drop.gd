@@ -1,6 +1,6 @@
 extends CharacterBody2D
 
-# Stats (configured from Globals)
+# Stats (configured from Services/Constants)
 var max_health: float = 60.0
 var current_health: float
 var xp_value: int = 100
@@ -26,11 +26,11 @@ func _ready() -> void:
 	add_to_group("tech_drops")
 	add_to_group("enemies") # So turrets can target them
 
-	# Load constants from Globals
-	scatter_count = Globals.TECH_DROP_SCATTER_COUNT
-	scatter_radius = Globals.TECH_DROP_SCATTER_RADIUS
-	xp_value = Globals.TECH_DROP_XP_REWARD
-	gold_value = Globals.TECH_DROP_GOLD_REWARD
+	# Load constants from Services/Constants
+	scatter_count = GameConstants.TECH_DROP_SCATTER_COUNT
+	scatter_radius = GameConstants.TECH_DROP_SCATTER_RADIUS
+	xp_value = GameConstants.TECH_DROP_XP_REWARD
+	gold_value = GameConstants.TECH_DROP_GOLD_REWARD
 
 	# Setup visuals
 	if sprite:
@@ -51,7 +51,7 @@ func _ready() -> void:
 	if glow:
 		start_glow_pulse()
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	# Tech drop doesn't move, but keep physics active for collision
 	velocity = Vector2.ZERO
 	move_and_slide()
@@ -61,7 +61,7 @@ func initialize(spawn_wave: int) -> void:
 	wave = spawn_wave
 
 	# Use tank enemy HP as baseline and apply wave scaling
-	var scaled_stats = Globals.get_enemy_stats_for_wave("tank", wave)
+	var scaled_stats = EnemyRegistry.get_stats_for_wave("tank", wave, DifficultyService.get_difficulty_config())
 	max_health = scaled_stats["health"] * 0.5 # 50% of tank HP
 	current_health = max_health
 
@@ -124,7 +124,7 @@ func _spawn_item_pickup(item_id: String) -> void:
 
 func scatter_rewards() -> void:
 	"""Emit xp_dropped signals to spawn XP pickups in scattered positions."""
-	var xp_per_drop = xp_value / scatter_count
+	var xp_per_drop = int(float(xp_value) / float(scatter_count))
 
 	for i in scatter_count:
 		# Calculate random position within scatter radius

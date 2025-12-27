@@ -5,7 +5,7 @@ extends Node
 
 # Item tracking
 var collected_items: Array[String] = []
-var item_counts: Dictionary = {}  # Tracks item counts for max_stacks
+var item_counts: Dictionary = {} # Tracks item counts for max_stacks
 
 # Modifier system reference (injected)
 var _modifier_service: ModifierService = null
@@ -49,4 +49,3 @@ func get_wave_bonus_multiplier() -> float:
 ## Get shop offer count (from items like Bargain Hunter)
 func get_shop_offer_count() -> int:
 	return int(_get_modifier_service().apply_modifiers_to_stat(float(GameConstants.SHOP_OFFER_COUNT), "shop_offer_count"))
-

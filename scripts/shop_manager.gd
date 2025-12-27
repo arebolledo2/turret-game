@@ -14,7 +14,7 @@ func _on_shop_closed() -> void:
 func generate_offers() -> void:
 	# Preserve locked offers before clearing
 	var locked_offers: Array = []
-	for offer in Globals.current_shop_offers:
+	for offer in EconomyService.current_shop_offers:
 		if offer.get("locked", false) and not offer.get("sold", false):
 			locked_offers.append(offer)
 
@@ -27,7 +27,7 @@ func generate_offers() -> void:
 		elif locked_offer["type"] == "turret":
 			locked_turret_ids.append(locked_offer["turret_id"])
 
-	Globals.current_shop_offers.clear()
+	EconomyService.current_shop_offers.clear()
 
 	# Track generated items to avoid duplicates
 	var generated_item_ids: Array[String] = []
@@ -36,7 +36,7 @@ func generate_offers() -> void:
 
 	# Roll each slot: 65% item, 35% turret
 	# Reduce offer count by number of locked offers
-	var base_offer_count = Globals.get_shop_offer_count()
+	var base_offer_count = ItemTrackingService.get_shop_offer_count()
 	var new_offer_count = base_offer_count - locked_offers.size()
 
 	for i in range(new_offer_count):
@@ -50,7 +50,7 @@ func generate_offers() -> void:
 	for locked_offer in locked_offers:
 		Globals.current_shop_offers.append(locked_offer)
 
-	Events.shop_offers_generated.emit(Globals.current_shop_offers)
+	Events.shop_offers_generated.emit(EconomyService.current_shop_offers)
 
 func generate_turret_offer(generated_turret_ids: Array[String], locked_turret_ids: Array[String] = []) -> void:
 	var turret_types: Array = TurretRegistry.get_all_type_ids()
@@ -74,7 +74,7 @@ func generate_turret_offer(generated_turret_ids: Array[String], locked_turret_id
 	generated_turret_ids.append(random_type)
 
 	var base_price: int = TurretRegistry.get_base_price(random_type)
-	var scaled_price: int = calculate_turret_price(base_price, Globals.current_wave)
+	var scaled_price: int = calculate_turret_price(base_price, GameStateService.current_wave)
 
 	var offer: Dictionary = {
 		"type": "turret",
@@ -83,7 +83,7 @@ func generate_turret_offer(generated_turret_ids: Array[String], locked_turret_id
 		"sold": false,
 		"locked": false,
 	}
-	Globals.current_shop_offers.append(offer)
+	EconomyService.current_shop_offers.append(offer)
 
 func generate_item_offer(generated_item_ids: Array[String], generated_turret_ids: Array[String], locked_item_ids: Array[String] = [], locked_turret_ids: Array[String] = []) -> void:
 	# Combine newly generated items + locked items to avoid duplicates
@@ -91,9 +91,9 @@ func generate_item_offer(generated_item_ids: Array[String], generated_turret_ids
 
 	# Use weighted rarity selection based on wave and luck
 	var random_item_id := ItemRegistry.get_weighted_random_item(
-		Globals.current_wave,
-		Globals.get_player_luck(),
-		Globals.item_counts,
+		GameStateService.current_wave,
+		PlayerStatsService.get_player_luck(),
+		ItemTrackingService.item_counts,
 		all_excluded_item_ids
 	)
 
@@ -103,7 +103,7 @@ func generate_item_offer(generated_item_ids: Array[String], generated_turret_ids
 		return
 	
 	var base_price: int = ItemRegistry.get_item_price(random_item_id)
-	var scaled_price: int = calculate_item_price(base_price, Globals.current_wave, random_item_id)
+	var scaled_price: int = calculate_item_price(base_price, GameStateService.current_wave, random_item_id)
 
 	# Track this item as generated
 	generated_item_ids.append(random_item_id)
@@ -115,64 +115,64 @@ func generate_item_offer(generated_item_ids: Array[String], generated_turret_ids
 		"sold": false,
 		"locked": false,
 	}
-	Globals.current_shop_offers.append(offer)
+	EconomyService.current_shop_offers.append(offer)
 
 func calculate_turret_price(base_price: int, wave: int) -> int:
 	# Include turret purchase penalty: +25% per turret owned (can be reduced by items)
-	var wave_multiplier: float = 1.0 + Globals.WAVE_PRICE_SCALE * wave
-	var penalty_per_turret: float = Globals.get_turret_purchase_penalty()
-	var penalty_multiplier: float = 1.0 + penalty_per_turret * Globals.turrets_purchased
-	var shop_price_mult: float = Globals.get_shop_price_multiplier()
+	var wave_multiplier: float = 1.0 + GameConstants.WAVE_PRICE_SCALE * wave
+	var penalty_per_turret: float = TurretStatsService.get_turret_purchase_penalty()
+	var penalty_multiplier: float = 1.0 + penalty_per_turret * EconomyService.turrets_purchased
+	var shop_price_mult: float = ItemTrackingService.get_shop_price_multiplier()
 	var price: int = int(base_price * wave_multiplier * penalty_multiplier * shop_price_mult)
 
 	# Apply Quantity Discount: Every 3rd turret costs 50%
-	if ItemRegistry.has_special_effect("quantity_discount") and Globals.item_counts.get("quantity_discount", 0) > 0:
+	if ItemRegistry.has_special_effect("quantity_discount") and ItemTrackingService.item_counts.get("quantity_discount", 0) > 0:
 		# Next purchase will be turrets_purchased + 1
-		if (Globals.turrets_purchased + 1) % 3 == 0:
+		if (EconomyService.turrets_purchased + 1) % 3 == 0:
 			price = int(price * 0.5)
 
 	return price
 
 func calculate_item_price(base_price: int, wave: int, item_id: String = "") -> int:
-	var price := base_price * (1.0 + Globals.WAVE_PRICE_SCALE * wave)
+	var price := base_price * (1.0 + GameConstants.WAVE_PRICE_SCALE * wave)
 
 	# Apply Fortune's Favor discount for rare+ items
 	if not item_id.is_empty() and ItemRegistry.has_special_effect("fortune_discount"):
 		var rarity := ItemRegistry.get_rarity(item_id)
 		if rarity >= GameEnums.ItemRarity.RARE:
 			# Check if player has Fortune's Favor
-			if Globals.item_counts.get("fortunes_favor", 0) > 0:
+			if ItemTrackingService.item_counts.get("fortunes_favor", 0) > 0:
 				price *= 0.85 # 15% discount
 
 	# Apply shop price multiplier from items
-	var shop_price_mult: float = Globals.get_shop_price_multiplier()
+	var shop_price_mult: float = ItemTrackingService.get_shop_price_multiplier()
 	price *= shop_price_mult
 
 	return int(price)
 
 func purchase_offer(offer_index: int) -> bool:
-	if offer_index < 0 or offer_index >= Globals.current_shop_offers.size():
+	if offer_index < 0 or offer_index >= EconomyService.current_shop_offers.size():
 		return false
 
-	var offer: Dictionary = Globals.current_shop_offers[offer_index]
+	var offer: Dictionary = EconomyService.current_shop_offers[offer_index]
 
 	if offer.get("sold", false):
 		return false
 
-	if Globals.total_gold < offer["price"]:
-		Events.shop_insufficient_funds.emit(offer["price"], Globals.total_gold)
+	if EconomyService.total_gold < offer["price"]:
+		Events.shop_insufficient_funds.emit(offer["price"], EconomyService.total_gold)
 		return false
 
-	Globals.total_gold -= offer["price"]
-	Events.gold_spent.emit(offer["price"], Globals.total_gold)
+	EconomyService.total_gold -= offer["price"]
+	Events.gold_spent.emit(offer["price"], EconomyService.total_gold)
 
 	offer["sold"] = true
 	offer["locked"] = false # Clear lock when purchased
 
 	if offer["type"] == "turret":
 		# Queue turret for spawning at wave start
-		Globals.pending_turret_purchases.append(offer["turret_id"])
-		Globals.turrets_purchased += 1
+		EconomyService.pending_turret_purchases.append(offer["turret_id"])
+		EconomyService.turrets_purchased += 1
 		
 		# Recalculate remaining turret prices with new turrets_purchased value
 		_recalculate_turret_prices()
@@ -190,19 +190,20 @@ func apply_item(item_id: String) -> void:
 		return
 
 	var item_data = ItemRegistry.get_item_dict(item_id)
-	Globals.collected_items.append(item_id)
+	ItemTrackingService.collected_items.append(item_id)
 
 	# Track item counts for max_stacks
-	if not Globals.item_counts.has(item_id):
-		Globals.item_counts[item_id] = 0
-	Globals.item_counts[item_id] += 1
+	if not ItemTrackingService.item_counts.has(item_id):
+		ItemTrackingService.item_counts[item_id] = 0
+	ItemTrackingService.item_counts[item_id] += 1
 
 	# Add all modifiers from this item to active_modifiers
 	var modifiers = ItemRegistry.get_modifiers(item_id)
+	var modifier_service = get_node("/root/ModifierService")
 	for modifier in modifiers:
 		var mod_with_id = modifier.duplicate(true)
-		mod_with_id["id"] = item_id + "_" + str(Globals.active_modifiers.size())
-		Globals.active_modifiers.append(mod_with_id)
+		mod_with_id["id"] = item_id + "_" + str(modifier_service.active_modifiers.size())
+		modifier_service.active_modifiers.append(mod_with_id)
 
 	# Emit event to notify systems of modifier change
 	Events.modifiers_changed.emit()
@@ -210,7 +211,8 @@ func apply_item(item_id: String) -> void:
 	# Update player health if max health changed
 	var player = get_tree().get_first_node_in_group("player")
 	if player:
-		var new_max_health = Globals.get_player_max_health()
+		var difficulty_mult = DifficultyService.get_difficulty_config()["player_health_mult"]
+		var new_max_health = PlayerStatsService.get_player_max_health(difficulty_mult)
 		player.max_health = new_max_health
 		player.current_health = min(player.current_health, new_max_health)
 
@@ -220,32 +222,32 @@ func reroll_shop() -> bool:
 	# Removed max reroll limit - infinite rerolls allowed
 	var reroll_cost = get_reroll_cost()
 
-	if Globals.total_gold < reroll_cost:
-		Events.shop_insufficient_funds.emit(reroll_cost, Globals.total_gold)
+	if EconomyService.total_gold < reroll_cost:
+		Events.shop_insufficient_funds.emit(reroll_cost, EconomyService.total_gold)
 		return false
 
-	Globals.total_gold -= reroll_cost
-	Events.gold_spent.emit(reroll_cost, Globals.total_gold)
-	Globals.shop_reroll_count += 1
+	EconomyService.total_gold -= reroll_cost
+	Events.gold_spent.emit(reroll_cost, EconomyService.total_gold)
+	EconomyService.shop_reroll_count += 1
 
 	generate_offers()
-	Events.shop_rerolled.emit(Globals.current_shop_offers, reroll_cost)
+	Events.shop_rerolled.emit(EconomyService.current_shop_offers, reroll_cost)
 	return true
 
 func get_reroll_cost() -> int:
 	# Base cost increases with each reroll this wave
-	var reroll_cost := Globals.REROLL_BASE_COST + (Globals.REROLL_COST_INCREMENT * Globals.shop_reroll_count)
+	var reroll_cost := GameConstants.REROLL_BASE_COST + (GameConstants.REROLL_COST_INCREMENT * EconomyService.shop_reroll_count)
 	# Apply reroll cost multiplier from modifiers (e.g., Probability Matrix)
-	var item_multiplier := Globals.get_reroll_cost_multiplier()
+	var item_multiplier := ItemTrackingService.get_reroll_cost_multiplier()
 	return int(reroll_cost * item_multiplier)
 
 func can_afford_reroll() -> bool:
 	# Only check if player has enough gold (no max reroll limit)
-	return Globals.total_gold >= get_reroll_cost()
+	return EconomyService.total_gold >= get_reroll_cost()
 
 func lock_offer(offer_index: int) -> bool:
 	"""Lock an offer so it persists to next reroll/wave"""
-	if offer_index < 0 or offer_index >= Globals.current_shop_offers.size():
+	if offer_index < 0 or offer_index >= EconomyService.current_shop_offers.size():
 		return false
 	
 	var offer = Globals.current_shop_offers[offer_index]
@@ -264,7 +266,7 @@ func lock_offer(offer_index: int) -> bool:
 
 func unlock_offer(offer_index: int) -> bool:
 	"""Unlock an offer"""
-	if offer_index < 0 or offer_index >= Globals.current_shop_offers.size():
+	if offer_index < 0 or offer_index >= EconomyService.current_shop_offers.size():
 		return false
 	
 	var offer = Globals.current_shop_offers[offer_index]
@@ -279,8 +281,8 @@ func unlock_offer(offer_index: int) -> bool:
 
 func _recalculate_turret_prices() -> void:
 	"""Recalculate prices for all unsold turret offers"""
-	for other_offer in Globals.current_shop_offers:
+	for other_offer in EconomyService.current_shop_offers:
 		if other_offer.get("type") == "turret" and not other_offer.get("sold", false):
 			var turret_type = other_offer.get("turret_id", "")
 			var base_price = TurretRegistry.get_base_price(turret_type)
-			other_offer["price"] = calculate_turret_price(base_price, Globals.current_wave)
+			other_offer["price"] = calculate_turret_price(base_price, GameStateService.current_wave)

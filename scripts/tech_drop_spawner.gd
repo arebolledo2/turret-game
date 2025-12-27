@@ -17,7 +17,7 @@ func _ready() -> void:
 	# Setup spawn timer
 	spawn_timer = Timer.new()
 	spawn_timer.one_shot = false
-	spawn_timer.wait_time = Globals.TECH_DROP_SPAWN_INTERVAL
+	spawn_timer.wait_time = GameConstants.TECH_DROP_SPAWN_INTERVAL
 	spawn_timer.timeout.connect(_on_spawn_timer_timeout)
 	add_child(spawn_timer)
 
@@ -61,7 +61,7 @@ func _on_spawn_timer_timeout() -> void:
 	active_tech_drops = active_tech_drops.filter(func(d): return is_instance_valid(d))
 
 	# 20% chance to spawn (no max limit)
-	if randf() < Globals.TECH_DROP_SPAWN_CHANCE:
+	if randf() < GameConstants.TECH_DROP_SPAWN_CHANCE:
 		attempt_spawn()
 
 func attempt_spawn() -> void:

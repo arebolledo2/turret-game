@@ -12,7 +12,7 @@ class_name PlayerMovement
 
 # State
 var velocity: Vector2 = Vector2.ZERO
-var facing_direction: int = 0  # 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE
+var facing_direction: int = 0 # 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE
 var is_moving: bool = false
 
 # Dependencies (set via initialize)
@@ -24,7 +24,7 @@ func initialize(p_player: CharacterBody2D, p_sprite: Sprite2D) -> void:
 	"""Initialize component with required references."""
 	player = p_player
 	sprite = p_sprite
-	speed = Globals.get_player_speed() if Globals else 300.0
+	speed = PlayerStatsService.get_player_speed()
 	assert(player != null, "PlayerMovement: player reference required")
 	assert(sprite != null, "PlayerMovement: sprite reference required")
 
@@ -48,7 +48,7 @@ func process(_delta: float) -> Vector2:
 	var effective_speed := speed
 	var turret_handler = player.get_node_or_null("Components/PlayerTurretHandler")
 	if turret_handler and turret_handler.is_carrying_turret():
-		effective_speed *= Globals.TURRET_CARRY_SPEED_PENALTY
+		effective_speed *= GameConstants.TURRET_CARRY_SPEED_PENALTY
 
 	velocity = input_vector * effective_speed
 
@@ -59,10 +59,10 @@ func process(_delta: float) -> Vector2:
 
 		# Flip sprite based on horizontal direction
 		# West-facing directions: show original left-facing sprite (no flip)
-		if facing_direction in [2, 3, 1]:  # West(2), Northwest(3), Southwest(1)
+		if facing_direction in [2, 3, 1]: # West(2), Northwest(3), Southwest(1)
 			sprite.flip_h = false
 		# East-facing directions: flip sprite to face right
-		elif facing_direction in [6, 5, 7]:  # East(6), Northeast(5), Southeast(7)
+		elif facing_direction in [6, 5, 7]: # East(6), Northeast(5), Southeast(7)
 			sprite.flip_h = true
 		# North(4) and South(0): Keep current flip state (last horizontal direction)
 	else:
@@ -83,7 +83,7 @@ func get_direction_from_vector(dir: Vector2) -> int:
 	var sector := int(round(angle / (TAU / 8))) % 8
 	# Map: 0=E, 1=SE, 2=S, 3=SW, 4=W, 5=NW, 6=N, 7=NE
 	# We need: 0=S, 1=SW, 2=W, 3=NW, 4=N, 5=NE, 6=E, 7=SE
-	var direction_map := [6, 7, 0, 1, 2, 3, 4, 5]  # Maps angle sector to frame index
+	var direction_map := [6, 7, 0, 1, 2, 3, 4, 5] # Maps angle sector to frame index
 	return direction_map[sector]
 
 func get_facing_direction() -> int:
@@ -93,14 +93,14 @@ func get_facing_direction() -> int:
 func get_facing_vector() -> Vector2:
 	"""Returns facing direction as a Vector2 for combat systems."""
 	var angle_map := [
-		PI / 2,      # 0: South
-		PI * 3 / 4,  # 1: Southwest
-		PI,          # 2: West
-		-PI * 3 / 4, # 3: Northwest
-		-PI / 2,     # 4: North
-		-PI / 4,     # 5: Northeast
-		0,           # 6: East
-		PI / 4       # 7: Southeast
+		PI / 2, # 0: South
+		PI * 3 / 4, # 1: Southwest
+		PI, # 2: West
+		- PI * 3 / 4, # 3: Northwest
+		- PI / 2, # 4: North
+		- PI / 4, # 5: Northeast
+		0, # 6: East
+		PI / 4 # 7: Southeast
 	]
 
 	var angle: float = angle_map[facing_direction]

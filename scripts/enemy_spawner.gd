@@ -12,10 +12,10 @@ var current_wave: int = 0
 var is_spawning: bool = false
 
 # Enemy type spawning stats
-var enemies_spawned_by_type: Dictionary = {}  # Track spawns per type
+var enemies_spawned_by_type: Dictionary = {} # Track spawns per type
 
 # Queued spawns (waiting for alert to finish)
-var queued_spawns: Array[Dictionary] = []  # {enemy_type: String, spawn_pos: Vector2, time_remaining: float}
+var queued_spawns: Array[Dictionary] = [] # {enemy_type: String, spawn_pos: Vector2, time_remaining: float}
 
 func _ready() -> void:
 	# Setup spawn zones on arena edges
@@ -28,33 +28,33 @@ func _ready() -> void:
 	add_child(spawn_timer)
 
 func setup_spawn_zones() -> void:
-	var half_width := Globals.ARENA_WIDTH / 2.0
-	var half_height := Globals.ARENA_HEIGHT / 2.0
-	var zone_depth := 200.0  # How far from edge enemies can spawn (allows spawning closer to middle)
-	var inset := 20.0  # Small inset from the very edge
+	var half_width := GameConstants.ARENA_WIDTH / 2.0
+	var half_height := GameConstants.ARENA_HEIGHT / 2.0
+	var zone_depth := 200.0 # How far from edge enemies can spawn (allows spawning closer to middle)
+	var inset := 20.0 # Small inset from the very edge
 
 	# Top edge (full width, spawn inside arena near top)
 	spawn_zones.append(Rect2(
-		-half_width + inset, -half_height + inset,
-		Globals.ARENA_WIDTH - (inset * 2), zone_depth
+		- half_width + inset, -half_height + inset,
+		GameConstants.ARENA_WIDTH - (inset * 2), zone_depth
 	))
 
 	# Bottom edge (full width, spawn inside arena near bottom)
 	spawn_zones.append(Rect2(
-		-half_width + inset, half_height - inset - zone_depth,
-		Globals.ARENA_WIDTH - (inset * 2), zone_depth
+		- half_width + inset, half_height - inset - zone_depth,
+		GameConstants.ARENA_WIDTH - (inset * 2), zone_depth
 	))
 
 	# Left edge (full height, spawn inside arena near left)
 	spawn_zones.append(Rect2(
-		-half_width + inset, -half_height + inset,
-		zone_depth, Globals.ARENA_HEIGHT - (inset * 2)
+		- half_width + inset, -half_height + inset,
+		zone_depth, GameConstants.ARENA_HEIGHT - (inset * 2)
 	))
 
 	# Right edge (full height, spawn inside arena near right)
 	spawn_zones.append(Rect2(
 		half_width - inset - zone_depth, -half_height + inset,
-		zone_depth, Globals.ARENA_HEIGHT - (inset * 2)
+		zone_depth, GameConstants.ARENA_HEIGHT - (inset * 2)
 	))
 
 func start_spawning(wave: int) -> void:
@@ -109,8 +109,8 @@ func _on_spawn_timer_timeout() -> void:
 func _spawn_random_enemy() -> void:
 	"""Select a random enemy type and spawn it (possibly multiple for swarm types)."""
 	# Select random enemy type based on wave and weights
-	var enemy_type := Globals.select_random_enemy_type(current_wave)
-	var spawn_count := Globals.get_enemy_spawn_count(enemy_type)
+	var enemy_type := EnemyRegistry.select_random_type(current_wave)
+	var spawn_count := EnemyRegistry.get_spawn_count(enemy_type)
 
 	# Get a base position for the swarm cluster
 	var base_pos := _get_random_spawn_position()
@@ -124,7 +124,7 @@ func _spawn_random_enemy() -> void:
 
 func _get_random_spawn_position() -> Vector2:
 	"""Get a random spawn position from the game mode service."""
-	return Globals.game_mode_service.get_random_spawn_position(spawn_zones)
+	return GameModeService.get_random_spawn_position(spawn_zones)
 
 func _queue_spawn_with_alert(enemy_type: String) -> void:
 	"""Queue an enemy spawn with a visual alert indicator at a random position."""
@@ -134,12 +134,12 @@ func _queue_spawn_with_alert(enemy_type: String) -> void:
 func _queue_spawn_with_alert_at_position(enemy_type: String, base_pos: Vector2, swarm_index: int) -> void:
 	"""Queue an enemy spawn with a visual alert indicator near a base position."""
 	# For swarm spawns, offset slightly from base position to create a cluster
-	const SWARM_SPREAD := 60.0  # How far apart swarm members spawn
+	const SWARM_SPREAD := 60.0 # How far apart swarm members spawn
 	var spawn_pos := base_pos
 	if swarm_index > 0:
 		# Offset subsequent enemies in a circular pattern around the base
-		var angle := (swarm_index * TAU / 5.0) + randf() * 0.5  # Slight randomness
-		var distance := SWARM_SPREAD * (0.7 + randf() * 0.6)  # 42-78 pixels from center
+		var angle := (swarm_index * TAU / 5.0) + randf() * 0.5 # Slight randomness
+		var distance := SWARM_SPREAD * (0.7 + randf() * 0.6) # 42-78 pixels from center
 		spawn_pos = base_pos + Vector2(cos(angle), sin(angle)) * distance
 
 	# Create spawn alert indicator
