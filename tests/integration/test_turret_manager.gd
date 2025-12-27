@@ -22,10 +22,10 @@ func before_each() -> void:
 	Globals.pending_turret_purchases.clear()
 
 	# Ensure arena dimensions are set for testing (headless mode may have 0x0 viewport)
-	if Globals.ARENA_WIDTH <= 0:
-		Globals.ARENA_WIDTH = 1400
-	if Globals.ARENA_HEIGHT <= 0:
-		Globals.ARENA_HEIGHT = 900
+	if ArenaBoundsService.arena_width <= 0:
+		ArenaBoundsService.arena_width = 1400
+	if ArenaBoundsService.arena_height <= 0:
+		ArenaBoundsService.arena_height = 900
 
 	turret_manager = _turret_manager_script.new()
 	add_child_autofree(turret_manager)
@@ -106,8 +106,8 @@ func test_find_valid_spawn_position_within_arena():
 	var pos = turret_manager.find_valid_spawn_position(null)
 
 	if pos != Vector2.INF:
-		var half_width = Globals.ARENA_WIDTH / 2.0
-		var half_height = Globals.ARENA_HEIGHT / 2.0
+		var half_width = ArenaBoundsService.arena_width / 2.0
+		var half_height = ArenaBoundsService.arena_height / 2.0
 
 		assert_lt(abs(pos.x), half_width, "X should be within arena bounds")
 		assert_lt(abs(pos.y), half_height, "Y should be within arena bounds")
@@ -117,8 +117,8 @@ func test_find_valid_spawn_position_respects_margin():
 	var pos = turret_manager.find_valid_spawn_position(null)
 
 	if pos != Vector2.INF:
-		var half_width = Globals.ARENA_WIDTH / 2.0
-		var half_height = Globals.ARENA_HEIGHT / 2.0
+		var half_width = ArenaBoundsService.arena_width / 2.0
+		var half_height = ArenaBoundsService.arena_height / 2.0
 		var margin = 50.0
 
 		assert_lt(abs(pos.x), half_width - margin + 1, "X should respect margin")

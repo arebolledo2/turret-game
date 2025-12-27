@@ -46,8 +46,8 @@ func test_spawn_zones_are_rect2():
 
 
 func test_spawn_zones_within_arena():
-	var half_width = Globals.ARENA_WIDTH / 2.0
-	var half_height = Globals.ARENA_HEIGHT / 2.0
+	var half_width = ArenaBoundsService.arena_width / 2.0
+	var half_height = ArenaBoundsService.arena_height / 2.0
 
 	for zone in spawner.spawn_zones:
 		# Zone should be within arena bounds

@@ -39,19 +39,19 @@ func test_spawn_interval_reasonable():
 # =============================================================================
 
 func test_arena_dimensions_valid():
-	var width = Globals.ARENA_WIDTH
-	var height = Globals.ARENA_HEIGHT
-	
+	var width = ArenaBoundsService.arena_width
+	var height = ArenaBoundsService.arena_height
+
 	assert_gt(width, 0, "Arena width should be positive")
 	assert_gt(height, 0, "Arena height should be positive")
 
 
 func test_spawn_margin_within_arena():
 	# Spawn margin (100) should be less than half of smallest arena dimension
-	var half_width = Globals.ARENA_WIDTH / 2.0
-	var half_height = Globals.ARENA_HEIGHT / 2.0
+	var half_width = ArenaBoundsService.arena_width / 2.0
+	var half_height = ArenaBoundsService.arena_height / 2.0
 	var margin = 100.0 # From tech_drop_spawner.gd
-	
+
 	assert_lt(margin, half_width, "Margin should fit within arena width")
 	assert_lt(margin, half_height, "Margin should fit within arena height")
 
@@ -86,4 +86,4 @@ func test_minimum_distance_between_drops():
 	# Tech drops should spawn at least 150 units apart (from tech_drop_spawner.gd)
 	var min_distance = 150.0
 	assert_gt(min_distance, 0.0, "Minimum distance should be positive")
-	assert_lt(min_distance, Globals.ARENA_WIDTH / 2.0, "Min distance should fit in arena")
+	assert_lt(min_distance, ArenaBoundsService.arena_width / 2.0, "Min distance should fit in arena")

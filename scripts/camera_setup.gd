@@ -88,8 +88,8 @@ func calculate_base_zoom() -> void:
 	var viewport_size = get_viewport().get_visible_rect().size
 
 	# Calculate zoom needed to fit arena width and height
-	var zoom_for_width = viewport_size.x / float(Globals.ARENA_WIDTH)
-	var zoom_for_height = viewport_size.y / float(Globals.ARENA_HEIGHT)
+	var zoom_for_width = viewport_size.x / ArenaBoundsService.arena_width
+	var zoom_for_height = viewport_size.y / ArenaBoundsService.arena_height
 
 	# Use the smaller zoom to ensure entire arena fits
 	base_zoom = min(zoom_for_width, zoom_for_height) * GameConstants.CAMERA_DEFAULT_ZOOM_BOOST

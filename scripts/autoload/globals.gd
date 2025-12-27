@@ -118,8 +118,8 @@ func _get_game_manager() -> Node:
 # =============================================================================
 # CONSTANTS (forwarded from GameConstants for backward compatibility)
 # =============================================================================
-var ARENA_WIDTH: int = GameConstants.ARENA_WIDTH
-var ARENA_HEIGHT: int = GameConstants.ARENA_HEIGHT
+# NOTE: ARENA_WIDTH and ARENA_HEIGHT have been moved to ArenaBoundsService
+# Use ArenaBoundsService.arena_width and ArenaBoundsService.arena_height instead
 const MAX_WAVES: int = GameConstants.MAX_WAVES
 const WAVE_ANNOUNCEMENT_TIME: float = GameConstants.WAVE_ANNOUNCEMENT_TIME
 const TURRET_SPAWN_TIME: float = GameConstants.TURRET_SPAWN_TIME

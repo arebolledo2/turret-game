@@ -27,6 +27,22 @@ var _half_width: float = FIXED_RECT_WIDTH / 2.0
 var _half_height: float = FIXED_RECT_HEIGHT / 2.0
 
 # =============================================================================
+# ARENA DIMENSIONS (Public Properties)
+# =============================================================================
+
+var arena_width: float:
+	get:
+		return _half_width * 2.0
+	set(value):
+		_half_width = value / 2.0
+
+var arena_height: float:
+	get:
+		return _half_height * 2.0
+	set(value):
+		_half_height = value / 2.0
+
+# =============================================================================
 # ARENA TYPE MANAGEMENT
 # =============================================================================
 

@@ -92,10 +92,6 @@ func setup_arena() -> void:
 	var half_width := half_dims.x
 	var half_height := half_dims.y
 	
-	# Update Globals for legacy code
-	Globals.ARENA_WIDTH = int(half_width * 2)
-	Globals.ARENA_HEIGHT = int(half_height * 2)
-	
 	if ArenaBoundsService.is_isometric():
 		_setup_isometric_arena(half_width, half_height)
 	else:
