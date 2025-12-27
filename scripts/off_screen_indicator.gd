@@ -58,13 +58,13 @@ func _update_arrow() -> void:
 	var angle := direction.angle()
 
 	# Create arrow triangle pointing in the direction
-	# Arrow points TOWARD the screen center (inward), so we invert the direction
-	var inward_angle := (-direction).angle()
+	# Arrow points OUTWARD toward the off-screen entities
+	var outward_angle := direction.angle()
 
 	var points := PackedVector2Array([
-		Vector2(15, 0).rotated(inward_angle),        # Arrow tip (points inward)
-		Vector2(-10, -8).rotated(inward_angle),      # Left wing
-		Vector2(-10, 8).rotated(inward_angle),       # Right wing
+		Vector2(30, 0).rotated(outward_angle), # Arrow tip (points outward)
+		Vector2(-20, -16).rotated(outward_angle), # Left wing
+		Vector2(-20, 16).rotated(outward_angle), # Right wing
 	])
 
 	arrow_polygon.polygon = points
