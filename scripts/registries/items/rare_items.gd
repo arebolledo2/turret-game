@@ -262,7 +262,7 @@ static func _create_fortified_core() -> Item:
 	item.description = "+25 max HP, but 10% less turret damage"
 	item.rarity = GameEnums.ItemRarity.RARE
 	item.modifiers = [
-		Item.create_modifier("player_max_health", "add", 25.0),
+		Item.create_modifier("player_max_health", "add", 6.0),
 		Item.create_modifier("damage", "multiply", 0.90, Item.filter_turret_type(["all"]))
 	]
 	return item

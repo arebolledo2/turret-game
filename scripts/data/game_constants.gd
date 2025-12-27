@@ -18,15 +18,15 @@ const CAMERA_DEFAULT_ZOOM_BOOST: float = 1.15 # Slightly zoomed in by default
 # =============================================================================
 # PLAYER
 # =============================================================================
-const PLAYER_BASE_MAX_HEALTH: float = 100.0
+const PLAYER_BASE_MAX_HEALTH: float = 25.0
 const PLAYER_SPEED: float = 250.0
 const PLAYER_PICKUP_RADIUS: float = 50.0
 const PLAYER_INVINCIBILITY_TIME: float = 0.5
-const PLAYER_WEAPON_DAMAGE: float = 5.0
+const PLAYER_WEAPON_DAMAGE: float = 1.0
 const PLAYER_WEAPON_FIRE_RATE: float = 3.0 # shots per second
 const PLAYER_WEAPON_RANGE: float = 200.0
 const PLAYER_PROJECTILE_SPEED: float = 600.0
-const PLAYER_MELEE_DAMAGE: float = 52.5 # Increased from 35.0 by 50%
+const PLAYER_MELEE_DAMAGE: float = 13.0 # Increased from 35.0 by 50%
 const PLAYER_MELEE_RANGE: float = 80.0
 const PLAYER_MELEE_ARC_DEGREES: float = 120.0
 const PLAYER_MELEE_COOLDOWN: float = 1.4 # Decreased speed by 50% (doubled cooldown from 0.7)
@@ -36,7 +36,7 @@ const PLAYER_MELEE_ANIMATION_DURATION: float = 0.15
 # Health Regeneration
 const PLAYER_BASE_HEALTH_REGEN: int = 0 # Whole number, 0 = no healing
 const PLAYER_BASE_HEAL_INTERVAL: float = 10.0 # Seconds at regen=1
-const PLAYER_HEAL_AMOUNT: float = 1.0 # HP per healing pip
+const PLAYER_HEAL_AMOUNT: float = 1.0 # HP per healing pip (kept at minimum for gameplay)
 
 # =============================================================================
 # KNOCKBACK
@@ -76,9 +76,9 @@ const TURRET_IN_RANGE_INDICATOR_ALPHA: float = 0.5
 # =============================================================================
 # ENEMY (Base values for Wave 1)
 # =============================================================================
-const ENEMY_BASE_HEALTH: float = 30.0
+const ENEMY_BASE_HEALTH: float = 8.0
 const ENEMY_BASE_SPEED: float = 100.0
-const ENEMY_BASE_CONTACT_DAMAGE: float = 33.0
+const ENEMY_BASE_CONTACT_DAMAGE: float = 8.0
 
 # =============================================================================
 # WAVE TIMING
@@ -118,7 +118,7 @@ const SHOP_ITEM_CHANCE: float = 0.65 # 65% item, 35% turret
 # =============================================================================
 const TECH_DROP_SPAWN_INTERVAL: float = 5.0
 const TECH_DROP_SPAWN_CHANCE: float = 0.20
-const TECH_DROP_BASE_HEALTH: float = 60.0
+const TECH_DROP_BASE_HEALTH: float = 15.0
 const TECH_DROP_XP_REWARD: int = 100
 const TECH_DROP_GOLD_REWARD: int = 0
 const TECH_DROP_SCATTER_COUNT: int = 5
@@ -129,20 +129,20 @@ const TECH_DROP_ITEM_DROP_CHANCE: float = 0.30 # 30% chance to drop item when de
 # GAME MODE ENTITIES
 # =============================================================================
 # Tech Defense
-const DEFENSE_TARGET_BASE_HEALTH: float = 500.0
+const DEFENSE_TARGET_BASE_HEALTH: float = 125.0
 const DEFENSE_TARGET_REFLECT_PERCENT: float = 0.50 # 50% damage reflected
 const DEFENSE_TARGET_KNOCKBACK_MULTIPLIER: float = 1.5 # 1.5x base knockback
 const DEFENSE_TARGET_SLOW_INTENSITY: float = 0.30 # 30% slow
 const DEFENSE_TARGET_SLOW_DURATION: float = 3.0 # 3 seconds
 const DEFENSE_TARGET_BARRIER_DURATION: float = 5.0 # 5 seconds immunity
 const DEFENSE_TARGET_BARRIER_COOLDOWN: float = 10.0 # 10 seconds between barriers
-const DEFENSE_TARGET_HEAL_BETWEEN_WAVES: float = 100.0 # HP healed between waves
+const DEFENSE_TARGET_HEAL_BETWEEN_WAVES: float = 25.0 # HP healed between waves
 const DEFENSE_MODE_PLAYER_AGGRO_RANGE: float = 250.0 # Enemies switch from defense target to player if within this range
 const DEFENSE_MODE_PLAYER_DEAGGRO_RANGE: float = 500.0 # Enemies switch back to defense target if player beyond this range
 
 # Tunneling
-const TUNNEL_DOOR_BASE_HEALTH: float = 200.0 # HP that must be damaged by turrets
-const TUNNEL_DOOR_HEALTH_SCALE_PER_WAVE: float = 50.0 # +50 HP per wave
+const TUNNEL_DOOR_BASE_HEALTH: float = 50.0 # HP that must be damaged by turrets
+const TUNNEL_DOOR_HEALTH_SCALE_PER_WAVE: float = 13.0 # +50 HP per wave
 const TUNNELING_ALERT_SOFT_TIMER_MULTIPLIER: float = 1.5 # Alert starts at 150% of normal wave time
 const TUNNELING_ALERT_ESCALATION_RATE: float = 0.30 # +30% spawn rate
 const TUNNELING_ALERT_ESCALATION_INTERVAL: float = 8.0 # Every 8 seconds

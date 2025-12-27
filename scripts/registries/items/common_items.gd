@@ -117,7 +117,7 @@ static func _create_efficient_scavenger() -> Item:
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
 		Item.create_modifier("gold_earn_mult", "multiply", 1.15),
-		Item.create_modifier("player_max_health", "add", -5.0)
+		Item.create_modifier("player_max_health", "add", -1.0)
 	]
 	return item
 
@@ -134,7 +134,7 @@ static func _create_reinforced_hull() -> Item:
 	item.description = "+15 max HP, but 3% slower movement"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("player_max_health", "add", 15.0),
+		Item.create_modifier("player_max_health", "add", 4.0),
 		Item.create_modifier("player_speed", "multiply", 0.97)
 	]
 	return item
@@ -163,7 +163,7 @@ static func _create_shock_absorbers() -> Item:
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
 		Item.create_modifier("player_speed", "multiply", 1.07),
-		Item.create_modifier("player_max_health", "add", -3.0)
+		Item.create_modifier("player_max_health", "add", -1.0)
 	]
 	return item
 
@@ -271,7 +271,7 @@ static func _create_nanite_injector() -> Item:
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
 		Item.create_modifier("player_health_regen", "add", 2.0),
-		Item.create_modifier("player_max_health", "add", -10.0)
+		Item.create_modifier("player_max_health", "add", -3.0)
 	]
 	return item
 
@@ -322,7 +322,7 @@ static func _create_adrenaline_core() -> Item:
 	item.modifiers = [
 		Item.create_modifier("player_speed", "multiply", 1.05),
 		Item.create_modifier("player_crit_chance", "add", 0.02),
-		Item.create_modifier("player_max_health", "add", -8.0)
+		Item.create_modifier("player_max_health", "add", -2.0)
 	]
 	return item
 
@@ -357,7 +357,7 @@ static func _create_experimental_chassis() -> Item:
 		Item.create_modifier("damage", "multiply", 1.08, Item.filter_turret_type(["all"])),
 		Item.create_modifier("fire_rate", "multiply", 1.04, Item.filter_turret_type(["all"])),
 		Item.create_modifier("turret_crit_chance", "add", 0.03),
-		Item.create_modifier("player_max_health", "add", -12.0),
+		Item.create_modifier("player_max_health", "add", -3.0),
 		Item.create_modifier("player_speed", "multiply", 0.94)
 	]
 	return item

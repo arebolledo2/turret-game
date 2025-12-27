@@ -92,7 +92,7 @@ static func _create_heavy_plating() -> Item:
 	item.description = "+20 max HP, but 8% slower movement"
 	item.rarity = GameEnums.ItemRarity.UNCOMMON
 	item.modifiers = [
-		Item.create_modifier("player_max_health", "add", 20.0),
+		Item.create_modifier("player_max_health", "add", 5.0),
 		Item.create_modifier("player_speed", "multiply", 0.92)
 	]
 	return item

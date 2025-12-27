@@ -31,7 +31,7 @@ const TYPES: Dictionary = {
 		"attack_styles": [GameEnums.AttackStyle.PROJECTILE],
 		"damage_types": [GameEnums.DamageType.PHYSICAL],
 		"base_stats": {
-			"damage": 50.0,
+			"damage": 13.0,
 			"fire_rate": 1.2,
 			"range": 160.0,
 			"rotation_speed": 0.0,
@@ -46,7 +46,7 @@ const TYPES: Dictionary = {
 		"attack_styles": [GameEnums.AttackStyle.INSTANT],
 		"damage_types": [GameEnums.DamageType.PHYSICAL],
 		"base_stats": {
-			"damage": 70.0,
+			"damage": 18.0,
 			"fire_rate": 0.5,
 			"range": 500.0,
 			"rotation_speed": 0.0,
@@ -60,13 +60,13 @@ const TYPES: Dictionary = {
 		"attack_styles": [GameEnums.AttackStyle.PROJECTILE],
 		"damage_types": [GameEnums.DamageType.FIRE],
 		"base_stats": {
-			"damage": 18.0,
+			"damage": 5.0,
 			"fire_rate": 2.0,
 			"range": 140.0,
 			"rotation_speed": 0.0,
 			"projectile_speed": 600.0,
 			"pierce": 99,
-			"dot_damage": 8.0,
+			"dot_damage": 2.0,
 			"dot_duration": 3.0,
 			"dot_tick_rate": 1.0,
 		}
@@ -78,7 +78,7 @@ const TYPES: Dictionary = {
 		"attack_styles": [GameEnums.AttackStyle.PROJECTILE, GameEnums.AttackStyle.AOE],
 		"damage_types": [GameEnums.DamageType.PLASMA],
 		"base_stats": {
-			"damage": 40.0,
+			"damage": 10.0,
 			"fire_rate": 1.0,
 			"range": 170.0,
 			"rotation_speed": 0.0,
@@ -96,7 +96,7 @@ const TYPES: Dictionary = {
 		"attack_styles": [GameEnums.AttackStyle.AOE],
 		"damage_types": [GameEnums.DamageType.ELECTRIC],
 		"base_stats": {
-			"damage": 14.0,
+			"damage": 4.0,
 			"fire_rate": 1.2,
 			"range": 160.0,
 			"rotation_speed": 0.0,
@@ -111,7 +111,7 @@ const TYPES: Dictionary = {
 		"attack_styles": [GameEnums.AttackStyle.INSTANT, GameEnums.AttackStyle.CHAIN],
 		"damage_types": [GameEnums.DamageType.ELECTRIC],
 		"base_stats": {
-			"damage": 38.0,
+			"damage": 10.0,
 			"fire_rate": 1.2,
 			"range": 150.0,
 			"rotation_speed": 0.0,
