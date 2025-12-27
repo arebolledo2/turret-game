@@ -95,10 +95,18 @@ func _physics_process(delta: float) -> void:
 	# Don't process if game hasn't started
 	if Globals == null or not Globals.is_game_active:
 		return
-	
+
 	velocity = movement.process(delta)
 	move_and_slide()
-	clamp_to_arena() # Clamp AFTER moving to prevent escaping bounds
+
+	# Round position to prevent sub-pixel rendering jitter
+	global_position = global_position.round()
+
+	# Clamp to arena bounds after rounding
+	var clamped_pos := ArenaBoundsService.clamp_to_arena(global_position, 20.0)
+	if not global_position.is_equal_approx(clamped_pos):
+		global_position = clamped_pos
+		velocity = Vector2.ZERO  # Stop movement when hitting boundary
 
 	# Turret pickup/placement system
 	turret_handler.process(delta)

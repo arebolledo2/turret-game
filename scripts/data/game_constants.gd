@@ -26,6 +26,12 @@ const PLAYER_WEAPON_DAMAGE: float = 5.0
 const PLAYER_WEAPON_FIRE_RATE: float = 3.0 # shots per second
 const PLAYER_WEAPON_RANGE: float = 200.0
 const PLAYER_PROJECTILE_SPEED: float = 600.0
+const PLAYER_MELEE_DAMAGE: float = 52.5 # Increased from 35.0 by 50%
+const PLAYER_MELEE_RANGE: float = 80.0
+const PLAYER_MELEE_ARC_DEGREES: float = 120.0
+const PLAYER_MELEE_COOLDOWN: float = 1.4 # Decreased speed by 50% (doubled cooldown from 0.7)
+const PLAYER_MELEE_WINDUP_TIME: float = 0.15
+const PLAYER_MELEE_ANIMATION_DURATION: float = 0.15
 
 # =============================================================================
 # KNOCKBACK
@@ -111,13 +117,13 @@ const TECH_DROP_ITEM_DROP_CHANCE: float = 0.30 # 30% chance to drop item when de
 # =============================================================================
 # Tech Defense
 const DEFENSE_TARGET_BASE_HEALTH: float = 500.0
-const DEFENSE_TARGET_REFLECT_PERCENT: float = 0.50  # 50% damage reflected
-const DEFENSE_TARGET_KNOCKBACK_MULTIPLIER: float = 1.5  # 1.5x base knockback
-const DEFENSE_TARGET_SLOW_INTENSITY: float = 0.30  # 30% slow
-const DEFENSE_TARGET_SLOW_DURATION: float = 3.0  # 3 seconds
-const DEFENSE_TARGET_BARRIER_DURATION: float = 5.0  # 5 seconds immunity
-const DEFENSE_TARGET_BARRIER_COOLDOWN: float = 10.0  # 10 seconds between barriers
-const DEFENSE_TARGET_HEAL_BETWEEN_WAVES: float = 100.0  # HP healed between waves
+const DEFENSE_TARGET_REFLECT_PERCENT: float = 0.50 # 50% damage reflected
+const DEFENSE_TARGET_KNOCKBACK_MULTIPLIER: float = 1.5 # 1.5x base knockback
+const DEFENSE_TARGET_SLOW_INTENSITY: float = 0.30 # 30% slow
+const DEFENSE_TARGET_SLOW_DURATION: float = 3.0 # 3 seconds
+const DEFENSE_TARGET_BARRIER_DURATION: float = 5.0 # 5 seconds immunity
+const DEFENSE_TARGET_BARRIER_COOLDOWN: float = 10.0 # 10 seconds between barriers
+const DEFENSE_TARGET_HEAL_BETWEEN_WAVES: float = 100.0 # HP healed between waves
 
 # Tunneling
 const TUNNEL_DOOR_BASE_HEALTH: float = 200.0 # HP that must be damaged by turrets

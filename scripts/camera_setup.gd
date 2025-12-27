@@ -24,7 +24,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			target_zoom = clamp(target_zoom - ZOOM_STEP, MIN_ZOOM, MAX_ZOOM)
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	# Round camera position to prevent sub-pixel jitter
+	position = position.round()
+
 	if not is_equal_approx(zoom.x, target_zoom):
 		var new_zoom: float = lerp(zoom.x, target_zoom, ZOOM_SPEED * delta)
 		zoom = Vector2(new_zoom, new_zoom)

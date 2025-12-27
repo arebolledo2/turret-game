@@ -31,12 +31,12 @@ var melee_hitbox: Area2D = null
 var melee_arc: Polygon2D = null
 
 # Config
-var melee_damage: float = 35.0
-var melee_range: float = 80.0
-var melee_arc_degrees: float = 120.0
-var melee_cooldown: float = 0.7
-var melee_windup_time: float = 0.15
-var melee_animation_duration: float = 0.15
+var melee_damage: float = GameConstants.PLAYER_MELEE_DAMAGE
+var melee_range: float = GameConstants.PLAYER_MELEE_RANGE
+var melee_arc_degrees: float = GameConstants.PLAYER_MELEE_ARC_DEGREES
+var melee_cooldown: float = GameConstants.PLAYER_MELEE_COOLDOWN
+var melee_windup_time: float = GameConstants.PLAYER_MELEE_WINDUP_TIME
+var melee_animation_duration: float = GameConstants.PLAYER_MELEE_ANIMATION_DURATION
 
 # Signals
 signal melee_hit() # Parent handles camera shake
@@ -50,13 +50,14 @@ func initialize(p_player: CharacterBody2D, p_sprite: Sprite2D, p_movement: Playe
 	assert(sprite != null, "PlayerMeleeCombat: sprite reference required")
 	assert(movement != null, "PlayerMeleeCombat: movement reference required")
 
-	# Load stats from Globals
+	# Load stats from Globals (facade provides access to GameConstants defaults)
 	if Globals:
-		melee_damage = Globals.PLAYER_MELEE_DAMAGE if "PLAYER_MELEE_DAMAGE" in Globals else 35.0
-		melee_range = Globals.PLAYER_MELEE_RANGE if "PLAYER_MELEE_RANGE" in Globals else 80.0
-		melee_cooldown = Globals.PLAYER_MELEE_COOLDOWN if "PLAYER_MELEE_COOLDOWN" in Globals else 0.7
-		melee_windup_time = Globals.PLAYER_MELEE_WINDUP_TIME if "PLAYER_MELEE_WINDUP_TIME" in Globals else 0.15
-		melee_animation_duration = Globals.PLAYER_MELEE_ANIMATION_DURATION if "PLAYER_MELEE_ANIMATION_DURATION" in Globals else 0.15
+		melee_damage = Globals.PLAYER_MELEE_DAMAGE
+		melee_range = Globals.PLAYER_MELEE_RANGE
+		melee_arc_degrees = Globals.PLAYER_MELEE_ARC_DEGREES
+		melee_cooldown = Globals.PLAYER_MELEE_COOLDOWN
+		melee_windup_time = Globals.PLAYER_MELEE_WINDUP_TIME
+		melee_animation_duration = Globals.PLAYER_MELEE_ANIMATION_DURATION
 
 	# Get MeleeVisuals nodes (sibling to Components)
 	melee_hitbox = player.get_node_or_null("MeleeVisuals/MeleeHitbox")

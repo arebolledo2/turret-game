@@ -134,7 +134,7 @@ func test_take_damage_while_invincible_does_nothing():
 	_apply_damage_directly(10.0)
 	var health_after_first = player.current_health
 
-	_apply_damage_directly(10.0)  # Should be ignored (is_invincible check)
+	_apply_damage_directly(10.0) # Should be ignored (is_invincible check)
 
 	assert_eq(player.current_health, health_after_first,
 		"Damage while invincible should not reduce health")
@@ -286,7 +286,7 @@ func test_drop_turret_clears_carried():
 # =============================================================================
 
 func test_melee_damage_default():
-	assert_eq(player.melee_damage, 35.0, "Default melee damage should be 35")
+	assert_eq(player.melee_damage, 52.5, "Default melee damage should be 52.5")
 
 
 func test_melee_range_default():
@@ -298,7 +298,7 @@ func test_melee_arc_default():
 
 
 func test_melee_cooldown_default():
-	assert_eq(player.melee_cooldown, 0.7, "Default melee cooldown should be 0.7")
+	assert_eq(player.melee_cooldown, 1.4, "Default melee cooldown should be 1.4")
 
 
 func test_melee_windup_default():
@@ -335,10 +335,10 @@ func test_get_direction_from_vector_west():
 
 func test_enemy_in_melee_arc_front():
 	var enemy = Node2D.new()
-	enemy.global_position = player.global_position + Vector2(50, 0)  # In front
+	enemy.global_position = player.global_position + Vector2(50, 0) # In front
 	add_child_autofree(enemy)
 
-	var attack_dir = Vector2(1, 0)  # Facing right
+	var attack_dir = Vector2(1, 0) # Facing right
 	var result = player.is_enemy_in_melee_arc(enemy, attack_dir)
 
 	assert_true(result, "Enemy directly in front should be in arc")
@@ -346,7 +346,7 @@ func test_enemy_in_melee_arc_front():
 
 func test_enemy_outside_melee_range():
 	var enemy = Node2D.new()
-	enemy.global_position = player.global_position + Vector2(200, 0)  # Too far
+	enemy.global_position = player.global_position + Vector2(200, 0) # Too far
 	add_child_autofree(enemy)
 
 	var attack_dir = Vector2(1, 0)
@@ -357,10 +357,10 @@ func test_enemy_outside_melee_range():
 
 func test_enemy_behind_player():
 	var enemy = Node2D.new()
-	enemy.global_position = player.global_position + Vector2(-50, 0)  # Behind
+	enemy.global_position = player.global_position + Vector2(-50, 0) # Behind
 	add_child_autofree(enemy)
 
-	var attack_dir = Vector2(1, 0)  # Facing right
+	var attack_dir = Vector2(1, 0) # Facing right
 	var result = player.is_enemy_in_melee_arc(enemy, attack_dir)
 
 	assert_false(result, "Enemy behind should not be in arc")
@@ -371,7 +371,7 @@ func test_enemy_behind_player():
 # =============================================================================
 
 func test_attack_direction_south():
-	player.facing_direction = 0  # South
+	player.facing_direction = 0 # South
 	var dir = player.get_attack_direction_from_facing()
 
 	assert_almost_eq(dir.x, 0.0, 0.01, "South X should be 0")
@@ -379,7 +379,7 @@ func test_attack_direction_south():
 
 
 func test_attack_direction_north():
-	player.facing_direction = 4  # North
+	player.facing_direction = 4 # North
 	var dir = player.get_attack_direction_from_facing()
 
 	assert_almost_eq(dir.x, 0.0, 0.01, "North X should be 0")
@@ -387,7 +387,7 @@ func test_attack_direction_north():
 
 
 func test_attack_direction_east():
-	player.facing_direction = 6  # East
+	player.facing_direction = 6 # East
 	var dir = player.get_attack_direction_from_facing()
 
 	assert_almost_eq(dir.x, 1.0, 0.01, "East X should be 1")
@@ -395,7 +395,7 @@ func test_attack_direction_east():
 
 
 func test_attack_direction_west():
-	player.facing_direction = 2  # West
+	player.facing_direction = 2 # West
 	var dir = player.get_attack_direction_from_facing()
 
 	assert_almost_eq(dir.x, -1.0, 0.01, "West X should be -1")

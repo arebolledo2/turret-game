@@ -55,8 +55,7 @@ position = Vector2(0, 0)
 script = ExtResource("1_camera_setup")
 zoom = Vector2(1.5, 1.5)
 limit_smoothed = true
-position_smoothing_enabled = true
-position_smoothing_speed = 8.0
+position_smoothing_enabled = false
 
 [node name="GameManager" type="Node" parent="."]
 script = ExtResource("2_2c3d4")
