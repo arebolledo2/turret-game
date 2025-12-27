@@ -8,9 +8,19 @@ var turrets: Array[Node2D] = []
 func _ready() -> void:
 	turret_scene = preload("res://scenes/turret.tscn")
 	Events.modifiers_changed.connect(_on_modifiers_changed)
+	Events.turret_placed.connect(_on_turret_placed)
+	Events.turret_picked_up.connect(_on_turret_picked_up)
 
 func _on_modifiers_changed() -> void:
 	"""Called when items are purchased and modifiers change"""
+	update_all_turret_stats()
+
+func _on_turret_placed(_turret: Node2D, _pos: Vector2) -> void:
+	"""Called when a carried turret is placed"""
+	update_all_turret_stats()
+
+func _on_turret_picked_up(_turret: Node2D) -> void:
+	"""Called when a turret is picked up"""
 	update_all_turret_stats()
 
 func update_all_turret_stats() -> void:
