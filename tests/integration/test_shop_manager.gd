@@ -19,7 +19,7 @@ func before_each() -> void:
 	Globals.current_wave = 1
 	Globals.total_gold = Globals.STARTING_GOLD
 	Globals.shop_reroll_count = 0
-	Globals.current_shop_offers.clear()
+	EconomyService.current_shop_offers.clear()
 	Globals.pending_turret_purchases.clear()
 	# Create a fresh instance for each test
 	shop_manager = _shop_manager_script.new()
@@ -34,7 +34,7 @@ func test_generate_offers_creates_correct_count():
 	shop_manager.generate_offers()
 
 	# Shop V2: configurable offers with 65% item / 35% turret chance per slot
-	assert_eq(Globals.current_shop_offers.size(), GameConstants.SHOP_OFFER_COUNT,
+	assert_eq(EconomyService.current_shop_offers.size(), GameConstants.SHOP_OFFER_COUNT,
 		"Should generate exactly %d offers" % GameConstants.SHOP_OFFER_COUNT)
 
 
@@ -43,7 +43,7 @@ func test_generate_offers_has_turret_offers():
 	var total_turrets = 0
 	for _i in range(20):
 		shop_manager.generate_offers()
-		for offer in Globals.current_shop_offers:
+		for offer in EconomyService.current_shop_offers:
 			if offer["type"] == "turret":
 				total_turrets += 1
 	
@@ -56,7 +56,7 @@ func test_generate_offers_has_item_offers():
 	var total_items = 0
 	for _i in range(20):
 		shop_manager.generate_offers()
-		for offer in Globals.current_shop_offers:
+		for offer in EconomyService.current_shop_offers:
 			if offer["type"] == "item":
 				total_items += 1
 	
@@ -69,7 +69,7 @@ func test_turret_offers_have_valid_turret_ids():
 	var found_turret = false
 	for _i in range(10):
 		shop_manager.generate_offers()
-		for offer in Globals.current_shop_offers:
+		for offer in EconomyService.current_shop_offers:
 			if offer["type"] == "turret":
 				assert_has(TurretRegistry.TYPES, offer["turret_id"],
 					"Turret offer should have valid turret_id")
@@ -85,7 +85,7 @@ func test_item_offers_have_valid_item_ids():
 	var found_item = false
 	for _i in range(10):
 		shop_manager.generate_offers()
-		for offer in Globals.current_shop_offers:
+		for offer in EconomyService.current_shop_offers:
 			if offer["type"] == "item":
 				assert_true(ItemRegistry.has_item(offer["item_id"]),
 					"Item offer should have valid item_id")
@@ -99,7 +99,7 @@ func test_item_offers_have_valid_item_ids():
 func test_offers_have_required_fields():
 	shop_manager.generate_offers()
 
-	for offer in Globals.current_shop_offers:
+	for offer in EconomyService.current_shop_offers:
 		assert_has(offer, "type", "Offer should have type")
 		assert_has(offer, "price", "Offer should have price")
 		assert_has(offer, "sold", "Offer should have sold flag")
@@ -112,7 +112,7 @@ func test_generate_offers_no_duplicate_turrets():
 	var validated_count = 0
 	for _i in range(10):
 		shop_manager.generate_offers()
-		for offer in Globals.current_shop_offers:
+		for offer in EconomyService.current_shop_offers:
 			if offer["type"] == "turret":
 				assert_has(TurretRegistry.TYPES, offer["turret_id"],
 					"Turret offer should have valid turret_id")
@@ -126,13 +126,13 @@ func test_generate_offers_no_duplicate_turrets():
 func test_generate_offers_clears_previous():
 	# Generate first set
 	shop_manager.generate_offers()
-	var first_offers = Globals.current_shop_offers.duplicate(true)
+	var first_offers = EconomyService.current_shop_offers.duplicate(true)
 
 	# Generate again
 	shop_manager.generate_offers()
 
 	# Should still have exactly SHOP_OFFER_COUNT offers (not doubled)
-	assert_eq(Globals.current_shop_offers.size(), GameConstants.SHOP_OFFER_COUNT,
+	assert_eq(EconomyService.current_shop_offers.size(), GameConstants.SHOP_OFFER_COUNT,
 		"generate_offers should clear previous offers")
 
 
@@ -147,7 +147,7 @@ func test_turret_price_wave_1():
 	var found_turret = false
 	for _i in range(10):
 		shop_manager.generate_offers()
-		for offer in Globals.current_shop_offers:
+		for offer in EconomyService.current_shop_offers:
 			if offer["type"] == "turret":
 				var base_price = TurretRegistry.get_base_price(offer["turret_id"])
 				var expected_wave_mult = 1.0 + Globals.WAVE_PRICE_SCALE * 1
@@ -170,7 +170,7 @@ func test_turret_price_scales_with_wave():
 	var found_turret = false
 	for _i in range(10):
 		shop_manager.generate_offers()
-		for offer in Globals.current_shop_offers:
+		for offer in EconomyService.current_shop_offers:
 			if offer["type"] == "turret":
 				var base_price = TurretRegistry.get_base_price(offer["turret_id"])
 				var expected_wave_mult = 1.0 + Globals.WAVE_PRICE_SCALE * 5
@@ -206,7 +206,7 @@ func test_item_price_scales_with_wave():
 	Globals.current_wave = 5
 	shop_manager.generate_offers()
 
-	for offer in Globals.current_shop_offers:
+	for offer in EconomyService.current_shop_offers:
 		if offer["type"] == "item":
 			var base_price = ItemRegistry.get_item_price(offer["item_id"])
 			var expected = int(base_price * (1.0 + Globals.WAVE_PRICE_SCALE * 5))
@@ -230,7 +230,7 @@ func test_purchase_turret_success():
 func test_purchase_turret_deducts_gold():
 	Globals.total_gold = 500
 	shop_manager.generate_offers()
-	var price = Globals.current_shop_offers[0]["price"]
+	var price = EconomyService.current_shop_offers[0]["price"]
 
 	shop_manager.purchase_offer(0)
 
@@ -244,7 +244,7 @@ func test_purchase_turret_marks_sold():
 
 	shop_manager.purchase_offer(0)
 
-	assert_true(Globals.current_shop_offers[0]["sold"],
+	assert_true(EconomyService.current_shop_offers[0]["sold"],
 		"Purchased offer should be marked as sold")
 
 
@@ -256,10 +256,10 @@ func test_purchase_turret_adds_to_pending():
 	var turret_id = ""
 	for _i in range(10):
 		shop_manager.generate_offers()
-		for j in range(Globals.current_shop_offers.size()):
-			if Globals.current_shop_offers[j]["type"] == "turret":
+		for j in range(EconomyService.current_shop_offers.size()):
+			if EconomyService.current_shop_offers[j]["type"] == "turret":
 				turret_index = j
-				turret_id = Globals.current_shop_offers[j]["turret_id"]
+				turret_id = EconomyService.current_shop_offers[j]["turret_id"]
 				break
 		if turret_index >= 0:
 			break
@@ -334,10 +334,10 @@ func test_purchase_item_adds_to_collected():
 	# Find item offer
 	var item_index = -1
 	var item_id = ""
-	for i in range(Globals.current_shop_offers.size()):
-		if Globals.current_shop_offers[i]["type"] == "item":
+	for i in range(EconomyService.current_shop_offers.size()):
+		if EconomyService.current_shop_offers[i]["type"] == "item":
 			item_index = i
-			item_id = Globals.current_shop_offers[i]["item_id"]
+			item_id = EconomyService.current_shop_offers[i]["item_id"]
 			break
 
 	if item_index >= 0:
@@ -354,8 +354,8 @@ func test_purchase_item_adds_modifiers():
 
 	# Find item offer
 	var item_index = -1
-	for i in range(Globals.current_shop_offers.size()):
-		if Globals.current_shop_offers[i]["type"] == "item":
+	for i in range(EconomyService.current_shop_offers.size()):
+		if EconomyService.current_shop_offers[i]["type"] == "item":
 			item_index = i
 			break
 
@@ -437,12 +437,12 @@ func test_reroll_shop_increments_count():
 func test_reroll_shop_generates_new_offers():
 	Globals.total_gold = 100
 	shop_manager.generate_offers()
-	var old_offers = Globals.current_shop_offers.duplicate(true)
+	var old_offers = EconomyService.current_shop_offers.duplicate(true)
 
 	shop_manager.reroll_shop()
 
 	# At minimum, still should have SHOP_OFFER_COUNT offers
-	assert_eq(Globals.current_shop_offers.size(), GameConstants.SHOP_OFFER_COUNT,
+	assert_eq(EconomyService.current_shop_offers.size(), GameConstants.SHOP_OFFER_COUNT,
 		"Reroll should generate new offers")
 
 
@@ -544,12 +544,12 @@ func test_multiple_purchases_in_one_shop():
 	shop_manager.generate_offers()
 
 	# Buy all offers
-	for i in range(Globals.current_shop_offers.size()):
+	for i in range(EconomyService.current_shop_offers.size()):
 		shop_manager.purchase_offer(i)
 
 	# Count sold
 	var sold_count = 0
-	for offer in Globals.current_shop_offers:
+	for offer in EconomyService.current_shop_offers:
 		if offer["sold"]:
 			sold_count += 1
 
@@ -558,7 +558,7 @@ func test_multiple_purchases_in_one_shop():
 
 func test_gold_exactly_enough():
 	shop_manager.generate_offers()
-	var price = Globals.current_shop_offers[0]["price"]
+	var price = EconomyService.current_shop_offers[0]["price"]
 	Globals.total_gold = price
 
 	var result = shop_manager.purchase_offer(0)

@@ -48,7 +48,7 @@ func generate_offers() -> void:
 
 	# Merge locked offers back into the offer list
 	for locked_offer in locked_offers:
-		Globals.current_shop_offers.append(locked_offer)
+		EconomyService.current_shop_offers.append(locked_offer)
 
 	Events.shop_offers_generated.emit(EconomyService.current_shop_offers)
 
@@ -249,8 +249,8 @@ func lock_offer(offer_index: int) -> bool:
 	"""Lock an offer so it persists to next reroll/wave"""
 	if offer_index < 0 or offer_index >= EconomyService.current_shop_offers.size():
 		return false
-	
-	var offer = Globals.current_shop_offers[offer_index]
+
+	var offer = EconomyService.current_shop_offers[offer_index]
 	
 	# Can't lock sold offers
 	if offer.get("sold", false):
@@ -268,8 +268,8 @@ func unlock_offer(offer_index: int) -> bool:
 	"""Unlock an offer"""
 	if offer_index < 0 or offer_index >= EconomyService.current_shop_offers.size():
 		return false
-	
-	var offer = Globals.current_shop_offers[offer_index]
+
+	var offer = EconomyService.current_shop_offers[offer_index]
 	
 	# Can't unlock non-locked offers
 	if not offer.get("locked", false):

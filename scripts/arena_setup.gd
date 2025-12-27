@@ -54,7 +54,7 @@ func _ready() -> void:
 	
 	# Wait for game mode to be set before configuring arena
 	# If game is already started, setup now; otherwise wait for signal
-	if Globals.is_game_active:
+	if GameStateService.is_game_active:
 		setup_arena()
 	else:
 		# Defer setup until arena type is known

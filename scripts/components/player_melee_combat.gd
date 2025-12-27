@@ -244,7 +244,7 @@ func _on_melee_hitbox_enemy_hit(enemy: Node2D) -> void:
 	# Apply knockback (only for enemies, not doors)
 	if enemy.has_method("apply_knockback") and enemy.is_in_group("enemies"):
 		var knockback_dir := player.global_position.direction_to(enemy.global_position)
-		enemy.apply_knockback(Globals.PLAYER_MELEE_KNOCKBACK_FORCE, knockback_dir)
+		enemy.apply_knockback(GameConstants.PLAYER_MELEE_KNOCKBACK_FORCE, knockback_dir)
 
 	# Emit signal for camera shake (first hit triggers shake)
 	if melee_hit_enemies.size() == 1:

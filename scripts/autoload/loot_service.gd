@@ -41,8 +41,8 @@ func roll_for_item_drop(wave: int) -> String:
 	# Use same weighted random system as shop
 	var item_id := ItemRegistry.get_weighted_random_item(
 		wave,
-		Globals.get_player_luck(),
-		Globals.item_counts,
+		PlayerStatsService.get_player_luck(),
+		ItemTrackingService.item_counts,
 		[] # No exclusions for loot drops
 	)
 	
