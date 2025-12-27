@@ -55,6 +55,9 @@ func _modifier_matches_turret(modifier: Dictionary, turret_type: String) -> bool
 
 	# Check turret_type filter
 	if filter.has("turret_type") and not filter["turret_type"].is_empty():
+		# "all" is a wildcard that matches any turret type
+		if "all" in filter["turret_type"]:
+			return true
 		if turret_type in filter["turret_type"]:
 			return true
 
@@ -86,8 +89,8 @@ func get_turret_stats(turret_type: String, difficulty_config: Dictionary) -> Dic
 	_apply_special_effects(base_stats, turret_type)
 
 	# Collect applicable modifiers
-	var add_mods: Dictionary = {}  # stat -> total add value
-	var mult_mods: Dictionary = {}  # stat -> array of multipliers
+	var add_mods: Dictionary = {} # stat -> total add value
+	var mult_mods: Dictionary = {} # stat -> array of multipliers
 
 	for modifier in _modifiers:
 		if not _modifier_matches_turret(modifier, turret_type):
@@ -219,7 +222,7 @@ func _apply_special_effects(stats: Dictionary, turret_type: String) -> void:
 		var diversity = Globals.get_turret_type_diversity()
 		var damage_bonus = diversity * 0.12
 		if diversity == 6:
-			damage_bonus += 0.25  # Completion bonus
+			damage_bonus += 0.25 # Completion bonus
 		stats["damage"] = stats.get("damage", 0.0) * (1.0 + damage_bonus)
 
 

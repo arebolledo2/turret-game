@@ -148,7 +148,7 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 		nodes["crit_mult_label"].add_theme_color_override("font_color", crit_mult_stat["color"])
 
 
-## Calculate effective DPS for a turret type including special effects
+## Calculate effective DPS for a turret type including special effects and crit
 static func calculate_effective_dps(turret_type: String, stats: Dictionary) -> Dictionary:
 	var base_dps: float = float(stats.get("damage", 0.0)) * float(stats.get("fire_rate", 0.0))
 	var effective_dps: float = base_dps
@@ -193,6 +193,15 @@ static func calculate_effective_dps(turret_type: String, stats: Dictionary) -> D
 			var range_val: float = float(stats.get("range", 0.0))
 			breakdown.append("Pulse DPS: %.1f" % base_dps)
 			breakdown.append("AoE Range: %.0fpx" % range_val)
+
+	# Apply crit to effective DPS using expected value formula
+	var crit_chance: float = TurretStatsService.get_turret_crit_chance()
+	var crit_mult: float = TurretStatsService.get_turret_crit_multiplier()
+	var crit_factor: float = 1.0 + crit_chance * (crit_mult - 1.0)
+	
+	if crit_factor > 1.0:
+		effective_dps *= crit_factor
+		breakdown.append("Crit Bonus: +%.0f%% (%.1f%% × %.1fx)" % [(crit_factor - 1.0) * 100, crit_chance * 100, crit_mult])
 
 	return {
 		"base_dps": base_dps,
