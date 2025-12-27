@@ -4,7 +4,7 @@ extends ScalableUIPanel
 ## Handles pause menu display and interactions
 ## REFACTORED: Now uses InventoryPanel component for turrets/items
 
-const MAIN_FONT = preload("res://addons/gut/fonts/AnonymousPro-Regular.ttf")
+const MAIN_FONT = preload("res://assets/fonts/NunitoSans-Regular.ttf")
 
 var resume_button: Button
 var level_label: Label

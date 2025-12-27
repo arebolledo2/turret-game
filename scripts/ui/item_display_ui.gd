@@ -6,7 +6,7 @@ extends RefCounted
 const ITEM_BUTTON_SIZE := Vector2(60, 60)
 const ICON_FONT_SIZE := 28
 const BADGE_FONT_SIZE := 12
-const MAIN_FONT = preload("res://addons/gut/fonts/AnonymousPro-Regular.ttf")
+const MAIN_FONT = preload("res://assets/fonts/NunitoSans-Regular.ttf")
 
 ## Creates a 60x60 button with emoji icon, rarity border, and count badge for item display
 static func create_item_button(item_id: String, count: int) -> Button:

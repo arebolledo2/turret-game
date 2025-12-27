@@ -4,7 +4,7 @@ extends VBoxContainer
 ## Reusable component displaying Player and Economy stats
 ## Used in both Shop Screen and Pause Menu
 
-const MAIN_FONT = preload("res://addons/gut/fonts/AnonymousPro-Regular.ttf")
+const MAIN_FONT = preload("res://assets/fonts/NunitoSans-Regular.ttf")
 const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
 
 # Base player constants (from player.gd defaults)

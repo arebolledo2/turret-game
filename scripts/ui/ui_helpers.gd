@@ -3,7 +3,7 @@ extends RefCounted
 
 ## General UI formatting and navigation helpers
 
-const MAIN_FONT = preload("res://addons/gut/fonts/AnonymousPro-Regular.ttf")
+const MAIN_FONT = preload("res://assets/fonts/NunitoSans-Regular.ttf")
 
 ## Format a stat with base and modified values
 ## Returns Dictionary with text and color for display

@@ -4,7 +4,7 @@ extends Node
 ## Manages shop offer display and purchase interactions
 ## Extracted from shop_screen.gd to reduce file size
 
-const MAIN_FONT = preload("res://addons/gut/fonts/AnonymousPro-Regular.ttf")
+const MAIN_FONT = preload("res://assets/fonts/NunitoSans-Regular.ttf")
 
 var offers_container: HBoxContainer
 var reroll_button: Button

@@ -2,7 +2,7 @@ extends Control
 
 ## Shop screen orchestrator - uses StatsPanel and InventoryPanel components
 
-const MAIN_FONT = preload("res://addons/gut/fonts/AnonymousPro-Regular.ttf")
+const MAIN_FONT = preload("res://assets/fonts/NunitoSans-Regular.ttf")
 const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
 
 # Preload shop offers panel script

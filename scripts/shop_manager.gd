@@ -175,13 +175,11 @@ func purchase_offer(offer_index: int) -> bool:
 		Globals.turrets_purchased += 1
 		
 		# Recalculate remaining turret prices with new turrets_purchased value
-		for other_offer in Globals.current_shop_offers:
-			if other_offer.get("type") == "turret" and not other_offer.get("sold", false):
-				var turret_type = other_offer.get("turret_id", "")
-				var base_price = TurretRegistry.get_base_price(turret_type)
-				other_offer["price"] = calculate_turret_price(base_price, Globals.current_wave)
+		_recalculate_turret_prices()
 	elif offer["type"] == "item":
 		apply_item(offer["item_id"])
+		# Recalculate turret prices in case item affects penalty/price multipliers
+		_recalculate_turret_prices()
 
 	Events.shop_purchase_made.emit(offer)
 	return true
@@ -278,3 +276,11 @@ func unlock_offer(offer_index: int) -> bool:
 	offer["locked"] = false
 	Events.offer_unlocked.emit(offer_index)
 	return true
+
+func _recalculate_turret_prices() -> void:
+	"""Recalculate prices for all unsold turret offers"""
+	for other_offer in Globals.current_shop_offers:
+		if other_offer.get("type") == "turret" and not other_offer.get("sold", false):
+			var turret_type = other_offer.get("turret_id", "")
+			var base_price = TurretRegistry.get_base_price(turret_type)
+			other_offer["price"] = calculate_turret_price(base_price, Globals.current_wave)

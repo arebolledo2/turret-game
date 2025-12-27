@@ -1,4 +1,6 @@
 [gd_resource type="Theme" format=3]
+[ext_resource type="FontFile" uid="uid://b7m4p8d9k2xqr" path="res://assets/fonts/NunitoSans-Regular.ttf"]
 
 [resource]
+default_font = ExtResource("1")
 default_font_size = 16

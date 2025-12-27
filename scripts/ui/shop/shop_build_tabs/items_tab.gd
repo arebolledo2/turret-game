@@ -5,7 +5,7 @@ extends Node
 ## Extracted from shop_screen.gd to reduce file size
 
 const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
-const MAIN_FONT = preload("res://addons/gut/fonts/AnonymousPro-Regular.ttf")
+const MAIN_FONT = preload("res://assets/fonts/NunitoSans-Regular.ttf")
 
 var items_title: Label
 var items_hint: Label

@@ -8,7 +8,7 @@ extends VBoxContainer
 signal turret_selected(turret_type: String)
 signal item_selected(item_id: String)
 
-const MAIN_FONT = preload("res://addons/gut/fonts/AnonymousPro-Regular.ttf")
+const MAIN_FONT = preload("res://assets/fonts/NunitoSans-Regular.ttf")
 const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
 
 @onready var turrets_header: HBoxContainer = $TurretsHeader
