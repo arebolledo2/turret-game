@@ -58,6 +58,7 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 
 	var vbox = VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 15)
 	panel.add_child(vbox)
 
 	if offer["type"] == "turret":
@@ -155,10 +156,6 @@ func _create_turret_offer_ui(offer: Dictionary, container: VBoxContainer) -> voi
 	stats_label.add_theme_font_size_override("font_size", 14)
 	container.add_child(stats_label)
 
-	# Spacer
-	var spacer = Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	container.add_child(spacer)
 
 func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	var item_id = offer["item_id"]
@@ -204,10 +201,6 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 		mod_label.add_theme_color_override("font_color", Color.GREEN if is_benefit else Color.RED)
 		container.add_child(mod_label)
 
-	# Spacer
-	var spacer = Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	container.add_child(spacer)
 
 func _format_modifier(modifier: Dictionary) -> String:
 	var stat = modifier["stat"]
