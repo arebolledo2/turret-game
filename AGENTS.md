@@ -15,13 +15,13 @@ Wave-based survival tower defense game built in **Godot 4.5** using GDScript. Pl
 ## Architecture
 
 ### Service-Oriented Architecture
-Game logic split into **12 focused service singletons** in `scripts/autoload/`:
+Game logic split into **15 focused service singletons** in `scripts/autoload/`:
 
 1. **DifficultyService** - Difficulty config and multipliers
 2. **GameStateService** - Wave number, XP, kills, time, level
 3. **EconomyService** - Gold, shop offers, rerolls, purchases
-4. **PlayerStatsService** - Player health, speed, luck
-5. **TurretStatsService** - Turret counts, stat calculation
+4. **PlayerStatsService** - Player health, speed, luck, crit stats
+5. **TurretStatsService** - Turret counts, stat calculation with modifiers
 6. **ItemTrackingService** - Item collection tracking
 7. **ModifierService** - Active modifiers management
 8. **SettingsService** - Runtime settings and debug flags
@@ -29,18 +29,21 @@ Game logic split into **12 focused service singletons** in `scripts/autoload/`:
 10. **ArenaBoundsService** - Arena geometry (rectangular vs isometric bounds)
 11. **LootService** - Manages item drops and loot review
 12. **UIScaler** - Dynamic UI scaling and layout adjustments
+13. **GameStateMachine** - State transitions with validation
+14. **Events** - Signal bus for cross-system communication
+15. **OffScreenIndicatorService** - Off-screen enemy and object indicators
 
 All code uses services directly. No facade pattern.
 
 ### Signal Bus Pattern
-**All cross-system communication** uses the `Events` autoload (`scripts/autoload/events.gd`). Approximately **48 signals** cover Game State, Waves, Combat, Turrets, Pickups, Tech Drops, Economy, Shop, Items, Loot, UI, and Player Progression.
+**All cross-system communication** uses the `Events` autoload (`scripts/autoload/events.gd`). Approximately **55 signals** cover Game State, Waves, Combat, Turrets, Pickups, Tech Drops, Economy, Shop, Items, Loot, UI, Defense Mode, and Player Progression.
 
 ### Registry Pattern
 Type definitions stored in **static registry classes**:
 
-- **EnemyRegistry** (`scripts/registries/enemy_registry.gd`) - 7 enemy types (basic, fast, tank, exploder, lazy_wanderer, charger, neon_drone)
+- **EnemyRegistry** (`scripts/registries/enemy_registry.gd`) - 8 enemy types (basic, fast, tank, exploder, lazy_wanderer, charger, neon_drone, lazy_shooter)
 - **TurretRegistry** (`scripts/registries/turret_registry.gd`) - 6 turret types (normal, sniper, fire, plasma, shock, tesla)
-- **ItemRegistry** (`scripts/registries/item_registry.gd`) - 53 items total across 5 rarity tiers
+- **ItemRegistry** (`scripts/registries/item_registry.gd`) - 54 items total across 5 rarity tiers
 - **GameModeRegistry** (`scripts/registries/game_mode_registry.gd`) - Game mode definitions and categories
 
 ### Component-Based Player System
@@ -52,21 +55,21 @@ Player (`scripts/player.gd`) delegates to **4 component nodes**:
 4. **PlayerTurretHandler** - Turret pickup, carry, and placement logic
 
 ### Modifier & Buff Systems
-- **ModifierService**: Manages permanent stat modifications (add/multiply) with filter support (turret_type, damage_type, etc.).
+- **ModifierService**: Manages permanent stat modifications (add/multiply) with filter support (turret_type, damage_type, attack_style, etc.).
 - **BuffSystem** (`scripts/systems/buff_system.gd`): Manages temporary, stackable, time-based buffs per turret instance.
 
 ### Modular Item System
 Items organized by rarity in `scripts/registries/items/`:
 - **Common**: 19 items
 - **Uncommon**: 10 items
-- **Rare**: 14 items
+- **Rare**: 12 items
 - **Epic**: 9 items
 - **Legendary**: 4 items
 
 ## Core Systems
 
 ### Game State Machine
-Game flow is managed by **GameState理论基础Machine** (`scripts/autoload/game_state_machine.gd`) with **10 states**:
+Game flow is managed by **GameStateMachine** (`scripts/autoload/game_state_machine.gd`) with **10 states**:
 IDLE, DIFFICULTY_SELECT, GAME_MODE_SELECT, WAVE_ANNOUNCEMENT, COMBAT, WAVE_END, LOOT_REVIEW, SHOP, VICTORY, GAME_OVER.
 
 ### Wave Cycle & Progression
