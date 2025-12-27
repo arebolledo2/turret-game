@@ -253,11 +253,11 @@ static func _create_regenerative_plating() -> Item:
 	item.item_id = "regenerative_plating"
 	item.name = "Regenerative Plating"
 	item.icon = "💚"
-	item.description = "+1 health regen, but -5% movement speed"
+	item.description = "+3 health regen, but -2% movement speed"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("player_health_regen", "add", 1.0),
-		Item.create_modifier("player_speed", "multiply", 0.95)
+		Item.create_modifier("player_health_regen", "add", 3.0),
+		Item.create_modifier("player_speed", "multiply", 0.98)
 	]
 	return item
 
@@ -284,12 +284,12 @@ static func _create_precision_lens() -> Item:
 	var item := Item.new()
 	item.item_id = "precision_lens"
 	item.name = "Precision Lens"
-	item.icon = "�"
-	item.description = "+3% player crit chance, but -3% fire rate"
+	item.icon = "🔬"
+	item.description = "+5% player crit chance, but -2% fire rate"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("player_crit_chance", "add", 0.03),
-		Item.create_modifier("fire_rate", "multiply", 0.97, Item.filter_turret_type(["all"]))
+		Item.create_modifier("player_crit_chance", "add", 0.05),
+		Item.create_modifier("fire_rate", "multiply", 0.98, Item.filter_turret_type(["all"]))
 	]
 	return item
 

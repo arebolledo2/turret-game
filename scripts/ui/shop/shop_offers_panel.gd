@@ -88,7 +88,7 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	if offer.get("sold", false):
 		purchase_button.text = "SOLD"
 		purchase_button.disabled = true
-		purchase_button.focus_mode = Control.FOCUS_NONE  # Make SOLD items non-focusable
+		purchase_button.focus_mode = Control.FOCUS_NONE # Make SOLD items non-focusable
 	else:
 		purchase_button.text = "Purchase"
 		purchase_button.pressed.connect(func(): purchase_requested.emit(index))
@@ -237,7 +237,7 @@ func _format_modifier(modifier: Dictionary) -> String:
 		return "%s%.1f%% %s%s" % [sign_str, display_value, stat_name, tag]
 	elif operation == "add":
 		# Stats stored as decimals (0.0-1.0 range) that represent percentages
-		var percentage_stats = ["player_luck", "turret_penalty_reduction"]
+		var percentage_stats = ["player_luck", "turret_penalty_reduction", "player_crit_chance", "turret_crit_chance"]
 
 		if stat in percentage_stats:
 			# Convert decimal to percentage (0.10 -> 10%)
