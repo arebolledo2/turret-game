@@ -5,8 +5,8 @@ extends Node
 ## Groups entities by directional sector (8 sectors) and type for clean UI presentation
 
 # Configuration
-const INDICATOR_INSET_MARGIN: float = 30.0  # Pixels from screen edge
-const SECTOR_COUNT: int = 8  # Directional sectors (N, NE, E, SE, S, SW, W, NW)
+const INDICATOR_INSET_MARGIN: float = 30.0 # Pixels from screen edge
+const SECTOR_COUNT: int = 8 # Directional sectors (N, NE, E, SE, S, SW, W, NW)
 
 # Color definitions
 const COLOR_ENEMY: Color = Color(1.0, 0.3, 0.3)
@@ -17,8 +17,8 @@ const COLOR_TURRET: Color = Color(0.4, 0.8, 0.4)
 # Tracked entity data
 class TrackedEntity:
 	var node: Node2D
-	var type: String  # "enemy_spider", "spawn_tank", "tech_drop", "turret_normal"
-	var category: String  # "enemy", "spawn", "tech_drop", "turret"
+	var type: String # "enemy_spider", "spawn_tank", "tech_drop", "turret_normal"
+	var category: String # "enemy", "spawn", "tech_drop", "turret"
 	var position: Vector2
 	var is_valid: bool = true
 
@@ -100,7 +100,7 @@ func get_indicator_groups() -> Dictionary:
 	# Track spawns from enemy spawner
 	_update_spawn_tracking()
 
-	var groups: Dictionary = {}  # sector -> type -> Array[TrackedEntity]
+	var groups: Dictionary = {} # sector -> type -> Array[TrackedEntity]
 	var screen_center := viewport_bounds.get_center()
 
 	for entity in tracked_entities:
@@ -128,7 +128,7 @@ func get_indicator_groups() -> Dictionary:
 
 
 ## Calculate screen position for an indicator at the edge of the viewport
-func calculate_indicator_position(entities: Array[TrackedEntity], viewport_bounds: Rect2) -> Dictionary:
+func calculate_indicator_position(entities: Array, viewport_bounds: Rect2) -> Dictionary:
 	if entities.is_empty():
 		return {}
 
@@ -137,7 +137,7 @@ func calculate_indicator_position(entities: Array[TrackedEntity], viewport_bound
 	# Average direction of all entities in group
 	var avg_direction := Vector2.ZERO
 	for entity in entities:
-		var direction := (entity.position - screen_center).normalized()
+		var direction: Vector2 = (entity.position - screen_center).normalized()
 		avg_direction += direction
 
 	avg_direction = avg_direction.normalized()
