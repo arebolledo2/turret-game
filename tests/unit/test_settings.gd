@@ -1,13 +1,14 @@
 extends GutTest
 
 # =============================================================================
-# Unit tests for settings flags in globals.gd
+# Unit tests for settings flags in SettingsService
 # Tests runtime toggle behavior
 # =============================================================================
 
 func before_each() -> void:
 	Globals.reset_stats()
 	Globals.current_difficulty = GameEnums.Difficulty.EASY
+	SettingsService.reset_state()
 
 
 # =============================================================================
@@ -15,15 +16,15 @@ func before_each() -> void:
 # =============================================================================
 
 func test_show_damage_numbers_default():
-	assert_true(Globals.show_damage_numbers, "Damage numbers should be enabled by default")
+	assert_true(SettingsService.show_damage_numbers, "Damage numbers should be enabled by default")
 
 
 func test_show_damage_numbers_can_be_toggled():
-	Globals.show_damage_numbers = false
-	assert_false(Globals.show_damage_numbers, "Damage numbers should be disabled")
-	
-	Globals.show_damage_numbers = true
-	assert_true(Globals.show_damage_numbers, "Damage numbers should be re-enabled")
+	SettingsService.show_damage_numbers = false
+	assert_false(SettingsService.show_damage_numbers, "Damage numbers should be disabled")
+
+	SettingsService.show_damage_numbers = true
+	assert_true(SettingsService.show_damage_numbers, "Damage numbers should be re-enabled")
 
 
 # =============================================================================
@@ -31,17 +32,17 @@ func test_show_damage_numbers_can_be_toggled():
 # =============================================================================
 
 func test_player_auto_attack_disabled_by_default():
-	assert_false(Globals.player_auto_attack_enabled, 
+	assert_false(SettingsService.player_auto_attack_enabled,
 		"Player auto-attack should be disabled by default")
 
 
 func test_player_auto_attack_can_be_enabled():
-	Globals.player_auto_attack_enabled = true
-	assert_true(Globals.player_auto_attack_enabled, 
+	SettingsService.player_auto_attack_enabled = true
+	assert_true(SettingsService.player_auto_attack_enabled,
 		"Player auto-attack should be enabled after setting")
-	
-	Globals.player_auto_attack_enabled = false
-	assert_false(Globals.player_auto_attack_enabled, 
+
+	SettingsService.player_auto_attack_enabled = false
+	assert_false(SettingsService.player_auto_attack_enabled,
 		"Player auto-attack should be disabled again")
 
 

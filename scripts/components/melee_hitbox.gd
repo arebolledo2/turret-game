@@ -131,5 +131,5 @@ func _on_debug_toggled(type: int, _show: bool) -> void:
 
 func _process(_delta: float) -> void:
 	# Continuously redraw during expansion animation
-	if Globals.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_ATTACK] and is_active:
+	if SettingsService.debug_hitbox_flags[GameEnums.HitboxType.PLAYER_ATTACK] and is_active:
 		queue_redraw()

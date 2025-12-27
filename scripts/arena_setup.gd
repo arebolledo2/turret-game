@@ -197,7 +197,7 @@ func _setup_isometric_arena(half_width: float, half_height: float) -> void:
 	var outline_points = ground_points.duplicate()
 	outline_points.append(ground_points[0]) # Close loop
 	debug_outline.points = outline_points
-	debug_outline.visible = Globals.isometric_debug_enabled # HIDE by default (unless enabled)
+	debug_outline.visible = SettingsService.isometric_debug_enabled # HIDE by default (unless enabled)
 
 
 func _on_isometric_debug_toggled(enabled: bool) -> void:
@@ -216,7 +216,7 @@ func _process(delta: float) -> void:
 	# Debug print to verify process is running (throttled)
 	if start_time == 0: start_time = Time.get_ticks_msec()
 	if Time.get_ticks_msec() - start_time > 2000: # Print every 2s if running
-		print("DEBUG: Arena _process running. Paused: ", get_tree().paused, " | Visible: ", visible, " | Sprite: ", bg_sprite != null, " | GlobalDebug: ", Globals.isometric_debug_enabled)
+		print("DEBUG: Arena _process running. Paused: ", get_tree().paused, " | Visible: ", visible, " | Sprite: ", bg_sprite != null, " | GlobalDebug: ", SettingsService.isometric_debug_enabled)
 		start_time = Time.get_ticks_msec()
 
 	# Only run if visible, sprite exists, AND DEBUG MODE IS ENABLED
@@ -224,7 +224,7 @@ func _process(delta: float) -> void:
 		return
 	if not bg_sprite:
 		return
-	if not Globals.isometric_debug_enabled:
+	if not SettingsService.isometric_debug_enabled:
 		return
 		
 	# Simple Runtime Alignment Tool

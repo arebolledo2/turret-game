@@ -110,20 +110,10 @@ func _get_game_manager() -> Node:
 
 
 # =============================================================================
-# SETTINGS (kept in Globals for UI access)
+# NOTE: Settings have been migrated to SettingsService
+# Use SettingsService directly for: show_damage_numbers, player_auto_attack_enabled,
+# show_turret_ranges, isometric_debug_enabled, debug_hitbox_flags
 # =============================================================================
-var show_damage_numbers: bool = true
-var player_auto_attack_enabled: bool = false
-var show_turret_ranges: bool = false
-var isometric_debug_enabled: bool = false
-
-
-var debug_hitbox_flags: Dictionary = {
-	GameEnums.HitboxType.PHYSICS: false,
-	GameEnums.HitboxType.PLAYER_HURTBOX: false,
-	GameEnums.HitboxType.ENEMY_HURTBOX: false,
-	GameEnums.HitboxType.PLAYER_ATTACK: false
-}
 
 # =============================================================================
 # CONSTANTS (forwarded from GameConstants for backward compatibility)
