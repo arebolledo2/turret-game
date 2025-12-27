@@ -79,6 +79,11 @@ func _on_body_entered(body: Node) -> void:
 	print("DEBUG DefenseTarget: Body entered: ", body)
 	print("DEBUG DefenseTarget: Is in enemies group: ", body.is_in_group("enemies"))
 
+	# Ignore tech drops - they should not damage the defense target
+	if body.is_in_group("tech_drops"):
+		print("DEBUG DefenseTarget: Tech drop ignored - not causing damage")
+		return
+
 	# If barrier is active, block enemy collision
 	if barrier_active:
 		if body.has_method("apply_knockback"):
