@@ -17,7 +17,10 @@ var behavior_instance: EnemyBehavior = null # Current active behavior strategy
 
 # Dependencies (set via initialize)
 var enemy: CharacterBody2D = null
-var player: Node2D = null
+var player: Node2D = null # Current target (can be player or defense target)
+var player_character: Node2D = null # Always the actual player (for aggro checks)
+var defense_target: Node2D = null # Defense target reference in defense mode
+var is_in_defense_mode: bool = false # Track if we're in defense mode
 
 # Config
 var speed: float = 150.0
@@ -32,12 +35,18 @@ func initialize(p_enemy: CharacterBody2D, p_speed: float, p_mass: float, p_behav
 	behavior_params = p_behavior_params
 	assert(enemy != null, "EnemyMovement: enemy reference required")
 
-	# Get player reference (or defense target in Tech Defense mode)
+	# Get player and defense target references
 	if enemy and is_instance_valid(enemy):
-		if GameModeService.should_spawn_defense_target():
-			player = enemy.get_tree().get_first_node_in_group("defense_targets")
-		if player == null: # Fallback to player
-			player = enemy.get_tree().get_first_node_in_group("player")
+		player_character = enemy.get_tree().get_first_node_in_group("player")
+		is_in_defense_mode = GameModeService.should_spawn_defense_target()
+		
+		if is_in_defense_mode:
+			defense_target = enemy.get_tree().get_first_node_in_group("defense_targets")
+			# Start targeting defense target in defense mode
+			player = defense_target if defense_target else player_character
+		else:
+			# Normal mode - always target player
+			player = player_character
 	
 	print("DEBUG EnemyMovement: Target = ", player, " at pos ", player.global_position if player else "null")
 	
@@ -51,13 +60,18 @@ func process(delta: float, speed_multiplier: float) -> Vector2:
 		if enemy == null or not is_instance_valid(enemy):
 			return Vector2.ZERO
 		
-		# Re-acquire target (defense target in Tech Defense, otherwise player)
-		if GameModeService.should_spawn_defense_target():
-			player = enemy.get_tree().get_first_node_in_group("defense_targets")
-		if player == null: # Fallback to player
-			player = enemy.get_tree().get_first_node_in_group("player")
+		# Re-acquire references
+		player_character = enemy.get_tree().get_first_node_in_group("player")
+		if is_in_defense_mode:
+			defense_target = enemy.get_tree().get_first_node_in_group("defense_targets")
+			player = defense_target if defense_target else player_character
+		else:
+			player = player_character
 		if player == null:
 			return Vector2.ZERO
+	
+	# Defense mode: Check player proximity for target switching
+	_check_defense_mode_aggro()
 
 	# Execute behavior to get movement direction
 	var movement_direction: Vector2 = _execute_current_behavior(delta)
@@ -129,3 +143,44 @@ func cleanup() -> void:
 	if behavior_instance:
 		behavior_instance.exit()
 		behavior_instance = null
+
+# =============================================================================
+# DEFENSE MODE AGGRO SYSTEM
+# =============================================================================
+
+func _check_defense_mode_aggro() -> void:
+	"""Check if enemy should switch targets based on player proximity in defense mode."""
+	if not is_in_defense_mode:
+		return
+	
+	if not enemy or not is_instance_valid(enemy):
+		return
+	
+	# Re-acquire player_character if null (may not have been available at init time)
+	if not player_character or not is_instance_valid(player_character):
+		player_character = enemy.get_tree().get_first_node_in_group("player")
+		if not player_character:
+			return
+	
+	var distance_to_player: float = enemy.global_position.distance_to(player_character.global_position)
+	var is_targeting_player: bool = (player == player_character)
+	
+	# Debug output
+	if randf() < 0.01: # Only print 1% of the time to avoid spam
+		print("DEBUG Aggro Check: dist=", distance_to_player, " targeting_player=", is_targeting_player, " aggro_range=", GameConstants.DEFENSE_MODE_PLAYER_AGGRO_RANGE)
+	
+	if is_targeting_player:
+		# Currently targeting player - check if should switch back to defense target
+		if distance_to_player > GameConstants.DEFENSE_MODE_PLAYER_DEAGGRO_RANGE:
+			print("DEBUG: Switching to defense target (player too far: ", distance_to_player, ")")
+			if defense_target and is_instance_valid(defense_target):
+				player = defense_target
+				# IMPORTANT: Update enemy.player so ChaseBehavior follows correct target
+				enemy.player = defense_target
+	else:
+		# Currently targeting defense target - check if should switch to player
+		if distance_to_player <= GameConstants.DEFENSE_MODE_PLAYER_AGGRO_RANGE:
+			print("DEBUG: Switching to player (within range: ", distance_to_player, ")")
+			player = player_character
+			# IMPORTANT: Update enemy.player so ChaseBehavior follows correct target
+			enemy.player = player_character

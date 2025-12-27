@@ -95,6 +95,10 @@ func _show_current_item() -> void:
 	if counter_label:
 		counter_label.text = "Item %d of %d" % [current_index + 1, pending_items.size()]
 
+	# Set focus for gamepad navigation
+	if keep_button:
+		keep_button.grab_focus()
+
 
 func _on_keep_pressed() -> void:
 	"""Player chose to keep the item."""

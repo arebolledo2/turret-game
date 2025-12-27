@@ -89,7 +89,7 @@ func test_enemy_emits_killed_signal_on_death():
 	watch_signals(Events)
 	enemy.initialize(1)
 	
-	enemy.take_damage(1000)  # Overkill to ensure death
+	enemy.take_damage(1000) # Overkill to ensure death
 	
 	assert_signal_emitted(Events, "enemy_killed", "Should emit enemy_killed signal")
 
@@ -142,3 +142,96 @@ func test_xp_dropped_signal_has_correct_value():
 	var signal_params = get_signal_parameters(Events, "xp_dropped")
 	# signal_params[1] is the xp amount (second parameter)
 	assert_eq(signal_params[1], expected_xp, "XP dropped should match enemy's xp_value")
+
+
+# =============================================================================
+# DEFENSE MODE AGGRO TESTS
+# =============================================================================
+
+func test_enemy_switches_target_to_player_when_in_aggro_range():
+	"""Test that enemies in defense mode switch from defense target to player when close."""
+	# Set up defense mode
+	GameModeService.set_mode(GameEnums.GameMode.TECH_DEFENSE)
+	
+	# Create defense target and player mock
+	var defense_target_scene = load("res://scenes/defense_target.tscn")
+	var player_scene = load("res://scenes/player.tscn")
+	
+	var def_target = defense_target_scene.instantiate()
+	def_target.global_position = Vector2(500, 500)
+	add_child_autofree(def_target)
+	
+	# Start player FAR AWAY (beyond deaggro range of 600) so enemy starts targeting defense target
+	var mock_player = player_scene.instantiate()
+	mock_player.global_position = Vector2(2000, 2000) # Very far from any enemy
+	add_child_autofree(mock_player)
+	
+	# Create enemy near defense target (far from player initially)
+	var test_enemy = enemy_scene.instantiate()
+	test_enemy.global_position = Vector2(400, 400) # Near defense target
+	add_child_autofree(test_enemy)
+	test_enemy.initialize(1)
+	
+	await wait_frames(2) # Let physics process
+	
+	# Initially should target defense target
+	assert_eq(test_enemy.movement.player, test_enemy.movement.defense_target,
+		"Enemy should initially target defense target")
+	
+	# Move player close to enemy (within 300 aggro range)
+	mock_player.global_position = Vector2(500, 400) # 100 units from enemy at (400, 400)
+	
+	# Process movement to trigger aggro check
+	test_enemy.movement.process(0.016, 1.0)
+	
+	# After processing, should have switched to player (within 300 units)
+	assert_eq(test_enemy.movement.player, test_enemy.movement.player_character,
+		"Enemy should switch to player when within aggro range")
+	
+	# Clean up
+	GameModeService.set_mode(GameEnums.GameMode.SURVIVAL)
+
+
+func test_enemy_deaggros_player_when_beyond_range():
+	"""Test that enemies switch back to defense target when player moves away."""
+	# Set up defense mode
+	GameModeService.set_mode(GameEnums.GameMode.TECH_DEFENSE)
+	
+	# Create defense target and player mock
+	var defense_target_scene = load("res://scenes/defense_target.tscn")
+	var player_scene = load("res://scenes/player.tscn")
+	
+	var def_target = defense_target_scene.instantiate()
+	def_target.global_position = Vector2(500, 500)
+	add_child_autofree(def_target)
+	
+	var mock_player = player_scene.instantiate()
+	mock_player.global_position = Vector2(2000, 2000) # Start FAR AWAY
+	add_child_autofree(mock_player)
+	
+	# Create enemy near defense target (far from player initially)
+	var test_enemy = enemy_scene.instantiate()
+	test_enemy.global_position = Vector2(400, 400) # Near defense target
+	add_child_autofree(test_enemy)
+	test_enemy.initialize(1)
+	
+	await wait_frames(2)
+	
+	# Move player close and trigger aggro to player
+	mock_player.global_position = Vector2(500, 400) # 100 units from enemy
+	test_enemy.movement.process(0.016, 1.0)
+	assert_eq(test_enemy.movement.player, test_enemy.movement.player_character,
+		"Enemy should be targeting player")
+	
+	# Move player far away (beyond 600 deaggro range)
+	mock_player.global_position = Vector2(1000, 1000) # ~1130 units from enemy
+	
+	# Process movement to trigger deaggro check
+	test_enemy.movement.process(0.016, 1.0)
+	
+	# Should switch back to defense target
+	assert_eq(test_enemy.movement.player, test_enemy.movement.defense_target,
+		"Enemy should switch back to defense target when player beyond deaggro range")
+	
+	# Clean up
+	GameModeService.set_mode(GameEnums.GameMode.SURVIVAL)
