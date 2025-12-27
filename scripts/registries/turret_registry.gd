@@ -97,7 +97,7 @@ const TYPES: Dictionary = {
 		"damage_types": [GameEnums.DamageType.ELECTRIC],
 		"base_stats": {
 			"damage": 14.0,
-			"fire_rate": 1.5,
+			"fire_rate": 1.2,
 			"range": 160.0,
 			"rotation_speed": 0.0,
 			"slow_intensity": 0.25,
