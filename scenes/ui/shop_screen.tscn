@@ -83,13 +83,13 @@ alignment = 1
 [node name="RerollButton" type="Button" parent="MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer"]
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 22
 text = "Reroll (Cost: 10)"
 
 [node name="ContinueButton" type="Button" parent="MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer"]
 custom_minimum_size = Vector2(250, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 24
 text = "Continue to Wave"
 
 [node name="RightPanel" type="PanelContainer" parent="MainContainer/ContentVBox/MainHBox"]

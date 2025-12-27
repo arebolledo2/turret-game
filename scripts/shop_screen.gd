@@ -66,7 +66,14 @@ func _on_shop_opened(wave_number: int) -> void:
 	gold_label.add_theme_font_override("font", MAIN_FONT)
 	gold_label.add_theme_font_size_override("font_size", 24)
 	reroll_button.add_theme_font_override("font", MAIN_FONT)
+	reroll_button.add_theme_font_size_override("font_size", 24)
+	reroll_button.add_theme_constant_override("outline_size", 6)
+	reroll_button.add_theme_color_override("font_outline_color", Color.BLACK)
+	
 	continue_button.add_theme_font_override("font", MAIN_FONT)
+	continue_button.add_theme_font_size_override("font_size", 28)
+	continue_button.add_theme_constant_override("outline_size", 6)
+	continue_button.add_theme_color_override("font_outline_color", Color.BLACK)
 	
 	title_label.text = "TURRET SHOP - WAVE %d" % wave_number
 	update_gold_display()

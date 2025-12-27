@@ -83,6 +83,9 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	# Purchase button
 	var purchase_button = Button.new()
 	purchase_button.add_theme_font_override("font", MAIN_FONT)
+	purchase_button.add_theme_font_size_override("font_size", 22)
+	purchase_button.add_theme_constant_override("outline_size", 4)
+	purchase_button.add_theme_color_override("font_outline_color", Color.BLACK)
 	purchase_button.process_mode = Control.PROCESS_MODE_ALWAYS
 	purchase_button.custom_minimum_size.x = 140
 	if offer.get("sold", false):
@@ -100,13 +103,16 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	if not offer.get("sold", false):
 		var lock_button = Button.new()
 		lock_button.add_theme_font_override("font", MAIN_FONT)
+		lock_button.add_theme_font_size_override("font_size", 22)
+		lock_button.add_theme_constant_override("outline_size", 4)
+		lock_button.add_theme_color_override("font_outline_color", Color.BLACK)
 		lock_button.process_mode = Control.PROCESS_MODE_ALWAYS
 		lock_button.custom_minimum_size.x = 140
 		if offer.get("locked", false):
-			lock_button.text = "🔓 Unlock"
+			lock_button.text = "🔒 Unlock"
 			lock_button.pressed.connect(func(): shop_manager.unlock_offer(index))
 		else:
-			lock_button.text = "🔒 Lock"
+			lock_button.text = "🔓 Lock"
 			lock_button.pressed.connect(func(): shop_manager.lock_offer(index))
 		button_vbox.add_child(lock_button)
 		_lock_buttons.append(lock_button)

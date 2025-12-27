@@ -63,6 +63,12 @@ func show_review(item_ids: Array) -> void:
 
 	_show_current_item()
 
+	# Set initial focus for gamepad navigation
+	if keep_button:
+		if tree_ref:
+			await tree_ref.process_frame
+		keep_button.grab_focus()
+
 
 func _show_current_item() -> void:
 	"""Display the current item in the queue."""
@@ -94,10 +100,6 @@ func _show_current_item() -> void:
 
 	if counter_label:
 		counter_label.text = "Item %d of %d" % [current_index + 1, pending_items.size()]
-
-	# Set focus for gamepad navigation
-	if keep_button:
-		keep_button.grab_focus()
 
 
 func _on_keep_pressed() -> void:
