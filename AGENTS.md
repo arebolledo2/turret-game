@@ -15,7 +15,7 @@ Wave-based survival tower defense game built in **Godot 4.5** using GDScript. Pl
 ## Architecture
 
 ### Service-Oriented Architecture
-Game logic split into **11 focused service singletons** in `scripts/autoload/`:
+Game logic split into **12 focused service singletons** in `scripts/autoload/`:
 
 1. **DifficultyService** - Difficulty config and multipliers
 2. **GameStateService** - Wave number, XP, kills, time, level
@@ -24,12 +24,13 @@ Game logic split into **11 focused service singletons** in `scripts/autoload/`:
 5. **TurretStatsService** - Turret counts, stat calculation
 6. **ItemTrackingService** - Item collection tracking
 7. **ModifierService** - Active modifiers management
-8. **GameModeService** - Active game mode and mode-specific logic hooks
-9. **ArenaBoundsService** - Arena geometry (rectangular vs isometric bounds)
-10. **LootService** - Manages item drops and loot review
-11. **UIScaler** - Dynamic UI scaling and layout adjustments
+8. **SettingsService** - Runtime settings and debug flags
+9. **GameModeService** - Active game mode and mode-specific logic hooks
+10. **ArenaBoundsService** - Arena geometry (rectangular vs isometric bounds)
+11. **LootService** - Manages item drops and loot review
+12. **UIScaler** - Dynamic UI scaling and layout adjustments
 
-**Globals as Facade**: `scripts/autoload/globals.gd` provides a compatibility layer delegating to services. Use services directly for new code.
+All code uses services directly. No facade pattern.
 
 ### Signal Bus Pattern
 **All cross-system communication** uses the `Events` autoload (`scripts/autoload/events.gd`). Approximately **48 signals** cover Game State, Waves, Combat, Turrets, Pickups, Tech Drops, Economy, Shop, Items, Loot, UI, and Player Progression.

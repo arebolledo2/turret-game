@@ -32,9 +32,9 @@ func test_enemy_added_to_group():
 
 func test_enemy_initializes_with_wave_scaling():
 	enemy.initialize(5)
-	
-	var expected_hp = Globals.get_enemy_health(5)
-	
+
+	var expected_hp = EnemyRegistry.get_stats_for_wave("basic", 5, DifficultyService.get_difficulty_config())["health"]
+
 	assert_eq(enemy.max_health, expected_hp, "Health should match wave 5 scaling")
 	assert_eq(enemy.current_health, enemy.max_health, "Current health should equal max")
 

@@ -34,8 +34,8 @@ func test_player_in_group():
 
 
 func test_player_initializes_max_health():
-	var expected = Globals.get_player_max_health()
-	assert_eq(player.max_health, expected, "Max health should match Globals")
+	var expected = PlayerStatsService.get_player_max_health(DifficultyService.get_difficulty_config()["player_health_mult"])
+	assert_eq(player.max_health, expected, "Max health should match PlayerStatsService")
 
 
 func test_player_initializes_current_health():
@@ -44,8 +44,8 @@ func test_player_initializes_current_health():
 
 
 func test_player_initializes_speed():
-	var expected = Globals.get_player_speed()
-	assert_eq(player.speed, expected, "Speed should match Globals")
+	var expected = PlayerStatsService.get_player_speed()
+	assert_eq(player.speed, expected, "Speed should match PlayerStatsService")
 
 
 func test_player_not_dead_initially():

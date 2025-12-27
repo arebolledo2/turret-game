@@ -94,11 +94,12 @@ func test_modifier_affects_matching_turret():
 		"value": 1.5,
 		"filter": {"damage_type": [GameEnums.DamageType.FIRE]}
 	})
-	
-	var fire_stats = Globals.get_turret_stats("fire")
+
 	var base_damage = TurretRegistry.get_base_stats("fire")["damage"]
-	var expected = base_damage * DifficultyService.get_config()["turret_damage_mult"] * 1.5
-	
+	var fire_stats = TurretRegistry.get_base_stats("fire")
+	fire_stats["damage"] = ModifierService.apply_modifiers_to_stat(base_damage * DifficultyService.get_difficulty_config()["turret_damage_mult"], "damage")
+	var expected = base_damage * DifficultyService.get_difficulty_config()["turret_damage_mult"] * 1.5
+
 	assert_almost_eq(fire_stats["damage"], expected, 0.01, "Fire damage should be boosted 50%")
 
 
@@ -110,11 +111,12 @@ func test_modifier_does_not_affect_unmatched_turret():
 		"value": 1.5,
 		"filter": {"damage_type": [GameEnums.DamageType.FIRE]}
 	})
-	
-	var normal_stats = Globals.get_turret_stats("normal")
+
 	var base_damage = TurretRegistry.get_base_stats("normal")["damage"]
-	var expected = base_damage * DifficultyService.get_config()["turret_damage_mult"]
-	
+	var normal_stats = TurretRegistry.get_base_stats("normal")
+	normal_stats["damage"] = ModifierService.apply_modifiers_to_stat(base_damage * DifficultyService.get_difficulty_config()["turret_damage_mult"], "damage")
+	var expected = base_damage * DifficultyService.get_difficulty_config()["turret_damage_mult"]
+
 	assert_almost_eq(normal_stats["damage"], expected, 0.01, "Normal damage should NOT be boosted")
 
 
@@ -127,8 +129,9 @@ func test_add_modifier_for_chain():
 		"filter": {"attack_style": [GameEnums.AttackStyle.CHAIN]}
 	})
 
-	var tesla_stats = Globals.get_turret_stats("tesla")
 	var base_chain: float = TurretRegistry.get_base_stats("tesla")["chain_count"]
+	var tesla_stats = TurretRegistry.get_base_stats("tesla")
+	tesla_stats["chain_count"] = ModifierService.apply_modifiers_to_stat(base_chain, "chain_count")
 
 	assert_eq(tesla_stats["chain_count"], base_chain + 2.0, "Tesla chain count should be increased by 2")
 
@@ -141,11 +144,12 @@ func test_remove_modifier():
 		"value": 2.0,
 		"filter": {}
 	})
-	
-	var before = Globals.get_turret_stats("normal")["damage"]
+
+	var base_damage_before = TurretRegistry.get_base_stats("normal")["damage"]
+	var before = ModifierService.apply_modifiers_to_stat(base_damage_before * DifficultyService.get_difficulty_config()["turret_damage_mult"], "damage")
 	ModifierService.remove_modifier("temp_boost")
-	var after = Globals.get_turret_stats("normal")["damage"]
-	
+	var after = ModifierService.apply_modifiers_to_stat(base_damage_before * DifficultyService.get_difficulty_config()["turret_damage_mult"], "damage")
+
 	assert_lt(after, before, "Damage should decrease after removing boost")
 
 
@@ -163,13 +167,13 @@ func test_clear_modifiers():
 # =============================================================================
 
 func test_turret_has_attack_style():
-	assert_true(Globals.turret_has_attack_style("tesla", GameEnums.AttackStyle.CHAIN))
-	assert_false(Globals.turret_has_attack_style("normal", GameEnums.AttackStyle.CHAIN))
+	assert_true(GameEnums.AttackStyle.CHAIN in TurretRegistry.TYPES["tesla"]["attack_styles"])
+	assert_false(GameEnums.AttackStyle.CHAIN in TurretRegistry.TYPES["normal"]["attack_styles"])
 
 
 func test_turret_has_damage_type():
-	assert_true(Globals.turret_has_damage_type("fire", GameEnums.DamageType.FIRE))
-	assert_false(Globals.turret_has_damage_type("normal", GameEnums.DamageType.FIRE))
+	assert_true(GameEnums.DamageType.FIRE in TurretRegistry.TYPES["fire"]["damage_types"])
+	assert_false(GameEnums.DamageType.FIRE in TurretRegistry.TYPES["normal"]["damage_types"])
 
 
 func test_get_turret_color():

@@ -102,12 +102,12 @@ func test_player_health_mult_decreases_with_difficulty():
 
 func test_set_difficulty():
 	DifficultyService.set_difficulty(GameEnums.Difficulty.HARD)
-	assert_eq(Globals.current_difficulty, GameEnums.Difficulty.HARD)
+	assert_eq(DifficultyService.current_difficulty, GameEnums.Difficulty.HARD)
 
 
 func test_get_difficulty_config_returns_correct_config():
 	DifficultyService.set_difficulty(GameEnums.Difficulty.MEDIUM)
-	var config = DifficultyService.get_config()
+	var config = DifficultyService.get_difficulty_config()
 	
 	assert_eq(config["name"], "Medium", "Should return Medium config")
 

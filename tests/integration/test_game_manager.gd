@@ -71,7 +71,7 @@ func test_start_settings_applied_starts_game():
 	)
 	await get_tree().process_frame
 	
-	assert_eq(Globals.current_difficulty, GameEnums.Difficulty.MEDIUM,
+	assert_eq(DifficultyService.current_difficulty, GameEnums.Difficulty.MEDIUM,
 		"Difficulty should be set to MEDIUM")
 	assert_signal_emitted(Events, "game_started", "Should emit game_started signal after settings applied")
 	assert_true(GameStateService.is_game_active, "Game should be active after settings applied")

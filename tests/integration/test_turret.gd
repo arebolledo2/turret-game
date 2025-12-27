@@ -33,12 +33,12 @@ func test_turret_added_to_group():
 	assert_true(turret.is_in_group("turrets"), "Turret should be in 'turrets' group")
 
 
-func test_turret_stats_from_globals():
-	# Normal turret type uses stats from TURRET_TYPES["normal"]
-	var expected_stats = Globals.get_turret_stats("normal")
-	assert_eq(turret.current_damage, expected_stats["damage"], "Damage should match Globals")
-	assert_eq(turret.current_fire_rate, expected_stats["fire_rate"], "Fire rate should match Globals")
-	assert_eq(turret.current_range, expected_stats["range"], "Range should match Globals")
+func test_turret_stats_from_registry():
+	# Normal turret type uses stats from TurretRegistry
+	var expected_stats = TurretRegistry.get_base_stats("normal")
+	assert_eq(turret.current_damage, expected_stats["damage"], "Damage should match TurretRegistry")
+	assert_eq(turret.current_fire_rate, expected_stats["fire_rate"], "Fire rate should match TurretRegistry")
+	assert_eq(turret.current_range, expected_stats["range"], "Range should match TurretRegistry")
 
 
 func test_turret_can_fire_initially():

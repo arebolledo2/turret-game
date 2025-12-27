@@ -151,7 +151,7 @@ func test_turret_price_wave_1():
 			if offer["type"] == "turret":
 				var base_price = TurretRegistry.get_base_price(offer["turret_id"])
 				var expected_wave_mult = 1.0 + GameConstants.WAVE_PRICE_SCALE * 1
-				var expected_penalty_mult = 1.0 + EconomyService.get_turret_purchase_penalty() * TurretStatsService.turrets_purchased
+				var expected_penalty_mult = 1.0 + TurretStatsService.get_turret_purchase_penalty() * EconomyService.turrets_purchased
 				var expected = int(base_price * expected_wave_mult * expected_penalty_mult)
 				assert_eq(offer["price"], expected,
 					"Wave 1 turret price should include wave and penalty multipliers")
@@ -174,7 +174,7 @@ func test_turret_price_scales_with_wave():
 			if offer["type"] == "turret":
 				var base_price = TurretRegistry.get_base_price(offer["turret_id"])
 				var expected_wave_mult = 1.0 + GameConstants.WAVE_PRICE_SCALE * 5
-				var expected_penalty_mult = 1.0 + EconomyService.get_turret_purchase_penalty() * TurretStatsService.turrets_purchased
+				var expected_penalty_mult = 1.0 + TurretStatsService.get_turret_purchase_penalty() * EconomyService.turrets_purchased
 				var expected = int(base_price * expected_wave_mult * expected_penalty_mult)
 				assert_eq(offer["price"], expected,
 					"Wave 5 turret price should include wave and penalty multipliers")
@@ -191,11 +191,11 @@ func test_calculate_turret_price_formula():
 	# Shop V2: Price includes wave scaling + turret purchase penalty
 	var base_price = 100
 	var wave = 3
-	TurretStatsService.turrets_purchased = 2  # Simulate having bought 2 turrets
+	EconomyService.turrets_purchased = 2  # Simulate having bought 2 turrets
 
 	var wave_mult = 1.0 + GameConstants.WAVE_PRICE_SCALE * wave
 	# Use EconomyService.get_turret_purchase_penalty() as shop_manager does (can be modified by items)
-	var penalty_mult = 1.0 + EconomyService.get_turret_purchase_penalty() * TurretStatsService.turrets_purchased
+	var penalty_mult = 1.0 + TurretStatsService.get_turret_purchase_penalty() * EconomyService.turrets_purchased
 	var expected = int(base_price * wave_mult * penalty_mult)
 
 	var result = shop_manager.calculate_turret_price(base_price, wave)
