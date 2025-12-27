@@ -56,7 +56,7 @@ Player (`scripts/player.gd`) delegates to **4 component nodes**:
 
 ### Modular Item System
 Items organized by rarity in `scripts/registries/items/`:
-- **Common**: 16 items
+- **Common**: 19 items
 - **Uncommon**: 10 items
 - **Rare**: 14 items
 - **Epic**: 9 items
