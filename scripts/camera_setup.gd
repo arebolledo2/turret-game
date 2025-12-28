@@ -29,17 +29,22 @@ func _physics_process(delta: float) -> void:
 	# Round camera position to prevent sub-pixel jitter
 	position = position.round()
 
+	# Handle gamepad zoom
+	var zoom_input := Input.get_axis("zoom_out", "zoom_in")
+	if zoom_input != 0:
+		target_zoom = clamp(target_zoom + zoom_input * ZOOM_STEP * delta * 5.0, MIN_ZOOM, MAX_ZOOM)
+
 	if not is_equal_approx(zoom.x, target_zoom):
 		var new_zoom: float = lerp(zoom.x, target_zoom, ZOOM_SPEED * delta)
 		zoom = Vector2(new_zoom, new_zoom)
-		setup_camera_limits()  # Recalculate limits for new zoom level
+		setup_camera_limits() # Recalculate limits for new zoom level
 
 func _sync_target_zoom() -> void:
 	target_zoom = base_zoom
 
 func _on_viewport_changed() -> void:
-	calculate_base_zoom()      # Must calculate zoom first
-	setup_camera_limits()      # Then set limits based on that zoom
+	calculate_base_zoom() # Must calculate zoom first
+	setup_camera_limits() # Then set limits based on that zoom
 
 func setup_camera_limits() -> void:
 	var bounds_rect := ArenaBoundsService.get_bounds_rect()
@@ -51,7 +56,7 @@ func setup_camera_limits() -> void:
 
 	# Get the actual player-reachable bounds (with margin)
 	var half_dims := ArenaBoundsService.get_half_dimensions()
-	var player_margin := 20.0  # Same margin used in player clamping
+	var player_margin := 20.0 # Same margin used in player clamping
 
 	if ArenaBoundsService.is_isometric():
 		# For isometric, player can reach diamond vertices at (±W, 0) and (0, ±H)
