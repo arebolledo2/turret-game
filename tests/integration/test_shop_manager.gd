@@ -21,6 +21,7 @@ func before_each() -> void:
 	EconomyService.shop_reroll_count = 0
 	EconomyService.current_shop_offers.clear()
 	EconomyService.pending_turret_purchases.clear()
+	ModifierService.clear_modifiers()
 	# Create a fresh instance for each test
 	shop_manager = _shop_manager_script.new()
 	add_child_autofree(shop_manager)

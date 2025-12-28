@@ -71,11 +71,11 @@ func test_add_gold_with_multiplier():
 		"Should add 50 * 1.5 = 75 gold")
 
 
-func test_add_gold_rounds_down():
+func test_add_gold_with_exact_multiplier():
 	economy_service.total_gold = 100
-	economy_service.add_gold(10, 1.25) # 10 * 1.25 = 12.5
-	assert_eq(economy_service.total_gold, 112,
-		"Should round down to 12 gold (int)")
+	economy_service.add_gold(10, 2.0) # 10 * 2.0 = 20 (exact, no probabilistic rounding)
+	assert_eq(economy_service.total_gold, 120,
+		"Should add exactly 20 gold with multiplier 2.0")
 
 
 func test_deduct_gold_success():
