@@ -155,16 +155,41 @@ func _start_wave_announcement() -> void:
 
 	# Spawn game mode entities on wave 1 (during announcement so they are ready for combat start)
 	# This ensures player can be positioned correctly relative to them before action starts
-	if GameStateService.current_wave == 1:
-		entity_spawner.spawn_game_mode_entities()
-		
-		# If Escort mode, move the starting turret to the payload as well
-		if GameModeService.is_escort_mode_active():
-			var defense_target = entity_spawner.get_defense_target()
-			if defense_target and turret_manager:
+	# Handle Escort and Defense Mode Setup
+	if GameModeService.is_escort_mode_active():
+		# Ensure entity exists (Spawn on Wave 1, or if missing)
+		if not entity_spawner.has_defense_target():
+			entity_spawner.spawn_game_mode_entities()
+			
+		# Regenerate path and reposition for EVERY wave (Dynamic Paths)
+		var defense_target = entity_spawner.get_defense_target()
+		if defense_target:
+			# Generate fresh random path
+			var new_path = GameModeService.generate_escort_path()
+			
+			# Teleport payload to start
+			defense_target.global_position = new_path[0]
+			defense_target.initialize_escort(new_path)
+			
+			# Teleport Player (Formation: Right Side)
+			var player = get_tree().get_first_node_in_group("player")
+			if player:
+				player.global_position = defense_target.global_position + Vector2(80, 0)
+			
+			# Teleport Turrets (Formation: Left Side)
+			# ONLY on Wave 1 (Squad Deploy). For subsequent waves, existing turrets retain positions.
+			if turret_manager and GameStateService.current_wave == 1:
+				var offset_idx = 0
 				for turret in turret_manager.turrets:
 					if is_instance_valid(turret):
-						turret.global_position = defense_target.global_position + Vector2(-80, 0) # Opposite side of player
+						# Stack them nicely on the left
+						var offset = Vector2(-80 - (offset_idx * 60), 0)
+						turret.global_position = defense_target.global_position + offset
+						offset_idx += 1
+						
+	# Tech Defense Setup (Static)
+	elif GameModeService.should_spawn_defense_target() and GameStateService.current_wave == 1:
+		entity_spawner.spawn_game_mode_entities()
 
 
 func _start_combat() -> void:
