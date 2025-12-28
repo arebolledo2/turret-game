@@ -68,8 +68,7 @@ func update_display() -> void:
 	economy_stats_vbox.add_child(penalty_label)
 
 	# Reroll Cost
-	var reroll_mult: float = ItemTrackingService.get_reroll_cost_multiplier()
-	var reroll_cost: int = shop_manager.get_reroll_cost(reroll_mult) if shop_manager else 0
+	var reroll_cost: int = shop_manager.get_reroll_cost() if shop_manager else 0
 	var reroll_cost_label := Label.new()
 	reroll_cost_label.text = "Reroll Cost: %dg" % reroll_cost
 	reroll_cost_label.add_theme_font_override("font", MAIN_FONT)

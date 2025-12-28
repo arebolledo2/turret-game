@@ -127,8 +127,7 @@ func _update_economy_stats() -> void:
 	economy_section.add_child(_create_label(price_stat["text"], 16, price_stat["color"]))
 
 	# Reroll Cost
-	var reroll_mult := ItemTrackingService.get_reroll_cost_multiplier()
-	var reroll_cost: int = shop_manager.get_reroll_cost(reroll_mult) if shop_manager else 0
+	var reroll_cost: int = shop_manager.get_reroll_cost() if shop_manager else 0
 	economy_section.add_child(_create_label("Reroll: %dg" % reroll_cost, 16))
 
 	# Separator
