@@ -15,6 +15,9 @@ enum DamageType {PHYSICAL, FIRE, ELECTRIC, PLASMA}
 # Enemy behavior tags - how enemies move/attack
 enum EnemyBehavior {CHASE, RANGED, SWARM, TANK, EXPLOSIVE, WANDER, CHARGE}
 
+# Enemy rank - scaling and reward tiers
+enum EnemyRank {NORMAL, LIEUTENANT, CAPTAIN}
+
 # Item rarity levels
 enum ItemRarity {COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, UNIQUE}
 

@@ -14,6 +14,10 @@ var is_spawning: bool = false
 # Enemy type spawning stats
 var enemies_spawned_by_type: Dictionary = {} # Track spawns per type
 
+# Rank spawning state
+var remaining_lts: int = 0
+var remaining_capts: int = 0
+
 # Queued spawns (waiting for alert to finish)
 var queued_spawns: Array[Dictionary] = [] # {enemy_type: String, spawn_pos: Vector2, time_remaining: float}
 
@@ -62,6 +66,16 @@ func start_spawning(wave: int) -> void:
 	enemies_spawned_by_type.clear()
 	is_spawning = true
 
+	# Initialize rank spawn counts for the wave
+	remaining_lts = 0
+	remaining_capts = 0
+
+	if wave >= GameConstants.ENEMY_RANK_LT_MIN_WAVE:
+		remaining_lts = randi_range(GameConstants.ENEMY_RANK_LT_PER_WAVE_MIN, GameConstants.ENEMY_RANK_LT_PER_WAVE_MAX)
+	
+	if wave == GameConstants.ENEMY_RANK_CAPT_WAVE:
+		remaining_capts = 1
+
 	# Set constant spawn interval for the wave
 	_update_spawn_interval()
 	spawn_timer.start()
@@ -92,7 +106,7 @@ func _process(delta: float) -> void:
 
 		if queued_spawns[i].time_remaining <= 0:
 			# Time to spawn the enemy
-			_spawn_enemy_immediate(queued_spawns[i].enemy_type, queued_spawns[i].spawn_pos)
+			_spawn_enemy_immediate(queued_spawns[i].enemy_type, queued_spawns[i].spawn_pos, queued_spawns[i].get("rank", GameEnums.EnemyRank.NORMAL))
 			queued_spawns.remove_at(i)
 		else:
 			i += 1
@@ -108,6 +122,23 @@ func _on_spawn_timer_timeout() -> void:
 
 func _spawn_random_enemy() -> void:
 	"""Select a random enemy type and spawn it (possibly multiple for swarm types)."""
+	# Roll for special rank spawns
+	var rank := GameEnums.EnemyRank.NORMAL
+	
+	if remaining_capts > 0:
+		# Random chance to spawn the captain if we have one (around middle of wave)
+		# Or just spawn it if we are halfway through the timer? 
+		# For now, let's just give it a 5% chance per spawn tick to start with
+		if randf() < 0.05:
+			rank = GameEnums.EnemyRank.CAPTAIN
+			remaining_capts -= 1
+	
+	if rank == GameEnums.EnemyRank.NORMAL and remaining_lts > 0:
+		# 15% chance to replace a normal spawn with a lieutenant
+		if randf() < 0.15:
+			rank = GameEnums.EnemyRank.LIEUTENANT
+			remaining_lts -= 1
+
 	# Select random enemy type based on wave and weights
 	var enemy_type := EnemyRegistry.select_random_type(current_wave)
 	var spawn_count := EnemyRegistry.get_spawn_count(enemy_type)
@@ -117,7 +148,9 @@ func _spawn_random_enemy() -> void:
 
 	# Spawn the enemy (or multiple for swarm types)
 	for i in range(spawn_count):
-		_queue_spawn_with_alert_at_position(enemy_type, base_pos, i)
+		# Only the first member of a swarm is the "ranked" unit to prevent crazy difficulty spikes
+		var spawn_rank := rank if i == 0 else GameEnums.EnemyRank.NORMAL
+		_queue_spawn_with_alert_at_position(enemy_type, base_pos, i, spawn_rank)
 
 		# Track spawn counts
 		enemies_spawned_by_type[enemy_type] = enemies_spawned_by_type.get(enemy_type, 0) + 1
@@ -131,7 +164,7 @@ func _queue_spawn_with_alert(enemy_type: String) -> void:
 	var spawn_pos := _get_random_spawn_position()
 	_queue_spawn_with_alert_at_position(enemy_type, spawn_pos, 0)
 
-func _queue_spawn_with_alert_at_position(enemy_type: String, base_pos: Vector2, swarm_index: int) -> void:
+func _queue_spawn_with_alert_at_position(enemy_type: String, base_pos: Vector2, swarm_index: int, rank: GameEnums.EnemyRank = GameEnums.EnemyRank.NORMAL) -> void:
 	"""Queue an enemy spawn with a visual alert indicator near a base position."""
 	# For swarm spawns, offset slightly from base position to create a cluster
 	const SWARM_SPREAD := 60.0 # How far apart swarm members spawn
@@ -152,10 +185,12 @@ func _queue_spawn_with_alert_at_position(enemy_type: String, base_pos: Vector2, 
 	queued_spawns.append({
 		"enemy_type": enemy_type,
 		"spawn_pos": spawn_pos,
-		"time_remaining": SPAWN_ALERT_TIME
+		"time_remaining": SPAWN_ALERT_TIME,
+		"rank": rank
 	})
 
-func _spawn_enemy_immediate(enemy_type: String, spawn_pos: Vector2) -> void:
+
+func _spawn_enemy_immediate(enemy_type: String, spawn_pos: Vector2, rank: GameEnums.EnemyRank = GameEnums.EnemyRank.NORMAL) -> void:
 	"""Immediately spawn an enemy at the given position (called after alert finishes)."""
 	# Check if enemy type has custom scene path
 	var type_def := EnemyRegistry.get_type(enemy_type)
@@ -176,7 +211,7 @@ func _spawn_enemy_immediate(enemy_type: String, spawn_pos: Vector2) -> void:
 
 	# Initialize with type and wave-scaled stats
 	if enemy.has_method("initialize"):
-		enemy.initialize(current_wave, enemy_type)
+		enemy.initialize(current_wave, enemy_type, rank)
 
 	# Add to scene
 	var enemy_container = get_node_or_null("../EnemyContainer")

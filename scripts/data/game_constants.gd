@@ -80,6 +80,26 @@ const ENEMY_BASE_HEALTH: float = 8.0
 const ENEMY_BASE_SPEED: float = 100.0
 const ENEMY_BASE_CONTACT_DAMAGE: float = 8.0
 
+# Enemy Ranks
+const ENEMY_RANK_LT_HP_MULT: float = 8.0
+const ENEMY_RANK_LT_SCALE_MULT: float = 1.5
+const ENEMY_RANK_LT_SPEED_MULT: float = 0.8
+const ENEMY_RANK_LT_XP_MULT: float = 10.0
+const ENEMY_RANK_LT_MASS_MULT: float = 3.0
+const ENEMY_RANK_LT_COLOR: Color = Color(1.0, 0.8, 0.4, 1.0) # Golden hue
+
+const ENEMY_RANK_CAPT_HP_MULT: float = 25.0
+const ENEMY_RANK_CAPT_SCALE_MULT: float = 2.5
+const ENEMY_RANK_CAPT_SPEED_MULT: float = 0.6
+const ENEMY_RANK_CAPT_XP_MULT: float = 50.0
+const ENEMY_RANK_CAPT_MASS_MULT: float = 10.0
+const ENEMY_RANK_CAPT_COLOR: Color = Color(1.0, 0.3, 0.3, 1.0) # Bright red hue
+
+const ENEMY_RANK_LT_MIN_WAVE: int = 5
+const ENEMY_RANK_LT_PER_WAVE_MIN: int = 0
+const ENEMY_RANK_LT_PER_WAVE_MAX: int = 2
+const ENEMY_RANK_CAPT_WAVE: int = 10
+
 # =============================================================================
 # WAVE TIMING
 # =============================================================================

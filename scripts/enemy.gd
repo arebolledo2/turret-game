@@ -9,6 +9,7 @@ extends CharacterBody2D
 # ENEMY TYPE CONFIGURATION
 # =============================================================================
 @export var enemy_type: String = "basic"
+@export var enemy_rank: GameEnums.EnemyRank = GameEnums.EnemyRank.NORMAL
 
 # Base stats (set from type or wave initialization)
 var max_health: float = 30.0
@@ -17,6 +18,7 @@ var contact_damage: float = 33.0
 var xp_value: int = 10
 var base_scale: float = 1.0
 var color_tint: Color = Color.WHITE
+var spawn_wave: int = 1
 
 # Type-specific stats (for special abilities)
 var explosion_radius: float = 0.0
@@ -205,9 +207,11 @@ func _configure_hitboxes(type_def: Dictionary) -> void:
 			var size: Vector2 = hurtbox_config.get("size", Vector2(24, 24))
 			hurtbox.configure(shape_type, size)
 
-func initialize(wave: int, type_id: String = "basic") -> void:
+func initialize(wave: int, type_id: String = "basic", rank: GameEnums.EnemyRank = GameEnums.EnemyRank.NORMAL) -> void:
 	"""Initialize enemy with type and wave-scaled stats."""
 	is_initialized = true
+	enemy_rank = rank
+	spawn_wave = wave
 	
 	# Apply base type configuration
 	_apply_type_config(type_id)
@@ -220,6 +224,29 @@ func initialize(wave: int, type_id: String = "basic") -> void:
 	contact_damage = scaled_stats.get("contact_damage", contact_damage)
 	
 	current_health = max_health
+
+	# Apply rank multipliers
+	_apply_rank_modifiers()
+
+	current_health = max_health # Reset health to full after rank scaling
+
+
+func _apply_rank_modifiers() -> void:
+	match enemy_rank:
+		GameEnums.EnemyRank.LIEUTENANT:
+			max_health *= GameConstants.ENEMY_RANK_LT_HP_MULT
+			base_scale *= GameConstants.ENEMY_RANK_LT_SCALE_MULT
+			speed *= GameConstants.ENEMY_RANK_LT_SPEED_MULT
+			xp_value = int(xp_value * GameConstants.ENEMY_RANK_LT_XP_MULT)
+			mass *= GameConstants.ENEMY_RANK_LT_MASS_MULT
+			color_tint = color_tint.lerp(GameConstants.ENEMY_RANK_LT_COLOR, 0.5)
+		GameEnums.EnemyRank.CAPTAIN:
+			max_health *= GameConstants.ENEMY_RANK_CAPT_HP_MULT
+			base_scale *= GameConstants.ENEMY_RANK_CAPT_SCALE_MULT
+			speed *= GameConstants.ENEMY_RANK_CAPT_SPEED_MULT
+			xp_value = int(xp_value * GameConstants.ENEMY_RANK_CAPT_XP_MULT)
+			mass *= GameConstants.ENEMY_RANK_CAPT_MASS_MULT
+			color_tint = color_tint.lerp(GameConstants.ENEMY_RANK_CAPT_COLOR, 0.5)
 
 func _physics_process(delta: float) -> void:
 	if is_dying:
@@ -290,6 +317,9 @@ func die() -> void:
 	Events.enemy_killed.emit(self, global_position)
 	Events.xp_dropped.emit(global_position, xp_value)
 	GameStateService.total_kills += 1
+
+	# Handle rank-based loot drops
+	_handle_rank_loot()
 
 	# Death effect (scale down and fade)
 	visuals.play_death_animation(queue_free)
@@ -370,3 +400,37 @@ var knockback_velocity: Vector2:
 var behavior_instance: EnemyBehavior:
 	get:
 		return movement.behavior_instance if movement else null
+
+
+func _handle_rank_loot() -> void:
+	match enemy_rank:
+		GameEnums.EnemyRank.LIEUTENANT:
+			var item_id := LootService.roll_for_item_drop(spawn_wave)
+			if not item_id.is_empty():
+				_spawn_item_pickup(item_id)
+		GameEnums.EnemyRank.CAPTAIN:
+			# Guaranteed legendary item
+			var legendary_pool = ItemRegistry.get_items_by_rarity(GameEnums.ItemRarity.LEGENDARY)
+			if not legendary_pool.is_empty():
+				var drop_id = legendary_pool[randi() % legendary_pool.size()]
+				_spawn_item_pickup(drop_id)
+
+
+func _spawn_item_pickup(item_id: String) -> void:
+	var pickup_scene := preload("res://scenes/item_pickup.tscn")
+	var pickup := pickup_scene.instantiate()
+	pickup.global_position = global_position
+	
+	# Add to tree - more robust than just current_scene for tests
+	var container = get_tree().current_scene
+	if not container:
+		# Fallback to parent (often the test script)
+		container = get_parent()
+	
+	if container:
+		container.add_child(pickup)
+	else:
+		# Absolute fallback
+		get_tree().root.add_child(pickup)
+		
+	pickup.initialize(item_id)
