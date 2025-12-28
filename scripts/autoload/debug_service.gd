@@ -33,21 +33,21 @@ const VALIDATION: bool = true      # Warnings and errors (always on by default)
 func log(category: bool, message: Variant, arg1: Variant = "", arg2: Variant = "", arg3: Variant = "", arg4: Variant = "", arg5: Variant = "", arg6: Variant = "", arg7: Variant = "", arg8: Variant = "") -> void:
 	if ENABLED and category:
 		var output = str(message)
-		if arg1 != "":
+		if arg1 != null and not (arg1 is String and arg1 == ""):
 			output += str(arg1)
-		if arg2 != "":
+		if arg2 != null and not (arg2 is String and arg2 == ""):
 			output += str(arg2)
-		if arg3 != "":
+		if arg3 != null and not (arg3 is String and arg3 == ""):
 			output += str(arg3)
-		if arg4 != "":
+		if arg4 != null and not (arg4 is String and arg4 == ""):
 			output += str(arg4)
-		if arg5 != "":
+		if arg5 != null and not (arg5 is String and arg5 == ""):
 			output += str(arg5)
-		if arg6 != "":
+		if arg6 != null and not (arg6 is String and arg6 == ""):
 			output += str(arg6)
-		if arg7 != "":
+		if arg7 != null and not (arg7 is String and arg7 == ""):
 			output += str(arg7)
-		if arg8 != "":
+		if arg8 != null and not (arg8 is String and arg8 == ""):
 			output += str(arg8)
 		print(output)
 
@@ -56,15 +56,15 @@ func log(category: bool, message: Variant, arg1: Variant = "", arg2: Variant = "
 func warn(category: bool, message: Variant, arg1: Variant = "", arg2: Variant = "", arg3: Variant = "", arg4: Variant = "", arg5: Variant = "") -> void:
 	if ENABLED and category:
 		var output = str(message)
-		if arg1 != "":
+		if arg1 != null and not (arg1 is String and arg1 == ""):
 			output += str(arg1)
-		if arg2 != "":
+		if arg2 != null and not (arg2 is String and arg2 == ""):
 			output += str(arg2)
-		if arg3 != "":
+		if arg3 != null and not (arg3 is String and arg3 == ""):
 			output += str(arg3)
-		if arg4 != "":
+		if arg4 != null and not (arg4 is String and arg4 == ""):
 			output += str(arg4)
-		if arg5 != "":
+		if arg5 != null and not (arg5 is String and arg5 == ""):
 			output += str(arg5)
 		push_warning(output)
 
@@ -73,15 +73,15 @@ func warn(category: bool, message: Variant, arg1: Variant = "", arg2: Variant = 
 func error(category: bool, message: Variant, arg1: Variant = "", arg2: Variant = "", arg3: Variant = "", arg4: Variant = "", arg5: Variant = "") -> void:
 	if ENABLED and category:
 		var output = str(message)
-		if arg1 != "":
+		if arg1 != null and not (arg1 is String and arg1 == ""):
 			output += str(arg1)
-		if arg2 != "":
+		if arg2 != null and not (arg2 is String and arg2 == ""):
 			output += str(arg2)
-		if arg3 != "":
+		if arg3 != null and not (arg3 is String and arg3 == ""):
 			output += str(arg3)
-		if arg4 != "":
+		if arg4 != null and not (arg4 is String and arg4 == ""):
 			output += str(arg4)
-		if arg5 != "":
+		if arg5 != null and not (arg5 is String and arg5 == ""):
 			output += str(arg5)
 		push_error(output)
 

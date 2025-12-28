@@ -15,7 +15,7 @@ Wave-based survival tower defense game built in **Godot 4.5** using GDScript. Pl
 ## Architecture
 
 ### Service-Oriented Architecture
-Game logic split into **15 focused service singletons** in `scripts/autoload/`:
+Game logic split into **16 focused service singletons** in `scripts/autoload/`:
 
 1. **DifficultyService** - Difficulty config and multipliers
 2. **GameStateService** - Wave number, XP, kills, time, level
@@ -32,6 +32,7 @@ Game logic split into **15 focused service singletons** in `scripts/autoload/`:
 13. **GameStateMachine** - State transitions with validation
 14. **Events** - Signal bus for cross-system communication
 15. **OffScreenIndicatorService** - Off-screen enemy and object indicators
+16. **DebugService** - Compile-time debug output management with category flags
 
 All code uses services directly. No facade pattern.
 
@@ -92,6 +93,35 @@ IDLE, DIFFICULTY_SELECT, GAME_MODE_SELECT, WAVE_ANNOUNCEMENT, COMBAT, WAVE_END, 
 - **Behaviors**: `scripts/turret.gd`, `scripts/enemy.gd`, `scripts/components/`
 - **UI**: `scripts/hud.gd`, `scripts/ui/`
 - **Tests**: `tests/unit/`, `tests/integration/` (using GUT)
+- **Debug**: `scripts/autoload/debug_service.gd` (Compile-time debug output management)
+
+### Debug Output Management
+**DebugService** provides compile-time debug output control with 7 categories:
+
+- **ENTITY** - Entity lifecycle (enemies, turrets, defense targets)
+- **COMBAT** - Combat mechanics (damage, collisions, projectiles)
+- **AI** - Enemy AI and movement
+- **ARENA** - Arena setup and configuration
+- **UI** - User interface systems
+- **SYSTEMS** - Core game systems (state machine, spawning)
+- **VALIDATION** - Warnings and errors (default: enabled)
+
+**Usage:**
+```gdscript
+DebugService.log(DebugService.ENTITY, "Enemy spawned at: ", position)
+DebugService.warn(DebugService.VALIDATION, "Missing component")
+DebugService.error(DebugService.VALIDATION, "Invalid state")
+```
+
+**Control output** by editing const flags in `scripts/autoload/debug_service.gd`:
+```gdscript
+const ENABLED: bool = true      # Master switch
+const ENTITY: bool = true       # Enable/disable ENTITY logs
+const COMBAT: bool = false      # Enable/disable COMBAT logs
+# ... etc
+```
+
+Zero runtime overhead - disabled categories are optimized away by the GDScript compiler.
 
 ### Commands
 - **Launch**: `.\launch.ps1`
