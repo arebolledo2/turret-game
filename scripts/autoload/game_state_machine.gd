@@ -48,7 +48,7 @@ const VALID_TRANSITIONS: Dictionary = {
 ## Returns true if transition was valid and executed
 func transition_to(new_state: GameState) -> bool:
 	if not _is_valid_transition(current_state, new_state):
-		push_warning("Invalid state transition: %s -> %s" % [
+		DebugService.warn(DebugService.SYSTEMS, "Invalid state transition: %s -> %s" % [
 			get_state_name(current_state),
 			get_state_name(new_state)
 		])

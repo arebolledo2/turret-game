@@ -60,7 +60,8 @@ func set_arena_type(type: GameEnums.ArenaType) -> void:
 		_half_width = FIXED_RECT_WIDTH / 2.0
 		_half_height = FIXED_RECT_HEIGHT / 2.0
 	
-	print("Arena type set to: ", "ISOMETRIC" if type == GameEnums.ArenaType.ISOMETRIC else "RECTANGULAR", " (", _half_width * 2, "x", _half_height * 2, ")")
+	var type_str = "ISOMETRIC" if type == GameEnums.ArenaType.ISOMETRIC else "RECTANGULAR"
+	DebugService.log(DebugService.ARENA, "Arena type set to: %s (%sx%s)" % [type_str, _half_width * 2, _half_height * 2])
 
 func is_isometric() -> bool:
 	return _arena_type == GameEnums.ArenaType.ISOMETRIC

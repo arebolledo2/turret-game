@@ -35,24 +35,24 @@ func apply_profile(new_profile: Resource) -> void:
 	profile = new_profile
 	
 	if not profile:
-		push_warning("[CollisionManager] No profile set")
+		DebugService.warn(DebugService.VALIDATION, "[CollisionManager] No profile set")
 		return
-	
+
 	# Validate the profile
 	if not profile.validate():
-		push_warning("[CollisionManager] Profile validation failed - physics shape larger than hurtbox!")
-	
+		DebugService.warn(DebugService.VALIDATION, "[CollisionManager] Profile validation failed - physics shape larger than hurtbox!")
+
 	# Configure physics collision shape
 	if physics_collision:
 		_apply_physics_shape()
 	else:
-		push_warning("[CollisionManager] No physics collision shape found at path: %s" % physics_collision_path)
-	
+		DebugService.warn(DebugService.VALIDATION, "[CollisionManager] No physics collision shape found at path: %s" % physics_collision_path)
+
 	# Configure hurtbox
 	if hurtbox:
 		_apply_hurtbox_shape()
 	else:
-		push_warning("[CollisionManager] No hurtbox found at path: %s" % hurtbox_path)
+		DebugService.warn(DebugService.VALIDATION, "[CollisionManager] No hurtbox found at path: %s" % hurtbox_path)
 
 
 func _apply_physics_shape() -> void:

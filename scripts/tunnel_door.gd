@@ -21,15 +21,15 @@ func _ready() -> void:
 	# Connect area signals for turret projectile collision
 	if area:
 		area.area_entered.connect(_on_area_entered)
-		print("DEBUG TunnelDoor: Area signals connected")
-		print("DEBUG TunnelDoor: Area collision layer = ", area.collision_layer)
-		print("DEBUG TunnelDoor: Area collision mask = ", area.collision_mask)
+		DebugService.log(DebugService.ENTITY, "TunnelDoor: Area signals connected")
+		DebugService.log(DebugService.ENTITY, "TunnelDoor: Area collision layer = ", area.collision_layer)
+		DebugService.log(DebugService.ENTITY, "TunnelDoor: Area collision mask = ", area.collision_mask)
 	else:
-		print("DEBUG TunnelDoor: WARNING - Area2D not found!")
+		DebugService.log(DebugService.ENTITY, "TunnelDoor: WARNING - Area2D not found!")
 
 func _on_area_entered(other_area: Area2D) -> void:
 	"""Handle projectiles hitting the door."""
-	print("DEBUG TunnelDoor: Area entered: ", other_area)
+	DebugService.log(DebugService.ENTITY, "TunnelDoor: Area entered: ", other_area)
 	
 	if is_breached:
 		return
@@ -40,17 +40,17 @@ func _on_area_entered(other_area: Area2D) -> void:
 	# Check if it's a projectile with damage
 	if projectile and "damage" in projectile:
 		var damage = projectile.damage
-		print("DEBUG TunnelDoor: Projectile damage = ", damage)
-		
+		DebugService.log(DebugService.ENTITY, "TunnelDoor: Projectile damage = ", damage)
+
 		# Allow BOTH player and turret projectiles to damage the door
 		if damage > 0:
 			take_damage(damage)
-			print("DEBUG TunnelDoor: Took ", damage, " damage. Current HP: ", current_health)
+			DebugService.log(DebugService.ENTITY, "TunnelDoor: Took ", damage, " damage. Current HP: ", current_health)
 			# Destroy the projectile
 			if projectile.has_method("queue_free"):
 				projectile.queue_free()
 	else:
-		print("DEBUG TunnelDoor: No damage property on area: ", other_area.name)
+		DebugService.log(DebugService.ENTITY, "TunnelDoor: No damage property on area: ", other_area.name)
 
 func initialize(wave: int, difficulty_config: Dictionary) -> void:
 	"""

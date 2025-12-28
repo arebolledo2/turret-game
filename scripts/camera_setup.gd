@@ -80,7 +80,7 @@ func setup_camera_limits() -> void:
 			limit_top = 0
 			limit_bottom = 0
 
-	print("Camera limits: L=", limit_left, " R=", limit_right, " T=", limit_top, " B=", limit_bottom, " zoom=", zoom.x)
+	DebugService.log(DebugService.ARENA, "Camera limits: L=%s R=%s T=%s B=%s zoom=%s" % [limit_left, limit_right, limit_top, limit_bottom, zoom.x])
 
 
 func calculate_base_zoom() -> void:

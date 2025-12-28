@@ -74,14 +74,14 @@ func _physics_process(delta: float) -> void:
 	position += direction * speed * delta
 
 func _on_hurtbox_entered(hurtbox: Area2D) -> void:
-	print("DEBUG Projectile: Collision with area: ", hurtbox, " name: ", hurtbox.name)
-	print("DEBUG Projectile: Is enemy_hurtbox: ", hurtbox.is_in_group("enemy_hurtbox"))
-	print("DEBUG Projectile: Is tunnel_door: ", hurtbox.is_in_group("tunnel_doors"))
-	print("DEBUG Projectile: Is player_hurtbox: ", hurtbox.is_in_group("player_hurtbox"))
+	DebugService.log(DebugService.COMBAT, "Projectile: Collision with area: ", hurtbox, " name: ", hurtbox.name)
+	DebugService.log(DebugService.COMBAT, "Projectile: Is enemy_hurtbox: ", hurtbox.is_in_group("enemy_hurtbox"))
+	DebugService.log(DebugService.COMBAT, "Projectile: Is tunnel_door: ", hurtbox.is_in_group("tunnel_doors"))
+	DebugService.log(DebugService.COMBAT, "Projectile: Is player_hurtbox: ", hurtbox.is_in_group("player_hurtbox"))
 
 	# Handle enemy projectiles hitting player
 	if not is_player_projectile and hurtbox.is_in_group("player_hurtbox"):
-		print("DEBUG Projectile: Enemy projectile hit player!")
+		DebugService.log(DebugService.COMBAT, "Projectile: Enemy projectile hit player!")
 		var player = hurtbox.get_parent()
 		if player and player.has_method("take_damage"):
 			player.take_damage(damage)
@@ -91,7 +91,7 @@ func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 	# Check if this is a tunnel door - handle specially
 	var parent = hurtbox.get_parent()
 	if parent and parent.is_in_group("tunnel_doors"):
-		print("DEBUG Projectile: Hit tunnel door!")
+		DebugService.log(DebugService.COMBAT, "Projectile: Hit tunnel door!")
 		if parent.has_method("take_damage"):
 			parent.take_damage(damage)
 			queue_free()

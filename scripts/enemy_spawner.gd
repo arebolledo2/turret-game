@@ -167,7 +167,7 @@ func _spawn_enemy_immediate(enemy_type: String, spawn_pos: Vector2) -> void:
 		scene_to_use = enemy_scene
 
 	if scene_to_use == null:
-		push_error("Enemy scene not set in EnemySpawner!")
+		DebugService.error(DebugService.VALIDATION, "Enemy scene not set in EnemySpawner!")
 		return
 
 	# Create enemy

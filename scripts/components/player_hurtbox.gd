@@ -67,7 +67,7 @@ func _configure_shape() -> void:
 			shape = capsule
 			collision_shape.rotation = PI / 2
 		_:
-			push_error("Unknown shape_type: %s" % shape_type)
+			DebugService.error(DebugService.VALIDATION, "Unknown shape_type: %s" % shape_type)
 			return
 
 	collision_shape.shape = shape

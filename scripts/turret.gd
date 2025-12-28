@@ -28,7 +28,7 @@ func _initialize_components() -> void:
 	if not has_node("Components/TurretCombat") or not has_node("Components/TurretVisuals"):
 		# Only error if we are supposed to have these (i.e. not in a bare unit test)
 		if get_tree() and get_tree().current_scene:
-			push_error("Turret components not found! Ensure Components node structure exists in scene.")
+			DebugService.error(DebugService.VALIDATION, "Turret components not found! Ensure Components node structure exists in scene.")
 		return
 
 	# Re-assign if null (handles cases where @onready missed them or script was added dynamically)

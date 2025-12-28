@@ -31,14 +31,14 @@ func update_all_turret_stats() -> void:
 
 func spawn_turret() -> void:
 	if turret_scene == null:
-		push_error("Turret scene not loaded!")
+		DebugService.error(DebugService.VALIDATION, "Turret scene not loaded!")
 		return
-	
+
 	var player = get_tree().get_first_node_in_group("player")
 	var spawn_pos := find_valid_spawn_position(player)
-	
+
 	if spawn_pos == Vector2.INF:
-		push_warning("Could not find valid turret spawn position!")
+		DebugService.warn(DebugService.VALIDATION, "Could not find valid turret spawn position!")
 		return
 	
 	# Create turret
@@ -141,7 +141,7 @@ func find_valid_spawn_position_excluding(player: Node2D, existing_positions: Arr
 func spawn_starting_turret() -> void:
 	"""Spawn a free Normal turret at arena center at game start"""
 	if turret_scene == null:
-		push_error("Turret scene not loaded!")
+		DebugService.error(DebugService.VALIDATION, "Turret scene not loaded!")
 		return
 	
 	# Prevent double spawning
@@ -183,11 +183,11 @@ func spawn_pending_turrets() -> void:
 
 func spawn_turret_type(turret_id: String) -> void:
 	if turret_scene == null:
-		push_error("Turret scene not loaded!")
+		DebugService.error(DebugService.VALIDATION, "Turret scene not loaded!")
 		return
 
 	if not TurretRegistry.TYPES.has(turret_id):
-		push_error("Invalid turret type: " + turret_id)
+		DebugService.error(DebugService.VALIDATION, "Invalid turret type: " + turret_id)
 		return
 
 	var player = get_tree().get_first_node_in_group("player")
@@ -200,7 +200,7 @@ func spawn_turret_type(turret_id: String) -> void:
 		spawn_pos = find_valid_spawn_position(player)
 
 	if spawn_pos == Vector2.INF:
-		push_warning("Could not find valid turret spawn position!")
+		DebugService.warn(DebugService.VALIDATION, "Could not find valid turret spawn position!")
 		return
 
 	var turret := turret_scene.instantiate()

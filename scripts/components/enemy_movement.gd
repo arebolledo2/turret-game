@@ -47,8 +47,9 @@ func initialize(p_enemy: CharacterBody2D, p_speed: float, p_mass: float, p_behav
 		else:
 			# Normal mode - always target player
 			player = player_character
-	
-	print("DEBUG EnemyMovement: Target = ", player, " at pos ", player.global_position if player else "null")
+
+	var pos_str = str(player.global_position) if player else "null"
+	DebugService.log(DebugService.AI, "EnemyMovement: Target = %s at pos %s" % [player, pos_str])
 	
 	# Create behavior instance
 	_create_behavior_instance()
@@ -168,12 +169,12 @@ func _check_defense_mode_aggro() -> void:
 	
 	# Debug output
 	if randf() < 0.01: # Only print 1% of the time to avoid spam
-		print("DEBUG Aggro Check: dist=", distance_to_player, " targeting_player=", is_targeting_player, " aggro_range=", GameConstants.DEFENSE_MODE_PLAYER_AGGRO_RANGE)
+		DebugService.log(DebugService.AI, "Aggro Check: dist=%s targeting_player=%s aggro_range=%s" % [distance_to_player, is_targeting_player, GameConstants.DEFENSE_MODE_PLAYER_AGGRO_RANGE])
 	
 	if is_targeting_player:
 		# Currently targeting player - check if should switch back to defense target
 		if distance_to_player > GameConstants.DEFENSE_MODE_PLAYER_DEAGGRO_RANGE:
-			print("DEBUG: Switching to defense target (player too far: ", distance_to_player, ")")
+			DebugService.log(DebugService.AI, "Switching to defense target (player too far: %s)" % distance_to_player)
 			if defense_target and is_instance_valid(defense_target):
 				player = defense_target
 				# IMPORTANT: Update enemy.player so ChaseBehavior follows correct target
@@ -181,7 +182,7 @@ func _check_defense_mode_aggro() -> void:
 	else:
 		# Currently targeting defense target - check if should switch to player
 		if distance_to_player <= GameConstants.DEFENSE_MODE_PLAYER_AGGRO_RANGE:
-			print("DEBUG: Switching to player (within range: ", distance_to_player, ")")
+			DebugService.log(DebugService.AI, "Switching to player (within range: %s)" % distance_to_player)
 			player = player_character
 			# IMPORTANT: Update enemy.player so ChaseBehavior follows correct target
 			enemy.player = player_character

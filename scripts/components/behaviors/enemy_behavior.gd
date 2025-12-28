@@ -26,7 +26,7 @@ func exit() -> void:
 ## Execute behavior logic and return movement direction
 ## Returns: Normalized Vector2 direction for movement (or Vector2.ZERO for no movement)
 func execute(delta: float) -> Vector2:
-	push_error("EnemyBehavior.execute() must be overridden by subclass")
+	DebugService.error(DebugService.VALIDATION, "EnemyBehavior.execute() must be overridden by subclass")
 	return Vector2.ZERO
 
 ## Get default parameters for this behavior type

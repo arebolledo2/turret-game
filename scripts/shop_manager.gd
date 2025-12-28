@@ -186,7 +186,7 @@ func purchase_offer(offer_index: int) -> bool:
 
 func apply_item(item_id: String) -> void:
 	if not ItemRegistry.has_item(item_id):
-		push_error("Invalid item ID: " + item_id)
+		DebugService.error(DebugService.VALIDATION, "Invalid item ID: " + item_id)
 		return
 
 	var item_data = ItemRegistry.get_item_dict(item_id)

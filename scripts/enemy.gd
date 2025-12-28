@@ -43,43 +43,43 @@ var behavior_params: Dictionary = {}
 var combat: Node = null # Optional combat component for ranged enemies
 
 func _ready() -> void:
-	print("DEBUG Enemy: _ready() START")
+	DebugService.log(DebugService.ENTITY, "Enemy: _ready() START")
 	add_to_group("enemies")
-	
-	print("DEBUG Enemy: Checking game mode for targeting...")
+
+	DebugService.log(DebugService.ENTITY, "Enemy: Checking game mode for targeting...")
 	# In Tech Defense mode, target the defense target instead of player
 	if GameModeService.should_spawn_defense_target():
-		print("DEBUG Enemy: Tech Defense mode - looking for defense target")
+		DebugService.log(DebugService.ENTITY, "Enemy: Tech Defense mode - looking for defense target")
 		var defense_target = get_tree().get_first_node_in_group("defense_targets")
 		if defense_target:
 			player = defense_target
-			print("DEBUG Enemy: Defense target found!")
+			DebugService.log(DebugService.ENTITY, "Enemy: Defense target found!")
 		else:
 			# Fallback to player if defense target doesn't exist yet
 			player = get_tree().get_first_node_in_group("player")
-			print("DEBUG Enemy: Defense target NOT found, using player")
+			DebugService.log(DebugService.ENTITY, "Enemy: Defense target NOT found, using player")
 	else:
 		player = get_tree().get_first_node_in_group("player")
-		print("DEBUG Enemy: Normal mode - using player")
+		DebugService.log(DebugService.ENTITY, "Enemy: Normal mode - using player")
 
-	print("DEBUG Enemy: About to connect debug toggle...")
+	DebugService.log(DebugService.ENTITY, "Enemy: About to connect debug toggle...")
 	# Connect to debug toggle event
 	if not Events.hitbox_debug_toggled.is_connected(_on_debug_toggled):
 		Events.hitbox_debug_toggled.connect(_on_debug_toggled)
-	print("DEBUG Enemy: Debug toggle connected")
+	DebugService.log(DebugService.ENTITY, "Enemy: Debug toggle connected")
 
-	print("DEBUG Enemy: Checking if components already initialized...")
+	DebugService.log(DebugService.ENTITY, "Enemy: Checking if components already initialized...")
 	# Components must be initialized in _ready (when @onready vars are available)
 	# Even if enemy stats were initialized by spawner, we still need to init components
 	if movement != null and movement.enemy != null:
-		print("DEBUG Enemy: Components already initialized, skipping")
+		DebugService.log(DebugService.ENTITY, "Enemy: Components already initialized, skipping")
 		return
-	
-	print("DEBUG Enemy: About to initialize components...")
+
+	DebugService.log(DebugService.ENTITY, "Enemy: About to initialize components...")
 	# Initialize components (must be done in _ready when @onready vars are available)
 	_initialize_components()
-	
-	print("DEBUG Enemy _ready complete: player target = ", player)
+
+	DebugService.log(DebugService.ENTITY, "Enemy: _ready complete: player target = ", player)
 
 func _on_debug_toggled(type: int, _enabled: bool) -> void:
 	if type == GameEnums.HitboxType.PHYSICS:

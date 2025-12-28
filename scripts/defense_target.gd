@@ -24,25 +24,25 @@ var barrier_cooldown_ready: bool = true
 @onready var barrier_visual: Node2D = $BarrierVisual
 
 func _ready() -> void:
-	print("DEBUG DefenseTarget: _ready() called")
+	DebugService.log(DebugService.ENTITY, "DefenseTarget: _ready() called")
 	add_to_group("defense_targets")
 	current_health = max_health
 	_setup_timers()
 
-	print("DEBUG DefenseTarget: Position = ", global_position)
-	print("DEBUG DefenseTarget: Visible = ", visible)
-	print("DEBUG DefenseTarget: Sprite exists = ", sprite != null)
+	DebugService.log(DebugService.ENTITY, "DefenseTarget: Position = ", global_position)
+	DebugService.log(DebugService.ENTITY, "DefenseTarget: Visible = ", visible)
+	DebugService.log(DebugService.ENTITY, "DefenseTarget: Sprite exists = ", sprite != null)
 	if sprite:
-		print("DEBUG DefenseTarget: Sprite visible = ", sprite.visible)
-		print("DEBUG DefenseTarget: Sprite modulate = ", sprite.modulate)
-		print("DEBUG DefenseTarget: Sprite scale = ", sprite.scale)
+		DebugService.log(DebugService.ENTITY, "DefenseTarget: Sprite visible = ", sprite.visible)
+		DebugService.log(DebugService.ENTITY, "DefenseTarget: Sprite modulate = ", sprite.modulate)
+		DebugService.log(DebugService.ENTITY, "DefenseTarget: Sprite scale = ", sprite.scale)
 
 	# Connect area signals for enemy collision
 	if area:
 		area.body_entered.connect(_on_body_entered)
-		print("DEBUG DefenseTarget: Area connected")
+		DebugService.log(DebugService.ENTITY, "DefenseTarget: Area connected")
 	else:
-		print("DEBUG DefenseTarget: WARNING - Area2D not found!")
+		DebugService.warn(DebugService.VALIDATION, "DefenseTarget: WARNING - Area2D not found!")
 
 	# Connect to wave_ended event for healing between rounds
 	Events.wave_ended.connect(_on_wave_ended)
@@ -52,10 +52,10 @@ func initialize(_wave: int, difficulty_config: Dictionary) -> void:
 	Initialize the defense target with wave and difficulty scaling.
 	User decision: 500 HP base, scaled by difficulty.
 	"""
-	print("DEBUG DefenseTarget: initialize() called")
-	print("DEBUG DefenseTarget: Wave = ", _wave)
-	print("DEBUG DefenseTarget: Difficulty config = ", difficulty_config)
-	
+	DebugService.log(DebugService.ENTITY, "DefenseTarget: initialize() called")
+	DebugService.log(DebugService.ENTITY, "DefenseTarget: Wave = ", _wave)
+	DebugService.log(DebugService.ENTITY, "DefenseTarget: Difficulty config = ", difficulty_config)
+
 	# Scale HP by difficulty
 	var health_mult = difficulty_config.get("enemy_health_mult", 1.0) # Use enemy mult as inverse
 	max_health = GameConstants.DEFENSE_TARGET_BASE_HEALTH / health_mult # Harder difficulty = less HP
@@ -67,21 +67,21 @@ func initialize(_wave: int, difficulty_config: Dictionary) -> void:
 		health_bar.max_value = max_health
 		health_bar.value = current_health
 
-	print("DEBUG DefenseTarget: Max HP = ", max_health)
-	print("DEBUG DefenseTarget: Current HP = ", current_health)
+	DebugService.log(DebugService.ENTITY, "DefenseTarget: Max HP = ", max_health)
+	DebugService.log(DebugService.ENTITY, "DefenseTarget: Current HP = ", current_health)
 
 	# Emit initial HP for UI
 	Events.defense_target_hp_changed.emit(current_health, max_health)
-	print("DEBUG DefenseTarget: HP changed event emitted")
+	DebugService.log(DebugService.ENTITY, "DefenseTarget: HP changed event emitted")
 
 func _on_body_entered(body: Node) -> void:
 	"""Handle enemies reaching the target."""
-	print("DEBUG DefenseTarget: Body entered: ", body)
-	print("DEBUG DefenseTarget: Is in enemies group: ", body.is_in_group("enemies"))
+	DebugService.log(DebugService.ENTITY, "DefenseTarget: Body entered: ", body)
+	DebugService.log(DebugService.ENTITY, "DefenseTarget: Is in enemies group: ", body.is_in_group("enemies"))
 
 	# Ignore tech drops - they should not damage the defense target
 	if body.is_in_group("tech_drops"):
-		print("DEBUG DefenseTarget: Tech drop ignored - not causing damage")
+		DebugService.log(DebugService.ENTITY, "DefenseTarget: Tech drop ignored - not causing damage")
 		return
 
 	# If barrier is active, block enemy collision
@@ -90,7 +90,7 @@ func _on_body_entered(body: Node) -> void:
 			var knockback_direction = (body.global_position - global_position).normalized()
 			var knockback_force = 800.0  # Very strong barrier knockback
 			body.apply_knockback(knockback_force, knockback_direction)
-			print("DEBUG DefenseTarget: Barrier blocked enemy - strong knockback applied")
+			DebugService.log(DebugService.ENTITY, "DefenseTarget: Barrier blocked enemy - strong knockback applied")
 		return
 
 	if is_destroyed:
@@ -101,14 +101,14 @@ func _on_body_entered(body: Node) -> void:
 		if enemy:
 			# Get contact damage from enemy property (not method)
 			var damage: float = enemy.contact_damage if "contact_damage" in enemy else 33.0
-			print("DEBUG DefenseTarget: Taking ", damage, " damage from enemy")
+			DebugService.log(DebugService.ENTITY, "DefenseTarget: Taking ", damage, " damage from enemy")
 
 			# Apply enhanced knockback to the enemy (push them away from target)
 			if enemy.has_method("apply_knockback"):
 				var knockback_direction = (enemy.global_position - global_position).normalized()
 				var knockback_force = 300.0 * GameConstants.DEFENSE_TARGET_KNOCKBACK_MULTIPLIER
 				enemy.apply_knockback(knockback_force, knockback_direction)
-				print("DEBUG DefenseTarget: Applied enhanced knockback to enemy (", knockback_force, ")")
+				DebugService.log(DebugService.ENTITY, "DefenseTarget: Applied enhanced knockback to enemy (", knockback_force, ")")
 
 			# Reflect damage back to enemy
 			_reflect_damage(enemy, damage)
@@ -270,7 +270,7 @@ func heal(amount: float) -> void:
 		Events.defense_target_hp_changed.emit(current_health, max_health)
 		Events.defense_target_healed.emit(current_health, max_health, actual_heal)
 
-		print("DEBUG DefenseTarget: Healed ", actual_heal, " HP (", current_health, "/", max_health, ")")
+		DebugService.log(DebugService.ENTITY, "DefenseTarget: Healed ", actual_heal, " HP (", current_health, "/", max_health, ")")
 
 func _on_wave_ended(_wave_number: int) -> void:
 	"""Heal the defense target between waves."""
@@ -278,4 +278,4 @@ func _on_wave_ended(_wave_number: int) -> void:
 		return
 
 	heal(GameConstants.DEFENSE_TARGET_HEAL_BETWEEN_WAVES)
-	print("DEBUG DefenseTarget: Wave ", _wave_number, " ended - healing between rounds")
+	DebugService.log(DebugService.ENTITY, "DefenseTarget: Wave ", _wave_number, " ended - healing between rounds")

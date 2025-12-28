@@ -18,6 +18,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 Events="*res://scripts/autoload/events.gd"
+DebugService="*res://scripts/autoload/debug_service.gd"
 GameStateMachine="*res://scripts/autoload/game_state_machine.gd"
 ModifierService="*res://scripts/autoload/modifier_service.gd"
 DifficultyService="*res://scripts/autoload/difficulty_service.gd"

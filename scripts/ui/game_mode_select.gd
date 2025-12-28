@@ -112,7 +112,7 @@ func _show_win_condition_selection() -> void:
 	
 	# TEMPORARY: If win condition buttons don't exist in scene yet, skip to arena
 	if not survival_button and not tech_defense_button:
-		print("Win condition buttons not in scene - auto-selecting SURVIVAL mode")
+		DebugService.log(DebugService.UI, "Win condition buttons not in scene - auto-selecting SURVIVAL mode")
 		selected_win_mode = GameEnums.GameMode.SURVIVAL
 		_show_arena_type_selection()
 		return
@@ -142,7 +142,7 @@ func _show_arena_type_selection() -> void:
 	
 	# Skip if arena buttons don't exist
 	if not classic_arena_button and not isometric_arena_button:
-		print("Arena type buttons not in scene - auto-selecting RECTANGULAR")
+		DebugService.log(DebugService.UI, "Arena type buttons not in scene - auto-selecting RECTANGULAR")
 		on_arena_type_selected(GameEnums.GameMode.ARENA_RECTANGULAR)
 		return
 	

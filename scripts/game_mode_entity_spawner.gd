@@ -35,7 +35,7 @@ func _spawn_defense_target(wave: int, difficulty_config: Dictionary) -> void:
 	if parent:
 		parent.add_child(current_defense_target)
 	else:
-		push_warning("No valid parent for defense target spawn")
+		DebugService.warn(DebugService.SYSTEMS, "No valid parent for defense target spawn")
 		current_defense_target.queue_free()
 		current_defense_target = null
 		return
@@ -51,7 +51,7 @@ func _spawn_tunnel_door(wave: int, difficulty_config: Dictionary) -> void:
 	if parent:
 		parent.add_child(current_tunnel_door)
 	else:
-		push_warning("No valid parent for tunnel door spawn")
+		DebugService.warn(DebugService.SYSTEMS, "No valid parent for tunnel door spawn")
 		current_tunnel_door.queue_free()
 		current_tunnel_door = null
 		return

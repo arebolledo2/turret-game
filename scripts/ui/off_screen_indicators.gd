@@ -39,7 +39,7 @@ func _try_load_indicator_scene() -> void:
 		indicator_scene = load("res://scenes/ui/off_screen_indicator.tscn")
 	else:
 		# Scene doesn't exist yet, we'll create indicators programmatically
-		print("OffScreenIndicators: Indicator scene not found, will create programmatically")
+		DebugService.log(DebugService.UI, "OffScreenIndicators: Indicator scene not found, will create programmatically")
 
 
 func _process(_delta: float) -> void:

@@ -33,7 +33,7 @@ func validate() -> bool:
 	var hurtbox_area := _get_approximate_area(hurtbox_shape_type, hurtbox_size)
 	
 	if physics_area > hurtbox_area:
-		push_warning("[CollisionProfile] Physics shape is larger than hurtbox! This will cause hit detection issues.")
+		DebugService.warn(DebugService.VALIDATION, "[CollisionProfile] Physics shape is larger than hurtbox! This will cause hit detection issues.")
 		return false
 	
 	return true

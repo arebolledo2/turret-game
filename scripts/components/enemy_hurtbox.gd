@@ -91,7 +91,7 @@ func _configure_shape() -> void:
 			# Auto-rotate to horizontal for capsule
 			collision_shape.rotation = PI / 2
 		_:
-			push_error("Unknown shape_type: %s" % shape_type)
+			DebugService.error(DebugService.VALIDATION, "Unknown shape_type: %s" % shape_type)
 			return
 
 	collision_shape.shape = shape
@@ -170,25 +170,25 @@ func _deal_contact_damage() -> void:
 	# Get the player from the hurtbox's parent
 	var player = overlapping_player_hurtbox.get_parent()
 	if not player:
-		push_warning("[EnemyHurtbox] PlayerHurtbox has no parent")
+		DebugService.warn(DebugService.VALIDATION, "[EnemyHurtbox] PlayerHurtbox has no parent")
 		return
-	
+
 	if not player.is_in_group("player"):
-		push_warning("[EnemyHurtbox] Hurtbox parent not in player group: %s" % player.name)
+		DebugService.warn(DebugService.VALIDATION, "[EnemyHurtbox] Hurtbox parent not in player group: %s" % player.name)
 		return
-	
+
 	if not player.has_method("take_damage"):
-		push_warning("[EnemyHurtbox] Player missing take_damage method")
+		DebugService.warn(DebugService.VALIDATION, "[EnemyHurtbox] Player missing take_damage method")
 		return
 
 	# Get contact damage from parent enemy
 	var enemy = get_parent()
 	if not enemy:
-		push_warning("[EnemyHurtbox] Hurtbox has no parent enemy")
+		DebugService.warn(DebugService.VALIDATION, "[EnemyHurtbox] Hurtbox has no parent enemy")
 		return
-	
+
 	if not "contact_damage" in enemy:
-		push_warning("[EnemyHurtbox] Parent enemy missing contact_damage property")
+		DebugService.warn(DebugService.VALIDATION, "[EnemyHurtbox] Parent enemy missing contact_damage property")
 		return
 	
 	player.take_damage(enemy.contact_damage)

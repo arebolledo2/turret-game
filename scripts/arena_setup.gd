@@ -42,12 +42,12 @@ var start_time: int = 0 # For debug print throttling
 func _ready() -> void:
 	# Ensure this script runs even when game is paused (for debug editing)
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	print("DEBUG: Arena _ready called. Process Mode set to ALWAYS. Visible: ", visible)
-	
+	DebugService.log(DebugService.ARENA, "Arena _ready called. Process Mode set to ALWAYS. Visible: ", visible)
+
 	# Connect to debug signal early so it works regardless of arena setup timing
 	if not Events.isometric_debug_toggled.is_connected(_on_isometric_debug_toggled):
 		Events.isometric_debug_toggled.connect(_on_isometric_debug_toggled)
-		print("DEBUG: Arena connected to isometric_debug_toggled signal")
+		DebugService.log(DebugService.ARENA, "Arena connected to isometric_debug_toggled signal")
 
 	if not Events.arena_background_selected.is_connected(_on_arena_background_selected):
 		Events.arena_background_selected.connect(_on_arena_background_selected)
@@ -197,22 +197,22 @@ func _setup_isometric_arena(half_width: float, half_height: float) -> void:
 
 
 func _on_isometric_debug_toggled(enabled: bool) -> void:
-	print("DEBUG: _on_isometric_debug_toggled called. Enabled: ", enabled, " | Outline exists: ", debug_outline != null)
+	DebugService.log(DebugService.ARENA, "_on_isometric_debug_toggled called. Enabled: ", enabled, " | Outline exists: ", debug_outline != null)
 	if debug_outline:
 		debug_outline.visible = enabled
-	
+
 	# Print status to console
 	if enabled:
-		print("ISOMETRIC EDIT MODE: ENABLED (Use Arrows/Shift/Plus/Minus/S)")
+		DebugService.log(DebugService.ARENA, "ISOMETRIC EDIT MODE: ENABLED (Use Arrows/Shift/Plus/Minus/S)")
 	else:
-		print("ISOMETRIC EDIT MODE: DISABLED")
+		DebugService.log(DebugService.ARENA, "ISOMETRIC EDIT MODE: DISABLED")
 
 
 func _process(delta: float) -> void:
 	# Debug print to verify process is running (throttled)
 	if start_time == 0: start_time = Time.get_ticks_msec()
 	if Time.get_ticks_msec() - start_time > 2000: # Print every 2s if running
-		print("DEBUG: Arena _process running. Paused: ", get_tree().paused, " | Visible: ", visible, " | Sprite: ", bg_sprite != null, " | GlobalDebug: ", SettingsService.isometric_debug_enabled)
+		DebugService.log(DebugService.ARENA, "Arena _process running. Paused: ", get_tree().paused, " | Visible: ", visible, " | Sprite: ", bg_sprite != null, " | GlobalDebug: ", SettingsService.isometric_debug_enabled)
 		start_time = Time.get_ticks_msec()
 
 	# Only run if visible, sprite exists, AND DEBUG MODE IS ENABLED
@@ -264,28 +264,28 @@ func _process(delta: float) -> void:
 	if Input.is_key_pressed(KEY_EQUAL) or Input.is_key_pressed(KEY_KP_ADD):
 		bg_zoom += Vector2(scale_speed, scale_speed)
 		changed = true
-		print("DEBUG: Plus pressed. New Zoom: ", bg_zoom)
+		DebugService.log(DebugService.ARENA, "Plus pressed. New Zoom: ", bg_zoom)
 	if Input.is_key_pressed(KEY_MINUS) or Input.is_key_pressed(KEY_KP_SUBTRACT):
 		bg_zoom -= Vector2(scale_speed, scale_speed)
 		changed = true
-		print("DEBUG: Minus pressed. New Zoom: ", bg_zoom)
-		
+		DebugService.log(DebugService.ARENA, "Minus pressed. New Zoom: ", bg_zoom)
+
 	# Save (S) - with debounce
 	var save_pressed := Input.is_physical_key_pressed(KEY_S)
 	if save_pressed and not _prev_save_key:
-		print("DEBUG: Save key pressed")
+		DebugService.log(DebugService.ARENA, "Save key pressed")
 		_save_all_bg_configs()
 	_prev_save_key = save_pressed
-	
+
 	# Switch backgrounds ([ and ]) - with debounce (just-pressed detection)
 	var bracket_left := Input.is_physical_key_pressed(KEY_BRACKETLEFT)
 	var bracket_right := Input.is_physical_key_pressed(KEY_BRACKETRIGHT)
-	
+
 	if bracket_left and not _prev_bracket_left:
-		print("DEBUG: [ pressed")
+		DebugService.log(DebugService.ARENA, "[ pressed")
 		_switch_background(-1)
 	if bracket_right and not _prev_bracket_right:
-		print("DEBUG: ] pressed")
+		DebugService.log(DebugService.ARENA, "] pressed")
 		_switch_background(1)
 	
 	_prev_bracket_left = bracket_left
@@ -305,32 +305,32 @@ const CONFIG_PATH = "user://isometric_bg_config.cfg"
 func _switch_background(direction: int) -> void:
 	if AVAILABLE_BACKGROUNDS.size() <= 1:
 		return
-	
+
 	# Store current config before switching
 	_store_current_bg_config()
-	
+
 	# Change index with wraparound
 	current_bg_index = (current_bg_index + direction) % AVAILABLE_BACKGROUNDS.size()
 	if current_bg_index < 0:
 		current_bg_index = AVAILABLE_BACKGROUNDS.size() - 1
-	
+
 	_apply_current_background()
 	var bg_name := _get_bg_filename(AVAILABLE_BACKGROUNDS[current_bg_index])
-	print("SWITCHED to background: ", bg_name, " [", current_bg_index + 1, "/", AVAILABLE_BACKGROUNDS.size(), "]")
+	DebugService.log(DebugService.ARENA, "SWITCHED to background: ", bg_name, " [", current_bg_index + 1, "/", AVAILABLE_BACKGROUNDS.size(), "]")
 
 
 ## Apply the current background texture and load its saved config
 func _apply_current_background() -> void:
 	if current_bg_index < 0 or current_bg_index >= AVAILABLE_BACKGROUNDS.size():
 		return
-	
+
 	var bg_path := AVAILABLE_BACKGROUNDS[current_bg_index]
 	var texture = load(bg_path)
-	
+
 	if texture:
 		bg_sprite.texture = texture
 		bg_sprite.visible = true
-		
+
 		# Load config for this specific background
 		if bg_configs.has(bg_path):
 			bg_offset = bg_configs[bg_path].get("offset", Vector2.ZERO)
@@ -338,12 +338,12 @@ func _apply_current_background() -> void:
 		else:
 			bg_offset = Vector2.ZERO
 			bg_zoom = Vector2.ONE
-		
+
 		bg_sprite.position = bg_offset
 		bg_sprite.scale = bg_zoom
-		print("DEBUG: Arena BG Loaded: ", _get_bg_filename(bg_path), " | Size: ", texture.get_size())
+		DebugService.log(DebugService.ARENA, "Arena BG Loaded: ", _get_bg_filename(bg_path), " | Size: ", texture.get_size())
 	else:
-		print("ERROR: Failed to load background: ", bg_path)
+		DebugService.error(DebugService.VALIDATION, "Failed to load background: ", bg_path)
 
 
 ## Store current background's config in memory
@@ -362,16 +362,16 @@ func _get_bg_filename(path: String) -> String:
 ## Save all background configs to file
 func _save_all_bg_configs() -> void:
 	_store_current_bg_config() # Ensure current is saved
-	
+
 	var config = ConfigFile.new()
 	for bg_path in bg_configs.keys():
 		var section := _get_bg_filename(bg_path)
 		config.set_value(section, "offset", bg_configs[bg_path]["offset"])
 		config.set_value(section, "scale", bg_configs[bg_path]["scale"])
-	
+
 	config.save(CONFIG_PATH)
 	var global_path = ProjectSettings.globalize_path(CONFIG_PATH)
-	print("SAVED all background configs to: ", global_path)
+	DebugService.log(DebugService.ARENA, "SAVED all background configs to: ", global_path)
 
 
 ## Load all background configs from file
@@ -379,11 +379,11 @@ func _load_all_bg_configs() -> void:
 	bg_configs.clear()
 	var config = ConfigFile.new()
 	var err = config.load(CONFIG_PATH)
-	
+
 	if err != OK:
-		print("No saved background configs found, using defaults.")
+		DebugService.log(DebugService.ARENA, "No saved background configs found, using defaults.")
 		return
-	
+
 	# Migration: Check for old [alignment] section format
 	if config.has_section("alignment"):
 		var old_offset = config.get_value("alignment", "offset", Vector2.ZERO)
@@ -392,9 +392,9 @@ func _load_all_bg_configs() -> void:
 		if AVAILABLE_BACKGROUNDS.size() > 0:
 			var first_bg := AVAILABLE_BACKGROUNDS[0]
 			bg_configs[first_bg] = {"offset": old_offset, "scale": old_scale}
-			print("MIGRATED old alignment config to: ", _get_bg_filename(first_bg))
+			DebugService.log(DebugService.ARENA, "MIGRATED old alignment config to: ", _get_bg_filename(first_bg))
 		return # Skip new format loading if migrating
-	
+
 	# Load configs for each available background (new format)
 	for bg_path in AVAILABLE_BACKGROUNDS:
 		var section := _get_bg_filename(bg_path)
@@ -403,5 +403,5 @@ func _load_all_bg_configs() -> void:
 				"offset": config.get_value(section, "offset", Vector2.ZERO),
 				"scale": config.get_value(section, "scale", Vector2.ONE)
 			}
-	
-	print("LOADED background configs from: ", ProjectSettings.globalize_path(CONFIG_PATH))
+
+	DebugService.log(DebugService.ARENA, "LOADED background configs from: ", ProjectSettings.globalize_path(CONFIG_PATH))

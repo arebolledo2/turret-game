@@ -27,17 +27,17 @@ func _initialize_defaults() -> void:
 func set_mode(mode_id: GameEnums.GameMode) -> void:
 	var config: Dictionary = GameModeRegistry.get_mode_config(mode_id)
 	if config.is_empty():
-		print("ERROR: Game mode config not found for ID: ", mode_id)
+		DebugService.error(DebugService.SYSTEMS, "Game mode config not found for ID: %s" % mode_id)
 		return
-		
+
 	var group: String = config.get("group")
 	active_modes[group] = mode_id
-	
+
 	# Update arena bounds if arena type changed
 	if group == "arena_type":
 		_update_arena_bounds()
-	
-	print("Game Mode Set: ", config.get("name"), " (Group: ", group, ")")
+
+	DebugService.log(DebugService.SYSTEMS, "Game Mode Set: %s (Group: %s)" % [config.get("name"), group])
 
 func _update_arena_bounds() -> void:
 	"""Synchronize ArenaBoundsService with selected arena type mode."""

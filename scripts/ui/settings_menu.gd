@@ -21,7 +21,7 @@ const BASE_BUTTON_HEIGHT: float = 40.0
 
 
 func setup(nodes: Dictionary, owner: Node) -> void:
-	print("DEBUG: SettingsMenuUI setup called. Nodes: ", nodes.keys())
+	DebugService.log(DebugService.UI, "SettingsMenuUI setup called. Nodes: %s" % [nodes.keys()])
 	show_damage_check = nodes.get("show_damage_check")
 	physics_hitboxes_check = nodes.get("physics_hitboxes_check")
 	player_hurtbox_check = nodes.get("player_hurtbox_check")
@@ -48,12 +48,12 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 		show_damage_check.button_pressed = SettingsService.show_damage_numbers
 		
 	if isometric_debug_check:
-		print("DEBUG: Connecting isometric_debug_check")
+		DebugService.log(DebugService.UI, "Connecting isometric_debug_check")
 		isometric_debug_check.button_pressed = SettingsService.isometric_debug_enabled
 		if not isometric_debug_check.toggled.is_connected(on_isometric_debug_toggled):
 			isometric_debug_check.toggled.connect(on_isometric_debug_toggled)
 	else:
-		print("ERROR: isometric_debug_check node NOT FOUND in SettingsMenuUI")
+		DebugService.error(DebugService.VALIDATION, "isometric_debug_check node NOT FOUND in SettingsMenuUI")
 
 	if physics_hitboxes_check:
 		physics_hitboxes_check.button_pressed = SettingsService.debug_hitbox_flags[GameEnums.HitboxType.PHYSICS]
@@ -85,7 +85,7 @@ func _scale_fonts(scale: float) -> void:
 
 
 func show() -> void:
-	print("DEBUG: SettingsMenuUI show() called")
+	DebugService.log(DebugService.UI, "SettingsMenuUI show() called")
 	if container:
 		container.modulate.a = 0.0
 		container.visible = true
@@ -106,7 +106,7 @@ func on_show_damage_toggled(toggled_on: bool) -> void:
 
 
 func on_isometric_debug_toggled(toggled_on: bool) -> void:
-	print("DEBUG: on_isometric_debug_toggled triggered. Value: ", toggled_on)
+	DebugService.log(DebugService.UI, "on_isometric_debug_toggled triggered. Value: %s" % toggled_on)
 	SettingsService.isometric_debug_enabled = toggled_on
 	Events.isometric_debug_toggled.emit(toggled_on)
 
@@ -156,13 +156,13 @@ func _on_add_item_pressed() -> void:
 	var shop_manager = _owner.get_node_or_null("/root/Main/ShopManager")
 	if shop_manager and shop_manager.has_method("apply_item"):
 		shop_manager.apply_item(item_id)
-		print("DEBUG: Added item for free: ", item_id)
+		DebugService.log(DebugService.UI, "Added item for free: %s" % item_id)
 		
 		# Update pause menu items panel if HUD is available
 		if _owner and _owner.has_method("update_items_panel"):
 			_owner.update_items_panel()
 	else:
-		push_error("Could not find shop_manager to apply item")
+		DebugService.error(DebugService.VALIDATION, "Could not find shop_manager to apply item")
 
 
 func _on_item_dropdown_selected(idx: int) -> void:
