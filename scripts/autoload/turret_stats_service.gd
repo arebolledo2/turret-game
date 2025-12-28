@@ -110,10 +110,7 @@ func get_most_common_turret_type() -> String:
 
 ## Get turret minimum distance (modified by Personal Space item)
 func get_turret_min_distance(item_counts: Dictionary) -> float:
-	# Personal Space increases minimum distance to 200px
-	if ItemRegistry.has_special_effect("personal_space") and item_counts.get("personal_space", 0) > 0:
-		return 200.0
-	return GameConstants.TURRET_MIN_DISTANCE
+	return SpecialEffectService.get_turret_min_distance(item_counts)
 
 
 ## Get turret purchase penalty (base 0.25, can be reduced/increased by items)
