@@ -26,6 +26,7 @@ var current_path_index: int = 0
 var escort_speed: float = 0.0
 var proximity_radius: float = 200.0 # Distance player must be within to move
 var is_moving: bool = false
+var path_visual: Line2D = null
 
 # Visual components
 @onready var health_bar: ProgressBar = $HealthBar
@@ -83,7 +84,32 @@ func initialize_escort(path: Array[Vector2]) -> void:
 	var wave_duration = GameStateService.get_wave_duration(GameStateService.current_wave)
 	escort_speed = total_distance / max(wave_duration, 1.0)
 	
+	_create_path_visual()
+	
 	DebugService.log(DebugService.ENTITY, "DefenseTarget Escort: Total Distance = ", total_distance, " Speed = ", escort_speed)
+
+func _create_path_visual() -> void:
+	"""Creates a visual line representing the escort path."""
+	if path_visual:
+		path_visual.queue_free()
+		
+	path_visual = Line2D.new()
+	path_visual.name = "EscortPathVisual"
+	path_visual.width = 4.0
+	path_visual.default_color = Color(0.2, 0.8, 1.0, 0.3) # Subtle cyan
+	path_visual.texture_mode = Line2D.LINE_TEXTURE_TILE
+	path_visual.joint_mode = Line2D.LINE_JOINT_ROUND
+	path_visual.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	path_visual.end_cap_mode = Line2D.LINE_CAP_ROUND
+	
+	# Add points to the line
+	for point in escort_path:
+		path_visual.add_point(point)
+		
+	# Move Line2D to the parent (World) so it doesn't move with the DefenseTarget
+	get_parent().call_deferred("add_child", path_visual)
+	# Ensure it renders below the entities
+	path_visual.z_index = -1
 
 func _handle_escort_movement(delta: float) -> void:
 	if current_path_index >= escort_path.size():
@@ -239,7 +265,11 @@ func _play_destruction_animation() -> void:
 	tween.set_parallel(true)
 	tween.tween_property(self, "scale", Vector2.ZERO, 0.5)
 	tween.tween_property(self, "modulate:a", 0.0, 0.5)
-	tween.finished.connect(queue_free)
+	tween.finished.connect(func():
+		if path_visual:
+			path_visual.queue_free()
+		queue_free()
+	)
 
 func _setup_timers() -> void:
 	"""Setup barrier duration and cooldown timers."""
