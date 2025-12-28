@@ -94,8 +94,9 @@ func process_wave_end(delta: float) -> bool:
 func award_wave_bonus() -> void:
 	"""Award gold for completing the wave."""
 	var wave_bonus_base = GameConstants.GOLD_WAVE_BONUS_BASE + (GameStateService.current_wave * 5)
-	var wave_bonus = int(wave_bonus_base * ItemTrackingService.get_wave_bonus_multiplier())
-	EconomyService.total_gold += wave_bonus
+	
+	# Use probabilistic addition for consistency (though less critical for large numbers)
+	var wave_bonus = EconomyService.add_gold_probabilistic(wave_bonus_base, ItemTrackingService.get_wave_bonus_multiplier())
 	Events.gold_collected.emit(wave_bonus, EconomyService.total_gold)
 	wave_completed.emit(GameStateService.current_wave)
 

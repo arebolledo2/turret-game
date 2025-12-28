@@ -35,9 +35,23 @@ func get_wave_gold_bonus(wave: int, wave_bonus_mult: float) -> int:
 	return int(base_bonus * wave_bonus_mult)
 
 
-## Add gold with multiplier applied
+## Add gold with multiplier applied using probabilistic rounding for fractional amounts
+## returns the actual amount added
+func add_gold_probabilistic(base_amount: int, multiplier: float) -> int:
+	var calculated: float = float(base_amount) * multiplier
+	var actual_amount: int = floori(calculated)
+	var chance: float = calculated - actual_amount
+	
+	if randf() < chance:
+		actual_amount += 1
+		
+	total_gold += actual_amount
+	return actual_amount
+
+
+## Add gold with multiplier applied (Legacy - prefer add_gold_probabilistic)
 func add_gold(amount: int, gold_earn_mult: float) -> void:
-	total_gold += int(amount * gold_earn_mult)
+	add_gold_probabilistic(amount, gold_earn_mult)
 
 
 ## Deduct gold (returns true if successful, false if insufficient funds)

@@ -50,8 +50,8 @@ func collect() -> void:
 
 	# Also award gold from same drop with modifier
 	var gold_mult = ItemTrackingService.get_gold_earn_multiplier()
-	var gold_amount = int(GameConstants.GOLD_PER_ENEMY * gold_mult)
-	EconomyService.total_gold += gold_amount
+	# GameConstants.GOLD_PER_ENEMY is base amount
+	var gold_amount = EconomyService.add_gold_probabilistic(GameConstants.GOLD_PER_ENEMY, gold_mult)
 	Events.gold_collected.emit(gold_amount, EconomyService.total_gold)
 
 	# Collection effect
