@@ -159,7 +159,7 @@ const DEFENSE_TARGET_BARRIER_COOLDOWN: float = 10.0 # 10 seconds between barrier
 const DEFENSE_TARGET_HEAL_BETWEEN_WAVES: float = 25.0 # HP healed between waves
 const DEFENSE_MODE_PLAYER_AGGRO_RANGE: float = 250.0 # Enemies switch from defense target to player if within this range
 const DEFENSE_MODE_PLAYER_DEAGGRO_RANGE: float = 500.0 # Enemies switch back to defense target if player beyond this range
-const ESCORT_ARRIVAL_TIME_RATIO: float = 0.8 # Payload arrives at 80% of wave time
+const ESCORT_ARRIVAL_TIME_RATIO: float = 1.0 # Payload arrives exactly at wave end (Perfect Sync)
 
 # Tunneling
 const TUNNEL_DOOR_BASE_HEALTH: float = 50.0 # HP that must be damaged by turrets

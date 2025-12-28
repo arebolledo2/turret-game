@@ -28,8 +28,7 @@ var proximity_radius: float = 200.0 # Distance player must be within to move
 var is_moving: bool = false
 var path_visual: Line2D = null
 var escort_curve: Curve2D = Curve2D.new()
-var escort_wave_duration: float = 0.0
-var escort_elapsed_time: float = 0.0
+# Precise timing uses WaveController progress via GameStateService
 
 # Visual components
 @onready var health_bar: ProgressBar = $HealthBar
@@ -82,13 +81,9 @@ func initialize_escort(path: Array[Vector2]) -> void:
 	for point in path:
 		escort_curve.add_point(point)
 	
-	# Store wave duration for time-based movement
-	escort_wave_duration = GameStateService.get_wave_duration(GameStateService.current_wave)
-	escort_elapsed_time = 0.0
-	
 	_create_path_visual()
 	
-	DebugService.log(DebugService.ENTITY, "DefenseTarget Escort: Path points = ", path.size(), " Wave Duration = ", escort_wave_duration)
+	DebugService.log(DebugService.ENTITY, "DefenseTarget Escort: Path points = ", path.size())
 
 func _create_path_visual() -> void:
 	"""Creates a visual line representing the escort path."""
@@ -113,17 +108,20 @@ func _create_path_visual() -> void:
 	# Ensure it renders below the entities
 	path_visual.z_index = -1
 
-func _handle_escort_movement(delta: float) -> void:
+func _handle_escort_movement(_delta: float) -> void:
 	if is_at_destination():
 		return
 		
-	# Update elapsed time
-	escort_elapsed_time += delta
 	is_moving = true
 	
-	# Calculate target arrival time (e.g. 80% of wave)
-	var target_duration = escort_wave_duration * GameConstants.ESCORT_ARRIVAL_TIME_RATIO
-	var t = clamp(escort_elapsed_time / max(target_duration, 1.0), 0.0, 1.0)
+	# Get perfectly synchronized progress from wave controller
+	var wave_progress = 0.0
+	if GameStateService.wave_controller:
+		wave_progress = GameStateService.wave_controller.get_wave_progress()
+	
+	# Map wave progress (e.g. 100%) to arrival goal (e.g. 80%)
+	# t = current_progress / arrival_ratio
+	var t = clamp(wave_progress / max(GameConstants.ESCORT_ARRIVAL_TIME_RATIO, 0.01), 0.0, 1.0)
 	
 	# Sample position from curve
 	var baked_length = escort_curve.get_baked_length()
@@ -143,10 +141,15 @@ func _on_destination_reached() -> void:
 	Events.escort_reached_destination.emit()
 
 func is_at_destination() -> bool:
-	# Calculate arrival progress based on time
-	var target_duration = escort_wave_duration * GameConstants.ESCORT_ARRIVAL_TIME_RATIO
-	var t = escort_elapsed_time / max(target_duration, 1.0)
-	return is_escort_mode and t >= 1.0
+	if not is_escort_mode:
+		return false
+		
+	# Get perfectly synchronized progress from wave controller
+	var wave_progress = 0.0
+	if GameStateService.wave_controller:
+		wave_progress = GameStateService.wave_controller.get_wave_progress()
+		
+	return wave_progress >= GameConstants.ESCORT_ARRIVAL_TIME_RATIO
 
 func initialize(_wave: int, difficulty_config: Dictionary) -> void:
 	"""

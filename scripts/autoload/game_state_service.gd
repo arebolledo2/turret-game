@@ -17,6 +17,7 @@ var is_game_active: bool = false
 
 # Turret spawning
 var turrets_spawned: int = 0
+var wave_controller: Node = null # Reference set by GameManager
 
 
 func reset_state() -> void:

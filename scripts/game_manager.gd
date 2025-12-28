@@ -35,6 +35,9 @@ func _ready() -> void:
 	wave_controller.enemy_spawner = enemy_spawner
 	wave_controller.turret_manager = turret_manager
 	wave_controller.tech_drop_spawner = tech_drop_spawner
+	
+	# Expose to other systems via service
+	GameStateService.wave_controller = wave_controller
 
 	# Connect events
 	Events.player_died.connect(_on_player_died)
@@ -150,14 +153,28 @@ func _start_wave_announcement() -> void:
 	GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_ANNOUNCEMENT)
 	wave_controller.start_wave_announcement()
 
+	# Spawn game mode entities on wave 1 (during announcement so they are ready for combat start)
+	# This ensures player can be positioned correctly relative to them before action starts
+	if GameStateService.current_wave == 1:
+		entity_spawner.spawn_game_mode_entities()
+		
+		# If Escort mode, move the starting turret to the payload as well
+		if GameModeService.is_escort_mode_active():
+			var defense_target = entity_spawner.get_defense_target()
+			if defense_target and turret_manager:
+				for turret in turret_manager.turrets:
+					if is_instance_valid(turret):
+						turret.global_position = defense_target.global_position + Vector2(-80, 0) # Opposite side of player
+
 
 func _start_combat() -> void:
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	wave_controller.start_combat()
 
 	# Spawn game mode entities on wave 1
-	if GameStateService.current_wave == 1:
-		entity_spawner.spawn_game_mode_entities()
+	# Moved to _start_wave_announcement for simultaneous spawn effect
+	# if GameStateService.current_wave == 1:
+	# 	entity_spawner.spawn_game_mode_entities()
 
 
 func _end_wave() -> void:

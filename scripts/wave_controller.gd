@@ -11,6 +11,7 @@ signal spawning_stopped()
 
 # Timers
 var wave_timer: float = 0.0
+var wave_max_duration: float = 0.0
 var announcement_timer: float = 0.0
 var pause_timer: float = 0.0
 
@@ -43,7 +44,8 @@ func process_announcement(delta: float) -> bool:
 # =============================================================================
 
 func start_combat() -> void:
-	wave_timer = get_wave_duration(GameStateService.current_wave)
+	wave_max_duration = get_wave_duration(GameStateService.current_wave)
+	wave_timer = wave_max_duration
 
 	Events.hide_wave_announcement.emit()
 	Events.wave_started.emit(GameStateService.current_wave)
@@ -64,6 +66,13 @@ func process_combat(delta: float) -> bool:
 	Events.wave_timer_updated.emit(wave_timer)
 	wave_timer_tick.emit(wave_timer)
 	return wave_timer <= 0
+
+
+func get_wave_progress() -> float:
+	"""Returns normalized progress (0.0 to 1.0) of the current combat wave."""
+	if wave_max_duration <= 0:
+		return 0.0
+	return clamp(1.0 - (wave_timer / wave_max_duration), 0.0, 1.0)
 
 
 # =============================================================================
