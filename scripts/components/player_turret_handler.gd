@@ -91,11 +91,16 @@ func place_turret() -> void:
 		carried_turret = null
 		return
 
-	var placement_pos := carried_turret.global_position
-	
+	# Drop to player's ground position (collision bottom) instead of carry position
+	# Player origin is center of 32x32 circle, so ground is +16
+	var placement_pos := player.global_position + Vector2(0, 16)
+
 	# Reset z_index for normal Y-sorting
 	carried_turret.z_index = 0
-	
+
+	# Actually set the turret's position before emitting the signal
+	carried_turret.global_position = placement_pos
+
 	Events.turret_placed.emit(carried_turret, placement_pos)
 
 	carried_turret = null
