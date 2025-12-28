@@ -114,6 +114,6 @@ func test_get_difficulty_config_returns_correct_config():
 
 func test_get_difficulty_name():
 	DifficultyService.set_difficulty(GameEnums.Difficulty.HARD)
-	var name = DifficultyService.get_name()
-	
+	var name = DifficultyService.get_difficulty_name()
+
 	assert_eq(name, "Hard", "Should return 'Hard'")

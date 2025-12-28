@@ -112,9 +112,8 @@ func test_modifier_does_not_affect_unmatched_turret():
 		"filter": {"damage_type": [GameEnums.DamageType.FIRE]}
 	})
 
+	var normal_stats = ModifierService.get_turret_stats("normal", DifficultyService.get_difficulty_config())
 	var base_damage = TurretRegistry.get_base_stats("normal")["damage"]
-	var normal_stats = TurretRegistry.get_base_stats("normal")
-	normal_stats["damage"] = ModifierService.apply_modifiers_to_stat(base_damage * DifficultyService.get_difficulty_config()["turret_damage_mult"], "damage")
 	var expected = base_damage * DifficultyService.get_difficulty_config()["turret_damage_mult"]
 
 	assert_almost_eq(normal_stats["damage"], expected, 0.01, "Normal damage should NOT be boosted")

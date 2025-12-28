@@ -112,8 +112,9 @@ func test_enemy_health_harder_on_hard_mode():
 
 func test_enemy_speed_wave_1():
 	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
+	var base_stats = EnemyRegistry.get_base_stats("basic")
 	var speed = EnemyRegistry.get_stats_for_wave("basic", 1, DifficultyService.get_difficulty_config())["speed"]
-	assert_eq(speed, GameConstants.ENEMY_BASE_SPEED, "Wave 1 Easy should have base speed")
+	assert_eq(speed, base_stats["speed"], "Wave 1 Easy should have base speed")
 
 
 func test_enemy_speed_scales_with_waves():
