@@ -108,6 +108,12 @@ func should_spawn_defense_target() -> bool:
 	"""
 	return is_mode_active(GameEnums.GameMode.TECH_DEFENSE)
 
+func is_defense_target_mode() -> bool:
+	"""
+	Returns true if the current mode involves protecting a target (Defense or Escort).
+	"""
+	return is_mode_active(GameEnums.GameMode.TECH_DEFENSE) or is_mode_active(GameEnums.GameMode.ESCORT)
+
 func should_spawn_tunnel_door() -> bool:
 	"""
 	Returns true if any tunneling mode is active and requires a door entity.

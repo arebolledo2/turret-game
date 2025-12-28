@@ -38,11 +38,11 @@ func initialize(p_enemy: CharacterBody2D, p_speed: float, p_mass: float, p_behav
 	# Get player and defense target references
 	if enemy and is_instance_valid(enemy):
 		player_character = enemy.get_tree().get_first_node_in_group("player")
-		is_in_defense_mode = GameModeService.should_spawn_defense_target()
+		is_in_defense_mode = GameModeService.is_defense_target_mode()
 		
 		if is_in_defense_mode:
 			defense_target = enemy.get_tree().get_first_node_in_group("defense_targets")
-			# Start targeting defense target in defense mode
+			# Start targeting defense target in defense/escort mode
 			player = defense_target if defense_target else player_character
 		else:
 			# Normal mode - always target player

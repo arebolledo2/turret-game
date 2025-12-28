@@ -49,9 +49,9 @@ func _ready() -> void:
 	add_to_group("enemies")
 
 	DebugService.log(DebugService.ENTITY, "Enemy: Checking game mode for targeting...")
-	# In Tech Defense mode, target the defense target instead of player
-	if GameModeService.should_spawn_defense_target():
-		DebugService.log(DebugService.ENTITY, "Enemy: Tech Defense mode - looking for defense target")
+	# In Defense or Escort mode, target the defense target instead of player
+	if GameModeService.is_defense_target_mode():
+		DebugService.log(DebugService.ENTITY, "Enemy: Defense target mode - looking for target")
 		var defense_target = get_tree().get_first_node_in_group("defense_targets")
 		if defense_target:
 			player = defense_target
@@ -258,8 +258,8 @@ func _physics_process(delta: float) -> void:
 		take_dot_damage(dot_damage)
 
 	if player == null or not is_instance_valid(player):
-		# Re-acquire target (defense target in Tech Defense, otherwise player)
-		if GameModeService.should_spawn_defense_target():
+		# Re-acquire target (defense target in Defense/Escort modes, otherwise player)
+		if GameModeService.is_defense_target_mode():
 			player = get_tree().get_first_node_in_group("defense_targets")
 		if player == null: # Fallback to player if no defense target
 			player = get_tree().get_first_node_in_group("player")
