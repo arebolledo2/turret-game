@@ -27,6 +27,11 @@ var status_indicators: HBoxContainer = null
 
 # State
 var is_in_pickup_range: bool = false
+var is_being_carried: bool = false
+var idle_bounce_tween: Tween = null
+var base_sprite_offset: Vector2 = Vector2.ZERO  # Store original offset for fire turret
+var base_sprite_scale: Vector2 = Vector2.ONE     # Store original scale for fire turret
+var base_sprite_pos: Vector2 = Vector2.ZERO       # Store original position for fire turret
 
 func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary) -> void:
 	"""Initialize component with required references."""
@@ -52,6 +57,11 @@ func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary) ->
 		_update_range_visual()
 		range_indicator.modulate = color
 		range_indicator.modulate.a = 0.0 # Hidden by default
+
+	# Listen for carry events
+	Events.turret_picked_up.connect(_on_turret_picked_up)
+	Events.turret_placed.connect(_on_turret_placed)
+	Events.turret_dropped.connect(_on_turret_placed) # Same cleanup as placed
 
 	# Listen for range toggle event
 	Events.turret_range_toggled.connect(_on_range_toggled)
@@ -330,6 +340,32 @@ func hide_pickup_indicator() -> void:
 	if weapon_sprite:
 		weapon_sprite.modulate = Color.WHITE
 
+func _on_turret_picked_up(p_turret: Node2D) -> void:
+	"""Handle turret picked up event."""
+	if p_turret == turret:
+		is_being_carried = true
+		# Stop bounce and reset offset/scale while carrying
+		if idle_bounce_tween:
+			idle_bounce_tween.kill()
+		if base_sprite and base_sprite_offset != Vector2.ZERO:
+			base_sprite.offset = Vector2.ZERO
+			# Restore original position (with its natural lift) for carrying on head
+			base_sprite.position = base_sprite_pos
+			# Reset scale to stored base scale so it doesn't look squashed while carrying
+			base_sprite.scale = base_sprite_scale
+
+func _on_turret_placed(p_turret: Node2D, _pos: Vector2 = Vector2.ZERO) -> void:
+	"""Handle turret placed/dropped event."""
+	if p_turret == turret:
+		is_being_carried = false
+		# Restore offset and scale, then restart bounce
+		if base_sprite and base_sprite_offset != Vector2.ZERO:
+			base_sprite.offset = base_sprite_offset
+			base_sprite.scale = base_sprite_scale
+			# On ground, move position to origin so bottom-anchored offset puts base on floor
+			base_sprite.position = Vector2.ZERO
+		_start_idle_bounce()
+
 func _on_range_toggled(show_ranges: bool) -> void:
 	"""Handle range toggle event."""
 	if show_ranges:
@@ -361,5 +397,56 @@ func _setup_fire_visuals() -> void:
 
 	base_sprite.visible = true
 	base_sprite.texture = load("res://assets/sprites/turrets/turret_flame.png")
-	base_sprite.scale = Vector2(0.125, 0.125)
+	base_sprite_scale = Vector2(0.125, 0.125)
+	base_sprite.scale = base_sprite_scale
 	base_sprite.modulate = Color.WHITE
+	
+	# Store original position (from scene)
+	base_sprite_pos = base_sprite.position
+	
+	# On ground, move position to origin so bottom-anchoring offset works correctly
+	base_sprite.position = Vector2.ZERO
+	
+	# Set offset to anchor at bottom center
+	# This makes scaling happen from the bottom instead of center
+	var tex = base_sprite.texture
+	if tex:
+		base_sprite_offset = Vector2(0, -tex.get_height() / 2.0)
+		base_sprite.offset = base_sprite_offset
+	
+	# Start idle bounce animation
+	_start_idle_bounce()
+
+func _start_idle_bounce() -> void:
+	"""Start a subtle idle bounce animation using algorithmic tweening (vertical only, bottom anchored)."""
+	if not base_sprite or is_being_carried:
+		return
+	
+	# Clean up any existing tween
+	if idle_bounce_tween and idle_bounce_tween.is_valid():
+		idle_bounce_tween.kill()
+	
+	# Create new tween with random phase offset
+	idle_bounce_tween = turret.create_tween()
+	idle_bounce_tween.set_loops()
+	idle_bounce_tween.set_ease(Tween.EASE_IN_OUT)
+	idle_bounce_tween.set_trans(Tween.TRANS_SINE)
+	
+	# Random starting phase to prevent synchronized bouncing
+	var random_phase = randf() * 0.6
+	
+	# Subtle bounce: only scale Y axis between 95% and 105% of base scale
+	var scale_x = base_sprite_scale.x  # Keep horizontal scale constant
+	var scale_y_base = base_sprite_scale.y
+	var scale_y_down = scale_y_base * 0.95
+	var scale_y_up = scale_y_base * 1.05
+	
+	# The sprite offset is set to anchor at bottom, so scaling Y will naturally
+	# grow upward from the bottom without position adjustments
+	# Duration is 0.6 seconds per half-cycle for a gentle, slow bounce
+	if random_phase > 0.3:
+		idle_bounce_tween.tween_property(base_sprite, "scale", Vector2(scale_x, scale_y_down), 0.6)
+		idle_bounce_tween.tween_property(base_sprite, "scale", Vector2(scale_x, scale_y_up), 0.6)
+	else:
+		idle_bounce_tween.tween_property(base_sprite, "scale", Vector2(scale_x, scale_y_up), 0.6)
+		idle_bounce_tween.tween_property(base_sprite, "scale", Vector2(scale_x, scale_y_down), 0.6)
