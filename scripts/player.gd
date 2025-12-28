@@ -63,6 +63,9 @@ func _ready() -> void:
 
 	# Connect to debug toggle event
 	Events.hitbox_debug_toggled.connect(_on_debug_toggled)
+	
+	# Connect to game mode entity spawning
+	Events.defense_target_spawned.connect(_on_defense_target_spawned)
 
 	# Initialize components
 	turret_handler.initialize(self)
@@ -76,6 +79,12 @@ func _ready() -> void:
 func _on_debug_toggled(type: int, _enabled: bool) -> void:
 	if type == GameEnums.HitboxType.PHYSICS:
 		queue_redraw()
+
+func _on_defense_target_spawned(_target: Node2D, pos: Vector2) -> void:
+	if GameModeService.is_escort_mode_active():
+		# Spawn next to payload with a slight offset
+		global_position = pos + Vector2(64, 64)
+		DebugService.log(DebugService.ENTITY, "Player: Teleported to escort start position: ", global_position)
 
 func _draw() -> void:
 	if not SettingsService.debug_hitbox_flags[GameEnums.HitboxType.PHYSICS]:

@@ -43,6 +43,7 @@ func _ready() -> void:
 	Events.start_settings_applied.connect(_on_start_settings_applied)
 	Events.defense_target_destroyed.connect(_on_defense_target_destroyed)
 	Events.tunnel_door_breached.connect(_on_tunnel_door_breached)
+	Events.escort_reached_destination.connect(_on_escort_reached_destination)
 	Events.loot_review_completed.connect(_on_loot_review_completed)
 
 	# Start game flow
@@ -160,6 +161,14 @@ func _start_combat() -> void:
 
 
 func _end_wave() -> void:
+	# Special case for Escort Mode: if timer runs out before reaching destination, it's a loss
+	if GameModeService.is_escort_mode_active():
+		var defense_target = entity_spawner.get_defense_target()
+		if defense_target and defense_target.has_method("is_at_destination") and not defense_target.is_at_destination():
+			DebugService.log(DebugService.SYSTEMS, "Escort failed: Timer ran out before destination.")
+			_trigger_game_over()
+			return
+			
 	GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_END)
 	wave_controller.end_wave()
 
@@ -237,6 +246,11 @@ func _on_defense_target_destroyed() -> void:
 
 
 func _on_tunnel_door_breached() -> void:
+	if GameStateMachine.is_in_combat():
+		_end_wave()
+
+
+func _on_escort_reached_destination() -> void:
 	if GameStateMachine.is_in_combat():
 		_end_wave()
 

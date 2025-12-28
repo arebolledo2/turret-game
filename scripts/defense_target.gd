@@ -19,6 +19,14 @@ var barrier_timer: Timer
 var barrier_cooldown_timer: Timer
 var barrier_cooldown_ready: bool = true
 
+# Escort mode properties
+var is_escort_mode: bool = false
+var escort_path: Array[Vector2] = []
+var current_path_index: int = 0
+var escort_speed: float = 0.0
+var proximity_radius: float = 200.0 # Distance player must be within to move
+var is_moving: bool = false
+
 # Visual components
 @onready var health_bar: ProgressBar = $HealthBar
 @onready var barrier_visual: Node2D = $BarrierVisual
@@ -46,6 +54,64 @@ func _ready() -> void:
 
 	# Connect to wave_ended event for healing between rounds
 	Events.wave_ended.connect(_on_wave_ended)
+	
+	# Initial visibility and state
+	if is_escort_mode:
+		DebugService.log(DebugService.ENTITY, "DefenseTarget: Initialized in ESCORT mode")
+
+func _physics_process(delta: float) -> void:
+	if not is_escort_mode or is_destroyed:
+		return
+		
+	if GameStateMachine.current_state != GameStateMachine.GameState.COMBAT:
+		return
+		
+	_handle_escort_movement(delta)
+
+func initialize_escort(path: Array[Vector2]) -> void:
+	"""Initialize defense target for escort mode with a path."""
+	is_escort_mode = true
+	escort_path = path
+	current_path_index = 1 # Start moving toward first waypoint after start point
+	
+	# Calculate total distance to determine speed
+	var total_distance = 0.0
+	for i in range(path.size() - 1):
+		total_distance += path[i].distance_to(path[i + 1])
+	
+	# Speed = Distance / Time (full wave duration)
+	var wave_duration = GameStateService.get_wave_duration(GameStateService.current_wave)
+	escort_speed = total_distance / max(wave_duration, 1.0)
+	
+	DebugService.log(DebugService.ENTITY, "DefenseTarget Escort: Total Distance = ", total_distance, " Speed = ", escort_speed)
+
+func _handle_escort_movement(delta: float) -> void:
+	if current_path_index >= escort_path.size():
+		return
+		
+	is_moving = true
+	
+	# Move toward current waypoint
+	var target_pos = escort_path[current_path_index]
+	var direction = (target_pos - global_position).normalized()
+	var move_dist = escort_speed * delta
+	
+	if global_position.distance_to(target_pos) <= move_dist:
+		global_position = target_pos
+		current_path_index += 1
+		if current_path_index >= escort_path.size():
+			_on_destination_reached()
+	else:
+		global_position += direction * move_dist
+		
+	Events.escort_position_updated.emit(global_position, float(current_path_index) / escort_path.size())
+
+func _on_destination_reached() -> void:
+	DebugService.log(DebugService.ENTITY, "DefenseTarget: Destination reached!")
+	Events.escort_reached_destination.emit()
+
+func is_at_destination() -> bool:
+	return is_escort_mode and current_path_index >= escort_path.size()
 
 func initialize(_wave: int, difficulty_config: Dictionary) -> void:
 	"""
@@ -88,7 +154,7 @@ func _on_body_entered(body: Node) -> void:
 	if barrier_active:
 		if body.has_method("apply_knockback"):
 			var knockback_direction = (body.global_position - global_position).normalized()
-			var knockback_force = 800.0  # Very strong barrier knockback
+			var knockback_force = 800.0 # Very strong barrier knockback
 			body.apply_knockback(knockback_force, knockback_direction)
 			DebugService.log(DebugService.ENTITY, "DefenseTarget: Barrier blocked enemy - strong knockback applied")
 		return
@@ -246,9 +312,9 @@ func _apply_status_effects(enemy: Node) -> void:
 
 	enemy.apply_status_effect(
 		GameEnums.DamageType.PHYSICAL,
-		0.0,  # No DoT damage
+		0.0, # No DoT damage
 		GameConstants.DEFENSE_TARGET_SLOW_DURATION,
-		1.0,  # tick_rate (irrelevant for slow-only)
+		1.0, # tick_rate (irrelevant for slow-only)
 		GameConstants.DEFENSE_TARGET_SLOW_INTENSITY
 	)
 

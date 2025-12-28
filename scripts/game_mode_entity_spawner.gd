@@ -19,8 +19,8 @@ func spawn_game_mode_entities() -> void:
 	var difficulty_config = DifficultyService.get_difficulty_config()
 	var current_wave = GameStateService.current_wave
 
-	# Tech Defense Mode - spawn defense target
-	if GameModeService.should_spawn_defense_target():
+	# Tech Defense or Escort Mode - spawn defense target
+	if GameModeService.should_spawn_defense_target() or GameModeService.is_escort_mode_active():
 		_spawn_defense_target(current_wave, difficulty_config)
 
 	# Tunneling Modes - spawn door
@@ -39,9 +39,17 @@ func _spawn_defense_target(wave: int, difficulty_config: Dictionary) -> void:
 		current_defense_target.queue_free()
 		current_defense_target = null
 		return
-	current_defense_target.global_position = Vector2.ZERO # Center of arena
+	var spawn_pos = Vector2.ZERO
+	if GameModeService.is_escort_mode_active():
+		var path = GameModeService.generate_escort_path()
+		spawn_pos = path[0]
+		current_defense_target.global_position = spawn_pos
+		current_defense_target.initialize_escort(path)
+	else:
+		current_defense_target.global_position = Vector2.ZERO # Center of arena
+		
 	current_defense_target.initialize(wave, difficulty_config)
-	Events.defense_target_spawned.emit(current_defense_target, Vector2.ZERO)
+	Events.defense_target_spawned.emit(current_defense_target, spawn_pos)
 
 
 func _spawn_tunnel_door(wave: int, difficulty_config: Dictionary) -> void:

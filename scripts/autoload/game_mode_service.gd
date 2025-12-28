@@ -114,6 +114,60 @@ func should_spawn_tunnel_door() -> bool:
 	"""
 	return is_mode_active(GameEnums.GameMode.TUNNELING_TIMED) or is_mode_active(GameEnums.GameMode.TUNNELING_ALERT)
 
+func is_escort_mode_active() -> bool:
+	"""
+	Returns true if ESCORT mode is active.
+	"""
+	return is_mode_active(GameEnums.GameMode.ESCORT)
+
+func generate_escort_path() -> Array[Vector2]:
+	"""
+	Generates a random path for the escort mode.
+	Two random points on opposite sides, with a somewhat random route.
+	"""
+	var points: Array[Vector2] = []
+	
+	# Determine sides (0: Top, 1: Bottom, 2: Left, 3: Right)
+	var start_side = randi() % 4
+	var end_side = (start_side + 1 + (randi() % 2)) % 4 # Ensure it's not the same side or adjacent?
+	# Let's just say "opposite enough"
+	if start_side == 0: end_side = 1 # Top -> Bottom
+	elif start_side == 1: end_side = 0 # Bottom -> Top
+	elif start_side == 2: end_side = 3 # Left -> Right
+	elif start_side == 3: end_side = 2 # Right -> Left
+	
+	var start_pos = _get_random_point_on_side(start_side)
+	var end_pos = _get_random_point_on_side(end_side)
+	
+	points.append(start_pos)
+	
+	# Add 1-2 middle points for "somewhat random route"
+	var middle_points_count = randi_range(1, 2)
+	for i in range(middle_points_count):
+		# Interpolate and add noise
+		var t = float(i + 1) / (middle_points_count + 1)
+		var lerp_pos = start_pos.lerp(end_pos, t)
+		var offset = Vector2(randf_range(-200, 200), randf_range(-200, 200))
+		points.append(lerp_pos + offset)
+		
+	points.append(end_pos)
+	return points
+
+func _get_random_point_on_side(side: int) -> Vector2:
+	var hw = GameConstants.ARENA_WIDTH / 2.5 # Inset a bit
+	var hh = GameConstants.ARENA_HEIGHT / 2.5
+	
+	match side:
+		0: # Top
+			return Vector2(randf_range(-hw, hw), -hh)
+		1: # Bottom
+			return Vector2(randf_range(-hw, hw), hh)
+		2: # Left
+			return Vector2(-hw, randf_range(-hh, hh))
+		3: # Right
+			return Vector2(hw, randf_range(-hh, hh))
+	return Vector2.ZERO
+
 func is_alert_mode_active() -> bool:
 	"""
 	Returns true if TUNNELING_ALERT mode is active (spawn escalation behavior).

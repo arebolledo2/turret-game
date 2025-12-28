@@ -62,6 +62,7 @@ func _setup_options() -> void:
 		mode_dropdown.add_item("Tech Defense", GameEnums.GameMode.TECH_DEFENSE)
 		mode_dropdown.add_item("Tunneling (Timed)", GameEnums.GameMode.TUNNELING_TIMED)
 		mode_dropdown.add_item("Tunneling (Alert)", GameEnums.GameMode.TUNNELING_ALERT)
+		mode_dropdown.add_item("Escort", GameEnums.GameMode.ESCORT)
 		# Default to Defense (Tech Defense is index 1)
 		mode_dropdown.select(1)
 

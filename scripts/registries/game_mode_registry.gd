@@ -38,6 +38,11 @@ const MODES = {
 		"description": "Breach the exit door. Spawn rate escalates until you do!",
 		"group": "win_condition"
 	},
+	GameEnums.GameMode.ESCORT: {
+		"name": "Escort",
+		"description": "Defend the target as it travels across the arena. Stay close to keep it moving!",
+		"group": "win_condition"
+	},
 	# Arena type modes
 	GameEnums.GameMode.ARENA_RECTANGULAR: {
 		"name": "Classic Arena",

@@ -37,6 +37,7 @@ enum GameMode {
 	# Arena type modes
 	ARENA_RECTANGULAR, # Classic rectangular arena (default)
 	ARENA_ISOMETRIC, # Isometric diamond arena for AI backgrounds
+	ESCORT, # Defend moving target
 }
 
 # Arena geometry types
