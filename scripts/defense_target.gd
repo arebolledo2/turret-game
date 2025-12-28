@@ -27,6 +27,9 @@ var escort_speed: float = 0.0
 var proximity_radius: float = 200.0 # Distance player must be within to move
 var is_moving: bool = false
 var path_visual: Line2D = null
+var escort_curve: Curve2D = Curve2D.new()
+var escort_wave_duration: float = 0.0
+var escort_elapsed_time: float = 0.0
 
 # Visual components
 @onready var health_bar: ProgressBar = $HealthBar
@@ -70,23 +73,22 @@ func _physics_process(delta: float) -> void:
 	_handle_escort_movement(delta)
 
 func initialize_escort(path: Array[Vector2]) -> void:
-	"""Initialize defense target for escort mode with a path."""
+	"""Initialize defense target for escort mode with a curve-based path."""
 	is_escort_mode = true
 	escort_path = path
-	current_path_index = 1 # Start moving toward first waypoint after start point
 	
-	# Calculate total distance to determine speed
-	var total_distance = 0.0
-	for i in range(path.size() - 1):
-		total_distance += path[i].distance_to(path[i + 1])
+	# Build the curve for precise interpolation
+	escort_curve.clear_points()
+	for point in path:
+		escort_curve.add_point(point)
 	
-	# Speed = Distance / Time (full wave duration)
-	var wave_duration = GameStateService.get_wave_duration(GameStateService.current_wave)
-	escort_speed = total_distance / max(wave_duration, 1.0)
+	# Store wave duration for time-based movement
+	escort_wave_duration = GameStateService.get_wave_duration(GameStateService.current_wave)
+	escort_elapsed_time = 0.0
 	
 	_create_path_visual()
 	
-	DebugService.log(DebugService.ENTITY, "DefenseTarget Escort: Total Distance = ", total_distance, " Speed = ", escort_speed)
+	DebugService.log(DebugService.ENTITY, "DefenseTarget Escort: Path points = ", path.size(), " Wave Duration = ", escort_wave_duration)
 
 func _create_path_visual() -> void:
 	"""Creates a visual line representing the escort path."""
@@ -112,32 +114,39 @@ func _create_path_visual() -> void:
 	path_visual.z_index = -1
 
 func _handle_escort_movement(delta: float) -> void:
-	if current_path_index >= escort_path.size():
+	if is_at_destination():
 		return
 		
+	# Update elapsed time
+	escort_elapsed_time += delta
 	is_moving = true
 	
-	# Move toward current waypoint
-	var target_pos = escort_path[current_path_index]
-	var direction = (target_pos - global_position).normalized()
-	var move_dist = escort_speed * delta
+	# Calculate target arrival time (e.g. 80% of wave)
+	var target_duration = escort_wave_duration * GameConstants.ESCORT_ARRIVAL_TIME_RATIO
+	var t = clamp(escort_elapsed_time / max(target_duration, 1.0), 0.0, 1.0)
 	
-	if global_position.distance_to(target_pos) <= move_dist:
-		global_position = target_pos
-		current_path_index += 1
-		if current_path_index >= escort_path.size():
-			_on_destination_reached()
-	else:
-		global_position += direction * move_dist
+	# Sample position from curve
+	var baked_length = escort_curve.get_baked_length()
+	var next_pos = escort_curve.sample_baked(t * baked_length)
+	
+	# Update position
+	global_position = next_pos
+	
+	# Check if reached destination
+	if t >= 1.0:
+		_on_destination_reached()
 		
-	Events.escort_position_updated.emit(global_position, float(current_path_index) / escort_path.size())
+	Events.escort_position_updated.emit(global_position, t)
 
 func _on_destination_reached() -> void:
 	DebugService.log(DebugService.ENTITY, "DefenseTarget: Destination reached!")
 	Events.escort_reached_destination.emit()
 
 func is_at_destination() -> bool:
-	return is_escort_mode and current_path_index >= escort_path.size()
+	# Calculate arrival progress based on time
+	var target_duration = escort_wave_duration * GameConstants.ESCORT_ARRIVAL_TIME_RATIO
+	var t = escort_elapsed_time / max(target_duration, 1.0)
+	return is_escort_mode and t >= 1.0
 
 func initialize(_wave: int, difficulty_config: Dictionary) -> void:
 	"""

@@ -251,8 +251,7 @@ func _on_tunnel_door_breached() -> void:
 
 
 func _on_escort_reached_destination() -> void:
-	if GameStateMachine.is_in_combat():
-		_end_wave()
+	DebugService.log(DebugService.SYSTEMS, "Escort reached destination! Keep defending until the timer ends.")
 
 
 # =============================================================================
