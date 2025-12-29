@@ -85,7 +85,7 @@ func take_damage(amount: float, is_crit: bool = false) -> void:
 
 	# Update progress (inverse: HP goes down = progress goes up)
 	Events.tunnel_door_progress_changed.emit(current_health, max_health)
-	Events.damage_dealt.emit(global_position, amount, is_crit)
+	Events.damage_dealt.emit(global_position, amount, is_crit, null)
 	
 	# Visual feedback
 	_apply_damage_flash()

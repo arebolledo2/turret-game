@@ -237,7 +237,7 @@ func take_damage(amount: float, is_crit: bool = false) -> void:
 
 	# Emit damage event for UI update
 	Events.defense_target_hp_changed.emit(current_health, max_health)
-	Events.damage_dealt.emit(global_position, amount, is_crit)
+	Events.damage_dealt.emit(global_position, amount, is_crit, null)
 
 	# Visual feedback
 	_apply_damage_flash()

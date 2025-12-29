@@ -80,7 +80,7 @@ func take_damage(amount: float, is_crit: bool = false) -> void:
 		health_bar.value = current_health
 
 	# Visual feedback
-	Events.damage_dealt.emit(global_position, amount, is_crit)
+	Events.damage_dealt.emit(global_position, amount, is_crit, null)
 	flash_damage()
 
 	if current_health <= 0:

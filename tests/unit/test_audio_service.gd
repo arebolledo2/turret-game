@@ -13,7 +13,7 @@ func test_audio_service_responds_to_damage_dealt():
 	# We can't easily spy on preloaded constants or internal calls without modifying the script for testability,
 	# but we can at least ensure emitting the signal doesn't crash anything.
 	watch_signals(Events)
-	Events.damage_dealt.emit(Vector2.ZERO, 10.0, false)
+	Events.damage_dealt.emit(Vector2.ZERO, 10.0, false, null)
 	
 	# If we reached here without crash, it's a good sign.
 	# AudioService connects to damage_dealt in _ready.
