@@ -79,11 +79,8 @@ func _apply_proximity_modifiers() -> void:
 
 func _show_stat_boost_effect() -> void:
 	"""Brief visual effect indicating stat boost."""
-	var tween = create_tween()
-	tween.set_ease(Tween.EASE_OUT)
-	tween.set_trans(Tween.TRANS_ELASTIC)
-	tween.tween_property(self, "scale", Vector2(1.2, 1.2), 0.15)
-	tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.15)
+	if visuals:
+		visuals.play_stat_boost_effect()
 
 func _physics_process(_delta: float) -> void:
 	"""Main turret update loop."""

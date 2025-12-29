@@ -28,10 +28,17 @@ var status_indicators: HBoxContainer = null
 # State
 var is_in_pickup_range: bool = false
 var is_being_carried: bool = false
-var idle_bounce_tween: Tween = null
-var base_sprite_offset: Vector2 = Vector2.ZERO  # Store original offset for fire turret
-var base_sprite_scale: Vector2 = Vector2.ONE     # Store original scale for fire turret
-var base_sprite_pos: Vector2 = Vector2.ZERO       # Store original position for fire turret
+
+# Universal visual state (applies to all turrets)
+var visual_node: CanvasItem = null  # The node we animate (sprite or animated_sprite)
+var original_scale: Vector2 = Vector2.ONE
+var original_offset: Vector2 = Vector2.ZERO
+var original_position: Vector2 = Vector2.ZERO
+
+# Animation tweens
+var spawn_tween: Tween = null
+var idle_tween: Tween = null
+var effect_tween: Tween = null
 
 func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary) -> void:
 	"""Initialize component with required references."""
@@ -75,26 +82,50 @@ func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary) ->
 
 func setup_visuals() -> void:
 	"""Setup turret visuals based on type."""
+	match turret_type:
+		"plasma":
+			_setup_plasma_visuals()
+		"normal":
+			_setup_normal_visuals()
+		"fire":
+			_setup_fire_visuals()
+		"shock":
+			_setup_shock_visuals()
+		"sniper":
+			_setup_sniper_visuals()
+		"tesla":
+			_setup_tesla_visuals()
+		_:
+			_setup_icon_fallback()
+
+	# Store visual state after type-specific setup
+	_store_visual_state()
+
+
+func _store_visual_state() -> void:
+	"""Store the visual node's original transform state after setup."""
+	# Determine which node is the primary visual
+	if animated_sprite and animated_sprite.visible:
+		visual_node = animated_sprite
+	elif base_sprite and base_sprite.visible:
+		visual_node = base_sprite
+	elif icon_label and icon_label.visible:
+		visual_node = icon_label
+	else:
+		visual_node = null
+
+	if visual_node:
+		original_scale = visual_node.scale
+		original_position = visual_node.position
+		if visual_node is Sprite2D:
+			original_offset = visual_node.offset
+
+
+func _setup_icon_fallback() -> void:
+	"""Setup icon-based display for turrets without custom sprites."""
 	var turret_config = TurretRegistry.get_type(turret_type)
 	var icon = turret_config.get("icon", "🗼")
 
-	# Plasma turret specialized visuals
-	if turret_type == "plasma" and animated_sprite:
-		_setup_plasma_visuals()
-		return
-
-	# Normal turret specialized visuals
-	if turret_type == "normal" and animated_sprite:
-		_setup_normal_visuals()
-		return
-
-	# Fire turret specialized visuals
-	if turret_type == "fire":
-		_setup_fire_visuals()
-		return
-
-
-	# Set base visuals
 	if base_sprite:
 		# Hide icon if using a custom sprite
 		if icon_label:
@@ -111,6 +142,21 @@ func setup_visuals() -> void:
 		icon_label.visible = true
 		icon_label.text = icon
 		icon_label.add_theme_font_size_override("font_size", 32)
+
+
+func _setup_shock_visuals() -> void:
+	"""Setup shock turret visuals. Currently uses icon fallback."""
+	_setup_icon_fallback()
+
+
+func _setup_sniper_visuals() -> void:
+	"""Setup sniper turret visuals. Currently uses icon fallback."""
+	_setup_icon_fallback()
+
+
+func _setup_tesla_visuals() -> void:
+	"""Setup tesla turret visuals. Currently uses icon fallback."""
+	_setup_icon_fallback()
 
 func _setup_plasma_visuals() -> void:
 	"""Setup plasma turret animation from spritesheet."""
@@ -193,12 +239,8 @@ func _update_range_visual() -> void:
 	"""Update range indicator visual to match current range stat."""
 	if range_indicator and range_indicator.has_method("set_radius"):
 		var current_range: float = stats.get("range", 250.0)
-		# Compensate for node scale since range indicator is a child
-		# but gameplay distance checks use global coordinates
-		var visual_radius = current_range
-		if turret.scale.x != 0:
-			visual_radius = current_range / turret.scale.x
-		range_indicator.set_radius(visual_radius)
+		# Parent turret node is always scale 1.0, no compensation needed
+		range_indicator.set_radius(current_range)
 
 func _update_status_indicators() -> void:
 	"""Update visual status indicators showing active buffs/debuffs."""
@@ -301,14 +343,42 @@ func flash_muzzle() -> void:
 
 func play_spawn_animation() -> void:
 	"""Animate turret spawning in."""
-	turret.scale = Vector2.ZERO
-	var tween = turret.create_tween()
-	tween.set_ease(Tween.EASE_OUT)
-	tween.set_trans(Tween.TRANS_BACK)
-	tween.tween_property(turret, "scale", Vector2(1.5, 1.5), 0.3)
+	if not visual_node:
+		return
 
-	# Update range visual as scale changes to keep it accurate
-	tween.parallel().tween_method(func(_v): _update_range_visual(), 0.0, 1.0, 0.3)
+	# Store target scale and zero the visual
+	var target_scale = original_scale
+	visual_node.scale = Vector2.ZERO
+
+	# Kill any existing spawn tween
+	if spawn_tween and spawn_tween.is_valid():
+		spawn_tween.kill()
+
+	spawn_tween = turret.create_tween()
+	spawn_tween.set_ease(Tween.EASE_OUT)
+	spawn_tween.set_trans(Tween.TRANS_BACK)
+	# Overshoot then settle to original scale
+	spawn_tween.tween_property(visual_node, "scale", target_scale * 1.2, 0.2)
+	spawn_tween.tween_property(visual_node, "scale", target_scale, 0.15)
+
+	# Start idle animation after spawn completes
+	spawn_tween.tween_callback(_start_idle_animation)
+
+
+func play_stat_boost_effect() -> void:
+	"""Brief visual effect indicating stat boost."""
+	if not visual_node:
+		return
+
+	# Kill any existing effect tween
+	if effect_tween and effect_tween.is_valid():
+		effect_tween.kill()
+
+	effect_tween = turret.create_tween()
+	effect_tween.set_ease(Tween.EASE_OUT)
+	effect_tween.set_trans(Tween.TRANS_ELASTIC)
+	effect_tween.tween_property(visual_node, "scale", original_scale * 1.2, 0.15)
+	effect_tween.tween_property(visual_node, "scale", original_scale, 0.15)
 
 func show_pickup_indicator() -> void:
 	"""Show visual indicator that turret is in pickup range."""
@@ -342,29 +412,35 @@ func hide_pickup_indicator() -> void:
 
 func _on_turret_picked_up(p_turret: Node2D) -> void:
 	"""Handle turret picked up event."""
-	if p_turret == turret:
-		is_being_carried = true
-		# Stop bounce and reset offset/scale while carrying
-		if idle_bounce_tween:
-			idle_bounce_tween.kill()
-		if base_sprite and base_sprite_offset != Vector2.ZERO:
-			base_sprite.offset = Vector2.ZERO
-			# Restore original position (with its natural lift) for carrying on head
-			base_sprite.position = base_sprite_pos
-			# Reset scale to stored base scale so it doesn't look squashed while carrying
-			base_sprite.scale = base_sprite_scale
+	if p_turret != turret:
+		return
+	is_being_carried = true
+
+	# Stop any idle animation
+	if idle_tween and idle_tween.is_valid():
+		idle_tween.kill()
+
+	# Reset visual state for carrying
+	if visual_node:
+		visual_node.scale = original_scale
+		visual_node.position = original_position
+		if visual_node is Sprite2D:
+			visual_node.offset = Vector2.ZERO  # Neutral offset while carrying
 
 func _on_turret_placed(p_turret: Node2D, _pos: Vector2 = Vector2.ZERO) -> void:
 	"""Handle turret placed/dropped event."""
-	if p_turret == turret:
-		is_being_carried = false
-		# Restore offset and scale, then restart bounce
-		if base_sprite and base_sprite_offset != Vector2.ZERO:
-			base_sprite.offset = base_sprite_offset
-			base_sprite.scale = base_sprite_scale
-			# On ground, move position to origin so bottom-anchored offset puts base on floor
-			base_sprite.position = Vector2.ZERO
-		_start_idle_bounce()
+	if p_turret != turret:
+		return
+	is_being_carried = false
+
+	# Restore visual state
+	if visual_node:
+		if visual_node is Sprite2D:
+			visual_node.offset = original_offset
+		visual_node.scale = original_scale
+		visual_node.position = Vector2.ZERO if original_offset != Vector2.ZERO else original_position
+
+	_start_idle_animation()
 
 func _on_range_toggled(show_ranges: bool) -> void:
 	"""Handle range toggle event."""
@@ -397,56 +473,64 @@ func _setup_fire_visuals() -> void:
 
 	base_sprite.visible = true
 	base_sprite.texture = load("res://assets/sprites/turrets/turret_flame.png")
-	base_sprite_scale = Vector2(0.125, 0.125)
-	base_sprite.scale = base_sprite_scale
+	base_sprite.scale = Vector2(0.125, 0.125)
 	base_sprite.modulate = Color.WHITE
-	
-	# Store original position (from scene)
-	base_sprite_pos = base_sprite.position
-	
+
+	# Store original position (from scene) before modifying
+	original_position = base_sprite.position
+
 	# On ground, move position to origin so bottom-anchoring offset works correctly
 	base_sprite.position = Vector2.ZERO
-	
+
 	# Set offset to anchor at bottom center
 	# This makes scaling happen from the bottom instead of center
 	var tex = base_sprite.texture
 	if tex:
-		base_sprite_offset = Vector2(0, -tex.get_height() / 2.0)
-		base_sprite.offset = base_sprite_offset
-	
-	# Start idle bounce animation
+		base_sprite.offset = Vector2(0, -tex.get_height() / 2.0)
+
+
+func _start_idle_animation() -> void:
+	"""Start idle animation if turret type supports it."""
+	if not visual_node or is_being_carried:
+		return
+
+	# Currently only fire turret has idle animation
+	if turret_type != "fire":
+		return
+
 	_start_idle_bounce()
+
 
 func _start_idle_bounce() -> void:
 	"""Start a subtle idle bounce animation using algorithmic tweening (vertical only, bottom anchored)."""
-	if not base_sprite or is_being_carried:
+	if not visual_node or is_being_carried:
 		return
-	
+
 	# Clean up any existing tween
-	if idle_bounce_tween and idle_bounce_tween.is_valid():
-		idle_bounce_tween.kill()
-	
+	if idle_tween and idle_tween.is_valid():
+		idle_tween.kill()
+
 	# Create new tween with random phase offset
-	idle_bounce_tween = turret.create_tween()
-	idle_bounce_tween.set_loops()
-	idle_bounce_tween.set_ease(Tween.EASE_IN_OUT)
-	idle_bounce_tween.set_trans(Tween.TRANS_SINE)
-	
+	idle_tween = turret.create_tween()
+	idle_tween.set_loops()
+	idle_tween.set_ease(Tween.EASE_IN_OUT)
+	idle_tween.set_trans(Tween.TRANS_SINE)
+
 	# Random starting phase to prevent synchronized bouncing
 	var random_phase = randf() * 0.6
-	
+
 	# Subtle bounce: only scale Y axis between 95% and 105% of base scale
-	var scale_x = base_sprite_scale.x  # Keep horizontal scale constant
-	var scale_y_base = base_sprite_scale.y
+	var scale_x = original_scale.x  # Keep horizontal scale constant
+	var scale_y_base = original_scale.y
 	var scale_y_down = scale_y_base * 0.95
 	var scale_y_up = scale_y_base * 1.05
-	
+
 	# The sprite offset is set to anchor at bottom, so scaling Y will naturally
 	# grow upward from the bottom without position adjustments
 	# Duration is 0.6 seconds per half-cycle for a gentle, slow bounce
 	if random_phase > 0.3:
-		idle_bounce_tween.tween_property(base_sprite, "scale", Vector2(scale_x, scale_y_down), 0.6)
-		idle_bounce_tween.tween_property(base_sprite, "scale", Vector2(scale_x, scale_y_up), 0.6)
+		idle_tween.tween_property(visual_node, "scale", Vector2(scale_x, scale_y_down), 0.6)
+		idle_tween.tween_property(visual_node, "scale", Vector2(scale_x, scale_y_up), 0.6)
 	else:
-		idle_bounce_tween.tween_property(base_sprite, "scale", Vector2(scale_x, scale_y_up), 0.6)
-		idle_bounce_tween.tween_property(base_sprite, "scale", Vector2(scale_x, scale_y_down), 0.6)
+		idle_tween.tween_property(visual_node, "scale", Vector2(scale_x, scale_y_up), 0.6)
+		idle_tween.tween_property(visual_node, "scale", Vector2(scale_x, scale_y_down), 0.6)
