@@ -33,6 +33,7 @@ shape_size = Vector2(14, 14)
 shape = SubResource("CircleShape2D_Hurtbox")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
 position = Vector2(0, -16)
 scale = Vector2(0.08, 0.08)
 texture = ExtResource("2_sprite")
