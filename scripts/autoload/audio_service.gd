@@ -32,7 +32,7 @@ func _connect_signals() -> void:
 	if not Events.damage_dealt.is_connected(_on_damage_dealt):
 		Events.damage_dealt.connect(_on_damage_dealt)
 
-func _on_damage_dealt(_position: Vector2, _amount: float, _is_crit: bool, enemy: Node2D = null) -> void:
+func _on_damage_dealt(_position: Vector2, _amount: float, _is_crit: bool, enemy: Node2D) -> void:
 	# Determine which hit sound to play based on enemy rank
 	var sound_to_play: AudioStream = null
 	

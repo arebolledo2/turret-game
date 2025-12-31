@@ -458,7 +458,7 @@ func _on_player_attack_toggled(toggled_on: bool) -> void:
 # =============================================================================
 # DAMAGE NUMBERS
 # =============================================================================
-func _on_damage_dealt(pos: Vector2, amount: float, is_crit: bool = false) -> void:
+func _on_damage_dealt(pos: Vector2, amount: float, is_crit: bool, _enemy: Node2D) -> void:
 	if not SettingsService.show_damage_numbers:
 		return
 	if damage_number_scene == null:
