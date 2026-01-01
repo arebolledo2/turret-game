@@ -81,7 +81,8 @@ func _setup_options() -> void:
 		bg_dropdown.add_item("Factory Ruins", 0)
 		bg_dropdown.add_item("Desert Outpost", 1)
 		bg_dropdown.add_item("Neon District", 2)
-		bg_dropdown.add_item("Dorama 1", 3)
+		bg_dropdown.add_item("Diorama 1", 3)
+		bg_dropdown.add_item("Diorama 2", 4)
 		# Default to Desert Outpost
 		bg_dropdown.select(1)
 		# Initially visible only if isometric is selected (which is default)

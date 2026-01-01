@@ -26,6 +26,7 @@ const AVAILABLE_BACKGROUNDS: Array[String] = [
 	"res://assets/sprites/isometric_arena_bg_2.jpeg",
 	"res://assets/sprites/isometric_arena_bg_3.jpeg",
 	"res://assets/sprites/isometric_arena_bg_4.jpeg",
+	"res://assets/sprites/isometric_arena_bg_5.jpeg",
 ]
 var current_bg_index: int = 0
 
