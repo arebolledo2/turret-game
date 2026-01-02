@@ -30,7 +30,7 @@ var is_in_pickup_range: bool = false
 var is_being_carried: bool = false
 
 # Universal visual state (applies to all turrets)
-var visual_node: CanvasItem = null  # The node we animate (sprite or animated_sprite)
+var visual_node: CanvasItem = null # The node we animate (sprite or animated_sprite)
 var original_scale: Vector2 = Vector2.ONE
 var original_offset: Vector2 = Vector2.ZERO
 var original_position: Vector2 = Vector2.ZERO
@@ -145,88 +145,174 @@ func _setup_icon_fallback() -> void:
 
 
 func _setup_shock_visuals() -> void:
-	"""Setup shock turret visuals. Currently uses icon fallback."""
-	_setup_icon_fallback()
+	"""Setup shock turret visuals with custom sprite."""
+	if not base_sprite:
+		return
+
+	# Hide alternatives
+	if animated_sprite:
+		animated_sprite.visible = false
+	if icon_label:
+		icon_label.visible = false
+
+	base_sprite.visible = true
+	base_sprite.texture = load("res://assets/sprites/turrets/turret_shock.png")
+	base_sprite.scale = Vector2(0.125, 0.125)
+	base_sprite.modulate = Color.WHITE
+
+	# Store original position (from scene) before modifying
+	original_position = base_sprite.position
+
+	# On ground, move position to origin so bottom-anchoring offset works correctly
+	base_sprite.position = Vector2.ZERO
+
+	# Set offset to anchor at bottom center
+	# This makes scaling happen from the bottom instead of center
+	var tex = base_sprite.texture
+	if tex:
+		base_sprite.offset = Vector2(0, -tex.get_height() / 2.0)
 
 
 func _setup_sniper_visuals() -> void:
-	"""Setup sniper turret visuals. Currently uses icon fallback."""
-	_setup_icon_fallback()
+	"""Setup sniper turret visuals with custom sprite."""
+	if not base_sprite:
+		return
+
+	# Hide alternatives
+	if animated_sprite:
+		animated_sprite.visible = false
+	if icon_label:
+		icon_label.visible = false
+
+	base_sprite.visible = true
+	base_sprite.texture = load("res://assets/sprites/turrets/turret_sniper.png")
+	base_sprite.scale = Vector2(0.125, 0.125)
+	base_sprite.modulate = Color.WHITE
+
+	# Store original position (from scene) before modifying
+	original_position = base_sprite.position
+
+	# On ground, move position to origin so bottom-anchoring offset works correctly
+	base_sprite.position = Vector2.ZERO
+
+	# Set offset to anchor at bottom center
+	# This makes scaling happen from the bottom instead of center
+	var tex = base_sprite.texture
+	if tex:
+		base_sprite.offset = Vector2(0, -tex.get_height() / 2.0)
 
 
 func _setup_tesla_visuals() -> void:
-	"""Setup tesla turret visuals. Currently uses icon fallback."""
-	_setup_icon_fallback()
+	"""Setup tesla turret visuals with custom sprite."""
+	if not base_sprite:
+		return
+
+	# Hide alternatives
+	if animated_sprite:
+		animated_sprite.visible = false
+	if icon_label:
+		icon_label.visible = false
+
+	base_sprite.visible = true
+	base_sprite.texture = load("res://assets/sprites/turrets/turret_tesla.png")
+	base_sprite.scale = Vector2(0.125, 0.125)
+	base_sprite.modulate = Color.WHITE
+
+	# Store original position (from scene) before modifying
+	original_position = base_sprite.position
+
+	# On ground, move position to origin so bottom-anchoring offset works correctly
+	base_sprite.position = Vector2.ZERO
+
+	# Set offset to anchor at bottom center
+	# This makes scaling happen from the bottom instead of center
+	var tex = base_sprite.texture
+	if tex:
+		base_sprite.offset = Vector2(0, -tex.get_height() / 2.0)
 
 func _setup_plasma_visuals() -> void:
-	"""Setup plasma turret animation from spritesheet."""
-	if not animated_sprite:
+	"""Setup plasma turret visuals with custom sprite."""
+	if not base_sprite:
 		return
 
-	# Hide base static sprite
-	if base_sprite:
-		base_sprite.visible = false
+	# Hide alternatives
+	if animated_sprite:
+		animated_sprite.visible = false
 	if icon_label:
 		icon_label.visible = false
 
-	animated_sprite.visible = true
+	base_sprite.visible = true
+	base_sprite.texture = load("res://assets/sprites/turrets/turret_plasma_static.png")
+	base_sprite.scale = Vector2(0.125, 0.125)
+	base_sprite.modulate = Color.WHITE
 
-	# Create SpriteFrames programmatically for the plasma turret
-	var frames = SpriteFrames.new()
-	var tex = load("res://assets/sprites/turret_plasma/plasma_turret_spritesheet.png")
+	# Store original position (from scene) before modifying
+	original_position = base_sprite.position
 
-	# 8 frames in the spritesheet
-	frames.add_animation("idle")
-	frames.set_animation_loop("idle", true)
-	frames.set_animation_speed("idle", 8.0)
+	# On ground, move position to origin so bottom-anchoring offset works correctly
+	base_sprite.position = Vector2.ZERO
 
-	var frame_width = tex.get_width() / 8
-	var frame_height = tex.get_height()
-
-	for i in range(8):
-		var atlas = AtlasTexture.new()
-		atlas.atlas = tex
-		atlas.region = Rect2(i * frame_width, 0, frame_width, frame_height)
-		frames.add_frame("idle", atlas)
-
-	animated_sprite.sprite_frames = frames
-	animated_sprite.play("idle")
+	# Set offset to anchor at bottom center
+	# This makes scaling happen from the bottom instead of center
+	var tex = base_sprite.texture
+	if tex:
+		base_sprite.offset = Vector2(0, -tex.get_height() / 2.0)
 
 func _setup_normal_visuals() -> void:
-	"""Setup normal turret animation from 16-frame horizontal spritesheet."""
-	if not animated_sprite:
+	"""Setup normal/basic turret visuals with custom sprite."""
+	if not base_sprite:
 		return
 
-	# Hide base static sprite
-	if base_sprite:
-		base_sprite.visible = false
+	# Hide alternatives
+	if animated_sprite:
+		animated_sprite.visible = false
 	if icon_label:
 		icon_label.visible = false
 
-	animated_sprite.visible = true
+	base_sprite.visible = true
+	base_sprite.texture = load("res://assets/sprites/turrets/turret_basic.png")
+	base_sprite.scale = Vector2(0.125, 0.125)
+	base_sprite.modulate = Color.WHITE
 
-	# Create SpriteFrames programmatically for the normal turret
-	var frames = SpriteFrames.new()
-	var tex = load("res://assets/sprites/turret_basic/turret_idle_spritesheet_4x4.png")
+	# Store original position (from scene) before modifying
+	original_position = base_sprite.position
 
-	# Configure animation (16 frames in a single row)
-	frames.add_animation("idle")
-	frames.set_animation_loop("idle", true)
-	frames.set_animation_speed("idle", 8.0) # 8 FPS
+	# On ground, move position to origin so bottom-anchoring offset works correctly
+	base_sprite.position = Vector2.ZERO
 
-	# Calculate frame dimensions (16 columns, 1 row)
-	var frame_width = tex.get_width() / 16
-	var frame_height = tex.get_height()
+	# Set offset to anchor at bottom center
+	# This makes scaling happen from the bottom instead of center
+	var tex = base_sprite.texture
+	if tex:
+		base_sprite.offset = Vector2(0, -tex.get_height() / 2.0)
 
-	# Extract all 16 frames from horizontal strip
-	for i in range(16):
-		var atlas = AtlasTexture.new()
-		atlas.atlas = tex
-		atlas.region = Rect2(i * frame_width, 0, frame_width, frame_height)
-		frames.add_frame("idle", atlas)
+func _setup_fire_visuals() -> void:
+	"""Setup fire turret visuals with custom sprite."""
+	if not base_sprite:
+		return
 
-	animated_sprite.sprite_frames = frames
-	animated_sprite.play("idle")
+	# Hide alternatives
+	if animated_sprite:
+		animated_sprite.visible = false
+	if icon_label:
+		icon_label.visible = false
+
+	base_sprite.visible = true
+	base_sprite.texture = load("res://assets/sprites/turrets/turret_fire.png")
+	base_sprite.scale = Vector2(0.125, 0.125)
+	base_sprite.modulate = Color.WHITE
+
+	# Store original position (from scene) before modifying
+	original_position = base_sprite.position
+
+	# On ground, move position to origin so bottom-anchoring offset works correctly
+	base_sprite.position = Vector2.ZERO
+
+	# Set offset to anchor at bottom center
+	# This makes scaling happen from the bottom instead of center
+	var tex = base_sprite.texture
+	if tex:
+		base_sprite.offset = Vector2(0, -tex.get_height() / 2.0)
 
 func update_stats(new_stats: Dictionary) -> void:
 	"""Update stats cache and refresh visuals."""
@@ -425,7 +511,7 @@ func _on_turret_picked_up(p_turret: Node2D) -> void:
 		visual_node.scale = original_scale
 		visual_node.position = original_position
 		if visual_node is Sprite2D:
-			visual_node.offset = Vector2.ZERO  # Neutral offset while carrying
+			visual_node.offset = Vector2.ZERO # Neutral offset while carrying
 
 func _on_turret_placed(p_turret: Node2D, _pos: Vector2 = Vector2.ZERO) -> void:
 	"""Handle turret placed/dropped event."""
@@ -460,45 +546,15 @@ func hide_range() -> void:
 		range_indicator.modulate.a = 0.0
 
 
-func _setup_fire_visuals() -> void:
-	"""Setup fire turret visuals with custom sprite."""
-	if not base_sprite:
-		return
-
-	# Hide alternatives
-	if animated_sprite:
-		animated_sprite.visible = false
-	if icon_label:
-		icon_label.visible = false
-
-	base_sprite.visible = true
-	base_sprite.texture = load("res://assets/sprites/turrets/turret_flame.png")
-	base_sprite.scale = Vector2(0.125, 0.125)
-	base_sprite.modulate = Color.WHITE
-
-	# Store original position (from scene) before modifying
-	original_position = base_sprite.position
-
-	# On ground, move position to origin so bottom-anchoring offset works correctly
-	base_sprite.position = Vector2.ZERO
-
-	# Set offset to anchor at bottom center
-	# This makes scaling happen from the bottom instead of center
-	var tex = base_sprite.texture
-	if tex:
-		base_sprite.offset = Vector2(0, -tex.get_height() / 2.0)
-
-
 func _start_idle_animation() -> void:
 	"""Start idle animation if turret type supports it."""
 	if not visual_node or is_being_carried:
 		return
 
-	# Currently only fire turret has idle animation
-	if turret_type != "fire":
-		return
-
-	_start_idle_bounce()
+	# All static sprite turrets have idle animation
+	var static_sprite_types = ["normal", "fire", "shock", "sniper", "tesla", "plasma"]
+	if turret_type in static_sprite_types:
+		_start_idle_bounce()
 
 
 func _start_idle_bounce() -> void:
@@ -520,7 +576,7 @@ func _start_idle_bounce() -> void:
 	var random_phase = randf() * 0.6
 
 	# Subtle bounce: only scale Y axis between 95% and 105% of base scale
-	var scale_x = original_scale.x  # Keep horizontal scale constant
+	var scale_x = original_scale.x # Keep horizontal scale constant
 	var scale_y_base = original_scale.y
 	var scale_y_down = scale_y_base * 0.95
 	var scale_y_up = scale_y_base * 1.05
