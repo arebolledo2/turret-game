@@ -20,8 +20,8 @@ var _inventory_section: VBoxContainer = null
 # Base values at 1080p
 const BASE_PANEL_WIDTH: float = 850.0
 const BASE_PANEL_HEIGHT: float = 650.0
-const BASE_TITLE_FONT: int = 28
-const BASE_LABEL_FONT: int = 18
+const BASE_TITLE_FONT: int = 32
+const BASE_LABEL_FONT: int = 22
 const BASE_BUTTON_HEIGHT: float = 46.0
 
 
@@ -44,9 +44,13 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 	# Register fonts
 	if level_label:
 		level_label.add_theme_font_override("font", MAIN_FONT)
+		level_label.add_theme_color_override("font_outline_color", Color.BLACK)
+		level_label.add_theme_constant_override("outline_size", 4)
 		register_font(level_label, BASE_LABEL_FONT)
 	if wave_label:
 		wave_label.add_theme_font_override("font", MAIN_FONT)
+		wave_label.add_theme_color_override("font_outline_color", Color.BLACK)
+		wave_label.add_theme_constant_override("outline_size", 4)
 		register_font(wave_label, BASE_LABEL_FONT)
 	if resume_button:
 		resume_button.add_theme_font_override("font", MAIN_FONT)
@@ -124,6 +128,9 @@ func update_stats() -> void:
 			if child is Label:
 				child.add_theme_font_override("font", MAIN_FONT)
 				child.add_theme_font_size_override("font_size", UIScaler.scale(BASE_LABEL_FONT))
+				# Add outline
+				child.add_theme_color_override("font_outline_color", Color.BLACK)
+				child.add_theme_constant_override("outline_size", 4)
 		
 		if stats_grid.has_node("HealthValue"):
 			stats_grid.get_node("HealthValue").text = "%d/%d" % [_player.current_health, _player.max_health]
@@ -133,7 +140,7 @@ func update_stats() -> void:
 			stats_grid.get_node("XPValue").text = "%d" % GameStateService.total_xp
 		if stats_grid.has_node("KillsValue"):
 			stats_grid.get_node("KillsValue").text = "%d" % GameStateService.total_kills
-
+		
 		var total_time = GameStateService.time_survived
 		var minutes := int(total_time / 60.0)
 		var seconds := int(total_time) % 60

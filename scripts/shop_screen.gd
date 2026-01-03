@@ -62,9 +62,15 @@ func _on_shop_opened(wave_number: int) -> void:
 	
 	# Apply fonts to header elements
 	title_label.add_theme_font_override("font", MAIN_FONT)
-	title_label.add_theme_font_size_override("font_size", 32)
+	title_label.add_theme_font_size_override("font_size", 36)
+	title_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	title_label.add_theme_constant_override("outline_size", 6)
+
 	gold_label.add_theme_font_override("font", MAIN_FONT)
-	gold_label.add_theme_font_size_override("font_size", 24)
+	gold_label.add_theme_font_size_override("font_size", 28)
+	gold_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	gold_label.add_theme_constant_override("outline_size", 4)
+
 	reroll_button.add_theme_font_override("font", MAIN_FONT)
 	reroll_button.add_theme_font_size_override("font_size", 24)
 	reroll_button.add_theme_constant_override("outline_size", 6)

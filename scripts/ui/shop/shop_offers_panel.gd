@@ -71,8 +71,10 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	price_label.text = "%d Gold" % offer["price"]
 	price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	price_label.add_theme_font_override("font", MAIN_FONT)
-	price_label.add_theme_font_size_override("font_size", 20)
+	price_label.add_theme_font_size_override("font_size", 24)
 	price_label.add_theme_color_override("font_color", Color.GOLD)
+	price_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	price_label.add_theme_constant_override("outline_size", 4)
 	vbox.add_child(price_label)
 
 	# Button container (vertical layout for gamepad navigation)
@@ -134,7 +136,7 @@ func _create_turret_offer_ui(offer: Dictionary, container: VBoxContainer) -> voi
 	icon.text = turret_config["icon"]
 	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	icon.add_theme_font_override("font", MAIN_FONT)
-	icon.add_theme_font_size_override("font_size", 56)
+	icon.add_theme_font_size_override("font_size", 64)
 	container.add_child(icon)
 
 	# Name
@@ -142,7 +144,9 @@ func _create_turret_offer_ui(offer: Dictionary, container: VBoxContainer) -> voi
 	name_label.text = turret_config["name"]
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_font_override("font", MAIN_FONT)
-	name_label.add_theme_font_size_override("font_size", 20)
+	name_label.add_theme_font_size_override("font_size", 24)
+	name_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	name_label.add_theme_constant_override("outline_size", 4)
 	container.add_child(name_label)
 
 	# Stats
@@ -154,7 +158,9 @@ func _create_turret_offer_ui(offer: Dictionary, container: VBoxContainer) -> voi
 	]
 	stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stats_label.add_theme_font_override("font", MAIN_FONT)
-	stats_label.add_theme_font_size_override("font_size", 14)
+	stats_label.add_theme_font_size_override("font_size", 16)
+	stats_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	stats_label.add_theme_constant_override("outline_size", 4)
 	container.add_child(stats_label)
 
 
@@ -167,7 +173,7 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	icon_label.text = item_data["icon"]
 	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	icon_label.add_theme_font_override("font", MAIN_FONT)
-	icon_label.add_theme_font_size_override("font_size", 56)
+	icon_label.add_theme_font_size_override("font_size", 64)
 	container.add_child(icon_label)
 
 	# Name with rarity color
@@ -175,8 +181,10 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	name_label.text = item_data["name"]
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_font_override("font", MAIN_FONT)
-	name_label.add_theme_font_size_override("font_size", 22)
+	name_label.add_theme_font_size_override("font_size", 24)
 	name_label.add_theme_color_override("font_color", ItemRegistry.get_rarity_color(item_data["rarity"]))
+	name_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	name_label.add_theme_constant_override("outline_size", 4)
 	container.add_child(name_label)
 
 	# Description (only if it has unique effects)
@@ -186,7 +194,9 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 		desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 		desc_label.add_theme_font_override("font", MAIN_FONT)
-		desc_label.add_theme_font_size_override("font_size", 14)
+		desc_label.add_theme_font_size_override("font_size", 16)
+		desc_label.add_theme_color_override("font_outline_color", Color.BLACK)
+		desc_label.add_theme_constant_override("outline_size", 4)
 		container.add_child(desc_label)
 
 	# Modifiers display
@@ -195,7 +205,9 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 		mod_label.text = _format_modifier(modifier)
 		mod_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		mod_label.add_theme_font_override("font", MAIN_FONT)
-		mod_label.add_theme_font_size_override("font_size", 13)
+		mod_label.add_theme_font_size_override("font_size", 15)
+		mod_label.add_theme_color_override("font_outline_color", Color.BLACK)
+		mod_label.add_theme_constant_override("outline_size", 4)
 		
 		var is_benefit = (modifier["operation"] == "multiply" and modifier["value"] > 1.0) or \
 						  (modifier["operation"] == "add" and modifier["value"] > 0.0)

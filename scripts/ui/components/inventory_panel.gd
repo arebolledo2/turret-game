@@ -43,7 +43,28 @@ var _item_buttons: Array[Button] = []
 
 
 func _ready() -> void:
-	pass
+	_setup_styles()
+
+
+func _setup_styles() -> void:
+	# Apply improved readability styles to all static labels
+	_improve_label_readability(turrets_title, 22)
+	_improve_label_readability(turrets_hint, 14)
+	
+	_improve_label_readability(turret_name_label, 20)
+	_improve_label_readability(turret_damage_label, 16)
+	_improve_label_readability(turret_range_label, 16)
+	_improve_label_readability(turret_fire_rate_label, 16)
+	_improve_label_readability(turret_rotation_label, 16)
+	_improve_label_readability(turret_proj_speed_label, 16)
+	_improve_label_readability(turret_dps_label, 16)
+	
+	_improve_label_readability(items_title, 22)
+	_improve_label_readability(items_hint, 14)
+	
+	_improve_label_readability(item_name_label, 20)
+	_improve_label_readability(item_rarity_label, 14)
+	_improve_label_readability(item_description_label, 16)
 
 
 func refresh() -> void:
@@ -176,7 +197,9 @@ func _update_items() -> void:
 			var no_items := Label.new()
 			no_items.text = "No items collected"
 			no_items.add_theme_font_override("font", MAIN_FONT)
-			no_items.add_theme_font_size_override("font_size", 12)
+			no_items.add_theme_font_size_override("font_size", 16)
+			no_items.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 1)) # Lighten gray
+			_improve_label_readability(no_items, 16) # Apply outline
 			no_items.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1))
 			items_hbox.add_child(no_items)
 			return
@@ -211,3 +234,14 @@ func _on_item_icon_pressed(item_id: String) -> void:
 	}
 	BuildDisplayUIScript.update_item_details(nodes, item_id)
 	item_selected.emit(item_id)
+
+
+func _improve_label_readability(label: Label, font_size_override: int = 0) -> void:
+	if not label:
+		return
+		
+	label.add_theme_color_override("font_outline_color", Color.BLACK)
+	label.add_theme_constant_override("outline_size", 4)
+	
+	if font_size_override > 0:
+		label.add_theme_font_size_override("font_size", font_size_override)
