@@ -243,5 +243,8 @@ func _improve_label_readability(label: Label, font_size_override: int = 0) -> vo
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 4)
 	
+	# Set texture filter to linear to ensure fonts are anti-aliased
+	label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	
 	if font_size_override > 0:
 		label.add_theme_font_size_override("font_size", font_size_override)

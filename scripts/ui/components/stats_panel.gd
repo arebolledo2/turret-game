@@ -158,4 +158,8 @@ func _create_label(text: String, font_size: int, color: Color = Color.WHITE) -> 
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 4)
 	
+	# Set texture filter to linear to ensure fonts are anti-aliased
+	# This overrides the global project setting of "Nearest" which is used for pixel art
+	label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	
 	return label

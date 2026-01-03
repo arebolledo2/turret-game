@@ -46,11 +46,13 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 		level_label.add_theme_font_override("font", MAIN_FONT)
 		level_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		level_label.add_theme_constant_override("outline_size", 4)
+		level_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		register_font(level_label, BASE_LABEL_FONT)
 	if wave_label:
 		wave_label.add_theme_font_override("font", MAIN_FONT)
 		wave_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		wave_label.add_theme_constant_override("outline_size", 4)
+		wave_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		register_font(wave_label, BASE_LABEL_FONT)
 	if resume_button:
 		resume_button.add_theme_font_override("font", MAIN_FONT)
@@ -131,6 +133,7 @@ func update_stats() -> void:
 				# Add outline
 				child.add_theme_color_override("font_outline_color", Color.BLACK)
 				child.add_theme_constant_override("outline_size", 4)
+				child.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		
 		if stats_grid.has_node("HealthValue"):
 			stats_grid.get_node("HealthValue").text = "%d/%d" % [_player.current_health, _player.max_health]
