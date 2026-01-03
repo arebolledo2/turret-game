@@ -32,6 +32,10 @@ var color_tint: Color = Color.WHITE
 # Status effect particles
 var fire_particles: GPUParticles2D = null
 
+# Idle animation
+var idle_tween: Tween = null
+var original_scale: Vector2 = Vector2.ONE
+
 func initialize(p_enemy: CharacterBody2D, p_base_scale: float, p_color_tint: Color, sprite_folder: String = "") -> void:
 	"""Initialize component with required references."""
 	enemy = p_enemy
@@ -53,6 +57,14 @@ func initialize(p_enemy: CharacterBody2D, p_base_scale: float, p_color_tint: Col
 
 	# Apply initial visuals
 	_apply_visuals()
+	
+	# Store original scale for animation
+	if sprite_node:
+		original_scale = sprite_node.scale
+	
+	# Start idle bounce animation for static sprites
+	if not is_animated:
+		_start_idle_bounce()
 
 func _load_sprites(folder_path: String) -> void:
 	"""Load directional sprites from the specified folder."""
@@ -246,3 +258,36 @@ func _create_fire_particle_material() -> ParticleProcessMaterial:
 	material.color_ramp = gradient
 	
 	return material
+
+
+func _start_idle_bounce() -> void:
+	"""Start a subtle idle bounce animation using algorithmic tweening (vertical only)."""
+	if not sprite_node:
+		return
+	
+	# Clean up any existing tween
+	if idle_tween and idle_tween.is_valid():
+		idle_tween.kill()
+	
+	# Create new tween with random phase offset
+	idle_tween = enemy.create_tween()
+	idle_tween.set_loops()
+	idle_tween.set_ease(Tween.EASE_IN_OUT)
+	idle_tween.set_trans(Tween.TRANS_SINE)
+	
+	# Random starting phase to prevent synchronized bouncing
+	var random_phase = randf() * 0.6
+	
+	# Subtle bounce: only scale Y axis between 95% and 105% of base scale
+	var scale_x = original_scale.x # Keep horizontal scale constant
+	var scale_y_base = original_scale.y
+	var scale_y_down = scale_y_base * 0.95
+	var scale_y_up = scale_y_base * 1.0
+	
+	# Duration is 0.6 seconds per half-cycle for a gentle, slow bounce
+	if random_phase > 0.3:
+		idle_tween.tween_property(sprite_node, "scale", Vector2(scale_x, scale_y_down), 0.6)
+		idle_tween.tween_property(sprite_node, "scale", Vector2(scale_x, scale_y_up), 0.6)
+	else:
+		idle_tween.tween_property(sprite_node, "scale", Vector2(scale_x, scale_y_up), 0.6)
+		idle_tween.tween_property(sprite_node, "scale", Vector2(scale_x, scale_y_down), 0.6)

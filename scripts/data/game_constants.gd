@@ -128,9 +128,10 @@ const GOLD_WAVE_BONUS_BASE: int = 0
 const SHOP_OFFER_COUNT: int = 4
 const REROLL_BASE_COST: int = 1
 const REROLL_COST_INCREMENT: int = 1
+const REROLL_WAVE_BASE_MULTIPLIER: float = 1.5 # Wave-based base cost multiplier
 # Removed MAX_REROLLS_PER_WAVE - infinite rerolls allowed (cost still scales)
-const WAVE_PRICE_SCALE: float = 0.15
-const TURRET_PURCHASE_PENALTY: float = 0.25 # +25% per turret owned
+const WAVE_PRICE_SCALE: float = 0.2
+const TURRET_PURCHASE_PENALTY: float = 0.5 # +50% per turret owned
 const SHOP_ITEM_CHANCE: float = 0.65 # 65% item, 35% turret
 
 # =============================================================================

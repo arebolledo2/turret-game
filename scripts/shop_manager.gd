@@ -235,11 +235,10 @@ func reroll_shop() -> bool:
 	return true
 
 func get_reroll_cost() -> int:
-	# Base cost increases with each reroll this wave
-	var reroll_cost := GameConstants.REROLL_BASE_COST + (GameConstants.REROLL_COST_INCREMENT * EconomyService.shop_reroll_count)
 	# Apply reroll cost multiplier from modifiers (e.g., Probability Matrix)
 	var item_multiplier := ItemTrackingService.get_reroll_cost_multiplier()
-	return int(reroll_cost * item_multiplier)
+	# Delegate to EconomyService with wave-based calculation
+	return EconomyService.get_reroll_cost(GameStateService.current_wave, item_multiplier)
 
 func can_afford_reroll() -> bool:
 	# Only check if player has enough gold (no max reroll limit)

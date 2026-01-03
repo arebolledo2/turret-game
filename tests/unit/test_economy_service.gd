@@ -114,44 +114,67 @@ func test_deduct_gold_zero():
 # REROLL COST CALCULATION
 # =============================================================================
 
-func test_get_reroll_cost_no_rerolls():
+func test_get_reroll_cost_wave1_no_rerolls():
 	economy_service.shop_reroll_count = 0
-	var cost = economy_service.get_reroll_cost(1.0)
-	assert_eq(cost, GameConstants.REROLL_BASE_COST,
-		"First reroll should cost base amount")
+	# Wave 1: 1 × 1.5 = 1 (rounded down)
+	var expected = int(1 * GameConstants.REROLL_WAVE_BASE_MULTIPLIER)
+	var cost = economy_service.get_reroll_cost(1, 1.0)
+	assert_eq(cost, expected,
+		"Wave 1, first reroll should cost 1 gold")
 
 
-func test_get_reroll_cost_increments():
+func test_get_reroll_cost_wave5_no_rerolls():
+	economy_service.shop_reroll_count = 0
+	# Wave 5: 5 × 1.5 = 7 (rounded down)
+	var expected = int(5 * GameConstants.REROLL_WAVE_BASE_MULTIPLIER)
+	var cost = economy_service.get_reroll_cost(5, 1.0)
+	assert_eq(cost, expected,
+		"Wave 5, first reroll should cost 7 gold")
+
+
+func test_get_reroll_cost_wave1_with_rerolls():
 	economy_service.shop_reroll_count = 3
-	var expected = GameConstants.REROLL_BASE_COST + 3 * GameConstants.REROLL_COST_INCREMENT
-	var cost = economy_service.get_reroll_cost(1.0)
+	# Wave 1: (1 × 1.5) + (3 × 1) = 1 + 3 = 4
+	var expected = int(1 * GameConstants.REROLL_WAVE_BASE_MULTIPLIER + 3 * GameConstants.REROLL_COST_INCREMENT)
+	var cost = economy_service.get_reroll_cost(1, 1.0)
 	assert_eq(cost, expected,
-		"Cost should increase with reroll count")
+		"Wave 1, 4th reroll should cost 4 gold")
 
 
-func test_get_reroll_cost_with_multiplier():
+func test_get_reroll_cost_wave3_with_rerolls():
 	economy_service.shop_reroll_count = 2
-	var base_cost = GameConstants.REROLL_BASE_COST + 2 * GameConstants.REROLL_COST_INCREMENT
-	var expected = int(base_cost * 1.5)
-	var cost = economy_service.get_reroll_cost(1.5)
+	# Wave 3: (3 × 1.5) + (2 × 1) = 4 + 2 = 6
+	var expected = int(3 * GameConstants.REROLL_WAVE_BASE_MULTIPLIER + 2 * GameConstants.REROLL_COST_INCREMENT)
+	var cost = economy_service.get_reroll_cost(3, 1.0)
 	assert_eq(cost, expected,
-		"Should apply multiplier to total cost")
+		"Wave 3, 3rd reroll should cost 6 gold")
+
+
+func test_get_reroll_cost_with_item_multiplier():
+	economy_service.shop_reroll_count = 1
+	# Wave 2: (2 × 1.5) + (1 × 1) = 3 + 1 = 4, then × 1.5 = 6
+	var base_cost = 2 * GameConstants.REROLL_WAVE_BASE_MULTIPLIER + 1 * GameConstants.REROLL_COST_INCREMENT
+	var expected = int(base_cost * 1.5)
+	var cost = economy_service.get_reroll_cost(2, 1.5)
+	assert_eq(cost, expected,
+		"Should apply item multiplier to total cost")
+
+
+func test_get_reroll_cost_with_discount():
+	economy_service.shop_reroll_count = 1
+	# Wave 5: (5 × 1.5) + (1 × 1) = 7 + 1 = 8, then × 0.5 = 4
+	var base_cost = 5 * GameConstants.REROLL_WAVE_BASE_MULTIPLIER + 1 * GameConstants.REROLL_COST_INCREMENT
+	var expected = int(base_cost * 0.5)
+	var cost = economy_service.get_reroll_cost(5, 0.5)
+	assert_eq(cost, expected,
+		"Should apply discount multiplier")
 
 
 func test_get_reroll_cost_rounds_down():
 	economy_service.shop_reroll_count = 0
-	var cost = economy_service.get_reroll_cost(1.25)
+	var cost = economy_service.get_reroll_cost(1, 1.25)
 	assert_typeof(cost, TYPE_INT,
 		"Cost should be an integer")
-
-
-func test_get_reroll_cost_discount():
-	economy_service.shop_reroll_count = 1
-	var base_cost = GameConstants.REROLL_BASE_COST + GameConstants.REROLL_COST_INCREMENT
-	var expected = int(base_cost * 0.5)
-	var cost = economy_service.get_reroll_cost(0.5)
-	assert_eq(cost, expected,
-		"Should apply discount multiplier")
 
 
 # =============================================================================
