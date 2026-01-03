@@ -274,7 +274,7 @@ func test_select_random_type_empty_available_returns_basic():
 func test_select_random_type_distribution():
 	# Over many selections, should see variety based on spawn weights
 	var selections: Dictionary = {}
-	var wave = 5  # All common types available
+	var wave = 5 # All common types available
 
 	for i in range(100):
 		var selected = EnemyRegistry.select_random_type(wave)
@@ -340,8 +340,15 @@ func test_has_behavior_invalid_type():
 # =============================================================================
 
 func test_get_spawn_count_basic():
-	var count = EnemyRegistry.get_spawn_count("basic")
-	assert_eq(count, 3, "Basic enemy spawn count should be 3")
+	# Test multiple times since spawn count is now randomized [1, 5]
+	var counts_seen = {}
+	for i in range(20):
+		var count = EnemyRegistry.get_spawn_count("basic")
+		assert_between(count, 1, 5, "Basic enemy spawn count should be between 1-5")
+		counts_seen[count] = true
+	
+	# Verify we see some randomization (at least 2 different values in 20 calls)
+	assert_gte(counts_seen.size(), 2, "Should see randomization in spawn counts")
 
 
 func test_get_spawn_count_fast():

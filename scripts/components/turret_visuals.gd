@@ -579,7 +579,7 @@ func _start_idle_bounce() -> void:
 	var scale_x = original_scale.x # Keep horizontal scale constant
 	var scale_y_base = original_scale.y
 	var scale_y_down = scale_y_base * 0.95
-	var scale_y_up = scale_y_base * 1.05
+	var scale_y_up = scale_y_base * 1.0
 
 	# The sprite offset is set to anchor at bottom, so scaling Y will naturally
 	# grow upward from the bottom without position adjustments

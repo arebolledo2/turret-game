@@ -20,7 +20,7 @@ const TYPES: Dictionary = {
 		},
 		"spawn_weight": 100,
 		"min_wave": 1,
-		"spawn_count": 3,
+		"spawn_count": [1, 5], # Random 1-5, average ~3
 	},
 	"fast": {
 		"name": "Scout Bot",
@@ -88,7 +88,7 @@ const TYPES: Dictionary = {
 			"type": "circle",
 			"size": Vector2(16, 16),
 		},
-		"spawn_weight": 0,  # Disabled
+		"spawn_weight": 0, # Disabled
 		"min_wave": 4,
 		"spawn_count": 3,
 	},
@@ -183,24 +183,24 @@ const TYPES: Dictionary = {
 		"description": "Wanders aimlessly while taking potshots at distant targets.",
 		"behaviors": [GameEnums.EnemyBehavior.WANDER],
 		"sprite_folder": "res://assets/sprites/enemy_tiny",
-		"color_tint": Color(0.9, 0.7, 0.5),  # Orange/tan
+		"color_tint": Color(0.9, 0.7, 0.5), # Orange/tan
 		"behavior_params": {
-			"wander_pause_min": 0.0,  # No pauses (like lazy_wanderer)
+			"wander_pause_min": 0.0, # No pauses (like lazy_wanderer)
 			"wander_pause_max": 0.0,
 			"wander_move_min": 2.0,
 			"wander_move_max": 4.0,
 		},
 		"combat_params": {
-			"fire_rate": 0.25,          # Every 4 seconds
-			"projectile_speed": 175.0,  # Slow, telegraphed
-			"projectile_damage": 8.0,   # Moderate damage
-			"firing_range": 350.0,      # Outranges player (200)
+			"fire_rate": 0.25, # Every 4 seconds
+			"projectile_speed": 175.0, # Slow, telegraphed
+			"projectile_damage": 8.0, # Moderate damage
+			"firing_range": 350.0, # Outranges player (200)
 		},
 		"base_stats": {
 			"health": 8.0,
-			"speed": 40.0,              # Lazy movement speed
-			"contact_damage": 6.0,      # Low melee damage
-			"xp_value": 12,             # Slightly more than basic
+			"speed": 40.0, # Lazy movement speed
+			"contact_damage": 6.0, # Low melee damage
+			"xp_value": 12, # Slightly more than basic
 			"scale": 1.3,
 			"mass": 1.0,
 		},
@@ -208,9 +208,9 @@ const TYPES: Dictionary = {
 			"type": "circle",
 			"size": Vector2(16, 16),
 		},
-		"spawn_weight": 50,             # Moderate spawn rate
-		"min_wave": 3,                  # Appears wave 3+
-		"spawn_count": 2,               # Spawn in pairs
+		"spawn_weight": 50, # Moderate spawn rate
+		"min_wave": 3, # Appears wave 3+
+		"spawn_count": 2, # Spawn in pairs
 	},
 }
 
@@ -291,7 +291,15 @@ static func has_behavior(type_id: String, behavior: GameEnums.EnemyBehavior) -> 
 static func get_spawn_count(type_id: String) -> int:
 	if not TYPES.has(type_id):
 		return 1
-	return TYPES[type_id].get("spawn_count", 1)
+	
+	var spawn_count = TYPES[type_id].get("spawn_count", 1)
+	
+	# Handle array format for random range [min, max]
+	if spawn_count is Array and spawn_count.size() == 2:
+		return randi_range(spawn_count[0], spawn_count[1])
+	
+	# Handle fixed integer
+	return spawn_count
 
 
 ## Get color tint for an enemy type
