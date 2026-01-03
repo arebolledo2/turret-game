@@ -7,15 +7,16 @@ const TYPES: Dictionary = {
 	"basic": {
 		"name": "Spider Drone",
 		"icon": "🕷️",
-		"description": "Animated spider-like drone with sleek neon design.",
+		"description": "Spider-like drone with sleek neon design.",
 		"behaviors": [GameEnums.EnemyBehavior.CHASE],
 		"scene_path": "res://scenes/enemy_spider_drone.tscn",
+		"sprite_folder": "res://assets/sprites/enemy_spider_drone",
 		"base_stats": {
 			"health": 8.0,
 			"speed": 75.0,
 			"contact_damage": 8.0,
 			"xp_value": 10,
-			"scale": 1.0, # Using 1.0 scale to match normalized scene
+			"scale": 0.075, # Smaller scale for sprite clarity
 			"mass": 1.0,
 		},
 		"spawn_weight": 100,

@@ -22,7 +22,7 @@ var sprite_north_west: Texture2D
 
 # Dependencies (set via initialize)
 var enemy: CharacterBody2D = null
-var sprite_node: Node = null  # Sprite2D or AnimatedSprite2D
+var sprite_node: Node = null # Sprite2D or AnimatedSprite2D
 var is_animated: bool = false
 
 # Config
@@ -56,6 +56,24 @@ func initialize(p_enemy: CharacterBody2D, p_base_scale: float, p_color_tint: Col
 
 func _load_sprites(folder_path: String) -> void:
 	"""Load directional sprites from the specified folder."""
+	# Try to load left/right sprites first (simpler setup)
+	var left_path = folder_path + "/spider_drone_left.png"
+	var right_path = folder_path + "/spider_drone_right.png"
+	
+	if ResourceLoader.exists(left_path) and ResourceLoader.exists(right_path):
+		# Simple left/right sprite mode
+		sprite_west = load(left_path)
+		sprite_east = load(right_path)
+		# Use the same sprite for all other directions (will be handled in update_direction_sprite)
+		sprite_south = sprite_east
+		sprite_north = sprite_east
+		sprite_south_east = sprite_east
+		sprite_south_west = sprite_west
+		sprite_north_east = sprite_east
+		sprite_north_west = sprite_west
+		return
+	
+	# Fallback to 8-directional sprites
 	sprite_south = load(folder_path + "/enemy_south.png")
 	sprite_north = load(folder_path + "/enemy_north.png")
 	sprite_east = load(folder_path + "/enemy_east.png")
@@ -137,12 +155,12 @@ func update_status_visual(active_effects: Dictionary) -> void:
 	var final_color := color_tint
 
 	if active_effects.has(GameEnums.DamageType.FIRE):
-		final_color = final_color.lerp(Color(1.0, 0.5, 0.2, 1), 0.4)  # Orange tint
+		final_color = final_color.lerp(Color(1.0, 0.5, 0.2, 1), 0.4) # Orange tint
 		_show_fire_particles()
 	if active_effects.has(GameEnums.DamageType.ELECTRIC):
-		final_color = final_color.lerp(Color(0.5, 0.8, 1.0, 1), 0.4)  # Blue tint
+		final_color = final_color.lerp(Color(0.5, 0.8, 1.0, 1), 0.4) # Blue tint
 	if active_effects.has(GameEnums.DamageType.PLASMA):
-		final_color = final_color.lerp(Color(0.8, 0.4, 1.0, 1), 0.4)  # Purple tint
+		final_color = final_color.lerp(Color(0.8, 0.4, 1.0, 1), 0.4) # Purple tint
 
 	sprite_node.modulate = final_color
 	
@@ -173,7 +191,7 @@ func play_death_animation(callback: Callable) -> void:
 func _show_fire_particles() -> void:
 	"""Show fire particles around the enemy."""
 	if fire_particles != null:
-		return  # Already showing
+		return # Already showing
 	
 	fire_particles = GPUParticles2D.new()
 	
@@ -221,10 +239,10 @@ func _create_fire_particle_material() -> ParticleProcessMaterial:
 	
 	# Color gradient - orange to red to transparent
 	var gradient = Gradient.new()
-	gradient.add_point(0.0, Color(1.0, 0.8, 0.3, 1.0))  # Yellow-orange
-	gradient.add_point(0.3, Color(1.0, 0.5, 0.1, 0.8))  # Orange
-	gradient.add_point(0.7, Color(0.8, 0.2, 0.0, 0.4))  # Red-orange
-	gradient.add_point(1.0, Color(0.5, 0.1, 0.0, 0.0))  # Dark red, transparent
+	gradient.add_point(0.0, Color(1.0, 0.8, 0.3, 1.0)) # Yellow-orange
+	gradient.add_point(0.3, Color(1.0, 0.5, 0.1, 0.8)) # Orange
+	gradient.add_point(0.7, Color(0.8, 0.2, 0.0, 0.4)) # Red-orange
+	gradient.add_point(1.0, Color(0.5, 0.1, 0.0, 0.0)) # Dark red, transparent
 	material.color_ramp = gradient
 	
 	return material
