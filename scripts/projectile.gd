@@ -72,6 +72,12 @@ func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: G
 
 func _physics_process(delta: float) -> void:
 	position += direction * speed * delta
+	
+	# Rotate sprite counter-clockwise at 2 rotations per second
+	# 2 rotations/sec = 720 degrees/sec = -4π radians/sec (negative for counter-clockwise)
+	var sprite = get_node_or_null("Sprite2D")
+	if sprite:
+		sprite.rotation -= TAU * 2.0 * delta # TAU = 2π, so TAU * 2 = 4π = 2 full rotations
 
 func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 	DebugService.log(DebugService.COMBAT, "Projectile: Collision with area: ", hurtbox, " name: ", hurtbox.name)
