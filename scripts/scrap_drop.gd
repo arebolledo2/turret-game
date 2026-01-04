@@ -1,6 +1,6 @@
 extends Area2D
 
-@export var xp_value: int = 10
+@export var scrap_value: int = 10
 @export var magnet_speed: float = 400.0
 @export var magnet_acceleration: float = 800.0
 
@@ -45,14 +45,10 @@ func collect() -> void:
 		return
 	is_collected = true
 
-	GameStateService.total_xp += xp_value
-	Events.xp_collected.emit(xp_value, GameStateService.total_xp)
-
-	# Also award gold from same drop with modifier
-	var gold_mult = ItemTrackingService.get_gold_earn_multiplier()
-	# GameConstants.GOLD_PER_ENEMY is base amount
-	var gold_amount = EconomyService.add_gold_probabilistic(GameConstants.GOLD_PER_ENEMY, gold_mult)
-	Events.gold_collected.emit(gold_amount, EconomyService.total_gold)
+	# Award scrap with multiplier (merged from old xp + gold system)
+	var scrap_mult = ItemTrackingService.get_scrap_earn_multiplier()
+	var scrap_amount = EconomyService.add_scrap_probabilistic(scrap_value, scrap_mult)
+	Events.scrap_collected.emit(scrap_amount, EconomyService.total_scrap)
 
 	# Collection effect
 	var tween = create_tween()

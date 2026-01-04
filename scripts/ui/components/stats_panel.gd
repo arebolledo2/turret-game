@@ -90,9 +90,6 @@ func _update_player_stats() -> void:
 	var crit_mult_label := _create_label(crit_mult_stat["text"], 18, crit_mult_stat["color"])
 	player_section.add_child(crit_mult_label)
 
-	# XP
-	player_section.add_child(_create_label("✨ XP: %d" % GameStateService.total_xp, 18))
-
 	# Kills
 	player_section.add_child(_create_label("💀 Kills: %d" % GameStateService.total_kills, 18))
 
@@ -113,13 +110,13 @@ func _update_economy_stats() -> void:
 	# Section header
 	economy_section.add_child(_create_label("💰 ECONOMY", 24, Color(1, 0.84, 0, 1)))
 
-	# Current Gold
-	economy_section.add_child(_create_label("Gold: %d" % EconomyService.total_gold, 18))
+	# Current Scrap
+	economy_section.add_child(_create_label("Scrap: %d" % EconomyService.total_scrap, 18))
 
-	# Gold Earn Multiplier
-	var gold_mult := ItemTrackingService.get_gold_earn_multiplier()
-	var gold_stat := BuildDisplayUIScript.format_stat_with_modifier("Earn Rate", 100.0, gold_mult * 100.0, "%.0f%%", true)
-	economy_section.add_child(_create_label(gold_stat["text"], 18, gold_stat["color"]))
+	# Scrap Earn Multiplier
+	var scrap_mult := ItemTrackingService.get_scrap_earn_multiplier()
+	var scrap_stat := BuildDisplayUIScript.format_stat_with_modifier("Earn Rate", 100.0, scrap_mult * 100.0, "%.0f%%", true)
+	economy_section.add_child(_create_label(scrap_stat["text"], 18, scrap_stat["color"]))
 
 	# Shop Prices
 	var price_mult := ItemTrackingService.get_shop_price_multiplier()

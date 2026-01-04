@@ -79,7 +79,7 @@ static func _create_war_profiteer() -> Item:
 	item.item_id = "war_profiteer"
 	item.name = "War Profiteer"
 	item.icon = "💵"
-	item.description = "Wave completion bonus gold +100%. Shop prices +25%"
+	item.description = "Wave completion bonus scrap +100%. Shop prices +25%"
 	item.rarity = GameEnums.ItemRarity.EPIC
 	item.max_stacks = 1
 	item.modifiers = [

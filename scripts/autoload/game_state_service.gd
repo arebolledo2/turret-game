@@ -1,15 +1,13 @@
 extends Node
 
 ## Game State Service
-## Manages wave progression, XP, kills, time, and game lifecycle
+## Manages wave progression, kills, time, and game lifecycle
 
 # Wave system
 var current_wave: int = 0
 
-# XP and progression
-var total_xp: int = 0
+# Stats tracking
 var total_kills: int = 0
-var player_level: int = 1
 
 # Time tracking
 var time_survived: float = 0.0
@@ -22,12 +20,10 @@ var wave_controller: Node = null # Reference set by GameManager
 
 func reset_state() -> void:
 	current_wave = 0
-	total_xp = 0
 	total_kills = 0
 	turrets_spawned = 0
 	time_survived = 0.0
 	is_game_active = false
-	player_level = 1
 
 
 ## Get wave duration in seconds

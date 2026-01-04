@@ -19,8 +19,7 @@ const LootReviewScreenScript = preload("res://scripts/ui/loot_review_screen.gd")
 @onready var health_label: Label = $MarginContainer/VBoxContainer/TopRow/HealthBar/HealthLabel
 @onready var wave_label: Label = $MarginContainer/VBoxContainer/TopRow/WaveInfo/WaveLabel
 @onready var timer_label: Label = $MarginContainer/VBoxContainer/TopRow/WaveInfo/TimerLabel
-@onready var xp_label: Label = $MarginContainer/VBoxContainer/TopRow/StatsContainer/XPLabel
-@onready var gold_label: Label = $MarginContainer/VBoxContainer/TopRow/StatsContainer/GoldLabel
+@onready var scrap_label: Label = $MarginContainer/VBoxContainer/TopRow/StatsContainer/ScrapLabel
 @onready var turret_label: Label = $MarginContainer/VBoxContainer/TopRow/StatsContainer/TurretLabel
 @onready var wave_announcement: Control = $WaveAnnouncement
 @onready var wave_announcement_label: Label = $WaveAnnouncement/Panel/WaveLabel
@@ -116,8 +115,7 @@ func _ready() -> void:
 		"health_label": health_label,
 		"wave_label": wave_label,
 		"timer_label": timer_label,
-		"xp_label": xp_label,
-		"gold_label": gold_label,
+		"scrap_label": scrap_label,
 		"turret_label": turret_label,
 	})
 
@@ -131,9 +129,8 @@ func _ready() -> void:
 	Events.player_damaged.connect(_on_player_damaged)
 	Events.wave_timer_updated.connect(_on_wave_timer_updated)
 	Events.wave_started.connect(_on_wave_started)
-	Events.xp_collected.connect(_on_xp_collected)
-	Events.gold_collected.connect(_on_gold_changed)
-	Events.gold_spent.connect(_on_gold_changed)
+	Events.scrap_collected.connect(_on_scrap_changed)
+	Events.scrap_spent.connect(_on_scrap_changed)
 	Events.turret_spawned.connect(_on_turret_spawned)
 	Events.show_wave_announcement.connect(_on_show_wave_announcement)
 	Events.hide_wave_announcement.connect(_on_hide_wave_announcement)
@@ -161,8 +158,7 @@ func _setup_components() -> void:
 		"health_label": health_label,
 		"wave_label": wave_label,
 		"timer_label": timer_label,
-		"xp_label": xp_label,
-		"gold_label": gold_label,
+		"scrap_label": scrap_label,
 		"turret_label": turret_label,
 	})
 
@@ -326,12 +322,8 @@ func _on_wave_started(wave_number: int) -> void:
 	game_display.update_wave_number(wave_number)
 
 
-func _on_xp_collected(_amount: int, total: int) -> void:
-	game_display.update_xp(total)
-
-
-func _on_gold_changed(_amount: int, total: int) -> void:
-	game_display.update_gold(total)
+func _on_scrap_changed(_amount: int, total: int) -> void:
+	game_display.update_scrap(total)
 
 
 func _on_turret_spawned(_turret: Node2D, _position: Vector2) -> void:
@@ -543,11 +535,8 @@ func _on_dot_damage_dealt(pos: Vector2, amount: float) -> void:
 func update_health_bar(current: float, maximum: float) -> void:
 	game_display.update_health_bar(current, maximum)
 
-func update_xp(total: int) -> void:
-	game_display.update_xp(total)
-
-func update_gold(total: int) -> void:
-	game_display.update_gold(total)
+func update_scrap(total: int) -> void:
+	game_display.update_scrap(total)
 
 func update_turret_count(count: int) -> void:
 	game_display.update_turret_count(count)

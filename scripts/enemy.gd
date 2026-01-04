@@ -15,7 +15,7 @@ extends CharacterBody2D
 var max_health: float = 30.0
 var speed: float = 150.0
 var contact_damage: float = 33.0
-var xp_value: int = 10
+var scrap_value: int = 10
 var base_scale: float = 1.0
 var color_tint: Color = Color.WHITE
 var spawn_wave: int = 1
@@ -124,7 +124,7 @@ func _apply_type_config(type_id: String) -> void:
 	max_health = base_stats.get("health", 30.0)
 	speed = base_stats.get("speed", 150.0)
 	contact_damage = base_stats.get("contact_damage", 33.0)
-	xp_value = base_stats.get("xp_value", 10)
+	scrap_value = base_stats.get("scrap_value", 10)
 	base_scale = base_stats.get("scale", 1.0)
 
 	# Load special ability stats
@@ -237,14 +237,14 @@ func _apply_rank_modifiers() -> void:
 			max_health *= GameConstants.ENEMY_RANK_LT_HP_MULT
 			base_scale *= GameConstants.ENEMY_RANK_LT_SCALE_MULT
 			speed *= GameConstants.ENEMY_RANK_LT_SPEED_MULT
-			xp_value = int(xp_value * GameConstants.ENEMY_RANK_LT_XP_MULT)
+			scrap_value = int(scrap_value * GameConstants.ENEMY_RANK_LT_SCRAP_MULT)
 			mass *= GameConstants.ENEMY_RANK_LT_MASS_MULT
 			color_tint = color_tint.lerp(GameConstants.ENEMY_RANK_LT_COLOR, 0.5)
 		GameEnums.EnemyRank.CAPTAIN:
 			max_health *= GameConstants.ENEMY_RANK_CAPT_HP_MULT
 			base_scale *= GameConstants.ENEMY_RANK_CAPT_SCALE_MULT
 			speed *= GameConstants.ENEMY_RANK_CAPT_SPEED_MULT
-			xp_value = int(xp_value * GameConstants.ENEMY_RANK_CAPT_XP_MULT)
+			scrap_value = int(scrap_value * GameConstants.ENEMY_RANK_CAPT_SCRAP_MULT)
 			mass *= GameConstants.ENEMY_RANK_CAPT_MASS_MULT
 			color_tint = color_tint.lerp(GameConstants.ENEMY_RANK_CAPT_COLOR, 0.5)
 
@@ -313,9 +313,9 @@ func die() -> void:
 	if EnemyRegistry.has_behavior(enemy_type, GameEnums.EnemyBehavior.EXPLOSIVE):
 		_explode()
 
-	# Emit signals for XP drop and kill tracking
+	# Emit signals for scrap drop and kill tracking
 	Events.enemy_killed.emit(self, global_position)
-	Events.xp_dropped.emit(global_position, xp_value)
+	Events.scrap_dropped.emit(global_position, scrap_value)
 	GameStateService.total_kills += 1
 
 	# Handle rank-based loot drops

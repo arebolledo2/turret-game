@@ -159,12 +159,12 @@ func purchase_offer(offer_index: int) -> bool:
 	if offer.get("sold", false):
 		return false
 
-	if EconomyService.total_gold < offer["price"]:
-		Events.shop_insufficient_funds.emit(offer["price"], EconomyService.total_gold)
+	if EconomyService.total_scrap < offer["price"]:
+		Events.shop_insufficient_funds.emit(offer["price"], EconomyService.total_scrap)
 		return false
 
-	EconomyService.total_gold -= offer["price"]
-	Events.gold_spent.emit(offer["price"], EconomyService.total_gold)
+	EconomyService.total_scrap -= offer["price"]
+	Events.scrap_spent.emit(offer["price"], EconomyService.total_scrap)
 
 	offer["sold"] = true
 	offer["locked"] = false # Clear lock when purchased
@@ -222,12 +222,12 @@ func reroll_shop() -> bool:
 	# Removed max reroll limit - infinite rerolls allowed
 	var reroll_cost = get_reroll_cost()
 
-	if EconomyService.total_gold < reroll_cost:
-		Events.shop_insufficient_funds.emit(reroll_cost, EconomyService.total_gold)
+	if EconomyService.total_scrap < reroll_cost:
+		Events.shop_insufficient_funds.emit(reroll_cost, EconomyService.total_scrap)
 		return false
 
-	EconomyService.total_gold -= reroll_cost
-	Events.gold_spent.emit(reroll_cost, EconomyService.total_gold)
+	EconomyService.total_scrap -= reroll_cost
+	Events.scrap_spent.emit(reroll_cost, EconomyService.total_scrap)
 	EconomyService.shop_reroll_count += 1
 
 	generate_offers()
@@ -241,8 +241,8 @@ func get_reroll_cost() -> int:
 	return EconomyService.get_reroll_cost(GameStateService.current_wave, item_multiplier)
 
 func can_afford_reroll() -> bool:
-	# Only check if player has enough gold (no max reroll limit)
-	return EconomyService.total_gold >= get_reroll_cost()
+	# Only check if player has enough scrap (no max reroll limit)
+	return EconomyService.total_scrap >= get_reroll_cost()
 
 func lock_offer(offer_index: int) -> bool:
 	"""Lock an offer so it persists to next reroll/wave"""

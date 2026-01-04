@@ -58,12 +58,12 @@ func show_game_over(victory: bool) -> void:
 	var time_seconds := int(total_time) % 60
 	stats_label.text = """Wave Reached: %d
 Enemies Killed: %d
-XP Collected: %d
+Scrap Collected: %d
 Turrets Spawned: %d
 Time Survived: %d:%02d""" % [
 		GameStateService.current_wave,
 		GameStateService.total_kills,
-		GameStateService.total_xp,
+		EconomyService.total_scrap,
 		GameStateService.turrets_spawned,
 		time_minutes, time_seconds
 	]

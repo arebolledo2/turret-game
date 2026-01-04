@@ -1,25 +1,25 @@
 extends Node
 
-# Listens for enemy deaths and spawns XP drops
+# Listens for enemy deaths and spawns scrap drops
 
-var xp_drop_scene: PackedScene
+var scrap_drop_scene: PackedScene
 
 func _ready() -> void:
-	xp_drop_scene = preload("res://scenes/xp_drop.tscn")
-	Events.xp_dropped.connect(_on_xp_dropped)
+	scrap_drop_scene = preload("res://scenes/scrap_drop.tscn")
+	Events.scrap_dropped.connect(_on_scrap_dropped)
 
-func _on_xp_dropped(position: Vector2, amount: int) -> void:
-	if xp_drop_scene == null:
+func _on_scrap_dropped(position: Vector2, amount: int) -> void:
+	if scrap_drop_scene == null:
 		return
-	
-	# Defer spawn to avoid physics callback error
-	call_deferred("_spawn_xp_drop", position, amount)
 
-func _spawn_xp_drop(position: Vector2, amount: int) -> void:
-	var drop := xp_drop_scene.instantiate()
+	# Defer spawn to avoid physics callback error
+	call_deferred("_spawn_scrap_drop", position, amount)
+
+func _spawn_scrap_drop(position: Vector2, amount: int) -> void:
+	var drop := scrap_drop_scene.instantiate()
 	drop.global_position = position
-	drop.xp_value = amount
-	
+	drop.scrap_value = amount
+
 	var drop_container = get_node_or_null("../DropContainer")
 	if drop_container:
 		drop_container.add_child(drop)

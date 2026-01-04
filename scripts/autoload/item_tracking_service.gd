@@ -26,9 +26,9 @@ func get_reroll_cost_multiplier() -> float:
 	return _get_modifier_service().apply_modifiers_to_stat(1.0, "reroll_cost")
 
 
-## Get gold earn multiplier (from items like Salvage Optimizer)
-func get_gold_earn_multiplier() -> float:
-	return _get_modifier_service().apply_modifiers_to_stat(1.0, "gold_earn_mult")
+## Get scrap earn multiplier (from items like Salvage Optimizer)
+func get_scrap_earn_multiplier() -> float:
+	return _get_modifier_service().apply_modifiers_to_stat(1.0, "scrap_earn_mult")
 
 
 ## Get enemy count multiplier (from items like Combat Surplus)

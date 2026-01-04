@@ -99,7 +99,7 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	else:
 		purchase_button.text = "Purchase"
 		purchase_button.pressed.connect(func(): purchase_requested.emit(index))
-		if EconomyService.total_gold < offer["price"]:
+		if EconomyService.total_scrap < offer["price"]:
 			purchase_button.disabled = true
 	button_vbox.add_child(purchase_button)
 

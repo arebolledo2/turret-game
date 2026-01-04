@@ -3,8 +3,7 @@ extends CharacterBody2D
 # Stats (configured from Services/Constants)
 var max_health: float = 60.0
 var current_health: float
-var xp_value: int = 100
-var gold_value: int = 25
+var scrap_value: int = 100
 var wave: int = 1
 
 # Scatter config (for destruction)
@@ -29,8 +28,7 @@ func _ready() -> void:
 	# Load constants from Services/Constants
 	scatter_count = GameConstants.TECH_DROP_SCATTER_COUNT
 	scatter_radius = GameConstants.TECH_DROP_SCATTER_RADIUS
-	xp_value = GameConstants.TECH_DROP_XP_REWARD
-	gold_value = GameConstants.TECH_DROP_GOLD_REWARD
+	scrap_value = GameConstants.TECH_DROP_SCRAP_REWARD
 
 	# Setup visuals
 	if sprite:
@@ -123,8 +121,8 @@ func _spawn_item_pickup(item_id: String) -> void:
 	pickup.initialize(item_id)
 
 func scatter_rewards() -> void:
-	"""Emit xp_dropped signals to spawn XP pickups in scattered positions."""
-	var xp_per_drop = int(float(xp_value) / float(scatter_count))
+	"""Emit scrap_dropped signals to spawn scrap pickups in scattered positions."""
+	var scrap_per_drop = int(float(scrap_value) / float(scatter_count))
 
 	for i in scatter_count:
 		# Calculate random position within scatter radius
@@ -134,7 +132,7 @@ func scatter_rewards() -> void:
 		var drop_pos = global_position + offset
 
 		# Emit signal - DropSpawner will create the actual pickup
-		Events.xp_dropped.emit(drop_pos, xp_per_drop)
+		Events.scrap_dropped.emit(drop_pos, scrap_per_drop)
 
 func despawn() -> void:
 	"""Wave ended - fade out with no rewards."""

@@ -32,14 +32,14 @@ func update_display() -> void:
 
 	# Current Gold
 	var current_gold_label := Label.new()
-	current_gold_label.text = "Gold: %d" % EconomyService.total_gold
+	current_gold_label.text = "Scrap: %d" % EconomyService.total_scrap
 	current_gold_label.add_theme_font_override("font", MAIN_FONT)
 	current_gold_label.add_theme_font_size_override("font_size", 15)
 	economy_stats_vbox.add_child(current_gold_label)
 
-	# Gold Earn Multiplier
-	var gold_mult: float = ItemTrackingService.get_gold_earn_multiplier()
-	var gold_mult_stat := BuildDisplayUIScript.format_stat_with_modifier("Gold Earn", 100.0, gold_mult * 100.0, "%.0f%%", true)
+	# Scrap Earn Multiplier
+	var gold_mult: float = ItemTrackingService.get_scrap_earn_multiplier()
+	var gold_mult_stat := BuildDisplayUIScript.format_stat_with_modifier("Scrap Earn", 100.0, gold_mult * 100.0, "%.0f%%", true)
 	var gold_mult_label := Label.new()
 	gold_mult_label.text = gold_mult_stat["text"]
 	gold_mult_label.add_theme_color_override("font_color", gold_mult_stat["color"])

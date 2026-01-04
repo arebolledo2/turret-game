@@ -85,10 +85,10 @@ static func _create_salvage_optimizer() -> Item:
 	item.item_id = "salvage_optimizer"
 	item.name = "Salvage Optimizer"
 	item.icon = "💰"
-	item.description = "+10% gold from enemy kills, but -2% turret damage"
+	item.description = "+10% scrap from enemy kills, but -2% turret damage"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("gold_earn_mult", "multiply", 1.10),
+		Item.create_modifier("scrap_earn_mult", "multiply", 1.10),
 		Item.create_modifier("damage", "multiply", 0.98, Item.filter_turret_type(["all"]))
 	]
 	return item
@@ -113,10 +113,10 @@ static func _create_efficient_scavenger() -> Item:
 	item.item_id = "efficient_scavenger"
 	item.name = "Efficient Scavenger"
 	item.icon = "🪙"
-	item.description = "+15% gold from enemy kills, but -5 max HP"
+	item.description = "+15% scrap from enemy kills, but -5 max HP"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("gold_earn_mult", "multiply", 1.15),
+		Item.create_modifier("scrap_earn_mult", "multiply", 1.15),
 		Item.create_modifier("player_max_health", "add", -1.0)
 	]
 	return item

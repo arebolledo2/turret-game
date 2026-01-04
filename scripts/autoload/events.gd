@@ -38,19 +38,15 @@ signal hitbox_debug_toggled(type: int, enabled: bool)
 signal isometric_debug_toggled(enabled: bool)
 
 
-# Pickup Events
-signal xp_dropped(position: Vector2, amount: int)
-signal xp_collected(amount: int, total: int)
+# Pickup Events (Scrap)
+signal scrap_dropped(position: Vector2, amount: int)
+signal scrap_collected(amount: int, total: int)
+signal scrap_spent(amount: int, remaining: int)
 
 # Tech Drop Events
 signal tech_drop_spawned(tech_drop: Node2D, position: Vector2)
 signal tech_drop_destroyed(tech_drop: Node2D, position: Vector2)
 signal tech_drop_despawned(tech_drop: Node2D) # Wave ended
-
-# Economy Events
-signal gold_dropped(position: Vector2, amount: int)
-signal gold_collected(amount: int, total: int)
-signal gold_spent(amount: int, remaining: int)
 
 # Shop Events
 signal shop_opened(wave_number: int)
@@ -83,9 +79,6 @@ signal game_mode_selected(game_mode: int)
 signal show_start_settings()
 signal start_settings_applied(difficulty: int, spawn_mode: int, win_mode: int, arena_mode: int, bg_index: int)
 signal update_hud()
-
-# Player Progression Events
-signal player_leveled_up(new_level: int)
 
 # Game Mode Events
 signal defense_target_spawned(target: Node2D, position: Vector2)

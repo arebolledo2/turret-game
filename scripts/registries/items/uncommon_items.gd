@@ -61,11 +61,11 @@ static func _create_combat_surplus() -> Item:
 	item.item_id = "combat_surplus"
 	item.name = "Combat Surplus"
 	item.icon = "📦"
-	item.description = "Waves spawn +15% more enemies. Gold per enemy +25%"
+	item.description = "Waves spawn +15% more enemies. Scrap per enemy +25%"
 	item.rarity = GameEnums.ItemRarity.UNCOMMON
 	item.modifiers = [
 		Item.create_modifier("enemy_count_mult", "multiply", 1.15),
-		Item.create_modifier("gold_earn_mult", "multiply", 1.25)
+		Item.create_modifier("scrap_earn_mult", "multiply", 1.25)
 	]
 	return item
 

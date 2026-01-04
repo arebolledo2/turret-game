@@ -140,7 +140,7 @@ func update_stats() -> void:
 		if stats_grid.has_node("SpeedValue"):
 			stats_grid.get_node("SpeedValue").text = "%d" % PlayerStatsService.get_player_speed()
 		if stats_grid.has_node("XPValue"):
-			stats_grid.get_node("XPValue").text = "%d" % GameStateService.total_xp
+			stats_grid.get_node("XPValue").text = "%d" % EconomyService.total_scrap
 		if stats_grid.has_node("KillsValue"):
 			stats_grid.get_node("KillsValue").text = "%d" % GameStateService.total_kills
 		

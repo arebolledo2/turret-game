@@ -42,7 +42,7 @@ func update_display() -> void:
 		health_current = int(_player.current_health)
 
 	var luck := PlayerStatsService.get_player_luck_display()
-	var xp := GameStateService.total_xp
+	var xp := EconomyService.total_scrap
 	var kills := GameStateService.total_kills
 	var minutes := int(GameStateService.time_survived) / 60
 	var seconds := int(GameStateService.time_survived) % 60
