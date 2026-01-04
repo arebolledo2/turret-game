@@ -22,20 +22,11 @@ const PLAYER_BASE_MAX_HEALTH: float = 25.0
 const PLAYER_SPEED: float = 250.0
 const PLAYER_PICKUP_RADIUS: float = 50.0
 const PLAYER_INVINCIBILITY_TIME: float = 0.5
-const PLAYER_WEAPON_DAMAGE: float = 1.0
-const PLAYER_WEAPON_FIRE_RATE: float = 3.0 # shots per second
-const PLAYER_WEAPON_RANGE: float = 200.0
-const PLAYER_PROJECTILE_SPEED: float = 600.0
-const PLAYER_MELEE_DAMAGE: float = 13.0 # Increased from 35.0 by 50%
-const PLAYER_MELEE_RANGE: float = 80.0
-const PLAYER_MELEE_ARC_DEGREES: float = 120.0
-const PLAYER_MELEE_COOLDOWN: float = 1.4 # Decreased speed by 50% (doubled cooldown from 0.7)
-const PLAYER_MELEE_WINDUP_TIME: float = 0.15
-const PLAYER_MELEE_ANIMATION_DURATION: float = 0.15
+const PLAYER_WEAPON_DAMAGE: float = 1.0  # Legacy - used by PlayerStatsService for item bonuses
 
-# Player Turret Combat (replacing melee)
+# Player Turret Combat
 const PLAYER_TURRET_DAMAGE: float = 10.0
-const PLAYER_TURRET_FIRE_RATE: float = 2.0 # shots per second
+const PLAYER_TURRET_FIRE_RATE: float = 1.2 # shots per second (matches basic turret)
 const PLAYER_TURRET_RANGE: float = 250.0
 const PLAYER_TURRET_PROJECTILE_SPEED: float = 700.0
 
@@ -47,7 +38,6 @@ const PLAYER_HEAL_AMOUNT: float = 1.0 # HP per healing pip (kept at minimum for 
 # =============================================================================
 # KNOCKBACK
 # =============================================================================
-const PLAYER_MELEE_KNOCKBACK_FORCE: float = 180.0
 const PLASMA_TURRET_KNOCKBACK_FORCE: float = 120.0
 const PLAYER_DEFENSIVE_PULSE_KNOCKBACK_FORCE: float = 250.0
 const PLAYER_DEFENSIVE_PULSE_RADIUS: float = 120.0

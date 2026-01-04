@@ -5,10 +5,6 @@ extends CharacterBody2D
 @export var speed: float = 300.0
 @export var pickup_radius: float = 50.0
 @export var invincibility_time: float = 0.5
-@export var weapon_damage: float = 5.0
-@export var weapon_fire_rate: float = 3.0
-@export var weapon_range: float = 200.0
-@export var projectile_speed: float = 600.0
 
 var current_health: float
 var is_invincible: bool = false
@@ -37,10 +33,6 @@ func _ready() -> void:
 	speed = PlayerStatsService.get_player_speed()
 	pickup_radius = PlayerStatsService.get_pickup_radius()
 	invincibility_time = GameConstants.PLAYER_INVINCIBILITY_TIME
-	weapon_damage = PlayerStatsService.get_player_weapon_damage()
-	weapon_fire_rate = GameConstants.PLAYER_WEAPON_FIRE_RATE
-	weapon_range = GameConstants.PLAYER_WEAPON_RANGE
-	projectile_speed = GameConstants.PLAYER_PROJECTILE_SPEED
 
 	current_health = max_health
 	add_to_group("player")
