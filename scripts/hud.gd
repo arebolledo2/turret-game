@@ -54,6 +54,7 @@ const LootReviewScreenScript = preload("res://scripts/ui/loot_review_screen.gd")
 @onready var isometric_arena_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/IsometricArenaButton
 @onready var restart_button: Button = $GameOverScreen/Panel/VBoxContainer/RestartButton
 @onready var loot_review_screen: Control = $LootReview
+var low_health_overlay: ColorRect
 
 # Pause Menu References
 @onready var resume_button: Button = $PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/ResumeButton
@@ -93,6 +94,15 @@ func _ready() -> void:
 	pause_menu.visible = false
 	settings_menu.visible = false
 	loot_review_screen.visible = false
+
+	# Create low health overlay
+	low_health_overlay = ColorRect.new()
+	low_health_overlay.name = "LowHealthOverlay"
+	low_health_overlay.color = Color(1, 0, 0, 0) # Start invisible
+	low_health_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	low_health_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(low_health_overlay)
+	move_child(low_health_overlay, 0) # Place at the back so it doesn't cover UI
 
 	# Load damage number scene
 	damage_number_scene = preload("res://scenes/damage_number.tscn")
@@ -286,11 +296,25 @@ func _on_game_started() -> void:
 	player = get_tree().get_first_node_in_group("player")
 	if player:
 		game_display.update_health_bar(player.current_health, player.max_health)
+		_update_low_health_visual(player.current_health, player.max_health)
 		_pause_menu.set_player(player)
 
 
 func _on_player_damaged(current_health: float, max_health: float) -> void:
 	game_display.update_health_bar(current_health, max_health)
+	_update_low_health_visual(current_health, max_health)
+
+
+func _update_low_health_visual(current_health: float, max_health: float) -> void:
+	if low_health_overlay:
+		var health_percent := current_health / max_health
+		if health_percent < 0.5:
+			# Redness increases as health goes from 50% down to 0%
+			# (0.5 - health_percent) / 0.5 maps [0.5, 0] to [0, 1]
+			var intensity := (0.5 - health_percent) / 0.5
+			low_health_overlay.color.a = intensity * 0.4 # Max 40% opacity
+		else:
+			low_health_overlay.color.a = 0.0
 
 
 func _on_wave_timer_updated(time_remaining: float) -> void:
