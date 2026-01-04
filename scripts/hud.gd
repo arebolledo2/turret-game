@@ -54,6 +54,7 @@ const LootReviewScreenScript = preload("res://scripts/ui/loot_review_screen.gd")
 @onready var isometric_arena_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/IsometricArenaButton
 @onready var restart_button: Button = $GameOverScreen/Panel/VBoxContainer/RestartButton
 @onready var loot_review_screen: Control = $LootReview
+@onready var damage_number_layer: Node2D = $DamageNumberLayer
 var low_health_overlay: ColorRect
 
 # Pause Menu References
@@ -489,8 +490,20 @@ func _on_damage_dealt(pos: Vector2, amount: float, is_crit: bool, _enemy: Node2D
 		return
 
 	var damage_number = damage_number_scene.instantiate()
-	get_tree().current_scene.add_child(damage_number)
-	damage_number.global_position = pos + Vector2(randf_range(-10, 10), -20)
+
+	# Convert world position to screen position
+	var viewport = get_viewport()
+	var camera = viewport.get_camera_2d()
+	if camera:
+		var viewport_size = viewport.get_visible_rect().size
+		var screen_pos = (pos - camera.global_position) * camera.zoom + viewport_size / 2
+		damage_number_layer.add_child(damage_number)
+		damage_number.position = screen_pos + Vector2(randf_range(-10, 10), -20)
+	else:
+		# Fallback if no camera (shouldn't happen in normal gameplay)
+		damage_number_layer.add_child(damage_number)
+		damage_number.position = pos + Vector2(randf_range(-10, 10), -20)
+
 	damage_number.setup(amount, is_crit)
 
 
@@ -502,10 +515,22 @@ func _on_dot_damage_dealt(pos: Vector2, amount: float) -> void:
 		return
 
 	var damage_number = damage_number_scene.instantiate()
-	get_tree().current_scene.add_child(damage_number)
-	damage_number.global_position = pos + Vector2(randf_range(-10, 10), -20)
+
+	# Convert world position to screen position
+	var viewport = get_viewport()
+	var camera = viewport.get_camera_2d()
+	if camera:
+		var viewport_size = viewport.get_visible_rect().size
+		var screen_pos = (pos - camera.global_position) * camera.zoom + viewport_size / 2
+		damage_number_layer.add_child(damage_number)
+		damage_number.position = screen_pos + Vector2(randf_range(-10, 10), -20)
+	else:
+		# Fallback if no camera (shouldn't happen in normal gameplay)
+		damage_number_layer.add_child(damage_number)
+		damage_number.position = pos + Vector2(randf_range(-10, 10), -20)
+
 	damage_number.setup(amount)
-	
+
 	# Set orange color for DoT damage
 	if damage_number.has_node("Label"):
 		var label = damage_number.get_node("Label")
