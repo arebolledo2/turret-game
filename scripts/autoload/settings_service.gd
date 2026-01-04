@@ -4,7 +4,7 @@ extends Node
 ## Manages runtime preferences and debug flags
 
 var show_damage_numbers: bool = true
-var player_auto_attack_enabled: bool = false
+var player_auto_attack_enabled: bool = true
 var show_turret_ranges: bool = false
 var isometric_debug_enabled: bool = false
 
@@ -18,7 +18,7 @@ var debug_hitbox_flags: Dictionary = {
 func reset_state() -> void:
 	# Resets to defaults
 	show_damage_numbers = true
-	player_auto_attack_enabled = false
+	player_auto_attack_enabled = true
 	show_turret_ranges = false
 	isometric_debug_enabled = false
 	

@@ -31,19 +31,19 @@ func test_show_damage_numbers_can_be_toggled():
 # PLAYER AUTO-ATTACK SETTING
 # =============================================================================
 
-func test_player_auto_attack_disabled_by_default():
-	assert_false(SettingsService.player_auto_attack_enabled,
-		"Player auto-attack should be disabled by default")
-
-
-func test_player_auto_attack_can_be_enabled():
-	SettingsService.player_auto_attack_enabled = true
+func test_player_auto_attack_enabled_by_default():
 	assert_true(SettingsService.player_auto_attack_enabled,
-		"Player auto-attack should be enabled after setting")
+		"Player auto-attack should be enabled by default")
 
+
+func test_player_auto_attack_can_be_toggled():
 	SettingsService.player_auto_attack_enabled = false
 	assert_false(SettingsService.player_auto_attack_enabled,
-		"Player auto-attack should be disabled again")
+		"Player auto-attack should be disabled after setting")
+
+	SettingsService.player_auto_attack_enabled = true
+	assert_true(SettingsService.player_auto_attack_enabled,
+		"Player auto-attack should be enabled again")
 
 
 # =============================================================================

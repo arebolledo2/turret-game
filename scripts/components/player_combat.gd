@@ -38,9 +38,9 @@ func initialize(p_player: CharacterBody2D, p_weapon_pivot: Node2D) -> void:
 
 	# Load stats
 	weapon_damage = PlayerStatsService.get_player_weapon_damage()
-	weapon_fire_rate = GameConstants.PLAYER_WEAPON_FIRE_RATE
-	weapon_range = GameConstants.PLAYER_WEAPON_RANGE
-	projectile_speed = GameConstants.PLAYER_PROJECTILE_SPEED
+	weapon_fire_rate = GameConstants.PLAYER_TURRET_FIRE_RATE
+	weapon_range = GameConstants.PLAYER_TURRET_RANGE
+	projectile_speed = GameConstants.PLAYER_TURRET_PROJECTILE_SPEED
 
 	# Load projectile scene
 	projectile_scene = preload("res://scenes/projectile.tscn")

@@ -60,10 +60,6 @@ func test_player_can_fire_initially():
 	assert_true(player.can_fire, "Player should be able to fire initially")
 
 
-func test_player_can_melee_initially():
-	assert_true(player.can_melee, "Player should be able to melee initially")
-
-
 func test_player_not_carrying_turret_initially():
 	assert_null(player.carried_turret, "Player should not carry turret initially")
 
@@ -282,30 +278,6 @@ func test_drop_turret_clears_carried():
 
 
 # =============================================================================
-# MELEE CONFIGURATION
-# =============================================================================
-
-func test_melee_damage_default():
-	assert_eq(player.melee_damage, 13.0, "Default melee damage should be 13.0")
-
-
-func test_melee_range_default():
-	assert_eq(player.melee_range, 80.0, "Default melee range should be 80")
-
-
-func test_melee_arc_default():
-	assert_eq(player.melee_arc_degrees, 120.0, "Default melee arc should be 120 degrees")
-
-
-func test_melee_cooldown_default():
-	assert_eq(player.melee_cooldown, 1.4, "Default melee cooldown should be 1.4")
-
-
-func test_melee_windup_default():
-	assert_eq(player.melee_windup_time, 0.15, "Default melee windup should be 0.15")
-
-
-# =============================================================================
 # DIRECTION HELPERS
 # =============================================================================
 
@@ -327,76 +299,3 @@ func test_get_direction_from_vector_east():
 func test_get_direction_from_vector_west():
 	var dir = player.get_direction_from_vector(Vector2(-1, 0))
 	assert_eq(dir, 2, "Left should be direction 2 (West)")
-
-
-# =============================================================================
-# MELEE ARC DETECTION
-# =============================================================================
-
-func test_enemy_in_melee_arc_front():
-	var enemy = Node2D.new()
-	enemy.global_position = player.global_position + Vector2(50, 0) # In front
-	add_child_autofree(enemy)
-
-	var attack_dir = Vector2(1, 0) # Facing right
-	var result = player.is_enemy_in_melee_arc(enemy, attack_dir)
-
-	assert_true(result, "Enemy directly in front should be in arc")
-
-
-func test_enemy_outside_melee_range():
-	var enemy = Node2D.new()
-	enemy.global_position = player.global_position + Vector2(200, 0) # Too far
-	add_child_autofree(enemy)
-
-	var attack_dir = Vector2(1, 0)
-	var result = player.is_enemy_in_melee_arc(enemy, attack_dir)
-
-	assert_false(result, "Enemy outside range should not be in arc")
-
-
-func test_enemy_behind_player():
-	var enemy = Node2D.new()
-	enemy.global_position = player.global_position + Vector2(-50, 0) # Behind
-	add_child_autofree(enemy)
-
-	var attack_dir = Vector2(1, 0) # Facing right
-	var result = player.is_enemy_in_melee_arc(enemy, attack_dir)
-
-	assert_false(result, "Enemy behind should not be in arc")
-
-
-# =============================================================================
-# ATTACK DIRECTION FROM FACING
-# =============================================================================
-
-func test_attack_direction_south():
-	player.facing_direction = 0 # South
-	var dir = player.get_attack_direction_from_facing()
-
-	assert_almost_eq(dir.x, 0.0, 0.01, "South X should be 0")
-	assert_almost_eq(dir.y, 1.0, 0.01, "South Y should be 1")
-
-
-func test_attack_direction_north():
-	player.facing_direction = 4 # North
-	var dir = player.get_attack_direction_from_facing()
-
-	assert_almost_eq(dir.x, 0.0, 0.01, "North X should be 0")
-	assert_almost_eq(dir.y, -1.0, 0.01, "North Y should be -1")
-
-
-func test_attack_direction_east():
-	player.facing_direction = 6 # East
-	var dir = player.get_attack_direction_from_facing()
-
-	assert_almost_eq(dir.x, 1.0, 0.01, "East X should be 1")
-	assert_almost_eq(dir.y, 0.0, 0.01, "East Y should be 0")
-
-
-func test_attack_direction_west():
-	player.facing_direction = 2 # West
-	var dir = player.get_attack_direction_from_facing()
-
-	assert_almost_eq(dir.x, -1.0, 0.01, "West X should be -1")
-	assert_almost_eq(dir.y, 0.0, 0.01, "West Y should be 0")

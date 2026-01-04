@@ -30,7 +30,6 @@ var projectile_scene: PackedScene
 @onready var turret_handler: PlayerTurretHandler = $Components/PlayerTurretHandler
 @onready var movement: PlayerMovement = $Components/PlayerMovement
 @onready var combat: PlayerCombat = $Components/PlayerCombat
-@onready var melee_combat: PlayerMeleeCombat = $Components/PlayerMeleeCombat
 
 func _ready() -> void:
 	# Initialize from services
@@ -71,10 +70,6 @@ func _ready() -> void:
 	turret_handler.initialize(self)
 	movement.initialize(self, sprite)
 	combat.initialize(self, weapon_pivot)
-	melee_combat.initialize(self, sprite, movement)
-
-	# Connect melee combat signals
-	melee_combat.melee_hit.connect(_on_melee_hit_occurred)
 
 func _on_debug_toggled(type: int, _enabled: bool) -> void:
 	if type == GameEnums.HitboxType.PHYSICS:
@@ -133,7 +128,6 @@ func _physics_process(delta: float) -> void:
 
 	# Combat systems
 	combat.process(delta)
-	melee_combat.process(delta, not turret_handler.is_carrying_turret())
 	
 	# Handle invincibility visual
 	if is_invincible:
@@ -167,10 +161,6 @@ var closest_enemy: Node2D:
 	get:
 		return combat.closest_enemy if combat else null
 
-var can_melee: bool:
-	get:
-		return melee_combat.can_melee if melee_combat else true
-
 var carried_turret: Node2D:
 	get:
 		return turret_handler.carried_turret if turret_handler else null
@@ -200,42 +190,9 @@ func update_carried_turret_position() -> void:
 func drop_carried_turret() -> void:
 	turret_handler.force_drop()
 
-func is_enemy_in_melee_arc(enemy: Node2D, attack_dir: Vector2) -> bool:
-	return melee_combat.is_enemy_in_melee_arc(enemy, attack_dir) if melee_combat else false
-
-func get_attack_direction_from_facing() -> Vector2:
-	return melee_combat.get_attack_direction_from_facing() if melee_combat else Vector2.DOWN
-
-# Melee property facades for tests
-var melee_damage: float:
-	get:
-		return melee_combat.melee_damage if melee_combat else 35.0
-
-var melee_range: float:
-	get:
-		return melee_combat.melee_range if melee_combat else 80.0
-
-var melee_arc_degrees: float:
-	get:
-		return melee_combat.melee_arc_degrees if melee_combat else 120.0
-
-var melee_cooldown: float:
-	get:
-		return melee_combat.melee_cooldown if melee_combat else 0.7
-
-var melee_windup_time: float:
-	get:
-		return melee_combat.melee_windup_time if melee_combat else 0.15
-
 func clamp_to_arena() -> void:
 	# Keep player within arena bounds (delegates to ArenaBoundsService for isometric support)
 	global_position = ArenaBoundsService.clamp_to_arena(global_position, 20.0)
-
-func _on_melee_hit_occurred() -> void:
-	"""Handle melee hit for camera shake."""
-	var camera = get_node_or_null("Camera2D")
-	if camera and camera.has_method("shake"):
-		camera.shake(0.15, 3)
 
 func take_damage(amount: float, is_crit: bool = false) -> void:
 	if is_invincible or is_dead:

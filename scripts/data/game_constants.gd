@@ -33,6 +33,12 @@ const PLAYER_MELEE_COOLDOWN: float = 1.4 # Decreased speed by 50% (doubled coold
 const PLAYER_MELEE_WINDUP_TIME: float = 0.15
 const PLAYER_MELEE_ANIMATION_DURATION: float = 0.15
 
+# Player Turret Combat (replacing melee)
+const PLAYER_TURRET_DAMAGE: float = 10.0
+const PLAYER_TURRET_FIRE_RATE: float = 2.0 # shots per second
+const PLAYER_TURRET_RANGE: float = 250.0
+const PLAYER_TURRET_PROJECTILE_SPEED: float = 700.0
+
 # Health Regeneration
 const PLAYER_BASE_HEALTH_REGEN: int = 0 # Whole number, 0 = no healing
 const PLAYER_BASE_HEAL_INTERVAL: float = 10.0 # Seconds at regen=1
