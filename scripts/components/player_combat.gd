@@ -37,7 +37,7 @@ func initialize(p_player: CharacterBody2D, p_weapon_pivot: Node2D) -> void:
 	assert(weapon_pivot != null, "PlayerCombat: weapon_pivot reference required")
 
 	# Load stats
-	weapon_damage = PlayerStatsService.get_player_weapon_damage()
+	weapon_damage = GameConstants.PLAYER_TURRET_DAMAGE
 	weapon_fire_rate = GameConstants.PLAYER_TURRET_FIRE_RATE
 	weapon_range = GameConstants.PLAYER_TURRET_RANGE
 	projectile_speed = GameConstants.PLAYER_TURRET_PROJECTILE_SPEED
