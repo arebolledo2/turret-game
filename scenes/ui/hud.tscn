@@ -75,16 +75,10 @@ size_flags_horizontal = 3
 [node name="StatsContainer" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TopRow"]
 layout_mode = 2
 
-[node name="XPLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/StatsContainer"]
+[node name="ScrapLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/StatsContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "XP: 0"
-horizontal_alignment = 2
-
-[node name="GoldLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/StatsContainer"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "Gold: 0"
+text = "Scrap: 0"
 horizontal_alignment = 2
 
 [node name="TurretLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/StatsContainer"]
@@ -179,7 +173,7 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "Wave Reached: 1
 Enemies Killed: 0
-XP Collected: 0
+Scrap Collected: 0
 Turrets Spawned: 0
 Time Survived: 0:00"
 horizontal_alignment = 1
@@ -393,12 +387,12 @@ theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
 text = "300"
 
-[node name="XPIcon" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+[node name="ScrapIcon" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
-text = "✨ XP:"
+text = "⚙ Scrap:"
 
-[node name="XPValue" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
+[node name="ScrapValue" type="Label" parent="PauseMenu/MainPanel/MainVBox/TopSection/StatsPanel/StatsGrid"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)

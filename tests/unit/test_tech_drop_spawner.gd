@@ -60,9 +60,9 @@ func test_spawn_margin_within_arena():
 # TECH DROP CONSTANTS
 # =============================================================================
 
-func test_tech_drop_xp_reward_positive():
-	var xp = GameConstants.TECH_DROP_XP_REWARD
-	assert_gt(xp, 0, "XP reward should be positive")
+func test_tech_drop_scrap_reward_positive():
+	var scrap = GameConstants.TECH_DROP_SCRAP_REWARD
+	assert_gt(scrap, 0, "Scrap reward should be positive")
 
 
 func test_tech_drop_base_health_positive():

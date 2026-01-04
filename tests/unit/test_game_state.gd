@@ -29,17 +29,17 @@ func test_initial_game_active():
 	assert_false(game_state.is_game_active, "Game should not be active initially")
 
 
-func test_initial_xp():
-	assert_eq(game_state.total_xp, 0, "Initial XP should be 0")
+func test_initial_scrap():
+	assert_eq(game_state.total_scrap, 0, "Initial scrap should be 0 before game start")
 
 
 func test_initial_kills():
 	assert_eq(game_state.total_kills, 0, "Initial kills should be 0")
 
 
-func test_initial_gold():
-	assert_eq(game_state.total_gold, GameConstants.STARTING_GOLD,
-		"Initial gold should match STARTING_GOLD constant")
+func test_initial_starting_scrap():
+	assert_eq(game_state.total_scrap, GameConstants.STARTING_SCRAP,
+		"Initial scrap should match STARTING_SCRAP constant")
 
 
 func test_initial_player_level():
@@ -423,10 +423,10 @@ func test_reset_clears_wave():
 	assert_eq(game_state.current_wave, 0, "Reset should clear wave to 0")
 
 
-func test_reset_clears_xp():
-	game_state.total_xp = 100
+func test_reset_clears_scrap():
+	game_state.total_scrap = 100
 	game_state.reset()
-	assert_eq(game_state.total_xp, 0, "Reset should clear XP to 0")
+	assert_eq(game_state.total_scrap, GameConstants.STARTING_SCRAP, "Reset should restore starting scrap")
 
 
 func test_reset_clears_kills():
@@ -484,11 +484,11 @@ func test_reset_clears_modifiers():
 		"Reset should clear modifiers")
 
 
-func test_reset_resets_gold():
-	game_state.total_gold = 500
+func test_reset_resets_scrap():
+	game_state.total_scrap = 500
 	game_state.reset()
-	assert_eq(game_state.total_gold, GameConstants.STARTING_GOLD,
-		"Reset should restore starting gold")
+	assert_eq(game_state.total_scrap, GameConstants.STARTING_SCRAP,
+		"Reset should restore starting scrap")
 
 
 func test_reset_clears_shop_reroll_count():

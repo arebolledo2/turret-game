@@ -49,8 +49,8 @@ func test_turret_signals_exist():
 
 
 func test_pickup_signals_exist():
-	assert_has_signal(Events, "xp_dropped")
-	assert_has_signal(Events, "xp_collected")
+	assert_has_signal(Events, "scrap_dropped")
+	assert_has_signal(Events, "scrap_collected")
 
 
 func test_ui_signals_exist():
@@ -95,10 +95,10 @@ func test_can_emit_player_damaged():
 	assert_signal_emitted_with_parameters(Events, "player_damaged", [50.0, 100.0])
 
 
-func test_can_emit_xp_collected():
+func test_can_emit_scrap_collected():
 	watch_signals(Events)
-	Events.xp_collected.emit(10, 100)
-	assert_signal_emitted_with_parameters(Events, "xp_collected", [10, 100])
+	Events.scrap_collected.emit(10, 100)
+	assert_signal_emitted_with_parameters(Events, "scrap_collected", [10, 100])
 
 
 # =============================================================================

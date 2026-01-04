@@ -46,7 +46,7 @@ func test_get_base_stats_returns_required_fields():
 	assert_has(stats, "health", "Base stats should have health")
 	assert_has(stats, "speed", "Base stats should have speed")
 	assert_has(stats, "contact_damage", "Base stats should have contact_damage")
-	assert_has(stats, "xp_value", "Base stats should have xp_value")
+	assert_has(stats, "scrap_value", "Base stats should have scrap_value")
 
 
 func test_get_base_stats_returns_copy():

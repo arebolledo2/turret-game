@@ -94,13 +94,13 @@ func test_enemy_emits_killed_signal_on_death():
 	assert_signal_emitted(Events, "enemy_killed", "Should emit enemy_killed signal")
 
 
-func test_enemy_emits_xp_dropped_signal_on_death():
+func test_enemy_emits_scrap_dropped_signal_on_death():
 	watch_signals(Events)
 	enemy.initialize(1)
-	
+
 	enemy.take_damage(1000)
-	
-	assert_signal_emitted(Events, "xp_dropped", "Should emit xp_dropped signal")
+
+	assert_signal_emitted(Events, "scrap_dropped", "Should emit scrap_dropped signal")
 
 
 func test_enemy_increments_kill_counter():
@@ -125,23 +125,23 @@ func test_multiple_kills_increment_counter():
 
 
 # =============================================================================
-# XP VALUE TESTS
+# SCRAP VALUE TESTS
 # =============================================================================
 
-func test_enemy_has_xp_value():
-	assert_gt(enemy.xp_value, 0, "Enemy should have positive XP value")
+func test_enemy_has_scrap_value():
+	assert_gt(enemy.scrap_value, 0, "Enemy should have positive scrap value")
 
 
-func test_xp_dropped_signal_has_correct_value():
+func test_scrap_dropped_signal_has_correct_value():
 	watch_signals(Events)
-	var expected_xp = enemy.xp_value
+	var expected_scrap = enemy.scrap_value
 	enemy.initialize(1)
-	
+
 	enemy.take_damage(1000)
-	
-	var signal_params = get_signal_parameters(Events, "xp_dropped")
-	# signal_params[1] is the xp amount (second parameter)
-	assert_eq(signal_params[1], expected_xp, "XP dropped should match enemy's xp_value")
+
+	var signal_params = get_signal_parameters(Events, "scrap_dropped")
+	# signal_params[1] is the scrap amount (second parameter)
+	assert_eq(signal_params[1], expected_scrap, "Scrap dropped should match enemy's scrap_value")
 
 
 # =============================================================================

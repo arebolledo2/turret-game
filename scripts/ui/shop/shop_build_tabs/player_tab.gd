@@ -83,12 +83,12 @@ func update_display() -> void:
 	luck_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(luck_label)
 
-	# XP
-	var xp_label := Label.new()
-	xp_label.text = "✨ XP: %d" % xp
-	xp_label.add_theme_font_override("font", MAIN_FONT)
-	xp_label.add_theme_font_size_override("font_size", 15)
-	player_stats_vbox.add_child(xp_label)
+	# Scrap
+	var scrap_label := Label.new()
+	scrap_label.text = "⚙ Scrap: %d" % xp
+	scrap_label.add_theme_font_override("font", MAIN_FONT)
+	scrap_label.add_theme_font_size_override("font_size", 15)
+	player_stats_vbox.add_child(scrap_label)
 
 	# Kills
 	var kills_label := Label.new()

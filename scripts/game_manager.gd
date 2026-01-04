@@ -337,14 +337,15 @@ func skip_wave() -> void:
 	# Use full duration if in announcement, otherwise use remaining timer
 	var timer_for_gold = duration if is_announcement else wave_controller.wave_timer
 	
-	# Give slightly more gold than time left would normally give (bonus for skipping)
-	var gold_to_give = int(timer_for_gold * enemy_rate * 1.5)
-	
-	# Minimum gold based on wave number
-	gold_to_give = max(gold_to_give, wave * 5)
-	
-	EconomyService.total_gold += gold_to_give
-	Events.gold_collected.emit(gold_to_give, EconomyService.total_gold)
+	# Give slightly more scrap than time left would normally give (bonus for skipping)
+	var scrap_to_give = int(timer_for_gold * enemy_rate * 1.5)
+
+	# Minimum scrap based on wave number
+	scrap_to_give = max(scrap_to_give, wave * 5)
+
+	# Use the scrap earn multiplier from items
+	var scrap_mult = ItemTrackingService.get_scrap_earn_multiplier()
+	EconomyService.add_scrap(scrap_to_give, scrap_mult)
 	
 	# Force end combat
 	_end_wave()

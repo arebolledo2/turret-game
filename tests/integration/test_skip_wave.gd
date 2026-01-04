@@ -38,15 +38,15 @@ func test_skip_wave_logic():
     wave_controller.start_combat()
     await get_tree().process_frame
 
-    var initial_gold = EconomyService.total_gold
-    
+    var initial_scrap = EconomyService.total_scrap
+
     # Trigger skip wave
     game_manager.skip_wave()
     await get_tree().process_frame
-    
+
     # Verify state transitioned to WAVE_END (and then to SHOP/LOOT after END pause)
     assert_ne(GameStateMachine.current_state, GameStateMachine.GameState.COMBAT, "Should not be in COMBAT after skip")
-    assert_gt(EconomyService.total_gold, initial_gold, "Gold should have increased")
+    assert_gt(EconomyService.total_scrap, initial_scrap, "Scrap should have increased")
     
     # Wait for wave end pause to finish
     await get_tree().create_timer(GameConstants.BETWEEN_WAVE_PAUSE + 0.1).timeout

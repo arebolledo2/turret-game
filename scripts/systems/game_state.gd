@@ -12,14 +12,13 @@ var current_wave: int = 0
 var is_game_active: bool = false
 
 # Player stats
-var total_xp: int = 0
+var total_scrap: int = 0
 var total_kills: int = 0
 var turrets_spawned: int = 0
 var time_survived: float = 0.0
 var player_level: int = 1
 
-# Economy
-var total_gold: int = GameConstants.STARTING_GOLD
+# Economy (Note: total_scrap is also tracked in player stats above for legacy reasons)
 var shop_reroll_count: int = 0
 var current_shop_offers: Array = []
 var pending_turret_purchases: Array[String] = []
@@ -122,7 +121,7 @@ func get_enemy_contact_damage() -> float:
 ## Reset all state for a new game
 func reset() -> void:
 	current_wave = 0
-	total_xp = 0
+	total_scrap = 0
 	total_kills = 0
 	turrets_spawned = 0
 	time_survived = 0.0
@@ -132,7 +131,6 @@ func reset() -> void:
 	selected_turret_type = ""
 	collected_items.clear()
 	modifiers.clear_modifiers()
-	total_gold = GameConstants.STARTING_GOLD
 	shop_reroll_count = 0
 	current_shop_offers.clear()
 	pending_turret_purchases.clear()

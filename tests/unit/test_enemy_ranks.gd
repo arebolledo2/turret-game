@@ -40,20 +40,20 @@ func test_captain_rank_initialization():
 	assert_almost_eq(_enemy.max_health, expected_hp, 0.1)
 	assert_almost_eq(_enemy.base_scale, base_stats["scale"] * GameConstants.ENEMY_RANK_CAPT_SCALE_MULT, 0.1)
 
-func test_rank_xp_scaling():
+func test_rank_scrap_scaling():
 	_enemy.initialize(1, "basic", GameEnums.EnemyRank.NORMAL)
-	var normal_xp = _enemy.xp_value
-	
+	var normal_scrap = _enemy.scrap_value
+
 	var lt_enemy = EnemyScene.instantiate()
 	add_child(lt_enemy)
 	lt_enemy.initialize(1, "basic", GameEnums.EnemyRank.LIEUTENANT)
-	assert_eq(lt_enemy.xp_value, int(normal_xp * GameConstants.ENEMY_RANK_LT_XP_MULT))
+	assert_eq(lt_enemy.scrap_value, int(normal_scrap * GameConstants.ENEMY_RANK_LT_SCRAP_MULT))
 	lt_enemy.free()
-	
+
 	var capt_enemy = EnemyScene.instantiate()
 	add_child(capt_enemy)
 	capt_enemy.initialize(1, "basic", GameEnums.EnemyRank.CAPTAIN)
-	assert_eq(capt_enemy.xp_value, int(normal_xp * GameConstants.ENEMY_RANK_CAPT_XP_MULT))
+	assert_eq(capt_enemy.scrap_value, int(normal_scrap * GameConstants.ENEMY_RANK_CAPT_SCRAP_MULT))
 	capt_enemy.free()
 
 func test_captain_guaranteed_legendary():

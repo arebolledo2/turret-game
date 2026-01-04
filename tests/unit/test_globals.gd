@@ -192,7 +192,7 @@ func test_turret_damage_reduced_on_hard():
 func test_reset_stats_clears_all():
 	# Set some values
 	GameStateService.current_wave = 5
-	GameStateService.total_xp = 100
+	GameStateService.total_scrap = 100
 	GameStateService.total_kills = 50
 	GameStateService.turrets_spawned = 3
 	GameStateService.time_survived = 120.0
@@ -203,7 +203,7 @@ func test_reset_stats_clears_all():
 	
 	# Verify all cleared
 	assert_eq(GameStateService.current_wave, 0, "Wave should reset to 0")
-	assert_eq(GameStateService.total_xp, 0, "XP should reset to 0")
+	assert_eq(GameStateService.total_scrap, 0, "XP should reset to 0")
 	assert_eq(GameStateService.total_kills, 0, "Kills should reset to 0")
 	assert_eq(GameStateService.turrets_spawned, 0, "Turrets should reset to 0")
 	assert_eq(GameStateService.time_survived, 0.0, "Time should reset to 0")

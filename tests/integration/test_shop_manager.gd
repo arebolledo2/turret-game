@@ -17,7 +17,7 @@ func before_each() -> void:
 	GameStateService.reset_state()
 	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
 	GameStateService.current_wave = 1
-	EconomyService.total_gold = GameConstants.STARTING_GOLD
+	EconomyService.total_scrap = GameConstants.STARTING_SCRAP
 	EconomyService.shop_reroll_count = 0
 	EconomyService.current_shop_offers.clear()
 	EconomyService.pending_turret_purchases.clear()
@@ -220,27 +220,27 @@ func test_item_price_scales_with_wave():
 # =============================================================================
 
 func test_purchase_turret_success():
-	EconomyService.total_gold = 500
+	EconomyService.total_scrap = 500
 	shop_manager.generate_offers()
 
 	var result = shop_manager.purchase_offer(0)
 
-	assert_true(result, "Purchase should succeed with enough gold")
+	assert_true(result, "Purchase should succeed with enough scrap")
 
 
 func test_purchase_turret_deducts_gold():
-	EconomyService.total_gold = 500
+	EconomyService.total_scrap = 500
 	shop_manager.generate_offers()
 	var price = EconomyService.current_shop_offers[0]["price"]
 
 	shop_manager.purchase_offer(0)
 
-	assert_eq(EconomyService.total_gold, 500 - price,
-		"Purchase should deduct correct gold amount")
+	assert_eq(EconomyService.total_scrap, 500 - price,
+		"Purchase should deduct correct scrap amount")
 
 
 func test_purchase_turret_marks_sold():
-	EconomyService.total_gold = 500
+	EconomyService.total_scrap = 500
 	shop_manager.generate_offers()
 
 	shop_manager.purchase_offer(0)
@@ -250,7 +250,7 @@ func test_purchase_turret_marks_sold():
 
 
 func test_purchase_turret_adds_to_pending():
-	EconomyService.total_gold = 500
+	EconomyService.total_scrap = 500
 	
 	# Shop V2: Generate offers multiple times to ensure we get a turret
 	var turret_index = -1
@@ -275,39 +275,39 @@ func test_purchase_turret_adds_to_pending():
 
 
 func test_purchase_insufficient_funds():
-	EconomyService.total_gold = 1  # Very low gold
+	EconomyService.total_scrap = 1  # Very low scrap
 	shop_manager.generate_offers()
 
 	var result = shop_manager.purchase_offer(0)
 
-	assert_false(result, "Purchase should fail with insufficient gold")
+	assert_false(result, "Purchase should fail with insufficient scrap")
 
 
 func test_purchase_insufficient_funds_keeps_gold():
-	EconomyService.total_gold = 1
+	EconomyService.total_scrap = 1
 	shop_manager.generate_offers()
 
 	shop_manager.purchase_offer(0)
 
-	assert_eq(EconomyService.total_gold, 1, "Failed purchase should not deduct gold")
+	assert_eq(EconomyService.total_scrap, 1, "Failed purchase should not deduct scrap")
 
 
 func test_purchase_already_sold_fails():
-	EconomyService.total_gold = 1000
+	EconomyService.total_scrap = 1000
 	shop_manager.generate_offers()
 
 	shop_manager.purchase_offer(0)
-	var gold_after_first = EconomyService.total_gold
+	var scrap_after_first = EconomyService.total_scrap
 
 	var result = shop_manager.purchase_offer(0)
 
 	assert_false(result, "Cannot purchase already sold offer")
-	assert_eq(EconomyService.total_gold, gold_after_first,
-		"Failed purchase should not deduct gold")
+	assert_eq(EconomyService.total_scrap, scrap_after_first,
+		"Failed purchase should not deduct scrap")
 
 
 func test_purchase_invalid_index_negative():
-	EconomyService.total_gold = 500
+	EconomyService.total_scrap = 500
 	shop_manager.generate_offers()
 
 	var result = shop_manager.purchase_offer(-1)
@@ -316,7 +316,7 @@ func test_purchase_invalid_index_negative():
 
 
 func test_purchase_invalid_index_too_high():
-	EconomyService.total_gold = 500
+	EconomyService.total_scrap = 500
 	shop_manager.generate_offers()
 
 	var result = shop_manager.purchase_offer(100)
@@ -329,7 +329,7 @@ func test_purchase_invalid_index_too_high():
 # =============================================================================
 
 func test_purchase_item_adds_to_collected():
-	EconomyService.total_gold = 500
+	EconomyService.total_scrap = 500
 	shop_manager.generate_offers()
 
 	# Find item offer
@@ -348,7 +348,7 @@ func test_purchase_item_adds_to_collected():
 
 
 func test_purchase_item_adds_modifiers():
-	EconomyService.total_gold = 500
+	EconomyService.total_scrap = 500
 	shop_manager.generate_offers()
 
 	var initial_modifier_count = ModifierService.active_modifiers.size()
@@ -405,28 +405,28 @@ func test_get_reroll_cost_formula():
 
 
 func test_reroll_shop_success():
-	EconomyService.total_gold = 100
+	EconomyService.total_scrap = 100
 	shop_manager.generate_offers()
 
 	var result = shop_manager.reroll_shop()
 
-	assert_true(result, "Reroll should succeed with enough gold")
+	assert_true(result, "Reroll should succeed with enough scrap")
 
 
 func test_reroll_shop_deducts_gold():
-	EconomyService.total_gold = 100
+	EconomyService.total_scrap = 100
 	EconomyService.shop_reroll_count = 0
 	shop_manager.generate_offers()
 
 	var reroll_cost = shop_manager.get_reroll_cost()
 	shop_manager.reroll_shop()
 
-	assert_eq(EconomyService.total_gold, 100 - reroll_cost,
-		"Reroll should deduct correct gold amount")
+	assert_eq(EconomyService.total_scrap, 100 - reroll_cost,
+		"Reroll should deduct correct scrap amount")
 
 
 func test_reroll_shop_increments_count():
-	EconomyService.total_gold = 100
+	EconomyService.total_scrap = 100
 	EconomyService.shop_reroll_count = 0
 	shop_manager.generate_offers()
 
@@ -436,7 +436,7 @@ func test_reroll_shop_increments_count():
 
 
 func test_reroll_shop_generates_new_offers():
-	EconomyService.total_gold = 100
+	EconomyService.total_scrap = 100
 	shop_manager.generate_offers()
 	var old_offers = EconomyService.current_shop_offers.duplicate(true)
 
@@ -448,48 +448,48 @@ func test_reroll_shop_generates_new_offers():
 
 
 func test_reroll_insufficient_funds():
-	EconomyService.total_gold = 0
+	EconomyService.total_scrap = 0
 	shop_manager.generate_offers()
 
 	var result = shop_manager.reroll_shop()
 
-	assert_false(result, "Reroll should fail with insufficient gold")
+	assert_false(result, "Reroll should fail with insufficient scrap")
 
 
 func test_can_afford_reroll_with_gold():
-	EconomyService.total_gold = 100
+	EconomyService.total_scrap = 100
 	EconomyService.shop_reroll_count = 0
 
 	var result = shop_manager.can_afford_reroll()
 
-	assert_true(result, "Should be able to afford reroll with enough gold")
+	assert_true(result, "Should be able to afford reroll with enough scrap")
 
 
 func test_can_afford_reroll_without_gold():
-	EconomyService.total_gold = 0
+	EconomyService.total_scrap = 0
 	EconomyService.shop_reroll_count = 0
 
 	var result = shop_manager.can_afford_reroll()
 
-	assert_false(result, "Should not be able to afford reroll without gold")
+	assert_false(result, "Should not be able to afford reroll without scrap")
 
 
 # =============================================================================
 # SIGNALS
 # =============================================================================
 
-func test_purchase_emits_gold_spent_signal():
-	EconomyService.total_gold = 500
+func test_purchase_emits_scrap_spent_signal():
+	EconomyService.total_scrap = 500
 	shop_manager.generate_offers()
 	watch_signals(Events)
 
 	shop_manager.purchase_offer(0)
 
-	assert_signal_emitted(Events, "gold_spent")
+	assert_signal_emitted(Events, "scrap_spent")
 
 
 func test_purchase_emits_shop_purchase_made_signal():
-	EconomyService.total_gold = 500
+	EconomyService.total_scrap = 500
 	shop_manager.generate_offers()
 	watch_signals(Events)
 
@@ -499,7 +499,7 @@ func test_purchase_emits_shop_purchase_made_signal():
 
 
 func test_insufficient_funds_emits_signal():
-	EconomyService.total_gold = 1
+	EconomyService.total_scrap = 1
 	shop_manager.generate_offers()
 	watch_signals(Events)
 
@@ -508,18 +508,18 @@ func test_insufficient_funds_emits_signal():
 	assert_signal_emitted(Events, "shop_insufficient_funds")
 
 
-func test_reroll_emits_gold_spent_signal():
-	EconomyService.total_gold = 100
+func test_reroll_emits_scrap_spent_signal():
+	EconomyService.total_scrap = 100
 	shop_manager.generate_offers()
 	watch_signals(Events)
 
 	shop_manager.reroll_shop()
 
-	assert_signal_emitted(Events, "gold_spent")
+	assert_signal_emitted(Events, "scrap_spent")
 
 
 func test_reroll_emits_shop_rerolled_signal():
-	EconomyService.total_gold = 100
+	EconomyService.total_scrap = 100
 	shop_manager.generate_offers()
 	watch_signals(Events)
 
@@ -541,7 +541,7 @@ func test_generate_offers_emits_signal():
 # =============================================================================
 
 func test_multiple_purchases_in_one_shop():
-	EconomyService.total_gold = 2000
+	EconomyService.total_scrap = 2000
 	shop_manager.generate_offers()
 
 	# Buy all offers
@@ -554,22 +554,22 @@ func test_multiple_purchases_in_one_shop():
 		if offer["sold"]:
 			sold_count += 1
 
-	assert_eq(sold_count, GameConstants.SHOP_OFFER_COUNT, "Should be able to buy all offers with enough gold")
+	assert_eq(sold_count, GameConstants.SHOP_OFFER_COUNT, "Should be able to buy all offers with enough scrap")
 
 
 func test_gold_exactly_enough():
 	shop_manager.generate_offers()
 	var price = EconomyService.current_shop_offers[0]["price"]
-	EconomyService.total_gold = price
+	EconomyService.total_scrap = price
 
 	var result = shop_manager.purchase_offer(0)
 
-	assert_true(result, "Should be able to purchase with exact gold amount")
-	assert_eq(EconomyService.total_gold, 0, "Should have zero gold after purchase")
+	assert_true(result, "Should be able to purchase with exact scrap amount")
+	assert_eq(EconomyService.total_scrap, 0, "Should have zero scrap after purchase")
 
 
 func test_reroll_then_purchase():
-	EconomyService.total_gold = 500
+	EconomyService.total_scrap = 500
 	shop_manager.generate_offers()
 
 	# Reroll

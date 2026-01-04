@@ -10,7 +10,7 @@ const ShopOffersPanelScript = preload("res://scripts/ui/shop/shop_offers_panel.g
 
 # UI References
 @onready var title_label: Label = $MainContainer/ContentVBox/Header/TitleLabel
-@onready var gold_label: Label = $MainContainer/ContentVBox/Header/GoldLabel
+@onready var scrap_label: Label = $MainContainer/ContentVBox/Header/ScrapLabel
 @onready var offers_container: HBoxContainer = $MainContainer/ContentVBox/MainHBox/LeftPanel/OffersContainer
 @onready var reroll_button: Button = $MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer/RerollButton
 @onready var continue_button: Button = $MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer/ContinueButton
@@ -37,8 +37,8 @@ func _ready() -> void:
 	# Connect events
 	Events.shop_opened.connect(_on_shop_opened)
 	Events.shop_closed.connect(_on_shop_closed)
-	Events.gold_collected.connect(_on_gold_changed)
-	Events.gold_spent.connect(_on_gold_changed)
+	Events.scrap_collected.connect(_on_scrap_changed)
+	Events.scrap_spent.connect(_on_scrap_changed)
 	Events.shop_purchase_made.connect(_on_purchase_made)
 	Events.shop_insufficient_funds.connect(_on_insufficient_funds)
 
@@ -66,10 +66,10 @@ func _on_shop_opened(wave_number: int) -> void:
 	title_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	title_label.add_theme_constant_override("outline_size", 6)
 
-	gold_label.add_theme_font_override("font", MAIN_FONT)
-	gold_label.add_theme_font_size_override("font_size", 28)
-	gold_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	gold_label.add_theme_constant_override("outline_size", 4)
+	scrap_label.add_theme_font_override("font", MAIN_FONT)
+	scrap_label.add_theme_font_size_override("font_size", 28)
+	scrap_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	scrap_label.add_theme_constant_override("outline_size", 4)
 
 	reroll_button.add_theme_font_override("font", MAIN_FONT)
 	reroll_button.add_theme_font_size_override("font_size", 24)
@@ -82,7 +82,7 @@ func _on_shop_opened(wave_number: int) -> void:
 	continue_button.add_theme_color_override("font_outline_color", Color.BLACK)
 	
 	title_label.text = "TURRET SHOP - WAVE %d" % wave_number
-	update_gold_display()
+	update_scrap_display()
 	offers_panel.update_reroll_button()
 	_update_panels()
 
@@ -137,19 +137,19 @@ func _on_continue_pressed() -> void:
 		game_manager.end_shop_phase()
 
 
-func _on_gold_changed(_amount: int, _total: int) -> void:
-	update_gold_display()
+func _on_scrap_changed(_amount: int, _total: int) -> void:
+	update_scrap_display()
 	_request_regeneration()
 
 
-func update_gold_display() -> void:
-	gold_label.text = "Gold: %d" % EconomyService.total_gold
+func update_scrap_display() -> void:
+	scrap_label.text = "Scrap: %d" % EconomyService.total_scrap
 
 
 func _on_insufficient_funds(_required: int, _current: int) -> void:
 	var tween = create_tween()
-	tween.tween_property(gold_label, "modulate", Color.RED, 0.1)
-	tween.tween_property(gold_label, "modulate", Color.WHITE, 0.1)
+	tween.tween_property(scrap_label, "modulate", Color.RED, 0.1)
+	tween.tween_property(scrap_label, "modulate", Color.WHITE, 0.1)
 
 
 func _update_panels() -> void:

@@ -92,37 +92,37 @@ func test_get_reroll_cost_multiplier_stacks():
 # GOLD EARN MULTIPLIER
 # =============================================================================
 
-func test_get_gold_earn_multiplier_base():
-	var mult = item_tracking_service.get_gold_earn_multiplier()
+func test_get_scrap_earn_multiplier_base():
+	var mult = item_tracking_service.get_scrap_earn_multiplier()
 	assert_eq(mult, 1.0,
 		"Should return 1.0 without modifiers")
 
 
-func test_get_gold_earn_multiplier_with_bonus():
+func test_get_scrap_earn_multiplier_with_bonus():
 	modifier_service.add_modifier({
 		"stat": "gold_earn_mult",
 		"operation": "multiply",
 		"value": 1.25,
 		"source": "gold_boost_item"
 	})
-	var mult = item_tracking_service.get_gold_earn_multiplier()
+	var mult = item_tracking_service.get_scrap_earn_multiplier()
 	assert_eq(mult, 1.25,
 		"Should return gold earn multiplier")
 
 
-func test_get_gold_earn_multiplier_with_penalty():
+func test_get_scrap_earn_multiplier_with_penalty():
 	modifier_service.add_modifier({
 		"stat": "gold_earn_mult",
 		"operation": "multiply",
 		"value": 0.75,
 		"source": "gold_penalty"
 	})
-	var mult = item_tracking_service.get_gold_earn_multiplier()
+	var mult = item_tracking_service.get_scrap_earn_multiplier()
 	assert_eq(mult, 0.75,
 		"Should return reduced gold multiplier")
 
 
-func test_get_gold_earn_multiplier_multiple_sources():
+func test_get_scrap_earn_multiplier_multiple_sources():
 	modifier_service.add_modifier({
 		"stat": "gold_earn_mult",
 		"operation": "multiply",
@@ -135,7 +135,7 @@ func test_get_gold_earn_multiplier_multiple_sources():
 		"value": 1.10,
 		"source": "item2"
 	})
-	var mult = item_tracking_service.get_gold_earn_multiplier()
+	var mult = item_tracking_service.get_scrap_earn_multiplier()
 	assert_almost_eq(mult, 1.15 * 1.10, 0.001,
 		"Should stack gold earn multipliers")
 
@@ -367,7 +367,7 @@ func test_all_multipliers_with_different_modifiers():
 	})
 
 	assert_eq(item_tracking_service.get_reroll_cost_multiplier(), 0.8)
-	assert_eq(item_tracking_service.get_gold_earn_multiplier(), 1.2)
+	assert_eq(item_tracking_service.get_scrap_earn_multiplier(), 1.2)
 	assert_eq(item_tracking_service.get_enemy_count_multiplier(), 1.5)
 	assert_eq(item_tracking_service.get_shop_price_multiplier(), 0.9)
 	assert_eq(item_tracking_service.get_wave_bonus_multiplier(), 1.3)
@@ -417,7 +417,7 @@ func test_zero_multiplier_values():
 		"value": 0.0,
 		"source": "zero_gold"
 	})
-	var mult = item_tracking_service.get_gold_earn_multiplier()
+	var mult = item_tracking_service.get_scrap_earn_multiplier()
 	assert_eq(mult, 0.0,
 		"Should handle zero multiplier")
 
