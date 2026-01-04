@@ -68,7 +68,7 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 
 	# Price label (common for both types)
 	var price_label = Label.new()
-	price_label.text = "%d Gold" % offer["price"]
+	price_label.text = "%d Scrap" % offer["price"]
 	price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	price_label.add_theme_font_override("font", MAIN_FONT)
 	price_label.add_theme_font_size_override("font_size", 24)

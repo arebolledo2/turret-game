@@ -100,44 +100,44 @@ func test_get_scrap_earn_multiplier_base():
 
 func test_get_scrap_earn_multiplier_with_bonus():
 	modifier_service.add_modifier({
-		"stat": "gold_earn_mult",
+		"stat": "scrap_earn_mult",
 		"operation": "multiply",
 		"value": 1.25,
-		"source": "gold_boost_item"
+		"source": "scrap_boost_item"
 	})
 	var mult = item_tracking_service.get_scrap_earn_multiplier()
 	assert_eq(mult, 1.25,
-		"Should return gold earn multiplier")
+		"Should return scrap earn multiplier")
 
 
 func test_get_scrap_earn_multiplier_with_penalty():
 	modifier_service.add_modifier({
-		"stat": "gold_earn_mult",
+		"stat": "scrap_earn_mult",
 		"operation": "multiply",
 		"value": 0.75,
-		"source": "gold_penalty"
+		"source": "scrap_penalty"
 	})
 	var mult = item_tracking_service.get_scrap_earn_multiplier()
 	assert_eq(mult, 0.75,
-		"Should return reduced gold multiplier")
+		"Should return reduced scrap multiplier")
 
 
 func test_get_scrap_earn_multiplier_multiple_sources():
 	modifier_service.add_modifier({
-		"stat": "gold_earn_mult",
+		"stat": "scrap_earn_mult",
 		"operation": "multiply",
 		"value": 1.15,
 		"source": "item1"
 	})
 	modifier_service.add_modifier({
-		"stat": "gold_earn_mult",
+		"stat": "scrap_earn_mult",
 		"operation": "multiply",
 		"value": 1.10,
 		"source": "item2"
 	})
 	var mult = item_tracking_service.get_scrap_earn_multiplier()
 	assert_almost_eq(mult, 1.15 * 1.10, 0.001,
-		"Should stack gold earn multipliers")
+		"Should stack scrap earn multipliers")
 
 
 # =============================================================================
@@ -342,7 +342,7 @@ func test_all_multipliers_with_different_modifiers():
 		"source": "reroll_item"
 	})
 	modifier_service.add_modifier({
-		"stat": "gold_earn_mult",
+		"stat": "scrap_earn_mult",
 		"operation": "multiply",
 		"value": 1.2,
 		"source": "gold_item"
@@ -412,7 +412,7 @@ func test_can_track_item_counts():
 
 func test_zero_multiplier_values():
 	modifier_service.add_modifier({
-		"stat": "gold_earn_mult",
+		"stat": "scrap_earn_mult",
 		"operation": "multiply",
 		"value": 0.0,
 		"source": "zero_gold"

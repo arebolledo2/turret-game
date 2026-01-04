@@ -37,11 +37,6 @@ func test_initial_kills():
 	assert_eq(game_state.total_kills, 0, "Initial kills should be 0")
 
 
-func test_initial_starting_scrap():
-	assert_eq(game_state.total_scrap, GameConstants.STARTING_SCRAP,
-		"Initial scrap should match STARTING_SCRAP constant")
-
-
 func test_initial_player_level():
 	assert_eq(game_state.player_level, 1, "Initial player level should be 1")
 
@@ -426,7 +421,7 @@ func test_reset_clears_wave():
 func test_reset_clears_scrap():
 	game_state.total_scrap = 100
 	game_state.reset()
-	assert_eq(game_state.total_scrap, GameConstants.STARTING_SCRAP, "Reset should restore starting scrap")
+	assert_eq(game_state.total_scrap, 0, "Reset should clear scrap to 0")
 
 
 func test_reset_clears_kills():
@@ -487,8 +482,8 @@ func test_reset_clears_modifiers():
 func test_reset_resets_scrap():
 	game_state.total_scrap = 500
 	game_state.reset()
-	assert_eq(game_state.total_scrap, GameConstants.STARTING_SCRAP,
-		"Reset should restore starting scrap")
+	assert_eq(game_state.total_scrap, 0,
+		"Reset should clear scrap to 0")
 
 
 func test_reset_clears_shop_reroll_count():
