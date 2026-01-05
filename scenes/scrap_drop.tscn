@@ -1,11 +1,10 @@
 [gd_scene load_steps=3 format=3 uid="uid://scrap_drop_scene_001"]
 
 [ext_resource type="Script" path="res://scripts/scrap_drop.gd" id="1_scrap_drop"]
+[ext_resource type="Texture2D" uid="uid://scrap_sprite_texture" path="res://assets/sprites/scrap_sprite.png" id="2_scrap_sprite"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
 radius = 8.0
-
-[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_1"]
 
 [node name="ScrapDrop" type="Area2D"]
 collision_layer = 8
@@ -16,6 +15,5 @@ script = ExtResource("1_scrap_drop")
 shape = SubResource("CircleShape2D_1")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-modulate = Color(0.5, 0.3, 1, 1)
-scale = Vector2(12, 12)
-texture = SubResource("PlaceholderTexture2D_1")
+scale = Vector2(0.05, 0.05)
+texture = ExtResource("2_scrap_sprite")
