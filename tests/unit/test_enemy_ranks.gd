@@ -40,20 +40,22 @@ func test_captain_rank_initialization():
 	assert_almost_eq(_enemy.max_health, expected_hp, 0.1)
 	assert_almost_eq(_enemy.base_scale, base_stats["scale"] * GameConstants.ENEMY_RANK_CAPT_SCALE_MULT, 0.1)
 
-func test_rank_scrap_scaling():
+func test_rank_scrap_value_unchanged():
+	# With new scrap system, scrap_value stays at 1 for all ranks
+	# (LT/CPT scatter multiple pickups via drop counts instead)
 	_enemy.initialize(1, "basic", GameEnums.EnemyRank.NORMAL)
-	var normal_scrap = _enemy.scrap_value
+	assert_eq(_enemy.scrap_value, 1, "Normal enemy scrap_value should be 1")
 
 	var lt_enemy = EnemyScene.instantiate()
 	add_child(lt_enemy)
 	lt_enemy.initialize(1, "basic", GameEnums.EnemyRank.LIEUTENANT)
-	assert_eq(lt_enemy.scrap_value, int(normal_scrap * GameConstants.ENEMY_RANK_LT_SCRAP_MULT))
+	assert_eq(lt_enemy.scrap_value, 1, "Lieutenant scrap_value should stay at 1 (drops multiple pickups)")
 	lt_enemy.free()
 
 	var capt_enemy = EnemyScene.instantiate()
 	add_child(capt_enemy)
 	capt_enemy.initialize(1, "basic", GameEnums.EnemyRank.CAPTAIN)
-	assert_eq(capt_enemy.scrap_value, int(normal_scrap * GameConstants.ENEMY_RANK_CAPT_SCRAP_MULT))
+	assert_eq(capt_enemy.scrap_value, 1, "Captain scrap_value should stay at 1 (drops multiple pickups)")
 	capt_enemy.free()
 
 func test_captain_guaranteed_legendary():

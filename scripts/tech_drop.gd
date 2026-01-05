@@ -121,10 +121,9 @@ func _spawn_item_pickup(item_id: String) -> void:
 	pickup.initialize(item_id)
 
 func scatter_rewards() -> void:
-	"""Emit scrap_dropped signals to spawn scrap pickups in scattered positions."""
-	var scrap_per_drop = int(float(scrap_value) / float(scatter_count))
-
-	for i in scatter_count:
+	"""Emit scrap_dropped signals to spawn scrap pickups in scattered positions.
+	Each pickup is worth 1 scrap. Total pickups = scrap_value (default 5)."""
+	for i in scrap_value:
 		# Calculate random position within scatter radius
 		var angle = randf() * TAU
 		var distance = randf() * scatter_radius
@@ -132,7 +131,7 @@ func scatter_rewards() -> void:
 		var drop_pos = global_position + offset
 
 		# Emit signal - DropSpawner will create the actual pickup
-		Events.scrap_dropped.emit(drop_pos, scrap_per_drop)
+		Events.scrap_dropped.emit(drop_pos, 1)
 
 func despawn() -> void:
 	"""Wave ended - fade out with no rewards."""

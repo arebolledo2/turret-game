@@ -134,14 +134,13 @@ func test_enemy_has_scrap_value():
 
 func test_scrap_dropped_signal_has_correct_value():
 	watch_signals(Events)
-	var expected_scrap = enemy.scrap_value
 	enemy.initialize(1)
 
 	enemy.take_damage(1000)
 
 	var signal_params = get_signal_parameters(Events, "scrap_dropped")
-	# signal_params[1] is the scrap amount (second parameter)
-	assert_eq(signal_params[1], expected_scrap, "Scrap dropped should match enemy's scrap_value")
+	# Normal enemies emit 1 scrap pickup worth 1 scrap
+	assert_eq(signal_params[1], 1, "Normal enemy should drop 1 scrap pickup worth 1")
 
 
 # =============================================================================

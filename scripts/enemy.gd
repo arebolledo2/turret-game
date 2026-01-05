@@ -237,14 +237,14 @@ func _apply_rank_modifiers() -> void:
 			max_health *= GameConstants.ENEMY_RANK_LT_HP_MULT
 			base_scale *= GameConstants.ENEMY_RANK_LT_SCALE_MULT
 			speed *= GameConstants.ENEMY_RANK_LT_SPEED_MULT
-			scrap_value = int(scrap_value * GameConstants.ENEMY_RANK_LT_SCRAP_MULT)
+			# scrap_value stays at 1 - we scatter multiple pickups instead
 			mass *= GameConstants.ENEMY_RANK_LT_MASS_MULT
 			color_tint = color_tint.lerp(GameConstants.ENEMY_RANK_LT_COLOR, 0.5)
 		GameEnums.EnemyRank.CAPTAIN:
 			max_health *= GameConstants.ENEMY_RANK_CAPT_HP_MULT
 			base_scale *= GameConstants.ENEMY_RANK_CAPT_SCALE_MULT
 			speed *= GameConstants.ENEMY_RANK_CAPT_SPEED_MULT
-			scrap_value = int(scrap_value * GameConstants.ENEMY_RANK_CAPT_SCRAP_MULT)
+			# scrap_value stays at 1 - we scatter multiple pickups instead
 			mass *= GameConstants.ENEMY_RANK_CAPT_MASS_MULT
 			color_tint = color_tint.lerp(GameConstants.ENEMY_RANK_CAPT_COLOR, 0.5)
 
@@ -313,10 +313,12 @@ func die() -> void:
 	if EnemyRegistry.has_behavior(enemy_type, GameEnums.EnemyBehavior.EXPLOSIVE):
 		_explode()
 
-	# Emit signals for scrap drop and kill tracking
+	# Emit kill tracking
 	Events.enemy_killed.emit(self, global_position)
-	Events.scrap_dropped.emit(global_position, scrap_value)
 	GameStateService.total_kills += 1
+
+	# Spawn scrap pickups based on rank
+	_spawn_scrap_drops()
 
 	# Handle rank-based loot drops
 	_handle_rank_loot()
@@ -401,6 +403,32 @@ var behavior_instance: EnemyBehavior:
 	get:
 		return movement.behavior_instance if movement else null
 
+
+func _spawn_scrap_drops() -> void:
+	"""Spawn scrap pickups based on enemy rank. Normal enemies drop 1, elites scatter multiple."""
+	var drop_count: int = 1
+	var scatter_radius: float = 0.0
+	
+	match enemy_rank:
+		GameEnums.EnemyRank.LIEUTENANT:
+			drop_count = GameConstants.ENEMY_RANK_LT_SCRAP_DROP_COUNT
+			scatter_radius = 60.0
+		GameEnums.EnemyRank.CAPTAIN:
+			drop_count = GameConstants.ENEMY_RANK_CAPT_SCRAP_DROP_COUNT
+			scatter_radius = 100.0
+	
+	# Single drop for normal enemies
+	if drop_count == 1:
+		Events.scrap_dropped.emit(global_position, 1)
+		return
+	
+	# Scatter multiple 1-scrap pickups for elite enemies
+	for i in drop_count:
+		var angle = randf() * TAU
+		var distance = randf() * scatter_radius
+		var offset = Vector2(cos(angle), sin(angle)) * distance
+		var drop_pos = global_position + offset
+		Events.scrap_dropped.emit(drop_pos, 1)
 
 func _handle_rank_loot() -> void:
 	match enemy_rank:

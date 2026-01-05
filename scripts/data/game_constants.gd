@@ -22,7 +22,7 @@ const PLAYER_BASE_MAX_HEALTH: float = 25.0
 const PLAYER_SPEED: float = 250.0
 const PLAYER_PICKUP_RADIUS: float = 50.0
 const PLAYER_INVINCIBILITY_TIME: float = 0.5
-const PLAYER_WEAPON_DAMAGE: float = 1.0  # Legacy - used by PlayerStatsService for item bonuses
+const PLAYER_WEAPON_DAMAGE: float = 1.0 # Legacy - used by PlayerStatsService for item bonuses
 
 # Player Turret Combat
 const PLAYER_TURRET_DAMAGE: float = 10.0
@@ -80,14 +80,14 @@ const ENEMY_BASE_CONTACT_DAMAGE: float = 8.0
 const ENEMY_RANK_LT_HP_MULT: float = 8.0
 const ENEMY_RANK_LT_SCALE_MULT: float = 1.5
 const ENEMY_RANK_LT_SPEED_MULT: float = 0.8
-const ENEMY_RANK_LT_SCRAP_MULT: float = 10.0
+const ENEMY_RANK_LT_SCRAP_DROP_COUNT: int = 10 # Number of 1-scrap pickups to scatter
 const ENEMY_RANK_LT_MASS_MULT: float = 3.0
 const ENEMY_RANK_LT_COLOR: Color = Color(1.0, 0.8, 0.4, 1.0) # Golden hue
 
 const ENEMY_RANK_CAPT_HP_MULT: float = 25.0
 const ENEMY_RANK_CAPT_SCALE_MULT: float = 2.5
 const ENEMY_RANK_CAPT_SPEED_MULT: float = 0.6
-const ENEMY_RANK_CAPT_SCRAP_MULT: float = 50.0
+const ENEMY_RANK_CAPT_SCRAP_DROP_COUNT: int = 50 # Number of 1-scrap pickups to scatter
 const ENEMY_RANK_CAPT_MASS_MULT: float = 10.0
 const ENEMY_RANK_CAPT_COLOR: Color = Color(1.0, 0.3, 0.3, 1.0) # Bright red hue
 
@@ -136,7 +136,7 @@ const SHOP_ITEM_CHANCE: float = 0.65 # 65% item, 35% turret
 const TECH_DROP_SPAWN_INTERVAL: float = 5.0
 const TECH_DROP_SPAWN_CHANCE: float = 0.20
 const TECH_DROP_BASE_HEALTH: float = 15.0
-const TECH_DROP_SCRAP_REWARD: int = 100
+const TECH_DROP_SCRAP_REWARD: int = 5
 const TECH_DROP_SCATTER_COUNT: int = 5
 const TECH_DROP_SCATTER_RADIUS: float = 80.0
 const TECH_DROP_ITEM_DROP_CHANCE: float = 0.30 # 30% chance to drop item when destroyed
