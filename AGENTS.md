@@ -1,6 +1,6 @@
 # Turret Game - AI Agent Instructions
 
-Wave-based survival tower defense game built in **Godot 4.5** using GDScript. Player dodges enemies while turrets provide primary damage. Purchase turrets and items between waves using gold earned from kills.
+Wave-based survival tower defense game built in **Godot 4.5** using GDScript. Player dodges enemies while turrets provide primary damage. Purchase turrets and items between waves using scrap earned from kills.
 
 ## Quick Reference
 
@@ -19,12 +19,12 @@ Game logic split into **focused service singletons** in `scripts/autoload/`:
 
 **Core Game State:**
 - **DifficultyService** - Difficulty config and multipliers
-- **GameStateService** - Wave number, XP, kills, time, level
+- **GameStateService** - Wave number, scrap, kills, time, level
 - **GameStateMachine** - State transitions with validation
 - **GameModeService** - Active game mode and mode-specific logic hooks
 
 **Economy & Progression:**
-- **EconomyService** - Gold, shop offers, rerolls, purchases
+- **EconomyService** - Scrap, shop offers, rerolls, purchases
 - **ItemTrackingService** - Item collection tracking
 - **LootService** - Manages item drops and loot review
 
@@ -94,7 +94,7 @@ Core game entities spawned during gameplay:
 
 - **DefenseTarget** (`scripts/defense_target.gd`) - Core entity for Tech Defense and Escort modes with barrier mechanics, reflection damage, and healing
 - **TunnelDoor** (`scripts/tunnel_door.gd`) - Breachable door entity for Tunneling game mode
-- **XPDrop** (`scripts/xp_drop.gd`) - Experience pickups with magnet-based collection
+- **ScrapDrop** (`scripts/xp_drop.gd`) - Scrap pickups with magnet-based collection
 - **TechDrop** (`scripts/tech_drop.gd`) - Item drops from wave completion with loot review
 - **ItemPickup** (`scripts/item_pickup.gd`) - Collectible item drops
 
@@ -110,7 +110,7 @@ Core game entities spawned during gameplay:
 ### UI Architecture
 UI components organized by function:
 
-**Core HUD**: HUDGameDisplay (health, wave, gold, XP), HUDMenuManager (menu states)
+**Core HUD**: HUDGameDisplay (health, wave, scrap), HUDMenuManager (menu states)
 
 **Screens**: StartSettings, GameModeSelect, DifficultySelect, WaveAnnouncement, PauseMenu, GameOverScreen, SettingsMenu, LootReviewScreen
 
@@ -134,7 +134,7 @@ IDLE, DIFFICULTY_SELECT, GAME_MODE_SELECT, WAVE_ANNOUNCEMENT, COMBAT, WAVE_END, 
 5. **SHOP**: Purchase turrets and items between waves.
 
 ### Economy & Combat
-- **Economy**: Gold from kills, wave bonuses, and tech drops. Shop offers are weighted (65% items, 35% turrets).
+- **Economy**: Scrap from kills, wave bonuses, and tech drops. Shop offers are weighted (65% items, 35% turrets).
 - **Combat**: Nearest-neighbor targeting for player/turrets. Includes status effects (DoT, slow), area-of-effect damage, and chain lightning.
 - **Arena Bounds**: `ArenaBoundsService` handles both rectangular and isometric diamond bounds for movement and spawning.
 

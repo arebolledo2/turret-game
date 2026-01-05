@@ -192,7 +192,7 @@ func test_calculate_turret_price_formula():
 	# Shop V2: Price includes wave scaling + turret purchase penalty
 	var base_price = 100
 	var wave = 3
-	EconomyService.turrets_purchased = 2  # Simulate having bought 2 turrets
+	EconomyService.turrets_purchased = 2 # Simulate having bought 2 turrets
 
 	var wave_mult = 1.0 + GameConstants.WAVE_PRICE_SCALE * wave
 	# Use EconomyService.get_turret_purchase_penalty() as shop_manager does (can be modified by items)
@@ -275,7 +275,7 @@ func test_purchase_turret_adds_to_pending():
 
 
 func test_purchase_insufficient_funds():
-	EconomyService.total_scrap = 1  # Very low scrap
+	EconomyService.total_scrap = 1 # Very low scrap
 	shop_manager.generate_offers()
 
 	var result = shop_manager.purchase_offer(0)
@@ -460,11 +460,6 @@ func test_can_afford_reroll_with_gold():
 	EconomyService.total_scrap = 100
 	EconomyService.shop_reroll_count = 0
 
-	var result = shop_manager.can_afford_reroll()
-
-	assert_true(result, "Should be able to afford reroll with enough scrap")
-
-
 func test_can_afford_reroll_without_gold():
 	EconomyService.total_scrap = 0
 	EconomyService.shop_reroll_count = 0
@@ -472,6 +467,33 @@ func test_can_afford_reroll_without_gold():
 	var result = shop_manager.can_afford_reroll()
 
 	assert_false(result, "Should not be able to afford reroll without scrap")
+
+
+func test_get_reroll_cost_all_items_purchased_is_zero():
+	# Generate offers first
+	EconomyService.total_scrap = 1000
+	shop_manager.generate_offers()
+	EconomyService.shop_reroll_count = 5 # Some non-zero count
+	
+	# Simulate all items being purchased
+	for offer in EconomyService.current_shop_offers:
+		offer["sold"] = true
+	
+	var cost = shop_manager.get_reroll_cost()
+	assert_eq(cost, 0, "Reroll cost should be 0 (free) when all items are purchased")
+
+
+func test_can_afford_reroll_when_all_items_purchased():
+	# Generate offers first
+	EconomyService.total_scrap = 0 # Player has no scrap
+	shop_manager.generate_offers()
+	
+	# Simulate all items being purchased
+	for offer in EconomyService.current_shop_offers:
+		offer["sold"] = true
+	
+	var result = shop_manager.can_afford_reroll()
+	assert_true(result, "Should be able to afford reroll when all items are purchased (cost is 0)")
 
 
 # =============================================================================

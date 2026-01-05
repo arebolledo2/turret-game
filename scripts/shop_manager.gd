@@ -234,7 +234,22 @@ func reroll_shop() -> bool:
 	Events.shop_rerolled.emit(EconomyService.current_shop_offers, reroll_cost)
 	return true
 
+func _are_all_offers_sold() -> bool:
+	"""Check if all shop offers have been purchased"""
+	if EconomyService.current_shop_offers.is_empty():
+		return false
+	
+	for offer in EconomyService.current_shop_offers:
+		if not offer.get("sold", false):
+			return false
+	
+	return true
+
 func get_reroll_cost() -> int:
+	# If all items have been purchased, reroll is free
+	if _are_all_offers_sold():
+		return 0
+	
 	# Apply reroll cost multiplier from modifiers (e.g., Probability Matrix)
 	var item_multiplier := ItemTrackingService.get_reroll_cost_multiplier()
 	# Delegate to EconomyService with wave-based calculation
