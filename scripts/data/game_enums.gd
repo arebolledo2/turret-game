@@ -7,7 +7,7 @@ extends RefCounted
 enum Difficulty {EASY, MEDIUM, HARD}
 
 # Attack style tags - how damage is delivered
-enum AttackStyle {PROJECTILE, INSTANT, AOE, CHAIN}
+enum AttackStyle {PROJECTILE, INSTANT, AOE, CHAIN, MELEE, DEPLOYABLE}
 
 # Damage type tags - elemental classification
 enum DamageType {PHYSICAL, FIRE, ELECTRIC, PLASMA}

@@ -23,6 +23,15 @@ var can_fire: bool = true
 var fire_timer: Timer = null
 var projectile_scene: PackedScene
 
+# Melee state
+var melee_rotation: float = 0.0
+var melee_hitbox: Area2D = null
+var melee_hit_cooldowns: Dictionary = {}
+
+# Deployable (mine) state
+var active_mines: Array = []
+var mine_scene: PackedScene = null
+
 func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary) -> void:
 	"""Initialize component with required references."""
 	turret = p_turret
@@ -40,6 +49,14 @@ func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary) ->
 	fire_timer.timeout.connect(_on_fire_timer_timeout)
 	turret.add_child(fire_timer)
 
+	# Setup melee hitbox if this is a melee turret
+	if TurretRegistry.has_attack_style(turret_type, GameEnums.AttackStyle.MELEE):
+		_setup_melee_hitbox()
+
+	# Preload mine scene if deployable turret
+	if TurretRegistry.has_attack_style(turret_type, GameEnums.AttackStyle.DEPLOYABLE):
+		mine_scene = preload("res://scenes/mine.tscn")
+
 func update_stats(new_stats: Dictionary) -> void:
 	"""Update stats cache and fire timer."""
 	stats = new_stats
@@ -56,6 +73,11 @@ func _update_fire_timer() -> void:
 
 func process() -> void:
 	"""Process combat logic (targeting and firing)."""
+	# Handle melee rotation
+	if TurretRegistry.has_attack_style(turret_type, GameEnums.AttackStyle.MELEE):
+		_process_melee_rotation(get_process_delta_time())
+		return # Skip normal targeting
+
 	find_target()
 
 	# Fire if target is in range and can fire
@@ -142,7 +164,11 @@ func fire() -> void:
 	var turret_def = TurretRegistry.get_type(turret_type)
 	var attack_styles = turret_def.get("attack_styles", [])
 
-	if GameEnums.AttackStyle.PROJECTILE in attack_styles:
+	if GameEnums.AttackStyle.MELEE in attack_styles:
+		return # Melee is passive, no firing action
+	elif GameEnums.AttackStyle.DEPLOYABLE in attack_styles:
+		_fire_deployable()
+	elif GameEnums.AttackStyle.PROJECTILE in attack_styles:
 		_fire_projectile()
 	elif GameEnums.AttackStyle.CHAIN in attack_styles:
 		_fire_chain()
@@ -419,3 +445,126 @@ func _spawn_pulse_effect() -> void:
 func _on_fire_timer_timeout() -> void:
 	"""Re-enable firing after cooldown."""
 	can_fire = true
+
+# Melee turret functions
+
+func _setup_melee_hitbox() -> void:
+	"""Setup collision area for melee turret."""
+	melee_hitbox = Area2D.new()
+	melee_hitbox.name = "MeleeHitbox"
+
+	# Set collision layers: projectile layer (4) to hit enemy hurtboxes (32)
+	melee_hitbox.collision_layer = 4
+	melee_hitbox.collision_mask = 32
+
+	# Create rectangular collision shape for the bat
+	var collision_shape = CollisionShape2D.new()
+	var rect_shape = RectangleShape2D.new()
+	var swing_radius = stats.get("range", 80.0)
+	rect_shape.size = Vector2(swing_radius * 0.3, swing_radius) # Thin bat
+	collision_shape.shape = rect_shape
+	collision_shape.position = Vector2(swing_radius / 2, 0) # Offset from center
+
+	melee_hitbox.add_child(collision_shape)
+	turret.add_child(melee_hitbox)
+
+	# Connect collision signal
+	melee_hitbox.area_entered.connect(_on_melee_hit)
+
+func _on_melee_hit(hurtbox: Area2D) -> void:
+	"""Handle melee collision with enemy hurtbox."""
+	if not hurtbox.is_in_group("enemy_hurtbox"):
+		return
+
+	var enemy = hurtbox.get_parent()
+	if not enemy or not enemy.is_in_group("enemies"):
+		return
+
+	# Cooldown check (0.3 second cooldown per enemy)
+	var enemy_id = enemy.get_instance_id()
+	var current_time = Time.get_ticks_msec() / 1000.0
+	if melee_hit_cooldowns.has(enemy_id):
+		if current_time - melee_hit_cooldowns[enemy_id] < 0.3:
+			return
+	melee_hit_cooldowns[enemy_id] = current_time
+
+	# Roll for crit
+	var is_crit := TurretStatsService.roll_turret_crit()
+	var base_damage := float(stats.get("damage", 8.0))
+	var final_damage := base_damage
+	if is_crit:
+		final_damage = TurretStatsService.calculate_turret_crit_damage(base_damage)
+
+	# Apply damage
+	if enemy.has_method("take_damage"):
+		enemy.take_damage(final_damage, is_crit)
+
+	# Apply knockback
+	var knockback_force = stats.get("knockback_force", 80.0)
+	if knockback_force > 0 and enemy.has_method("apply_knockback"):
+		var knockback_dir = turret.global_position.direction_to(enemy.global_position)
+		enemy.apply_knockback(knockback_force, knockback_dir)
+
+	Events.turret_fired.emit(turret) # For stats tracking
+
+func _process_melee_rotation(delta: float) -> void:
+	"""Continuously rotate melee weapon."""
+	var rotation_rate = stats.get("rotation_rate", 360.0)
+	melee_rotation += rotation_rate * delta
+
+	if melee_rotation >= 360.0:
+		melee_rotation -= 360.0
+
+	# Apply rotation to hitbox and turret sprite
+	if melee_hitbox:
+		melee_hitbox.rotation_degrees = melee_rotation
+
+	# Rotate the entire turret to show spinning
+	turret.rotation_degrees = melee_rotation
+
+# Mine turret functions
+
+func _fire_deployable() -> void:
+	"""Deploy a mine within turret range."""
+	if mine_scene == null:
+		return
+
+	# Check max mines limit
+	var max_mines = int(stats.get("max_mines", 5))
+	_clean_invalid_mines()
+
+	if active_mines.size() >= max_mines:
+		# At capacity, don't spawn
+		return
+
+	# Random position within range
+	var deploy_range = stats.get("range", 150.0)
+	var angle = randf() * TAU
+	var distance = randf() * deploy_range
+	var spawn_offset = Vector2(cos(angle), sin(angle)) * distance
+	var spawn_pos = turret.global_position + spawn_offset
+
+	# Spawn mine
+	var mine = mine_scene.instantiate()
+	var parent = turret.get_tree().current_scene if turret.get_tree().current_scene else turret.get_tree().root
+	parent.add_child(mine)
+	mine.global_position = spawn_pos
+
+	# Setup mine with stats
+	var damage = stats.get("damage", 15.0)
+	var explosive_radius = stats.get("explosive_radius", 70.0)
+	var proximity_radius = stats.get("proximity_radius", 40.0)
+	var knockback = stats.get("knockback_force", 150.0)
+	mine.setup(damage, explosive_radius, proximity_radius, knockback, turret)
+
+	active_mines.append(mine)
+
+func _clean_invalid_mines() -> void:
+	"""Remove mines that have been destroyed."""
+	active_mines = active_mines.filter(func(m): return is_instance_valid(m))
+
+func _on_mine_exploded(mine: Node2D) -> void:
+	"""Remove exploded mine from active mines."""
+	var idx = active_mines.find(mine)
+	if idx >= 0:
+		active_mines.remove_at(idx)

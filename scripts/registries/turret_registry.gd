@@ -11,6 +11,8 @@ const COLORS: Dictionary = {
 	"plasma": Color("AA44DD"),
 	"shock": Color("DDDD44"),
 	"tesla": Color("44DDDD"),
+	"melee": Color("999999"),
+	"mine": Color("DD8844"),
 }
 
 # Base prices for turret types
@@ -21,6 +23,8 @@ const BASE_PRICES: Dictionary = {
 	"plasma": 16,
 	"shock": 14,
 	"tesla": 17,
+	"melee": 12,
+	"mine": 15,
 }
 
 const TYPES: Dictionary = {
@@ -118,6 +122,38 @@ const TYPES: Dictionary = {
 			"chain_count": 3,
 			"chain_range": 150.0,
 			"chain_decay": 0.7,
+		}
+	},
+	"melee": {
+		"name": "Melee Turret",
+		"icon": "⚔️",
+		"description": "Spinning bat that damages and knocks back enemies on contact.",
+		"attack_styles": [GameEnums.AttackStyle.MELEE],
+		"damage_types": [GameEnums.DamageType.PHYSICAL],
+		"base_stats": {
+			"damage": 8.0,
+			"fire_rate": 0.0,
+			"range": 80.0,
+			"rotation_speed": 0.0,
+			"rotation_rate": 360.0,
+			"knockback_force": 80.0,
+		}
+	},
+	"mine": {
+		"name": "Mine Turret",
+		"icon": "💣",
+		"description": "Deploys proximity mines that explode when enemies approach.",
+		"attack_styles": [GameEnums.AttackStyle.DEPLOYABLE],
+		"damage_types": [GameEnums.DamageType.PHYSICAL],
+		"base_stats": {
+			"damage": 15.0,
+			"fire_rate": 0.33,
+			"range": 150.0,
+			"rotation_speed": 0.0,
+			"explosive_radius": 70.0,
+			"proximity_radius": 40.0,
+			"max_mines": 5,
+			"knockback_force": 150.0,
 		}
 	},
 }

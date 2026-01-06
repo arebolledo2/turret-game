@@ -152,6 +152,11 @@ func hide_range() -> void:
 	if visuals:
 		visuals.hide_range()
 
+func on_mine_exploded(mine: Node2D) -> void:
+	"""Called when a mine explodes to remove it from tracking."""
+	if combat:
+		combat._on_mine_exploded(mine)
+
 # Property facades for external access
 var target: Node2D:
 	get:

@@ -95,6 +95,10 @@ func setup_visuals() -> void:
 			_setup_sniper_visuals()
 		"tesla":
 			_setup_tesla_visuals()
+		"melee":
+			_setup_melee_visuals()
+		"mine":
+			_setup_mine_visuals()
 		_:
 			_setup_icon_fallback()
 
@@ -552,7 +556,7 @@ func _start_idle_animation() -> void:
 		return
 
 	# All static sprite turrets have idle animation
-	var static_sprite_types = ["normal", "fire", "shock", "sniper", "tesla", "plasma"]
+	var static_sprite_types = ["normal", "fire", "shock", "sniper", "tesla", "plasma", "melee", "mine"]
 	if turret_type in static_sprite_types:
 		_start_idle_bounce()
 
@@ -590,3 +594,13 @@ func _start_idle_bounce() -> void:
 	else:
 		idle_tween.tween_property(visual_node, "scale", Vector2(scale_x, scale_y_up), 0.6)
 		idle_tween.tween_property(visual_node, "scale", Vector2(scale_x, scale_y_down), 0.6)
+
+
+func _setup_melee_visuals() -> void:
+	"""Setup melee turret visuals using basic turret sprite."""
+	_setup_normal_visuals()
+
+
+func _setup_mine_visuals() -> void:
+	"""Setup mine turret visuals using basic turret sprite."""
+	_setup_normal_visuals()
