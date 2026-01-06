@@ -12,6 +12,12 @@ var target_player: Node2D = null
 func _ready() -> void:
 	add_to_group("pickups")
 	
+	# Randomly select one of two scrap sprites (50/50)
+	var sprite_node = $Sprite2D
+	var scrap_sprite_1 = preload("res://assets/sprites/scrap_sprite.png")
+	var scrap_sprite_2 = preload("res://assets/sprites/scrap_sprite_2.png")
+	sprite_node.texture = scrap_sprite_1 if randf() < 0.5 else scrap_sprite_2
+	
 	# Small spawn animation
 	scale = Vector2.ZERO
 	var tween = create_tween()

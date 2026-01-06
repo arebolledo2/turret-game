@@ -515,12 +515,14 @@ func _process_melee_rotation(delta: float) -> void:
 	if melee_rotation >= 360.0:
 		melee_rotation -= 360.0
 
-	# Apply rotation to hitbox and turret sprite
+	# Apply rotation to hitbox
 	if melee_hitbox:
 		melee_hitbox.rotation_degrees = melee_rotation
 
-	# Rotate the entire turret to show spinning
-	turret.rotation_degrees = melee_rotation
+	# Rotate only the bat weapon sprite (not the entire turret)
+	var weapon_sprite = turret.get_node_or_null("MeleeBat")
+	if weapon_sprite:
+		weapon_sprite.rotation_degrees = melee_rotation
 
 # Mine turret functions
 

@@ -597,8 +597,18 @@ func _start_idle_bounce() -> void:
 
 
 func _setup_melee_visuals() -> void:
-	"""Setup melee turret visuals using basic turret sprite."""
+	"""Setup melee turret visuals with static base and spinning bat."""
+	# Setup base sprite (static turret)
 	_setup_normal_visuals()
+
+	# Create spinning bat weapon sprite on top
+	if turret:
+		weapon_sprite = Sprite2D.new()
+		weapon_sprite.name = "MeleeBat"
+		var bat_texture = load("res://assets/sprites/melee_bat.png")
+		weapon_sprite.texture = bat_texture
+		weapon_sprite.z_index = 1 # Draw above base sprite
+		turret.add_child(weapon_sprite)
 
 
 func _setup_mine_visuals() -> void:

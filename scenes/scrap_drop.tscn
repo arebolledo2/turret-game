@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://scrap_drop_scene_001"]
+[gd_scene load_steps=4 format=3 uid="uid://scrap_drop_scene_001"]
 
 [ext_resource type="Script" path="res://scripts/scrap_drop.gd" id="1_scrap_drop"]
 [ext_resource type="Texture2D" uid="uid://scrap_sprite_texture" path="res://assets/sprites/scrap_sprite.png" id="2_scrap_sprite"]
+[ext_resource type="Texture2D" uid="uid://scrap_sprite_2_texture" path="res://assets/sprites/scrap_sprite_2.png" id="3_scrap_sprite_2"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
 radius = 8.0
@@ -15,5 +16,5 @@ script = ExtResource("1_scrap_drop")
 shape = SubResource("CircleShape2D_1")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-scale = Vector2(0.05, 0.05)
+scale = Vector2(0.04, 0.04)
 texture = ExtResource("2_scrap_sprite")

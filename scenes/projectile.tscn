@@ -15,5 +15,5 @@ script = ExtResource("1_projectile")
 shape = SubResource("CircleShape2D_1")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-scale = Vector2(0.05, 0.05)
+scale = Vector2(0.025, 0.025)
 texture = ExtResource("2_sprite")
