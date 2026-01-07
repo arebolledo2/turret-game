@@ -760,6 +760,36 @@ theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 text = "Select an item to see its description"
 autowrap_mode = 2
 
+[node name="HSeparator2" type="HSeparator" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="DebugTurretsTitle" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Debug - Add Turret:"
+
+[node name="DebugTurretContainer" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="AddTurretDropdown" type="OptionButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/DebugTurretContainer"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AddTurretButton" type="Button" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/DebugTurretContainer"]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "Spawn"
+
+[node name="TurretDescriptionLabel" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+text = "Select a turret to see its info"
+autowrap_mode = 2
+
 [node name="BackButton" type="Button" parent="SettingsMenu/Panel/VBoxContainer"]
 custom_minimum_size = Vector2(0, 45)
 layout_mode = 2

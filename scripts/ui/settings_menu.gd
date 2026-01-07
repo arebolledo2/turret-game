@@ -12,6 +12,9 @@ var isometric_debug_check: CheckButton
 var add_item_dropdown: OptionButton
 var add_item_button: Button
 var item_description_label: Label
+var add_turret_dropdown: OptionButton
+var add_turret_button: Button
+var turret_description_label: Label
 var back_button: Button
 
 # Base values at 1080p
@@ -31,7 +34,9 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 	back_button = nodes.get("back_button")
 	add_item_dropdown = nodes.get("add_item_dropdown")
 	add_item_button = nodes.get("add_item_button")
-	
+	add_turret_dropdown = nodes.get("add_turret_dropdown")
+	add_turret_button = nodes.get("add_turret_button")
+
 	back_button = nodes.get("back_button")
 	
 	if container:
@@ -74,8 +79,18 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 			add_item_button.pressed.connect(_on_add_item_pressed)
 		if not add_item_dropdown.item_selected.is_connected(_on_item_dropdown_selected):
 			add_item_dropdown.item_selected.connect(_on_item_dropdown_selected)
-	
+
 	item_description_label = nodes.get("item_description_label")
+
+	# Setup debug turret dropdown
+	if add_turret_dropdown and add_turret_button:
+		_populate_turret_dropdown()
+		if not add_turret_button.pressed.is_connected(_on_add_turret_pressed):
+			add_turret_button.pressed.connect(_on_add_turret_pressed)
+		if not add_turret_dropdown.item_selected.is_connected(_on_turret_dropdown_selected):
+			add_turret_dropdown.item_selected.connect(_on_turret_dropdown_selected)
+
+	turret_description_label = nodes.get("turret_description_label")
 
 
 func _scale_fonts(scale: float) -> void:
@@ -201,3 +216,56 @@ func _on_item_dropdown_selected(idx: int) -> void:
 		description = ", ".join(mod_texts)
 	
 	item_description_label.text = description if not description.is_empty() else "No description available"
+
+
+# =============================================================================
+# DEBUG TURRET DROPDOWN
+# =============================================================================
+func _populate_turret_dropdown() -> void:
+	"""Populate the dropdown with all available turret types."""
+	add_turret_dropdown.clear()
+	var all_turret_ids = TurretRegistry.get_all_type_ids()
+
+	for turret_id in all_turret_ids:
+		var turret_name = turret_id.capitalize()
+		add_turret_dropdown.add_item(turret_name)
+		add_turret_dropdown.set_item_metadata(add_turret_dropdown.item_count - 1, turret_id)
+
+
+func _on_add_turret_pressed() -> void:
+	"""Spawn the selected turret at a random position (free, for debugging)."""
+	var idx = add_turret_dropdown.selected
+	if idx < 0:
+		return
+
+	var turret_id = add_turret_dropdown.get_item_metadata(idx)
+	if turret_id == null or turret_id.is_empty():
+		return
+
+	# Find turret_manager and spawn turret
+	var turret_manager = _owner.get_node_or_null("/root/Main/TurretManager")
+	if turret_manager and turret_manager.has_method("spawn_turret_type"):
+		turret_manager.spawn_turret_type(turret_id)
+		DebugService.log(DebugService.UI, "Spawned turret for free: %s" % turret_id)
+	else:
+		DebugService.error(DebugService.VALIDATION, "Could not find turret_manager to spawn turret")
+
+
+func _on_turret_dropdown_selected(idx: int) -> void:
+	"""Update the description label when a turret is selected."""
+	if not turret_description_label:
+		return
+
+	if idx < 0:
+		turret_description_label.text = "Select a turret to see its info"
+		return
+
+	var turret_id = add_turret_dropdown.get_item_metadata(idx)
+	if turret_id == null or turret_id.is_empty():
+		turret_description_label.text = "Select a turret to see its info"
+		return
+
+	var base_price = TurretRegistry.get_base_price(turret_id)
+	var description = "Base Price: %d scrap" % base_price
+
+	turret_description_label.text = description

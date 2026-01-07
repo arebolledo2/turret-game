@@ -41,6 +41,9 @@ const LootReviewScreenScript = preload("res://scripts/ui/loot_review_screen.gd")
 @onready var add_item_dropdown: OptionButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/DebugItemContainer/AddItemDropdown
 @onready var add_item_button: Button = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/DebugItemContainer/AddItemButton
 @onready var debug_item_description_label: Label = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ItemDescriptionLabel
+@onready var add_turret_dropdown: OptionButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/DebugTurretContainer/AddTurretDropdown
+@onready var add_turret_button: Button = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/DebugTurretContainer/AddTurretButton
+@onready var debug_turret_description_label: Label = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/TurretDescriptionLabel
 @onready var settings_back_button: Button = $SettingsMenu/Panel/VBoxContainer/BackButton
 @onready var easy_button: Button = $DifficultySelect/Panel/VBoxContainer/ButtonContainer/EasyButton
 @onready var sentinel_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/SentinelButton
@@ -244,6 +247,9 @@ func _setup_components() -> void:
 		"add_item_dropdown": add_item_dropdown,
 		"add_item_button": add_item_button,
 		"item_description_label": debug_item_description_label,
+		"add_turret_dropdown": add_turret_dropdown,
+		"add_turret_button": add_turret_button,
+		"turret_description_label": debug_turret_description_label,
 		"back_button": settings_back_button,
 	}, self)
 
