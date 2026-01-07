@@ -461,12 +461,18 @@ func _setup_melee_hitbox() -> void:
 	var collision_shape = CollisionShape2D.new()
 	var rect_shape = RectangleShape2D.new()
 	var swing_radius = stats.get("range", 80.0)
-	rect_shape.size = Vector2(swing_radius * 0.3, swing_radius) # Thin bat
+	# Vertical orientation: thin in X, long in Y (bat points up)
+	rect_shape.size = Vector2(swing_radius * 0.3, swing_radius)
 	collision_shape.shape = rect_shape
-	collision_shape.position = Vector2(swing_radius / 2, 0) # Offset from center
+	# Offset upward to match vertical bat sprite
+	collision_shape.position = Vector2(0, -swing_radius / 2)
 
 	melee_hitbox.add_child(collision_shape)
 	turret.add_child(melee_hitbox)
+
+	# Attach debug visualization script
+	var debug_script = preload("res://scripts/components/melee_hitbox_debug.gd")
+	melee_hitbox.set_script(debug_script)
 
 	# Connect collision signal
 	melee_hitbox.area_entered.connect(_on_melee_hit)

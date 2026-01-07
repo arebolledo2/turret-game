@@ -607,7 +607,19 @@ func _setup_melee_visuals() -> void:
 		weapon_sprite.name = "MeleeBat"
 		var bat_texture = load("res://assets/sprites/melee_bat.png")
 		weapon_sprite.texture = bat_texture
+		weapon_sprite.scale = Vector2(0.1, 0.1) # Scale down the bat
 		weapon_sprite.z_index = 1 # Draw above base sprite
+
+		# The sprite is vertical (pointing up) in the asset
+		# Use offset to position the pivot at the handle (bottom of the bat)
+		# Then rotation will swing it from the handle
+		if bat_texture:
+			var texture_height = bat_texture.get_height()
+			var scaled_length = texture_height * 0.1
+			# Offset upward so the handle stays at turret center
+			# and the blade extends up (and will rotate around the handle)
+			weapon_sprite.offset.y = -scaled_length / 2.0
+
 		turret.add_child(weapon_sprite)
 
 
