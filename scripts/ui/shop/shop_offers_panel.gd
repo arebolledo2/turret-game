@@ -56,6 +56,14 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	panel.custom_minimum_size = Vector2(220, 300)
 	panel.process_mode = Control.PROCESS_MODE_ALWAYS
 
+	# Add custom panel style with less transparency
+	var panel_style = StyleBoxFlat.new()
+	panel_style.bg_color = Color(0.15, 0.15, 0.15, 0.95)  # Dark gray with high opacity
+	panel_style.border_color = Color(0.3, 0.3, 0.3, 1.0)
+	panel_style.set_border_width_all(2)
+	panel_style.set_corner_radius_all(8)
+	panel.add_theme_stylebox_override("panel", panel_style)
+
 	var vbox = VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_theme_constant_override("separation", 15)
@@ -68,10 +76,10 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 
 	# Price label (common for both types)
 	var price_label = Label.new()
-	price_label.text = "%d Scrap" % offer["price"]
+	price_label.text = "💰 %d" % offer["price"]
 	price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	price_label.add_theme_font_override("font", MAIN_FONT)
-	price_label.add_theme_font_size_override("font_size", 24)
+	price_label.add_theme_font_size_override("font_size", 28)
 	price_label.add_theme_color_override("font_color", Color.GOLD)
 	price_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	price_label.add_theme_constant_override("outline_size", 4)
@@ -87,11 +95,21 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	# Purchase button
 	var purchase_button = Button.new()
 	purchase_button.add_theme_font_override("font", MAIN_FONT)
-	purchase_button.add_theme_font_size_override("font_size", 22)
+	purchase_button.add_theme_font_size_override("font_size", 26)
 	purchase_button.add_theme_constant_override("outline_size", 4)
 	purchase_button.add_theme_color_override("font_outline_color", Color.BLACK)
 	purchase_button.process_mode = Control.PROCESS_MODE_ALWAYS
 	purchase_button.custom_minimum_size.x = 140
+
+	# Add button style for better visibility
+	var button_style = StyleBoxFlat.new()
+	button_style.bg_color = Color(0.25, 0.25, 0.25, 0.95)  # Medium gray with high opacity
+	button_style.set_corner_radius_all(4)
+	purchase_button.add_theme_stylebox_override("normal", button_style)
+
+	var button_hover = button_style.duplicate()
+	button_hover.bg_color = Color(0.35, 0.35, 0.35, 0.95)  # Lighter on hover
+	purchase_button.add_theme_stylebox_override("hover", button_hover)
 	if offer.get("sold", false):
 		purchase_button.text = "SOLD"
 		purchase_button.disabled = true
@@ -107,17 +125,27 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	if not offer.get("sold", false):
 		var lock_button = Button.new()
 		lock_button.add_theme_font_override("font", MAIN_FONT)
-		lock_button.add_theme_font_size_override("font_size", 22)
+		lock_button.add_theme_font_size_override("font_size", 26)
 		lock_button.add_theme_constant_override("outline_size", 4)
 		lock_button.add_theme_color_override("font_outline_color", Color.BLACK)
 		lock_button.process_mode = Control.PROCESS_MODE_ALWAYS
 		lock_button.custom_minimum_size.x = 140
+
+		# Add custom style with color based on lock state
+		var lock_style = StyleBoxFlat.new()
 		if offer.get("locked", false):
+			# Locked state - yellow/gold background
+			lock_style.bg_color = Color(0.8, 0.7, 0.2, 0.7)  # Gold with transparency
 			lock_button.text = "🔒 Unlock"
 			lock_button.pressed.connect(func(): shop_manager.unlock_offer(index))
 		else:
+			# Unlocked state - default dark background
+			lock_style.bg_color = Color(0.2, 0.2, 0.2, 0.7)
 			lock_button.text = "🔓 Lock"
 			lock_button.pressed.connect(func(): shop_manager.lock_offer(index))
+		lock_style.set_corner_radius_all(4)
+		lock_button.add_theme_stylebox_override("normal", lock_style)
+
 		button_vbox.add_child(lock_button)
 		_lock_buttons.append(lock_button)
 	else:
@@ -137,7 +165,7 @@ func _create_turret_offer_ui(offer: Dictionary, container: VBoxContainer) -> voi
 	icon.text = turret_config["icon"]
 	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	icon.add_theme_font_override("font", MAIN_FONT)
-	icon.add_theme_font_size_override("font_size", 64)
+	icon.add_theme_font_size_override("font_size", 76)
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	container.add_child(icon)
 
@@ -146,7 +174,7 @@ func _create_turret_offer_ui(offer: Dictionary, container: VBoxContainer) -> voi
 	name_label.text = turret_config["name"]
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_font_override("font", MAIN_FONT)
-	name_label.add_theme_font_size_override("font_size", 24)
+	name_label.add_theme_font_size_override("font_size", 28)
 	name_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	name_label.add_theme_constant_override("outline_size", 4)
 	name_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
@@ -161,7 +189,7 @@ func _create_turret_offer_ui(offer: Dictionary, container: VBoxContainer) -> voi
 	]
 	stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stats_label.add_theme_font_override("font", MAIN_FONT)
-	stats_label.add_theme_font_size_override("font_size", 16)
+	stats_label.add_theme_font_size_override("font_size", 18)
 	stats_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	stats_label.add_theme_constant_override("outline_size", 4)
 	stats_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
@@ -177,7 +205,7 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	icon_label.text = item_data["icon"]
 	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	icon_label.add_theme_font_override("font", MAIN_FONT)
-	icon_label.add_theme_font_size_override("font_size", 64)
+	icon_label.add_theme_font_size_override("font_size", 76)
 	icon_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	container.add_child(icon_label)
 
@@ -186,7 +214,7 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	name_label.text = item_data["name"]
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_font_override("font", MAIN_FONT)
-	name_label.add_theme_font_size_override("font_size", 24)
+	name_label.add_theme_font_size_override("font_size", 28)
 	name_label.add_theme_color_override("font_color", ItemRegistry.get_rarity_color(item_data["rarity"]))
 	name_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	name_label.add_theme_constant_override("outline_size", 4)
@@ -200,7 +228,7 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 		desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 		desc_label.add_theme_font_override("font", MAIN_FONT)
-		desc_label.add_theme_font_size_override("font_size", 16)
+		desc_label.add_theme_font_size_override("font_size", 18)
 		desc_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		desc_label.add_theme_constant_override("outline_size", 4)
 		desc_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
@@ -212,13 +240,14 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 		mod_label.text = _format_modifier(modifier)
 		mod_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		mod_label.add_theme_font_override("font", MAIN_FONT)
-		mod_label.add_theme_font_size_override("font_size", 15)
+		mod_label.add_theme_font_size_override("font_size", 17)
 		mod_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		mod_label.add_theme_constant_override("outline_size", 4)
-		
+
 		var is_benefit = (modifier["operation"] == "multiply" and modifier["value"] > 1.0) or \
 						  (modifier["operation"] == "add" and modifier["value"] > 0.0)
-		mod_label.add_theme_color_override("font_color", Color.GREEN if is_benefit else Color.RED)
+		var negative_color = Color(1.0, 0.4, 0.4)  # Light red/salmon color
+		mod_label.add_theme_color_override("font_color", Color.GREEN if is_benefit else negative_color)
 		mod_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		container.add_child(mod_label)
 
@@ -356,7 +385,7 @@ func _on_reroll_pressed() -> void:
 func update_reroll_button() -> void:
 	if shop_manager and reroll_button:
 		var cost = shop_manager.get_reroll_cost()
-		reroll_button.text = "Reroll (Cost: %d)" % cost
+		reroll_button.text = "Reroll (💰 %d)" % cost
 		reroll_button.disabled = not shop_manager.can_afford_reroll()
 
 func regenerate_offers() -> void:

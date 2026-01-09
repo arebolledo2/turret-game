@@ -62,22 +62,22 @@ func _on_shop_opened(wave_number: int) -> void:
 	
 	# Apply fonts to header elements
 	title_label.add_theme_font_override("font", MAIN_FONT)
-	title_label.add_theme_font_size_override("font_size", 36)
+	title_label.add_theme_font_size_override("font_size", 42)
 	title_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	title_label.add_theme_constant_override("outline_size", 6)
 
 	scrap_label.add_theme_font_override("font", MAIN_FONT)
-	scrap_label.add_theme_font_size_override("font_size", 28)
+	scrap_label.add_theme_font_size_override("font_size", 32)
 	scrap_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	scrap_label.add_theme_constant_override("outline_size", 4)
 
 	reroll_button.add_theme_font_override("font", MAIN_FONT)
-	reroll_button.add_theme_font_size_override("font_size", 24)
+	reroll_button.add_theme_font_size_override("font_size", 28)
 	reroll_button.add_theme_constant_override("outline_size", 6)
 	reroll_button.add_theme_color_override("font_outline_color", Color.BLACK)
-	
+
 	continue_button.add_theme_font_override("font", MAIN_FONT)
-	continue_button.add_theme_font_size_override("font_size", 28)
+	continue_button.add_theme_font_size_override("font_size", 32)
 	continue_button.add_theme_constant_override("outline_size", 6)
 	continue_button.add_theme_color_override("font_outline_color", Color.BLACK)
 	
@@ -143,7 +143,7 @@ func _on_scrap_changed(_amount: int, _total: int) -> void:
 
 
 func update_scrap_display() -> void:
-	scrap_label.text = "Scrap: %d" % EconomyService.total_scrap
+	scrap_label.text = "💰 %d" % EconomyService.total_scrap
 
 
 func _on_insufficient_funds(_required: int, _current: int) -> void:
