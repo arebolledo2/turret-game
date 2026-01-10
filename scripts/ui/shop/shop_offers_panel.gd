@@ -105,7 +105,7 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	panel.add_theme_stylebox_override("panel", panel_style)
 
 	var vbox = VBoxContainer.new()
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.alignment = BoxContainer.ALIGNMENT_BEGIN
 	vbox.add_theme_constant_override("separation", 15)
 	panel.add_child(vbox)
 
@@ -113,6 +113,11 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 		_create_turret_offer_ui(offer, vbox)
 	elif offer["type"] == "item":
 		_create_item_offer_ui(offer, vbox)
+
+	# Add spacer to push price/buttons to bottom
+	var spacer = Control.new()
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	vbox.add_child(spacer)
 
 	# Price label (common for both types)
 	var price_label = Label.new()

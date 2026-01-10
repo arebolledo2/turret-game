@@ -13,7 +13,7 @@ const MAX_WAVES: int = 10
 # =============================================================================
 # CAMERA
 # =============================================================================
-const CAMERA_DEFAULT_ZOOM_BOOST: float = 1.7 # Zoomed in for better visibility
+const CAMERA_DEFAULT_ZOOM_BOOST: float = 2 # Zoomed in for better visibility
 
 # =============================================================================
 # PLAYER
