@@ -245,7 +245,7 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	icon_label.text = item_data["icon"]
 	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	icon_label.add_theme_font_override("font", MAIN_FONT)
-	icon_label.add_theme_font_size_override("font_size", 76)
+	icon_label.add_theme_font_size_override("font_size", 64)
 	icon_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	container.add_child(icon_label)
 
@@ -254,7 +254,7 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	name_label.text = item_data["name"]
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_font_override("font", MAIN_FONT)
-	name_label.add_theme_font_size_override("font_size", 28)
+	name_label.add_theme_font_size_override("font_size", 22)
 	name_label.add_theme_color_override("font_color", ItemRegistry.get_rarity_color(item_data["rarity"]))
 	name_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	name_label.add_theme_constant_override("outline_size", 4)
@@ -281,13 +281,13 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 		mod_label.text = "%s %s" % [icon, _format_modifier(modifier)] if icon else _format_modifier(modifier)
 		mod_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		mod_label.add_theme_font_override("font", MAIN_FONT)
-		mod_label.add_theme_font_size_override("font_size", 17)
+		mod_label.add_theme_font_size_override("font_size", 20)
 		mod_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		mod_label.add_theme_constant_override("outline_size", 4)
 
 		var is_benefit = (modifier["operation"] == "multiply" and modifier["value"] > 1.0) or \
 						  (modifier["operation"] == "add" and modifier["value"] > 0.0)
-		var negative_color = Color(1.0, 0.5, 0.5)  # Brighter red for better readability
+		var negative_color = Color(1.0, 0.8, 0.8)  # Brighter red for better readability
 		mod_label.add_theme_color_override("font_color", Color.GREEN if is_benefit else negative_color)
 		mod_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		container.add_child(mod_label)
