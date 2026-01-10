@@ -91,8 +91,8 @@ func stop_spawning() -> void:
 func _update_spawn_interval() -> void:
 	"""Set a constant spawn interval for the current wave with some randomness."""
 	# Calculate base interval based on wave (faster each wave)
-	# Wave 1: ~2.5s, Wave 10: ~1.0s (adjust as needed for balance)
-	var base_interval := lerpf(2.5, 0.8, clampf((current_wave - 1) / 9.0, 0.0, 1.0))
+	# Wave 1: ~1.2s, Wave 10: ~0.35s (increased frequency further)
+	var base_interval := lerpf(1.2, 0.35, clampf((current_wave - 1) / 9.0, 0.0, 1.0))
 	
 	# Add randomness (e.g. +/- 20%)
 	var random_factor := randf_range(0.8, 1.2)

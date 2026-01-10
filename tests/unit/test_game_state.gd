@@ -101,30 +101,30 @@ func test_set_difficulty():
 
 func test_wave_duration_wave_1():
 	var duration = game_state.get_wave_duration(1)
-	assert_eq(duration, GameConstants.WAVE_BASE_DURATION,
-		"Wave 1 duration should equal base duration")
+	assert_eq(duration, GameConstants.WAVE_DURATION_EARLY,
+		"Wave 1 duration should equal early duration")
 
 
 func test_wave_duration_increases():
 	var wave1 = game_state.get_wave_duration(1)
-	var wave5 = game_state.get_wave_duration(5)
+	var wave3 = game_state.get_wave_duration(3)
 
-	assert_gt(wave5, wave1, "Later waves should have longer duration")
+	assert_gt(wave3, wave1, "Later waves should have longer duration until CAP")
 
 
 func test_wave_duration_formula():
-	var wave = 5
-	var expected = GameConstants.WAVE_BASE_DURATION + (wave - 1) * GameConstants.WAVE_DURATION_INCREMENT
+	var wave = 1
+	var expected = GameConstants.WAVE_DURATION_EARLY
 	var actual = game_state.get_wave_duration(wave)
 
-	assert_eq(actual, expected, "Duration formula: base + (wave-1) * increment")
+	assert_eq(actual, expected, "Wave 1 duration should equal early duration")
 
 
 func test_wave_duration_wave_10():
-	var expected = GameConstants.WAVE_BASE_DURATION + 9 * GameConstants.WAVE_DURATION_INCREMENT
+	var expected = GameConstants.WAVE_DURATION_CAP
 	var actual = game_state.get_wave_duration(10)
 
-	assert_eq(actual, expected, "Wave 10 should have correct duration")
+	assert_eq(actual, expected, "Wave 10 should be capped at WAVE_DURATION_CAP")
 
 
 # =============================================================================
@@ -135,7 +135,7 @@ func test_enemy_count_wave_1_easy():
 	game_state.current_difficulty = GameEnums.Difficulty.EASY
 	var count = game_state.get_wave_enemy_count(1)
 
-	var expected = int(GameConstants.WAVE_BASE_ENEMY_COUNT * 1.0) # Easy mult is 1.0
+	var expected = int(GameConstants.WAVE_BASE_ENEMY_COUNT * 1.8) # Easy mult is 1.8
 	assert_eq(count, expected, "Wave 1 Easy should have base enemy count")
 
 
@@ -163,7 +163,7 @@ func test_enemy_count_formula():
 	game_state.current_difficulty = GameEnums.Difficulty.EASY
 	var wave = 5
 	var base = GameConstants.WAVE_BASE_ENEMY_COUNT + (wave - 1) * GameConstants.WAVE_ENEMY_INCREMENT
-	var expected = int(base * 1.0) # Easy mult
+	var expected = int(base * 1.8) # Easy mult
 	var actual = game_state.get_wave_enemy_count(wave)
 
 	assert_eq(actual, expected, "Enemy count formula: (base + increment) * difficulty_mult")

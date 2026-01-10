@@ -25,7 +25,7 @@ var pending_turret_purchases: Array[String] = []
 
 # Inventory
 var collected_items: Array[String] = []
-var turret_counts: Dictionary = {}  # {"normal": 2, "fire": 1, etc.}
+var turret_counts: Dictionary = {} # {"normal": 2, "fire": 1, etc.}
 var selected_turret_type: String = ""
 
 # Settings
@@ -83,7 +83,16 @@ func get_turret_stats(turret_type: String) -> Dictionary:
 
 ## Get wave duration for a specific wave
 func get_wave_duration(wave: int) -> float:
-	return GameConstants.WAVE_BASE_DURATION + (wave - 1) * GameConstants.WAVE_DURATION_INCREMENT
+	if wave <= 1:
+		return GameConstants.WAVE_DURATION_EARLY
+	elif wave < GameConstants.WAVE_DURATION_MID_THRESHOLD:
+		var t: float = float(wave - 1) / float(GameConstants.WAVE_DURATION_MID_THRESHOLD - 1)
+		return lerpf(GameConstants.WAVE_DURATION_EARLY, GameConstants.WAVE_DURATION_MID, t)
+	elif wave < GameConstants.WAVE_DURATION_LATE_THRESHOLD:
+		var t: float = float(wave - GameConstants.WAVE_DURATION_MID_THRESHOLD) / float(GameConstants.WAVE_DURATION_LATE_THRESHOLD - GameConstants.WAVE_DURATION_MID_THRESHOLD)
+		return lerpf(GameConstants.WAVE_DURATION_MID, GameConstants.WAVE_DURATION_LATE, t)
+	else:
+		return GameConstants.WAVE_DURATION_CAP
 
 
 ## Get enemy count for a specific wave

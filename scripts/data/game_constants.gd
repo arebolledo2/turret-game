@@ -27,7 +27,7 @@ const PLAYER_WEAPON_DAMAGE: float = 1.0 # Legacy - used by PlayerStatsService fo
 # Player Turret Combat
 const PLAYER_TURRET_DAMAGE: float = 10.0
 const PLAYER_TURRET_FIRE_RATE: float = 1.2 # shots per second (matches basic turret)
-const PLAYER_TURRET_RANGE: float = 250.0
+const PLAYER_TURRET_RANGE: float = 375.0
 const PLAYER_TURRET_PROJECTILE_SPEED: float = 700.0
 
 # Health Regeneration
@@ -57,7 +57,7 @@ const TURRET_BASE_CRIT_MULTIPLIER: float = 2.0 # 200% damage (100% bonus)
 # =============================================================================
 const TURRET_BASE_DAMAGE: float = 15.0
 const TURRET_FIRE_RATE: float = 2.0 # shots per second
-const TURRET_RANGE: float = 400.0
+const TURRET_RANGE: float = 600.0
 const TURRET_PROJECTILE_SPEED: float = 500.0
 const TURRET_ROTATION_SPEED: float = 180.0 # degrees per second
 const TURRET_MIN_DISTANCE: float = 100.0 # from other turrets
@@ -104,8 +104,8 @@ const TURRET_SPAWN_TIME: float = 0.5
 const BETWEEN_WAVE_PAUSE: float = 0.5
 const WAVE_BASE_DURATION: float = 25.0 # wave 1
 const WAVE_DURATION_INCREMENT: float = 4.0 # per wave
-const WAVE_BASE_ENEMY_COUNT: int = 12
-const WAVE_ENEMY_INCREMENT: int = 4
+const WAVE_BASE_ENEMY_COUNT: int = 22
+const WAVE_ENEMY_INCREMENT: int = 8
 
 # Wave duration scaling (linear progression: 40s, 45s, 50s, 55s, 60s, 60s+)
 const WAVE_DURATION_EARLY: float = 40.0 # Wave 1
@@ -217,7 +217,7 @@ const DIFFICULTY_CONFIG: Dictionary = {
 		"enemy_health_mult": 1.0,
 		"enemy_speed_mult": 1.0,
 		"enemy_damage_mult": 1.0,
-		"enemy_count_mult": 1.0,
+		"enemy_count_mult": 1.8,
 		"enemy_hp_scale_per_wave": 1.10,
 		"enemy_speed_scale_per_wave": 1.0,
 		"player_health_mult": 1.0,
@@ -229,7 +229,7 @@ const DIFFICULTY_CONFIG: Dictionary = {
 		"enemy_health_mult": 1.25,
 		"enemy_speed_mult": 1.0,
 		"enemy_damage_mult": 1.2,
-		"enemy_count_mult": 1.2,
+		"enemy_count_mult": 2.2,
 		"enemy_hp_scale_per_wave": 1.12,
 		"enemy_speed_scale_per_wave": 1.0,
 		"player_health_mult": 1.0,
@@ -241,7 +241,7 @@ const DIFFICULTY_CONFIG: Dictionary = {
 		"enemy_health_mult": 1.5,
 		"enemy_speed_mult": 1.0,
 		"enemy_damage_mult": 1.5,
-		"enemy_count_mult": 1.4,
+		"enemy_count_mult": 2.6,
 		"enemy_hp_scale_per_wave": 1.15,
 		"enemy_speed_scale_per_wave": 1.0,
 		"player_health_mult": 0.8,

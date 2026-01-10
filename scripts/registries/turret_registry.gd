@@ -37,7 +37,7 @@ const TYPES: Dictionary = {
 		"base_stats": {
 			"damage": 13.0,
 			"fire_rate": 1.2,
-			"range": 160.0,
+			"range": 240.0,
 			"rotation_speed": 0.0,
 			"projectile_speed": 700.0,
 			"pierce": 0,
@@ -52,7 +52,7 @@ const TYPES: Dictionary = {
 		"base_stats": {
 			"damage": 18.0,
 			"fire_rate": 0.5,
-			"range": 500.0,
+			"range": 750.0,
 			"rotation_speed": 0.0,
 			"targeting": "farthest",
 		}
@@ -66,7 +66,7 @@ const TYPES: Dictionary = {
 		"base_stats": {
 			"damage": 5.0,
 			"fire_rate": 2.0,
-			"range": 140.0,
+			"range": 210.0,
 			"rotation_speed": 0.0,
 			"projectile_speed": 600.0,
 			"pierce": 99,
@@ -84,7 +84,7 @@ const TYPES: Dictionary = {
 		"base_stats": {
 			"damage": 10.0,
 			"fire_rate": 1.0,
-			"range": 170.0,
+			"range": 255.0,
 			"rotation_speed": 0.0,
 			"projectile_speed": 550.0,
 			"pierce": 0,
@@ -102,7 +102,7 @@ const TYPES: Dictionary = {
 		"base_stats": {
 			"damage": 4.0,
 			"fire_rate": 1.2,
-			"range": 160.0,
+			"range": 240.0,
 			"rotation_speed": 0.0,
 			"slow_intensity": 0.25,
 			"slow_duration": 0.5,
@@ -117,10 +117,10 @@ const TYPES: Dictionary = {
 		"base_stats": {
 			"damage": 10.0,
 			"fire_rate": 1.2,
-			"range": 150.0,
+			"range": 225.0,
 			"rotation_speed": 0.0,
 			"chain_count": 3,
-			"chain_range": 150.0,
+			"chain_range": 225.0,
 			"chain_decay": 0.7,
 		}
 	},
@@ -133,7 +133,7 @@ const TYPES: Dictionary = {
 		"base_stats": {
 			"damage": 8.0,
 			"fire_rate": 0.0,
-			"range": 80.0,
+			"range": 120.0,
 			"rotation_speed": 0.0,
 			"rotation_rate": 360.0,
 			"knockback_force": 80.0,
@@ -148,7 +148,7 @@ const TYPES: Dictionary = {
 		"base_stats": {
 			"damage": 15.0,
 			"fire_rate": 0.33,
-			"range": 150.0,
+			"range": 225.0,
 			"rotation_speed": 0.0,
 			"explosive_radius": 70.0,
 			"proximity_radius": 40.0,

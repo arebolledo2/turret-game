@@ -38,19 +38,21 @@ func test_wave_duration_wave_10():
 
 func test_wave_enemy_count_wave_1_easy():
 	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
-	var count = GameStateService.get_wave_enemy_count(1, DifficultyService.get_difficulty_config()["enemy_count_mult"], 1.0)
+	var mult = DifficultyService.get_difficulty_config()["enemy_count_mult"]
+	var count = GameStateService.get_wave_enemy_count(1, mult, 1.0)
 	# Wave 1: base count * difficulty mult
-	var expected = int(GameConstants.WAVE_BASE_ENEMY_COUNT * 1.0)
+	var expected = int(GameConstants.WAVE_BASE_ENEMY_COUNT * mult)
 	assert_eq(count, expected, "Wave 1 Easy should have base enemy count")
 
 
 func test_wave_enemy_count_scales_with_waves():
 	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
-	var wave1_count = GameStateService.get_wave_enemy_count(1, DifficultyService.get_difficulty_config()["enemy_count_mult"], 1.0)
-	var wave5_count = GameStateService.get_wave_enemy_count(5, DifficultyService.get_difficulty_config()["enemy_count_mult"], 1.0)
+	var mult = DifficultyService.get_difficulty_config()["enemy_count_mult"]
+	var wave1_count = GameStateService.get_wave_enemy_count(1, mult, 1.0)
+	var wave5_count = GameStateService.get_wave_enemy_count(5, mult, 1.0)
 	
 	# Wave 5 = base + 4 * increment
-	var expected_wave5 = int((GameConstants.WAVE_BASE_ENEMY_COUNT + 4 * GameConstants.WAVE_ENEMY_INCREMENT) * 1.0)
+	var expected_wave5 = int((GameConstants.WAVE_BASE_ENEMY_COUNT + 4 * GameConstants.WAVE_ENEMY_INCREMENT) * mult)
 	assert_gt(wave5_count, wave1_count, "Later waves should have more enemies")
 	assert_eq(wave5_count, expected_wave5, "Wave 5 Easy should have calculated enemy count")
 
