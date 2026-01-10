@@ -88,7 +88,11 @@ func end_wave() -> void:
 func process_wave_end(delta: float) -> bool:
 	"""Process end-of-wave pause. Returns true when pause is complete."""
 	pause_timer -= delta
-	return pause_timer <= 0
+	if pause_timer <= 0:
+		# Convert uncollected scrap to research points before transitioning
+		_convert_scrap_to_research()
+		return true
+	return false
 
 
 func award_wave_bonus() -> void:
@@ -110,6 +114,42 @@ func stop_spawning() -> void:
 		tech_drop_spawner.stop_spawning()
 
 	spawning_stopped.emit()
+
+
+func _convert_scrap_to_research() -> void:
+	"""Convert all uncollected scrap on the ground to research points."""
+	var scrap_drops = get_tree().get_nodes_in_group("pickups")
+	var total_scrap_value: int = 0
+
+	# Count all uncollected scrap
+	for drop in scrap_drops:
+		if is_instance_valid(drop) and drop.has("scrap_value"):
+			total_scrap_value += drop.scrap_value
+
+	# Apply conversion (base 1:1 ratio, modifiable by items/techs)
+	if total_scrap_value > 0:
+		var conversion_ratio: float = ItemTrackingService.get_research_conversion_multiplier()
+		var research_gained: int = int(total_scrap_value * conversion_ratio)
+
+		TechTreeService.add_research_points(research_gained)
+		Events.research_points_gained.emit(research_gained, TechTreeService.total_research_points)
+
+		DebugService.log("Converted %d scrap to %d research (ratio: %.2f)" % [total_scrap_value, research_gained, conversion_ratio], DebugService.Category.SYSTEMS)
+
+		# Despawn scrap drops with animation
+		for drop in scrap_drops:
+			if is_instance_valid(drop):
+				_despawn_scrap_drop(drop)
+
+
+func _despawn_scrap_drop(drop: Node2D) -> void:
+	"""Animate and despawn a scrap drop."""
+	# Create upward float and fade animation
+	var tween = drop.create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(drop, "position:y", drop.position.y - 100, 0.5)
+	tween.tween_property(drop, "modulate:a", 0.0, 0.5)
+	tween.chain().tween_callback(drop.queue_free)
 
 
 # =============================================================================

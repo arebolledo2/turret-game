@@ -58,6 +58,14 @@ signal shop_insufficient_funds(required: int, current: int)
 signal offer_locked(offer_index: int)
 signal offer_unlocked(offer_index: int)
 
+# Research Events
+signal research_points_gained(amount: int, total: int)
+signal research_points_changed(total: int)
+signal tech_unlocked(tech_id: String)
+signal tech_unlock_failed(tech_id: String, reason: String)
+signal tech_tree_opened()
+signal tech_tree_closed()
+
 # Item Events
 signal item_collected(item_data: Dictionary)
 
