@@ -123,7 +123,7 @@ func _convert_scrap_to_research() -> void:
 
 	# Count all uncollected scrap
 	for drop in scrap_drops:
-		if is_instance_valid(drop) and drop.has("scrap_value"):
+		if is_instance_valid(drop) and "scrap_value" in drop:
 			total_scrap_value += drop.scrap_value
 
 	# Apply conversion (base 1:1 ratio, modifiable by items/techs)

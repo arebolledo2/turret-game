@@ -120,11 +120,9 @@ func get_tech_unlock_count(tech_id: String) -> int:
 	return tech_unlock_counts.get(tech_id, 0)
 
 
-## Get tech definition from registry (placeholder until TechRegistry exists)
+## Get tech definition from registry
 func _get_tech_definition(tech_id: String) -> Dictionary:
-	# This will call TechRegistry.get_tech(tech_id) in Phase 2
-	# For now, return empty dict
-	return {}
+	return TechRegistry.get_tech(tech_id)
 
 
 ## Apply tech effects based on effect type
