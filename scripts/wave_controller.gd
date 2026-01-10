@@ -134,7 +134,7 @@ func _convert_scrap_to_research() -> void:
 		TechTreeService.add_research_points(research_gained)
 		Events.research_points_gained.emit(research_gained, TechTreeService.total_research_points)
 
-		DebugService.log("Converted %d scrap to %d research (ratio: %.2f)" % [total_scrap_value, research_gained, conversion_ratio], DebugService.Category.SYSTEMS)
+		DebugService.log(DebugService.SYSTEMS, "Converted ", total_scrap_value, " scrap to ", research_gained, " research (ratio: ", conversion_ratio, ")")
 
 		# Despawn scrap drops with animation
 		for drop in scrap_drops:

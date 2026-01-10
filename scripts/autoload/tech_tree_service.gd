@@ -25,7 +25,7 @@ func reset_state() -> void:
 	total_research_points = 0
 	unlocked_tech_ids.clear()
 	tech_unlock_counts.clear()
-	DebugService.log("Tech tree state reset", DebugService.Category.SYSTEMS)
+	DebugService.log(DebugService.SYSTEMS, "Tech tree state reset")
 
 
 ## Add research points (typically from scrap conversion at wave end)
@@ -35,7 +35,7 @@ func add_research_points(amount: int) -> void:
 
 	total_research_points += amount
 	Events.research_points_changed.emit(total_research_points)
-	DebugService.log("Added %d research points (total: %d)" % [amount, total_research_points], DebugService.Category.SYSTEMS)
+	DebugService.log(DebugService.SYSTEMS, "Added ", amount, " research points (total: ", total_research_points, ")")
 
 
 ## Check if a tech can be unlocked
@@ -105,7 +105,7 @@ func unlock_tech(tech_id: String) -> bool:
 	Events.tech_unlocked.emit(tech_id)
 	Events.research_points_changed.emit(total_research_points)
 
-	DebugService.log("Unlocked tech '%s' for %d research (remaining: %d)" % [tech_id, cost, total_research_points], DebugService.Category.SYSTEMS)
+	DebugService.log(DebugService.SYSTEMS, "Unlocked tech '", tech_id, "' for ", cost, " research (remaining: ", total_research_points, ")")
 
 	return true
 
@@ -146,18 +146,18 @@ func _apply_tech_effects(tech_id: String, tech_def: Dictionary) -> void:
 
 			# Notify that modifiers changed
 			Events.modifiers_changed.emit()
-			DebugService.log("Applied %d modifier(s) from tech '%s'" % [modifiers.size(), tech_id], DebugService.Category.SYSTEMS)
+			DebugService.log(DebugService.SYSTEMS, "Applied ", modifiers.size(), " modifier(s) from tech '", tech_id, "'")
 
 		"unlock_mechanic":
 			# Set flags for special mechanics (queried by game systems)
 			var special_effect: String = tech_def.get("special_effect", "")
 			if special_effect:
-				DebugService.log("Unlocked mechanic '%s' from tech '%s'" % [special_effect, tech_id], DebugService.Category.SYSTEMS)
+				DebugService.log(DebugService.SYSTEMS, "Unlocked mechanic '", special_effect, "' from tech '", tech_id, "'")
 			# Specific mechanics will be queried via helper methods
 
 		"shop_improvement":
 			# Shop improvements are queried by shop system when generating offers/prices
-			DebugService.log("Unlocked shop improvement from tech '%s'" % tech_id, DebugService.Category.SYSTEMS)
+			DebugService.log(DebugService.SYSTEMS, "Unlocked shop improvement from tech '", tech_id, "'")
 
 		_:
 			push_warning("Unknown tech effect type: %s" % effect_type)
