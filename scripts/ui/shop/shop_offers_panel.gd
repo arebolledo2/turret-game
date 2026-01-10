@@ -6,6 +6,46 @@ extends Node
 
 const MAIN_FONT = preload("res://assets/fonts/NunitoSans-Regular.ttf")
 
+const STAT_ICONS = {
+	# Player Stats
+	"player_max_health": "❤",
+	"player_health_regen": "💚",
+	"player_speed": "⚡",
+	"player_luck": "🍀",
+	"player_crit_chance": "💥",
+	"player_crit_multiplier": "💥",
+
+	# Turret Stats - Combat
+	"damage": "⚔️",
+	"fire_rate": "⏱️",
+	"range": "🎯",
+	"rotation_speed": "🔄",
+	"projectile_speed": "💨",
+	"turret_crit_chance": "💥",
+	"turret_crit_multiplier": "💥",
+
+	# Turret Stats - Special Effects
+	"pierce": "➡️",
+	"chain_count": "⚡",
+	"aoe_radius": "💣",
+	"knockback_force": "💢",
+	"dot_damage": "🔥",
+	"dot_duration": "🔥",
+	"dot_tick_rate": "⏱️",
+
+	# Economy
+	"scrap_earn_mult": "💰",
+	"shop_price_mult": "💸",
+	"reroll_cost": "🔄",
+	"pickup_radius": "🧲",
+	"shop_offer_count": "🛒",
+
+	# Penalties/Multipliers
+	"turret_penalty_reduction": "📉",
+	"turret_penalty_increase": "📈",
+	"enemy_count_mult": "👾",
+}
+
 var offers_container: HBoxContainer
 var reroll_button: Button
 var shop_manager: Node
@@ -237,7 +277,8 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	# Modifiers display
 	for modifier in item_data["modifiers"]:
 		var mod_label = Label.new()
-		mod_label.text = _format_modifier(modifier)
+		var icon = _get_stat_icon(modifier["stat"])
+		mod_label.text = "%s %s" % [icon, _format_modifier(modifier)] if icon else _format_modifier(modifier)
 		mod_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		mod_label.add_theme_font_override("font", MAIN_FONT)
 		mod_label.add_theme_font_size_override("font_size", 17)
@@ -246,7 +287,7 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 
 		var is_benefit = (modifier["operation"] == "multiply" and modifier["value"] > 1.0) or \
 						  (modifier["operation"] == "add" and modifier["value"] > 0.0)
-		var negative_color = Color(1.0, 0.4, 0.4)  # Light red/salmon color
+		var negative_color = Color(1.0, 0.5, 0.5)  # Brighter red for better readability
 		mod_label.add_theme_color_override("font_color", Color.GREEN if is_benefit else negative_color)
 		mod_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		container.add_child(mod_label)
@@ -302,6 +343,12 @@ func _format_modifier(modifier: Dictionary) -> String:
 			return "%s%.0f %s%s" % [sign_str, display_value, stat_name, tag]
 
 	return ""
+
+
+func _get_stat_icon(stat_name: String) -> String:
+	"""Returns emoji icon for stat, or empty string if no icon mapped"""
+	return STAT_ICONS.get(stat_name, "")
+
 
 func _setup_offer_focus_neighbors() -> void:
 	# Find first focusable purchase button (skip SOLD)
