@@ -345,7 +345,8 @@ func _on_research_points_changed(total: int) -> void:
 
 func _on_research_points_gained(amount: int, total: int) -> void:
 	# Update label
-	research_label.text = "🔬 Research: %d" % total
+	if research_label:
+		research_label.text = "🔬 Research: %d" % total
 
 	# Show floating notification
 	var notification = Label.new()

@@ -4,14 +4,6 @@ class_name TechTreePanel
 ## Tech Tree Panel - displays tech paths and nodes for unlocking during shop phase
 
 const TechNodeButtonScene = preload("res://scenes/ui/components/tech_node_button.tscn")
-const _BASE_FONT = preload("res://assets/fonts/NunitoSans-VariableFont.ttf")
-static var MAIN_FONT: FontVariation = _create_medium_font()
-
-static func _create_medium_font() -> FontVariation:
-	var font_var := FontVariation.new()
-	font_var.base_font = _BASE_FONT
-	font_var.variation_opentype = {"wght": 500}
-	return font_var
 
 # UI References
 @onready var research_label: Label = $Header/ResearchLabel
@@ -34,7 +26,6 @@ var tech_node_buttons: Array[TechNodeButton] = []
 func _ready() -> void:
 	# Apply fonts
 	if research_label:
-		research_label.add_theme_font_override("font", MAIN_FONT)
 		research_label.add_theme_font_size_override("font_size", 20)
 
 	# Setup path selector buttons
@@ -69,7 +60,6 @@ func _setup_path_selector() -> void:
 		var btn = Button.new()
 		btn.text = "%s %s" % [path_data["icon"], path_data["name"]]
 		btn.custom_minimum_size = Vector2(150, 40)
-		btn.add_theme_font_override("font", MAIN_FONT)
 		btn.add_theme_font_size_override("font_size", 16)
 		var path_id = path_data["id"]
 		btn.pressed.connect(func(): _show_path(path_id))

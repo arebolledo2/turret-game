@@ -2,14 +2,6 @@ extends Control
 
 ## Shop screen orchestrator - uses StatsPanel and InventoryPanel components
 
-const _BASE_FONT = preload("res://assets/fonts/NunitoSans-VariableFont.ttf")
-static var MAIN_FONT: FontVariation = _create_medium_font()
-
-static func _create_medium_font() -> FontVariation:
-	var font_var := FontVariation.new()
-	font_var.base_font = _BASE_FONT
-	font_var.variation_opentype = {"wght": 500}
-	return font_var
 const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
 
 # Preload shop offers panel script
@@ -72,25 +64,25 @@ func _on_shop_opened(wave_number: int) -> void:
 	get_tree().paused = true
 	
 	# Apply fonts to header elements
-	title_label.add_theme_font_override("font", MAIN_FONT)
-	title_label.add_theme_font_size_override("font_size", 42)
-	title_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	title_label.add_theme_constant_override("outline_size", 6)
+	if title_label:
+		title_label.add_theme_font_size_override("font_size", 42)
+		title_label.add_theme_color_override("font_outline_color", Color.BLACK)
+		title_label.add_theme_constant_override("outline_size", 6)
 
-	scrap_label.add_theme_font_override("font", MAIN_FONT)
-	scrap_label.add_theme_font_size_override("font_size", 32)
-	scrap_label.add_theme_color_override("font_outline_color", Color.BLACK)
-	scrap_label.add_theme_constant_override("outline_size", 4)
+	if scrap_label:
+		scrap_label.add_theme_font_size_override("font_size", 32)
+		scrap_label.add_theme_color_override("font_outline_color", Color.BLACK)
+		scrap_label.add_theme_constant_override("outline_size", 4)
 
-	reroll_button.add_theme_font_override("font", MAIN_FONT)
-	reroll_button.add_theme_font_size_override("font_size", 28)
-	reroll_button.add_theme_constant_override("outline_size", 6)
-	reroll_button.add_theme_color_override("font_outline_color", Color.BLACK)
+	if reroll_button:
+		reroll_button.add_theme_font_size_override("font_size", 28)
+		reroll_button.add_theme_constant_override("outline_size", 6)
+		reroll_button.add_theme_color_override("font_outline_color", Color.BLACK)
 
-	continue_button.add_theme_font_override("font", MAIN_FONT)
-	continue_button.add_theme_font_size_override("font_size", 32)
-	continue_button.add_theme_constant_override("outline_size", 6)
-	continue_button.add_theme_color_override("font_outline_color", Color.BLACK)
+	if continue_button:
+		continue_button.add_theme_font_size_override("font_size", 32)
+		continue_button.add_theme_constant_override("outline_size", 6)
+		continue_button.add_theme_color_override("font_outline_color", Color.BLACK)
 	
 	title_label.text = "TURRET SHOP - WAVE %d" % wave_number
 	update_scrap_display()

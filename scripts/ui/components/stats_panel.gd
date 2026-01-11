@@ -4,14 +4,6 @@ extends VBoxContainer
 ## Reusable component displaying Player and Economy stats
 ## Used in both Shop Screen and Pause Menu
 
-const _BASE_FONT = preload("res://assets/fonts/NunitoSans-VariableFont.ttf")
-static var MAIN_FONT: FontVariation = _create_medium_font()
-
-static func _create_medium_font() -> FontVariation:
-	var font_var := FontVariation.new()
-	font_var.base_font = _BASE_FONT
-	font_var.variation_opentype = {"wght": 500}
-	return font_var
 const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
 
 # Base player constants (from player.gd defaults)
@@ -153,7 +145,6 @@ func _update_economy_stats() -> void:
 func _create_label(text: String, font_size: int, color: Color = Color.WHITE) -> Label:
 	var label := Label.new()
 	label.text = text
-	label.add_theme_font_override("font", MAIN_FONT)
 	label.add_theme_font_size_override("font_size", font_size)
 	if color != Color.WHITE:
 		label.add_theme_color_override("font_color", color)

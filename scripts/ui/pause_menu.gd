@@ -4,15 +4,6 @@ extends ScalableUIPanel
 ## Handles pause menu display and interactions
 ## REFACTORED: Now uses InventoryPanel component for turrets/items
 
-const _BASE_FONT = preload("res://assets/fonts/NunitoSans-VariableFont.ttf")
-static var MAIN_FONT: FontVariation = _create_medium_font()
-
-static func _create_medium_font() -> FontVariation:
-	var font_var := FontVariation.new()
-	font_var.base_font = _BASE_FONT
-	font_var.variation_opentype = {"wght": 500}
-	return font_var
-
 var resume_button: Button
 var skip_wave_button: Button
 var level_label: Label
@@ -50,21 +41,19 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 
 	# Register fonts
 	if level_label:
-		level_label.add_theme_font_override("font", MAIN_FONT)
 		level_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		level_label.add_theme_constant_override("outline_size", 4)
 		level_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		register_font(level_label, BASE_LABEL_FONT)
 	if wave_label:
-		wave_label.add_theme_font_override("font", MAIN_FONT)
 		wave_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		wave_label.add_theme_constant_override("outline_size", 4)
 		wave_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		register_font(wave_label, BASE_LABEL_FONT)
 	if resume_button:
-		resume_button.add_theme_font_override("font", MAIN_FONT)
+		if _owner and _owner.has_method("_on_resume_pressed"):
+			resume_button.pressed.connect(_owner._on_resume_pressed)
 	if skip_wave_button:
-		skip_wave_button.add_theme_font_override("font", MAIN_FONT)
 		if _owner and _owner.has_method("_on_skip_wave_pressed"):
 			skip_wave_button.pressed.connect(_owner._on_skip_wave_pressed)
 	
@@ -135,7 +124,6 @@ func update_stats() -> void:
 	if _player and stats_grid:
 		for child in stats_grid.get_children():
 			if child is Label:
-				child.add_theme_font_override("font", MAIN_FONT)
 				child.add_theme_font_size_override("font_size", UIScaler.scale(BASE_LABEL_FONT))
 				# Add outline
 				child.add_theme_color_override("font_outline_color", Color.BLACK)

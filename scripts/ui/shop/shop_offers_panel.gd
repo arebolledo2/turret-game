@@ -4,15 +4,6 @@ extends Node
 ## Manages shop offer display and purchase interactions
 ## Extracted from shop_screen.gd to reduce file size
 
-const _BASE_FONT = preload("res://assets/fonts/NunitoSans-VariableFont.ttf")
-static var MAIN_FONT: FontVariation = _create_medium_font()
-
-static func _create_medium_font() -> FontVariation:
-	var font_var := FontVariation.new()
-	font_var.base_font = _BASE_FONT
-	font_var.variation_opentype = {"wght": 500}
-	return font_var
-
 const STAT_ICONS = {
 	# Player Stats
 	"player_max_health": "❤",
@@ -70,7 +61,6 @@ func initialize(offers_cont: HBoxContainer, reroll_btn: Button) -> void:
 	
 	if reroll_button:
 		reroll_button.pressed.connect(_on_reroll_pressed)
-		reroll_button.add_theme_font_override("font", MAIN_FONT)
 	
 	Events.shop_offers_generated.connect(_on_offers_generated)
 	Events.offer_locked.connect(_on_offer_locked)
@@ -130,7 +120,6 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	var price_label = Label.new()
 	price_label.text = "💰 %d" % offer["price"]
 	price_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	price_label.add_theme_font_override("font", MAIN_FONT)
 	price_label.add_theme_font_size_override("font_size", 28)
 	price_label.add_theme_color_override("font_color", Color.GOLD)
 	price_label.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -146,7 +135,6 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 
 	# Purchase button
 	var purchase_button = Button.new()
-	purchase_button.add_theme_font_override("font", MAIN_FONT)
 	purchase_button.add_theme_font_size_override("font_size", 26)
 	purchase_button.add_theme_constant_override("outline_size", 4)
 	purchase_button.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -176,7 +164,6 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	# Lock button (show only if not sold)
 	if not offer.get("sold", false):
 		var lock_button = Button.new()
-		lock_button.add_theme_font_override("font", MAIN_FONT)
 		lock_button.add_theme_font_size_override("font_size", 26)
 		lock_button.add_theme_constant_override("outline_size", 4)
 		lock_button.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -216,7 +203,6 @@ func _create_turret_offer_ui(offer: Dictionary, container: VBoxContainer) -> voi
 	var icon = Label.new()
 	icon.text = turret_config["icon"]
 	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon.add_theme_font_override("font", MAIN_FONT)
 	icon.add_theme_font_size_override("font_size", 76)
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	container.add_child(icon)
@@ -225,7 +211,6 @@ func _create_turret_offer_ui(offer: Dictionary, container: VBoxContainer) -> voi
 	var name_label = Label.new()
 	name_label.text = turret_config["name"]
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_override("font", MAIN_FONT)
 	name_label.add_theme_font_size_override("font_size", 28)
 	name_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	name_label.add_theme_constant_override("outline_size", 4)
@@ -240,7 +225,6 @@ func _create_turret_offer_ui(offer: Dictionary, container: VBoxContainer) -> voi
 		turret_stats["fire_rate"]
 	]
 	stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stats_label.add_theme_font_override("font", MAIN_FONT)
 	stats_label.add_theme_font_size_override("font_size", 18)
 	stats_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	stats_label.add_theme_constant_override("outline_size", 4)
@@ -256,7 +240,6 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	var icon_label = Label.new()
 	icon_label.text = item_data["icon"]
 	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon_label.add_theme_font_override("font", MAIN_FONT)
 	icon_label.add_theme_font_size_override("font_size", 64)
 	icon_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	container.add_child(icon_label)
@@ -265,7 +248,6 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 	var name_label = Label.new()
 	name_label.text = item_data["name"]
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_override("font", MAIN_FONT)
 	name_label.add_theme_font_size_override("font_size", 22)
 	name_label.add_theme_color_override("font_color", ItemRegistry.get_rarity_color(item_data["rarity"]))
 	name_label.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -279,7 +261,6 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 		desc_label.text = item_data["description"]
 		desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD
-		desc_label.add_theme_font_override("font", MAIN_FONT)
 		desc_label.add_theme_font_size_override("font_size", 18)
 		desc_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		desc_label.add_theme_constant_override("outline_size", 4)
@@ -292,7 +273,6 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 		var icon = _get_stat_icon(modifier["stat"])
 		mod_label.text = "%s %s" % [icon, _format_modifier(modifier)] if icon else _format_modifier(modifier)
 		mod_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		mod_label.add_theme_font_override("font", MAIN_FONT)
 		mod_label.add_theme_font_size_override("font_size", 20)
 		mod_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		mod_label.add_theme_constant_override("outline_size", 4)

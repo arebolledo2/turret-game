@@ -6,14 +6,6 @@ extends RefCounted
 const TURRET_BUTTON_SIZE := Vector2(56, 56)
 const ICON_FONT_SIZE := 28
 const BADGE_FONT_SIZE := 12
-const _BASE_FONT = preload("res://assets/fonts/NunitoSans-VariableFont.ttf")
-static var MAIN_FONT: FontVariation = _create_medium_font()
-
-static func _create_medium_font() -> FontVariation:
-	var font_var := FontVariation.new()
-	font_var.base_font = _BASE_FONT
-	font_var.variation_opentype = {"wght": 500}
-	return font_var
 
 ## Creates a 56x56 button with icon and count badge for turret display
 static func create_turret_button(turret_type: String, count: int) -> Button:
@@ -21,7 +13,6 @@ static func create_turret_button(turret_type: String, count: int) -> Button:
 	
 	var btn := Button.new()
 	btn.custom_minimum_size = TURRET_BUTTON_SIZE
-	btn.add_theme_font_override("font", MAIN_FONT)
 	btn.add_theme_font_size_override("font_size", ICON_FONT_SIZE)
 	btn.text = turret_config.get("icon", "?")
 	btn.tooltip_text = turret_config.get("name", "Unknown Turret")
@@ -34,7 +25,6 @@ static func create_turret_button(turret_type: String, count: int) -> Button:
 	if count > 0:
 		var badge := Label.new()
 		badge.text = str(count)
-		badge.add_theme_font_override("font", MAIN_FONT)
 		badge.add_theme_font_size_override("font_size", BADGE_FONT_SIZE)
 		badge.add_theme_color_override("font_color", Color.WHITE)
 		badge.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -76,12 +66,10 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 	var count: int = TurretStatsService.turret_counts.get(turret_type, 0)
 
 	if nodes.has("turret_name_label") and nodes["turret_name_label"]:
-		nodes["turret_name_label"].add_theme_font_override("font", MAIN_FONT)
 		nodes["turret_name_label"].text = "%s %s (x%d)" % [config.get("icon", "?"), config.get("name", "Unknown"), count]
 
 	# Damage with base/modified
 	if nodes.has("damage_label") and nodes["damage_label"]:
-		nodes["damage_label"].add_theme_font_override("font", MAIN_FONT)
 		var base_damage := float(base_stats.get("damage", 0))
 		var mod_damage := float(modified_stats.get("damage", 0))
 		var damage_stat := UIHelpers.format_stat_with_modifier("Damage", base_damage, mod_damage, "%.1f", true)
@@ -90,7 +78,6 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 
 	# Range with base/modified
 	if nodes.has("range_label") and nodes["range_label"]:
-		nodes["range_label"].add_theme_font_override("font", MAIN_FONT)
 		var base_range := float(base_stats.get("range", 0))
 		var mod_range := float(modified_stats.get("range", 0))
 		var range_stat := UIHelpers.format_stat_with_modifier("Range", base_range, mod_range, "%.0f", true)
@@ -99,7 +86,6 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 
 	# Fire Rate with base/modified
 	if nodes.has("fire_rate_label") and nodes["fire_rate_label"]:
-		nodes["fire_rate_label"].add_theme_font_override("font", MAIN_FONT)
 		var base_fire_rate := float(base_stats.get("fire_rate", 0))
 		var mod_fire_rate := float(modified_stats.get("fire_rate", 0))
 		var fire_rate_stat := UIHelpers.format_stat_with_modifier("Fire Rate", base_fire_rate, mod_fire_rate, "%.1f/s", true)
@@ -108,7 +94,6 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 
 	# Rotation Speed with base/modified
 	if nodes.has("rotation_label") and nodes["rotation_label"]:
-		nodes["rotation_label"].add_theme_font_override("font", MAIN_FONT)
 		var base_rotation := float(base_stats.get("rotation_speed", 0))
 		var mod_rotation := float(modified_stats.get("rotation_speed", 0))
 		var rotation_stat := UIHelpers.format_stat_with_modifier("Rotation", base_rotation, mod_rotation, "%.0f°/s", true)
@@ -117,7 +102,6 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 
 	# Projectile Speed with base/modified
 	if nodes.has("proj_speed_label") and nodes["proj_speed_label"]:
-		nodes["proj_speed_label"].add_theme_font_override("font", MAIN_FONT)
 		var base_proj_speed := float(base_stats.get("projectile_speed", 0))
 		var mod_proj_speed := float(modified_stats.get("projectile_speed", 0))
 		var proj_speed_stat := UIHelpers.format_stat_with_modifier("Proj Speed", base_proj_speed, mod_proj_speed, "%.0f", true)
@@ -126,7 +110,6 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 
 	# DPS with effective calculation
 	if nodes.has("dps_label") and nodes["dps_label"]:
-		nodes["dps_label"].add_theme_font_override("font", MAIN_FONT)
 		var dps_calc := calculate_effective_dps(turret_type, modified_stats)
 		var base_dps: float = float(dps_calc["base_dps"])
 		var effective_dps: float = float(dps_calc["effective_dps"])
@@ -139,7 +122,6 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 
 	# Crit Chance
 	if nodes.has("crit_chance_label") and nodes["crit_chance_label"]:
-		nodes["crit_chance_label"].add_theme_font_override("font", MAIN_FONT)
 		var base_crit_chance := GameConstants.TURRET_BASE_CRIT_CHANCE * 100.0
 		var mod_crit_chance := TurretStatsService.get_turret_crit_chance() * 100.0
 		var crit_chance_stat := UIHelpers.format_stat_with_modifier("Crit Chance", base_crit_chance, mod_crit_chance, "%.1f%%", true)
@@ -148,7 +130,6 @@ static func update_turret_details(nodes: Dictionary, turret_type: String) -> voi
 
 	# Crit Multiplier
 	if nodes.has("crit_mult_label") and nodes["crit_mult_label"]:
-		nodes["crit_mult_label"].add_theme_font_override("font", MAIN_FONT)
 		var base_crit_mult := GameConstants.TURRET_BASE_CRIT_MULTIPLIER
 		var mod_crit_mult := TurretStatsService.get_turret_crit_multiplier()
 		var crit_mult_stat := UIHelpers.format_stat_with_modifier("Crit Damage", base_crit_mult, mod_crit_mult, "%.1fx", true)

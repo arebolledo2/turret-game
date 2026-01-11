@@ -6,14 +6,6 @@ extends RefCounted
 const ITEM_BUTTON_SIZE := Vector2(60, 60)
 const ICON_FONT_SIZE := 28
 const BADGE_FONT_SIZE := 12
-const _BASE_FONT = preload("res://assets/fonts/NunitoSans-VariableFont.ttf")
-static var MAIN_FONT: FontVariation = _create_medium_font()
-
-static func _create_medium_font() -> FontVariation:
-	var font_var := FontVariation.new()
-	font_var.base_font = _BASE_FONT
-	font_var.variation_opentype = {"wght": 500}
-	return font_var
 
 ## Creates a 60x60 button with emoji icon, rarity border, and count badge for item display
 static func create_item_button(item_id: String, count: int) -> Button:
@@ -38,7 +30,6 @@ static func create_item_button(item_id: String, count: int) -> Button:
 	# Add emoji icon label
 	var icon_label := Label.new()
 	icon_label.text = item_data.get("icon", "?")
-	icon_label.add_theme_font_override("font", MAIN_FONT)
 	icon_label.add_theme_font_size_override("font_size", ICON_FONT_SIZE)
 	icon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	icon_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -50,7 +41,6 @@ static func create_item_button(item_id: String, count: int) -> Button:
 	if count > 1:
 		var badge := Label.new()
 		badge.text = "x%d" % count
-		badge.add_theme_font_override("font", MAIN_FONT)
 		badge.add_theme_font_size_override("font_size", BADGE_FONT_SIZE)
 		badge.add_theme_color_override("font_color", Color.WHITE)
 		badge.add_theme_color_override("font_outline_color", Color.BLACK)
@@ -103,24 +93,20 @@ static func update_item_details(nodes: Dictionary, item_id: String) -> void:
 	var count: int = ItemTrackingService.item_counts.get(item_id, 1)
 	
 	if nodes.has("item_icon_label") and nodes["item_icon_label"]:
-		nodes["item_icon_label"].add_theme_font_override("font", MAIN_FONT)
 		nodes["item_icon_label"].text = item_data.get("icon", "?")
 	
 	if nodes.has("item_name_label") and nodes["item_name_label"]:
-		nodes["item_name_label"].add_theme_font_override("font", MAIN_FONT)
 		if count > 1:
 			nodes["item_name_label"].text = "%s (x%d)" % [item_data.get("name", "Unknown Item"), count]
 		else:
 			nodes["item_name_label"].text = item_data.get("name", "Unknown Item")
 	
 	if nodes.has("item_rarity_label") and nodes["item_rarity_label"]:
-		nodes["item_rarity_label"].add_theme_font_override("font", MAIN_FONT)
 		var rarity = item_data.get("rarity", GameEnums.ItemRarity.COMMON)
 		nodes["item_rarity_label"].text = ItemRegistry.RARITY_NAMES.get(rarity, "Common")
 		nodes["item_rarity_label"].add_theme_color_override("font_color", ItemRegistry.get_rarity_color(rarity))
 	
 	if nodes.has("item_description_label") and nodes["item_description_label"]:
-		nodes["item_description_label"].add_theme_font_override("font", MAIN_FONT)
 		if ItemRegistry.should_show_description(item_id):
 			nodes["item_description_label"].text = item_data.get("description", "")
 			nodes["item_description_label"].visible = true

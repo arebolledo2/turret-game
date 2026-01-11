@@ -8,14 +8,6 @@ extends VBoxContainer
 signal turret_selected(turret_type: String)
 signal item_selected(item_id: String)
 
-const _BASE_FONT = preload("res://assets/fonts/NunitoSans-VariableFont.ttf")
-static var MAIN_FONT: FontVariation = _create_medium_font()
-
-static func _create_medium_font() -> FontVariation:
-	var font_var := FontVariation.new()
-	font_var.base_font = _BASE_FONT
-	font_var.variation_opentype = {"wght": 500}
-	return font_var
 const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
 
 @onready var turrets_header: HBoxContainer = $TurretsHeader
@@ -91,7 +83,6 @@ func _update_turrets() -> void:
 	var total_turrets := TurretStatsService.get_total_turret_count()
 	
 	if turrets_title:
-		turrets_title.add_theme_font_override("font", MAIN_FONT)
 		turrets_title.text = "TURRETS (%d)" % total_turrets
 	
 	_turret_buttons.clear()
@@ -176,7 +167,6 @@ func _update_items() -> void:
 	var unique_item_count := ItemTrackingService.item_counts.size()
 	
 	if items_title:
-		items_title.add_theme_font_override("font", MAIN_FONT)
 		items_title.text = "ITEMS (%d)" % total_item_count
 	
 	var has_items := unique_item_count > 0
@@ -203,7 +193,6 @@ func _update_items() -> void:
 		if not has_items:
 			var no_items := Label.new()
 			no_items.text = "No items collected"
-			no_items.add_theme_font_override("font", MAIN_FONT)
 			no_items.add_theme_font_size_override("font_size", 16)
 			no_items.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 1)) # Lighten gray
 			_improve_label_readability(no_items, 16) # Apply outline

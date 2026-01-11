@@ -3,15 +3,6 @@ extends RefCounted
 
 ## General UI formatting and navigation helpers
 
-const _BASE_FONT = preload("res://assets/fonts/NunitoSans-VariableFont.ttf")
-static var MAIN_FONT: FontVariation = _create_medium_font()
-
-static func _create_medium_font() -> FontVariation:
-	var font_var := FontVariation.new()
-	font_var.base_font = _BASE_FONT
-	font_var.variation_opentype = {"wght": 500}
-	return font_var
-
 ## Format a stat with base and modified values
 ## Returns Dictionary with text and color for display
 static func format_stat_with_modifier(

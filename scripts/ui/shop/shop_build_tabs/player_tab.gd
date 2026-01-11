@@ -5,14 +5,6 @@ extends Node
 ## Extracted from shop_screen.gd to reduce file size
 
 const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
-const _BASE_FONT = preload("res://assets/fonts/NunitoSans-VariableFont.ttf")
-static var MAIN_FONT: FontVariation = _create_medium_font()
-
-static func _create_medium_font() -> FontVariation:
-	var font_var := FontVariation.new()
-	font_var.base_font = _BASE_FONT
-	font_var.variation_opentype = {"wght": 500}
-	return font_var
 
 var player_stats_vbox: VBoxContainer
 var _player: Node2D = null
@@ -60,8 +52,7 @@ func update_display() -> void:
 	if not is_equal_approx(modified_max_health, BASE_MAX_HEALTH):
 		health_label.text += " (base: %d)" % int(BASE_MAX_HEALTH)
 		health_label.add_theme_color_override("font_color", Color.GREEN)
-	health_label.add_theme_font_override("font", MAIN_FONT)
-	health_label.add_theme_font_size_override("font_size", 15)
+	health_label	health_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(health_label)
 
 	# Health Regen (only show if > 0)
@@ -70,8 +61,7 @@ func update_display() -> void:
 		var regen_label := Label.new()
 		regen_label.text = "💚 Regen: +%d" % health_regen
 		regen_label.add_theme_color_override("font_color", Color.GREEN)
-		regen_label.add_theme_font_override("font", MAIN_FONT)
-		regen_label.add_theme_font_size_override("font_size", 15)
+		regen_label		regen_label.add_theme_font_size_override("font_size", 15)
 		player_stats_vbox.add_child(regen_label)
 
 	# Speed stat with base/modified
@@ -79,34 +69,29 @@ func update_display() -> void:
 	var speed_label := Label.new()
 	speed_label.text = speed_stat["text"]
 	speed_label.add_theme_color_override("font_color", speed_stat["color"])
-	speed_label.add_theme_font_override("font", MAIN_FONT)
-	speed_label.add_theme_font_size_override("font_size", 15)
+	speed_label	speed_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(speed_label)
 
 	# Luck
 	var luck_label := Label.new()
 	luck_label.text = "🍀 Luck: %d" % luck
-	luck_label.add_theme_font_override("font", MAIN_FONT)
-	luck_label.add_theme_font_size_override("font_size", 15)
+	luck_label	luck_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(luck_label)
 
 	# Scrap
 	var scrap_label := Label.new()
 	scrap_label.text = "⚙ Scrap: %d" % xp
-	scrap_label.add_theme_font_override("font", MAIN_FONT)
-	scrap_label.add_theme_font_size_override("font_size", 15)
+	scrap_label	scrap_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(scrap_label)
 
 	# Kills
 	var kills_label := Label.new()
 	kills_label.text = "💀 Kills: %d" % kills
-	kills_label.add_theme_font_override("font", MAIN_FONT)
-	kills_label.add_theme_font_size_override("font_size", 15)
+	kills_label	kills_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(kills_label)
 
 	# Time
 	var time_label := Label.new()
 	time_label.text = "⏱ Time: %d:%02d" % [minutes, seconds]
-	time_label.add_theme_font_override("font", MAIN_FONT)
-	time_label.add_theme_font_size_override("font_size", 15)
+	time_label	time_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(time_label)

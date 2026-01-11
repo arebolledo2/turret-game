@@ -5,14 +5,6 @@ extends Node
 ## Extracted from shop_screen.gd to reduce file size
 
 const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
-const _BASE_FONT = preload("res://assets/fonts/NunitoSans-VariableFont.ttf")
-static var MAIN_FONT: FontVariation = _create_medium_font()
-
-static func _create_medium_font() -> FontVariation:
-	var font_var := FontVariation.new()
-	font_var.base_font = _BASE_FONT
-	font_var.variation_opentype = {"wght": 500}
-	return font_var
 
 var items_title: Label
 var items_hint: Label
@@ -47,8 +39,7 @@ func update_display() -> void:
 		total_item_count += count
 	
 	if items_title:
-		items_title.add_theme_font_override("font", MAIN_FONT)
-		items_title.text = "ITEMS (%d)" % total_item_count
+		items_title		items_title.text = "ITEMS (%d)" % total_item_count
 	
 	var has_items := unique_item_count > 0
 	
