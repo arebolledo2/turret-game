@@ -228,3 +228,67 @@ func test_reset_after_unlocks():
 		"Unlock counts should be cleared")
 	assert_false(tech_tree_service.is_tech_unlocked("tech1"),
 		"Tech1 should not be unlocked after reset")
+
+
+# =============================================================================
+# TURRET UNLOCK SYSTEM
+# =============================================================================
+
+func test_turret_unlock_techs_exist():
+	# Verify all 7 turret unlock techs exist in registry
+	var turret_types = ["sniper", "fire", "plasma", "shock", "tesla", "melee", "mine"]
+	for turret_type in turret_types:
+		var tech_id = "turret_unlock_%s" % turret_type
+		var tech = TechRegistry.get_tech(tech_id)
+		assert_false(tech.is_empty(),
+			"Turret unlock tech for %s should exist" % turret_type)
+		assert_eq(tech.get("path"), "turret_unlock",
+			"Turret unlock tech should be in turret_unlock path")
+		assert_eq(tech.get("effect_type"), "unlock_mechanic",
+			"Turret unlock tech should have unlock_mechanic effect type")
+
+
+func test_normal_turret_always_unlocked():
+	# Normal turret should always be available without research
+	assert_true(tech_tree_service.is_turret_type_unlocked("normal"),
+		"Normal turret should always be unlocked")
+
+
+func test_advanced_turrets_locked_initially():
+	# All advanced turrets should be locked at game start
+	var advanced_turrets = ["sniper", "fire", "plasma", "shock", "tesla", "melee", "mine"]
+	for turret_type in advanced_turrets:
+		assert_false(tech_tree_service.is_turret_type_unlocked(turret_type),
+			"%s turret should be locked initially" % turret_type)
+
+
+func test_unlocking_turret_tech_unlocks_turret():
+	# Grant research points
+	tech_tree_service.add_research_points(50)
+
+	# Verify sniper is locked
+	assert_false(tech_tree_service.is_turret_type_unlocked("sniper"),
+		"Sniper should be locked before unlock")
+
+	# Unlock sniper tech
+	var success = tech_tree_service.unlock_tech("turret_unlock_sniper")
+	assert_true(success, "Should successfully unlock sniper tech")
+
+	# Verify sniper is now unlocked
+	assert_true(tech_tree_service.is_turret_type_unlocked("sniper"),
+		"Sniper should be unlocked after tech purchase")
+
+
+func test_turret_unlock_techs_are_purchaseable():
+	# Grant research points
+	tech_tree_service.add_research_points(100)
+
+	# Verify we can purchase turret unlock techs
+	var fire_tech_id = "turret_unlock_fire"
+	assert_true(tech_tree_service.can_unlock_tech(fire_tech_id),
+		"Should be able to unlock fire turret with sufficient research")
+
+	var success = tech_tree_service.unlock_tech(fire_tech_id)
+	assert_true(success, "Should successfully purchase fire turret unlock")
+	assert_true(tech_tree_service.is_tech_unlocked(fire_tech_id),
+		"Fire unlock tech should be in unlocked list")
