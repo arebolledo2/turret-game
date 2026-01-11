@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://shop_screen_001"]
+[gd_scene load_steps=5 format=3 uid="uid://shop_screen_001"]
 
 [ext_resource type="Script" path="res://scripts/shop_screen.gd" id="1_shop"]
 [ext_resource type="PackedScene" uid="uid://stats_panel_001" path="res://scenes/ui/components/stats_panel.tscn" id="2_stats"]
 [ext_resource type="PackedScene" uid="uid://inventory_panel_001" path="res://scenes/ui/components/inventory_panel.tscn" id="3_inv"]
+[ext_resource type="PackedScene" uid="uid://tech_tree_panel_001" path="res://scenes/ui/components/tech_tree_panel.tscn" id="4_tech"]
 
 [node name="ShopScreen" type="Control"]
 visible = false
@@ -76,6 +77,11 @@ size_flags_vertical = 3
 theme_override_constants/separation = 8
 alignment = 1
 
+[node name="TechTreePanel" parent="MainContainer/ContentVBox/MainHBox/LeftPanel" instance=ExtResource("4_tech")]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+
 [node name="RerollContainer" type="HBoxContainer" parent="MainContainer/ContentVBox/MainHBox/LeftPanel"]
 layout_mode = 2
 theme_override_constants/separation = 15
@@ -86,6 +92,12 @@ custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 theme_override_font_sizes/font_size = 22
 text = "Reroll (Cost: 10)"
+
+[node name="TechTreeButton" type="Button" parent="MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer"]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "🔬 Tech Tree"
 
 [node name="ContinueButton" type="Button" parent="MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer"]
 custom_minimum_size = Vector2(250, 50)

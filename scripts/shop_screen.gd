@@ -12,7 +12,9 @@ const ShopOffersPanelScript = preload("res://scripts/ui/shop/shop_offers_panel.g
 @onready var title_label: Label = $MainContainer/ContentVBox/Header/TitleLabel
 @onready var scrap_label: Label = $MainContainer/ContentVBox/Header/ScrapLabel
 @onready var offers_container: HBoxContainer = $MainContainer/ContentVBox/MainHBox/LeftPanel/OffersContainer
+@onready var tech_tree_panel: VBoxContainer = $MainContainer/ContentVBox/MainHBox/LeftPanel/TechTreePanel
 @onready var reroll_button: Button = $MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer/RerollButton
+@onready var tech_tree_button: Button = $MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer/TechTreeButton
 @onready var continue_button: Button = $MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer/ContinueButton
 
 # Component references
@@ -23,6 +25,7 @@ const ShopOffersPanelScript = preload("res://scripts/ui/shop/shop_offers_panel.g
 var offers_panel
 var shop_manager: Node
 var regeneration_pending: bool = false
+var showing_tech_tree: bool = false
 
 
 func _ready() -> void:
@@ -48,6 +51,7 @@ func _ready() -> void:
 	offers_panel.focus_restored.connect(_setup_focus_neighbors)
 
 	continue_button.pressed.connect(_on_continue_pressed)
+	tech_tree_button.pressed.connect(_on_tech_tree_button_pressed)
 
 
 func _unhandled_input(_event: InputEvent) -> void:
@@ -135,6 +139,23 @@ func _on_continue_pressed() -> void:
 	var game_manager = get_node_or_null("/root/Main/GameManager")
 	if game_manager and game_manager.has_method("end_shop_phase"):
 		game_manager.end_shop_phase()
+
+
+func _on_tech_tree_button_pressed() -> void:
+	showing_tech_tree = not showing_tech_tree
+
+	if showing_tech_tree:
+		# Show tech tree, hide offers
+		offers_container.visible = false
+		tech_tree_panel.visible = true
+		reroll_button.visible = false
+		tech_tree_button.text = "🛒 Shop"
+	else:
+		# Show offers, hide tech tree
+		offers_container.visible = true
+		tech_tree_panel.visible = false
+		reroll_button.visible = true
+		tech_tree_button.text = "🔬 Tech Tree"
 
 
 func _on_scrap_changed(_amount: int, _total: int) -> void:

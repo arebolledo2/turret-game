@@ -1,0 +1,33 @@
+[gd_scene load_steps=2 format=3 uid="uid://tech_node_button_001"]
+
+[ext_resource type="Script" path="res://scripts/ui/shop/tech_node_button.gd" id="1_tech_node"]
+
+[node name="TechNodeButton" type="Button"]
+custom_minimum_size = Vector2(80, 80)
+offset_right = 80.0
+offset_bottom = 80.0
+focus_mode = 2
+theme_override_font_sizes/font_size = 40
+script = ExtResource("1_tech_node")
+
+[node name="Border" type="Panel" parent="."]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="IconLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 40
+text = "💥"
+horizontal_alignment = 1
+vertical_alignment = 1

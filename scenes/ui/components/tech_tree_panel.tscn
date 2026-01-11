@@ -1,0 +1,88 @@
+[gd_scene load_steps=2 format=3 uid="uid://tech_tree_panel_001"]
+
+[ext_resource type="Script" path="res://scripts/ui/shop/tech_tree_panel.gd" id="1_tech_tree"]
+
+[node name="TechTreePanel" type="VBoxContainer"]
+offset_right = 1200.0
+offset_bottom = 700.0
+theme_override_constants/separation = 10
+script = ExtResource("1_tech_tree")
+
+[node name="Header" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "TECH TREE"
+horizontal_alignment = 1
+
+[node name="ResearchLabel" type="Label" parent="Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
+text = "🔬 Research: 0"
+
+[node name="PathSelector" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="TechScroll" type="ScrollContainer" parent="."]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TechGrid" type="GridContainer" parent="TechScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 5
+
+[node name="DetailPanel" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+
+[node name="DetailVBox" type="VBoxContainer" parent="DetailPanel"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="DetailIcon" type="Label" parent="DetailPanel/DetailVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+horizontal_alignment = 1
+
+[node name="DetailName" type="Label" parent="DetailPanel/DetailVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Select a tech"
+horizontal_alignment = 1
+
+[node name="DetailDescription" type="Label" parent="DetailPanel/DetailVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Click on a tech node to see details"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="DetailCost" type="Label" parent="DetailPanel/DetailVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+
+[node name="DetailPrereqs" type="Label" parent="DetailPanel/DetailVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="UnlockButton" type="Button" parent="DetailPanel/DetailVBox"]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 24
+disabled = true
+text = "Select Tech"

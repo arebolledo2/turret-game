@@ -87,6 +87,12 @@ theme_override_font_sizes/font_size = 16
 text = "Turrets: 0"
 horizontal_alignment = 2
 
+[node name="ResearchLabel" type="Label" parent="MarginContainer/VBoxContainer/TopRow/StatsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "🔬 Research: 0"
+horizontal_alignment = 2
+
 [node name="WaveAnnouncement" type="Control" parent="."]
 visible = false
 anchors_preset = 8

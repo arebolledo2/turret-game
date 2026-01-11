@@ -21,6 +21,7 @@ const LootReviewScreenScript = preload("res://scripts/ui/loot_review_screen.gd")
 @onready var timer_label: Label = $MarginContainer/VBoxContainer/TopRow/WaveInfo/TimerLabel
 @onready var scrap_label: Label = $MarginContainer/VBoxContainer/TopRow/StatsContainer/ScrapLabel
 @onready var turret_label: Label = $MarginContainer/VBoxContainer/TopRow/StatsContainer/TurretLabel
+@onready var research_label: Label = $MarginContainer/VBoxContainer/TopRow/StatsContainer/ResearchLabel
 @onready var wave_announcement: Control = $WaveAnnouncement
 @onready var wave_announcement_label: Label = $WaveAnnouncement/Panel/WaveLabel
 @onready var game_over_screen: Control = $GameOverScreen
@@ -145,6 +146,8 @@ func _ready() -> void:
 	Events.damage_dealt.connect(_on_damage_dealt)
 	Events.dot_damage_dealt.connect(_on_dot_damage_dealt)
 	Events.loot_review_started.connect(_on_loot_review_started)
+	Events.research_points_changed.connect(_on_research_points_changed)
+	Events.research_points_gained.connect(_on_research_points_gained)
 
 	# Connect Granular Hitbox Toggles
 	physics_hitboxes_check.toggled.connect(_on_physics_hitboxes_toggled)
@@ -334,6 +337,35 @@ func _on_scrap_changed(_amount: int, total: int) -> void:
 
 func _on_turret_spawned(_turret: Node2D, _position: Vector2) -> void:
 	game_display.update_turret_count(GameStateService.turrets_spawned)
+
+
+func _on_research_points_changed(total: int) -> void:
+	research_label.text = "🔬 Research: %d" % total
+
+
+func _on_research_points_gained(amount: int, total: int) -> void:
+	# Update label
+	research_label.text = "🔬 Research: %d" % total
+
+	# Show floating notification
+	var notification = Label.new()
+	notification.text = "+%d Research" % amount
+	notification.modulate = Color(0.4, 0.8, 1.0)  # Light blue
+	notification.add_theme_font_size_override("font_size", 20)
+	notification.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	notification.add_theme_constant_override("outline_size", 2)
+
+	# Position near the research label
+	if research_label:
+		add_child(notification)
+		notification.global_position = research_label.global_position + Vector2(-50, 0)
+
+		# Animate upward and fade
+		var tween = create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(notification, "global_position:y", notification.global_position.y - 80, 1.5)
+		tween.tween_property(notification, "modulate:a", 0.0, 1.5)
+		tween.chain().tween_callback(notification.queue_free)
 
 
 func _on_show_wave_announcement(wave_number: int) -> void:
