@@ -1,6 +1,13 @@
-[gd_resource type="Theme" format=3]
-[ext_resource type="FontFile" uid="uid://b7m4p8d9k2xqr" id="1" path="res://assets/fonts/NunitoSans-Regular.ttf"]
+[gd_resource type="Theme" load_steps=3 format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/NunitoSans-VariableFont.ttf" id="1"]
+
+[sub_resource type="FontVariation" id="FontVariation_1"]
+base_font = ExtResource("1")
+variation_opentype = {
+"wght": 500
+}
 
 [resource]
-default_font = ExtResource("1")
+default_font = SubResource("FontVariation_1")
 default_font_size = 16

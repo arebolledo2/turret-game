@@ -4,7 +4,14 @@ extends Node
 ## Manages shop offer display and purchase interactions
 ## Extracted from shop_screen.gd to reduce file size
 
-const MAIN_FONT = preload("res://assets/fonts/NunitoSans-Regular.ttf")
+const _BASE_FONT = preload("res://assets/fonts/NunitoSans-VariableFont.ttf")
+static var MAIN_FONT: FontVariation = _create_medium_font()
+
+static func _create_medium_font() -> FontVariation:
+	var font_var := FontVariation.new()
+	font_var.base_font = _BASE_FONT
+	font_var.variation_opentype = {"wght": 500}
+	return font_var
 
 const STAT_ICONS = {
 	# Player Stats

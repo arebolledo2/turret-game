@@ -8,7 +8,14 @@ extends VBoxContainer
 signal turret_selected(turret_type: String)
 signal item_selected(item_id: String)
 
-const MAIN_FONT = preload("res://assets/fonts/NunitoSans-Regular.ttf")
+const _BASE_FONT = preload("res://assets/fonts/NunitoSans-VariableFont.ttf")
+static var MAIN_FONT: FontVariation = _create_medium_font()
+
+static func _create_medium_font() -> FontVariation:
+	var font_var := FontVariation.new()
+	font_var.base_font = _BASE_FONT
+	font_var.variation_opentype = {"wght": 500}
+	return font_var
 const BuildDisplayUIScript = preload("res://scripts/ui/build_display_ui.gd")
 
 @onready var turrets_header: HBoxContainer = $TurretsHeader

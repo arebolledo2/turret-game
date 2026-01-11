@@ -6,7 +6,14 @@ extends RefCounted
 const ITEM_BUTTON_SIZE := Vector2(60, 60)
 const ICON_FONT_SIZE := 28
 const BADGE_FONT_SIZE := 12
-const MAIN_FONT = preload("res://assets/fonts/NunitoSans-Regular.ttf")
+const _BASE_FONT = preload("res://assets/fonts/NunitoSans-VariableFont.ttf")
+static var MAIN_FONT: FontVariation = _create_medium_font()
+
+static func _create_medium_font() -> FontVariation:
+	var font_var := FontVariation.new()
+	font_var.base_font = _BASE_FONT
+	font_var.variation_opentype = {"wght": 500}
+	return font_var
 
 ## Creates a 60x60 button with emoji icon, rarity border, and count badge for item display
 static func create_item_button(item_id: String, count: int) -> Button:
