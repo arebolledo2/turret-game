@@ -169,3 +169,34 @@ func has_mechanic_unlocked(mechanic_id: String) -> bool:
 			if tech_def.get("special_effect") == mechanic_id:
 				return true
 	return false
+
+
+## Get all modifiers from unlocked techs that affect shop mechanics
+## Returns Dictionary with aggregated values:
+## - "price_mult": float (multiply all values together, default 1.0)
+## - "offer_count_bonus": int (sum all additive bonuses, default 0)
+func get_shop_modifiers() -> Dictionary:
+	var price_mult := 1.0
+	var offer_count_bonus := 0
+
+	for tech_id in unlocked_tech_ids:
+		var tech_def = _get_tech_definition(tech_id)
+		var modifiers: Array = tech_def.get("modifiers", [])
+
+		for modifier in modifiers:
+			var stat: String = modifier.get("stat", "")
+			var operation: String = modifier.get("operation", "")
+			var value = modifier.get("value", 0)
+
+			# Shop price multiplier
+			if stat == "shop_price_mult" and operation == "multiply":
+				price_mult *= value
+
+			# Shop offer count bonus
+			elif stat == "shop_offer_count" and operation == "add":
+				offer_count_bonus += int(value)
+
+	return {
+		"price_mult": price_mult,
+		"offer_count_bonus": offer_count_bonus
+	}
