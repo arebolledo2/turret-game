@@ -48,14 +48,13 @@ theme_override_constants/separation = 20
 [node name="TitleLabel" type="Label" parent="MainContainer/ContentVBox/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_type_variation = &"HeaderLabel"
-theme_override_font_sizes/font_size = 32
+theme_type_variation = &"Header2"
 text = "TURRET SHOP - WAVE 1"
 horizontal_alignment = 1
 
 [node name="ScrapLabel" type="Label" parent="MainContainer/ContentVBox/Header"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_type_variation = &"Header3"
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
 text = "Scrap: 100"
 
@@ -90,19 +89,19 @@ alignment = 1
 [node name="RerollButton" type="Button" parent="MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer"]
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
+theme_type_variation = &"ButtonLarge"
 text = "Reroll (Cost: 10)"
 
 [node name="TechTreeButton" type="Button" parent="MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer"]
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
+theme_type_variation = &"ButtonLarge"
 text = "🔬 Tech Tree"
 
 [node name="ContinueButton" type="Button" parent="MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer"]
 custom_minimum_size = Vector2(250, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_type_variation = &"ButtonXLarge"
 text = "Continue to Wave"
 
 [node name="RightPanel" type="PanelContainer" parent="MainContainer/ContentVBox/MainHBox"]

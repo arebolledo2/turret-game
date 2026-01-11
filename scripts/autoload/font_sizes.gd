@@ -1,100 +1,109 @@
 extends Node
 
-## Centralized font size constants for all UI elements
+## Centralized font size management
 ##
-## All sizes are defined for 1080p baseline and scale automatically via UIScaler
+## This service automatically updates the global UI theme based on the current
+## UI scale factor. CONSTANTS are kept as BASE values (1080p).
 ##
 ## Usage:
-##   label.add_theme_font_size_override("font_size", FontSizes.BODY)
-##   scaled_size = FontSizes.get_scaled(FontSizes.HEADING_1)
+##   - Just use the Type Variations in the Theme (e.g. "Header1", "Body")
+##   - No need to call FontSizes.get_scaled() manually anymore
+##     (though it is kept for backward compatibility if needed)
 
-# ===== HEADING SIZES =====
-# Large titles (Wave Announcement, Victory/Defeat screens)
-const HEADING_1: int = 64
+# ===== HEADING SIZES (Base 1080p) =====
+const HEADING_1: int = 64 # Large titles
+const HEADING_2: int = 42 # Screen titles
+const HEADING_3: int = 32 # Section headers
+const HEADING_4: int = 24 # Sub-headers
 
-# Screen titles (Shop, Game Over, Main Menu)
-const HEADING_2: int = 42
+# ===== BODY TEXT SIZES (Base 1080p) =====
+const BODY: int = 18 # Primary UI text
+const BODY_SMALL: int = 16 # Secondary UI text
+const BODY_TINY: int = 15 # Tertiary text
+const CAPTION: int = 14 # Tiny labels
 
-# Section headers (Wave number display, Shop scrap counter)
-const HEADING_3: int = 32
-
-# Sub-headers (Shop buttons, menu options)
-const HEADING_4: int = 24
-
-# ===== BODY TEXT SIZES =====
-# Primary UI text (HUD labels, stats display)
-const BODY: int = 18
-
-# Secondary UI text (Shop descriptions, item details)
-const BODY_SMALL: int = 16
-
-# Tertiary text (Fine print, tooltips)
-const BODY_TINY: int = 15
-
-# Tiny labels (Off-screen indicators, minor UI elements)
-const CAPTION: int = 14
-
-# ===== ICON SIZES =====
-# Large icons (Shop offer cards)
-const ICON_LARGE: int = 76
-
-# Medium icons (Item display, turret display)
-const ICON_MEDIUM: int = 32
-
-# Small icons (Inventory, compact UI)
-const ICON_SMALL: int = 24
-
-# Icon badges (Counts, status indicators)
-const ICON_BADGE: int = 18
-
-# ===== COMBAT FEEDBACK =====
-# Normal damage numbers
+# ===== COMBAT FEEDBACK (Restored) =====
 const DAMAGE_NORMAL: int = 24
-
-# Critical hit damage numbers
 const DAMAGE_CRIT: int = 32
 
-# ===== SHOP-SPECIFIC SIZES =====
-# Shop offer card icon (extra large)
+# ===== BUTTON SIZES (Base 1080p) =====
+const BUTTON_LARGE: int = 24
+const BUTTON_MEDIUM: int = 20
+const BUTTON_XLARGE: int = 32
+
+# ===== ICON SIZES (Base 1080p) =====
+const ICON_LARGE: int = 76
+const ICON_MEDIUM: int = 32
+const ICON_SMALL: int = 24
+const ICON_BADGE: int = 18
+
+# ===== SHOP-SPECIFIC SIZES (Restored) =====
 const SHOP_OFFER_ICON: int = 76
-
-# Shop offer name
 const SHOP_OFFER_NAME: int = 22
-
-# Shop offer price
 const SHOP_OFFER_PRICE: int = 20
-
-# Shop offer description
 const SHOP_OFFER_DESC: int = 18
-
-# Shop category labels
 const SHOP_CATEGORY: int = 20
 
-# ===== UTILITY FUNCTIONS =====
+# Theme Reference
+var _theme: Theme
 
-## Get scaled font size for current resolution
-## Uses UIScaler to calculate appropriate size based on viewport height
+func _ready() -> void:
+	# Load the global theme
+	_theme = load("res://resources/ui_theme.tres")
+	
+	# Connect to scaler
+	if UIScaler:
+		UIScaler.scale_changed.connect(_on_scale_changed)
+		_update_theme_sizes(UIScaler.scale_factor)
+
+func _on_scale_changed(new_scale: float) -> void:
+	_update_theme_sizes(new_scale)
+
+func _update_theme_sizes(scale: float) -> void:
+	if not _theme:
+		return
+		
+	# Update Label Variations
+	_set_font_size("Header1", HEADING_1, scale)
+	_set_font_size("Header2", HEADING_2, scale)
+	_set_font_size("Header3", HEADING_3, scale)
+	_set_font_size("Header4", HEADING_4, scale)
+	_set_font_size("Body", BODY, scale)
+	_set_font_size("BodySmall", BODY_SMALL, scale)
+	
+	# Update Button Variations
+	_set_font_size("ButtonLarge", BUTTON_LARGE, scale)
+	_set_font_size("ButtonMedium", BUTTON_MEDIUM, scale)
+	_set_font_size("ButtonXLarge", BUTTON_XLARGE, scale)
+	
+	# Also update default Label/Button if desired, 
+	# but usually we want to rely on variations. 
+	# If we want the *default* Label to be BODY size:
+	_theme.set_default_font_size(UIScaler.scale_font(BODY))
+
+func _set_font_size(type_name: String, base_size: int, scale: float) -> void:
+	# Use UIScaler.scale_font logic locally or call it
+	# Reimplementing simplified here to ensure we use the passed scale
+	var scaled = maxi(int(base_size * scale), 8)
+	_theme.set_font_size("font_size", type_name, scaled)
+
+# --- Legacy/Helper Methods (kept for code compatibility vs refactoring EVERYTHING) ---
+
 func get_scaled(base_size: int) -> int:
 	return UIScaler.scale_font(base_size)
 
-## Get scaled heading size by level (1-4)
 func get_heading(level: int) -> int:
 	match level:
 		1: return HEADING_1
 		2: return HEADING_2
 		3: return HEADING_3
 		4: return HEADING_4
-		_:
-			push_error("Invalid heading level: %d. Expected 1-4." % level)
-			return BODY
+		_: return BODY
 
-## Get scaled icon size by category
 func get_icon_size(category: String) -> int:
 	match category:
 		"large": return ICON_LARGE
 		"medium": return ICON_MEDIUM
 		"small": return ICON_SMALL
 		"badge": return ICON_BADGE
-		_:
-			push_error("Invalid icon category: %s" % category)
-			return ICON_MEDIUM
+		_: return ICON_MEDIUM
