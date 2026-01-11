@@ -18,8 +18,6 @@ var _inventory_section: VBoxContainer = null
 # Base values at 1080p
 const BASE_PANEL_WIDTH: float = 850.0
 const BASE_PANEL_HEIGHT: float = 650.0
-const BASE_TITLE_FONT: int = 32
-const BASE_LABEL_FONT: int = 22
 const BASE_BUTTON_HEIGHT: float = 46.0
 
 
@@ -29,7 +27,7 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 	level_label = nodes.get("level_label")
 	wave_label = nodes.get("wave_label")
 	stats_grid = nodes.get("stats_grid")
-	
+
 	# Get reference to inventory section for adding InventoryPanel
 	_inventory_section = nodes.get("inventory_section")
 
@@ -39,17 +37,17 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 	# Call parent setup
 	super.setup(nodes, owner)
 
-	# Register fonts
+	# Register fonts using centralized FontSizes
 	if level_label:
 		level_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		level_label.add_theme_constant_override("outline_size", 4)
 		level_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-		register_font(level_label, BASE_LABEL_FONT)
+		register_font(level_label, FontSizes.HEADING_4)
 	if wave_label:
 		wave_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		wave_label.add_theme_constant_override("outline_size", 4)
 		wave_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
-		register_font(wave_label, BASE_LABEL_FONT)
+		register_font(wave_label, FontSizes.HEADING_4)
 	if resume_button:
 		if _owner and _owner.has_method("_on_resume_pressed"):
 			resume_button.pressed.connect(_owner._on_resume_pressed)
@@ -124,7 +122,7 @@ func update_stats() -> void:
 	if _player and stats_grid:
 		for child in stats_grid.get_children():
 			if child is Label:
-				child.add_theme_font_size_override("font_size", UIScaler.scale(BASE_LABEL_FONT))
+				child.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.CAPTION))
 				# Add outline
 				child.add_theme_color_override("font_outline_color", Color.BLACK)
 				child.add_theme_constant_override("outline_size", 4)

@@ -145,7 +145,7 @@ func _setup_icon_fallback() -> void:
 		# Fallback to icon for other turret types
 		icon_label.visible = true
 		icon_label.text = icon
-		icon_label.add_theme_font_size_override("font_size", 32)
+		icon_label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.ICON_MEDIUM))
 
 
 func _setup_shock_visuals() -> void:
@@ -401,7 +401,7 @@ func _update_status_indicators() -> void:
 		var panel = PanelContainer.new()
 		var label = Label.new()
 		label.text = effect.icon
-		label.add_theme_font_size_override("font_size", 16)
+		label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.BODY_SMALL))
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 

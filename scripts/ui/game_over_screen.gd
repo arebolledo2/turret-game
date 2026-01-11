@@ -10,8 +10,6 @@ var restart_button: Button
 # Base values at 1080p
 const BASE_PANEL_WIDTH: float = 400.0
 const BASE_PANEL_HEIGHT: float = 300.0
-const BASE_TITLE_FONT: int = 36
-const BASE_STATS_FONT: int = 16
 const BASE_BUTTON_HEIGHT: float = 40.0
 
 
@@ -26,18 +24,18 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 	# Call parent setup
 	super.setup(nodes, owner)
 
-	# Register fonts
+	# Register fonts using centralized FontSizes
 	if title_label:
-		register_font(title_label, BASE_TITLE_FONT)
+		register_font(title_label, FontSizes.HEADING_2)
 	if stats_label:
-		register_font(stats_label, BASE_STATS_FONT)
+		register_font(stats_label, FontSizes.BODY_SMALL)
 
 
 func _scale_fonts(scale: float) -> void:
 	if title_label:
-		title_label.add_theme_font_size_override("font_size", UIScaler.scale_font(BASE_TITLE_FONT))
+		title_label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.HEADING_2))
 	if stats_label:
-		stats_label.add_theme_font_size_override("font_size", UIScaler.scale_font(BASE_STATS_FONT))
+		stats_label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.BODY_SMALL))
 
 	# Scale button
 	if restart_button:

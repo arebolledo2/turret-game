@@ -63,24 +63,24 @@ func _on_shop_opened(wave_number: int) -> void:
 	visible = true
 	get_tree().paused = true
 	
-	# Apply fonts to header elements
+	# Apply fonts to header elements using centralized FontSizes
 	if title_label:
-		title_label.add_theme_font_size_override("font_size", 42)
+		title_label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.HEADING_2))
 		title_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		title_label.add_theme_constant_override("outline_size", 6)
 
 	if scrap_label:
-		scrap_label.add_theme_font_size_override("font_size", 32)
+		scrap_label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.HEADING_3))
 		scrap_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		scrap_label.add_theme_constant_override("outline_size", 4)
 
 	if reroll_button:
-		reroll_button.add_theme_font_size_override("font_size", 28)
+		reroll_button.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.HEADING_4))
 		reroll_button.add_theme_constant_override("outline_size", 6)
 		reroll_button.add_theme_color_override("font_outline_color", Color.BLACK)
 
 	if continue_button:
-		continue_button.add_theme_font_size_override("font_size", 32)
+		continue_button.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.HEADING_3))
 		continue_button.add_theme_constant_override("outline_size", 6)
 		continue_button.add_theme_color_override("font_outline_color", Color.BLACK)
 	

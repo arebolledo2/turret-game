@@ -8,7 +8,6 @@ var label: Label
 # Base values at 1080p
 const BASE_PANEL_WIDTH: float = 400.0
 const BASE_PANEL_HEIGHT: float = 100.0
-const BASE_FONT_SIZE: int = 64
 
 
 func setup(nodes: Dictionary, owner: Node) -> void:
@@ -20,14 +19,14 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 	# Call parent setup
 	super.setup(nodes, owner)
 
-	# Register fonts
+	# Register fonts using centralized FontSizes
 	if label:
-		register_font(label, BASE_FONT_SIZE)
+		register_font(label, FontSizes.HEADING_1)
 
 
 func _scale_fonts(scale: float) -> void:
 	if label:
-		label.add_theme_font_size_override("font_size", UIScaler.scale_font(BASE_FONT_SIZE))
+		label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.HEADING_1))
 
 
 func show_announcement(wave_number: int) -> void:

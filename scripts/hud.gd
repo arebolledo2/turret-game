@@ -126,6 +126,9 @@ func _ready() -> void:
 	menu_manager = HUDMenuManager.new()
 	add_child(menu_manager)
 
+	# Setup fonts with centralized constants
+	_setup_fonts()
+
 	# Initialize UI components
 	_setup_components()
 
@@ -154,6 +157,19 @@ func _ready() -> void:
 	player_hurtbox_check.toggled.connect(_on_player_hurtbox_toggled)
 	enemy_hurtbox_check.toggled.connect(_on_enemy_hurtbox_toggled)
 	player_attack_check.toggled.connect(_on_player_attack_toggled)
+
+
+func _setup_fonts() -> void:
+	## Setup all font sizes using centralized FontSizes constants
+	## This ensures fonts scale properly and can be changed in one place
+
+	# Main HUD labels
+	health_label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.BODY))
+	wave_label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.HEADING_3))
+	timer_label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.BODY))
+	scrap_label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.BODY_SMALL))
+	turret_label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.BODY_SMALL))
+	research_label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.BODY_SMALL))
 
 
 func _setup_components() -> void:
@@ -352,7 +368,7 @@ func _on_research_points_gained(amount: int, total: int) -> void:
 	var notification = Label.new()
 	notification.text = "+%d Research" % amount
 	notification.modulate = Color(0.4, 0.8, 1.0)  # Light blue
-	notification.add_theme_font_size_override("font_size", 20)
+	notification.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.BODY))
 	notification.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	notification.add_theme_constant_override("outline_size", 2)
 

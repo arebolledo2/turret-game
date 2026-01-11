@@ -137,7 +137,7 @@ func _create_indicator_programmatically() -> Control:
 	# Create count label
 	var label := Label.new()
 	label.name = "CountLabel"
-	label.add_theme_font_size_override("font_size", 14)
+	label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.CAPTION))
 	label.add_theme_color_override("font_color", Color.WHITE)
 	label.add_theme_color_override("font_outline_color", Color.BLACK)
 	label.add_theme_constant_override("outline_size", 2)

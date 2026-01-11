@@ -21,15 +21,15 @@ func setup(amount: float, is_crit: bool = false) -> void:
 	if label:
 		label.text = str(int(amount))
 
-		# Apply crit styling
+		# Apply crit styling using centralized FontSizes
 		if is_crit:
 			# White color for crits
 			label.add_theme_color_override("font_color", Color.WHITE)
-			# Larger size for crits (32 vs 24)
-			label.add_theme_font_size_override("font_size", 32)
+			# Larger size for crits
+			label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.DAMAGE_CRIT))
 			# Slightly more dramatic spawn scale
 			scale = Vector2(1.4, 1.4)
 		else:
 			# Normal white color
 			label.add_theme_color_override("font_color", Color.WHITE)
-			label.add_theme_font_size_override("font_size", 24)
+			label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.DAMAGE_NORMAL))
