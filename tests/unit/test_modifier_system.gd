@@ -523,6 +523,78 @@ func test_get_player_weapon_damage():
 
 
 # =============================================================================
+# FILTER VALIDATION (ENTITY_TYPE)
+# =============================================================================
+
+func test_apply_to_stat_respects_entity_type_filter():
+	modifier_system.clear_modifiers()
+
+	# Add player-specific modifier
+	var player_mod = {
+		"id": "player_health_boost",
+		"stat": "max_health",
+		"operation": "multiply",
+		"value": 1.5,
+		"filter": {"entity_type": ["player"]}
+	}
+	modifier_system.add_modifier(player_mod)
+
+	# Should apply to player entity type
+	var result_player = modifier_system.apply_to_stat(100.0, "max_health", "player")
+	assert_eq(result_player, 150.0, "Should apply player modifier to player entity")
+
+	# Should NOT apply to turret entity type
+	var result_turret = modifier_system.apply_to_stat(100.0, "max_health", "turret")
+	assert_eq(result_turret, 100.0, "Should not apply player modifier to turret entity")
+
+
+func test_apply_to_stat_allows_empty_filter():
+	modifier_system.clear_modifiers()
+
+	# Add modifier with no filter (applies to all)
+	var universal_mod = {
+		"id": "universal_boost",
+		"stat": "damage",
+		"operation": "add",
+		"value": 10.0,
+		"filter": {}
+	}
+	modifier_system.add_modifier(universal_mod)
+
+	# Should apply to both player and turret
+	var result_player = modifier_system.apply_to_stat(50.0, "damage", "player")
+	var result_turret = modifier_system.apply_to_stat(50.0, "damage", "turret")
+	assert_eq(result_player, 60.0, "Should apply universal modifier to player")
+	assert_eq(result_turret, 60.0, "Should apply universal modifier to turret")
+
+
+func test_apply_to_stat_handles_multiple_entity_types_in_filter():
+	modifier_system.clear_modifiers()
+
+	# Add modifier that applies to both player and enemy
+	var multi_mod = {
+		"id": "speed_boost",
+		"stat": "speed",
+		"operation": "multiply",
+		"value": 1.2,
+		"filter": {"entity_type": ["player", "enemy"]}
+	}
+	modifier_system.add_modifier(multi_mod)
+
+	# Should apply to player
+	var result_player = modifier_system.apply_to_stat(100.0, "speed", "player")
+	assert_eq(result_player, 120.0, "Should apply to player in multi-entity filter")
+
+	# Should apply to enemy
+	var result_enemy = modifier_system.apply_to_stat(100.0, "speed", "enemy")
+	assert_eq(result_enemy, 120.0, "Should apply to enemy in multi-entity filter")
+
+	# Should NOT apply to turret
+	var result_turret = modifier_system.apply_to_stat(100.0, "speed", "turret")
+	assert_eq(result_turret, 100.0, "Should not apply to turret not in filter")
+
+
+# =============================================================================
 # EDGE CASES
 # =============================================================================
 

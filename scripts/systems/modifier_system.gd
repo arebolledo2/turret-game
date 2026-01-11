@@ -120,15 +120,28 @@ func get_turret_stats(turret_type: String, difficulty_config: Dictionary) -> Dic
 	return base_stats
 
 
-## Apply modifiers to a single stat value
-func apply_to_stat(base_value: float, stat_name: String) -> float:
+## Apply modifiers to a single stat value with FILTER VALIDATION
+## Now supports entity_type filter for player vs turret distinction
+func apply_to_stat(base_value: float, stat_name: String, entity_type: String = "player") -> float:
 	var add_value: float = 0.0
 	var mult_values: Array[float] = []
 
 	for modifier in _modifiers:
+		# Skip if stat name doesn't match
 		if modifier.get("stat", "") != stat_name:
 			continue
 
+		# Validate filter (similar to _modifier_matches_turret logic)
+		var filter: Dictionary = modifier.get("filter", {})
+		if not filter.is_empty():
+			# Check entity_type filter
+			if filter.has("entity_type"):
+				var allowed_types: Array = filter.get("entity_type", [])
+				# Skip if entity_type is specified but doesn't include our type
+				if not allowed_types.is_empty() and entity_type not in allowed_types:
+					continue
+
+		# Apply modifier
 		var operation = modifier.get("operation", "add")
 		var value = modifier.get("value", 0.0)
 
@@ -147,24 +160,24 @@ func apply_to_stat(base_value: float, stat_name: String) -> float:
 
 ## Get player speed with modifiers applied
 func get_player_speed(base_speed: float) -> float:
-	return apply_to_stat(base_speed, "player_speed")
+	return apply_to_stat(base_speed, "player_speed", "player")
 
 
 ## Get player max health with modifiers applied
 func get_player_max_health(base_health: float) -> float:
-	return apply_to_stat(base_health, "player_max_health")
+	return apply_to_stat(base_health, "player_max_health", "player")
 
 
 ## Get player weapon damage with modifiers applied
 func get_player_weapon_damage(base_damage: float) -> float:
-	return apply_to_stat(base_damage, "player_weapon_damage")
+	return apply_to_stat(base_damage, "player_weapon_damage", "player")
 
 
 ## Get player luck with modifiers applied
 func get_player_luck(base_luck: float) -> float:
-	return apply_to_stat(base_luck, "player_luck")
+	return apply_to_stat(base_luck, "player_luck", "player")
 
 
 ## Get reroll cost multiplier (1.0 = normal)
 func get_reroll_cost_multiplier() -> float:
-	return apply_to_stat(1.0, "reroll_cost")
+	return apply_to_stat(1.0, "reroll_cost", "player")

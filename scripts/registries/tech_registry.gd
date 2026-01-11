@@ -23,6 +23,7 @@ extends Object
 # Tech path constants
 const PATH_TURRET_OFFENSE := "turret_offense"
 const PATH_TURRET_UTILITY := "turret_utility"
+const PATH_TURRET_UNLOCK := "turret_unlock"
 const PATH_PLAYER_COMBAT := "player_combat"
 const PATH_PLAYER_DEFENSE := "player_defense"
 const PATH_ECONOMY := "economy"
@@ -45,6 +46,7 @@ static func _ensure_initialized() -> void:
 	# Load techs from all path files
 	var turret_offense_techs = preload("res://scripts/registries/techs/turret_offense_techs.gd")
 	var turret_utility_techs = preload("res://scripts/registries/techs/turret_utility_techs.gd")
+	var turret_unlock_techs = preload("res://scripts/registries/techs/turret_unlock_techs.gd")
 	var player_combat_techs = preload("res://scripts/registries/techs/player_combat_techs.gd")
 	var player_defense_techs = preload("res://scripts/registries/techs/player_defense_techs.gd")
 	var economy_techs = preload("res://scripts/registries/techs/economy_techs.gd")
@@ -52,6 +54,7 @@ static func _ensure_initialized() -> void:
 	# Register techs from each path
 	_register_path_techs(turret_offense_techs.get_techs())
 	_register_path_techs(turret_utility_techs.get_techs())
+	_register_path_techs(turret_unlock_techs.get_techs())
 	_register_path_techs(player_combat_techs.get_techs())
 	_register_path_techs(player_defense_techs.get_techs())
 	_register_path_techs(economy_techs.get_techs())

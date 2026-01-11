@@ -28,7 +28,7 @@ func _ready() -> void:
 	# Apply fonts
 	if research_label:
 		research_label.add_theme_font_override("font", MAIN_FONT)
-		research_label.add_theme_font_size_override("font_size", 24)
+		research_label.add_theme_font_size_override("font_size", 20)
 
 	# Setup path selector buttons
 	_setup_path_selector()
@@ -52,6 +52,7 @@ func _setup_path_selector() -> void:
 	var paths = [
 		{"id": "turret_offense", "name": "Turret Offense", "icon": "⚔️"},
 		{"id": "turret_utility", "name": "Turret Utility", "icon": "🔧"},
+		{"id": "turret_unlock", "name": "Turret Unlocks", "icon": "🔓"},
 		{"id": "player_combat", "name": "Player Combat", "icon": "🗡️"},
 		{"id": "player_defense", "name": "Player Defense", "icon": "🛡️"},
 		{"id": "economy", "name": "Economy", "icon": "💰"}
@@ -133,19 +134,19 @@ func _show_tech_details(tech_id: String) -> void:
 					prereq_names.append("%s %s" % [check, prereq_tech.get("name", prereq_id)])
 			detail_prereqs.text = "Prerequisites:\n" + "\n".join(prereq_names)
 
-	# Update unlock button
+	# Update purchase button
 	if unlock_button:
 		var is_unlocked = TechTreeService.is_tech_unlocked(tech_id)
 		var can_unlock = TechTreeService.can_unlock_tech(tech_id)
 
 		if is_unlocked:
-			unlock_button.text = "Unlocked ✅"
+			unlock_button.text = "Purchased ✅"
 			unlock_button.disabled = true
 		elif can_unlock:
-			unlock_button.text = "Unlock"
+			unlock_button.text = "Purchase"
 			unlock_button.disabled = false
 		else:
-			unlock_button.text = "Cannot Unlock"
+			unlock_button.text = "Cannot Purchase"
 			unlock_button.disabled = true
 
 
@@ -155,7 +156,7 @@ func _clear_detail_panel() -> void:
 	if detail_icon:
 		detail_icon.text = ""
 	if detail_name:
-		detail_name.text = "Select a tech"
+		detail_name.text = "Select a tech to purchase"
 	if detail_description:
 		detail_description.text = ""
 	if detail_cost:
@@ -163,7 +164,7 @@ func _clear_detail_panel() -> void:
 	if detail_prereqs:
 		detail_prereqs.text = ""
 	if unlock_button:
-		unlock_button.text = "Select Tech"
+		unlock_button.text = "Select to Purchase"
 		unlock_button.disabled = true
 
 

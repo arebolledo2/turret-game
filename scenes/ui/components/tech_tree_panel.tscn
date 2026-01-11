@@ -43,7 +43,7 @@ theme_override_constants/v_separation = 8
 columns = 5
 
 [node name="DetailPanel" type="PanelContainer" parent="."]
-custom_minimum_size = Vector2(0, 200)
+custom_minimum_size = Vector2(0, 140)
 layout_mode = 2
 
 [node name="DetailVBox" type="VBoxContainer" parent="DetailPanel"]
@@ -52,30 +52,30 @@ theme_override_constants/separation = 5
 
 [node name="DetailIcon" type="Label" parent="DetailPanel/DetailVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 64
+theme_override_font_sizes/font_size = 48
 horizontal_alignment = 1
 
 [node name="DetailName" type="Label" parent="DetailPanel/DetailVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "Select a tech"
+theme_override_font_sizes/font_size = 22
+text = "Select a tech to purchase"
 horizontal_alignment = 1
 
 [node name="DetailDescription" type="Label" parent="DetailPanel/DetailVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Click on a tech node to see details"
+theme_override_font_sizes/font_size = 14
+text = "Click on a tech to view purchase options"
 horizontal_alignment = 1
 autowrap_mode = 3
 
 [node name="DetailCost" type="Label" parent="DetailPanel/DetailVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
 
 [node name="DetailPrereqs" type="Label" parent="DetailPanel/DetailVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 13
 horizontal_alignment = 1
 autowrap_mode = 3
 
@@ -83,6 +83,6 @@ autowrap_mode = 3
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 disabled = true
-text = "Select Tech"
+text = "Select to Purchase"

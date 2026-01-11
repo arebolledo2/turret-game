@@ -58,15 +58,18 @@ func generate_turret_offer(generated_turret_ids: Array[String], locked_turret_id
 	# Combine newly generated turrets + locked turrets to avoid duplicates
 	var all_excluded_turret_ids = generated_turret_ids + locked_turret_ids
 
-	# Filter out already generated AND locked turrets
+	# Filter out already generated AND locked turrets, plus turrets not unlocked by tech tree
 	var available_turrets: Array[String] = []
 	for turret_id in turret_types:
 		if turret_id not in all_excluded_turret_ids:
-			available_turrets.append(turret_id)
+			# Check if turret is unlocked by tech tree
+			if TechTreeService.is_turret_type_unlocked(turret_id):
+				available_turrets.append(turret_id)
 
 	# If all turrets are already generated, allow duplicates
 	if available_turrets.is_empty():
-		available_turrets = turret_types
+		for turret_id in turret_types:
+			available_turrets.append(turret_id)
 
 	var random_type: String = available_turrets[randi() % available_turrets.size()]
 

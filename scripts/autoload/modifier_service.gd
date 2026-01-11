@@ -43,8 +43,8 @@ func get_all_modifiers() -> Array:
 # DELEGATED METHODS - STAT CALCULATIONS
 # =============================================================================
 
-func apply_modifiers_to_stat(base_value: float, stat_name: String) -> float:
-	return _system.apply_to_stat(base_value, stat_name)
+func apply_modifiers_to_stat(base_value: float, stat_name: String, entity_type: String = "player") -> float:
+	return _system.apply_to_stat(base_value, stat_name, entity_type)
 
 
 func get_turret_stats(turret_type: String, difficulty_config: Dictionary) -> Dictionary:

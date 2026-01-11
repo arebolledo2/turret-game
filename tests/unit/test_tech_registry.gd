@@ -13,13 +13,14 @@ func test_registry_has_techs():
 		"Registry should have techs loaded")
 
 
-func test_registry_has_all_five_paths():
+func test_registry_has_all_six_paths():
 	var all_paths = TechRegistry.get_all_paths()
-	assert_eq(all_paths.size(), 5,
-		"Registry should have exactly 5 tech paths")
+	assert_eq(all_paths.size(), 6,
+		"Registry should have exactly 6 tech paths")
 
 	assert_true("turret_offense" in all_paths, "Should have turret_offense path")
 	assert_true("turret_utility" in all_paths, "Should have turret_utility path")
+	assert_true("turret_unlock" in all_paths, "Should have turret_unlock path")
 	assert_true("player_combat" in all_paths, "Should have player_combat path")
 	assert_true("player_defense" in all_paths, "Should have player_defense path")
 	assert_true("economy" in all_paths, "Should have economy path")
@@ -194,12 +195,15 @@ func test_all_tier1_techs_cost_same():
 
 	for tech_id in all_techs.keys():
 		var tech = all_techs[tech_id]
+		# Skip turret_unlock techs - they're priced based on turret power level
+		if tech.get("path") == "turret_unlock":
+			continue
 		if tech.get("tier") == 1:
 			if tier1_cost == null:
 				tier1_cost = tech.get("cost")
 			else:
 				assert_eq(tech.get("cost"), tier1_cost,
-					"All tier 1 techs should have same cost")
+					"All tier 1 techs (excluding turret unlocks) should have same cost")
 
 
 # =============================================================================

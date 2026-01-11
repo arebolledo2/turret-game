@@ -21,23 +21,23 @@ func reset_state() -> void:
 
 ## Get player speed with modifiers applied
 func get_player_speed() -> float:
-	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.PLAYER_SPEED, "player_speed")
+	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.PLAYER_SPEED, "player_speed", "player")
 
 
 ## Get player max health with modifiers applied
 func get_player_max_health(difficulty_mult: float) -> float:
 	var base_health := GameConstants.PLAYER_BASE_MAX_HEALTH * difficulty_mult
-	return _get_modifier_service().apply_modifiers_to_stat(base_health, "player_max_health")
+	return _get_modifier_service().apply_modifiers_to_stat(base_health, "player_max_health", "player")
 
 
 ## Get player weapon damage with modifiers applied
 func get_player_weapon_damage() -> float:
-	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.PLAYER_WEAPON_DAMAGE, "player_weapon_damage")
+	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.PLAYER_WEAPON_DAMAGE, "player_weapon_damage", "player")
 
 
 ## Get player luck with modifiers applied, clamped to valid range
 func get_player_luck() -> float:
-	var modified_luck := _get_modifier_service().apply_modifiers_to_stat(player_luck, "player_luck")
+	var modified_luck := _get_modifier_service().apply_modifiers_to_stat(player_luck, "player_luck", "player")
 	return clampf(modified_luck, 0.0, GameConstants.PLAYER_MAX_LUCK)
 
 
@@ -48,17 +48,17 @@ func get_player_luck_display() -> int:
 
 ## Get pickup radius with modifiers applied
 func get_pickup_radius() -> float:
-	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.PLAYER_PICKUP_RADIUS, "pickup_radius")
+	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.PLAYER_PICKUP_RADIUS, "pickup_radius", "player")
 
 
 ## Get player crit chance with modifiers applied
 func get_player_crit_chance() -> float:
-	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.PLAYER_BASE_CRIT_CHANCE, "player_crit_chance")
+	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.PLAYER_BASE_CRIT_CHANCE, "player_crit_chance", "player")
 
 
 ## Get player crit multiplier with modifiers applied
 func get_player_crit_multiplier() -> float:
-	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.PLAYER_BASE_CRIT_MULTIPLIER, "player_crit_multiplier")
+	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.PLAYER_BASE_CRIT_MULTIPLIER, "player_crit_multiplier", "player")
 
 
 ## Roll for critical hit (returns true if crit)
@@ -74,7 +74,7 @@ func calculate_player_crit_damage(base_damage: float) -> float:
 ## Get player health regen with modifiers applied (whole number)
 func get_player_health_regen() -> int:
 	var modified := _get_modifier_service().apply_modifiers_to_stat(
-		float(GameConstants.PLAYER_BASE_HEALTH_REGEN), "player_health_regen"
+		float(GameConstants.PLAYER_BASE_HEALTH_REGEN), "player_health_regen", "player"
 	)
 	return int(modified)
 

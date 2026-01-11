@@ -200,3 +200,16 @@ func get_shop_modifiers() -> Dictionary:
 		"price_mult": price_mult,
 		"offer_count_bonus": offer_count_bonus
 	}
+
+
+## Check if a turret type is unlocked for purchase
+## Normal turret is always available (no unlock required)
+## All other turrets require corresponding unlock tech
+func is_turret_type_unlocked(turret_type: String) -> bool:
+	# Normal turret always available
+	if turret_type == "normal":
+		return true
+
+	# Check for unlock tech
+	var unlock_tech_id = "turret_unlock_%s" % turret_type
+	return is_tech_unlocked(unlock_tech_id)
