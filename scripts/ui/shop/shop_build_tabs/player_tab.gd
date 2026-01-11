@@ -52,7 +52,7 @@ func update_display() -> void:
 	if not is_equal_approx(modified_max_health, BASE_MAX_HEALTH):
 		health_label.text += " (base: %d)" % int(BASE_MAX_HEALTH)
 		health_label.add_theme_color_override("font_color", Color.GREEN)
-	health_label	health_label.add_theme_font_size_override("font_size", 15)
+	health_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(health_label)
 
 	# Health Regen (only show if > 0)
@@ -61,7 +61,7 @@ func update_display() -> void:
 		var regen_label := Label.new()
 		regen_label.text = "💚 Regen: +%d" % health_regen
 		regen_label.add_theme_color_override("font_color", Color.GREEN)
-		regen_label		regen_label.add_theme_font_size_override("font_size", 15)
+		regen_label.add_theme_font_size_override("font_size", 15)
 		player_stats_vbox.add_child(regen_label)
 
 	# Speed stat with base/modified
@@ -69,29 +69,29 @@ func update_display() -> void:
 	var speed_label := Label.new()
 	speed_label.text = speed_stat["text"]
 	speed_label.add_theme_color_override("font_color", speed_stat["color"])
-	speed_label	speed_label.add_theme_font_size_override("font_size", 15)
+	speed_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(speed_label)
 
 	# Luck
 	var luck_label := Label.new()
 	luck_label.text = "🍀 Luck: %d" % luck
-	luck_label	luck_label.add_theme_font_size_override("font_size", 15)
+	luck_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(luck_label)
 
 	# Scrap
 	var scrap_label := Label.new()
 	scrap_label.text = "⚙ Scrap: %d" % xp
-	scrap_label	scrap_label.add_theme_font_size_override("font_size", 15)
+	scrap_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(scrap_label)
 
 	# Kills
 	var kills_label := Label.new()
 	kills_label.text = "💀 Kills: %d" % kills
-	kills_label	kills_label.add_theme_font_size_override("font_size", 15)
+	kills_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(kills_label)
 
 	# Time
 	var time_label := Label.new()
 	time_label.text = "⏱ Time: %d:%02d" % [minutes, seconds]
-	time_label	time_label.add_theme_font_size_override("font_size", 15)
+	time_label.add_theme_font_size_override("font_size", 15)
 	player_stats_vbox.add_child(time_label)

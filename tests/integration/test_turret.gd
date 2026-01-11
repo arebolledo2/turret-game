@@ -348,15 +348,15 @@ func test_aoe_turret_applies_slow_effect():
 	shock_turret.turret_type = "shock"
 	add_child_autofree(shock_turret)
 	shock_turret.global_position = Vector2.ZERO
-	
+
 	# Disable automatic firing to control when damage is applied
 	shock_turret.can_fire = false
-	
-	# Create enemy in range
+
+	# Create enemy in range with higher wave number to ensure it survives one hit
 	var enemy = enemy_scene.instantiate()
 	add_child_autofree(enemy)
 	enemy.global_position = Vector2(50, 0)
-	enemy.initialize(1)
+	enemy.initialize(3)
 	
 	await get_tree().physics_frame
 	

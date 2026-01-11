@@ -1,11 +1,11 @@
-[gd_resource type="Theme" load_steps=3 format=3]
+[gd_resource type="Theme" load_steps=3 format=3 uid="uid://dqby2roc51kso"]
 
-[ext_resource type="FontFile" path="res://assets/fonts/NunitoSans-VariableFont.ttf" id="1"]
+[ext_resource type="FontFile" uid="uid://c765x6kp3ksf2" path="res://assets/fonts/NunitoSans-VariableFont.ttf" id="1_font"]
 
 [sub_resource type="FontVariation" id="FontVariation_1"]
-base_font = ExtResource("1")
+base_font = ExtResource("1_font")
 variation_opentype = {
-"wght": 700
+"wght": 900
 }
 
 [resource]

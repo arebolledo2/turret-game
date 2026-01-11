@@ -50,10 +50,12 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 		register_font(wave_label, FontSizes.HEADING_4)
 	if resume_button:
 		if _owner and _owner.has_method("_on_resume_pressed"):
-			resume_button.pressed.connect(_owner._on_resume_pressed)
+			if not resume_button.pressed.is_connected(_owner._on_resume_pressed):
+				resume_button.pressed.connect(_owner._on_resume_pressed)
 	if skip_wave_button:
 		if _owner and _owner.has_method("_on_skip_wave_pressed"):
-			skip_wave_button.pressed.connect(_owner._on_skip_wave_pressed)
+			if not skip_wave_button.pressed.is_connected(_owner._on_skip_wave_pressed):
+				skip_wave_button.pressed.connect(_owner._on_skip_wave_pressed)
 	
 	# Create and add InventoryPanel
 	_create_inventory_panel()

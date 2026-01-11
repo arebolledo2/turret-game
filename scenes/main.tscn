@@ -1,18 +1,18 @@
-[gd_scene load_steps=11 format=3 uid="uid://dq8n5xwlavh4s"]
+[gd_scene load_steps=14 format=3 uid="uid://dq8n5xwlavh4s"]
 
 [ext_resource type="PackedScene" uid="uid://c8yqvh3xwn5n5" path="res://scenes/player.tscn" id="1_1a2b3"]
-[ext_resource type="Script" path="res://scripts/arena_setup.gd" id="1_arena_setup"]
-[ext_resource type="Script" path="res://scripts/camera_setup.gd" id="1_camera_setup"]
-[ext_resource type="Script" path="res://scripts/game_manager.gd" id="2_2c3d4"]
-[ext_resource type="Script" path="res://scripts/enemy_spawner.gd" id="3_3e4f5"]
+[ext_resource type="Script" uid="uid://b7bi5nr4qkxin" path="res://scripts/arena_setup.gd" id="1_arena_setup"]
+[ext_resource type="Script" uid="uid://cb3cmwmm4qtut" path="res://scripts/camera_setup.gd" id="1_camera_setup"]
+[ext_resource type="Script" uid="uid://ct77duoq4laay" path="res://scripts/game_manager.gd" id="2_2c3d4"]
+[ext_resource type="Script" uid="uid://ct1q2cl2y2st8" path="res://scripts/enemy_spawner.gd" id="3_3e4f5"]
 [ext_resource type="PackedScene" uid="uid://bq5n7xwk8vh3r" path="res://scenes/enemy.tscn" id="4_4g5h6"]
-[ext_resource type="PackedScene" uid="uid://spawn_alert_001" path="res://scenes/spawn_alert.tscn" id="4_spawn_alert"]
-[ext_resource type="Script" path="res://scripts/turret_manager.gd" id="5_turret_mgr"]
-[ext_resource type="Script" path="res://scripts/drop_spawner.gd" id="6_drop_spawner"]
-[ext_resource type="Script" path="res://scripts/tech_drop_spawner.gd" id="6_tech_drop_spawner"]
-[ext_resource type="PackedScene" uid="uid://hud_scene_001" path="res://scenes/ui/hud.tscn" id="7_hud"]
-[ext_resource type="Script" path="res://scripts/shop_manager.gd" id="8_shop_mgr"]
-[ext_resource type="PackedScene" uid="uid://shop_screen_001" path="res://scenes/ui/shop_screen.tscn" id="9_shop_screen"]
+[ext_resource type="PackedScene" path="res://scenes/spawn_alert.tscn" id="4_spawn_alert"]
+[ext_resource type="Script" uid="uid://dcrtcdphv1xm0" path="res://scripts/turret_manager.gd" id="5_turret_mgr"]
+[ext_resource type="Script" uid="uid://degn0uwl50wac" path="res://scripts/drop_spawner.gd" id="6_drop_spawner"]
+[ext_resource type="Script" uid="uid://d2s0lv5o4roeu" path="res://scripts/tech_drop_spawner.gd" id="6_tech_drop_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="7_hud"]
+[ext_resource type="Script" uid="uid://qe86owk3awn" path="res://scripts/shop_manager.gd" id="8_shop_mgr"]
+[ext_resource type="PackedScene" path="res://scenes/ui/shop_screen.tscn" id="9_shop_screen"]
 
 [node name="Main" type="Node2D"]
 y_sort_enabled = true
@@ -21,20 +21,20 @@ y_sort_enabled = true
 script = ExtResource("1_arena_setup")
 
 [node name="Ground" type="TextureRect" parent="Arena"]
+modulate = Color(0.15, 0.18, 0.22, 1)
 offset_left = -700.0
 offset_top = -450.0
 offset_right = 700.0
 offset_bottom = 450.0
 expand_mode = 1
-modulate = Color(0.15, 0.18, 0.22, 1)
 
 [node name="Boundary" type="ColorRect" parent="Arena"]
+z_index = -1
 offset_left = -710.0
 offset_top = -460.0
 offset_right = 710.0
 offset_bottom = 460.0
 color = Color(0.3, 0.35, 0.3, 1)
-z_index = -1
 
 [node name="TurretContainer" type="Node2D" parent="."]
 y_sort_enabled = true
@@ -49,13 +49,11 @@ y_sort_enabled = true
 y_sort_enabled = true
 
 [node name="Player" parent="." instance=ExtResource("1_1a2b3")]
-position = Vector2(0, 0)
 
 [node name="Camera2D" type="Camera2D" parent="Player"]
-script = ExtResource("1_camera_setup")
 zoom = Vector2(1.5, 1.5)
 limit_smoothed = true
-position_smoothing_enabled = false
+script = ExtResource("1_camera_setup")
 
 [node name="GameManager" type="Node" parent="."]
 script = ExtResource("2_2c3d4")
@@ -80,7 +78,8 @@ script = ExtResource("8_shop_mgr")
 [node name="HUD" parent="." instance=ExtResource("7_hud")]
 
 [node name="ShopLayer" type="CanvasLayer" parent="."]
-layer = 20
 process_mode = 3
+layer = 20
 
 [node name="ShopScreen" parent="ShopLayer" instance=ExtResource("9_shop_screen")]
+layout_mode = 3

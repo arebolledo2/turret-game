@@ -39,7 +39,7 @@ func update_display() -> void:
 		total_item_count += count
 	
 	if items_title:
-		items_title		items_title.text = "ITEMS (%d)" % total_item_count
+		items_title.text = "ITEMS (%d)" % total_item_count
 	
 	var has_items := unique_item_count > 0
 	
