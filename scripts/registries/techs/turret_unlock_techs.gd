@@ -42,7 +42,7 @@ static func get_techs() -> Array:
 		{
 			"id": "turret_unlock_plasma",
 			"name": "Plasma Cannon Research",
-			"icon": "⚡",
+			"icon": "💠",
 			"description": "Unlocks Plasma Turret for purchase in shop",
 			"path": "turret_unlock",
 			"tier": 1,
@@ -74,7 +74,7 @@ static func get_techs() -> Array:
 		{
 			"id": "turret_unlock_tesla",
 			"name": "Tesla Coil Research",
-			"icon": "⚡",
+			"icon": "⛓️",
 			"description": "Unlocks Tesla Turret for purchase in shop",
 			"path": "turret_unlock",
 			"tier": 1,

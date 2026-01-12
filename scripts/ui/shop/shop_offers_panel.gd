@@ -153,7 +153,6 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	if offer.get("sold", false):
 		purchase_button.text = "SOLD"
 		purchase_button.disabled = true
-		purchase_button.focus_mode = Control.FOCUS_NONE # Make SOLD items non-focusable
 	else:
 		purchase_button.text = "Purchase"
 		purchase_button.pressed.connect(func(): purchase_requested.emit(index))

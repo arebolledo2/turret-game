@@ -13,8 +13,9 @@ const ShopOffersPanelScript = preload("res://scripts/ui/shop/shop_offers_panel.g
 @onready var offers_container: HBoxContainer = $MainContainer/ContentVBox/MainHBox/LeftPanel/OffersContainer
 @onready var tech_tree_panel: VBoxContainer = $MainContainer/ContentVBox/MainHBox/LeftPanel/TechTreePanel
 @onready var reroll_button: Button = $MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer/RerollButton
-@onready var tech_tree_button: Button = $MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer/TechTreeButton
 @onready var continue_button: Button = $MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer/ContinueButton
+@onready var shop_tab_button: Button = $MainContainer/ContentVBox/TabBar/ShopTabButton
+@onready var tech_tree_tab_button: Button = $MainContainer/ContentVBox/TabBar/TechTreeTabButton
 
 # Component references
 @onready var stats_panel: VBoxContainer = $MainContainer/ContentVBox/MainHBox/RightPanel/StatsPanel
@@ -50,13 +51,23 @@ func _ready() -> void:
 	offers_panel.focus_restored.connect(_setup_focus_neighbors)
 
 	continue_button.pressed.connect(_on_continue_pressed)
-	tech_tree_button.pressed.connect(_on_tech_tree_button_pressed)
+	shop_tab_button.pressed.connect(_on_shop_tab_pressed)
+	tech_tree_tab_button.pressed.connect(_on_tech_tree_tab_pressed)
 
 
-func _unhandled_input(_event: InputEvent) -> void:
+func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
-	# Can add tab navigation for stats/inventory if needed later
+
+	# Tab switching with RB/LB
+	if event.is_action_pressed("tab_right"):
+		get_viewport().set_input_as_handled()
+		if not showing_tech_tree:
+			_switch_to_tech_tree()
+	elif event.is_action_pressed("tab_left"):
+		get_viewport().set_input_as_handled()
+		if showing_tech_tree:
+			_switch_to_shop()
 
 
 func _on_shop_opened(wave_number: int) -> void:
@@ -83,11 +94,26 @@ func _on_shop_opened(wave_number: int) -> void:
 		# Font size handled by Theme Variation (ButtonXLarge)
 		continue_button.add_theme_constant_override("outline_size", 6)
 		continue_button.add_theme_color_override("font_outline_color", Color.BLACK)
-	
+
+	if shop_tab_button:
+		shop_tab_button.add_theme_constant_override("outline_size", 6)
+		shop_tab_button.add_theme_color_override("font_outline_color", Color.BLACK)
+
+	if tech_tree_tab_button:
+		tech_tree_tab_button.add_theme_constant_override("outline_size", 6)
+		tech_tree_tab_button.add_theme_color_override("font_outline_color", Color.BLACK)
+
 	title_label.text = "TURRET SHOP - WAVE %d" % wave_number
 	update_scrap_display()
 	offers_panel.update_reroll_button()
 	_update_panels()
+
+	# Reset to shop tab
+	showing_tech_tree = false
+	_update_tab_visuals()
+	offers_container.visible = true
+	tech_tree_panel.visible = false
+	reroll_button.visible = true
 
 	# Fade in animation
 	modulate.a = 0.0
@@ -140,21 +166,50 @@ func _on_continue_pressed() -> void:
 		game_manager.end_shop_phase()
 
 
-func _on_tech_tree_button_pressed() -> void:
-	showing_tech_tree = not showing_tech_tree
+func _on_shop_tab_pressed() -> void:
+	_switch_to_shop()
 
+func _on_tech_tree_tab_pressed() -> void:
+	_switch_to_tech_tree()
+
+func _switch_to_shop() -> void:
 	if showing_tech_tree:
-		# Show tech tree, hide offers
-		offers_container.visible = false
-		tech_tree_panel.visible = true
-		reroll_button.visible = false
-		tech_tree_button.text = "🛒 Shop"
-	else:
-		# Show offers, hide tech tree
+		showing_tech_tree = false
+		_update_tab_visuals()
 		offers_container.visible = true
 		tech_tree_panel.visible = false
 		reroll_button.visible = true
-		tech_tree_button.text = "🔬 Tech Tree"
+		_set_focus_to_shop()
+
+func _switch_to_tech_tree() -> void:
+	if not showing_tech_tree:
+		showing_tech_tree = true
+		_update_tab_visuals()
+		offers_container.visible = false
+		tech_tree_panel.visible = true
+		reroll_button.visible = false
+		_set_focus_to_tech_tree()
+
+func _update_tab_visuals() -> void:
+	if showing_tech_tree:
+		shop_tab_button.modulate = Color(0.7, 0.7, 0.7, 1.0)  # Dimmed
+		tech_tree_tab_button.modulate = Color(1.0, 1.0, 1.0, 1.0)  # Bright
+	else:
+		shop_tab_button.modulate = Color(1.0, 1.0, 1.0, 1.0)  # Bright
+		tech_tree_tab_button.modulate = Color(0.7, 0.7, 0.7, 1.0)  # Dimmed
+
+func _set_focus_to_shop() -> void:
+	var offer_buttons = offers_panel.get_offer_buttons()
+	for btn in offer_buttons:
+		if is_instance_valid(btn) and not btn.disabled:
+			btn.grab_focus()
+			return
+	if continue_button:
+		continue_button.grab_focus()
+
+func _set_focus_to_tech_tree() -> void:
+	if tech_tree_panel and tech_tree_panel.has_method("grab_initial_focus"):
+		tech_tree_panel.grab_initial_focus()
 
 
 func _on_scrap_changed(_amount: int, _total: int) -> void:

@@ -1,15 +1,21 @@
 extends Node
 
+# Session-level duplicate tracking (persists across rerolls)
+var _session_turret_types: Array[String] = []
+var _session_item_ids: Array[String] = []
+
 func _ready() -> void:
 	Events.shop_opened.connect(_on_shop_opened)
 	Events.shop_closed.connect(_on_shop_closed)
 
 func _on_shop_opened(_wave_number: int) -> void:
+	_session_turret_types.clear()
+	_session_item_ids.clear()
 	generate_offers()
 
 func _on_shop_closed() -> void:
-	# Locks persist between waves - they will be preserved by generate_offers()
-	pass
+	_session_turret_types.clear()
+	_session_item_ids.clear()
 
 func generate_offers() -> void:
 	# Preserve locked offers before clearing
@@ -18,7 +24,7 @@ func generate_offers() -> void:
 		if offer.get("locked", false) and not offer.get("sold", false):
 			locked_offers.append(offer)
 
-	# Extract locked item and turret IDs to exclude from duplicates
+	# Extract locked item and turret IDs
 	var locked_item_ids: Array[String] = []
 	var locked_turret_ids: Array[String] = []
 	for locked_offer in locked_offers:
@@ -29,53 +35,63 @@ func generate_offers() -> void:
 
 	EconomyService.current_shop_offers.clear()
 
-	# Track generated items to avoid duplicates
+	# Track generated items/turrets in THIS generation
 	var generated_item_ids: Array[String] = []
-	# Track generated turrets to avoid duplicates
 	var generated_turret_ids: Array[String] = []
 
+	# Combine session-level + locked for full exclusion list
+	var all_excluded_turrets = _session_turret_types + locked_turret_ids
+	var all_excluded_items = _session_item_ids + locked_item_ids
+
 	# Roll each slot: 65% item, 35% turret
-	# Reduce offer count by number of locked offers
 	var base_offer_count = ItemTrackingService.get_shop_offer_count()
 	var new_offer_count = base_offer_count - locked_offers.size()
 
 	for i in range(new_offer_count):
 		var roll: float = randf()
 		if roll < GameConstants.SHOP_ITEM_CHANCE:
-			generate_item_offer(generated_item_ids, generated_turret_ids, locked_item_ids, locked_turret_ids)
+			generate_item_offer(generated_item_ids, generated_turret_ids, all_excluded_items, all_excluded_turrets)
 		else:
-			generate_turret_offer(generated_turret_ids, locked_turret_ids)
+			# Try to generate turret, fall back to item if duplicate
+			var success = generate_turret_offer(generated_turret_ids, all_excluded_turrets, generated_item_ids, all_excluded_items)
+			if not success:
+				# Turret was duplicate, generate item instead
+				generate_item_offer(generated_item_ids, generated_turret_ids, all_excluded_items, all_excluded_turrets)
 
-	# Merge locked offers back into the offer list
+	# Merge locked offers back
 	for locked_offer in locked_offers:
 		EconomyService.current_shop_offers.append(locked_offer)
 
 	Events.shop_offers_generated.emit(EconomyService.current_shop_offers)
 
-func generate_turret_offer(generated_turret_ids: Array[String], locked_turret_ids: Array[String] = []) -> void:
+func generate_turret_offer(
+	generated_turret_ids: Array[String],
+	excluded_turret_ids: Array[String],
+	generated_item_ids: Array[String] = [],
+	excluded_item_ids: Array[String] = []
+) -> bool:
+	"""Returns false if no unique turret available (caller should generate item instead)"""
 	var turret_types: Array = TurretRegistry.get_all_type_ids()
 
-	# Combine newly generated turrets + locked turrets to avoid duplicates
-	var all_excluded_turret_ids = generated_turret_ids + locked_turret_ids
+	var all_excluded_turret_ids = generated_turret_ids + excluded_turret_ids
 
-	# Filter out already generated AND locked turrets, plus turrets not unlocked by tech tree
+	# Filter out excluded turrets AND check tech unlocks
 	var available_turrets: Array[String] = []
 	for turret_id in turret_types:
 		if turret_id not in all_excluded_turret_ids:
-			# Check if turret is unlocked by tech tree
 			if TechTreeService.is_turret_type_unlocked(turret_id):
 				available_turrets.append(turret_id)
 
-	# If all turrets are already generated, allow duplicates (but still respect tech unlocks)
+	# If no unique turrets available, return false
 	if available_turrets.is_empty():
-		for turret_id in turret_types:
-			if TechTreeService.is_turret_type_unlocked(turret_id):
-				available_turrets.append(turret_id)
+		return false
 
 	var random_type: String = available_turrets[randi() % available_turrets.size()]
 
-	# Track this turret as generated
+	# Track in BOTH generation-level AND session-level
 	generated_turret_ids.append(random_type)
+	if random_type not in _session_turret_types:
+		_session_turret_types.append(random_type)
 
 	var base_price: int = TurretRegistry.get_base_price(random_type)
 	var scaled_price: int = calculate_turret_price(base_price, GameStateService.current_wave)
@@ -88,12 +104,16 @@ func generate_turret_offer(generated_turret_ids: Array[String], locked_turret_id
 		"locked": false,
 	}
 	EconomyService.current_shop_offers.append(offer)
+	return true
 
-func generate_item_offer(generated_item_ids: Array[String], generated_turret_ids: Array[String], locked_item_ids: Array[String] = [], locked_turret_ids: Array[String] = []) -> void:
-	# Combine newly generated items + locked items to avoid duplicates
-	var all_excluded_item_ids = generated_item_ids + locked_item_ids
+func generate_item_offer(
+	generated_item_ids: Array[String],
+	generated_turret_ids: Array[String],
+	excluded_item_ids: Array[String] = [],
+	excluded_turret_ids: Array[String] = []
+) -> void:
+	var all_excluded_item_ids = generated_item_ids + excluded_item_ids
 
-	# Use weighted rarity selection based on wave and luck
 	var random_item_id := ItemRegistry.get_weighted_random_item(
 		GameStateService.current_wave,
 		PlayerStatsService.get_player_luck(),
@@ -103,14 +123,16 @@ func generate_item_offer(generated_item_ids: Array[String], generated_turret_ids
 
 	if random_item_id.is_empty():
 		# Fallback to turret if no items available
-		generate_turret_offer(generated_turret_ids, locked_turret_ids)
+		generate_turret_offer(generated_turret_ids, excluded_turret_ids, generated_item_ids, excluded_item_ids)
 		return
-	
+
 	var base_price: int = ItemRegistry.get_item_price(random_item_id)
 	var scaled_price: int = calculate_item_price(base_price, GameStateService.current_wave, random_item_id)
 
-	# Track this item as generated
+	# Track in BOTH generation-level AND session-level
 	generated_item_ids.append(random_item_id)
+	if random_item_id not in _session_item_ids:
+		_session_item_ids.append(random_item_id)
 
 	var offer: Dictionary = {
 		"type": "item",

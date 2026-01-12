@@ -197,3 +197,23 @@ func _refresh_all_nodes() -> void:
 	for node_btn in tech_node_buttons:
 		if is_instance_valid(node_btn):
 			node_btn.refresh()
+
+
+func grab_initial_focus() -> void:
+	"""Focus first available element when tab is switched to"""
+	# Try to focus unlock button if enabled
+	if unlock_button and not unlock_button.disabled:
+		unlock_button.grab_focus()
+		return
+
+	# Try to focus first available tech node
+	for node_btn in tech_node_buttons:
+		if is_instance_valid(node_btn) and not node_btn.disabled:
+			node_btn.grab_focus()
+			return
+
+	# Fallback to first path selector button
+	if path_selector and path_selector.get_child_count() > 0:
+		var first_path_btn = path_selector.get_child(0)
+		if first_path_btn is Button:
+			first_path_btn.grab_focus()
