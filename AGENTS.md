@@ -29,14 +29,17 @@ Game logic split into **focused service singletons** in `scripts/autoload/`:
 - **LootService** - Manages item drops and loot review
 
 **Player & Combat:**
-- **PlayerStatsService** - Player health, speed, luck, crit stats
-- **TurretStatsService** - Turret counts, stat calculation with modifiers
-- **ModifierService** - Active modifiers management
+- **PlayerStatsService** - Player health (with regen), speed, luck, and crit stats
+- **TurretStatsService** - Turret counts, diversity, stat calculation with modifiers, and purchase penalties
+- **ModifierService** - Active modifiers management (used by all stat services)
+- **ItemTrackingService** - Item collection tracking and economy multipliers (Earn Rate, Shop Prices)
+- **LootService** - Manages item drops and loot review
 
 **Environment & Presentation:**
 - **ArenaBoundsService** - Arena geometry (rectangular vs isometric bounds)
 - **SettingsService** - Runtime settings and debug flags
-- **UIScaler** - Dynamic UI scaling and layout adjustments
+- **FontSizes** - Centralized font size management with dynamic theme updates
+- **UIScaler** - Dynamic UI scaling engine coordinating with FontSizes
 - **OffScreenIndicatorService** - Off-screen enemy and object indicators
 - **AudioService** - Sound effects with object pooling and hit sound variations
 
@@ -104,7 +107,7 @@ Core game entities spawned during gameplay:
 - **Status Effects** - Component-based status effect handling on enemies
 - **Barrier System** - DefenseTarget barrier with activation, cooldown, and visual representation
 - **Range Indicators** (`scripts/range_indicator.gd`) - Visual turret range display (togglable)
-- **Damage Numbers** (`scripts/damage_number.gd`) - Floating damage text for combat feedback
+- **Damage Numbers** (`scripts/damage_number.gd`) - Floating damage text with centralized font scaling
 - **Off-Screen Indicators** - UI system for tracking off-screen enemies and objectives
 
 ### UI Architecture
@@ -119,6 +122,8 @@ UI components organized by function:
 **Display Panels**: TurretDisplayUI, ItemDisplayUI, BuildDisplayUI, DefenseTargetHP, TunnelDoorProgress
 
 **Utilities**: UIHelpers, ScalableUIPanel (dynamic scaling), InventoryPanel, StatsPanel, OffScreenIndicators
+
+**Font System**: Centralized system using `FontSizes` service. UI components use semantic **Theme Variations** (`Header1`-`Header4`, `Body`, `BodySmall`, `ButtonLarge`, etc.) instead of manual size overrides.
 
 ## Core Systems
 
