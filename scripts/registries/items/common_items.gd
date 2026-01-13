@@ -85,10 +85,10 @@ static func _create_salvage_optimizer() -> Item:
 	item.item_id = "salvage_optimizer"
 	item.name = "Salvage Optimizer"
 	item.icon = "💰"
-	item.description = "+10% scrap from enemy kills, but -2% turret damage"
+	item.description = "+5% scrap from enemy kills, but -2% turret damage"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("scrap_earn_mult", "multiply", 1.10),
+		Item.create_modifier("scrap_earn_mult", "multiply", 1.05),
 		Item.create_modifier("damage", "multiply", 0.98, Item.filter_turret_type(["all"]))
 	]
 	return item
@@ -99,10 +99,10 @@ static func _create_lucky_charm() -> Item:
 	item.item_id = "lucky_charm"
 	item.name = "Lucky Charm"
 	item.icon = "🍀"
-	item.description = "+10 luck. Better items may appear in shops. -3% movement speed"
+	item.description = "+7 luck. Better items may appear in shops. -3% movement speed"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("player_luck", "add", 0.10),
+		Item.create_modifier("player_luck", "add", 0.07),
 		Item.create_modifier("player_speed", "multiply", 0.97)
 	]
 	return item
@@ -159,11 +159,11 @@ static func _create_shock_absorbers() -> Item:
 	item.item_id = "shock_absorbers"
 	item.name = "Shock Absorbers"
 	item.icon = "🏃"
-	item.description = "+7% movement speed, but -3 max HP"
+	item.description = "+5% movement speed, but -2 max HP"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("player_speed", "multiply", 1.07),
-		Item.create_modifier("player_max_health", "add", -1.0)
+		Item.create_modifier("player_speed", "multiply", 1.05),
+		Item.create_modifier("player_max_health", "add", -2.0)
 	]
 	return item
 
