@@ -49,7 +49,7 @@ func test_get_reroll_cost_multiplier_base():
 func test_get_reroll_cost_multiplier_with_discount():
 	modifier_service.add_modifier({
 		"stat": "reroll_cost",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 0.5,
 		"source": "discount_item"
 	})
@@ -61,7 +61,7 @@ func test_get_reroll_cost_multiplier_with_discount():
 func test_get_reroll_cost_multiplier_with_increase():
 	modifier_service.add_modifier({
 		"stat": "reroll_cost",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 1.5,
 		"source": "penalty_item"
 	})
@@ -73,19 +73,19 @@ func test_get_reroll_cost_multiplier_with_increase():
 func test_get_reroll_cost_multiplier_stacks():
 	modifier_service.add_modifier({
 		"stat": "reroll_cost",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 0.8,
 		"source": "item1"
 	})
 	modifier_service.add_modifier({
 		"stat": "reroll_cost",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 0.9,
 		"source": "item2"
 	})
 	var mult = item_tracking_service.get_reroll_cost_multiplier()
 	assert_eq(mult, 0.8 * 0.9,
-		"Multiple multipliers should stack")
+		"Multiple 'more' modifiers should stack multiplicatively")
 
 
 # =============================================================================
@@ -101,7 +101,7 @@ func test_get_scrap_earn_multiplier_base():
 func test_get_scrap_earn_multiplier_with_bonus():
 	modifier_service.add_modifier({
 		"stat": "scrap_earn_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 1.25,
 		"source": "scrap_boost_item"
 	})
@@ -113,7 +113,7 @@ func test_get_scrap_earn_multiplier_with_bonus():
 func test_get_scrap_earn_multiplier_with_penalty():
 	modifier_service.add_modifier({
 		"stat": "scrap_earn_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 0.75,
 		"source": "scrap_penalty"
 	})
@@ -125,19 +125,19 @@ func test_get_scrap_earn_multiplier_with_penalty():
 func test_get_scrap_earn_multiplier_multiple_sources():
 	modifier_service.add_modifier({
 		"stat": "scrap_earn_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 1.15,
 		"source": "item1"
 	})
 	modifier_service.add_modifier({
 		"stat": "scrap_earn_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 1.10,
 		"source": "item2"
 	})
 	var mult = item_tracking_service.get_scrap_earn_multiplier()
 	assert_almost_eq(mult, 1.15 * 1.10, 0.001,
-		"Should stack scrap earn multipliers")
+		"Should stack scrap earn 'more' modifiers multiplicatively")
 
 
 # =============================================================================
@@ -153,7 +153,7 @@ func test_get_enemy_count_multiplier_base():
 func test_get_enemy_count_multiplier_increased():
 	modifier_service.add_modifier({
 		"stat": "enemy_count_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 1.5,
 		"source": "horde_mode_item"
 	})
@@ -165,7 +165,7 @@ func test_get_enemy_count_multiplier_increased():
 func test_get_enemy_count_multiplier_decreased():
 	modifier_service.add_modifier({
 		"stat": "enemy_count_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 0.7,
 		"source": "fewer_enemies_item"
 	})
@@ -187,7 +187,7 @@ func test_get_shop_price_multiplier_base():
 func test_get_shop_price_multiplier_discount():
 	modifier_service.add_modifier({
 		"stat": "shop_price_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 0.8,
 		"source": "discount_item"
 	})
@@ -199,7 +199,7 @@ func test_get_shop_price_multiplier_discount():
 func test_get_shop_price_multiplier_increase():
 	modifier_service.add_modifier({
 		"stat": "shop_price_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 1.3,
 		"source": "expensive_item"
 	})
@@ -211,19 +211,19 @@ func test_get_shop_price_multiplier_increase():
 func test_get_shop_price_multiplier_stacking():
 	modifier_service.add_modifier({
 		"stat": "shop_price_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 0.9,
 		"source": "discount1"
 	})
 	modifier_service.add_modifier({
 		"stat": "shop_price_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 0.85,
 		"source": "discount2"
 	})
 	var mult = item_tracking_service.get_shop_price_multiplier()
 	assert_almost_eq(mult, 0.9 * 0.85, 0.001,
-		"Multiple discounts should stack multiplicatively")
+		"Multiple 'more' discounts should stack multiplicatively")
 
 
 # =============================================================================
@@ -239,7 +239,7 @@ func test_get_wave_bonus_multiplier_base():
 func test_get_wave_bonus_multiplier_increased():
 	modifier_service.add_modifier({
 		"stat": "wave_bonus_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 1.5,
 		"source": "bonus_item"
 	})
@@ -251,7 +251,7 @@ func test_get_wave_bonus_multiplier_increased():
 func test_get_wave_bonus_multiplier_decreased():
 	modifier_service.add_modifier({
 		"stat": "wave_bonus_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 0.5,
 		"source": "penalty_item"
 	})
@@ -334,34 +334,34 @@ func test_modifier_service_lazy_loaded():
 
 
 func test_all_multipliers_with_different_modifiers():
-	# Set up different modifiers for each stat
+	# Set up different modifiers for each stat using "more" operation
 	modifier_service.add_modifier({
 		"stat": "reroll_cost",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 0.8,
 		"source": "reroll_item"
 	})
 	modifier_service.add_modifier({
 		"stat": "scrap_earn_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 1.2,
 		"source": "gold_item"
 	})
 	modifier_service.add_modifier({
 		"stat": "enemy_count_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 1.5,
 		"source": "enemy_item"
 	})
 	modifier_service.add_modifier({
 		"stat": "shop_price_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 0.9,
 		"source": "shop_item"
 	})
 	modifier_service.add_modifier({
 		"stat": "wave_bonus_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 1.3,
 		"source": "wave_item"
 	})
@@ -413,25 +413,25 @@ func test_can_track_item_counts():
 func test_zero_multiplier_values():
 	modifier_service.add_modifier({
 		"stat": "scrap_earn_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 0.0,
 		"source": "zero_gold"
 	})
 	var mult = item_tracking_service.get_scrap_earn_multiplier()
 	assert_eq(mult, 0.0,
-		"Should handle zero multiplier")
+		"Should handle zero 'more' multiplier")
 
 
 func test_very_large_multipliers():
 	modifier_service.add_modifier({
 		"stat": "enemy_count_mult",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 10.0,
 		"source": "huge_mult"
 	})
 	var mult = item_tracking_service.get_enemy_count_multiplier()
 	assert_eq(mult, 10.0,
-		"Should handle large multipliers")
+		"Should handle large 'more' multipliers")
 
 
 func test_negative_shop_offer_count():

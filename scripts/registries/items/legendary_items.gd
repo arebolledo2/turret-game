@@ -62,6 +62,6 @@ static func _create_chain_reaction() -> Item:
 	item.max_stacks = 1
 	item.special_effect = "chain_reaction"
 	item.modifiers = [
-		Item.create_modifier("damage", "multiply", 0.85)
+		Item.create_modifier("damage", "increase", -0.15)
 	]
 	return item

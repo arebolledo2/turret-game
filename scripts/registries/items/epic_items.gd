@@ -40,8 +40,8 @@ static func _create_glass_cannon_core() -> Item:
 	item.rarity = GameEnums.ItemRarity.EPIC
 	item.max_stacks = 1
 	item.modifiers = [
-		Item.create_modifier("damage", "multiply", 1.4, Item.filter_turret_type(["all"])),
-		Item.create_modifier("player_max_health", "multiply", 0.5)
+		Item.create_modifier("damage", "increase", 0.4, Item.filter_turret_type(["all"])),
+		Item.create_modifier("player_max_health", "increase", -0.5)
 	]
 	return item
 
@@ -66,10 +66,10 @@ static func _create_plasma_destabilizer() -> Item:
 	item.description = "Plasma turrets +80% knockback and +25% explosion radius. -20% projectile speed, -15% fire rate"
 	item.rarity = GameEnums.ItemRarity.EPIC
 	item.modifiers = [
-		Item.create_modifier("knockback_force", "multiply", 1.80, Item.filter_damage_type([GameEnums.DamageType.PLASMA])),
-		Item.create_modifier("aoe_radius", "multiply", 1.25, Item.filter_damage_type([GameEnums.DamageType.PLASMA])),
-		Item.create_modifier("projectile_speed", "multiply", 0.80, Item.filter_damage_type([GameEnums.DamageType.PLASMA])),
-		Item.create_modifier("fire_rate", "multiply", 0.85, Item.filter_damage_type([GameEnums.DamageType.PLASMA]))
+		Item.create_modifier("knockback_force", "increase", 0.80, Item.filter_damage_type([GameEnums.DamageType.PLASMA])),
+		Item.create_modifier("aoe_radius", "increase", 0.25, Item.filter_damage_type([GameEnums.DamageType.PLASMA])),
+		Item.create_modifier("projectile_speed", "increase", -0.20, Item.filter_damage_type([GameEnums.DamageType.PLASMA])),
+		Item.create_modifier("fire_rate", "increase", -0.15, Item.filter_damage_type([GameEnums.DamageType.PLASMA]))
 	]
 	return item
 
@@ -83,8 +83,8 @@ static func _create_war_profiteer() -> Item:
 	item.rarity = GameEnums.ItemRarity.EPIC
 	item.max_stacks = 1
 	item.modifiers = [
-		Item.create_modifier("wave_bonus_mult", "multiply", 2.0),
-		Item.create_modifier("shop_price_mult", "multiply", 1.25)
+		Item.create_modifier("wave_bonus_mult", "increase", 1.0),
+		Item.create_modifier("shop_price_mult", "increase", 0.25)
 	]
 	return item
 
@@ -125,8 +125,8 @@ static func _create_personal_space() -> Item:
 	item.max_stacks = 1
 	item.special_effect = "personal_space"
 	item.modifiers = [
-		Item.create_modifier("damage", "multiply", 1.35),
-		Item.create_modifier("range", "multiply", 1.20)
+		Item.create_modifier("damage", "increase", 0.35),
+		Item.create_modifier("range", "increase", 0.20)
 	]
 	return item
 

@@ -23,10 +23,10 @@ func before_each() -> void:
 # =============================================================================
 
 func test_buff_creation():
-	var buff = buff_system.Buff.new("fire_rate", 1.1, "multiply", 2.0, 3)
+	var buff = buff_system.Buff.new("fire_rate", 1.1, "more", 2.0, 3)
 	assert_eq(buff.stat, "fire_rate", "Should set stat")
 	assert_eq(buff.value, 1.1, "Should set value")
-	assert_eq(buff.operation, "multiply", "Should set operation")
+	assert_eq(buff.operation, "more", "Should set operation")
 	assert_eq(buff.duration, 2.0, "Should set duration")
 	assert_eq(buff.time_remaining, 2.0, "Time remaining should equal duration")
 	assert_eq(buff.stack_count, 1, "Should start with 1 stack")
@@ -43,7 +43,7 @@ func test_buff_default_max_stacks():
 # =============================================================================
 
 func test_apply_buff_creates_entry():
-	var buff = buff_system.Buff.new("fire_rate", 1.1, "multiply", 2.0, 1)
+	var buff = buff_system.Buff.new("fire_rate", 1.1, "more", 2.0, 1)
 	buff_system.apply_buff(mock_turret, buff)
 
 	var turret_id = mock_turret.get_instance_id()
@@ -67,7 +67,7 @@ func test_apply_buff_stores_buff_data():
 
 
 func test_apply_multiple_different_buffs():
-	var buff1 = buff_system.Buff.new("fire_rate", 1.1, "multiply", 2.0, 1)
+	var buff1 = buff_system.Buff.new("fire_rate", 1.1, "more", 2.0, 1)
 	var buff2 = buff_system.Buff.new("damage", 10.0, "add", 1.0, 1)
 
 	buff_system.apply_buff(mock_turret, buff1)
@@ -83,8 +83,8 @@ func test_apply_multiple_different_buffs():
 # =============================================================================
 
 func test_apply_same_buff_stacks():
-	var buff1 = buff_system.Buff.new("fire_rate", 1.08, "multiply", 2.0, 5)
-	var buff2 = buff_system.Buff.new("fire_rate", 1.08, "multiply", 2.0, 5)
+	var buff1 = buff_system.Buff.new("fire_rate", 1.08, "more", 2.0, 5)
+	var buff2 = buff_system.Buff.new("fire_rate", 1.08, "more", 2.0, 5)
 
 	buff_system.apply_buff(mock_turret, buff1)
 	buff_system.apply_buff(mock_turret, buff2)
@@ -97,7 +97,7 @@ func test_apply_same_buff_stacks():
 
 
 func test_buff_stacking_respects_max():
-	var buff = buff_system.Buff.new("fire_rate", 1.08, "multiply", 2.0, 3)
+	var buff = buff_system.Buff.new("fire_rate", 1.08, "more", 2.0, 3)
 
 	# Apply 5 times but max is 3
 	for i in range(5):
@@ -111,14 +111,14 @@ func test_buff_stacking_respects_max():
 
 
 func test_buff_stacking_refreshes_duration():
-	var buff1 = buff_system.Buff.new("fire_rate", 1.1, "multiply", 2.0, 5)
+	var buff1 = buff_system.Buff.new("fire_rate", 1.1, "more", 2.0, 5)
 	buff_system.apply_buff(mock_turret, buff1)
 
 	var turret_id = mock_turret.get_instance_id()
 	# Simulate time passing
 	buff_system.active_buffs[turret_id][0].time_remaining = 0.5
 
-	var buff2 = buff_system.Buff.new("fire_rate", 1.1, "multiply", 2.0, 5)
+	var buff2 = buff_system.Buff.new("fire_rate", 1.1, "more", 2.0, 5)
 	buff_system.apply_buff(mock_turret, buff2)
 
 	var stored_buff = buff_system.active_buffs[turret_id][0]
@@ -127,7 +127,7 @@ func test_buff_stacking_refreshes_duration():
 
 
 func test_buff_at_max_stacks_still_refreshes():
-	var buff = buff_system.Buff.new("fire_rate", 1.08, "multiply", 2.0, 2)
+	var buff = buff_system.Buff.new("fire_rate", 1.08, "more", 2.0, 2)
 
 	# Apply twice to hit max
 	buff_system.apply_buff(mock_turret, buff)
@@ -137,7 +137,7 @@ func test_buff_at_max_stacks_still_refreshes():
 	buff_system.active_buffs[turret_id][0].time_remaining = 0.3
 
 	# Apply again
-	var buff3 = buff_system.Buff.new("fire_rate", 1.08, "multiply", 2.0, 2)
+	var buff3 = buff_system.Buff.new("fire_rate", 1.08, "more", 2.0, 2)
 	buff_system.apply_buff(mock_turret, buff3)
 
 	var stored_buff = buff_system.active_buffs[turret_id][0]
@@ -162,7 +162,7 @@ func test_buff_expires_after_duration():
 
 
 func test_buff_duration_decrements():
-	var buff = buff_system.Buff.new("fire_rate", 1.1, "multiply", 3.0, 1)
+	var buff = buff_system.Buff.new("fire_rate", 1.1, "more", 3.0, 1)
 	buff_system.apply_buff(mock_turret, buff)
 
 	var turret_id = mock_turret.get_instance_id()
@@ -176,7 +176,7 @@ func test_buff_duration_decrements():
 
 
 func test_multiple_buffs_expire_independently():
-	var buff1 = buff_system.Buff.new("fire_rate", 1.1, "multiply", 1.0, 1)
+	var buff1 = buff_system.Buff.new("fire_rate", 1.1, "more", 1.0, 1)
 	var buff2 = buff_system.Buff.new("damage", 10.0, "add", 3.0, 1)
 
 	buff_system.apply_buff(mock_turret, buff1)
@@ -216,7 +216,7 @@ func test_get_buff_multiplier_no_buffs():
 
 
 func test_get_buff_multiplier_single_buff():
-	var buff = buff_system.Buff.new("fire_rate", 1.2, "multiply", 2.0, 1)
+	var buff = buff_system.Buff.new("fire_rate", 1.2, "more", 2.0, 1)
 	buff_system.apply_buff(mock_turret, buff)
 
 	var mult = buff_system.get_buff_multiplier(mock_turret, "fire_rate")
@@ -224,7 +224,7 @@ func test_get_buff_multiplier_single_buff():
 
 
 func test_get_buff_multiplier_with_stacks():
-	var buff = buff_system.Buff.new("fire_rate", 1.08, "multiply", 2.0, 5)
+	var buff = buff_system.Buff.new("fire_rate", 1.08, "more", 2.0, 5)
 
 	# Apply 3 times
 	buff_system.apply_buff(mock_turret, buff)
@@ -239,7 +239,7 @@ func test_get_buff_multiplier_with_stacks():
 
 func test_get_buff_multiplier_max_stacks():
 	# Chain Reaction: 1.08 fire rate, max 5 stacks
-	var buff = buff_system.Buff.new("fire_rate", 1.08, "multiply", 2.0, 5)
+	var buff = buff_system.Buff.new("fire_rate", 1.08, "more", 2.0, 5)
 
 	for i in range(5):
 		buff_system.apply_buff(mock_turret, buff)
@@ -251,7 +251,7 @@ func test_get_buff_multiplier_max_stacks():
 
 
 func test_get_buff_multiplier_wrong_stat():
-	var buff = buff_system.Buff.new("fire_rate", 1.5, "multiply", 2.0, 1)
+	var buff = buff_system.Buff.new("fire_rate", 1.5, "more", 2.0, 1)
 	buff_system.apply_buff(mock_turret, buff)
 
 	var mult = buff_system.get_buff_multiplier(mock_turret, "damage")
@@ -267,8 +267,8 @@ func test_get_buff_multiplier_ignores_additive():
 
 
 func test_get_buff_multiplier_multiple_buffs():
-	var buff1 = buff_system.Buff.new("range", 1.2, "multiply", 2.0, 1)
-	var buff2 = buff_system.Buff.new("range", 1.3, "multiply", 2.0, 1)
+	var buff1 = buff_system.Buff.new("range", 1.2, "more", 2.0, 1)
+	var buff2 = buff_system.Buff.new("range", 1.3, "more", 2.0, 1)
 
 	buff_system.apply_buff(mock_turret, buff1)
 	buff_system.apply_buff(mock_turret, buff2)
@@ -304,7 +304,7 @@ func test_get_buff_add_value_with_stacks():
 		buff_system.apply_buff(mock_turret, buff)
 
 	var add = buff_system.get_buff_add_value(mock_turret, "damage")
-	assert_eq(add, 5.0 * 3, "Should multiply by stack count")
+	assert_eq(add, 5.0 * 3, "Should more by stack count")
 
 
 func test_get_buff_add_value_wrong_stat():
@@ -316,7 +316,7 @@ func test_get_buff_add_value_wrong_stat():
 
 
 func test_get_buff_add_value_ignores_multiplicative():
-	var buff = buff_system.Buff.new("range", 1.5, "multiply", 2.0, 1)
+	var buff = buff_system.Buff.new("range", 1.5, "more", 2.0, 1)
 	buff_system.apply_buff(mock_turret, buff)
 
 	var add = buff_system.get_buff_add_value(mock_turret, "range")
@@ -331,7 +331,7 @@ func test_buffs_independent_per_turret():
 	var turret2 = Node2D.new()
 	add_child_autofree(turret2)
 
-	var buff1 = buff_system.Buff.new("fire_rate", 1.1, "multiply", 2.0, 1)
+	var buff1 = buff_system.Buff.new("fire_rate", 1.1, "more", 2.0, 1)
 	var buff2 = buff_system.Buff.new("damage", 10.0, "add", 2.0, 1)
 
 	buff_system.apply_buff(mock_turret, buff1)
@@ -364,7 +364,7 @@ func test_buff_with_zero_duration():
 
 
 func test_buff_with_negative_duration():
-	var buff = buff_system.Buff.new("fire_rate", 1.1, "multiply", -1.0, 1)
+	var buff = buff_system.Buff.new("fire_rate", 1.1, "more", -1.0, 1)
 	buff_system.apply_buff(mock_turret, buff)
 
 	var turret_id = mock_turret.get_instance_id()
@@ -373,7 +373,7 @@ func test_buff_with_negative_duration():
 
 
 func test_large_stack_count():
-	var buff = buff_system.Buff.new("fire_rate", 1.01, "multiply", 10.0, 100)
+	var buff = buff_system.Buff.new("fire_rate", 1.01, "more", 10.0, 100)
 
 	for i in range(100):
 		buff_system.apply_buff(mock_turret, buff)
@@ -385,7 +385,7 @@ func test_large_stack_count():
 
 
 func test_zero_value_multiplier():
-	var buff = buff_system.Buff.new("damage", 0.0, "multiply", 2.0, 1)
+	var buff = buff_system.Buff.new("damage", 0.0, "more", 2.0, 1)
 	buff_system.apply_buff(mock_turret, buff)
 
 	var mult = buff_system.get_buff_multiplier(mock_turret, "damage")

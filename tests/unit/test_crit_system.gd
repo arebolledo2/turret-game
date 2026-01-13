@@ -60,16 +60,16 @@ func test_get_player_crit_chance_with_multiple_modifiers():
 		"Should stack multiple crit chance modifiers (5% + 10% + 5% = 20%)")
 
 
-func test_get_player_crit_chance_with_multiply_modifier():
+func test_get_player_crit_chance_with_more_modifier():
 	modifier_service.add_modifier({
 		"stat": "player_crit_chance",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 2.0,
 		"source": "test_item"
 	})
 	var crit_chance = player_stats_service.get_player_crit_chance()
 	assert_almost_eq(crit_chance, 0.10, 0.001,
-		"Should apply multiplicative modifier (5% * 2 = 10%)")
+		"Should apply 'more' modifier (5% * 2 = 10%)")
 
 
 # =============================================================================
@@ -94,16 +94,16 @@ func test_get_player_crit_multiplier_with_additive_modifier():
 		"Should apply +0.5 multiplier (2.0 + 0.5 = 2.5x)")
 
 
-func test_get_player_crit_multiplier_with_multiply_modifier():
+func test_get_player_crit_multiplier_with_more_modifier():
 	modifier_service.add_modifier({
 		"stat": "player_crit_multiplier",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 1.5,
 		"source": "test_item"
 	})
 	var crit_mult = player_stats_service.get_player_crit_multiplier()
 	assert_almost_eq(crit_mult, 3.0, 0.001,
-		"Should apply multiplicative modifier (2.0 * 1.5 = 3.0x)")
+		"Should apply 'more' modifier (2.0 * 1.5 = 3.0x)")
 
 
 # =============================================================================

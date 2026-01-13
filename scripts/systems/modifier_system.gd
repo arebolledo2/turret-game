@@ -2,12 +2,23 @@ class_name ModifierSystem
 extends RefCounted
 
 ## Manages active modifiers from items and applies them to stats
+## Uses Path of Exile-style modifier stacking:
+##   - "add": Flat value added to base (stacks additively)
+##   - "increase": Percentage modifier (all sources sum, then multiply base)
+##   - "more": Multiplicative modifier (each source multiplies independently)
+##
+## Formula: final = (base + flat_total) × (1 + increase_total) × more1 × more2 × ...
+##
+## Example:
+##   Base 10, +5 flat, +50% increase, +50% increase, 1.2 more, 1.3 more
+##   = (10 + 5) × (1 + 0.5 + 0.5) × 1.2 × 1.3
+##   = 15 × 2.0 × 1.2 × 1.3 = 46.8
 ##
 ## Modifier format:
 ## {
 ##   "id": String,           # Unique identifier
 ##   "stat": String,         # Which stat to modify (damage, fire_rate, etc.)
-##   "operation": String,    # "add" or "multiply"
+##   "operation": String,    # "add", "increase", or "more"
 ##   "value": float,         # The modification value
 ##   "filter": {             # Optional filters (OR logic within each array)
 ##     "damage_type": [],    # Array of DamageType enums
@@ -79,6 +90,7 @@ func _modifier_matches_turret(modifier: Dictionary, turret_type: String) -> bool
 
 
 ## Get turret stats with all modifiers applied
+## Uses PoE formula: (base + flat) × (1 + increases) × more1 × more2 × ...
 func get_turret_stats(turret_type: String, difficulty_config: Dictionary) -> Dictionary:
 	var base_stats := TurretRegistry.get_base_stats(turret_type)
 
@@ -88,9 +100,10 @@ func get_turret_stats(turret_type: String, difficulty_config: Dictionary) -> Dic
 	# Apply special effects from items (dynamic modifiers)
 	SpecialEffectService.apply_static_effects(turret_type, base_stats)
 
-	# Collect applicable modifiers
-	var add_mods: Dictionary = {} # stat -> total add value
-	var mult_mods: Dictionary = {} # stat -> array of multipliers
+	# Collect applicable modifiers by type
+	var flat_mods: Dictionary = {}      # stat -> total flat value
+	var increase_mods: Dictionary = {}  # stat -> total increase % (summed)
+	var more_mods: Dictionary = {}      # stat -> array of more multipliers
 
 	for modifier in _modifiers:
 		if not _modifier_matches_turret(modifier, turret_type):
@@ -100,31 +113,53 @@ func get_turret_stats(turret_type: String, difficulty_config: Dictionary) -> Dic
 		var operation: String = modifier.get("operation", "add")
 		var value: float = modifier.get("value", 0.0)
 
-		if operation == "add":
-			add_mods[stat] = add_mods.get(stat, 0.0) + value
-		elif operation == "multiply":
-			if not mult_mods.has(stat):
-				mult_mods[stat] = []
-			mult_mods[stat].append(value)
+		match operation:
+			"add":
+				flat_mods[stat] = flat_mods.get(stat, 0.0) + value
+			"increase":
+				increase_mods[stat] = increase_mods.get(stat, 0.0) + value
+			"more":
+				if not more_mods.has(stat):
+					more_mods[stat] = []
+				more_mods[stat].append(value)
 
-	# Apply modifiers: first add, then multiply
-	for stat in add_mods:
-		base_stats[stat] = base_stats.get(stat, 0.0) + add_mods[stat]
+	# Apply PoE formula: (base + flat) × (1 + increases) × more1 × more2 × ...
+	# Get all stats that have any modifier
+	var all_stats: Dictionary = {}
+	for stat in flat_mods:
+		all_stats[stat] = true
+	for stat in increase_mods:
+		all_stats[stat] = true
+	for stat in more_mods:
+		all_stats[stat] = true
 
-	for stat in mult_mods:
-		var combined_mult: float = 1.0
-		for mult in mult_mods[stat]:
-			combined_mult *= mult
-		base_stats[stat] = base_stats.get(stat, 0.0) * combined_mult
+	for stat in all_stats:
+		var base_value: float = base_stats.get(stat, 0.0)
+
+		# Step 1: Add flat modifiers
+		base_value += flat_mods.get(stat, 0.0)
+
+		# Step 2: Apply summed increases as single multiplier
+		var increase_total: float = increase_mods.get(stat, 0.0)
+		base_value *= (1.0 + increase_total)
+
+		# Step 3: Apply each "more" multiplier independently
+		if more_mods.has(stat):
+			for more_mult in more_mods[stat]:
+				base_value *= more_mult
+
+		base_stats[stat] = base_value
 
 	return base_stats
 
 
 ## Apply modifiers to a single stat value with FILTER VALIDATION
-## Now supports entity_type filter for player vs turret distinction
+## Uses PoE formula: (base + flat) × (1 + increases) × more1 × more2 × ...
+## Supports entity_type filter for player vs turret distinction
 func apply_to_stat(base_value: float, stat_name: String, entity_type: String = "player") -> float:
-	var add_value: float = 0.0
-	var mult_values: Array[float] = []
+	var flat_value: float = 0.0
+	var increase_value: float = 0.0
+	var more_values: Array[float] = []
 
 	for modifier in _modifiers:
 		# Skip if stat name doesn't match
@@ -141,19 +176,23 @@ func apply_to_stat(base_value: float, stat_name: String, entity_type: String = "
 				if not allowed_types.is_empty() and entity_type not in allowed_types:
 					continue
 
-		# Apply modifier
+		# Collect modifier by operation type
 		var operation = modifier.get("operation", "add")
 		var value = modifier.get("value", 0.0)
 
-		if operation == "add":
-			add_value += value
-		elif operation == "multiply":
-			mult_values.append(value)
+		match operation:
+			"add":
+				flat_value += value
+			"increase":
+				increase_value += value
+			"more":
+				more_values.append(value)
 
-	# Apply: base + adds, then multiply
-	var result = base_value + add_value
-	for mult in mult_values:
-		result *= mult
+	# Apply PoE formula: (base + flat) × (1 + increases) × more1 × more2 × ...
+	var result = base_value + flat_value
+	result *= (1.0 + increase_value)
+	for more_mult in more_values:
+		result *= more_mult
 
 	return result
 

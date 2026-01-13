@@ -216,8 +216,8 @@ func test_shock_absorbers_has_speed_modifier():
 	for mod in mods:
 		if mod.get("stat") == "player_speed":
 			has_speed_mod = true
-			assert_eq(mod.get("operation"), "multiply", "Speed modifier should be multiply")
-			assert_gt(mod.get("value"), 1.0, "Speed modifier should increase speed")
+			assert_eq(mod.get("operation"), "increase", "Speed modifier should be 'increase'")
+			assert_gt(mod.get("value"), 0.0, "Speed modifier value should be positive (percentage)")
 	assert_true(has_speed_mod, "Shock absorbers should have speed modifier")
 
 
@@ -227,7 +227,8 @@ func test_dense_rounds_has_damage_modifier():
 	for mod in mods:
 		if mod.get("stat") == "damage":
 			has_damage_mod = true
-			assert_gt(mod.get("value"), 1.0, "Damage modifier should increase damage")
+			# With PoE-style system, increase values are percentages (0.15 = +15%)
+			assert_gt(mod.get("value"), 0.0, "Damage modifier should increase damage")
 	assert_true(has_damage_mod, "Dense rounds should have damage modifier")
 
 

@@ -77,21 +77,21 @@ func test_get_turret_stats_with_additive_modifier():
 		"Should apply additive modifier")
 
 
-func test_get_turret_stats_with_multiplicative_modifier():
+func test_get_turret_stats_with_increase_modifier():
 	modifier_service.add_modifier({
 		"stat": "fire_rate",
-		"operation": "multiply",
-		"value": 1.5,
+		"operation": "increase",
+		"value": 0.5,
 		"filter": {},
 		"source": "test_item"
 	})
 	var base_stats = TurretRegistry.get_base_stats("sniper")
 	var stats = turret_stats_service.get_turret_stats("sniper", 1.0)
 	assert_eq(stats["fire_rate"], base_stats["fire_rate"] * 1.5,
-		"Should apply multiplicative modifier")
+		"Should apply 50% increase modifier")
 
 
-func test_get_turret_stats_adds_before_multiplies():
+func test_get_turret_stats_adds_before_more():
 	modifier_service.add_modifier({
 		"stat": "damage",
 		"operation": "add",
@@ -101,7 +101,7 @@ func test_get_turret_stats_adds_before_multiplies():
 	})
 	modifier_service.add_modifier({
 		"stat": "damage",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 2.0,
 		"filter": {},
 		"source": "item2"
@@ -110,20 +110,20 @@ func test_get_turret_stats_adds_before_multiplies():
 	var expected = (base_stats["damage"] + 5.0) * 2.0
 	var stats = turret_stats_service.get_turret_stats("normal", 1.0)
 	assert_eq(stats["damage"], expected,
-		"Should apply adds before multipliers")
+		"Should apply adds before 'more' multipliers")
 
 
-func test_get_turret_stats_multiple_multipliers_stack():
+func test_get_turret_stats_multiple_more_modifiers_stack():
 	modifier_service.add_modifier({
 		"stat": "range",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 1.2,
 		"filter": {},
 		"source": "item1"
 	})
 	modifier_service.add_modifier({
 		"stat": "range",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 1.5,
 		"filter": {},
 		"source": "item2"
@@ -132,7 +132,7 @@ func test_get_turret_stats_multiple_multipliers_stack():
 	var expected = base_stats["range"] * 1.2 * 1.5
 	var stats = turret_stats_service.get_turret_stats("plasma", 1.0)
 	assert_almost_eq(stats["range"], expected, 0.001,
-		"Multiple multipliers should stack multiplicatively")
+		"Multiple 'more' modifiers should stack multiplicatively")
 
 
 # =============================================================================
@@ -174,22 +174,22 @@ func test_modifier_filtered_by_turret_type_no_match():
 func test_modifier_filtered_by_damage_type_match():
 	modifier_service.add_modifier({
 		"stat": "damage",
-		"operation": "multiply",
-		"value": 1.5,
+		"operation": "increase",
+		"value": 0.5,
 		"filter": {"damage_type": [GameEnums.DamageType.PLASMA]},
 		"source": "plasma_boost"
 	})
 	var base_stats = TurretRegistry.get_base_stats("plasma")
 	var stats = turret_stats_service.get_turret_stats("plasma", 1.0)
 	assert_eq(stats["damage"], base_stats["damage"] * 1.5,
-		"Plasma turret should get plasma damage modifier")
+		"Plasma turret should get plasma damage 50% increase modifier")
 
 
 func test_modifier_filtered_by_damage_type_no_match():
 	modifier_service.add_modifier({
 		"stat": "damage",
-		"operation": "multiply",
-		"value": 1.5,
+		"operation": "increase",
+		"value": 0.5,
 		"filter": {"damage_type": [GameEnums.DamageType.FIRE]},
 		"source": "fire_boost"
 	})
@@ -206,22 +206,22 @@ func test_modifier_filtered_by_damage_type_no_match():
 func test_modifier_filtered_by_attack_style_match():
 	modifier_service.add_modifier({
 		"stat": "fire_rate",
-		"operation": "multiply",
-		"value": 1.3,
+		"operation": "increase",
+		"value": 0.3,
 		"filter": {"attack_style": [GameEnums.AttackStyle.PROJECTILE]},
 		"source": "projectile_boost"
 	})
 	var base_stats = TurretRegistry.get_base_stats("normal")  # Normal has PROJECTILE
 	var stats = turret_stats_service.get_turret_stats("normal", 1.0)
 	assert_eq(stats["fire_rate"], base_stats["fire_rate"] * 1.3,
-		"Normal (projectile) should get projectile modifier")
+		"Normal (projectile) should get 30% increase projectile modifier")
 
 
 func test_modifier_filtered_by_attack_style_no_match():
 	modifier_service.add_modifier({
 		"stat": "fire_rate",
-		"operation": "multiply",
-		"value": 1.3,
+		"operation": "increase",
+		"value": 0.3,
 		"filter": {"attack_style": [GameEnums.AttackStyle.AOE]},
 		"source": "aoe_boost"
 	})

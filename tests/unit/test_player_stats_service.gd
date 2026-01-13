@@ -58,16 +58,16 @@ func test_get_player_speed_with_additive_modifier():
 		"Should apply additive modifier")
 
 
-func test_get_player_speed_with_multiplicative_modifier():
+func test_get_player_speed_with_increase_modifier():
 	modifier_service.add_modifier({
 		"stat": "player_speed",
-		"operation": "multiply",
-		"value": 1.5,
+		"operation": "increase",
+		"value": 0.5,
 		"source": "test_item"
 	})
 	var speed = player_stats_service.get_player_speed()
 	assert_eq(speed, GameConstants.PLAYER_SPEED * 1.5,
-		"Should apply multiplicative modifier")
+		"Should apply 50% increase modifier (base * 1.5)")
 
 
 func test_get_player_speed_with_multiple_modifiers():
@@ -79,15 +79,15 @@ func test_get_player_speed_with_multiple_modifiers():
 	})
 	modifier_service.add_modifier({
 		"stat": "player_speed",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 2.0,
 		"source": "item2"
 	})
-	# Should apply adds first, then multipliers
+	# Should apply adds first, then "more" multipliers
 	var expected = (GameConstants.PLAYER_SPEED + 50.0) * 2.0
 	var speed = player_stats_service.get_player_speed()
 	assert_eq(speed, expected,
-		"Should apply adds before multipliers")
+		"Should apply adds before 'more' multipliers")
 
 
 # =============================================================================
@@ -121,15 +121,15 @@ func test_get_player_max_health_with_modifier():
 func test_get_player_max_health_difficulty_and_modifiers():
 	modifier_service.add_modifier({
 		"stat": "player_max_health",
-		"operation": "multiply",
-		"value": 1.2,
+		"operation": "increase",
+		"value": 0.2,
 		"source": "test_item"
 	})
-	# Base * difficulty * modifier
+	# Base * difficulty * (1 + increase)
 	var expected = (GameConstants.PLAYER_BASE_MAX_HEALTH * 0.8) * 1.2
 	var health = player_stats_service.get_player_max_health(0.8)
 	assert_eq(health, expected,
-		"Should apply both difficulty and modifiers")
+		"Should apply both difficulty and increase modifiers")
 
 
 # =============================================================================
@@ -145,13 +145,13 @@ func test_get_player_weapon_damage_base():
 func test_get_player_weapon_damage_with_modifier():
 	modifier_service.add_modifier({
 		"stat": "player_weapon_damage",
-		"operation": "multiply",
-		"value": 1.5,
+		"operation": "increase",
+		"value": 0.5,
 		"source": "damage_boost"
 	})
 	var damage = player_stats_service.get_player_weapon_damage()
 	assert_eq(damage, GameConstants.PLAYER_WEAPON_DAMAGE * 1.5,
-		"Should apply damage modifier")
+		"Should apply 50% increase damage modifier")
 
 
 # =============================================================================
@@ -248,13 +248,13 @@ func test_get_pickup_radius_base():
 func test_get_pickup_radius_with_modifier():
 	modifier_service.add_modifier({
 		"stat": "pickup_radius",
-		"operation": "multiply",
-		"value": 1.5,
+		"operation": "increase",
+		"value": 0.5,
 		"source": "magnet_item"
 	})
 	var radius = player_stats_service.get_pickup_radius()
 	assert_eq(radius, GameConstants.PLAYER_PICKUP_RADIUS * 1.5,
-		"Should apply radius modifier")
+		"Should apply 50% increase radius modifier")
 
 
 # =============================================================================
@@ -276,7 +276,7 @@ func test_multiple_stats_with_different_modifiers():
 	})
 	modifier_service.add_modifier({
 		"stat": "player_weapon_damage",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 2.0,
 		"source": "damage_item"
 	})
@@ -292,11 +292,11 @@ func test_multiple_stats_with_different_modifiers():
 	var luck = player_stats_service.get_player_luck()
 
 	assert_eq(speed, GameConstants.PLAYER_SPEED + 50.0,
-		"Speed should be modified")
+		"Speed should be modified by add")
 	assert_eq(damage, GameConstants.PLAYER_WEAPON_DAMAGE * 2.0,
-		"Damage should be modified")
+		"Damage should be modified by 'more' 2.0x")
 	assert_eq(luck, GameConstants.PLAYER_BASE_LUCK + 0.1,
-		"Luck should be modified")
+		"Luck should be modified by add")
 
 
 # =============================================================================

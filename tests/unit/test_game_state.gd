@@ -335,14 +335,14 @@ func test_player_speed_with_modifiers():
 	game_state.modifiers.add_modifier({
 		"id": "speed_boost",
 		"stat": "player_speed",
-		"operation": "multiply",
-		"value": 1.2
+		"operation": "increase",
+		"value": 0.2
 	})
 
 	var speed = game_state.get_player_speed()
 	var expected = GameConstants.PLAYER_SPEED * 1.2
 
-	assert_eq(speed, expected, "Player speed should include modifiers")
+	assert_eq(speed, expected, "Player speed should include increase modifier")
 
 
 func test_player_weapon_damage_no_modifiers():

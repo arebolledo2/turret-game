@@ -90,8 +90,8 @@ func test_modifier_affects_matching_turret():
 	ModifierService.add_modifier({
 		"id": "test_fire_boost",
 		"stat": "damage",
-		"operation": "multiply",
-		"value": 1.5,
+		"operation": "increase",
+		"value": 0.5,
 		"filter": {"damage_type": [GameEnums.DamageType.FIRE]}
 	})
 
@@ -100,15 +100,15 @@ func test_modifier_affects_matching_turret():
 	fire_stats["damage"] = ModifierService.apply_modifiers_to_stat(base_damage * DifficultyService.get_difficulty_config()["turret_damage_mult"], "damage")
 	var expected = base_damage * DifficultyService.get_difficulty_config()["turret_damage_mult"] * 1.5
 
-	assert_almost_eq(fire_stats["damage"], expected, 0.01, "Fire damage should be boosted 50%")
+	assert_almost_eq(fire_stats["damage"], expected, 0.01, "Fire damage should be boosted 50% via increase")
 
 
 func test_modifier_does_not_affect_unmatched_turret():
 	ModifierService.add_modifier({
 		"id": "test_fire_boost",
 		"stat": "damage",
-		"operation": "multiply",
-		"value": 1.5,
+		"operation": "increase",
+		"value": 0.5,
 		"filter": {"damage_type": [GameEnums.DamageType.FIRE]}
 	})
 
@@ -139,7 +139,7 @@ func test_remove_modifier():
 	ModifierService.add_modifier({
 		"id": "temp_boost",
 		"stat": "damage",
-		"operation": "multiply",
+		"operation": "more",
 		"value": 2.0,
 		"filter": {}
 	})
@@ -149,7 +149,7 @@ func test_remove_modifier():
 	ModifierService.remove_modifier("temp_boost")
 	var after = ModifierService.apply_modifiers_to_stat(base_damage_before * DifficultyService.get_difficulty_config()["turret_damage_mult"], "damage")
 
-	assert_lt(after, before, "Damage should decrease after removing boost")
+	assert_lt(after, before, "Damage should decrease after removing 'more' boost")
 
 
 func test_clear_modifiers():

@@ -75,7 +75,7 @@ static func _create_scrap_magnet() -> Item:
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.always_show_description = true
 	item.modifiers = [
-		Item.create_modifier("pickup_radius", "multiply", 1.3)
+		Item.create_modifier("pickup_radius", "increase", 0.3)
 	]
 	return item
 
@@ -88,8 +88,8 @@ static func _create_salvage_optimizer() -> Item:
 	item.description = "+5% scrap from enemy kills, but -2% turret damage"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("scrap_earn_mult", "multiply", 1.05),
-		Item.create_modifier("damage", "multiply", 0.98, Item.filter_turret_type(["all"]))
+		Item.create_modifier("scrap_earn_mult", "increase", 0.05),
+		Item.create_modifier("damage", "increase", -0.02, Item.filter_turret_type(["all"]))
 	]
 	return item
 
@@ -103,7 +103,7 @@ static func _create_lucky_charm() -> Item:
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
 		Item.create_modifier("player_luck", "add", 0.07),
-		Item.create_modifier("player_speed", "multiply", 0.97)
+		Item.create_modifier("player_speed", "increase", -0.03)
 	]
 	return item
 
@@ -116,7 +116,7 @@ static func _create_efficient_scavenger() -> Item:
 	item.description = "+15% scrap from enemy kills, but -5 max HP"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("scrap_earn_mult", "multiply", 1.15),
+		Item.create_modifier("scrap_earn_mult", "increase", 0.15),
 		Item.create_modifier("player_max_health", "add", -1.0)
 	]
 	return item
@@ -135,7 +135,7 @@ static func _create_reinforced_hull() -> Item:
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
 		Item.create_modifier("player_max_health", "add", 4.0),
-		Item.create_modifier("player_speed", "multiply", 0.97)
+		Item.create_modifier("player_speed", "increase", -0.03)
 	]
 	return item
 
@@ -148,8 +148,8 @@ static func _create_quick_loader() -> Item:
 	item.description = "+5% fire rate, but -2% damage"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("fire_rate", "multiply", 1.05, Item.filter_turret_type(["all"])),
-		Item.create_modifier("damage", "multiply", 0.98, Item.filter_turret_type(["all"]))
+		Item.create_modifier("fire_rate", "increase", 0.05, Item.filter_turret_type(["all"])),
+		Item.create_modifier("damage", "increase", -0.02, Item.filter_turret_type(["all"]))
 	]
 	return item
 
@@ -162,7 +162,7 @@ static func _create_shock_absorbers() -> Item:
 	item.description = "+5% movement speed, but -2 max HP"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("player_speed", "multiply", 1.05),
+		Item.create_modifier("player_speed", "increase", 0.05),
 		Item.create_modifier("player_max_health", "add", -2.0)
 	]
 	return item
@@ -176,8 +176,8 @@ static func _create_dense_rounds() -> Item:
 	item.description = "+6% damage, but -2% fire rate"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("damage", "multiply", 1.06, Item.filter_turret_type(["all"])),
-		Item.create_modifier("fire_rate", "multiply", 0.98, Item.filter_turret_type(["all"]))
+		Item.create_modifier("damage", "increase", 0.06, Item.filter_turret_type(["all"])),
+		Item.create_modifier("fire_rate", "increase", -0.02, Item.filter_turret_type(["all"]))
 	]
 	return item
 
@@ -194,8 +194,8 @@ static func _create_budget_capacitor() -> Item:
 	item.description = "Reroll costs reduced by 10%. -3% turret range"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("reroll_cost", "multiply", 0.90),
-		Item.create_modifier("range", "multiply", 0.97, Item.filter_turret_type(["all"]))
+		Item.create_modifier("reroll_cost", "increase", -0.10),
+		Item.create_modifier("range", "increase", -0.03, Item.filter_turret_type(["all"]))
 	]
 	return item
 
@@ -208,8 +208,8 @@ static func _create_ammo_surplus() -> Item:
 	item.description = "Projectile turrets gain +6% fire rate but -3% damage"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("fire_rate", "multiply", 1.06, Item.filter_attack_style([GameEnums.AttackStyle.PROJECTILE])),
-		Item.create_modifier("damage", "multiply", 0.97, Item.filter_attack_style([GameEnums.AttackStyle.PROJECTILE]))
+		Item.create_modifier("fire_rate", "increase", 0.06, Item.filter_attack_style([GameEnums.AttackStyle.PROJECTILE])),
+		Item.create_modifier("damage", "increase", -0.03, Item.filter_attack_style([GameEnums.AttackStyle.PROJECTILE]))
 	]
 	return item
 
@@ -222,9 +222,9 @@ static func _create_overclock_module() -> Item:
 	item.description = "All turrets gain +6% fire rate and damage. You have -8% max health"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("fire_rate", "multiply", 1.06, Item.filter_turret_type(["all"])),
-		Item.create_modifier("damage", "multiply", 1.06, Item.filter_turret_type(["all"])),
-		Item.create_modifier("player_max_health", "multiply", 0.92)
+		Item.create_modifier("fire_rate", "increase", 0.06, Item.filter_turret_type(["all"])),
+		Item.create_modifier("damage", "increase", 0.06, Item.filter_turret_type(["all"])),
+		Item.create_modifier("player_max_health", "increase", -0.08)
 	]
 	return item
 
@@ -239,7 +239,7 @@ static func _create_compact_design() -> Item:
 	item.max_stacks = 3
 	item.modifiers = [
 		Item.create_modifier("turret_penalty_reduction", "add", -0.04),
-		Item.create_modifier("range", "multiply", 0.96, Item.filter_turret_type(["all"]))
+		Item.create_modifier("range", "increase", -0.04, Item.filter_turret_type(["all"]))
 	]
 	return item
 
@@ -257,7 +257,7 @@ static func _create_regenerative_plating() -> Item:
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
 		Item.create_modifier("player_health_regen", "add", 3.0),
-		Item.create_modifier("player_speed", "multiply", 0.98)
+		Item.create_modifier("player_speed", "increase", -0.02)
 	]
 	return item
 
@@ -289,7 +289,7 @@ static func _create_precision_lens() -> Item:
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
 		Item.create_modifier("player_crit_chance", "add", 0.05),
-		Item.create_modifier("fire_rate", "multiply", 0.98, Item.filter_turret_type(["all"]))
+		Item.create_modifier("fire_rate", "increase", -0.02, Item.filter_turret_type(["all"]))
 	]
 	return item
 
@@ -303,7 +303,7 @@ static func _create_lucky_shot_module() -> Item:
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
 		Item.create_modifier("turret_crit_chance", "add", 0.05),
-		Item.create_modifier("damage", "multiply", 0.96, Item.filter_turret_type(["all"]))
+		Item.create_modifier("damage", "increase", -0.04, Item.filter_turret_type(["all"]))
 	]
 	return item
 
@@ -320,7 +320,7 @@ static func _create_adrenaline_core() -> Item:
 	item.description = "+5% movement speed, +2% player crit chance, but -8 max HP"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("player_speed", "multiply", 1.05),
+		Item.create_modifier("player_speed", "increase", 0.05),
 		Item.create_modifier("player_crit_chance", "add", 0.02),
 		Item.create_modifier("player_max_health", "add", -2.0)
 	]
@@ -335,9 +335,9 @@ static func _create_fortified_magazine() -> Item:
 	item.description = "+5% turret damage, +1 health regen, but -4% fire rate"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("damage", "multiply", 1.05, Item.filter_turret_type(["all"])),
+		Item.create_modifier("damage", "increase", 0.05, Item.filter_turret_type(["all"])),
 		Item.create_modifier("player_health_regen", "add", 1.0),
-		Item.create_modifier("fire_rate", "multiply", 0.96, Item.filter_turret_type(["all"]))
+		Item.create_modifier("fire_rate", "increase", -0.04, Item.filter_turret_type(["all"]))
 	]
 	return item
 
@@ -354,10 +354,10 @@ static func _create_experimental_chassis() -> Item:
 	item.description = "+8% turret damage, +4% fire rate, +3% crit chance. -12 max HP, -6% movement speed"
 	item.rarity = GameEnums.ItemRarity.COMMON
 	item.modifiers = [
-		Item.create_modifier("damage", "multiply", 1.08, Item.filter_turret_type(["all"])),
-		Item.create_modifier("fire_rate", "multiply", 1.04, Item.filter_turret_type(["all"])),
+		Item.create_modifier("damage", "increase", 0.08, Item.filter_turret_type(["all"])),
+		Item.create_modifier("fire_rate", "increase", 0.04, Item.filter_turret_type(["all"])),
 		Item.create_modifier("turret_crit_chance", "add", 0.03),
 		Item.create_modifier("player_max_health", "add", -3.0),
-		Item.create_modifier("player_speed", "multiply", 0.94)
+		Item.create_modifier("player_speed", "increase", -0.06)
 	]
 	return item

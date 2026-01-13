@@ -1,11 +1,15 @@
 extends Node
 
 ## Manages temporary buffs on turrets (e.g., for Chain Reaction item)
+## Uses Path of Exile-style modifier operations:
+##   - "add": Flat value added to base
+##   - "increase": Percentage modifier (stacks additively)
+##   - "more": Multiplicative modifier (each stacks independently)
 
 class Buff:
 	var stat: String
 	var value: float
-	var operation: String # "add" or "multiply"
+	var operation: String  # "add", "increase", or "more"
 	var duration: float
 	var time_remaining: float
 	var stack_count: int = 1
@@ -41,9 +45,10 @@ func _on_turret_fired(turret: Node2D) -> void:
 	var nearby = turret_manager.get_turrets_within_radius(turret.global_position, 150.0)
 
 	# Apply buff to nearby turrets
+	# Uses "more" operation since Chain Reaction stacks multiplicatively
 	for nearby_turret in nearby:
 		if is_instance_valid(nearby_turret):
-			var buff = Buff.new("fire_rate", 1.08, "multiply", 2.0, 5)
+			var buff = Buff.new("fire_rate", 1.08, "more", 2.0, 5)
 			apply_buff(nearby_turret, buff)
 
 func apply_buff(turret: Node2D, buff: Buff) -> void:
@@ -98,30 +103,57 @@ func _process(delta: float) -> void:
 		if turret and is_instance_valid(turret) and turret.has_method("update_stats"):
 			turret.update_stats()
 
-## Get total multiplier from active buffs for a turret's stat
-func get_buff_multiplier(turret: Node2D, stat: String) -> float:
+## Get total flat (add) value from active buffs for a turret's stat
+func get_buff_flat(turret: Node2D, stat: String) -> float:
+	var turret_id = turret.get_instance_id()
+	if not active_buffs.has(turret_id):
+		return 0.0
+
+	var total_flat := 0.0
+	for buff in active_buffs[turret_id]:
+		if buff.stat == stat and buff.operation == "add":
+			total_flat += buff.value * buff.stack_count
+
+	return total_flat
+
+
+## Get total increase value from active buffs for a turret's stat
+## Returns the sum of all increase percentages (to be used as: 1 + increase_total)
+func get_buff_increase(turret: Node2D, stat: String) -> float:
+	var turret_id = turret.get_instance_id()
+	if not active_buffs.has(turret_id):
+		return 0.0
+
+	var total_increase := 0.0
+	for buff in active_buffs[turret_id]:
+		if buff.stat == stat and buff.operation == "increase":
+			total_increase += buff.value * buff.stack_count
+
+	return total_increase
+
+
+## Get combined "more" multiplier from active buffs for a turret's stat
+## Each "more" buff multiplies independently (PoE style)
+func get_buff_more_multiplier(turret: Node2D, stat: String) -> float:
 	var turret_id = turret.get_instance_id()
 	if not active_buffs.has(turret_id):
 		return 1.0
 
 	var total_mult := 1.0
 	for buff in active_buffs[turret_id]:
-		if buff.stat == stat and buff.operation == "multiply":
+		if buff.stat == stat and buff.operation == "more":
 			# Stack multiplier: (1.08)^stack_count for Chain Reaction
 			var stack_mult = pow(buff.value, buff.stack_count)
 			total_mult *= stack_mult
 
 	return total_mult
 
-## Get total additive value from active buffs for a turret's stat
+
+## Legacy compatibility: Get total additive value (alias for get_buff_flat)
 func get_buff_add_value(turret: Node2D, stat: String) -> float:
-	var turret_id = turret.get_instance_id()
-	if not active_buffs.has(turret_id):
-		return 0.0
+	return get_buff_flat(turret, stat)
 
-	var total_add := 0.0
-	for buff in active_buffs[turret_id]:
-		if buff.stat == stat and buff.operation == "add":
-			total_add += buff.value * buff.stack_count
 
-	return total_add
+## Legacy compatibility: Get total multiplier (now returns "more" multiplier)
+func get_buff_multiplier(turret: Node2D, stat: String) -> float:
+	return get_buff_more_multiplier(turret, stat)

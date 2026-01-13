@@ -38,7 +38,7 @@ func update_display() -> void:
 	var total_turrets := TurretStatsService.get_total_turret_count()
 	
 	if turrets_title:
-		turrets_title		turrets_title.text = "TURRETS (%d)" % total_turrets
+		turrets_title.text = "TURRETS (%d)" % total_turrets
 	
 	_turret_buttons.clear()
 	

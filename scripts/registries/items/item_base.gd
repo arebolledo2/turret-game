@@ -19,6 +19,7 @@ extends Resource
 
 
 ## Helper to create a modifier dictionary
+## Operations: "add" (flat), "increase" (additive %), "more" (multiplicative %)
 static func create_modifier(stat: String, operation: String, value: float, filter: Dictionary = {}) -> Dictionary:
 	return {
 		"stat": stat,
@@ -26,6 +27,18 @@ static func create_modifier(stat: String, operation: String, value: float, filte
 		"value": value,
 		"filter": filter
 	}
+
+
+## Helper to create an increase/decrease modifier (percentage, stacks additively)
+## value: percentage as decimal (0.10 = 10% increase, -0.10 = 10% decrease)
+static func create_increase(stat: String, value: float, filter: Dictionary = {}) -> Dictionary:
+	return create_modifier(stat, "increase", value, filter)
+
+
+## Helper to create a more/less modifier (multiplicative, each stacks independently)
+## value: multiplier (1.5 = 50% more, 0.8 = 20% less)
+static func create_more(stat: String, value: float, filter: Dictionary = {}) -> Dictionary:
+	return create_modifier(stat, "more", value, filter)
 
 
 ## Helper to create turret type filter
