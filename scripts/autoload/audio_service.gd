@@ -8,8 +8,12 @@ const HIT_SOUND_LARGE_PATH = "res://assets/sounds/robot_hit_large.mp3"
 var hit_sound_small: AudioStream = null
 var hit_sound_large: AudioStream = null
 
-var sfx_pool: Array[AudioStreamPlayer] = []
+var sfx_pool: Array[AudioStreamPlayer2D] = []
 var max_pool_size: int = 16
+
+# Spatial audio settings
+const MAX_SOUND_DISTANCE = 1500.0
+const ATTENUATION_FALLOFF = 2.0
 
 func _ready() -> void:
 	# Load sounds - using ResourceLoader for better safety
@@ -21,7 +25,9 @@ func _ready() -> void:
 	
 	# Initialize pool of audio players
 	for i in range(max_pool_size):
-		var player = AudioStreamPlayer.new()
+		var player = AudioStreamPlayer2D.new()
+		player.max_distance = MAX_SOUND_DISTANCE
+		player.attenuation = ATTENUATION_FALLOFF
 		add_child(player)
 		sfx_pool.append(player)
 	
@@ -48,9 +54,9 @@ func _on_damage_dealt(_position: Vector2, _amount: float, _is_crit: bool, enemy:
 		sound_to_play = hit_sound_small
 	
 	if sound_to_play:
-		play_sfx(sound_to_play)
+		play_sfx(sound_to_play, _position)
 
-func play_sfx(stream: AudioStream) -> void:
+func play_sfx(stream: AudioStream, pos: Vector2 = Vector2.ZERO) -> void:
 	if not stream:
 		return
 		
@@ -58,9 +64,10 @@ func play_sfx(stream: AudioStream) -> void:
 	var player = _get_available_player()
 	if player:
 		player.stream = stream
+		player.global_position = pos
 		player.play()
 
-func _get_available_player() -> AudioStreamPlayer:
+func _get_available_player() -> AudioStreamPlayer2D:
 	# First pass: find a player that isn't playing
 	for player in sfx_pool:
 		if not player.playing:

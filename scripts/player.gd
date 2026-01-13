@@ -63,6 +63,11 @@ func _ready() -> void:
 	movement.initialize(self, sprite)
 	combat.initialize(self, weapon_pivot)
 
+	# Setup audio listener for spatial sounds
+	var listener = AudioListener2D.new()
+	add_child(listener)
+	listener.make_current()
+
 func _on_debug_toggled(type: int, _enabled: bool) -> void:
 	if type == GameEnums.HitboxType.PHYSICS:
 		queue_redraw()
