@@ -67,13 +67,57 @@ func find_valid_spawn_position(player: Node2D, max_attempts: int = 50) -> Vector
 	var margin := 50.0 # Keep away from edges
 
 	for i in max_attempts:
-		# Random position within arena (handles both rectangular and isometric modes)
-		var pos := ArenaBoundsService.get_random_arena_position(margin)
+		# Generate center-biased position using normal distribution
+		var pos := get_center_biased_position(margin)
 
 		if is_position_valid(pos, player):
 			return pos
 
 	return Vector2.INF # Failed to find valid position
+
+func get_center_biased_position(margin: float) -> Vector2:
+	"""Generate position biased toward arena center using normal distribution.
+
+	Uses Box-Muller transform to generate normally distributed offsets from center.
+	Standard deviation set to 1/3 of arena radius to concentrate ~99.7% within bounds.
+	"""
+	var arena_center := Vector2.ZERO
+	var max_radius: float = min(_get_arena_effective_radius(margin), _get_max_spawn_radius())
+
+	# Generate random angle
+	var angle := randf() * TAU
+
+	# Generate radius using normal distribution (Box-Muller transform)
+	# Standard deviation = max_radius / 3 keeps most spawns within arena
+	var u1 := randf()
+	var u2 := randf()
+	var normal := sqrt(-2.0 * log(u1)) * cos(TAU * u2)
+	var radius: float = abs(normal) * (max_radius / 3.0)
+	radius = clamp(radius, 0.0, max_radius)
+
+	# Convert polar to cartesian
+	var offset: Vector2 = Vector2(cos(angle), sin(angle)) * radius
+	var pos: Vector2 = arena_center + offset
+
+	# Ensure position is within arena bounds
+	return ArenaBoundsService.clamp_to_arena(pos, margin)
+
+func _get_arena_effective_radius(margin: float) -> float:
+	"""Get effective spawn radius based on arena shape."""
+	var half_width: float = (ArenaBoundsService.arena_width / 2.0) - margin
+	var half_height: float = (ArenaBoundsService.arena_height / 2.0) - margin
+
+	if ArenaBoundsService.is_isometric():
+		# Diamond inscribed radius (distance from center to midpoint of edge)
+		return min(half_width, half_height)
+	else: # RECTANGULAR
+		# Use average of width and height for radius
+		return (half_width + half_height) / 2.0
+
+func _get_max_spawn_radius() -> float:
+	"""Get maximum spawn radius to keep turrets reasonably centered.
+	Hard-coded to 40% for tight clustering near center."""
+	return _get_arena_effective_radius(50.0) * 0.4 # 40% of arena radius for tight clustering
 
 func is_position_valid(pos: Vector2, player: Node2D) -> bool:
 	# Check distance from player
@@ -118,8 +162,8 @@ func find_valid_spawn_position_excluding(player: Node2D, existing_positions: Arr
 	var margin := 50.0
 
 	for i in max_attempts:
-		# Random position within arena (handles both rectangular and isometric modes)
-		var pos := ArenaBoundsService.get_random_arena_position(margin)
+		# Generate center-biased position using normal distribution
+		var pos := get_center_biased_position(margin)
 
 		# Check distance from player
 		if player and pos.distance_to(player.global_position) < GameConstants.TURRET_PLAYER_EXCLUSION:

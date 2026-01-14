@@ -95,7 +95,7 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 
 	# Add custom panel style with less transparency
 	var panel_style = StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.15, 0.15, 0.15, 0.95)  # Dark gray with high opacity
+	panel_style.bg_color = Color(0.15, 0.15, 0.15, 0.95) # Dark gray with high opacity
 	panel_style.border_color = Color(0.3, 0.3, 0.3, 1.0)
 	panel_style.set_border_width_all(2)
 	panel_style.set_corner_radius_all(8)
@@ -143,12 +143,12 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 
 	# Add button style for better visibility
 	var button_style = StyleBoxFlat.new()
-	button_style.bg_color = Color(0.25, 0.25, 0.25, 0.95)  # Medium gray with high opacity
+	button_style.bg_color = Color(0.25, 0.25, 0.25, 0.95) # Medium gray with high opacity
 	button_style.set_corner_radius_all(4)
 	purchase_button.add_theme_stylebox_override("normal", button_style)
 
 	var button_hover = button_style.duplicate()
-	button_hover.bg_color = Color(0.35, 0.35, 0.35, 0.95)  # Lighter on hover
+	button_hover.bg_color = Color(0.35, 0.35, 0.35, 0.95) # Lighter on hover
 	purchase_button.add_theme_stylebox_override("hover", button_hover)
 	if offer.get("sold", false):
 		purchase_button.text = "SOLD"
@@ -173,7 +173,7 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 		var lock_style = StyleBoxFlat.new()
 		if offer.get("locked", false):
 			# Locked state - yellow/gold background
-			lock_style.bg_color = Color(0.8, 0.7, 0.2, 0.7)  # Gold with transparency
+			lock_style.bg_color = Color(0.8, 0.7, 0.2, 0.7) # Gold with transparency
 			lock_button.text = "🔒 Unlock"
 			lock_button.pressed.connect(func(): shop_manager.unlock_offer(index))
 		else:
@@ -278,7 +278,7 @@ func _create_item_offer_ui(offer: Dictionary, container: VBoxContainer) -> void:
 
 		var is_benefit = (modifier["operation"] == "multiply" and modifier["value"] > 1.0) or \
 						  (modifier["operation"] == "add" and modifier["value"] > 0.0)
-		var negative_color = Color(1.0, 0.8, 0.8)  # Brighter red for better readability
+		var negative_color = Color(1.0, 0.8, 0.8) # Brighter red for better readability
 		mod_label.add_theme_color_override("font_color", Color.GREEN if is_benefit else negative_color)
 		mod_label.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 		container.add_child(mod_label)
@@ -316,6 +316,11 @@ func _format_modifier(modifier: Dictionary) -> String:
 
 	if operation == "multiply":
 		display_value = (value - 1.0) * 100.0
+		sign_str = "+" if display_value > 0 else ""
+		return "%s%.1f%% %s%s" % [sign_str, display_value, stat_name, tag]
+	elif operation == "increase":
+		# Additive percentage modifier stored as decimal (0.10 = 10%)
+		display_value = value * 100.0
 		sign_str = "+" if display_value > 0 else ""
 		return "%s%.1f%% %s%s" % [sign_str, display_value, stat_name, tag]
 	elif operation == "add":
