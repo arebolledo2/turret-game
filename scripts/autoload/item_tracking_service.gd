@@ -12,7 +12,8 @@ var _modifier_service: ModifierService = null
 
 func _get_modifier_service() -> ModifierService:
 	if _modifier_service == null:
-		_modifier_service = get_node("/root/ModifierService")
+		_modifier_service = get_node_or_null("/root/ModifierService")
+		assert(_modifier_service != null, "ItemTrackingService: ModifierService autoload not found")
 	return _modifier_service
 
 

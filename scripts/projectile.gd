@@ -126,16 +126,7 @@ func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 	
 	# Apply direct damage (with Executioner's Mark bonus)
 	if enemy.has_method("take_damage"):
-		var final_damage := damage
-		# Executioner's Mark: +50% damage to enemies below 25% HP
-		if ItemRegistry.has_special_effect("executioner") and ItemTrackingService.item_counts.get("executioners_mark", 0) > 0:
-			var health_percent := 1.0
-			if enemy.has_method("get_health_percent"):
-				health_percent = enemy.get_health_percent()
-			elif "current_health" in enemy and "max_health" in enemy:
-				health_percent = enemy.current_health / enemy.max_health
-			if health_percent < 0.25:
-				final_damage *= 1.5
+		var final_damage := _calculate_damage_with_executioner(damage, enemy)
 		enemy.take_damage(final_damage, is_crit)
 	
 	# Apply DoT if applicable
@@ -161,14 +152,7 @@ func _do_aoe_explosion() -> void:
 		var distance = explosion_pos.distance_to(enemy.global_position)
 		if distance <= aoe_radius:
 			if enemy.has_method("take_damage"):
-				var aoe_damage := damage
-				# Executioner's Mark: +50% damage to enemies below 25% HP
-				if ItemRegistry.has_special_effect("executioner") and ItemTrackingService.item_counts.get("executioners_mark", 0) > 0:
-					var health_percent := 1.0
-					if enemy.has_method("get_health_percent"):
-						health_percent = enemy.get_health_percent()
-					if health_percent < 0.25:
-						aoe_damage *= 1.5
+				var aoe_damage := _calculate_damage_with_executioner(damage, enemy)
 				enemy.take_damage(aoe_damage, is_crit)
 
 			# Apply DoT to all enemies in AoE
@@ -182,6 +166,23 @@ func _do_aoe_explosion() -> void:
 
 	# Visual feedback for explosion (spawn effect or flash)
 	_spawn_explosion_effect()
+
+## Calculate damage with Executioner's Mark bonus (+50% to enemies below 25% HP)
+func _calculate_damage_with_executioner(base_damage: float, enemy: Node2D) -> float:
+	# Check if player owns the Executioner's Mark item
+	if ItemTrackingService.item_counts.get("executioners_mark", 0) <= 0:
+		return base_damage
+
+	var health_percent := 1.0
+	if enemy.has_method("get_health_percent"):
+		health_percent = enemy.get_health_percent()
+	elif "current_health" in enemy and "max_health" in enemy and enemy.max_health > 0:
+		health_percent = enemy.current_health / enemy.max_health
+
+	if health_percent < 0.25:
+		return base_damage * 1.5
+	return base_damage
+
 
 ## Spawn a visual explosion effect
 func _spawn_explosion_effect() -> void:
