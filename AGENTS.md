@@ -31,9 +31,10 @@ Game logic split into **focused service singletons** in `scripts/autoload/`:
 **Player & Combat:**
 - **PlayerStatsService** - Player health (with regen), speed, luck, and crit stats
 - **TurretStatsService** - Turret counts, diversity, stat calculation with modifiers, and purchase penalties
-- **ModifierService** - Active modifiers management (used by all stat services)
-- **ItemTrackingService** - Item collection tracking and economy multipliers (Earn Rate, Shop Prices)
-- **LootService** - Manages item drops and loot review
+- **ModifierService** - Active modifiers management (uses ModifierSystem class)
+
+**Progression & Tech:**
+- **TechTreeService** - Research points, tech tree unlocks, turret type unlocks, and shop modifiers
 
 **Environment & Presentation:**
 - **ArenaBoundsService** - Arena geometry (rectangular vs isometric bounds)
@@ -58,9 +59,10 @@ All code uses services directly. No facade pattern.
 ### Registry Pattern
 Type definitions stored in **static registry classes**:
 
-- **EnemyRegistry** (`scripts/registries/enemy_registry.gd`) - Enemy type definitions (basic, fast, tank, exploder, lazy_wanderer, charger, neon_drone, lazy_shooter)
-- **TurretRegistry** (`scripts/registries/turret_registry.gd`) - Turret type definitions (normal, sniper, fire, plasma, shock, tesla)
+- **EnemyRegistry** (`scripts/registries/enemy_registry.gd`) - Enemy type definitions (basic, tank, lazy_wanderer, charger, lazy_shooter)
+- **TurretRegistry** (`scripts/registries/turret_registry.gd`) - Turret type definitions (normal, sniper, fire, plasma, shock, tesla, melee, mine)
 - **ItemRegistry** (`scripts/registries/item_registry.gd`) - Item definitions across 5 rarity tiers
+- **TechRegistry** (`scripts/registries/tech_registry.gd`) - Tech tree definitions across 6 paths (turret_offense, turret_utility, turret_unlock, player_combat, player_defense, economy)
 - **GameModeRegistry** (`scripts/registries/game_mode_registry.gd`) - Game mode definitions and categories
 
 ### Component-Based Player System
@@ -68,13 +70,31 @@ Player (`scripts/player.gd`) delegates to **behavior components** (plus PlayerHu
 
 - **PlayerMovement** - Input, speed, and arena bounds clamping
 - **PlayerCombat** - Auto-fire targeting and projectile spawning
-- **PlayerMeleeCombat** - Melee attack with windup, arc damage, and knockback
 - **PlayerTurretHandler** - Turret pickup, carry, and placement logic
 - **PlayerHurtbox** - Damage receipt from enemy hurtboxes with collision validation
 
 ### Modifier & Buff Systems
-- **ModifierService**: Manages permanent stat modifications (add/multiply) with filter support (turret_type, damage_type, attack_style, etc.).
+- **ModifierService**: Autoload wrapper for ModifierSystem. Manages permanent stat modifications.
+- **ModifierSystem** (`scripts/systems/modifier_system.gd`): Core modifier logic using PoE-style stacking (add/increase/more operations) with filter support (turret_type, damage_type, attack_style, entity_type).
 - **BuffSystem** (`scripts/systems/buff_system.gd`): Manages temporary, stackable, time-based buffs per turret instance.
+
+### Entity Component Systems
+**Enemy Components** (in `scripts/components/`):
+- **EnemyMovement** - Movement patterns with behavior system integration
+- **EnemyCombat** - Projectile and ranged attack handling
+- **EnemyStatusEffects** - DoT, slow, and other status effect tracking
+- **EnemyVisuals** - Sprite animation, damage flash, and death effects
+- **EnemyHurtbox** - Collision and damage receipt validation
+
+**Turret Components**:
+- **TurretCombat** (`scripts/components/turret_combat.gd`) - All attack logic (projectile, instant, AOE, chain, melee, deployable)
+- **TurretVisuals** (`scripts/components/turret_visuals.gd`) - Sprite animation, rotation, and visual effects
+
+**Enemy Behaviors** (in `scripts/components/behaviors/`):
+- **EnemyBehavior** - Base class for enemy AI behaviors
+- **ChaseBehavior** - Direct pursuit of player
+- **WanderBehavior** - Random wandering movement
+- **ChargeBehavior** - Wander until player is close, then charge aggressively
 
 ### Modular Item System
 Items organized by rarity in `scripts/registries/items/`:
@@ -97,7 +117,7 @@ Core game entities spawned during gameplay:
 
 - **DefenseTarget** (`scripts/defense_target.gd`) - Core entity for Tech Defense and Escort modes with barrier mechanics, reflection damage, and healing
 - **TunnelDoor** (`scripts/tunnel_door.gd`) - Breachable door entity for Tunneling game mode
-- **ScrapDrop** (`scripts/xp_drop.gd`) - Scrap pickups with magnet-based collection
+- **ScrapDrop** (`scripts/scrap_drop.gd`) - Scrap pickups with magnet-based collection
 - **TechDrop** (`scripts/tech_drop.gd`) - Item drops from wave completion with loot review
 - **ItemPickup** (`scripts/item_pickup.gd`) - Collectible item drops
 
@@ -117,7 +137,7 @@ UI components organized by function:
 
 **Screens**: StartSettings, GameModeSelect, DifficultySelect, WaveAnnouncement, PauseMenu, GameOverScreen, SettingsMenu, LootReviewScreen
 
-**Shop Components**: ShopOffersPanel, EconomyTab, PlayerTab, ItemsTab, TurretsTab
+**Shop Components**: ShopOffersPanel, TechTreePanel, TechNodeButton, EconomyTab, PlayerTab, ItemsTab, TurretsTab
 
 **Display Panels**: TurretDisplayUI, ItemDisplayUI, BuildDisplayUI, DefenseTargetHP, TunnelDoorProgress
 
