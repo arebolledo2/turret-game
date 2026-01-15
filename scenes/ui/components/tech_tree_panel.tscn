@@ -2,87 +2,101 @@
 
 [ext_resource type="Script" path="res://scripts/ui/shop/tech_tree_panel.gd" id="1_tech_tree"]
 
-[node name="TechTreePanel" type="VBoxContainer"]
+[node name="TechTreePanel" type="HBoxContainer"]
 offset_right = 1200.0
 offset_bottom = 700.0
-theme_override_constants/separation = 10
+theme_override_constants/separation = 15
 script = ExtResource("1_tech_tree")
 
-[node name="Header" type="HBoxContainer" parent="."]
-layout_mode = 2
-
-[node name="TitleLabel" type="Label" parent="Header"]
+[node name="LeftContainer" type="VBoxContainer" parent="."]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="Header" type="VBoxContainer" parent="LeftContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TitleLabel" type="Label" parent="LeftContainer/Header"]
+layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "TECH TREE"
 horizontal_alignment = 1
 
-[node name="ResearchLabel" type="Label" parent="Header"]
+[node name="ResearchLabel" type="Label" parent="LeftContainer/Header"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 20
 theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
 text = "🔬 Research: 0"
+horizontal_alignment = 1
 
-[node name="PathSelector" type="HBoxContainer" parent="."]
-layout_mode = 2
-theme_override_constants/separation = 8
-alignment = 1
-
-[node name="TechScroll" type="ScrollContainer" parent="."]
-custom_minimum_size = Vector2(0, 300)
+[node name="CategoriesScroll" type="ScrollContainer" parent="LeftContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="TechGrid" type="GridContainer" parent="TechScroll"]
+[node name="CategoriesContainer" type="VBoxContainer" parent="LeftContainer/CategoriesScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 3
-theme_override_constants/h_separation = 8
-theme_override_constants/v_separation = 8
-columns = 5
+theme_override_constants/separation = 15
 
-[node name="DetailPanel" type="PanelContainer" parent="."]
-custom_minimum_size = Vector2(0, 140)
+[node name="PreviewPanel" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(280, 0)
 layout_mode = 2
 
-[node name="DetailVBox" type="VBoxContainer" parent="DetailPanel"]
+[node name="PreviewVBox" type="VBoxContainer" parent="PreviewPanel"]
 layout_mode = 2
-theme_override_constants/separation = 5
+theme_override_constants/separation = 8
 
-[node name="DetailIcon" type="Label" parent="DetailPanel/DetailVBox"]
+[node name="PreviewHeader" type="Label" parent="PreviewPanel/PreviewVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+text = "TECH PREVIEW"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="PreviewPanel/PreviewVBox"]
+layout_mode = 2
+
+[node name="PreviewIcon" type="Label" parent="PreviewPanel/PreviewVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 48
 horizontal_alignment = 1
 
-[node name="DetailName" type="Label" parent="DetailPanel/DetailVBox"]
+[node name="PreviewName" type="Label" parent="PreviewPanel/PreviewVBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "Select a tech to purchase"
+theme_override_font_sizes/font_size = 20
+text = "Select a tech"
 horizontal_alignment = 1
 
-[node name="DetailDescription" type="Label" parent="DetailPanel/DetailVBox"]
+[node name="PreviewDescription" type="Label" parent="PreviewPanel/PreviewVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
-text = "Click on a tech to view purchase options"
+text = "Click on a tech to view details"
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="DetailCost" type="Label" parent="DetailPanel/DetailVBox"]
+[node name="HSeparator2" type="HSeparator" parent="PreviewPanel/PreviewVBox"]
+layout_mode = 2
+
+[node name="PreviewCost" type="Label" parent="PreviewPanel/PreviewVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
 
-[node name="DetailPrereqs" type="Label" parent="DetailPanel/DetailVBox"]
+[node name="PreviewPrereqs" type="Label" parent="PreviewPanel/PreviewVBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 13
 horizontal_alignment = 1
 autowrap_mode = 3
 
-[node name="UnlockButton" type="Button" parent="DetailPanel/DetailVBox"]
-custom_minimum_size = Vector2(200, 50)
+[node name="Spacer" type="Control" parent="PreviewPanel/PreviewVBox"]
 layout_mode = 2
-size_flags_horizontal = 4
+size_flags_vertical = 3
+
+[node name="UnlockButton" type="Button" parent="PreviewPanel/PreviewVBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
 theme_override_font_sizes/font_size = 18
 disabled = true
 text = "Select to Purchase"

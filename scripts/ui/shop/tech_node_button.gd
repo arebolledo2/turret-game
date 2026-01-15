@@ -14,15 +14,28 @@ var current_state: State = State.LOCKED
 @onready var border: Panel = $Border
 
 signal tech_selected(tech_id: String)
+signal tech_focused(tech_id: String)
+signal tech_purchase_requested(tech_id: String)
+
+
+func _ready() -> void:
+	focus_entered.connect(_on_focus_entered)
+	mouse_entered.connect(_on_mouse_entered)
+
+
+func _on_focus_entered() -> void:
+	if not tech_id.is_empty():
+		tech_focused.emit(tech_id)
+
+
+func _on_mouse_entered() -> void:
+	if not tech_id.is_empty():
+		tech_focused.emit(tech_id)
 
 
 func setup(tech_data: Dictionary) -> void:
 	tech_id = tech_data.get("id", "")
 	tech_def = tech_data
-
-	# Set icon
-	if icon_label:
-		icon_label.text = tech_data.get("icon", "?")
 
 	# Set tooltip (shows name + description)
 	tooltip_text = "%s\n%s\nCost: %d Research" % [
@@ -31,7 +44,22 @@ func setup(tech_data: Dictionary) -> void:
 		tech_data.get("cost", 0)
 	]
 
+	# Defer icon and state update until node is ready
+	if is_node_ready():
+		_apply_icon()
+		_update_state()
+	else:
+		ready.connect(_on_setup_ready, CONNECT_ONE_SHOT)
+
+
+func _on_setup_ready() -> void:
+	_apply_icon()
 	_update_state()
+
+
+func _apply_icon() -> void:
+	if icon_label and not tech_def.is_empty():
+		icon_label.text = tech_def.get("icon", "?")
 
 
 func _update_state() -> void:
@@ -102,4 +130,4 @@ func refresh() -> void:
 
 func _on_pressed() -> void:
 	if not tech_id.is_empty():
-		tech_selected.emit(tech_id)
+		tech_purchase_requested.emit(tech_id)
