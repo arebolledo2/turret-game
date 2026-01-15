@@ -101,8 +101,8 @@ func test_set_difficulty():
 
 func test_wave_duration_wave_1():
 	var duration = game_state.get_wave_duration(1)
-	assert_eq(duration, GameConstants.WAVE_DURATION_EARLY,
-		"Wave 1 duration should equal early duration")
+	assert_eq(duration, GameConstants.WAVE_DURATION_BASE,
+		"Wave 1 duration should equal base duration")
 
 
 func test_wave_duration_increases():
@@ -114,10 +114,10 @@ func test_wave_duration_increases():
 
 func test_wave_duration_formula():
 	var wave = 1
-	var expected = GameConstants.WAVE_DURATION_EARLY
+	var expected = GameConstants.WAVE_DURATION_BASE
 	var actual = game_state.get_wave_duration(wave)
 
-	assert_eq(actual, expected, "Wave 1 duration should equal early duration")
+	assert_eq(actual, expected, "Wave 1 duration should equal base duration")
 
 
 func test_wave_duration_wave_10():

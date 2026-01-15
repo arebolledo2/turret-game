@@ -24,9 +24,9 @@ func before_each() -> void:
 
 func test_get_wave_duration_wave_1():
 	var duration = wave_controller.get_wave_duration(1)
-	var expected = GameConstants.WAVE_DURATION_EARLY  # Early wave duration
+	var expected = GameConstants.WAVE_DURATION_BASE  # Base wave duration
 
-	assert_eq(duration, expected, "Wave 1 duration should be early duration")
+	assert_eq(duration, expected, "Wave 1 duration should be base duration")
 
 
 func test_get_wave_duration_scales_with_wave():

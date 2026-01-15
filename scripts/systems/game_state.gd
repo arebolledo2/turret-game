@@ -83,16 +83,11 @@ func get_turret_stats(turret_type: String) -> Dictionary:
 
 ## Get wave duration for a specific wave
 func get_wave_duration(wave: int) -> float:
-	if wave <= 1:
-		return GameConstants.WAVE_DURATION_EARLY
-	elif wave < GameConstants.WAVE_DURATION_MID_THRESHOLD:
-		var t: float = float(wave - 1) / float(GameConstants.WAVE_DURATION_MID_THRESHOLD - 1)
-		return lerpf(GameConstants.WAVE_DURATION_EARLY, GameConstants.WAVE_DURATION_MID, t)
-	elif wave < GameConstants.WAVE_DURATION_LATE_THRESHOLD:
-		var t: float = float(wave - GameConstants.WAVE_DURATION_MID_THRESHOLD) / float(GameConstants.WAVE_DURATION_LATE_THRESHOLD - GameConstants.WAVE_DURATION_MID_THRESHOLD)
-		return lerpf(GameConstants.WAVE_DURATION_MID, GameConstants.WAVE_DURATION_LATE, t)
-	else:
+	# Linear scaling: 30s, 35s, 40s, 45s, 50s, 55s, 60s (capped at wave 7+)
+	if wave >= GameConstants.WAVE_DURATION_CAP_THRESHOLD:
 		return GameConstants.WAVE_DURATION_CAP
+	var duration: float = GameConstants.WAVE_DURATION_BASE + (wave - 1) * GameConstants.WAVE_DURATION_INCREMENT
+	return duration
 
 
 ## Get enemy count for a specific wave

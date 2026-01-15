@@ -102,18 +102,14 @@ const ENEMY_RANK_CAPT_WAVE: int = 10
 const WAVE_ANNOUNCEMENT_TIME: float = 1.5
 const TURRET_SPAWN_TIME: float = 0.5
 const BETWEEN_WAVE_PAUSE: float = 0.5
-const WAVE_BASE_DURATION: float = 25.0 # wave 1
-const WAVE_DURATION_INCREMENT: float = 4.0 # per wave
 const WAVE_BASE_ENEMY_COUNT: int = 22
 const WAVE_ENEMY_INCREMENT: int = 8
 
-# Wave duration scaling (linear progression: 40s, 45s, 50s, 55s, 60s, 60s+)
-const WAVE_DURATION_EARLY: float = 40.0 # Wave 1
-const WAVE_DURATION_MID: float = 50.0 # Wave 3 target
-const WAVE_DURATION_LATE: float = 60.0 # Wave 5+ target
-const WAVE_DURATION_CAP: float = 60.0 # Wave 5+ cap
-const WAVE_DURATION_MID_THRESHOLD: int = 3
-const WAVE_DURATION_LATE_THRESHOLD: int = 5
+# Wave duration scaling (linear progression: 30s, 35s, 40s, 45s, 50s, 55s, 60s+)
+const WAVE_DURATION_BASE: float = 30.0 # Wave 1
+const WAVE_DURATION_INCREMENT: float = 5.0 # Per wave
+const WAVE_DURATION_CAP: float = 60.0 # Wave 7+ cap
+const WAVE_DURATION_CAP_THRESHOLD: int = 7
 
 # =============================================================================
 # ECONOMY
