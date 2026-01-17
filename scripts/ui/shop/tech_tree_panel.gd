@@ -31,6 +31,7 @@ const CATEGORIES := [
 
 var selected_tech_id: String = ""
 var tech_node_buttons: Array[TechNodeButton] = []
+var category_rows: Array[Array] = [] # Array of arrays, one per category
 
 
 func _ready() -> void:
@@ -43,6 +44,9 @@ func _ready() -> void:
 
 	# Build all categories
 	_build_all_categories()
+	
+	# Setup focus neighbors for gamepad navigation
+	call_deferred("_setup_tech_focus_neighbors")
 
 	# Initial display
 	_update_research_label()
@@ -53,14 +57,17 @@ func _build_all_categories() -> void:
 	for child in categories_container.get_children():
 		child.queue_free()
 	tech_node_buttons.clear()
+	category_rows.clear()
 
 	# Create a section for each category
 	for category in CATEGORIES:
-		var section := _create_category_section(category)
+		var row_buttons: Array[TechNodeButton] = []
+		var section := _create_category_section(category, row_buttons)
 		categories_container.add_child(section)
+		category_rows.append(row_buttons)
 
 
-func _create_category_section(category: Dictionary) -> VBoxContainer:
+func _create_category_section(category: Dictionary, row_buttons: Array[TechNodeButton]) -> VBoxContainer:
 	var section := VBoxContainer.new()
 	section.add_theme_constant_override("separation", 8)
 
@@ -97,6 +104,7 @@ func _create_category_section(category: Dictionary) -> VBoxContainer:
 		node_btn.tech_focused.connect(_on_tech_focused)
 		node_btn.tech_purchase_requested.connect(_on_tech_purchase_requested)
 		tech_node_buttons.append(node_btn)
+		row_buttons.append(node_btn)
 
 	section.add_child(techs_row)
 
@@ -252,11 +260,11 @@ func _scroll_to_focused_node() -> void:
 
 	# Scroll up if node is above visible area
 	if node_top < scroll_top:
-		var offset := node_top - scroll_top - 20  # 20px padding
+		var offset := node_top - scroll_top - 20 # 20px padding
 		categories_scroll.scroll_vertical += int(offset)
 	# Scroll down if node is below visible area
 	elif node_bottom > scroll_bottom:
-		var offset := node_bottom - scroll_bottom + 20  # 20px padding
+		var offset := node_bottom - scroll_bottom + 20 # 20px padding
 		categories_scroll.scroll_vertical += int(offset)
 
 
@@ -272,3 +280,54 @@ func grab_initial_focus() -> void:
 		if is_instance_valid(node_btn) and not node_btn.disabled:
 			node_btn.grab_focus()
 			return
+
+
+func _setup_tech_focus_neighbors() -> void:
+	"""Configure focus neighbors for proper gamepad navigation within tech tree"""
+	if category_rows.is_empty():
+		return
+	
+	# For each category row, set up horizontal and vertical navigation
+	for row_idx in range(category_rows.size()):
+		var row: Array = category_rows[row_idx]
+		if row.is_empty():
+			continue
+		
+		# Horizontal navigation within row
+		for i in range(row.size()):
+			var btn: TechNodeButton = row[i]
+			if not is_instance_valid(btn):
+				continue
+			
+			# Left neighbor (wrap to last in same row)
+			if i > 0:
+				btn.focus_neighbor_left = row[i - 1].get_path()
+			else:
+				btn.focus_neighbor_left = row[row.size() - 1].get_path()
+			
+			# Right neighbor (wrap to first in same row)
+			if i < row.size() - 1:
+				btn.focus_neighbor_right = row[i + 1].get_path()
+			else:
+				btn.focus_neighbor_right = row[0].get_path()
+			
+			# Vertical navigation - connect to corresponding position in adjacent rows
+			# Up neighbor
+			if row_idx > 0:
+				var prev_row: Array = category_rows[row_idx - 1]
+				if not prev_row.is_empty():
+					var target_idx := mini(i, prev_row.size() - 1)
+					btn.focus_neighbor_top = prev_row[target_idx].get_path()
+			
+			# Down neighbor
+			if row_idx < category_rows.size() - 1:
+				var next_row: Array = category_rows[row_idx + 1]
+				if not next_row.is_empty():
+					var target_idx := mini(i, next_row.size() - 1)
+					btn.focus_neighbor_bottom = next_row[target_idx].get_path()
+			else:
+				# Last row: prevent focus from escaping downward - wrap to top row
+				var first_row: Array = category_rows[0]
+				if not first_row.is_empty():
+					var target_idx := mini(i, first_row.size() - 1)
+					btn.focus_neighbor_bottom = first_row[target_idx].get_path()
