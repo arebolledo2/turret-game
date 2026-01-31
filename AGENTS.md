@@ -1,10 +1,10 @@
 # Turret Game - AI Agent Instructions
 
-Wave-based survival tower defense game built in **Godot 4.5** using GDScript. Player dodges enemies while turrets provide primary damage. Purchase turrets and items between waves using scrap earned from kills.
+Wave-based survival tower defense game built in **Godot 4.6** using GDScript. Player dodges enemies while turrets provide primary damage. Purchase turrets and items between waves using scrap earned from kills.
 
 ## Quick Reference
 
-- **Engine**: Godot 4.5
+- **Engine**: Godot 4.6
 - **Language**: GDScript with static typing
 - **Architecture**: Service-oriented with event bus pattern
 - **Key Pattern**: Signal bus (`Events`) for all cross-system communication
