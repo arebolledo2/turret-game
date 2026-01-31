@@ -1,53 +1,52 @@
-[gd_scene load_steps=10 format=3 uid="uid://bq5n7xwk8vh3r"]
+[gd_scene format=3 uid="uid://bq5n7xwk8vh3r"]
 
-[ext_resource type="Script" path="res://scripts/enemy.gd" id="1_2j3k4"]
-[ext_resource type="Texture2D" path="res://assets/sprites/enemy_tiny/enemy_south.png" id="2_south"]
-[ext_resource type="Script" path="res://scripts/components/enemy_hurtbox.gd" id="3_hurtbox"]
-[ext_resource type="Script" path="res://scripts/components/collision_manager.gd" id="4_collision_manager"]
+[ext_resource type="Script" uid="uid://ugfhi7two2i0" path="res://scripts/enemy.gd" id="1_2j3k4"]
+[ext_resource type="Texture2D" uid="uid://c8s5vfpq7q1wm" path="res://assets/sprites/enemy_tiny/enemy_south.png" id="2_south"]
+[ext_resource type="Script" uid="uid://dsb12yyswyuxh" path="res://scripts/components/enemy_hurtbox.gd" id="3_hurtbox"]
+[ext_resource type="Script" uid="uid://cr6gyte1nydlc" path="res://scripts/components/collision_manager.gd" id="4_collision_manager"]
 [ext_resource type="Resource" path="res://resources/collision_profiles/basic_enemy.tres" id="5_profile"]
-[ext_resource type="Script" path="res://scripts/components/enemy_movement.gd" id="6_movement"]
-[ext_resource type="Script" path="res://scripts/components/enemy_visuals.gd" id="7_visuals"]
-[ext_resource type="Script" path="res://scripts/components/enemy_status_effects.gd" id="8_status"]
-[ext_resource type="Script" path="res://scripts/components/enemy_combat.gd" id="9_combat"]
+[ext_resource type="Script" uid="uid://0g606xd5mcyx" path="res://scripts/components/enemy_movement.gd" id="6_movement"]
+[ext_resource type="Script" uid="uid://qwmwanmshw34" path="res://scripts/components/enemy_visuals.gd" id="7_visuals"]
+[ext_resource type="Script" uid="uid://djeaypbqccqle" path="res://scripts/components/enemy_status_effects.gd" id="8_status"]
+[ext_resource type="Script" uid="uid://0u63sdiet2kn" path="res://scripts/components/enemy_combat.gd" id="9_combat"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_Hurtbox"]
 radius = 24.0
 
-[node name="Enemy" type="CharacterBody2D"]
+[node name="Enemy" type="CharacterBody2D" unique_id=1534617363]
 collision_layer = 2
-collision_mask = 1
 script = ExtResource("1_2j3k4")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=800776095]
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=497184114]
 position = Vector2(0, -16)
 texture = ExtResource("2_south")
 
-[node name="CollisionManager" type="Node" parent="."]
+[node name="CollisionManager" type="Node" parent="." unique_id=106508793]
 script = ExtResource("4_collision_manager")
 profile = ExtResource("5_profile")
 physics_collision_path = NodePath("../CollisionShape2D")
 hurtbox_path = NodePath("../Hurtbox")
 
-[node name="Hurtbox" type="Area2D" parent="."]
+[node name="Hurtbox" type="Area2D" parent="." unique_id=1201967376]
 collision_layer = 32
 collision_mask = 16
 script = ExtResource("3_hurtbox")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=95671684]
 shape = SubResource("CircleShape2D_Hurtbox")
 
-[node name="Components" type="Node" parent="."]
+[node name="Components" type="Node" parent="." unique_id=1641805034]
 
-[node name="EnemyMovement" type="Node" parent="Components"]
+[node name="EnemyMovement" type="Node" parent="Components" unique_id=624774552]
 script = ExtResource("6_movement")
 
-[node name="EnemyVisuals" type="Node" parent="Components"]
+[node name="EnemyVisuals" type="Node" parent="Components" unique_id=1598716880]
 script = ExtResource("7_visuals")
 
-[node name="EnemyStatusEffects" type="Node" parent="Components"]
+[node name="EnemyStatusEffects" type="Node" parent="Components" unique_id=1612795972]
 script = ExtResource("8_status")
 
-[node name="EnemyCombat" type="Node" parent="Components"]
+[node name="EnemyCombat" type="Node" parent="Components" unique_id=1210778097]
 script = ExtResource("9_combat")

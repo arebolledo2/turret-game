@@ -1,19 +1,19 @@
-[gd_scene load_steps=4 format=3 uid="uid://projectile_scene_001"]
+[gd_scene format=3 uid="uid://cwjdaxyacc7qq"]
 
-[ext_resource type="Script" path="res://scripts/projectile.gd" id="1_projectile"]
-[ext_resource type="Texture2D" path="res://assets/sprites/projectile.png" id="2_sprite"]
+[ext_resource type="Script" uid="uid://rtqnrgapney0" path="res://scripts/projectile.gd" id="1_projectile"]
+[ext_resource type="Texture2D" uid="uid://ddaogqdgcw1ml" path="res://assets/sprites/projectile.png" id="2_sprite"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
 radius = 5.0
 
-[node name="Projectile" type="Area2D"]
+[node name="Projectile" type="Area2D" unique_id=1732562305]
 collision_layer = 4
 collision_mask = 96
 script = ExtResource("1_projectile")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=421501611]
 shape = SubResource("CircleShape2D_1")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1550611992]
 scale = Vector2(0.025, 0.025)
 texture = ExtResource("2_sprite")

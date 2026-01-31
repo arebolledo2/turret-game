@@ -1,9 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://tech_drop_scene_001"]
+[gd_scene format=3 uid="uid://mq8ju1mg3y8j"]
 
-[ext_resource type="Script" path="res://scripts/tech_drop.gd" id="1_tech_drop"]
-[ext_resource type="Script" path="res://scripts/components/enemy_hurtbox.gd" id="2_hurtbox"]
-[ext_resource type="Texture2D" path="res://assets/sprites/tech_drop.png" id="2_sprite"]
-
+[ext_resource type="Script" uid="uid://b4e5lgyc4jfef" path="res://scripts/tech_drop.gd" id="1_tech_drop"]
+[ext_resource type="Script" uid="uid://dsb12yyswyuxh" path="res://scripts/components/enemy_hurtbox.gd" id="2_hurtbox"]
+[ext_resource type="Texture2D" uid="uid://cyby8ukorv56k" path="res://assets/sprites/tech_drop.png" id="2_sprite"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_1"]
 radius = 20.0
@@ -16,35 +15,34 @@ radius = 22.0
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
 bg_color = Color(0.2, 0.2, 0.2, 0.8)
 
-[node name="TechDrop" type="CharacterBody2D"]
+[node name="TechDrop" type="CharacterBody2D" unique_id=776456945]
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("1_tech_drop")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1224373697]
 shape = SubResource("CircleShape2D_1")
 
-[node name="Hurtbox" type="Area2D" parent="."]
+[node name="Hurtbox" type="Area2D" parent="." unique_id=437727676]
 collision_layer = 32
 collision_mask = 0
 script = ExtResource("2_hurtbox")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=15384390]
 shape = SubResource("CircleShape2D_Hurtbox")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=990949604]
 scale = Vector2(0.125, 0.125)
 texture = ExtResource("2_sprite")
 
-[node name="GlowEffect" type="Sprite2D" parent="."]
+[node name="GlowEffect" type="Sprite2D" parent="." unique_id=237615727]
 visible = false
 modulate = Color(0.5, 0.9, 1, 0.5)
+z_index = -1
 scale = Vector2(30, 30)
 texture = SubResource("PlaceholderTexture2D_1")
-z_index = -1
 
-
-[node name="HealthBar" type="ProgressBar" parent="."]
+[node name="HealthBar" type="ProgressBar" parent="." unique_id=410726858]
 offset_left = -25.0
 offset_top = -40.0
 offset_right = 25.0
@@ -54,7 +52,7 @@ max_value = 60.0
 value = 60.0
 show_percentage = false
 
-[node name="IconLabel" type="Label" parent="."]
+[node name="IconLabel" type="Label" parent="." unique_id=1798871128]
 offset_left = -16.0
 offset_top = -16.0
 offset_right = 16.0

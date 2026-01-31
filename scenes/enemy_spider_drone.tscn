@@ -1,49 +1,48 @@
-[gd_scene load_steps=7 format=3 uid="uid://c8r3m44jtqpa5"]
+[gd_scene format=3 uid="uid://c8r3m44jtqpa5"]
 
-[ext_resource type="Script" path="res://scripts/enemy.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://assets/sprites/enemy_spider_drone/spider_drone_right.png" id="2_right"]
-[ext_resource type="Script" path="res://scripts/components/enemy_hurtbox.gd" id="4_hurtbox"]
-[ext_resource type="Script" path="res://scripts/components/collision_manager.gd" id="5_collision_manager"]
+[ext_resource type="Script" uid="uid://ugfhi7two2i0" path="res://scripts/enemy.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://1s4buqg4bo36" path="res://assets/sprites/enemy_spider_drone/spider_drone_right.png" id="2_right"]
+[ext_resource type="Script" uid="uid://dsb12yyswyuxh" path="res://scripts/components/enemy_hurtbox.gd" id="4_hurtbox"]
+[ext_resource type="Script" uid="uid://cr6gyte1nydlc" path="res://scripts/components/collision_manager.gd" id="5_collision_manager"]
 [ext_resource type="Resource" path="res://resources/collision_profiles/spider_enemy.tres" id="6_profile"]
-[ext_resource type="Script" path="res://scripts/components/enemy_movement.gd" id="7_movement"]
-[ext_resource type="Script" path="res://scripts/components/enemy_visuals.gd" id="8_visuals"]
-[ext_resource type="Script" path="res://scripts/components/enemy_status_effects.gd" id="9_status"]
+[ext_resource type="Script" uid="uid://0g606xd5mcyx" path="res://scripts/components/enemy_movement.gd" id="7_movement"]
+[ext_resource type="Script" uid="uid://qwmwanmshw34" path="res://scripts/components/enemy_visuals.gd" id="8_visuals"]
+[ext_resource type="Script" uid="uid://djeaypbqccqle" path="res://scripts/components/enemy_status_effects.gd" id="9_status"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_Hurtbox"]
 radius = 18.0
 height = 48.0
 
-[node name="Enemy" type="CharacterBody2D"]
+[node name="Enemy" type="CharacterBody2D" unique_id=1734029701]
 collision_layer = 2
-collision_mask = 1
 script = ExtResource("1_script")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=86851020]
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1083669587]
 texture = ExtResource("2_right")
 
-[node name="CollisionManager" type="Node" parent="."]
+[node name="CollisionManager" type="Node" parent="." unique_id=47266861]
 script = ExtResource("5_collision_manager")
 profile = ExtResource("6_profile")
 physics_collision_path = NodePath("../CollisionShape2D")
 hurtbox_path = NodePath("../Hurtbox")
 
-[node name="Hurtbox" type="Area2D" parent="."]
+[node name="Hurtbox" type="Area2D" parent="." unique_id=1379045433]
 collision_layer = 32
 collision_mask = 16
 script = ExtResource("4_hurtbox")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=1082293078]
 shape = SubResource("CapsuleShape2D_Hurtbox")
 
-[node name="Components" type="Node" parent="."]
+[node name="Components" type="Node" parent="." unique_id=1635509837]
 
-[node name="EnemyMovement" type="Node" parent="Components"]
+[node name="EnemyMovement" type="Node" parent="Components" unique_id=1317174652]
 script = ExtResource("7_movement")
 
-[node name="EnemyVisuals" type="Node" parent="Components"]
+[node name="EnemyVisuals" type="Node" parent="Components" unique_id=1415297480]
 script = ExtResource("8_visuals")
 
-[node name="EnemyStatusEffects" type="Node" parent="Components"]
+[node name="EnemyStatusEffects" type="Node" parent="Components" unique_id=1626881993]
 script = ExtResource("9_status")

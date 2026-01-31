@@ -1,16 +1,16 @@
 [gd_scene format=3 uid="uid://c56dq8l7py2mu"]
 
-[node name="LootReview" type="Control"]
+[node name="LootReview" type="Control" unique_id=1985545585]
+process_mode = 3
 visible = false
 layout_mode = 3
-process_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Overlay" type="ColorRect" parent="."]
+[node name="Overlay" type="ColorRect" parent="." unique_id=2079107432]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -19,7 +19,7 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0, 0, 0, 0.7)
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=81691018]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -27,81 +27,79 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+[node name="Panel" type="PanelContainer" parent="CenterContainer" unique_id=1549077144]
 custom_minimum_size = Vector2(500, 400)
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel" unique_id=1905477198]
 layout_mode = 2
 theme_override_constants/margin_left = 30
 theme_override_constants/margin_top = 30
 theme_override_constants/margin_right = 30
 theme_override_constants/margin_bottom = 30
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer" unique_id=289383748]
 layout_mode = 2
 theme_override_constants/separation = 20
 
-[node name="TitleLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer" unique_id=518578282]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.843137, 0, 1)
 theme_override_font_sizes/font_size = 32
 text = "✨ LOOT FOUND!"
 horizontal_alignment = 1
 
-[node name="ItemCard" type="PanelContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+[node name="ItemCard" type="PanelContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer" unique_id=1100765552]
 layout_mode = 2
 
-[node name="ItemVBox" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ItemCard"]
+[node name="ItemVBox" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ItemCard" unique_id=119602316]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="RarityLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ItemCard/ItemVBox"]
+[node name="RarityLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ItemCard/ItemVBox" unique_id=810645602]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Common"
 horizontal_alignment = 1
 
-[node name="ItemNameLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ItemCard/ItemVBox"]
+[node name="ItemNameLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ItemCard/ItemVBox" unique_id=932857363]
 layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "Item Name"
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ItemCard/ItemVBox"]
+[node name="HSeparator" type="HSeparator" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ItemCard/ItemVBox" unique_id=397382981]
 layout_mode = 2
 
-[node name="ItemDescriptionLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ItemCard/ItemVBox"]
+[node name="ItemDescriptionLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ItemCard/ItemVBox" unique_id=71520022]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Item description goes here. It can be quite long."
 horizontal_alignment = 1
 autowrap_mode = 2
 
-[node name="CounterLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+[node name="CounterLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer" unique_id=1957756303]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 theme_override_font_sizes/font_size = 16
 text = "Item 1 of 3"
 horizontal_alignment = 1
 
-[node name="ButtonContainer" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+[node name="ButtonContainer" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer" unique_id=993779876]
 layout_mode = 2
 theme_override_constants/separation = 20
 alignment = 1
 
-[node name="DiscardButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
+[node name="DiscardButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer" unique_id=1451638409]
 custom_minimum_size = Vector2(150, 50)
 layout_mode = 2
-focus_mode = 2
 focus_neighbor_right = NodePath("../KeepButton")
 theme_override_font_sizes/font_size = 22
 text = "❌ DISCARD"
 
-[node name="KeepButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer"]
+[node name="KeepButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ButtonContainer" unique_id=554662480]
 custom_minimum_size = Vector2(150, 50)
 layout_mode = 2
-focus_mode = 2
 focus_neighbor_left = NodePath("../DiscardButton")
 theme_override_font_sizes/font_size = 22
 text = "✓ KEEP"

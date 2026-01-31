@@ -1,155 +1,155 @@
-[gd_scene load_steps=2 format=3 uid="uid://inventory_panel_001"]
+[gd_scene format=3 uid="uid://b00fns388x0h7"]
 
-[ext_resource type="Script" path="res://scripts/ui/components/inventory_panel.gd" id="1_inv"]
+[ext_resource type="Script" uid="uid://csqdh0ghasq1c" path="res://scripts/ui/components/inventory_panel.gd" id="1_inv"]
 
-[node name="InventoryPanel" type="VBoxContainer"]
-script = ExtResource("1_inv")
+[node name="InventoryPanel" type="VBoxContainer" unique_id=832084111]
 theme_override_constants/separation = 8
+script = ExtResource("1_inv")
 
-[node name="TurretsHeader" type="HBoxContainer" parent="."]
+[node name="TurretsHeader" type="HBoxContainer" parent="." unique_id=1533149293]
 layout_mode = 2
 
-[node name="TurretsTitle" type="Label" parent="TurretsHeader"]
+[node name="TurretsTitle" type="Label" parent="TurretsHeader" unique_id=1958015842]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "TURRETS (0)"
 
-[node name="Spacer" type="Control" parent="TurretsHeader"]
+[node name="Spacer" type="Control" parent="TurretsHeader" unique_id=1131947027]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="TurretsHint" type="Label" parent="TurretsHeader"]
+[node name="TurretsHint" type="Label" parent="TurretsHeader" unique_id=144715926]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 12
 text = "Select for details"
 
-[node name="TurretIconsRow" type="HBoxContainer" parent="."]
+[node name="TurretIconsRow" type="HBoxContainer" parent="." unique_id=406955661]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="TurretDetailsPanel" type="PanelContainer" parent="."]
+[node name="TurretDetailsPanel" type="PanelContainer" parent="." unique_id=1093890185]
 visible = false
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 
-[node name="TurretDetailsVBox" type="VBoxContainer" parent="TurretDetailsPanel"]
+[node name="TurretDetailsVBox" type="VBoxContainer" parent="TurretDetailsPanel" unique_id=170199906]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="TurretName" type="Label" parent="TurretDetailsPanel/TurretDetailsVBox"]
+[node name="TurretName" type="Label" parent="TurretDetailsPanel/TurretDetailsVBox" unique_id=1494936656]
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "Select a turret"
 horizontal_alignment = 1
 
-[node name="StatsHBox" type="HBoxContainer" parent="TurretDetailsPanel/TurretDetailsVBox"]
+[node name="StatsHBox" type="HBoxContainer" parent="TurretDetailsPanel/TurretDetailsVBox" unique_id=35310653]
 layout_mode = 2
 theme_override_constants/separation = 30
 
-[node name="LeftStats" type="VBoxContainer" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox"]
+[node name="LeftStats" type="VBoxContainer" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox" unique_id=1848070292]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="DamageLabel" type="Label" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats"]
+[node name="DamageLabel" type="Label" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats" unique_id=193456828]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "• Damage: --"
 
-[node name="RangeLabel" type="Label" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats"]
+[node name="RangeLabel" type="Label" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats" unique_id=1901348359]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "• Range: --"
 
-[node name="FireRateLabel" type="Label" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats"]
+[node name="FireRateLabel" type="Label" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox/LeftStats" unique_id=1720213600]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "• Fire Rate: --"
 
-[node name="RightStats" type="VBoxContainer" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox"]
+[node name="RightStats" type="VBoxContainer" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox" unique_id=1542156410]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="RotationLabel" type="Label" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats"]
+[node name="RotationLabel" type="Label" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats" unique_id=427974412]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "• Rotation: --"
 
-[node name="ProjSpeedLabel" type="Label" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats"]
+[node name="ProjSpeedLabel" type="Label" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats" unique_id=133480787]
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "• Proj Speed: --"
 
-[node name="DPSLabel" type="Label" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats"]
+[node name="DPSLabel" type="Label" parent="TurretDetailsPanel/TurretDetailsVBox/StatsHBox/RightStats" unique_id=669841193]
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_font_sizes/font_size = 14
 text = "• DPS: --"
 
-[node name="HSeparator" type="HSeparator" parent="."]
+[node name="HSeparator" type="HSeparator" parent="." unique_id=1286947273]
 layout_mode = 2
 
-[node name="ItemsHeader" type="HBoxContainer" parent="."]
+[node name="ItemsHeader" type="HBoxContainer" parent="." unique_id=847985630]
 layout_mode = 2
 
-[node name="ItemsTitle" type="Label" parent="ItemsHeader"]
+[node name="ItemsTitle" type="Label" parent="ItemsHeader" unique_id=1306510369]
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "ITEMS (0)"
 
-[node name="Spacer" type="Control" parent="ItemsHeader"]
+[node name="Spacer" type="Control" parent="ItemsHeader" unique_id=239437101]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="ItemsHint" type="Label" parent="ItemsHeader"]
+[node name="ItemsHint" type="Label" parent="ItemsHeader" unique_id=210209630]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
+theme_override_font_sizes/font_size = 12
 text = "Select for details"
 
-[node name="ItemsScrollContainer" type="ScrollContainer" parent="."]
+[node name="ItemsScrollContainer" type="ScrollContainer" parent="." unique_id=78605904]
 custom_minimum_size = Vector2(0, 64)
 layout_mode = 2
 horizontal_scroll_mode = 2
 vertical_scroll_mode = 0
 
-[node name="ItemsHBox" type="HBoxContainer" parent="ItemsScrollContainer"]
+[node name="ItemsHBox" type="HBoxContainer" parent="ItemsScrollContainer" unique_id=1998386895]
 layout_mode = 2
 theme_override_constants/separation = 6
 
-[node name="ItemDetailsPanel" type="PanelContainer" parent="."]
+[node name="ItemDetailsPanel" type="PanelContainer" parent="." unique_id=1109452354]
 visible = false
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 
-[node name="ItemDetailsVBox" type="VBoxContainer" parent="ItemDetailsPanel"]
+[node name="ItemDetailsVBox" type="VBoxContainer" parent="ItemDetailsPanel" unique_id=1145339847]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="ItemHeader" type="HBoxContainer" parent="ItemDetailsPanel/ItemDetailsVBox"]
+[node name="ItemHeader" type="HBoxContainer" parent="ItemDetailsPanel/ItemDetailsVBox" unique_id=755189369]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="ItemIcon" type="Label" parent="ItemDetailsPanel/ItemDetailsVBox/ItemHeader"]
+[node name="ItemIcon" type="Label" parent="ItemDetailsPanel/ItemDetailsVBox/ItemHeader" unique_id=611531424]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "🧲"
 
-[node name="ItemName" type="Label" parent="ItemDetailsPanel/ItemDetailsVBox/ItemHeader"]
+[node name="ItemName" type="Label" parent="ItemDetailsPanel/ItemDetailsVBox/ItemHeader" unique_id=1159966147]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 16
 text = "Item Name"
 
-[node name="ItemRarity" type="Label" parent="ItemDetailsPanel/ItemDetailsVBox/ItemHeader"]
+[node name="ItemRarity" type="Label" parent="ItemDetailsPanel/ItemDetailsVBox/ItemHeader" unique_id=29102647]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 12
 text = "Common"
 
-[node name="ItemDescription" type="Label" parent="ItemDetailsPanel/ItemDetailsVBox"]
+[node name="ItemDescription" type="Label" parent="ItemDetailsPanel/ItemDetailsVBox" unique_id=1357182767]
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 14
 text = "Item description goes here"
 autowrap_mode = 2
