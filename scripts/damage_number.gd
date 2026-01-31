@@ -9,14 +9,6 @@ func _ready() -> void:
 	# Render above all gameplay entities
 	z_index = 100
 
-	# Start animation
-	var tween = create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(self, "position:y", position.y - 20, duration).set_ease(Tween.EASE_OUT)
-	tween.tween_property(self, "modulate:a", 0.0, duration).set_ease(Tween.EASE_IN).set_delay(duration * 0.5)
-	tween.tween_property(self, "scale", Vector2(0.8, 0.8), duration).set_ease(Tween.EASE_IN).set_delay(duration * 0.3)
-	tween.chain().tween_callback(queue_free)
-
 func setup(amount: float, is_crit: bool = false) -> void:
 	if label:
 		label.text = str(int(amount))
@@ -33,3 +25,27 @@ func setup(amount: float, is_crit: bool = false) -> void:
 			# Normal white color
 			label.add_theme_color_override("font_color", Color.WHITE)
 			label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.DAMAGE_NORMAL))
+	
+	# Start animation AFTER position has been set by the caller
+	# Rise 25% of distance, pause, then fade
+	var rise_distance: float = 40.0 # Rise distance in pixels
+	var rise_duration: float = duration * 0.25 # Rise in first 25% of time
+	var pause_duration: float = duration * 0.25 # Pause for next 25%
+	var fade_duration: float = duration * 0.5 # Fade during remaining 50%
+	
+	var tween = create_tween()
+	
+	# Phase 1: Rise up quickly
+	tween.tween_property(self, "position:y", position.y - rise_distance, rise_duration).set_ease(Tween.EASE_OUT)
+	
+	# Phase 2: Pause (just wait)
+	tween.tween_interval(pause_duration)
+	
+	# Phase 3: Fade out and shrink (parallel with each other)
+	tween.set_parallel(true)
+	tween.tween_property(self, "modulate:a", 0.0, fade_duration).set_ease(Tween.EASE_IN)
+	tween.tween_property(self, "scale", Vector2(0.8, 0.8), fade_duration).set_ease(Tween.EASE_IN)
+	tween.set_parallel(false)
+	
+	# Queue free after animation completes
+	tween.tween_callback(queue_free)
