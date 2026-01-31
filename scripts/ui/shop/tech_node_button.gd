@@ -4,11 +4,12 @@ class_name TechNodeButton
 ## Tech node button component for tech tree UI
 ## Shows tech icon, name, and state (locked/too expensive/affordable/purchased)
 
-enum State { LOCKED, TOO_EXPENSIVE, AFFORDABLE, PURCHASED }
+enum State {LOCKED, TOO_EXPENSIVE, AFFORDABLE, PURCHASED}
 
 var tech_id: String = ""
 var tech_def: Dictionary = {}
 var current_state: State = State.LOCKED
+var can_purchase: bool = false # Track if purchase is allowed (keeps buttons focusable for gamepad navigation)
 
 @onready var icon_label: Label = $IconLabel
 @onready var border: Panel = $Border
@@ -90,38 +91,39 @@ func _update_state() -> void:
 		current_state = State.LOCKED
 
 	# Apply visual styling based on state
+	# All states keep disabled = false for gamepad focus navigation
+	# Purchase is controlled by can_purchase flag checked in _on_pressed()
+	can_purchase = (current_state == State.AFFORDABLE)
+
+	# Apply visual styling based on state
 	match current_state:
 		State.PURCHASED:
-			modulate = Color(0.4, 1.0, 0.4)  # Green
-			disabled = true
+			modulate = Color(0.4, 1.0, 0.4) # Green
 			if icon_label:
 				icon_label.modulate = Color(1, 1, 1)
 			if border:
-				border.modulate = Color(0.2, 0.8, 0.2)  # Dark green border
+				border.modulate = Color(0.2, 0.8, 0.2) # Dark green border
 
 		State.AFFORDABLE:
-			modulate = Color(1.0, 1.0, 0.4)  # Yellow
-			disabled = false
+			modulate = Color(1.0, 1.0, 0.4) # Yellow
 			if icon_label:
 				icon_label.modulate = Color(1, 1, 1)
 			if border:
-				border.modulate = Color(0.8, 0.8, 0.2)  # Solid yellow border
+				border.modulate = Color(0.8, 0.8, 0.2) # Solid yellow border
 
 		State.TOO_EXPENSIVE:
-			modulate = Color(1.0, 1.0, 0.4)  # Yellow (same color)
-			disabled = true  # Can't click
+			modulate = Color(1.0, 1.0, 0.4) # Yellow (same color)
 			if icon_label:
 				icon_label.modulate = Color(0.9, 0.9, 0.9)
 			if border:
-				border.modulate = Color(0.6, 0.6, 0.1)  # Dimmer yellow border
+				border.modulate = Color(0.6, 0.6, 0.1) # Dimmer yellow border
 
 		State.LOCKED:
-			modulate = Color(0.5, 0.5, 0.5)  # Gray
-			disabled = true
+			modulate = Color(0.5, 0.5, 0.5) # Gray
 			if icon_label:
 				icon_label.modulate = Color(0.7, 0.7, 0.7)
 			if border:
-				border.modulate = Color(0.3, 0.3, 0.3)  # Dark gray border
+				border.modulate = Color(0.3, 0.3, 0.3) # Dark gray border
 
 
 func refresh() -> void:
@@ -129,5 +131,5 @@ func refresh() -> void:
 
 
 func _on_pressed() -> void:
-	if not tech_id.is_empty():
+	if not tech_id.is_empty() and can_purchase:
 		tech_purchase_requested.emit(tech_id)
