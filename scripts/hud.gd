@@ -162,7 +162,6 @@ func _ready() -> void:
 func _setup_fonts() -> void:
 	## Setup all font sizes using centralized FontSizes constants
 	## This ensures fonts scale properly and can be changed in one place
-
 	# Main HUD labels
 	health_label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.BODY))
 	wave_label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.HEADING_3))
@@ -367,7 +366,7 @@ func _on_research_points_gained(amount: int, total: int) -> void:
 	# Show floating notification
 	var notification = Label.new()
 	notification.text = "+%d Research" % amount
-	notification.modulate = Color(0.4, 0.8, 1.0)  # Light blue
+	notification.modulate = Color(0.4, 0.8, 1.0) # Light blue
 	notification.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.BODY))
 	notification.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	notification.add_theme_constant_override("outline_size", 2)
@@ -537,17 +536,14 @@ func _on_damage_dealt(pos: Vector2, amount: float, is_crit: bool, _enemy: Node2D
 		return
 
 	var damage_number = damage_number_scene.instantiate()
-
-	# Convert world position to screen position
-	var viewport = get_viewport()
-	var camera = viewport.get_camera_2d()
-	if camera:
-		var viewport_size = viewport.get_visible_rect().size
-		var screen_pos = (pos - camera.global_position) * camera.zoom + viewport_size / 2
-		damage_number_layer.add_child(damage_number)
-		damage_number.position = screen_pos + Vector2(randf_range(-10, 10), -20)
+	
+	# Add to world space (Main scene) so numbers stay anchored to map position
+	var main_scene = get_tree().root.get_node_or_null("Main")
+	if main_scene:
+		main_scene.add_child(damage_number)
+		damage_number.global_position = pos + Vector2(randf_range(-10, 10), -20)
 	else:
-		# Fallback if no camera (shouldn't happen in normal gameplay)
+		# Fallback to HUD layer if Main not found
 		damage_number_layer.add_child(damage_number)
 		damage_number.position = pos + Vector2(randf_range(-10, 10), -20)
 
@@ -562,17 +558,14 @@ func _on_dot_damage_dealt(pos: Vector2, amount: float) -> void:
 		return
 
 	var damage_number = damage_number_scene.instantiate()
-
-	# Convert world position to screen position
-	var viewport = get_viewport()
-	var camera = viewport.get_camera_2d()
-	if camera:
-		var viewport_size = viewport.get_visible_rect().size
-		var screen_pos = (pos - camera.global_position) * camera.zoom + viewport_size / 2
-		damage_number_layer.add_child(damage_number)
-		damage_number.position = screen_pos + Vector2(randf_range(-10, 10), -20)
+	
+	# Add to world space (Main scene) so numbers stay anchored to map position
+	var main_scene = get_tree().root.get_node_or_null("Main")
+	if main_scene:
+		main_scene.add_child(damage_number)
+		damage_number.global_position = pos + Vector2(randf_range(-10, 10), -20)
 	else:
-		# Fallback if no camera (shouldn't happen in normal gameplay)
+		# Fallback to HUD layer if Main not found
 		damage_number_layer.add_child(damage_number)
 		damage_number.position = pos + Vector2(randf_range(-10, 10), -20)
 
