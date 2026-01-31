@@ -22,6 +22,7 @@ signal tech_purchase_requested(tech_id: String)
 func _ready() -> void:
 	focus_entered.connect(_on_focus_entered)
 	mouse_entered.connect(_on_mouse_entered)
+	pressed.connect(_on_pressed)
 
 
 func _on_focus_entered() -> void:
