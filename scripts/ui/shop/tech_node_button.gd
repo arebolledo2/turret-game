@@ -13,6 +13,7 @@ var can_purchase: bool = false # Track if purchase is allowed (keeps buttons foc
 
 @onready var icon_label: Label = $IconLabel
 @onready var border: Panel = $Border
+var checkmark_label: Label = null
 
 signal tech_selected(tech_id: String)
 signal tech_focused(tech_id: String)
@@ -23,6 +24,40 @@ func _ready() -> void:
 	focus_entered.connect(_on_focus_entered)
 	mouse_entered.connect(_on_mouse_entered)
 	pressed.connect(_on_pressed)
+	_setup_border_style()
+	_setup_checkmark()
+
+
+func _setup_border_style() -> void:
+	# Create a visible StyleBoxFlat for the border panel
+	if border:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color(0, 0, 0, 0) # Transparent background
+		style.border_width_left = 3
+		style.border_width_right = 3
+		style.border_width_top = 3
+		style.border_width_bottom = 3
+		style.border_color = Color(0.3, 0.3, 0.3) # Default gray border
+		style.corner_radius_top_left = 4
+		style.corner_radius_top_right = 4
+		style.corner_radius_bottom_left = 4
+		style.corner_radius_bottom_right = 4
+		border.add_theme_stylebox_override("panel", style)
+
+
+func _setup_checkmark() -> void:
+	# Create checkmark label for purchased state
+	checkmark_label = Label.new()
+	checkmark_label.text = "✓"
+	checkmark_label.add_theme_font_size_override("font_size", 24)
+	checkmark_label.add_theme_color_override("font_color", Color(0.2, 1.0, 0.2))
+	checkmark_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	checkmark_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	checkmark_label.set_anchors_preset(Control.PRESET_FULL_RECT)
+	checkmark_label.offset_right = -4
+	checkmark_label.offset_bottom = -2
+	checkmark_label.visible = false
+	add_child(checkmark_label)
 
 
 func _on_focus_entered() -> void:
@@ -99,32 +134,69 @@ func _update_state() -> void:
 	# Apply visual styling based on state
 	match current_state:
 		State.PURCHASED:
-			modulate = Color(0.4, 1.0, 0.4) # Green
+			modulate = Color(1.0, 1.0, 1.0) # Normal modulate
 			if icon_label:
-				icon_label.modulate = Color(1, 1, 1)
+				icon_label.modulate = Color(1.0, 1.0, 1.0)
 			if border:
-				border.modulate = Color(0.2, 0.8, 0.2) # Dark green border
+				# Bright green glowing border
+				var style: StyleBoxFlat = border.get_theme_stylebox("panel")
+				if style:
+					style.border_color = Color(0.2, 1.0, 0.2) # Bright green
+					style.border_width_left = 4
+					style.border_width_right = 4
+					style.border_width_top = 4
+					style.border_width_bottom = 4
+					style.bg_color = Color(0.1, 0.3, 0.1, 0.5) # Subtle green background
+			if checkmark_label:
+				checkmark_label.visible = true
 
 		State.AFFORDABLE:
-			modulate = Color(1.0, 1.0, 0.4) # Yellow
+			modulate = Color(1.0, 1.0, 0.9) # Slightly warm
 			if icon_label:
 				icon_label.modulate = Color(1, 1, 1)
 			if border:
-				border.modulate = Color(0.8, 0.8, 0.2) # Solid yellow border
+				var style: StyleBoxFlat = border.get_theme_stylebox("panel")
+				if style:
+					style.border_color = Color(1.0, 0.9, 0.2) # Yellow border
+					style.border_width_left = 3
+					style.border_width_right = 3
+					style.border_width_top = 3
+					style.border_width_bottom = 3
+					style.bg_color = Color(0, 0, 0, 0)
+			if checkmark_label:
+				checkmark_label.visible = false
 
 		State.TOO_EXPENSIVE:
-			modulate = Color(1.0, 1.0, 0.4) # Yellow (same color)
+			modulate = Color(0.8, 0.8, 0.6) # Dimmer
 			if icon_label:
 				icon_label.modulate = Color(0.9, 0.9, 0.9)
 			if border:
-				border.modulate = Color(0.6, 0.6, 0.1) # Dimmer yellow border
+				var style: StyleBoxFlat = border.get_theme_stylebox("panel")
+				if style:
+					style.border_color = Color(0.6, 0.5, 0.1) # Dim yellow
+					style.border_width_left = 2
+					style.border_width_right = 2
+					style.border_width_top = 2
+					style.border_width_bottom = 2
+					style.bg_color = Color(0, 0, 0, 0)
+			if checkmark_label:
+				checkmark_label.visible = false
 
 		State.LOCKED:
 			modulate = Color(0.5, 0.5, 0.5) # Gray
 			if icon_label:
 				icon_label.modulate = Color(0.7, 0.7, 0.7)
 			if border:
-				border.modulate = Color(0.3, 0.3, 0.3) # Dark gray border
+				var style: StyleBoxFlat = border.get_theme_stylebox("panel")
+				if style:
+					style.border_color = Color(0.3, 0.3, 0.3) # Gray
+					style.border_width_left = 2
+					style.border_width_right = 2
+					style.border_width_top = 2
+					style.border_width_bottom = 2
+					style.bg_color = Color(0, 0, 0, 0)
+			if checkmark_label:
+				checkmark_label.visible = false
 
 
 func refresh() -> void:
