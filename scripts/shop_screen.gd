@@ -95,14 +95,6 @@ func _on_shop_opened(wave_number: int) -> void:
 		continue_button.add_theme_constant_override("outline_size", 6)
 		continue_button.add_theme_color_override("font_outline_color", Color.BLACK)
 
-	if shop_tab_button:
-		shop_tab_button.add_theme_constant_override("outline_size", 6)
-		shop_tab_button.add_theme_color_override("font_outline_color", Color.BLACK)
-
-	if tech_tree_tab_button:
-		tech_tree_tab_button.add_theme_constant_override("outline_size", 6)
-		tech_tree_tab_button.add_theme_color_override("font_outline_color", Color.BLACK)
-
 	title_label.text = "TURRET SHOP - WAVE %d" % wave_number
 	update_scrap_display()
 	offers_panel.update_reroll_button()
@@ -192,11 +184,21 @@ func _switch_to_tech_tree() -> void:
 
 func _update_tab_visuals() -> void:
 	if showing_tech_tree:
-		shop_tab_button.modulate = Color(0.7, 0.7, 0.7, 1.0)  # Dimmed
-		tech_tree_tab_button.modulate = Color(1.0, 1.0, 1.0, 1.0)  # Bright
+		# Shop tab is inactive
+		shop_tab_button.modulate = Color(0.5, 0.5, 0.5, 0.8) # Dimmed and transparent
+		shop_tab_button.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 1.0))
+		
+		# Tech tree tab is active
+		tech_tree_tab_button.modulate = Color(1.0, 1.0, 1.0, 1.0) # Full brightness
+		tech_tree_tab_button.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
 	else:
-		shop_tab_button.modulate = Color(1.0, 1.0, 1.0, 1.0)  # Bright
-		tech_tree_tab_button.modulate = Color(0.7, 0.7, 0.7, 1.0)  # Dimmed
+		# Shop tab is active
+		shop_tab_button.modulate = Color(1.0, 1.0, 1.0, 1.0) # Full brightness
+		shop_tab_button.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
+		
+		# Tech tree tab is inactive
+		tech_tree_tab_button.modulate = Color(0.5, 0.5, 0.5, 0.8) # Dimmed and transparent
+		tech_tree_tab_button.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 1.0))
 
 func _set_focus_to_shop() -> void:
 	var offer_buttons = offers_panel.get_offer_buttons()

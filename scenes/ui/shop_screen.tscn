@@ -1,9 +1,73 @@
-[gd_scene load_steps=5 format=3 uid="uid://shop_screen_001"]
+[gd_scene load_steps=9 format=3 uid="uid://shop_screen_001"]
 
 [ext_resource type="Script" path="res://scripts/shop_screen.gd" id="1_shop"]
 [ext_resource type="PackedScene" uid="uid://stats_panel_001" path="res://scenes/ui/components/stats_panel.tscn" id="2_stats"]
 [ext_resource type="PackedScene" uid="uid://inventory_panel_001" path="res://scenes/ui/components/inventory_panel.tscn" id="3_inv"]
 [ext_resource type="PackedScene" uid="uid://tech_tree_panel_001" path="res://scenes/ui/components/tech_tree_panel.tscn" id="4_tech"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_normal"]
+bg_color = Color(0.15, 0.15, 0.2, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.4, 0.5, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_hover"]
+bg_color = Color(0.25, 0.25, 0.35, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.6, 0.6, 0.7, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_pressed"]
+bg_color = Color(0.35, 0.35, 0.45, 1.0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1.0, 0.85, 0.3, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_focus"]
+bg_color = Color(0.2, 0.2, 0.3, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1.0, 0.9, 0.4, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 12.0
+content_margin_top = 8.0
+content_margin_right = 12.0
+content_margin_bottom = 8.0
 
 [node name="ShopScreen" type="Control"]
 visible = false
@@ -33,31 +97,13 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 40
-theme_override_constants/margin_top = 30
+theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 40
 theme_override_constants/margin_bottom = 30
 
 [node name="ContentVBox" type="VBoxContainer" parent="MainContainer"]
 layout_mode = 2
 theme_override_constants/separation = 10
-
-[node name="TabBar" type="HBoxContainer" parent="MainContainer/ContentVBox"]
-custom_minimum_size = Vector2(0, 60)
-layout_mode = 2
-theme_override_constants/separation = 15
-alignment = 1
-
-[node name="ShopTabButton" type="Button" parent="MainContainer/ContentVBox/TabBar"]
-custom_minimum_size = Vector2(200, 50)
-layout_mode = 2
-theme_type_variation = &"ButtonLarge"
-text = "🛒 Shop"
-
-[node name="TechTreeTabButton" type="Button" parent="MainContainer/ContentVBox/TabBar"]
-custom_minimum_size = Vector2(200, 50)
-layout_mode = 2
-theme_type_variation = &"ButtonLarge"
-text = "🔬 Tech Tree"
 
 [node name="Header" type="HBoxContainer" parent="MainContainer/ContentVBox"]
 layout_mode = 2
@@ -75,6 +121,42 @@ layout_mode = 2
 theme_type_variation = &"Header3"
 theme_override_colors/font_color = Color(1, 0.84, 0, 1)
 text = "Scrap: 100"
+
+[node name="TabBar" type="HBoxContainer" parent="MainContainer/ContentVBox"]
+custom_minimum_size = Vector2(0, 60)
+layout_mode = 2
+theme_override_constants/separation = 15
+alignment = 1
+
+[node name="ShopTabButton" type="Button" parent="MainContainer/ContentVBox/TabBar"]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+theme_type_variation = &"ButtonLarge"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 0.95, 0.7, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.85, 0.3, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_styles/normal = SubResource("StyleBoxFlat_tab_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_tab_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_tab_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_tab_focus")
+text = "🛒 Shop"
+
+[node name="TechTreeTabButton" type="Button" parent="MainContainer/ContentVBox/TabBar"]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+theme_type_variation = &"ButtonLarge"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 0.95, 0.7, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.85, 0.3, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_styles/normal = SubResource("StyleBoxFlat_tab_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_tab_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_tab_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_tab_focus")
+text = "🔬 Tech Tree"
 
 [node name="MainHBox" type="HBoxContainer" parent="MainContainer/ContentVBox"]
 layout_mode = 2
