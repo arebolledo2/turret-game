@@ -195,7 +195,18 @@ func take_damage(amount: float, is_crit: bool = false) -> void:
 	if is_invincible or is_dead:
 		return
 
-	current_health -= amount
+	# Roll for evasion
+	var evasion_chance := PlayerStatsService.get_evasion_chance()
+	if evasion_chance > 0 and randf() < evasion_chance:
+		DebugService.log(DebugService.COMBAT, "Player EVADED damage!")
+		_show_evasion_effect()
+		return
+
+	# Apply damage reduction
+	var reduction_mult := PlayerStatsService.get_damage_reduction()
+	var final_damage := amount * reduction_mult
+
+	current_health -= final_damage
 	is_invincible = true
 	invincibility_timer.wait_time = invincibility_time
 	invincibility_timer.start()
@@ -214,8 +225,20 @@ func take_damage(amount: float, is_crit: bool = false) -> void:
 	# Emit signal
 	Events.player_damaged.emit(current_health, max_health)
 
+	# Visual damage numbers
+	Events.damage_dealt.emit(global_position, final_damage, is_crit, null)
+
 	if current_health <= 0:
 		die()
+
+
+func _show_evasion_effect() -> void:
+	"""Show visual feedback for successful evasion."""
+	# Flash white/blue for dodge
+	var original_modulate = sprite.modulate
+	sprite.modulate = Color(0.5, 0.8, 1.0, 1.0)
+	var tween = create_tween()
+	tween.tween_property(sprite, "modulate", original_modulate, 0.2)
 
 func _on_invincibility_timeout() -> void:
 	is_invincible = false

@@ -174,7 +174,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "crit_chance",
+				"stat": "turret_crit_chance",
 				"operation": "add",
 				"value": 0.15,
 				"filter": {"entity_type": ["turret"]}

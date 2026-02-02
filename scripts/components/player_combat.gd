@@ -54,6 +54,15 @@ func initialize(p_player: CharacterBody2D, p_weapon_pivot: Node2D) -> void:
 
 func process(_delta: float) -> void:
 	"""Main update function - call from player's _physics_process."""
+	# Update stats dynamically
+	weapon_damage = PlayerStatsService.get_player_weapon_damage()
+	weapon_fire_rate = PlayerStatsService.get_player_fire_rate()
+	
+	# Update fire timer wait time if fire rate changed
+	var target_wait_time = 1.0 / weapon_fire_rate
+	if not is_equal_approx(fire_timer.wait_time, target_wait_time):
+		fire_timer.wait_time = target_wait_time
+
 	if not SettingsService.player_auto_attack_enabled:
 		return
 

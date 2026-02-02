@@ -44,6 +44,7 @@ func _ready() -> void:
 	Events.scrap_spent.connect(_on_scrap_changed)
 	Events.shop_purchase_made.connect(_on_purchase_made)
 	Events.shop_insufficient_funds.connect(_on_insufficient_funds)
+	Events.tech_unlocked.connect(_on_tech_unlocked)
 
 	# Connect panel signals
 	offers_panel.purchase_requested.connect(_on_purchase_pressed)
@@ -227,6 +228,12 @@ func _on_insufficient_funds(_required: int, _current: int) -> void:
 	var tween = create_tween()
 	tween.tween_property(scrap_label, "modulate", Color.RED, 0.1)
 	tween.tween_property(scrap_label, "modulate", Color.WHITE, 0.1)
+
+
+func _on_tech_unlocked(_tech_id: String) -> void:
+	"""Called when a tech is purchased in the tech tree"""
+	_update_panels()
+	update_scrap_display()
 
 
 func _update_panels() -> void:

@@ -22,7 +22,8 @@ class MockEnemy extends CharacterBody2D:
 
 func test_enemy_behavior_base_class_exists():
 	# Base class should exist and be instantiable
-	var mock_enemy = MockEnemy.new()
+	var mock_enemy = CharacterBody2D.new()
+	mock_enemy.set_script(load("res://tests/unit/mock_enemy_script.gd"))
 	add_child_autofree(mock_enemy)
 	
 	var behavior = EnemyBehavior.new(mock_enemy, {})
@@ -31,7 +32,8 @@ func test_enemy_behavior_base_class_exists():
 
 
 func test_enemy_behavior_stores_params():
-	var mock_enemy = MockEnemy.new()
+	var mock_enemy = CharacterBody2D.new()
+	mock_enemy.set_script(load("res://tests/unit/mock_enemy_script.gd"))
 	add_child_autofree(mock_enemy)
 	
 	var test_params = {"test_key": "test_value", "number": 42}
@@ -51,15 +53,19 @@ func test_enemy_behavior_default_params_empty():
 # =============================================================================
 
 func test_chase_behavior_inherits_base():
-	var mock_enemy = MockEnemy.new()
+	var mock_enemy = CharacterBody2D.new()
+	mock_enemy.set_script(load("res://tests/unit/mock_enemy_script.gd"))
 	add_child_autofree(mock_enemy)
-	
+
 	var behavior = ChaseBehavior.new(mock_enemy, {})
-	assert_is(behavior, EnemyBehavior, "ChaseBehavior should extend EnemyBehavior")
+	assert_true(behavior is EnemyBehavior, "ChaseBehavior should extend EnemyBehavior")
 
 
 func test_chase_behavior_returns_zero_without_player():
-	var mock_enemy = MockEnemy.new()
+	var mock_enemy = CharacterBody2D.new()
+	# Add player property manually using a script to ensure it's accessible via dot notation
+	mock_enemy.set_script(load("res://tests/unit/mock_enemy_script.gd"))
+	mock_enemy.set("player", null)
 	add_child_autofree(mock_enemy)
 	mock_enemy.global_position = Vector2(100, 100)
 	
@@ -104,7 +110,8 @@ func test_wander_behavior_initializes_paused():
 
 
 func test_wander_behavior_returns_zero_when_paused():
-	var mock_enemy = MockEnemy.new()
+	var mock_enemy = CharacterBody2D.new()
+	mock_enemy.set_script(load("res://tests/unit/mock_enemy_script.gd"))
 	add_child_autofree(mock_enemy)
 	mock_enemy.global_position = Vector2.ZERO
 	

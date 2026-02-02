@@ -36,6 +36,11 @@ func get_player_weapon_damage() -> float:
 	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.PLAYER_WEAPON_DAMAGE, "player_weapon_damage", "player")
 
 
+## Get player fire rate with modifiers applied
+func get_player_fire_rate() -> float:
+	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.PLAYER_FIRE_RATE, "player_fire_rate", "player")
+
+
 ## Get player luck with modifiers applied, clamped to valid range
 func get_player_luck() -> float:
 	var modified_luck := _get_modifier_service().apply_modifiers_to_stat(player_luck, "player_luck", "player")
@@ -86,3 +91,14 @@ func get_heal_interval() -> float:
 	if regen <= 0:
 		return -1.0
 	return GameConstants.PLAYER_BASE_HEAL_INTERVAL / float(regen)
+
+
+## Get damage reduction multiplier (0.15 reduction -> 0.85 multiplier)
+func get_damage_reduction() -> float:
+	var reduction := _get_modifier_service().apply_modifiers_to_stat(0.0, "damage_reduction", "player")
+	return clampf(1.0 - reduction, 0.0, 1.0)
+
+
+## Get evasion chance (0.10 -> 10% chance to dodge)
+func get_evasion_chance() -> float:
+	return _get_modifier_service().apply_modifiers_to_stat(0.0, "player_evasion", "player")

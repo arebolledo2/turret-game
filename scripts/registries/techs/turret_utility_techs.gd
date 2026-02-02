@@ -32,7 +32,7 @@ static func get_techs() -> Array:
 			"id": "expanded_blast",
 			"name": "Expanded Blast Radius",
 			"icon": "🎆",
-			"description": "+50% AOE explosion size",
+			"description": "+50% AOE explosion radius",
 			"path": "turret_utility",
 			"tier": 2,
 			"cost": 25,
@@ -41,7 +41,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "aoe_size",
+				"stat": "aoe_radius",
 				"operation": "multiply",
 				"value": 1.50,
 				"filter": {"entity_type": ["turret"]}
@@ -61,7 +61,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "pierce_count",
+				"stat": "pierce",
 				"operation": "add",
 				"value": 1,
 				"filter": {"entity_type": ["turret"]}
@@ -120,7 +120,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "pierce_count",
+				"stat": "pierce",
 				"operation": "add",
 				"value": 2,
 				"filter": {"entity_type": ["turret"]}

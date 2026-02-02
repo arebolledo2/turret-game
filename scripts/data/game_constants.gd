@@ -27,6 +27,7 @@ const PLAYER_WEAPON_DAMAGE: float = 1.0 # Legacy - used by PlayerStatsService fo
 # Player Turret Combat
 const PLAYER_TURRET_DAMAGE: float = 12.0
 const PLAYER_TURRET_FIRE_RATE: float = 1.2 # shots per second (matches basic turret)
+const PLAYER_FIRE_RATE: float = 1.2 # Standardized key for services
 const PLAYER_TURRET_RANGE: float = 375.0
 const PLAYER_TURRET_PROJECTILE_SPEED: float = 700.0
 

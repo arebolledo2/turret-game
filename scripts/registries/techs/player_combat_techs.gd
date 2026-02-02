@@ -22,7 +22,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "damage",
+				"stat": "player_weapon_damage",
 				"operation": "multiply",
 				"value": 1.15,
 				"filter": {"entity_type": ["player"]}
@@ -46,7 +46,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "damage",
+				"stat": "player_weapon_damage",
 				"operation": "multiply",
 				"value": 1.20,
 				"filter": {"entity_type": ["player"]}
@@ -66,7 +66,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "crit_chance",
+				"stat": "player_crit_chance",
 				"operation": "add",
 				"value": 0.10,
 				"filter": {"entity_type": ["player"]}
@@ -86,7 +86,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "attack_speed",
+				"stat": "player_fire_rate",
 				"operation": "multiply",
 				"value": 1.20,
 				"filter": {"entity_type": ["player"]}
@@ -110,7 +110,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "damage",
+				"stat": "player_weapon_damage",
 				"operation": "multiply",
 				"value": 1.30,
 				"filter": {"entity_type": ["player"]}
@@ -130,7 +130,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "crit_chance",
+				"stat": "player_crit_chance",
 				"operation": "add",
 				"value": 0.15,
 				"filter": {"entity_type": ["player"]}
@@ -150,7 +150,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "attack_speed",
+				"stat": "player_fire_rate",
 				"operation": "multiply",
 				"value": 1.30,
 				"filter": {"entity_type": ["player"]}
@@ -174,27 +174,12 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "crit_damage",
+				"stat": "player_crit_multiplier",
 				"operation": "multiply",
 				"value": 1.50,
 				"filter": {"entity_type": ["player"]}
 			}],
 			"special_effect": ""
-		},
-		{
-			"id": "rampage",
-			"name": "Rampage",
-			"icon": "💀",
-			"description": "Kills grant +5% damage for 5s (stacks 5x)",
-			"path": "player_combat",
-			"tier": 4,
-			"cost": 80,
-			"prerequisites": ["lethal_force"],
-			"repeatable": false,
-			"max_unlocks": 1,
-			"effect_type": "unlock_mechanic",
-			"modifiers": [],
-			"special_effect": "player_rampage_buff"
 		},
 
 		# =================================================================
@@ -208,25 +193,25 @@ static func get_techs() -> Array:
 			"path": "player_combat",
 			"tier": 5,
 			"cost": 120,
-			"prerequisites": ["executioner", "rampage"],
+			"prerequisites": ["executioner", "berserker_rage"],
 			"repeatable": false,
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [
 				{
-					"stat": "damage",
+					"stat": "player_weapon_damage",
 					"operation": "multiply",
 					"value": 1.30,
 					"filter": {"entity_type": ["player"]}
 				},
 				{
-					"stat": "crit_chance",
+					"stat": "player_crit_chance",
 					"operation": "add",
 					"value": 0.20,
 					"filter": {"entity_type": ["player"]}
 				},
 				{
-					"stat": "attack_speed",
+					"stat": "player_fire_rate",
 					"operation": "multiply",
 					"value": 1.20,
 					"filter": {"entity_type": ["player"]}

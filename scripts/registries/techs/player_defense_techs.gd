@@ -22,7 +22,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "max_health",
+				"stat": "player_max_health",
 				"operation": "multiply",
 				"value": 1.15,
 				"filter": {"entity_type": ["player"]}
@@ -46,7 +46,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "max_health",
+				"stat": "player_max_health",
 				"operation": "multiply",
 				"value": 1.20,
 				"filter": {"entity_type": ["player"]}
@@ -66,7 +66,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "speed",
+				"stat": "player_speed",
 				"operation": "multiply",
 				"value": 1.20,
 				"filter": {"entity_type": ["player"]}
@@ -86,7 +86,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "health_regen",
+				"stat": "player_health_regen",
 				"operation": "add",
 				"value": 1.0,
 				"filter": {"entity_type": ["player"]}
@@ -110,7 +110,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "max_health",
+				"stat": "player_max_health",
 				"operation": "multiply",
 				"value": 1.30,
 				"filter": {"entity_type": ["player"]}
@@ -130,7 +130,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "speed",
+				"stat": "player_speed",
 				"operation": "multiply",
 				"value": 1.30,
 				"filter": {"entity_type": ["player"]}
@@ -150,7 +150,7 @@ static func get_techs() -> Array:
 			"max_unlocks": 1,
 			"effect_type": "modifier",
 			"modifiers": [{
-				"stat": "health_regen",
+				"stat": "player_health_regen",
 				"operation": "add",
 				"value": 2.0,
 				"filter": {"entity_type": ["player"]}
@@ -214,13 +214,13 @@ static func get_techs() -> Array:
 			"effect_type": "modifier",
 			"modifiers": [
 				{
-					"stat": "max_health",
+					"stat": "player_max_health",
 					"operation": "multiply",
 					"value": 1.40,
 					"filter": {"entity_type": ["player"]}
 				},
 				{
-					"stat": "health_regen",
+					"stat": "player_health_regen",
 					"operation": "add",
 					"value": 3.0,
 					"filter": {"entity_type": ["player"]}
