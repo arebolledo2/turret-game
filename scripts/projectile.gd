@@ -41,11 +41,11 @@ func setup(dir: Vector2, spd: float, dmg: float, from_player: bool, crit: bool =
 	is_setup = true
 
 	# Set collision - use call_deferred to avoid physics query error
-	call_deferred("set_collision_layer", 4) # projectile layer
+	call_deferred("set_collision_layer", GameConstants.COLLISION_LAYER_PROJECTILE)
 	if is_player_projectile:
-		call_deferred("set_collision_mask", 96) # enemy_hurtbox (32) + tunnel_door (64)
+		call_deferred("set_collision_mask", GameConstants.COLLISION_MASK_ENEMY_AND_TUNNEL)
 	else:
-		call_deferred("set_collision_mask", 16) # player_hurtbox only
+		call_deferred("set_collision_mask", GameConstants.COLLISION_MASK_PLAYER)
 
 ## Extended setup for turret-typed projectiles
 func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: GameEnums.DamageType, crit: bool = false) -> void:
@@ -64,11 +64,11 @@ func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: G
 	is_setup = true
 
 	# Set collision
-	call_deferred("set_collision_layer", 4) # projectile layer
+	call_deferred("set_collision_layer", GameConstants.COLLISION_LAYER_PROJECTILE)
 	if is_player_projectile:
-		call_deferred("set_collision_mask", 96) # enemy_hurtbox (32) + tunnel_door (64)
+		call_deferred("set_collision_mask", GameConstants.COLLISION_MASK_ENEMY_AND_TUNNEL)
 	else:
-		call_deferred("set_collision_mask", 16) # player_hurtbox only
+		call_deferred("set_collision_mask", GameConstants.COLLISION_MASK_PLAYER)
 
 func _physics_process(delta: float) -> void:
 	position += direction * speed * delta
@@ -77,7 +77,7 @@ func _physics_process(delta: float) -> void:
 	# 2 rotations/sec = 720 degrees/sec = -4π radians/sec (negative for counter-clockwise)
 	var sprite = get_node_or_null("Sprite2D")
 	if sprite:
-		sprite.rotation -= TAU * 2.0 * delta # TAU = 2π, so TAU * 2 = 4π = 2 full rotations
+		sprite.rotation -= TAU * GameConstants.PROJECTILE_SPIN_RATE * delta
 
 func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 	DebugService.log(DebugService.COMBAT, "Projectile: Collision with area: ", hurtbox, " name: ", hurtbox.name)
@@ -179,8 +179,8 @@ func _calculate_damage_with_executioner(base_damage: float, enemy: Node2D) -> fl
 	elif "current_health" in enemy and "max_health" in enemy and enemy.max_health > 0:
 		health_percent = enemy.current_health / enemy.max_health
 
-	if health_percent < 0.25:
-		return base_damage * 1.5
+	if health_percent < GameConstants.EXECUTIONER_MARK_HEALTH_THRESHOLD:
+		return base_damage * GameConstants.EXECUTIONER_MARK_DAMAGE_MULT
 	return base_damage
 
 
@@ -191,7 +191,7 @@ func _spawn_explosion_effect() -> void:
 	
 	# Create circle polygon with the aoe_radius
 	var points = PackedVector2Array()
-	var segments = 32
+	var segments = GameConstants.VISUAL_POLYGON_SEGMENTS
 	for i in range(segments):
 		var angle = i * TAU / float(segments)
 		points.append(Vector2(cos(angle), sin(angle)) * aoe_radius)

@@ -19,9 +19,13 @@ func _ready() -> void:
 	# Load sounds - using ResourceLoader for better safety
 	if ResourceLoader.exists(HIT_SOUND_SMALL_PATH):
 		hit_sound_small = load(HIT_SOUND_SMALL_PATH) as AudioStream
-	
+	else:
+		DebugService.warn(DebugService.SYSTEMS, "AudioService: Failed to load ", HIT_SOUND_SMALL_PATH)
+
 	if ResourceLoader.exists(HIT_SOUND_LARGE_PATH):
 		hit_sound_large = load(HIT_SOUND_LARGE_PATH) as AudioStream
+	else:
+		DebugService.warn(DebugService.SYSTEMS, "AudioService: Failed to load ", HIT_SOUND_LARGE_PATH)
 	
 	# Initialize pool of audio players
 	for i in range(max_pool_size):

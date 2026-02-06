@@ -7,16 +7,6 @@ extends Node
 var turret_counts: Dictionary = {}
 var selected_turret_type: String = ""
 
-# Modifier system reference (injected)
-var _modifier_service: ModifierService = null
-
-func _get_modifier_service() -> ModifierService:
-	if _modifier_service == null:
-		_modifier_service = get_node_or_null("/root/ModifierService")
-		assert(_modifier_service != null, "TurretStatsService: ModifierService autoload not found")
-	return _modifier_service
-
-
 func reset_state() -> void:
 	turret_counts.clear()
 	selected_turret_type = ""
@@ -30,7 +20,7 @@ func get_turret_stats(turret_type: String, difficulty_turret_damage_mult: float)
 
 	# Build a minimal difficulty config with the damage mult
 	var difficulty_config := {"turret_damage_mult": difficulty_turret_damage_mult}
-	return _get_modifier_service().get_turret_stats(turret_type, difficulty_config)
+	return ModifierService.get_turret_stats(turret_type, difficulty_config)
 
 
 ## Get turret color
@@ -50,12 +40,12 @@ func turret_has_damage_type(turret_type: String, dtype: GameEnums.DamageType) ->
 
 ## Get turret crit chance with modifiers applied
 func get_turret_crit_chance() -> float:
-	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.TURRET_BASE_CRIT_CHANCE, "turret_crit_chance")
+	return ModifierService.apply_modifiers_to_stat(GameConstants.TURRET_BASE_CRIT_CHANCE, "turret_crit_chance")
 
 
 ## Get turret crit multiplier with modifiers applied
 func get_turret_crit_multiplier() -> float:
-	return _get_modifier_service().apply_modifiers_to_stat(GameConstants.TURRET_BASE_CRIT_MULTIPLIER, "turret_crit_multiplier")
+	return ModifierService.apply_modifiers_to_stat(GameConstants.TURRET_BASE_CRIT_MULTIPLIER, "turret_crit_multiplier")
 
 
 ## Roll for critical hit (returns true if crit)
@@ -118,7 +108,7 @@ func get_turret_min_distance(item_counts: Dictionary) -> float:
 func get_turret_purchase_penalty() -> float:
 	var penalty = GameConstants.TURRET_PURCHASE_PENALTY
 	# Apply reductions (e.g., Compact Design, Mass Production)
-	penalty = _get_modifier_service().apply_modifiers_to_stat(penalty, "turret_penalty_reduction")
+	penalty = ModifierService.apply_modifiers_to_stat(penalty, "turret_penalty_reduction")
 	# Apply increases (e.g., Elite Forces, Diversity Matrix)
-	penalty = _get_modifier_service().apply_modifiers_to_stat(penalty, "turret_penalty_increase")
+	penalty = ModifierService.apply_modifiers_to_stat(penalty, "turret_penalty_increase")
 	return penalty

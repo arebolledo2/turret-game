@@ -28,6 +28,7 @@ var projectile_speed: float = 600.0
 
 # Scene
 var projectile_scene: PackedScene
+var spawn_parent: Node = null ## Injected parent for projectiles; falls back to current_scene
 
 func initialize(p_player: CharacterBody2D, p_weapon_pivot: Node2D) -> void:
 	"""Initialize component with required references."""
@@ -102,7 +103,8 @@ func fire_at_enemy() -> void:
 
 	# Create projectile
 	var projectile = projectile_scene.instantiate()
-	player.get_tree().current_scene.add_child(projectile)
+	var parent = spawn_parent if spawn_parent else player.get_tree().current_scene
+	parent.add_child(projectile)
 	projectile.global_position = player.global_position
 	var dir = player.global_position.direction_to(closest_enemy.global_position)
 	projectile.setup(dir, projectile_speed, final_damage, true, is_crit)

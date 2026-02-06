@@ -133,14 +133,13 @@ func generate_escort_path() -> Array[Vector2]:
 	"""
 	var points: Array[Vector2] = []
 	
-	# Determine sides (0: Top, 1: Bottom, 2: Left, 3: Right)
+	# Pick a random side and use its opposite
 	var start_side = randi() % 4
-	var end_side = (start_side + 1 + (randi() % 2)) % 4 # Ensure it's not the same side or adjacent?
-	# Let's just say "opposite enough"
+	var end_side: int
 	if start_side == 0: end_side = 1 # Top -> Bottom
 	elif start_side == 1: end_side = 0 # Bottom -> Top
 	elif start_side == 2: end_side = 3 # Left -> Right
-	elif start_side == 3: end_side = 2 # Right -> Left
+	else: end_side = 2 # Right -> Left
 	
 	var start_pos = _get_random_point_on_side(start_side)
 	var end_pos = _get_random_point_on_side(end_side)
@@ -153,15 +152,15 @@ func generate_escort_path() -> Array[Vector2]:
 		# Interpolate and add noise
 		var t = float(i + 1) / (middle_points_count + 1)
 		var lerp_pos = start_pos.lerp(end_pos, t)
-		var offset = Vector2(randf_range(-200, 200), randf_range(-200, 200))
+		var offset = Vector2(randf_range(-GameConstants.ESCORT_PATH_OFFSET, GameConstants.ESCORT_PATH_OFFSET), randf_range(-GameConstants.ESCORT_PATH_OFFSET, GameConstants.ESCORT_PATH_OFFSET))
 		points.append(lerp_pos + offset)
 		
 	points.append(end_pos)
 	return points
 
 func _get_random_point_on_side(side: int) -> Vector2:
-	var hw = GameConstants.ARENA_WIDTH / 2.5 # Inset a bit
-	var hh = GameConstants.ARENA_HEIGHT / 2.5
+	var hw = GameConstants.ARENA_WIDTH / GameConstants.ESCORT_SPAWN_INSET_FACTOR
+	var hh = GameConstants.ARENA_HEIGHT / GameConstants.ESCORT_SPAWN_INSET_FACTOR
 	
 	match side:
 		0: # Top
@@ -198,6 +197,5 @@ func get_spawn_rate_multiplier(time_since_alert: float) -> float:
 	if time_since_alert <= 0:
 		return 1.0
 	
-	# +30% every 8 seconds
-	var intervals_passed: int = int(floor(time_since_alert / 8.0))
-	return 1.0 + (intervals_passed * 0.3)
+	var intervals_passed: int = int(floor(time_since_alert / GameConstants.TUNNELING_ALERT_ESCALATION_INTERVAL))
+	return 1.0 + (intervals_passed * GameConstants.TUNNELING_ALERT_ESCALATION_RATE)

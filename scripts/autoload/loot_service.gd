@@ -8,7 +8,7 @@ extends Node
 var found_items: Array[String] = []
 
 
-func reset() -> void:
+func reset_state() -> void:
 	"""Reset loot state for new game."""
 	found_items.clear()
 

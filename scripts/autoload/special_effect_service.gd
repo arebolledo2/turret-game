@@ -3,6 +3,14 @@ extends Node
 ## Special Effect Service
 ## Centralizes complex item logic and proximity-based turret effects
 
+# Injected reference - set via set_turret_manager() during game setup
+var _turret_manager: Node = null
+
+
+func set_turret_manager(manager: Node) -> void:
+	_turret_manager = manager
+
+
 func apply_static_effects(turret_type: String, stats: Dictionary) -> void:
 	"""Apply effects that depend on global game state (e.g., owned items, total turrets)."""
 	
@@ -72,14 +80,13 @@ func apply_static_effects(turret_type: String, stats: Dictionary) -> void:
 
 func apply_instance_effects(turret: Node2D, stats: Dictionary) -> void:
 	"""Apply effects that depend on a specific turret instance (e.g., proximity to others)."""
-	var turret_manager = get_node_or_null("/root/Main/TurretManager")
-	if not turret_manager:
+	if not _turret_manager:
 		return
 
 	# Signal Amplifier: +15% range if clustered, -10% fire rate if isolated
 	if ItemRegistry.has_special_effect("signal_amplifier") and ItemTrackingService.item_counts.get("signal_amplifier", 0) > 0:
 		var stacks = ItemTrackingService.item_counts.get("signal_amplifier", 0)
-		var nearby = turret_manager.get_turrets_within_radius(turret.global_position, 200.0)
+		var nearby = _turret_manager.get_turrets_within_radius(turret.global_position, GameConstants.SIGNAL_AMPLIFIER_RANGE)
 		if nearby.size() > 0:
 			# Clustered: +15% range per stack
 			var range_mult = 1.0 + (0.15 * stacks)
@@ -92,7 +99,7 @@ func apply_instance_effects(turret: Node2D, stats: Dictionary) -> void:
 	# Isolation Protocol: +40% damage if isolated, -15% damage if clustered
 	if ItemRegistry.has_special_effect("isolation_protocol") and ItemTrackingService.item_counts.get("isolation_protocol", 0) > 0:
 		var stacks = ItemTrackingService.item_counts.get("isolation_protocol", 0)
-		var nearby = turret_manager.get_turrets_within_radius(turret.global_position, 250.0)
+		var nearby = _turret_manager.get_turrets_within_radius(turret.global_position, GameConstants.ISOLATION_PROTOCOL_RANGE)
 		if nearby.size() == 0:
 			# Isolated: +40% damage per stack
 			var damage_mult = 1.0 + (0.40 * stacks)
@@ -105,7 +112,7 @@ func apply_instance_effects(turret: Node2D, stats: Dictionary) -> void:
 	# Feedback Loop: +6% fire rate per nearby turret (max +30% per stack)
 	if ItemRegistry.has_special_effect("feedback_loop") and ItemTrackingService.item_counts.get("feedback_loop", 0) > 0:
 		var stacks = ItemTrackingService.item_counts.get("feedback_loop", 0)
-		var nearby = turret_manager.get_turrets_within_radius(turret.global_position, 180.0)
+		var nearby = _turret_manager.get_turrets_within_radius(turret.global_position, GameConstants.FEEDBACK_LOOP_RANGE)
 		var fire_rate_bonus = min(nearby.size() * 0.06, 0.30) * stacks
 		stats["fire_rate"] = stats.get("fire_rate", 1.0) * (1.0 + fire_rate_bonus)
 
@@ -118,5 +125,5 @@ func get_turret_min_distance(item_counts: Dictionary) -> float:
 	"""Apply modifications to turret placement rules."""
 	# Personal Space increases minimum distance to 200px
 	if ItemRegistry.has_special_effect("personal_space") and item_counts.get("personal_space", 0) > 0:
-		return 200.0
+		return GameConstants.PERSONAL_SPACE_MIN_DISTANCE
 	return GameConstants.TURRET_MIN_DISTANCE

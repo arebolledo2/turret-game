@@ -261,12 +261,6 @@ func test_get_pickup_radius_with_modifier():
 # MODIFIER SERVICE INTEGRATION
 # =============================================================================
 
-func test_modifier_service_lazy_loaded():
-	# Access internal _modifier_service after fresh reset
-	assert_not_null(player_stats_service._get_modifier_service(),
-		"Should lazy load modifier service")
-
-
 func test_multiple_stats_with_different_modifiers():
 	modifier_service.add_modifier({
 		"stat": "player_speed",

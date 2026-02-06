@@ -36,6 +36,11 @@ func _ready() -> void:
 	wave_controller.turret_manager = turret_manager
 	wave_controller.tech_drop_spawner = tech_drop_spawner
 	
+	# Inject scene references into services that need them
+	SpecialEffectService.set_turret_manager(turret_manager)
+	BuffSystem.set_turret_manager(turret_manager)
+	OffScreenIndicatorService.set_enemy_spawner(enemy_spawner)
+
 	# Expose to other systems via service
 	GameStateService.wave_controller = wave_controller
 

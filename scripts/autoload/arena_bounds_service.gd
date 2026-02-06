@@ -19,8 +19,8 @@ const FIXED_RECT_HEIGHT: int = GameConstants.ARENA_HEIGHT
 
 # Isometric dimensions scaled by sqrt(2) for equal surface area
 # Diamond area = W*H/2, so we need W*H*sqrt(2) to match rectangle
-const FIXED_ISO_WIDTH: int = 2716 # 1920 * 1.414
-const FIXED_ISO_HEIGHT: int = 1527 # 1080 * 1.414
+const FIXED_ISO_WIDTH: int = int(GameConstants.ARENA_WIDTH * GameConstants.ISO_SCALE_FACTOR)
+const FIXED_ISO_HEIGHT: int = int(GameConstants.ARENA_HEIGHT * GameConstants.ISO_SCALE_FACTOR)
 
 # Arena dimensions (half-sizes for centered coordinate system)
 var _half_width: float = FIXED_RECT_WIDTH / 2.0
@@ -98,7 +98,7 @@ func _is_inside_isometric(pos: Vector2, margin: float) -> bool:
 	
 	var normalized_dist: float = abs(pos.x) / effective_half_width + abs(pos.y) / effective_half_height
 	# Use small epsilon for floating point tolerance (edge points should be considered inside)
-	return normalized_dist <= 1.0 + 0.0001
+	return normalized_dist <= 1.0 + GameConstants.ISOMETRIC_BOUNDARY_EPSILON
 
 # =============================================================================
 # CLAMPING TO BOUNDS
@@ -202,7 +202,7 @@ func _get_random_isometric_position(margin: float) -> Vector2:
 	var effective_half_height := _half_height - margin
 	
 	# Rejection sampling - try random points in bounding box until one is inside diamond
-	for _i in range(100): # Safety limit
+	for _i in range(GameConstants.REJECTION_SAMPLING_MAX_ATTEMPTS):
 		var pos := Vector2(
 			randf_range(-effective_half_width, effective_half_width),
 			randf_range(-effective_half_height, effective_half_height)

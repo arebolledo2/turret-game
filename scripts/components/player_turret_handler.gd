@@ -93,7 +93,7 @@ func place_turret() -> void:
 
 	# Drop to player's ground position (collision bottom) instead of carry position
 	# Player origin is center of 32x32 circle, so ground is +16
-	var placement_pos := player.global_position + Vector2(0, 16)
+	var placement_pos := player.global_position + GameConstants.TURRET_DROP_OFFSET
 
 	# Reset z_index for normal Y-sorting
 	carried_turret.z_index = 0

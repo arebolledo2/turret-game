@@ -75,7 +75,7 @@ func _on_debug_toggled(type: int, _enabled: bool) -> void:
 func _on_defense_target_spawned(_target: Node2D, pos: Vector2) -> void:
 	if GameModeService.is_escort_mode_active():
 		# Spawn next to payload with a slight offset
-		global_position = pos + Vector2(64, 64)
+		global_position = pos + GameConstants.PLAYER_ESCORT_SPAWN_OFFSET
 		DebugService.log(DebugService.ENTITY, "Player: Teleported to escort start position: ", global_position)
 
 func _draw() -> void:
@@ -128,7 +128,7 @@ func _physics_process(delta: float) -> void:
 	
 	# Handle invincibility visual
 	if is_invincible:
-		sprite.modulate.a = 0.5 if fmod(Time.get_ticks_msec(), 100) < 50 else 1.0
+		sprite.modulate.a = 0.5 if fmod(Time.get_ticks_msec(), GameConstants.INVINCIBILITY_FLASH_INTERVAL_MS) < GameConstants.INVINCIBILITY_FLASH_THRESHOLD_MS else 1.0
 	else:
 		sprite.modulate.a = 1.0
 
@@ -212,7 +212,7 @@ func take_damage(amount: float, is_crit: bool = false) -> void:
 	invincibility_timer.start()
 
 	# Visual feedback - flash red
-	sprite.modulate = Color(1, 0.3, 0.3, 1)
+	sprite.modulate = GameConstants.PLAYER_DAMAGE_FLASH_COLOR
 
 	# Defensive pulse - knockback nearby enemies
 	apply_defensive_pulse()
@@ -236,7 +236,7 @@ func _show_evasion_effect() -> void:
 	"""Show visual feedback for successful evasion."""
 	# Flash white/blue for dodge
 	var original_modulate = sprite.modulate
-	sprite.modulate = Color(0.5, 0.8, 1.0, 1.0)
+	sprite.modulate = GameConstants.PLAYER_EVASION_FLASH_COLOR
 	var tween = create_tween()
 	tween.tween_property(sprite, "modulate", original_modulate, 0.2)
 
@@ -246,7 +246,7 @@ func _on_invincibility_timeout() -> void:
 
 func _on_animation_timer_timeout() -> void:
 	# Cycle through walk animation frames (0-15 for 4x4 grid)
-	sprite.frame = (sprite.frame + 1) % 16
+	sprite.frame = (sprite.frame + 1) % GameConstants.PLAYER_ANIMATION_FRAME_COUNT
 
 func die() -> void:
 	if is_dead:
@@ -326,12 +326,12 @@ func spawn_defensive_pulse_visual() -> void:
 	"""Create visual effect for defensive pulse."""
 	var viz = Polygon2D.new()
 	var points = PackedVector2Array()
-	var segments = 32
+	var segments = GameConstants.VISUAL_POLYGON_SEGMENTS
 	for i in range(segments):
 		var angle = i * TAU / float(segments)
 		points.append(Vector2(cos(angle), sin(angle)) * GameConstants.PLAYER_DEFENSIVE_PULSE_RADIUS)
 	viz.polygon = points
-	viz.color = Color(1.0, 0.8, 0.3) # Golden defensive color
+	viz.color = GameConstants.DEFENSIVE_PULSE_COLOR
 	viz.color.a = 0.5
 	viz.global_position = global_position
 

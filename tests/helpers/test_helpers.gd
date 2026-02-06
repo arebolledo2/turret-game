@@ -129,26 +129,26 @@ static func create_mock_player_hurtbox(player: Node2D) -> Area2D:
 ## Reset all service states for clean testing
 ## Call this in before_each() to ensure test isolation
 static func reset_all_services() -> void:
-	# Reset game state
-	if Engine.has_singleton("GameStateService") or true:
-		var gss = Engine.get_main_loop().root.get_node_or_null("/root/GameStateService")
-		if gss and gss.has_method("reset_state"):
-			gss.reset_state()
+	# Core game state
+	GameStateService.reset_state()
+	EconomyService.reset_state()
+	DifficultyService.reset_state()
+	GameModeService.reset_state()
+	SettingsService.reset_state()
 
-	# Reset economy
-	var economy = Engine.get_main_loop().root.get_node_or_null("/root/EconomyService")
-	if economy and economy.has_method("reset_state"):
-		economy.reset_state()
+	# Player & combat
+	PlayerStatsService.reset_state()
+	TurretStatsService.reset_state()
+	ModifierService.clear_modifiers()
+	BuffSystem.active_buffs.clear()
 
-	# Reset item tracking
-	var item_tracking = Engine.get_main_loop().root.get_node_or_null("/root/ItemTrackingService")
-	if item_tracking and item_tracking.has_method("reset_state"):
-		item_tracking.reset_state()
+	# Economy & progression
+	ItemTrackingService.reset_state()
+	TechTreeService.reset_state()
+	LootService.reset_state()
 
-	# Reset modifier service
-	var modifier = Engine.get_main_loop().root.get_node_or_null("/root/ModifierService")
-	if modifier and modifier.has_method("reset_state"):
-		modifier.reset_state()
+	# Presentation
+	OffScreenIndicatorService.tracked_entities.clear()
 
 
 # =============================================================================

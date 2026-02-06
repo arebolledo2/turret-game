@@ -36,6 +36,11 @@ var tracked_entities: Array[TrackedEntity] = []
 var enemy_spawner: Node = null
 
 
+## Inject enemy spawner reference (called from GameManager)
+func set_enemy_spawner(spawner: Node) -> void:
+	enemy_spawner = spawner
+
+
 func _ready() -> void:
 	# Connect to entity lifecycle signals
 	Events.enemy_spawned.connect(_on_enemy_spawned)
@@ -49,9 +54,8 @@ func _ready() -> void:
 
 
 func _on_game_started() -> void:
-	# Get reference to enemy spawner
-	await get_tree().process_frame
-	enemy_spawner = get_tree().get_first_node_in_group("enemy_spawner") if get_tree() else null
+	# Clear tracked entities for new game
+	tracked_entities.clear()
 
 
 ## Get viewport bounds in world coordinates

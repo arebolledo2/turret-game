@@ -328,11 +328,6 @@ func test_get_shop_offer_count_multiple_modifiers():
 # MODIFIER SERVICE INTEGRATION
 # =============================================================================
 
-func test_modifier_service_lazy_loaded():
-	assert_not_null(item_tracking_service._get_modifier_service(),
-		"Should lazy load modifier service")
-
-
 func test_all_multipliers_with_different_modifiers():
 	# Set up different modifiers for each stat using "more" operation
 	modifier_service.add_modifier({

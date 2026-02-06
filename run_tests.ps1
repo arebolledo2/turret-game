@@ -13,7 +13,8 @@ param(
     [switch]$integration,
     [switch]$verbose,
     [switch]$full,
-    [string]$filter = ""
+    [string]$filter = "",
+    [int]$timeout = 120
 )
 
 # Find Godot executable
@@ -89,36 +90,46 @@ if ($full -or $verbose) {
     Write-Host ""
 }
 
-# Run tests
+# Run tests with timeout using background process
+$process = Start-Process -FilePath $godot -ArgumentList $gutArgs -PassThru -NoNewWindow -RedirectStandardOutput "$env:TEMP\gut_stdout.txt" -RedirectStandardError "$env:TEMP\gut_stderr.txt"
+
+if (-not $process.WaitForExit($timeout * 1000)) {
+    Write-Host "TIMEOUT: Tests exceeded ${timeout}s limit. Killing process." -ForegroundColor Red
+    $process.Kill()
+    exit 1
+}
+
+$exitCode = $process.ExitCode
+
+# Read captured output
+$output = @()
+if (Test-Path "$env:TEMP\gut_stdout.txt") {
+    $output = Get-Content "$env:TEMP\gut_stdout.txt"
+}
+
 if ($full -or $verbose) {
-    & $godot @gutArgs
+    $output | ForEach-Object { Write-Host $_ }
 } else {
-    # Run and filter output to only show errors, failures, and summary
+    # Filter output to only show errors, failures, and summary
     $inSummary = $false
-    & $godot @gutArgs 2>&1 | ForEach-Object {
-        $line = $_.ToString()
-        
+    $output | ForEach-Object {
+        $line = $_
+
         # Detect start of summary
-        # GUT log level 1 summary often starts with [  Summary  ] or has results
         if ($line -match "--- GUT Finished ---" -or $line -match "Tests finished" -or $line -match "Passes.*Failures.*Pending" -or $line -match "\[  Summary  \]" -or $line -match "Totals") {
             $inSummary = $true
         }
-        
+
         # Output logic
         if ($inSummary) {
-            # In summary, show everything
             Write-Host $line
         } elseif ($line -match "\[ERROR\]" -or $line -match "\[FAIL\]" -or $line -match "failed" -or $line -match "error" -or $line -match "PARSE ERROR") {
-            # Show failures and errors in red
             Write-Host $line -ForegroundColor Red
         } elseif ($line -match "SCRIPT ERROR") {
-            # Show script errors too
             Write-Host $line -ForegroundColor Yellow
         }
     }
 }
-
-$exitCode = $LASTEXITCODE
 
 Write-Host ""
 if ($exitCode -eq 0) {

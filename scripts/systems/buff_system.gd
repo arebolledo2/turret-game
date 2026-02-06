@@ -26,6 +26,14 @@ class Buff:
 # turret_instance_id -> Array[Buff]
 var active_buffs: Dictionary = {}
 
+# Injected reference - set via set_turret_manager() during game setup
+var _turret_manager: Node = null
+
+
+func set_turret_manager(manager: Node) -> void:
+	_turret_manager = manager
+
+
 func _ready() -> void:
 	# Listen for Chain Reaction triggers
 	Events.turret_fired.connect(_on_turret_fired)
@@ -37,18 +45,17 @@ func _on_turret_fired(turret: Node2D) -> void:
 	if ItemTrackingService.item_counts.get("chain_reaction", 0) == 0:
 		return
 
-	var turret_manager = get_node_or_null("/root/Main/TurretManager")
-	if not turret_manager:
+	if not _turret_manager:
 		return
 
-	# Get turrets within 150px of the firing turret
-	var nearby = turret_manager.get_turrets_within_radius(turret.global_position, 150.0)
+	# Get turrets within range of the firing turret
+	var nearby = _turret_manager.get_turrets_within_radius(turret.global_position, GameConstants.CHAIN_REACTION_RANGE)
 
 	# Apply buff to nearby turrets
 	# Uses "more" operation since Chain Reaction stacks multiplicatively
 	for nearby_turret in nearby:
 		if is_instance_valid(nearby_turret):
-			var buff = Buff.new("fire_rate", 1.08, "more", 2.0, 5)
+			var buff = Buff.new("fire_rate", GameConstants.CHAIN_REACTION_FIRE_RATE_MULT, "more", GameConstants.CHAIN_REACTION_DURATION, GameConstants.CHAIN_REACTION_MAX_STACKS)
 			apply_buff(nearby_turret, buff)
 
 func apply_buff(turret: Node2D, buff: Buff) -> void:

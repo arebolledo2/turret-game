@@ -45,43 +45,30 @@ var behavior_params: Dictionary = {}
 var combat: Node = null # Optional combat component for ranged enemies
 
 func _ready() -> void:
-	DebugService.log(DebugService.ENTITY, "Enemy: _ready() START")
 	add_to_group("enemies")
 
-	DebugService.log(DebugService.ENTITY, "Enemy: Checking game mode for targeting...")
-	# In Defense or Escort mode, target the defense target instead of player
-	if GameModeService.is_defense_target_mode():
-		DebugService.log(DebugService.ENTITY, "Enemy: Defense target mode - looking for target")
-		var defense_target = get_tree().get_first_node_in_group("defense_targets")
-		if defense_target:
-			player = defense_target
-			DebugService.log(DebugService.ENTITY, "Enemy: Defense target found!")
-		else:
-			# Fallback to player if defense target doesn't exist yet
-			player = get_tree().get_first_node_in_group("player")
-			DebugService.log(DebugService.ENTITY, "Enemy: Defense target NOT found, using player")
-	else:
-		player = get_tree().get_first_node_in_group("player")
-		DebugService.log(DebugService.ENTITY, "Enemy: Normal mode - using player")
+	# Acquire initial target
+	player = _acquire_target()
 
-	DebugService.log(DebugService.ENTITY, "Enemy: About to connect debug toggle...")
 	# Connect to debug toggle event
 	if not Events.hitbox_debug_toggled.is_connected(_on_debug_toggled):
 		Events.hitbox_debug_toggled.connect(_on_debug_toggled)
-	DebugService.log(DebugService.ENTITY, "Enemy: Debug toggle connected")
 
-	DebugService.log(DebugService.ENTITY, "Enemy: Checking if components already initialized...")
-	# Components must be initialized in _ready (when @onready vars are available)
-	# Even if enemy stats were initialized by spawner, we still need to init components
+	# Initialize components if not already done by spawner
 	if movement != null and movement.enemy != null:
-		DebugService.log(DebugService.ENTITY, "Enemy: Components already initialized, skipping")
 		return
 
-	DebugService.log(DebugService.ENTITY, "Enemy: About to initialize components...")
-	# Initialize components (must be done in _ready when @onready vars are available)
 	_initialize_components()
+	DebugService.log(DebugService.ENTITY, "Enemy: _ready complete, target = ", player)
 
-	DebugService.log(DebugService.ENTITY, "Enemy: _ready complete: player target = ", player)
+
+func _acquire_target() -> Node2D:
+	"""Find the appropriate target based on game mode."""
+	if GameModeService.is_defense_target_mode():
+		var defense_target = get_tree().get_first_node_in_group("defense_targets")
+		if defense_target:
+			return defense_target
+	return get_tree().get_first_node_in_group("player")
 
 func _on_debug_toggled(type: int, _enabled: bool) -> void:
 	if type == GameEnums.HitboxType.PHYSICS:
@@ -258,11 +245,7 @@ func _physics_process(delta: float) -> void:
 		take_dot_damage(dot_damage)
 
 	if player == null or not is_instance_valid(player):
-		# Re-acquire target (defense target in Defense/Escort modes, otherwise player)
-		if GameModeService.is_defense_target_mode():
-			player = get_tree().get_first_node_in_group("defense_targets")
-		if player == null: # Fallback to player if no defense target
-			player = get_tree().get_first_node_in_group("player")
+		player = _acquire_target()
 		if player == null:
 			return
 
@@ -346,7 +329,7 @@ func _explode() -> void:
 			continue
 		var dist := global_position.distance_to(enemy.global_position)
 		if dist <= explosion_radius and enemy.has_method("take_damage"):
-			enemy.take_damage(explosion_damage * 0.5) # Half damage to other enemies
+			enemy.take_damage(explosion_damage * GameConstants.ENEMY_EXPLOSION_CHAIN_DAMAGE_MULT)
 
 # =============================================================================
 # DELEGATED METHODS - Facades for components (test compatibility)
@@ -412,10 +395,10 @@ func _spawn_scrap_drops() -> void:
 	match enemy_rank:
 		GameEnums.EnemyRank.LIEUTENANT:
 			drop_count = GameConstants.ENEMY_RANK_LT_SCRAP_DROP_COUNT
-			scatter_radius = 60.0
+			scatter_radius = GameConstants.ENEMY_RANK_LT_SCATTER_RADIUS
 		GameEnums.EnemyRank.CAPTAIN:
 			drop_count = GameConstants.ENEMY_RANK_CAPT_SCRAP_DROP_COUNT
-			scatter_radius = 100.0
+			scatter_radius = GameConstants.ENEMY_RANK_CAPT_SCATTER_RADIUS
 	
 	# Single drop for normal enemies
 	if drop_count == 1:

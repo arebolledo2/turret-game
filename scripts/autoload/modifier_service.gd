@@ -13,10 +13,13 @@ var _system: ModifierSystem = ModifierSystem.new()
 
 var active_modifiers: Array:
 	get: return _system.get_all_modifiers()
-	set(value):
-		_system.clear_modifiers()
-		for modifier in value:
-			_system.add_modifier(modifier)
+
+
+func load_modifiers(modifiers: Array) -> void:
+	"""Replace all modifiers with a new set. Use this instead of setting active_modifiers directly."""
+	_system.clear_modifiers()
+	for modifier in modifiers:
+		_system.add_modifier(modifier)
 
 
 # =============================================================================

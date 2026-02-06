@@ -192,7 +192,7 @@ func _on_body_entered(body: Node) -> void:
 	if barrier_active:
 		if body.has_method("apply_knockback"):
 			var knockback_direction = (body.global_position - global_position).normalized()
-			var knockback_force = 800.0 # Very strong barrier knockback
+			var knockback_force = GameConstants.DEFENSE_TARGET_BARRIER_KNOCKBACK
 			body.apply_knockback(knockback_force, knockback_direction)
 			DebugService.log(DebugService.ENTITY, "DefenseTarget: Barrier blocked enemy - strong knockback applied")
 		return
@@ -210,7 +210,7 @@ func _on_body_entered(body: Node) -> void:
 			# Apply enhanced knockback to the enemy (push them away from target)
 			if enemy.has_method("apply_knockback"):
 				var knockback_direction = (enemy.global_position - global_position).normalized()
-				var knockback_force = 300.0 * GameConstants.DEFENSE_TARGET_KNOCKBACK_MULTIPLIER
+				var knockback_force = GameConstants.DEFENSE_TARGET_BASE_KNOCKBACK * GameConstants.DEFENSE_TARGET_KNOCKBACK_MULTIPLIER
 				enemy.apply_knockback(knockback_force, knockback_direction)
 				DebugService.log(DebugService.ENTITY, "DefenseTarget: Applied enhanced knockback to enemy (", knockback_force, ")")
 

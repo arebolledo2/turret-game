@@ -292,3 +292,89 @@ func test_turret_unlock_techs_are_purchaseable():
 	assert_true(success, "Should successfully purchase fire turret unlock")
 	assert_true(tech_tree_service.is_tech_unlocked(fire_tech_id),
 		"Fire unlock tech should be in unlocked list")
+
+
+# =============================================================================
+# UNLOCK TECH PREREQUISITES & COST
+# =============================================================================
+
+func test_cannot_unlock_without_enough_points() -> void:
+	tech_tree_service.total_research_points = 0
+	var can_unlock = tech_tree_service.can_unlock_tech("turret_unlock_sniper")
+	assert_false(can_unlock,
+		"Should not be able to unlock with 0 research points")
+
+
+func test_unlock_tech_deducts_cost() -> void:
+	tech_tree_service.add_research_points(200)
+	var before = tech_tree_service.total_research_points
+
+	tech_tree_service.unlock_tech("turret_unlock_sniper")
+
+	var after = tech_tree_service.total_research_points
+	assert_lt(after, before,
+		"Unlocking should deduct research points")
+
+
+func test_cannot_unlock_same_non_repeatable_tech_twice() -> void:
+	tech_tree_service.add_research_points(200)
+	tech_tree_service.unlock_tech("turret_unlock_sniper")
+
+	# Try to unlock again
+	var can_unlock = tech_tree_service.can_unlock_tech("turret_unlock_sniper")
+	assert_false(can_unlock,
+		"Should not be able to re-unlock a non-repeatable tech")
+
+
+func test_unlock_multiple_turret_types() -> void:
+	tech_tree_service.add_research_points(500)
+
+	tech_tree_service.unlock_tech("turret_unlock_sniper")
+	tech_tree_service.unlock_tech("turret_unlock_fire")
+
+	assert_true(tech_tree_service.is_turret_type_unlocked("sniper"),
+		"Sniper should be unlocked")
+	assert_true(tech_tree_service.is_turret_type_unlocked("fire"),
+		"Fire should be unlocked")
+	assert_false(tech_tree_service.is_turret_type_unlocked("plasma"),
+		"Plasma should still be locked")
+
+
+# =============================================================================
+# UNLOCK CHAIN - SEQUENTIAL UNLOCKING
+# =============================================================================
+
+func test_unlock_chain_preserves_previous_unlocks() -> void:
+	tech_tree_service.add_research_points(500)
+
+	tech_tree_service.unlock_tech("turret_unlock_sniper")
+	tech_tree_service.unlock_tech("turret_unlock_fire")
+	tech_tree_service.unlock_tech("turret_unlock_plasma")
+
+	assert_eq(tech_tree_service.unlocked_tech_ids.size(), 3,
+		"Should have 3 unlocked techs")
+	assert_true(tech_tree_service.is_tech_unlocked("turret_unlock_sniper"),
+		"First unlocked tech should persist")
+
+
+# =============================================================================
+# RESEARCH POINTS - EDGE CASES
+# =============================================================================
+
+func test_research_points_exactly_at_cost() -> void:
+	# Get cost of a tech
+	var tech := TechRegistry.get_tech("turret_unlock_sniper")
+	var cost: int = tech.get("cost", 999)
+
+	tech_tree_service.total_research_points = cost
+	assert_true(tech_tree_service.can_unlock_tech("turret_unlock_sniper"),
+		"Should be able to unlock with exact cost")
+
+
+func test_research_points_one_below_cost() -> void:
+	var tech := TechRegistry.get_tech("turret_unlock_sniper")
+	var cost: int = tech.get("cost", 999)
+
+	tech_tree_service.total_research_points = cost - 1
+	assert_false(tech_tree_service.can_unlock_tech("turret_unlock_sniper"),
+		"Should not be able to unlock with cost - 1")
