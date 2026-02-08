@@ -59,7 +59,7 @@ All code uses services directly. No facade pattern.
 ### Registry Pattern
 Type definitions stored in **static registry classes**:
 
-- **EnemyRegistry** (`scripts/registries/enemy_registry.gd`) - Enemy type definitions (basic, tank, lazy_wanderer, charger, lazy_shooter)
+- **EnemyRegistry** (`scripts/registries/enemy_registry.gd`) - Enemy type definitions (basic, fast, tank, lazy_wanderer, charger, neon_drone, lazy_shooter)
 - **TurretRegistry** (`scripts/registries/turret_registry.gd`) - Turret type definitions (normal, sniper, fire, plasma, shock, tesla, melee, mine)
 - **ItemRegistry** (`scripts/registries/item_registry.gd`) - Item definitions across 5 rarity tiers
 - **TechRegistry** (`scripts/registries/tech_registry.gd`) - Tech tree definitions across 6 paths (turret_offense, turret_utility, turret_unlock, player_combat, player_defense, economy)
@@ -76,7 +76,7 @@ Player (`scripts/player.gd`) delegates to **behavior components** (plus PlayerHu
 ### Modifier & Buff Systems
 - **ModifierService**: Autoload wrapper for ModifierSystem. Manages permanent stat modifications.
 - **ModifierSystem** (`scripts/systems/modifier_system.gd`): Core modifier logic using PoE-style stacking (add/increase/more operations) with filter support (turret_type, damage_type, attack_style, entity_type).
-- **BuffSystem** (`scripts/systems/buff_system.gd`): Manages temporary, stackable, time-based buffs per turret instance.
+- **BuffSystem** (`scripts/systems/buff_system.gd`): Manages temporary, stackable, time-based buffs per turret instance (add/increase/more operations).
 
 ### Entity Component Systems
 **Enemy Components** (in `scripts/components/`):
@@ -107,7 +107,11 @@ Items organized by rarity in `scripts/registries/items/`:
 ### Core Coordinators
 Key manager scripts that coordinate between services:
 
+- **GameManager** (`scripts/game_manager.gd`) - Top-level orchestrator; creates and wires WaveController, EnemySpawner, and GameModeEntitySpawner
 - **WaveController** (`scripts/wave_controller.gd`) - Orchestrates wave timing, progression, and spawning coordination
+- **EnemySpawner** (`scripts/enemy_spawner.gd`) - Spawn zones, queues, and wave-based enemy spawning
+- **TurretManager** (`scripts/turret_manager.gd`) - Turret spawning, placement constraints, and stat updates
+- **ShopManager** (`scripts/shop_manager.gd`) - Shop offer generation, locked offers, and session dedup
 - **GameModeEntitySpawner** (`scripts/game_mode_entity_spawner.gd`) - Spawns game-mode-specific entities
 - **ArenaSetup** (`scripts/arena_setup.gd`) - Arena configuration and initialization
 - **CameraSetup** (`scripts/camera_setup.gd`) - Camera system with gamepad zoom support
