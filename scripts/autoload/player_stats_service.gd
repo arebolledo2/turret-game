@@ -23,7 +23,7 @@ func get_player_max_health(difficulty_mult: float) -> float:
 
 ## Get player weapon damage with modifiers applied
 func get_player_weapon_damage() -> float:
-	return ModifierService.apply_modifiers_to_stat(GameConstants.PLAYER_WEAPON_DAMAGE, "player_weapon_damage", "player")
+	return ModifierService.apply_modifiers_to_stat(GameConstants.PLAYER_TURRET_DAMAGE, "player_weapon_damage", "player")
 
 
 ## Get player fire rate with modifiers applied

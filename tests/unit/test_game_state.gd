@@ -347,7 +347,7 @@ func test_player_speed_with_modifiers():
 
 func test_player_weapon_damage_no_modifiers():
 	var damage = game_state.get_player_weapon_damage()
-	assert_eq(damage, GameConstants.PLAYER_WEAPON_DAMAGE,
+	assert_eq(damage, GameConstants.PLAYER_TURRET_DAMAGE,
 		"Base player weapon damage with no modifiers")
 
 
@@ -360,7 +360,7 @@ func test_player_weapon_damage_with_modifiers():
 	})
 
 	var damage = game_state.get_player_weapon_damage()
-	var expected = GameConstants.PLAYER_WEAPON_DAMAGE + 5.0
+	var expected = GameConstants.PLAYER_TURRET_DAMAGE + 5.0
 
 	assert_eq(damage, expected, "Player weapon damage should include modifiers")
 

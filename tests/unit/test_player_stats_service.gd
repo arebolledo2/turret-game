@@ -138,7 +138,7 @@ func test_get_player_max_health_difficulty_and_modifiers():
 
 func test_get_player_weapon_damage_base():
 	var damage = player_stats_service.get_player_weapon_damage()
-	assert_eq(damage, GameConstants.PLAYER_WEAPON_DAMAGE,
+	assert_eq(damage, GameConstants.PLAYER_TURRET_DAMAGE,
 		"Should return base weapon damage")
 
 
@@ -150,7 +150,7 @@ func test_get_player_weapon_damage_with_modifier():
 		"source": "damage_boost"
 	})
 	var damage = player_stats_service.get_player_weapon_damage()
-	assert_eq(damage, GameConstants.PLAYER_WEAPON_DAMAGE * 1.5,
+	assert_eq(damage, GameConstants.PLAYER_TURRET_DAMAGE * 1.5,
 		"Should apply 50% increase damage modifier")
 
 
@@ -287,7 +287,7 @@ func test_multiple_stats_with_different_modifiers():
 
 	assert_eq(speed, GameConstants.PLAYER_SPEED + 50.0,
 		"Speed should be modified by add")
-	assert_eq(damage, GameConstants.PLAYER_WEAPON_DAMAGE * 2.0,
+	assert_eq(damage, GameConstants.PLAYER_TURRET_DAMAGE * 2.0,
 		"Damage should be modified by 'more' 2.0x")
 	assert_eq(luck, GameConstants.PLAYER_BASE_LUCK + 0.1,
 		"Luck should be modified by add")

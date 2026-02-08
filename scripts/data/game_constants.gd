@@ -22,7 +22,6 @@ const PLAYER_BASE_MAX_HEALTH: float = 25.0
 const PLAYER_SPEED: float = 250.0
 const PLAYER_PICKUP_RADIUS: float = 50.0
 const PLAYER_INVINCIBILITY_TIME: float = 0.5
-const PLAYER_WEAPON_DAMAGE: float = 1.0 # Legacy - used by PlayerStatsService for item bonuses
 
 # Player Turret Combat
 const PLAYER_TURRET_DAMAGE: float = 12.0

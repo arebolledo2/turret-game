@@ -73,7 +73,7 @@ func get_player_speed() -> float:
 
 ## Get player weapon damage with modifiers applied
 func get_player_weapon_damage() -> float:
-	return modifiers.get_player_weapon_damage(GameConstants.PLAYER_WEAPON_DAMAGE)
+	return modifiers.get_player_weapon_damage(GameConstants.PLAYER_TURRET_DAMAGE)
 
 
 ## Get turret stats with difficulty and modifiers applied
