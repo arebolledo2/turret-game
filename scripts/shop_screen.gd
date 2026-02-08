@@ -9,7 +9,8 @@ const ShopOffersPanelScript = preload("res://scripts/ui/shop/shop_offers_panel.g
 
 # UI References
 @onready var title_label: Label = $MainContainer/ContentVBox/Header/TitleLabel
-@onready var scrap_label: Label = $MainContainer/ContentVBox/Header/ScrapLabel
+@onready var scrap_label: Label = $MainContainer/ContentVBox/TabBar/ScrapLabel
+@onready var research_label: Label = $MainContainer/ContentVBox/TabBar/ResearchLabel
 @onready var offers_container: HBoxContainer = $MainContainer/ContentVBox/MainHBox/LeftPanel/OffersContainer
 @onready var tech_tree_panel: TechTreePanel = $MainContainer/ContentVBox/MainHBox/LeftPanel/TechTreePanel
 @onready var reroll_button: Button = $MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer/RerollButton
@@ -45,6 +46,7 @@ func _ready() -> void:
 	Events.shop_purchase_made.connect(_on_purchase_made)
 	Events.shop_insufficient_funds.connect(_on_insufficient_funds)
 	Events.tech_unlocked.connect(_on_tech_unlocked)
+	Events.research_points_changed.connect(_on_research_changed)
 
 	# Connect panel signals
 	offers_panel.purchase_requested.connect(_on_purchase_pressed)
@@ -86,6 +88,11 @@ func _on_shop_opened(wave_number: int) -> void:
 		scrap_label.add_theme_color_override("font_outline_color", Color.BLACK)
 		scrap_label.add_theme_constant_override("outline_size", 4)
 
+	if research_label:
+		# Font size handled by Theme Variation (Header3)
+		research_label.add_theme_color_override("font_outline_color", Color.BLACK)
+		research_label.add_theme_constant_override("outline_size", 4)
+
 	if reroll_button:
 		# Font size handled by Theme Variation (ButtonLarge)
 		reroll_button.add_theme_constant_override("outline_size", 6)
@@ -98,6 +105,7 @@ func _on_shop_opened(wave_number: int) -> void:
 
 	title_label.text = "TURRET SHOP - WAVE %d" % wave_number
 	update_scrap_display()
+	update_research_display()
 	offers_panel.update_reroll_button()
 	_update_panels()
 
@@ -224,6 +232,14 @@ func update_scrap_display() -> void:
 	scrap_label.text = "💰 %d" % EconomyService.total_scrap
 
 
+func update_research_display() -> void:
+	research_label.text = "🔬 %d" % TechTreeService.total_research_points
+
+
+func _on_research_changed(_total: int) -> void:
+	update_research_display()
+
+
 func _on_insufficient_funds(_required: int, _current: int) -> void:
 	var tween = create_tween()
 	tween.tween_property(scrap_label, "modulate", Color.RED, 0.1)
@@ -234,6 +250,7 @@ func _on_tech_unlocked(_tech_id: String) -> void:
 	"""Called when a tech is purchased in the tech tree"""
 	_update_panels()
 	update_scrap_display()
+	update_research_display()
 
 
 func _update_panels() -> void:

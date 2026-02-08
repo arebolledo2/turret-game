@@ -95,7 +95,7 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 
 	# Add custom panel style with less transparency
 	var panel_style = StyleBoxFlat.new()
-	panel_style.bg_color = Color(0.15, 0.15, 0.15, 0.95) # Dark gray with high opacity
+	panel_style.bg_color = Color(0.15, 0.15, 0.15, 1.0)
 	panel_style.border_color = Color(0.3, 0.3, 0.3, 1.0)
 	panel_style.set_border_width_all(2)
 	panel_style.set_corner_radius_all(8)
@@ -143,12 +143,12 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 
 	# Add button style for better visibility
 	var button_style = StyleBoxFlat.new()
-	button_style.bg_color = Color(0.25, 0.25, 0.25, 0.95) # Medium gray with high opacity
+	button_style.bg_color = Color(0.25, 0.25, 0.25, 1.0)
 	button_style.set_corner_radius_all(4)
 	purchase_button.add_theme_stylebox_override("normal", button_style)
 
 	var button_hover = button_style.duplicate()
-	button_hover.bg_color = Color(0.35, 0.35, 0.35, 0.95) # Lighter on hover
+	button_hover.bg_color = Color(0.35, 0.35, 0.35, 1.0)
 	purchase_button.add_theme_stylebox_override("hover", button_hover)
 	if offer.get("sold", false):
 		purchase_button.text = "SOLD"
@@ -173,12 +173,12 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 		var lock_style = StyleBoxFlat.new()
 		if offer.get("locked", false):
 			# Locked state - yellow/gold background
-			lock_style.bg_color = Color(0.8, 0.7, 0.2, 0.7) # Gold with transparency
+			lock_style.bg_color = Color(0.8, 0.7, 0.2, 1.0)
 			lock_button.text = "🔒 Unlock"
 			lock_button.pressed.connect(func(): shop_manager.unlock_offer(index))
 		else:
 			# Unlocked state - default dark background
-			lock_style.bg_color = Color(0.2, 0.2, 0.2, 0.7)
+			lock_style.bg_color = Color(0.2, 0.2, 0.2, 1.0)
 			lock_button.text = "🔓 Lock"
 			lock_button.pressed.connect(func(): shop_manager.lock_offer(index))
 		lock_style.set_corner_radius_all(4)
