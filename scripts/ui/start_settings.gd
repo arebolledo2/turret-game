@@ -75,14 +75,11 @@ func _setup_options() -> void:
 		arena_dropdown.select(1)
 		arena_dropdown.item_selected.connect(_on_arena_type_selected)
 
-	# Background Options
+	# Background Options (populated from GameConstants)
 	if bg_dropdown:
 		bg_dropdown.clear()
-		bg_dropdown.add_item("Factory Ruins", 0)
-		bg_dropdown.add_item("Desert Outpost", 1)
-		bg_dropdown.add_item("Neon District", 2)
-		bg_dropdown.add_item("Diorama 1", 3)
-		bg_dropdown.add_item("Diorama 2", 4)
+		for i in GameConstants.BACKGROUNDS.size():
+			bg_dropdown.add_item(GameConstants.BACKGROUNDS[i].name, i)
 		# Default to Desert Outpost
 		bg_dropdown.select(1)
 		# Initially visible only if isometric is selected (which is default)

@@ -20,14 +20,8 @@ var diamond_border: Polygon2D = null
 var bg_sprite: Sprite2D = null
 var debug_outline: Line2D = null
 
-# Available background images (hardcoded list)
-const AVAILABLE_BACKGROUNDS: Array[String] = [
-	"res://assets/sprites/isometric_arena_bg.jpeg",
-	"res://assets/sprites/isometric_arena_bg_2.jpeg",
-	"res://assets/sprites/isometric_arena_bg_3.jpeg",
-	"res://assets/sprites/isometric_arena_bg_4.jpeg",
-	"res://assets/sprites/isometric_arena_bg_5.jpeg",
-]
+# Available backgrounds (from GameConstants)
+var AVAILABLE_BACKGROUNDS: Array[String] = []
 var current_bg_index: int = 0
 
 # Alignment (Adjustable at runtime, stored per-background)
@@ -43,6 +37,10 @@ var start_time: int = 0 # For debug print throttling
 
 
 func _ready() -> void:
+	# Populate background paths from centralized data
+	for bg in GameConstants.BACKGROUNDS:
+		AVAILABLE_BACKGROUNDS.append(bg.path)
+
 	# Ensure this script runs even when game is paused (for debug editing)
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	DebugService.log(DebugService.ARENA, "Arena _ready called. Process Mode set to ALWAYS. Visible: ", visible)

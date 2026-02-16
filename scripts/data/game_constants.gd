@@ -206,6 +206,18 @@ const INVINCIBILITY_FLASH_THRESHOLD_MS: int = 50
 const TURRET_DROP_OFFSET: Vector2 = Vector2(0, 16) # Offset when placing turret
 
 # =============================================================================
+# ARENA BACKGROUNDS (Isometric)
+# =============================================================================
+const BACKGROUNDS: Array[Dictionary] = [
+	{"name": "Factory Ruins", "path": "res://assets/sprites/isometric_arena_bg.jpeg"},
+	{"name": "Desert Outpost", "path": "res://assets/sprites/isometric_arena_bg_2.jpeg"},
+	{"name": "Neon District", "path": "res://assets/sprites/isometric_arena_bg_3.jpeg"},
+	{"name": "Diorama 1", "path": "res://assets/sprites/isometric_arena_bg_4.jpeg"},
+	{"name": "Diorama 2", "path": "res://assets/sprites/isometric_arena_bg_5.jpeg"},
+	{"name": "Sci-Fi Platform", "path": "res://assets/sprites/isometric_arena_bg_6.jpeg"},
+]
+
+# =============================================================================
 # ARENA (Isometric)
 # =============================================================================
 const ISO_SCALE_FACTOR: float = 1.414 # sqrt(2) for equal surface area
