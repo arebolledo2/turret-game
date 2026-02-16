@@ -39,7 +39,7 @@ tests/
 
 ### From Godot Editor
 
-1. Open the project in Godot 4.3
+1. Open the project in Godot 4.6
 2. Enable the GUT plugin: Project → Project Settings → Plugins → GUT → Enable
 3. Open GUT panel: Bottom panel → GUT
 4. Click "Run All" to run tests
