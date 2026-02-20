@@ -28,7 +28,7 @@ const TYPES: Dictionary = {
 		"icon": "⚡",
 		"description": "Quick but fragile enemy.",
 		"behaviors": [GameEnums.EnemyBehavior.CHASE, GameEnums.EnemyBehavior.SWARM],
-		"sprite_folder": "res://assets/sprites/enemy_tiny",
+		"sprite_folder": "res://assets/sprites/enemy_fast",
 		"color_tint": Color(0.6, 0.9, 1.0),
 		"base_stats": {
 			"health": 4.0,
@@ -51,7 +51,7 @@ const TYPES: Dictionary = {
 		"icon": "🛡️",
 		"description": "Slow but very tough enemy.",
 		"behaviors": [GameEnums.EnemyBehavior.CHASE, GameEnums.EnemyBehavior.TANK],
-		"sprite_folder": "res://assets/sprites/enemy_tiny",
+		"sprite_folder": "res://assets/sprites/enemy_tank",
 		"color_tint": Color(0.8, 0.5, 0.3),
 		"base_stats": {
 			"health": 30.0,
