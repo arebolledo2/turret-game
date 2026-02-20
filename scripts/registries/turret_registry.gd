@@ -178,7 +178,23 @@ static func get_base_stats(type_id: String) -> Dictionary:
 
 ## Get turret color tint
 static func get_color(type_id: String) -> Color:
+	var asset_config := AssetConfigService.get_turret_config(type_id)
+	if asset_config and asset_config.visual:
+		var configured_color: Color = asset_config.visual.modulate
+		if not configured_color.is_equal_approx(Color.WHITE):
+			return configured_color
 	return COLORS.get(type_id, Color.WHITE)
+
+
+## Get the primary configured sprite path for a turret type
+static func get_sprite_path(type_id: String) -> String:
+	var asset_config := AssetConfigService.get_turret_config(type_id)
+	if asset_config and asset_config.visual:
+		if asset_config.visual.texture_paths.has("default"):
+			return str(asset_config.visual.texture_paths.get("default", ""))
+		if asset_config.visual.texture_paths.has("right"):
+			return str(asset_config.visual.texture_paths.get("right", ""))
+	return ""
 
 
 ## Get turret base price

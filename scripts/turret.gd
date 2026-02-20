@@ -15,6 +15,8 @@ var current_rotation_speed: float = 0.0
 
 func _ready() -> void:
 	add_to_group("turrets")
+	Events.asset_preset_changed.connect(_on_asset_preset_changed)
+	Events.asset_config_changed.connect(_on_asset_config_changed)
 
 	# Initialize stats
 	update_stats()
@@ -182,3 +184,14 @@ var is_in_pickup_range: bool:
 	set(value):
 		if visuals:
 			visuals.is_in_pickup_range = value
+
+
+func _on_asset_preset_changed(_preset_name: String) -> void:
+	if visuals:
+		visuals.apply_asset_config(AssetConfigService.get_turret_config(turret_type))
+		visuals.setup_visuals()
+
+
+func _on_asset_config_changed(entity_kind: int, asset_id: String) -> void:
+	if entity_kind == EntityAssetConfig.EntityKind.TURRET and asset_id == turret_type:
+		_on_asset_preset_changed(AssetConfigService.get_active_preset())

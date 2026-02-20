@@ -392,11 +392,11 @@ func test_get_color_invalid_type():
 
 func test_get_sprite_folder_default():
 	var folder = EnemyRegistry.get_sprite_folder("fast")
-	assert_eq(folder, "res://assets/sprites/enemy_tiny",
-		"Fast enemy should use enemy_tiny sprites")
+	assert_eq(folder, "res://assets/sprites/enemy_fast",
+		"Fast enemy should use enemy_fast sprites")
 
 
 func test_get_sprite_folder_invalid_type():
 	var folder = EnemyRegistry.get_sprite_folder("nonexistent")
-	assert_eq(folder, "res://assets/sprites/enemy_tiny",
-		"Invalid type should return default sprite folder")
+	assert_eq(folder, "res://assets/sprites/enemy_spider_drone",
+		"Invalid type should fall back to basic enemy sprite folder")

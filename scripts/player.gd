@@ -26,6 +26,8 @@ var projectile_scene: PackedScene
 @onready var turret_handler: PlayerTurretHandler = $Components/PlayerTurretHandler
 @onready var movement: PlayerMovement = $Components/PlayerMovement
 @onready var combat: PlayerCombat = $Components/PlayerCombat
+@onready var visuals: PlayerVisuals = $Components/PlayerVisuals
+@onready var collision_manager: CollisionManager = $CollisionManager
 
 func _ready() -> void:
 	# Initialize from services
@@ -57,11 +59,15 @@ func _ready() -> void:
 	
 	# Connect to game mode entity spawning
 	Events.defense_target_spawned.connect(_on_defense_target_spawned)
+	Events.asset_preset_changed.connect(_on_asset_preset_changed)
+	Events.asset_config_changed.connect(_on_asset_config_changed)
 
 	# Initialize components
 	turret_handler.initialize(self)
-	movement.initialize(self, sprite)
+	movement.initialize(self)
 	combat.initialize(self, weapon_pivot)
+	visuals.initialize(self, movement, sprite)
+	_apply_asset_config()
 
 	# Setup audio listener for spatial sounds
 	var listener = AudioListener2D.new()
@@ -125,6 +131,9 @@ func _physics_process(delta: float) -> void:
 
 	# Combat systems
 	combat.process(delta)
+
+	# Visual orientation/state from asset config
+	visuals.process(delta)
 	
 	# Handle invincibility visual
 	if is_invincible:
@@ -242,7 +251,10 @@ func _show_evasion_effect() -> void:
 
 func _on_invincibility_timeout() -> void:
 	is_invincible = false
-	sprite.modulate = Color.WHITE # Reset to normal color
+	if visuals:
+		sprite.modulate = visuals.get_base_modulate()
+	else:
+		sprite.modulate = Color.WHITE
 
 func _on_animation_timer_timeout() -> void:
 	# Cycle through walk animation frames (0-15 for 4x4 grid)
@@ -342,3 +354,28 @@ func spawn_defensive_pulse_visual() -> void:
 	tween.tween_property(viz, "scale", Vector2.ONE * 1.4, 0.3)
 	tween.tween_property(viz, "modulate:a", 0.0, 0.3)
 	tween.chain().tween_callback(viz.queue_free)
+
+
+func _apply_asset_config() -> void:
+	var config := AssetConfigService.get_player_config()
+	if config == null:
+		return
+
+	if visuals:
+		visuals.apply_asset_config(config)
+
+	if collision_manager and config.collision and config.collision.enabled:
+		var profile_path := config.collision.collision_profile_path
+		if not profile_path.is_empty() and ResourceLoader.exists(profile_path):
+			var profile := load(profile_path)
+			if profile:
+				collision_manager.apply_profile(profile)
+
+
+func _on_asset_preset_changed(_preset_name: String) -> void:
+	_apply_asset_config()
+
+
+func _on_asset_config_changed(entity_kind: int, asset_id: String) -> void:
+	if entity_kind == EntityAssetConfig.EntityKind.PLAYER and asset_id == "main":
+		_apply_asset_config()

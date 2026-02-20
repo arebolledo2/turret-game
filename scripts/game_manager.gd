@@ -369,4 +369,5 @@ func _reset_all_services() -> void:
 	ModifierService.clear_modifiers()
 	GameModeService.reset_state()
 	SettingsService.reset_state()
+	AssetConfigService.reset_state()
 	TechTreeService.reset_state()

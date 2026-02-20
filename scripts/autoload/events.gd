@@ -103,3 +103,7 @@ signal tunnel_door_breached()
 signal escort_reached_destination()
 signal escort_position_updated(position: Vector2, progress: float)
 signal arena_background_selected(index: int)
+
+# Asset configuration events
+signal asset_preset_changed(preset_name: String)
+signal asset_config_changed(entity_kind: int, asset_id: String)

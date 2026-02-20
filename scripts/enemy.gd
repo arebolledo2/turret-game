@@ -41,6 +41,7 @@ var behavior_params: Dictionary = {}
 @onready var movement: EnemyMovement = $Components/EnemyMovement
 @onready var visuals: EnemyVisuals = $Components/EnemyVisuals
 @onready var status_effects: EnemyStatusEffects = $Components/EnemyStatusEffects
+@onready var collision_manager: CollisionManager = $CollisionManager
 
 var combat: Node = null # Optional combat component for ranged enemies
 
@@ -53,6 +54,10 @@ func _ready() -> void:
 	# Connect to debug toggle event
 	if not Events.hitbox_debug_toggled.is_connected(_on_debug_toggled):
 		Events.hitbox_debug_toggled.connect(_on_debug_toggled)
+	if not Events.asset_preset_changed.is_connected(_on_asset_preset_changed):
+		Events.asset_preset_changed.connect(_on_asset_preset_changed)
+	if not Events.asset_config_changed.is_connected(_on_asset_config_changed):
+		Events.asset_config_changed.connect(_on_asset_config_changed)
 
 	# Initialize components if not already done by spawner
 	if movement != null and movement.enemy != null:
@@ -122,7 +127,7 @@ func _apply_type_config(type_id: String) -> void:
 	mass = base_stats.get("mass", 1.0)
 
 	# Load color tint
-	color_tint = type_def.get("color_tint", Color.WHITE)
+	color_tint = Color.WHITE
 
 	# Load behavior_params
 	behavior_params = type_def.get("behavior_params", {})
@@ -142,8 +147,7 @@ func _apply_type_config(type_id: String) -> void:
 
 	# Note: Sprite loading and visual configuration now handled by EnemyVisuals component
 
-	# Configure hitboxes if available
-	_configure_hitboxes(type_def)
+	# Hitbox/collision profile is now managed via AssetConfigService + CollisionManager
 
 func _initialize_components() -> void:
 	"""Initialize all components with their dependencies."""
@@ -155,12 +159,10 @@ func _initialize_components() -> void:
 	# Initialize movement component
 	movement.initialize(self, speed, mass, current_behavior_type, behavior_params)
 
-	# Initialize visuals component (with sprite folder if applicable)
-	var sprite_folder := ""
 	var type_def := EnemyRegistry.get_type(enemy_type)
-	if type_def.has("sprite_folder"):
-		sprite_folder = type_def.get("sprite_folder", "")
-	visuals.initialize(self, base_scale, color_tint, sprite_folder)
+	var asset_config := _build_effective_asset_config()
+	visuals.initialize(self, asset_config)
+	_apply_collision_profile_from_config(asset_config)
 
 	# Initialize status effects component
 	status_effects.initialize(self)
@@ -178,21 +180,6 @@ func _initialize_components() -> void:
 func _on_status_visual_changed(effects: Dictionary) -> void:
 	"""Handle status effect visual updates from component."""
 	visuals.update_status_visual(effects)
-
-func _configure_hitboxes(type_def: Dictionary) -> void:
-	"""Configure unified hurtbox from type definition.
-	The hurtbox now handles both receiving AND dealing damage (no separate DamageZone)."""
-	# Configure unified hurtbox (for both receiving and dealing damage)
-	if has_node("Hurtbox"):
-		var hurtbox = $Hurtbox
-		if hurtbox.has_node("CollisionShape2D"):
-			hurtbox.get_node("CollisionShape2D").debug_color = Color(1.0, 0.5, 0.0, 0.4) # Orange for hurtbox
-			
-		if type_def.has("hurtbox") and hurtbox.has_method("configure"):
-			var hurtbox_config: Dictionary = type_def.get("hurtbox", {})
-			var shape_type: String = hurtbox_config.get("type", "circle")
-			var size: Vector2 = hurtbox_config.get("size", Vector2(24, 24))
-			hurtbox.configure(shape_type, size)
 
 func initialize(wave: int, type_id: String = "basic", rank: GameEnums.EnemyRank = GameEnums.EnemyRank.NORMAL) -> void:
 	"""Initialize enemy with type and wave-scaled stats."""
@@ -214,6 +201,7 @@ func initialize(wave: int, type_id: String = "basic", rank: GameEnums.EnemyRank 
 
 	# Apply rank multipliers
 	_apply_rank_modifiers()
+	_refresh_asset_config()
 
 	current_health = max_health # Reset health to full after rank scaling
 
@@ -330,6 +318,56 @@ func _explode() -> void:
 		var dist := global_position.distance_to(enemy.global_position)
 		if dist <= explosion_radius and enemy.has_method("take_damage"):
 			enemy.take_damage(explosion_damage * GameConstants.ENEMY_EXPLOSION_CHAIN_DAMAGE_MULT)
+
+
+func _build_effective_asset_config() -> EntityAssetConfig:
+	var asset_config := AssetConfigService.get_enemy_config(enemy_type)
+	if asset_config == null:
+		return null
+
+	var effective := asset_config.duplicate(true) as EntityAssetConfig
+	if effective == null or effective.visual == null:
+		return asset_config
+
+	effective.visual.scale = Vector2(effective.visual.scale.x * base_scale, effective.visual.scale.y * base_scale)
+	effective.visual.modulate = effective.visual.modulate * color_tint
+	return effective
+
+
+func _apply_collision_profile_from_config(asset_config: EntityAssetConfig) -> void:
+	if collision_manager == null or asset_config == null or asset_config.collision == null:
+		return
+	if not asset_config.collision.enabled:
+		return
+	if not asset_config.collision.live_apply and is_initialized:
+		return
+
+	var profile_path := asset_config.collision.collision_profile_path
+	if profile_path.is_empty() or not ResourceLoader.exists(profile_path):
+		return
+
+	var profile = load(profile_path)
+	if profile:
+		collision_manager.apply_profile(profile)
+
+
+func _refresh_asset_config() -> void:
+	var asset_config := _build_effective_asset_config()
+	if asset_config == null:
+		return
+
+	if visuals:
+		visuals.apply_asset_config(asset_config)
+	_apply_collision_profile_from_config(asset_config)
+
+
+func _on_asset_preset_changed(_preset_name: String) -> void:
+	_refresh_asset_config()
+
+
+func _on_asset_config_changed(entity_kind: int, asset_id: String) -> void:
+	if entity_kind == EntityAssetConfig.EntityKind.ENEMY and asset_id == enemy_type:
+		_refresh_asset_config()
 
 # =============================================================================
 # DELEGATED METHODS - Facades for components (test compatibility)

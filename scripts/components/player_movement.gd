@@ -6,7 +6,6 @@ class_name PlayerMovement
 ## Responsibilities:
 ## - Collect input (WASD + gamepad)
 ## - Calculate velocity with speed modifiers
-## - Flip sprite horizontally based on movement direction
 ## - Clamp to arena bounds
 ## - Check turret carry speed penalty
 
@@ -17,24 +16,13 @@ var is_moving: bool = false
 
 # Dependencies (set via initialize)
 var player: CharacterBody2D = null
-var sprite: Sprite2D = null
 var speed: float = 300.0
 
-# Assets
-var tex_left: Texture2D = preload("res://assets/sprites/player/player_left.png")
-var tex_right: Texture2D = preload("res://assets/sprites/player/player_right.png")
-
-func initialize(p_player: CharacterBody2D, p_sprite: Sprite2D) -> void:
+func initialize(p_player: CharacterBody2D, _p_sprite: Sprite2D = null) -> void:
 	"""Initialize component with required references."""
 	player = p_player
-	sprite = p_sprite
 	speed = PlayerStatsService.get_player_speed()
 	assert(player != null, "PlayerMovement: player reference required")
-	assert(sprite != null, "PlayerMovement: sprite reference required")
-	
-	# Set initial texture
-	sprite.texture = tex_left
-	sprite.flip_h = false
 
 func process(_delta: float) -> Vector2:
 	"""Main update function - returns velocity for move_and_slide."""
@@ -64,20 +52,8 @@ func process(_delta: float) -> Vector2:
 	if input_vector.length() > 0.1:
 		is_moving = true
 		facing_direction = get_direction_from_vector(input_vector)
-
-		# Flip sprite based on horizontal direction using separate textures
-		# West-facing directions: show original left-facing sprite
-		if facing_direction in [2, 3, 1]: # West(2), Northwest(3), Southwest(1)
-			sprite.texture = tex_left
-			sprite.flip_h = false
-		# East-facing directions: show right-facing sprite
-		elif facing_direction in [6, 5, 7]: # East(6), Northeast(5), Southeast(7)
-			sprite.texture = tex_right
-			sprite.flip_h = false # Flipped asset already exists
-		# North(4) and South(0): Keep current flip state (last horizontal direction)
 	else:
 		is_moving = false
-		# Keep facing and flip state when idle
 
 	return velocity
 

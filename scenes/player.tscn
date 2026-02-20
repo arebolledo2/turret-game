@@ -6,6 +6,9 @@
 [ext_resource type="Script" uid="uid://d0p5ycsnvlmr3" path="res://scripts/components/player_turret_handler.gd" id="5_turret"]
 [ext_resource type="Script" uid="uid://dt7q6iadms1oo" path="res://scripts/components/player_movement.gd" id="6_movement"]
 [ext_resource type="Script" uid="uid://hgf80sfff1hn" path="res://scripts/components/player_combat.gd" id="7_combat"]
+[ext_resource type="Script" path="res://scripts/components/player_visuals.gd" id="8_visuals"]
+[ext_resource type="Script" path="res://scripts/components/collision_manager.gd" id="9_collision_manager"]
+[ext_resource type="Resource" path="res://resources/collision_profiles/player_default.tres" id="10_profile"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_Physics"]
 radius = 16.0
@@ -39,6 +42,12 @@ wait_time = 0.1
 
 [node name="WeaponPivot" type="Node2D" parent="." unique_id=1081807656]
 
+[node name="CollisionManager" type="Node" parent="." unique_id=210070001]
+script = ExtResource("9_collision_manager")
+profile = ExtResource("10_profile")
+physics_collision_path = NodePath("../CollisionShape2D")
+hurtbox_path = NodePath("../Hurtbox")
+
 [node name="Components" type="Node" parent="." unique_id=594115321]
 
 [node name="PlayerTurretHandler" type="Node" parent="Components" unique_id=1483322548]
@@ -49,3 +58,6 @@ script = ExtResource("6_movement")
 
 [node name="PlayerCombat" type="Node" parent="Components" unique_id=1339821500]
 script = ExtResource("7_combat")
+
+[node name="PlayerVisuals" type="Node" parent="Components" unique_id=414840027]
+script = ExtResource("8_visuals")

@@ -16,6 +16,9 @@ class_name TurretVisuals
 var turret: Node2D = null
 var turret_type: String = ""
 var stats: Dictionary = {}
+var asset_config: EntityAssetConfig = null
+var visual_config: AssetVisualConfig = null
+var base_visual_modulate: Color = Color.WHITE
 
 # Sprite nodes
 var base_sprite: Sprite2D = null
@@ -55,12 +58,15 @@ func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary) ->
 	range_indicator = turret.get_node_or_null("RangeIndicator")
 	status_indicators = turret.get_node_or_null("StatusIndicators")
 
+	# Resolve initial config
+	apply_asset_config(AssetConfigService.get_turret_config(turret_type))
+
 	# Setup visuals based on turret type
 	setup_visuals()
 
 	# Setup range indicator
 	if range_indicator:
-		var color = TurretRegistry.get_color(turret_type)
+		var color = _get_visual_color()
 		_update_range_visual()
 		range_indicator.modulate = color
 		range_indicator.modulate.a = 0.0 # Hidden by default
@@ -72,6 +78,8 @@ func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary) ->
 
 	# Listen for range toggle event
 	Events.turret_range_toggled.connect(_on_range_toggled)
+	Events.asset_preset_changed.connect(_on_asset_preset_changed)
+	Events.asset_config_changed.connect(_on_asset_config_changed)
 
 	# Apply current range visibility state
 	if SettingsService.show_turret_ranges:
@@ -82,6 +90,11 @@ func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary) ->
 
 func setup_visuals() -> void:
 	"""Setup turret visuals based on type."""
+	if visual_config != null:
+		_setup_from_visual_config()
+		_store_visual_state()
+		return
+
 	match turret_type:
 		"plasma":
 			_setup_plasma_visuals()
@@ -104,6 +117,93 @@ func setup_visuals() -> void:
 
 	# Store visual state after type-specific setup
 	_store_visual_state()
+
+
+func apply_asset_config(new_config: EntityAssetConfig) -> void:
+	asset_config = new_config
+	if asset_config and asset_config.visual:
+		visual_config = asset_config.visual
+	else:
+		visual_config = null
+
+
+func _setup_from_visual_config() -> void:
+	var fallback_path := "res://assets/sprites/turrets/turret_basic.png"
+	match turret_type:
+		"sniper":
+			fallback_path = "res://assets/sprites/turrets/turret_sniper.png"
+		"fire":
+			fallback_path = "res://assets/sprites/turrets/turret_fire.png"
+		"plasma":
+			fallback_path = "res://assets/sprites/turrets/turret_plasma_static.png"
+		"shock":
+			fallback_path = "res://assets/sprites/turrets/turret_shock.png"
+		"tesla":
+			fallback_path = "res://assets/sprites/turrets/turret_tesla.png"
+		"normal", "mine", "melee":
+			fallback_path = "res://assets/sprites/turrets/turret_basic.png"
+
+	_setup_static_visual(_resolve_primary_texture_path(fallback_path))
+
+	if turret_type == "melee":
+		_setup_melee_weapon()
+
+
+func _resolve_primary_texture_path(fallback_path: String) -> String:
+	if visual_config == null:
+		return fallback_path
+	if visual_config.texture_paths.has("default"):
+		var path := str(visual_config.texture_paths.get("default", ""))
+		if ResourceLoader.exists(path):
+			return path
+	if visual_config.texture_paths.has("right"):
+		var right_path := str(visual_config.texture_paths.get("right", ""))
+		if ResourceLoader.exists(right_path):
+			return right_path
+	return fallback_path
+
+
+func _setup_static_visual(texture_path: String) -> void:
+	if not base_sprite:
+		return
+
+	_clear_dynamic_weapon()
+
+	if animated_sprite:
+		animated_sprite.visible = false
+	if icon_label:
+		icon_label.visible = false
+
+	base_sprite.visible = true
+	base_sprite.texture = load(texture_path)
+
+	var scale := Vector2(0.125, 0.125)
+	var modulate := Color.WHITE
+	var position_offset := Vector2.ZERO
+	var anchor_bottom := true
+	if visual_config:
+		scale = visual_config.scale
+		modulate = visual_config.modulate
+		position_offset = visual_config.position_offset
+		anchor_bottom = visual_config.anchor_bottom
+
+	base_sprite.scale = scale
+	base_sprite.modulate = modulate
+	base_visual_modulate = modulate
+
+	original_position = base_sprite.position
+	base_sprite.position = position_offset
+
+	if anchor_bottom and base_sprite.texture:
+		base_sprite.offset = Vector2(0, -base_sprite.texture.get_height() / 2.0)
+	else:
+		base_sprite.offset = Vector2.ZERO
+
+
+func _clear_dynamic_weapon() -> void:
+	if weapon_sprite and is_instance_valid(weapon_sprite):
+		weapon_sprite.queue_free()
+	weapon_sprite = null
 
 
 func _store_visual_state() -> void:
@@ -146,183 +246,42 @@ func _setup_icon_fallback() -> void:
 		icon_label.visible = true
 		icon_label.text = icon
 		icon_label.add_theme_font_size_override("font_size", FontSizes.get_scaled(FontSizes.ICON_MEDIUM))
+	base_visual_modulate = Color.WHITE
 
 
 func _setup_shock_visuals() -> void:
 	"""Setup shock turret visuals with custom sprite."""
-	if not base_sprite:
-		return
-
-	# Hide alternatives
-	if animated_sprite:
-		animated_sprite.visible = false
-	if icon_label:
-		icon_label.visible = false
-
-	base_sprite.visible = true
-	base_sprite.texture = load("res://assets/sprites/turrets/turret_shock.png")
-	base_sprite.scale = Vector2(0.125, 0.125)
-	base_sprite.modulate = Color.WHITE
-
-	# Store original position (from scene) before modifying
-	original_position = base_sprite.position
-
-	# On ground, move position to origin so bottom-anchoring offset works correctly
-	base_sprite.position = Vector2.ZERO
-
-	# Set offset to anchor at bottom center
-	# This makes scaling happen from the bottom instead of center
-	var tex = base_sprite.texture
-	if tex:
-		base_sprite.offset = Vector2(0, -tex.get_height() / 2.0)
+	_setup_static_visual(_resolve_primary_texture_path("res://assets/sprites/turrets/turret_shock.png"))
 
 
 func _setup_sniper_visuals() -> void:
 	"""Setup sniper turret visuals with custom sprite."""
-	if not base_sprite:
-		return
-
-	# Hide alternatives
-	if animated_sprite:
-		animated_sprite.visible = false
-	if icon_label:
-		icon_label.visible = false
-
-	base_sprite.visible = true
-	base_sprite.texture = load("res://assets/sprites/turrets/turret_sniper.png")
-	base_sprite.scale = Vector2(0.125, 0.125)
-	base_sprite.modulate = Color.WHITE
-
-	# Store original position (from scene) before modifying
-	original_position = base_sprite.position
-
-	# On ground, move position to origin so bottom-anchoring offset works correctly
-	base_sprite.position = Vector2.ZERO
-
-	# Set offset to anchor at bottom center
-	# This makes scaling happen from the bottom instead of center
-	var tex = base_sprite.texture
-	if tex:
-		base_sprite.offset = Vector2(0, -tex.get_height() / 2.0)
+	_setup_static_visual(_resolve_primary_texture_path("res://assets/sprites/turrets/turret_sniper.png"))
 
 
 func _setup_tesla_visuals() -> void:
 	"""Setup tesla turret visuals with custom sprite."""
-	if not base_sprite:
-		return
-
-	# Hide alternatives
-	if animated_sprite:
-		animated_sprite.visible = false
-	if icon_label:
-		icon_label.visible = false
-
-	base_sprite.visible = true
-	base_sprite.texture = load("res://assets/sprites/turrets/turret_tesla.png")
-	base_sprite.scale = Vector2(0.125, 0.125)
-	base_sprite.modulate = Color.WHITE
-
-	# Store original position (from scene) before modifying
-	original_position = base_sprite.position
-
-	# On ground, move position to origin so bottom-anchoring offset works correctly
-	base_sprite.position = Vector2.ZERO
-
-	# Set offset to anchor at bottom center
-	# This makes scaling happen from the bottom instead of center
-	var tex = base_sprite.texture
-	if tex:
-		base_sprite.offset = Vector2(0, -tex.get_height() / 2.0)
+	_setup_static_visual(_resolve_primary_texture_path("res://assets/sprites/turrets/turret_tesla.png"))
 
 func _setup_plasma_visuals() -> void:
 	"""Setup plasma turret visuals with custom sprite."""
-	if not base_sprite:
-		return
-
-	# Hide alternatives
-	if animated_sprite:
-		animated_sprite.visible = false
-	if icon_label:
-		icon_label.visible = false
-
-	base_sprite.visible = true
-	base_sprite.texture = load("res://assets/sprites/turrets/turret_plasma_static.png")
-	base_sprite.scale = Vector2(0.125, 0.125)
-	base_sprite.modulate = Color.WHITE
-
-	# Store original position (from scene) before modifying
-	original_position = base_sprite.position
-
-	# On ground, move position to origin so bottom-anchoring offset works correctly
-	base_sprite.position = Vector2.ZERO
-
-	# Set offset to anchor at bottom center
-	# This makes scaling happen from the bottom instead of center
-	var tex = base_sprite.texture
-	if tex:
-		base_sprite.offset = Vector2(0, -tex.get_height() / 2.0)
+	_setup_static_visual(_resolve_primary_texture_path("res://assets/sprites/turrets/turret_plasma_static.png"))
 
 func _setup_normal_visuals() -> void:
 	"""Setup normal/basic turret visuals with custom sprite."""
-	if not base_sprite:
-		return
-
-	# Hide alternatives
-	if animated_sprite:
-		animated_sprite.visible = false
-	if icon_label:
-		icon_label.visible = false
-
-	base_sprite.visible = true
-	base_sprite.texture = load("res://assets/sprites/turrets/turret_basic.png")
-	base_sprite.scale = Vector2(0.125, 0.125)
-	base_sprite.modulate = Color.WHITE
-
-	# Store original position (from scene) before modifying
-	original_position = base_sprite.position
-
-	# On ground, move position to origin so bottom-anchoring offset works correctly
-	base_sprite.position = Vector2.ZERO
-
-	# Set offset to anchor at bottom center
-	# This makes scaling happen from the bottom instead of center
-	var tex = base_sprite.texture
-	if tex:
-		base_sprite.offset = Vector2(0, -tex.get_height() / 2.0)
+	_setup_static_visual(_resolve_primary_texture_path("res://assets/sprites/turrets/turret_basic.png"))
 
 func _setup_fire_visuals() -> void:
 	"""Setup fire turret visuals with custom sprite."""
-	if not base_sprite:
-		return
-
-	# Hide alternatives
-	if animated_sprite:
-		animated_sprite.visible = false
-	if icon_label:
-		icon_label.visible = false
-
-	base_sprite.visible = true
-	base_sprite.texture = load("res://assets/sprites/turrets/turret_fire.png")
-	base_sprite.scale = Vector2(0.125, 0.125)
-	base_sprite.modulate = Color.WHITE
-
-	# Store original position (from scene) before modifying
-	original_position = base_sprite.position
-
-	# On ground, move position to origin so bottom-anchoring offset works correctly
-	base_sprite.position = Vector2.ZERO
-
-	# Set offset to anchor at bottom center
-	# This makes scaling happen from the bottom instead of center
-	var tex = base_sprite.texture
-	if tex:
-		base_sprite.offset = Vector2(0, -tex.get_height() / 2.0)
+	_setup_static_visual(_resolve_primary_texture_path("res://assets/sprites/turrets/turret_fire.png"))
 
 func update_stats(new_stats: Dictionary) -> void:
 	"""Update stats cache and refresh visuals."""
 	stats = new_stats
 	if range_indicator:
 		_update_range_visual()
+		range_indicator.modulate = _get_visual_color()
+		range_indicator.modulate.a = 0.0 if not SettingsService.show_turret_ranges else 0.3
 	_update_status_indicators()
 
 func _update_range_visual() -> void:
@@ -481,7 +440,7 @@ func show_pickup_indicator() -> void:
 		sprite_node = animated_sprite
 		
 	if sprite_node:
-		sprite_node.modulate = Color.WHITE.lightened(0.4)
+		sprite_node.modulate = base_visual_modulate.lightened(0.4)
 	if weapon_sprite:
 		weapon_sprite.modulate = Color.WHITE.lightened(0.4)
 
@@ -496,7 +455,7 @@ func hide_pickup_indicator() -> void:
 		sprite_node = animated_sprite
 		
 	if sprite_node:
-		sprite_node.modulate = Color.WHITE
+		sprite_node.modulate = base_visual_modulate
 	if weapon_sprite:
 		weapon_sprite.modulate = Color.WHITE
 
@@ -550,12 +509,35 @@ func hide_range() -> void:
 		range_indicator.modulate.a = 0.0
 
 
+func _get_visual_color() -> Color:
+	if visual_config:
+		return visual_config.modulate
+	return TurretRegistry.get_color(turret_type)
+
+
+func _on_asset_preset_changed(_preset_name: String) -> void:
+	apply_asset_config(AssetConfigService.get_turret_config(turret_type))
+	setup_visuals()
+	if range_indicator:
+		range_indicator.modulate = _get_visual_color()
+		range_indicator.modulate.a = 0.0 if not SettingsService.show_turret_ranges else 0.3
+
+
+func _on_asset_config_changed(entity_kind: int, asset_id: String) -> void:
+	if entity_kind == EntityAssetConfig.EntityKind.TURRET and asset_id == turret_type:
+		_on_asset_preset_changed(AssetConfigService.get_active_preset())
+
+
 func _start_idle_animation() -> void:
 	"""Start idle animation if turret type supports it."""
 	if not visual_node or is_being_carried:
 		return
 
-	# All static sprite turrets have idle animation
+	if visual_config and visual_config.idle_bounce_enabled:
+		_start_idle_bounce()
+		return
+
+	# Backward-compatible fallback for legacy visual config
 	var static_sprite_types = ["normal", "fire", "shock", "sniper", "tesla", "plasma", "melee", "mine"]
 	if turret_type in static_sprite_types:
 		_start_idle_bounce()
@@ -579,21 +561,27 @@ func _start_idle_bounce() -> void:
 	# Random starting phase to prevent synchronized bouncing
 	var random_phase = randf() * 0.6
 
-	# Subtle bounce: only scale Y axis between 95% and 105% of base scale
+	var min_scale := 0.95
+	var cycle := 0.6
+	if visual_config:
+		min_scale = clampf(visual_config.idle_bounce_min_y_scale, 0.1, 1.0)
+		cycle = maxf(0.05, visual_config.idle_bounce_cycle_seconds)
+
+	# Subtle bounce: only scale Y axis between configured min and base scale
 	var scale_x = original_scale.x # Keep horizontal scale constant
 	var scale_y_base = original_scale.y
-	var scale_y_down = scale_y_base * 0.95
+	var scale_y_down = scale_y_base * min_scale
 	var scale_y_up = scale_y_base * 1.0
 
 	# The sprite offset is set to anchor at bottom, so scaling Y will naturally
 	# grow upward from the bottom without position adjustments
-	# Duration is 0.6 seconds per half-cycle for a gentle, slow bounce
+	# Duration is configurable per half-cycle
 	if random_phase > 0.3:
-		idle_tween.tween_property(visual_node, "scale", Vector2(scale_x, scale_y_down), 0.6)
-		idle_tween.tween_property(visual_node, "scale", Vector2(scale_x, scale_y_up), 0.6)
+		idle_tween.tween_property(visual_node, "scale", Vector2(scale_x, scale_y_down), cycle)
+		idle_tween.tween_property(visual_node, "scale", Vector2(scale_x, scale_y_up), cycle)
 	else:
-		idle_tween.tween_property(visual_node, "scale", Vector2(scale_x, scale_y_up), 0.6)
-		idle_tween.tween_property(visual_node, "scale", Vector2(scale_x, scale_y_down), 0.6)
+		idle_tween.tween_property(visual_node, "scale", Vector2(scale_x, scale_y_up), cycle)
+		idle_tween.tween_property(visual_node, "scale", Vector2(scale_x, scale_y_down), cycle)
 
 
 func _setup_melee_visuals() -> void:
@@ -601,11 +589,23 @@ func _setup_melee_visuals() -> void:
 	# Setup base sprite (static turret)
 	_setup_normal_visuals()
 
+	_setup_melee_weapon()
+
+
+func _setup_melee_weapon() -> void:
+	"""Attach melee weapon sprite from config (fallback to legacy path)."""
+	_clear_dynamic_weapon()
+
 	# Create spinning bat weapon sprite on top
 	if turret:
 		weapon_sprite = Sprite2D.new()
 		weapon_sprite.name = "MeleeBat"
-		var bat_texture = load("res://assets/sprites/melee_bat.png")
+		var weapon_path := "res://assets/sprites/melee_bat.png"
+		if visual_config and visual_config.texture_paths.has("weapon"):
+			var candidate := str(visual_config.texture_paths.get("weapon", ""))
+			if ResourceLoader.exists(candidate):
+				weapon_path = candidate
+		var bat_texture = load(weapon_path)
 		weapon_sprite.texture = bat_texture
 		weapon_sprite.scale = Vector2(0.1, 0.1) # Scale down the bat
 		weapon_sprite.z_index = 1 # Draw above base sprite

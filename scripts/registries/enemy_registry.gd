@@ -305,6 +305,9 @@ static func get_spawn_count(type_id: String) -> int:
 
 ## Get color tint for an enemy type
 static func get_color(type_id: String) -> Color:
+	var asset_config := AssetConfigService.get_enemy_config(type_id)
+	if asset_config and asset_config.visual:
+		return asset_config.visual.modulate
 	if not TYPES.has(type_id):
 		return Color.WHITE
 	return TYPES[type_id].get("color_tint", Color.WHITE)
@@ -312,6 +315,11 @@ static func get_color(type_id: String) -> Color:
 
 ## Get sprite folder path for an enemy type
 static func get_sprite_folder(type_id: String) -> String:
+	var asset_config := AssetConfigService.get_enemy_config(type_id)
+	if asset_config and asset_config.visual:
+		for value in asset_config.visual.texture_paths.values():
+			if value is String and not value.is_empty():
+				return value.get_base_dir()
 	if not TYPES.has(type_id):
 		return "res://assets/sprites/enemy_tiny"
 	return TYPES[type_id].get("sprite_folder", "res://assets/sprites/enemy_tiny")
