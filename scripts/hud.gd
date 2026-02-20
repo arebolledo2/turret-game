@@ -10,6 +10,7 @@ const GameOverScreenScript = preload("res://scripts/ui/game_over_screen.gd")
 const DifficultySelectScript = preload("res://scripts/ui/difficulty_select.gd")
 const PauseMenuScript = preload("res://scripts/ui/pause_menu.gd")
 const SettingsMenuScript = preload("res://scripts/ui/settings_menu.gd")
+const AssetStudioScript = preload("res://scripts/ui/asset_studio.gd")
 const GameModeSelectScript = preload("res://scripts/ui/game_mode_select.gd")
 const StartSettingsScript = preload("res://scripts/ui/start_settings.gd")
 const LootReviewScreenScript = preload("res://scripts/ui/loot_review_screen.gd")
@@ -33,6 +34,7 @@ const LootReviewScreenScript = preload("res://scripts/ui/loot_review_screen.gd")
 @onready var hud_container: MarginContainer = $MarginContainer
 @onready var pause_menu: Control = $PauseMenu
 @onready var settings_menu: Control = $SettingsMenu
+@onready var asset_studio: Control = $AssetStudio
 @onready var show_damage_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageCheck
 @onready var isometric_debug_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/IsometricDebugCheck
 @onready var physics_hitboxes_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PhysicsHitboxes/PhysicsHitboxesCheck
@@ -80,6 +82,7 @@ var _game_mode_select
 var _start_settings
 var _pause_menu
 var _settings_menu
+var _asset_studio
 var _loot_review
 
 var player: Node2D = null
@@ -97,6 +100,7 @@ func _ready() -> void:
 	hud_container.visible = false
 	pause_menu.visible = false
 	settings_menu.visible = false
+	asset_studio.visible = false
 	loot_review_screen.visible = false
 
 	# Create low health overlay
@@ -271,6 +275,58 @@ func _setup_components() -> void:
 		"back_button": settings_back_button,
 	}, self)
 
+	# Asset studio component
+	_asset_studio = AssetStudioScript.new()
+	_asset_studio.setup({
+		"container": asset_studio,
+		"panel": asset_studio.get_node("Panel"),
+		"back_button": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/Header/BackButton"),
+		"presets_dropdown": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/PresetRow/PresetsDropdown"),
+		"preset_name_input": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/PresetRow/PresetNameInput"),
+		"new_preset_button": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/PresetRow/NewPresetButton"),
+		"clone_preset_button": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/PresetRow/ClonePresetButton"),
+		"delete_preset_button": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/PresetRow/DeletePresetButton"),
+		"clone_cta_button": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/PresetRow/CloneCtaButton"),
+		"read_only_label": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/ReadOnlyLabel"),
+		"entity_kind_dropdown": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/LeftPanel/EntityKindDropdown"),
+		"asset_list": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/LeftPanel/AssetList"),
+		"editor_tabs": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs"),
+		"visual_tab": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab"),
+		"collision_tab": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab"),
+		"sprite_kind_dropdown": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/SpriteKindRow/SpriteKindDropdown"),
+		"orientation_mode_dropdown": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/OrientationModeRow/OrientationModeDropdown"),
+		"sprite_frames_input": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/SpriteFramesRow/SpriteFramesInput"),
+		"animation_speed_spin": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/AnimSpeedRow/AnimationSpeedSpin"),
+		"scale_x_spin": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/ScaleRow/ScaleXSpin"),
+		"scale_y_spin": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/ScaleRow/ScaleYSpin"),
+		"offset_x_spin": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/OffsetRow/OffsetXSpin"),
+		"offset_y_spin": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/OffsetRow/OffsetYSpin"),
+		"modulate_picker": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/ModulateRow/ModulatePicker"),
+		"anchor_bottom_check": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/FlagsRow/AnchorBottomCheck"),
+		"idle_bounce_enabled_check": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/FlagsRow/IdleBounceEnabledCheck"),
+		"idle_bounce_min_y_spin": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/IdleBounceRow/IdleBounceMinYSpin"),
+		"idle_bounce_cycle_spin": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/IdleBounceRow/IdleBounceCycleSpin"),
+		"animation_map_left_input": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/AnimationMapRow/AnimMapLeftInput"),
+		"animation_map_right_input": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/AnimationMapRow/AnimMapRightInput"),
+		"texture_slots_container": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/TextureSlotsContainer"),
+		"reset_field_button": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/RollbackRow/ResetFieldButton"),
+		"reset_asset_button": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/RollbackRow/ResetAssetButton"),
+		"revert_preset_button": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/RollbackRow/RevertPresetButton"),
+		"turret_collision_deferred_label": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/TurretCollisionDeferredLabel"),
+		"collision_enabled_check": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/CollisionEnabledCheck"),
+		"physics_shape_dropdown": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/PhysicsShapeRow/PhysicsShapeDropdown"),
+		"physics_size_x_spin": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/PhysicsShapeRow/PhysicsSizeXSpin"),
+		"physics_size_y_spin": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/PhysicsShapeRow/PhysicsSizeYSpin"),
+		"hurtbox_shape_dropdown": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/HurtboxShapeRow/HurtboxShapeDropdown"),
+		"hurtbox_size_x_spin": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/HurtboxShapeRow/HurtboxSizeXSpin"),
+		"hurtbox_size_y_spin": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/HurtboxShapeRow/HurtboxSizeYSpin"),
+		"deals_contact_damage_check": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/ContactRow/DealsContactDamageCheck"),
+		"damage_cooldown_spin": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/ContactRow/DamageCooldownSpin"),
+		"collision_profile_path_label": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/CollisionProfilePathLabel"),
+		"preview": asset_studio.get_node("Panel/MarginContainer/VBoxContainer/MainSplit/RightPanel/Preview"),
+		"texture_picker": asset_studio.get_node("TexturePicker"),
+	}, self)
+
 	# Loot review screen component
 	_loot_review = LootReviewScreenScript.new()
 	_loot_review.setup({
@@ -290,11 +346,13 @@ func _setup_components() -> void:
 	menu_manager.initialize({
 		"pause_menu": pause_menu,
 		"settings_menu": settings_menu,
+		"asset_studio": asset_studio,
 		"game_over_screen": game_over_screen,
 		"difficulty_screen": difficulty_screen,
 		"game_mode_screen": game_mode_screen,
 		"pause_controller": _pause_menu,
 		"settings_controller": _settings_menu,
+		"asset_studio_controller": _asset_studio,
 		"difficulty_controller": _difficulty_select,
 		"game_mode_controller": _game_mode_select,
 	})
@@ -304,6 +362,8 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("pause") and GameStateService.is_game_active:
 		if settings_menu.visible:
 			_on_settings_back_pressed()
+		elif asset_studio.visible:
+			_on_asset_studio_back_pressed()
 		else:
 			menu_manager.toggle_pause()
 
@@ -488,6 +548,10 @@ func _on_settings_pressed() -> void:
 	menu_manager.show_settings()
 
 
+func _on_asset_studio_pressed() -> void:
+	menu_manager.show_asset_studio()
+
+
 func _on_quit_pressed() -> void:
 	get_tree().paused = false
 	get_tree().reload_current_scene()
@@ -502,6 +566,12 @@ func _on_skip_wave_pressed() -> void:
 
 func _on_settings_back_pressed() -> void:
 	menu_manager.hide_settings()
+	if resume_button:
+		resume_button.grab_focus()
+
+
+func _on_asset_studio_back_pressed() -> void:
+	menu_manager.hide_asset_studio()
 	if resume_button:
 		resume_button.grab_focus()
 

@@ -6,6 +6,10 @@ const EntityAssetConfigClass = preload("res://scripts/resources/assets/entity_as
 const BUILTIN_PRESET_DIR: String = "res://resources/asset_presets"
 const USER_PRESET_DIR: String = "user://asset_presets"
 const USER_PRESET_SUFFIX: String = ".cfg"
+const ACTIVE_PRESET_STATE_FILE: String = "user://asset_presets/state.cfg"
+const ACTIVE_PRESET_STATE_SECTION: String = "meta"
+const ACTIVE_PRESET_STATE_KEY: String = "active_preset"
+const USER_COLLISION_PROFILE_DIR: String = "user://collision_profiles"
 
 const KIND_ENEMY: String = "enemy"
 const KIND_TURRET: String = "turret"
@@ -30,9 +34,11 @@ func _ready() -> void:
 func reload_all() -> void:
 	_load_builtin_presets()
 	_load_user_presets()
+	_load_active_preset_state()
 
 	if not _preset_exists(_active_preset):
 		_active_preset = "default"
+	_save_active_preset_state()
 
 
 func reset_state() -> void:
@@ -52,6 +58,31 @@ func get_player_config() -> EntityAssetConfig:
 	return _get_resolved_config(EntityAssetConfigClass.EntityKind.PLAYER, "main")
 
 
+func get_asset_config(entity_kind: int, asset_id: String) -> EntityAssetConfig:
+	return _get_resolved_config(entity_kind, asset_id)
+
+
+func list_asset_ids(entity_kind: int) -> Array[String]:
+	var ids: Array[String] = []
+
+	match entity_kind:
+		EntityAssetConfigClass.EntityKind.ENEMY:
+			var enemy_ids = EnemyRegistry.get_all_type_ids()
+			for id in enemy_ids:
+				_append_unique_string(ids, str(id))
+		EntityAssetConfigClass.EntityKind.TURRET:
+			var turret_ids = TurretRegistry.get_all_type_ids()
+			for id in turret_ids:
+				_append_unique_string(ids, str(id))
+		EntityAssetConfigClass.EntityKind.PLAYER:
+			_append_unique_string(ids, "main")
+
+	_append_asset_ids_from_presets(entity_kind, ids)
+	_append_asset_ids_from_active_overrides(entity_kind, ids)
+	ids.sort()
+	return ids
+
+
 func list_presets() -> Array[String]:
 	var all: Array[String] = []
 
@@ -67,6 +98,27 @@ func list_presets() -> Array[String]:
 	return all
 
 
+func get_preset_origin(name: String) -> String:
+	if _builtin_presets.has(name):
+		return "builtin"
+	if _user_preset_bases.has(name):
+		return "user"
+	return ""
+
+
+func get_user_preset_base(name: String) -> String:
+	return str(_user_preset_bases.get(name, "default"))
+
+
+func list_collision_profiles(include_user: bool = true) -> Array[String]:
+	var profile_paths: Array[String] = []
+	_collect_collision_profiles("res://resources/collision_profiles", profile_paths)
+	if include_user:
+		_collect_collision_profiles(USER_COLLISION_PROFILE_DIR, profile_paths)
+	profile_paths.sort()
+	return profile_paths
+
+
 func set_active_preset(name: String) -> void:
 	var target := name.strip_edges()
 	if target.is_empty():
@@ -79,6 +131,7 @@ func set_active_preset(name: String) -> void:
 		return
 
 	_active_preset = target
+	_save_active_preset_state()
 	Events.asset_preset_changed.emit(_active_preset)
 
 
@@ -109,6 +162,59 @@ func upsert_override(entity_kind: int, asset_id: String, patch: Dictionary) -> v
 
 	_save_user_preset(preset_name)
 	Events.asset_config_changed.emit(entity_kind, asset_id)
+
+
+func upsert_collision_profile_override(entity_kind: int, asset_id: String, profile_patch: Dictionary) -> String:
+	if profile_patch.is_empty():
+		return ""
+
+	var clean_asset_id := asset_id.strip_edges()
+	if clean_asset_id.is_empty():
+		DebugService.warn(DebugService.VALIDATION, "[AssetConfigService] Cannot patch collision profile with empty asset_id")
+		return ""
+
+	var kind_key := _kind_to_key(entity_kind)
+	if kind_key.is_empty():
+		DebugService.warn(DebugService.VALIDATION, "[AssetConfigService] Cannot patch collision profile for unknown entity kind %s" % entity_kind)
+		return ""
+
+	var current_config := _get_resolved_config(entity_kind, clean_asset_id)
+	var profile_path := ""
+	if current_config and current_config.collision:
+		profile_path = current_config.collision.collision_profile_path
+
+	var base_profile := _load_collision_profile(profile_path)
+	var editable_profile: CollisionProfileClass = null
+	if base_profile:
+		editable_profile = base_profile.duplicate(true)
+	if editable_profile == null:
+		editable_profile = CollisionProfileClass.new()
+
+	_apply_collision_profile_patch(editable_profile, profile_patch)
+	if not editable_profile.validate():
+		DebugService.warn(DebugService.VALIDATION, "[AssetConfigService] Rejected invalid collision profile patch for %s:%s" % [kind_key, clean_asset_id])
+		return ""
+
+	var preset_name := _active_preset
+	if preset_name in _builtin_presets and not preset_name in _user_preset_bases:
+		_ensure_user_preset_state(preset_name, preset_name)
+
+	var target_profile_path := _user_collision_profile_path(preset_name, kind_key, clean_asset_id)
+	var abs_dir := ProjectSettings.globalize_path(target_profile_path.get_base_dir())
+	DirAccess.make_dir_recursive_absolute(abs_dir)
+
+	var save_err := ResourceSaver.save(editable_profile, target_profile_path)
+	if save_err != OK:
+		DebugService.warn(DebugService.VALIDATION, "[AssetConfigService] Failed saving collision profile '%s' (err=%s)" % [target_profile_path, save_err])
+		return ""
+
+	upsert_override(entity_kind, clean_asset_id, {
+		"collision.enabled": true,
+		"collision.collision_profile_path": target_profile_path,
+		"collision.live_apply": true,
+	})
+
+	return target_profile_path
 
 
 func clear_override(entity_kind: int, asset_id: String) -> void:
@@ -160,6 +266,9 @@ func delete_user_preset(name: String) -> void:
 		var err := DirAccess.remove_absolute(abs)
 		if err != OK:
 			DebugService.warn(DebugService.VALIDATION, "[AssetConfigService] Failed deleting preset file '%s' (err=%s)" % [abs, err])
+
+	var collision_dir := "%s/%s" % [USER_COLLISION_PROFILE_DIR, name]
+	_delete_directory_recursive(collision_dir)
 
 	_user_preset_bases.erase(name)
 	_user_overrides.erase(name)
@@ -293,9 +402,12 @@ func _validate_collision_config(resolved: EntityAssetConfig, base_cfg: EntityAss
 func _is_valid_collision_profile(path: String) -> bool:
 	if path.is_empty():
 		return false
-	if not ResourceLoader.exists(path):
+	if path.begins_with("user://"):
+		if not FileAccess.file_exists(path):
+			return false
+	elif not ResourceLoader.exists(path):
 		return false
-	var res = load(path)
+	var res = ResourceLoader.load(path)
 	return res is CollisionProfileClass
 
 
@@ -322,6 +434,38 @@ func _apply_patch(config: EntityAssetConfig, patch: Dictionary) -> void:
 			config.display_name = str(value)
 		elif key == "asset_id":
 			config.asset_id = str(value)
+
+
+func _apply_collision_profile_patch(profile: CollisionProfileClass, patch: Dictionary) -> void:
+	for key in patch.keys():
+		var normalized_key := str(key)
+		if normalized_key.find(".") >= 0:
+			var split := normalized_key.split(".")
+			if split.size() > 0:
+				normalized_key = str(split[split.size() - 1])
+		var value = patch[key]
+
+		match normalized_key:
+			"physics_shape_type":
+				profile.physics_shape_type = int(value)
+			"physics_size":
+				profile.physics_size = _coerce_vector2(value, profile.physics_size)
+			"hurtbox_shape_type":
+				profile.hurtbox_shape_type = int(value)
+			"hurtbox_size":
+				profile.hurtbox_size = _coerce_vector2(value, profile.hurtbox_size)
+			"deals_contact_damage":
+				profile.deals_contact_damage = bool(value)
+			"damage_cooldown":
+				profile.damage_cooldown = float(value)
+
+
+func _coerce_vector2(value: Variant, fallback: Vector2) -> Vector2:
+	if value is Vector2:
+		return value
+	if value is Array and value.size() >= 2:
+		return Vector2(float(value[0]), float(value[1]))
+	return fallback
 
 
 func _apply_patch_path(config: EntityAssetConfig, path: Array, value: Variant) -> void:
@@ -487,6 +631,25 @@ func _load_user_presets() -> void:
 	dir.list_dir_end()
 
 
+func _load_active_preset_state() -> void:
+	var cfg := ConfigFile.new()
+	var err := cfg.load(ACTIVE_PRESET_STATE_FILE)
+	if err != OK:
+		return
+	var saved := str(cfg.get_value(ACTIVE_PRESET_STATE_SECTION, ACTIVE_PRESET_STATE_KEY, _active_preset)).strip_edges()
+	if not saved.is_empty():
+		_active_preset = saved
+
+
+func _save_active_preset_state() -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(USER_PRESET_DIR))
+	var cfg := ConfigFile.new()
+	cfg.set_value(ACTIVE_PRESET_STATE_SECTION, ACTIVE_PRESET_STATE_KEY, _active_preset)
+	var err := cfg.save(ACTIVE_PRESET_STATE_FILE)
+	if err != OK:
+		DebugService.warn(DebugService.VALIDATION, "[AssetConfigService] Failed saving active preset state (%s)" % err)
+
+
 func _load_user_preset_file(preset_name: String) -> void:
 	var cfg := ConfigFile.new()
 	var path := _user_preset_path(preset_name)
@@ -539,8 +702,123 @@ func _user_preset_path(preset_name: String) -> String:
 	return "%s/%s%s" % [USER_PRESET_DIR, preset_name, USER_PRESET_SUFFIX]
 
 
+func _user_collision_profile_path(preset_name: String, kind_key: String, asset_id: String) -> String:
+	var file_name := "%s_%s.tres" % [kind_key, _sanitize_file_component(asset_id)]
+	return "%s/%s/%s" % [USER_COLLISION_PROFILE_DIR, preset_name, file_name]
+
+
 func _preset_exists(name: String) -> bool:
 	return _builtin_presets.has(name) or _user_preset_bases.has(name)
+
+
+func _append_unique_string(target: Array[String], value: String) -> void:
+	if value.is_empty():
+		return
+	if value not in target:
+		target.append(value)
+
+
+func _append_asset_ids_from_presets(entity_kind: int, out_ids: Array[String]) -> void:
+	var kind_key := _kind_to_key(entity_kind)
+	if kind_key.is_empty():
+		return
+
+	var active_builtin := _get_builtin_for_active_preset()
+	var default_builtin: Dictionary = _builtin_presets.get("default", {})
+
+	var active_map: Dictionary = active_builtin.get(kind_key, {})
+	for id in active_map.keys():
+		_append_unique_string(out_ids, str(id))
+
+	var default_map: Dictionary = default_builtin.get(kind_key, {})
+	for id in default_map.keys():
+		_append_unique_string(out_ids, str(id))
+
+
+func _append_asset_ids_from_active_overrides(entity_kind: int, out_ids: Array[String]) -> void:
+	if not _user_overrides.has(_active_preset):
+		return
+	var kind_key := _kind_to_key(entity_kind)
+	if kind_key.is_empty():
+		return
+	var prefix := "%s:" % kind_key
+	for section_name in _user_overrides[_active_preset].keys():
+		var section := str(section_name)
+		if section.begins_with(prefix):
+			var id := section.trim_prefix(prefix)
+			_append_unique_string(out_ids, id)
+
+
+func _collect_collision_profiles(dir_path: String, out_paths: Array[String]) -> void:
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return
+
+	dir.list_dir_begin()
+	var entry := dir.get_next()
+	while not entry.is_empty():
+		if entry.begins_with("."):
+			entry = dir.get_next()
+			continue
+
+		var full_path := "%s/%s" % [dir_path, entry]
+		if dir.current_is_dir():
+			_collect_collision_profiles(full_path, out_paths)
+		elif entry.ends_with(".tres"):
+			_append_unique_string(out_paths, full_path)
+		entry = dir.get_next()
+	dir.list_dir_end()
+
+
+func _load_collision_profile(path: String) -> CollisionProfileClass:
+	if path.is_empty():
+		return null
+	if not _is_valid_collision_profile(path):
+		return null
+	var res = ResourceLoader.load(path)
+	if res is CollisionProfileClass:
+		return res
+	return null
+
+
+func _sanitize_file_component(value: String) -> String:
+	var sanitized := value.strip_edges()
+	if sanitized.is_empty():
+		return "asset"
+	sanitized = sanitized.replace("/", "_")
+	sanitized = sanitized.replace("\\", "_")
+	sanitized = sanitized.replace(":", "_")
+	sanitized = sanitized.replace(".", "_")
+	sanitized = sanitized.replace(" ", "_")
+	return sanitized
+
+
+func _delete_directory_recursive(path: String) -> void:
+	var dir := DirAccess.open(path)
+	if dir == null:
+		return
+
+	dir.list_dir_begin()
+	var entry := dir.get_next()
+	while not entry.is_empty():
+		if entry.begins_with("."):
+			entry = dir.get_next()
+			continue
+		var child_path := "%s/%s" % [path, entry]
+		if dir.current_is_dir():
+			_delete_directory_recursive(child_path)
+		else:
+			var file_abs := ProjectSettings.globalize_path(child_path)
+			var file_err := DirAccess.remove_absolute(file_abs)
+			if file_err != OK:
+				DebugService.warn(DebugService.VALIDATION, "[AssetConfigService] Failed deleting file '%s' (err=%s)" % [file_abs, file_err])
+		entry = dir.get_next()
+	dir.list_dir_end()
+
+	var abs_dir := ProjectSettings.globalize_path(path)
+	var err := DirAccess.remove_absolute(abs_dir)
+	if err != OK:
+		DebugService.warn(DebugService.VALIDATION, "[AssetConfigService] Failed deleting directory '%s' (err=%s)" % [abs_dir, err])
 
 
 func _kind_to_key(entity_kind: int) -> String:

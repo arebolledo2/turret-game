@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bfnnps4ayojtw" path="res://scripts/hud.gd" id="1_hud"]
 [ext_resource type="PackedScene" uid="uid://c56dq8l7py2mu" path="res://scenes/ui/loot_review.tscn" id="2_loot_review"]
 [ext_resource type="Script" uid="uid://begwadnwmmgbe" path="res://scripts/ui/off_screen_indicators.gd" id="3_off_screen_indicators"]
+[ext_resource type="PackedScene" path="res://scenes/ui/asset_studio.tscn" id="4_asset_studio"]
 
 [node name="HUD" type="CanvasLayer" unique_id=480728874]
 process_mode = 3
@@ -347,6 +348,12 @@ custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
 text = "Settings"
+
+[node name="AssetStudioButton" type="Button" parent="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel" unique_id=933470721]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Asset Studio"
 
 [node name="QuitButton" type="Button" parent="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel" unique_id=431738623]
 custom_minimum_size = Vector2(0, 40)
@@ -803,6 +810,9 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Back"
 
+[node name="AssetStudio" parent="." unique_id=2045546207 instance=ExtResource("4_asset_studio")]
+layout_mode = 3
+
 [node name="StartSettings" type="Control" parent="." unique_id=1723186957]
 visible = false
 layout_mode = 3
@@ -1048,6 +1058,7 @@ script = ExtResource("3_off_screen_indicators")
 [connection signal="pressed" from="DifficultySelect/Panel/VBoxContainer/ButtonContainer/HardButton" to="." method="_on_hard_pressed"]
 [connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/ResumeButton" to="." method="_on_resume_pressed"]
 [connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/SettingsButton" to="." method="_on_settings_pressed"]
+[connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/AssetStudioButton" to="." method="_on_asset_studio_pressed"]
 [connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/QuitButton" to="." method="_on_quit_pressed"]
 [connection signal="toggled" from="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageCheck" to="." method="_on_show_damage_toggled"]
 [connection signal="pressed" from="SettingsMenu/Panel/VBoxContainer/BackButton" to="." method="_on_settings_back_pressed"]

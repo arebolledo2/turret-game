@@ -1,0 +1,489 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/asset_studio_preview.gd" id="1_preview"]
+[ext_resource type="Script" path="res://scripts/ui/asset_studio_texture_picker.gd" id="2_picker"]
+
+[node name="AssetStudio" type="Control"]
+process_mode = 3
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.82)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -700.0
+offset_top = -410.0
+offset_right = 700.0
+offset_bottom = 410.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Header" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/Header"]
+layout_mode = 2
+text = "ASSET STUDIO"
+theme_override_font_sizes/font_size = 28
+
+[node name="HeaderSpacer" type="Control" parent="Panel/MarginContainer/VBoxContainer/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BackButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/Header"]
+layout_mode = 2
+text = "Back"
+
+[node name="PresetRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PresetsLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/PresetRow"]
+layout_mode = 2
+text = "Preset"
+
+[node name="PresetsDropdown" type="OptionButton" parent="Panel/MarginContainer/VBoxContainer/PresetRow"]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+
+[node name="PresetNameInput" type="LineEdit" parent="Panel/MarginContainer/VBoxContainer/PresetRow"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+placeholder_text = "preset name"
+
+[node name="NewPresetButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/PresetRow"]
+layout_mode = 2
+text = "New"
+
+[node name="ClonePresetButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/PresetRow"]
+layout_mode = 2
+text = "Clone"
+
+[node name="DeletePresetButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/PresetRow"]
+layout_mode = 2
+text = "Delete"
+
+[node name="CloneCtaButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/PresetRow"]
+layout_mode = 2
+text = "Clone Built-in To Edit"
+
+[node name="ReadOnlyLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Built-in preset is read-only. Clone it to edit."
+
+[node name="MainSplit" type="HSplitContainer" parent="Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+split_offset = 240
+
+[node name="LeftPanel" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="KindLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/LeftPanel"]
+layout_mode = 2
+text = "Entity Kind"
+
+[node name="EntityKindDropdown" type="OptionButton" parent="Panel/MarginContainer/VBoxContainer/MainSplit/LeftPanel"]
+layout_mode = 2
+
+[node name="AssetLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/LeftPanel"]
+layout_mode = 2
+text = "Asset"
+
+[node name="AssetList" type="ItemList" parent="Panel/MarginContainer/VBoxContainer/MainSplit/LeftPanel"]
+custom_minimum_size = Vector2(0, 560)
+layout_mode = 2
+size_flags_vertical = 3
+select_mode = 0
+
+[node name="CenterPanel" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="EditorTabs" type="TabContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+current_tab = 0
+
+[node name="VisualTab" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="SpriteKindRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab"]
+layout_mode = 2
+
+[node name="SpriteKindLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/SpriteKindRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Sprite Kind"
+
+[node name="SpriteKindDropdown" type="OptionButton" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/SpriteKindRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="OrientationModeRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab"]
+layout_mode = 2
+
+[node name="OrientationModeLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/OrientationModeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Orientation"
+
+[node name="OrientationModeDropdown" type="OptionButton" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/OrientationModeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TextureSlotsLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab"]
+layout_mode = 2
+text = "Texture Mapping"
+
+[node name="TextureSlotsContainer" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SpriteFramesRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab"]
+layout_mode = 2
+
+[node name="SpriteFramesLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/SpriteFramesRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "SpriteFrames"
+
+[node name="SpriteFramesInput" type="LineEdit" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/SpriteFramesRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Optional SpriteFrames resource path"
+
+[node name="AnimSpeedRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab"]
+layout_mode = 2
+
+[node name="AnimSpeedLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/AnimSpeedRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Anim FPS"
+
+[node name="AnimationSpeedSpin" type="SpinBox" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/AnimSpeedRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 60.0
+step = 0.5
+value = 12.0
+
+[node name="AnimationMapRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="AnimMapLeftInput" type="LineEdit" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/AnimationMapRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "animation_map.left"
+
+[node name="AnimMapRightInput" type="LineEdit" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/AnimationMapRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "animation_map.right"
+
+[node name="ScaleRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="ScaleLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/ScaleRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Scale"
+
+[node name="ScaleXSpin" type="SpinBox" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/ScaleRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.01
+max_value = 6.0
+step = 0.01
+value = 1.0
+
+[node name="ScaleYSpin" type="SpinBox" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/ScaleRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.01
+max_value = 6.0
+step = 0.01
+value = 1.0
+
+[node name="OffsetRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="OffsetLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/OffsetRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Offset"
+
+[node name="OffsetXSpin" type="SpinBox" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/OffsetRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = -500.0
+max_value = 500.0
+step = 1.0
+
+[node name="OffsetYSpin" type="SpinBox" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/OffsetRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = -500.0
+max_value = 500.0
+step = 1.0
+
+[node name="ModulateRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab"]
+layout_mode = 2
+
+[node name="ModulateLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/ModulateRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Color"
+
+[node name="ModulatePicker" type="ColorPickerButton" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/ModulateRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FlagsRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="AnchorBottomCheck" type="CheckButton" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/FlagsRow"]
+layout_mode = 2
+text = "Anchor Bottom"
+
+[node name="IdleBounceEnabledCheck" type="CheckButton" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/FlagsRow"]
+layout_mode = 2
+text = "Idle Bounce"
+
+[node name="IdleBounceRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="IdleBounceMinYLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/IdleBounceRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Bounce Min Y"
+
+[node name="IdleBounceMinYSpin" type="SpinBox" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/IdleBounceRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.1
+max_value = 1.0
+step = 0.01
+value = 0.95
+
+[node name="IdleBounceCycleSpin" type="SpinBox" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/VisualTab/IdleBounceRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.05
+max_value = 5.0
+step = 0.01
+value = 0.6
+
+[node name="CollisionTab" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs"]
+visible = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TurretCollisionDeferredLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab"]
+layout_mode = 2
+text = "Turret collision runtime customization is deferred in this phase."
+
+[node name="CollisionEnabledCheck" type="CheckButton" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab"]
+layout_mode = 2
+text = "Collision Override Enabled"
+
+[node name="PhysicsShapeRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PhysicsShapeLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/PhysicsShapeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Physics Shape"
+
+[node name="PhysicsShapeDropdown" type="OptionButton" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/PhysicsShapeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PhysicsSizeXSpin" type="SpinBox" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/PhysicsShapeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 400.0
+step = 0.5
+value = 16.0
+
+[node name="PhysicsSizeYSpin" type="SpinBox" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/PhysicsShapeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 400.0
+step = 0.5
+value = 16.0
+
+[node name="HurtboxShapeRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HurtboxShapeLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/HurtboxShapeRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+text = "Hurtbox Shape"
+
+[node name="HurtboxShapeDropdown" type="OptionButton" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/HurtboxShapeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HurtboxSizeXSpin" type="SpinBox" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/HurtboxShapeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 400.0
+step = 0.5
+value = 24.0
+
+[node name="HurtboxSizeYSpin" type="SpinBox" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/HurtboxShapeRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 1.0
+max_value = 400.0
+step = 0.5
+value = 24.0
+
+[node name="ContactRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DealsContactDamageCheck" type="CheckButton" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/ContactRow"]
+layout_mode = 2
+text = "Deals Contact Damage"
+
+[node name="DamageCooldownSpin" type="SpinBox" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab/ContactRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.05
+max_value = 5.0
+step = 0.05
+value = 0.5
+
+[node name="CollisionProfilePathLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/EditorTabs/CollisionTab"]
+layout_mode = 2
+text = "Profile: (none)"
+
+[node name="RollbackRow" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ResetFieldButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/RollbackRow"]
+layout_mode = 2
+text = "Reset Field"
+
+[node name="ResetAssetButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/RollbackRow"]
+layout_mode = 2
+text = "Reset Asset"
+
+[node name="RevertPresetButton" type="Button" parent="Panel/MarginContainer/VBoxContainer/MainSplit/CenterPanel/RollbackRow"]
+layout_mode = 2
+text = "Revert Preset"
+
+[node name="RightPanel" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer/MainSplit"]
+layout_mode = 2
+custom_minimum_size = Vector2(320, 0)
+
+[node name="PreviewTitle" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/RightPanel"]
+layout_mode = 2
+text = "Preview"
+
+[node name="Preview" type="Control" parent="Panel/MarginContainer/VBoxContainer/MainSplit/RightPanel"]
+custom_minimum_size = Vector2(300, 560)
+layout_mode = 2
+size_flags_vertical = 3
+script = ExtResource("1_preview")
+
+[node name="InfoLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer/MainSplit/RightPanel/Preview"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 44.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 12
+text = ""
+autowrap_mode = 2
+
+[node name="TexturePicker" type="Window" parent="."]
+visible = false
+position = Vector2i(120, 80)
+size = Vector2i(900, 620)
+script = ExtResource("2_picker")
+title = "Select Texture"
+
+[node name="MarginContainer" type="MarginContainer" parent="TexturePicker"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TexturePicker/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="SearchInput" type="LineEdit" parent="TexturePicker/MarginContainer/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Search textures..."
+
+[node name="TextureList" type="ItemList" parent="TexturePicker/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+select_mode = 0
+
+[node name="Buttons" type="HBoxContainer" parent="TexturePicker/MarginContainer/VBoxContainer"]
+layout_mode = 2
+alignment = 2
+theme_override_constants/separation = 8
+
+[node name="SelectButton" type="Button" parent="TexturePicker/MarginContainer/VBoxContainer/Buttons"]
+layout_mode = 2
+text = "Select"
+
+[node name="CancelButton" type="Button" parent="TexturePicker/MarginContainer/VBoxContainer/Buttons"]
+layout_mode = 2
+text = "Cancel"

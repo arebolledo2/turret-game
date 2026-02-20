@@ -6,12 +6,14 @@ extends Node
 
 var pause_menu: Control
 var settings_menu: Control
+var asset_studio: Control
 var game_over_screen: Control
 var difficulty_screen: Control
 var game_mode_screen: Control
 
 var pause_controller: Object
 var settings_controller: Object
+var asset_studio_controller: Object
 var difficulty_controller: Object
 var game_mode_controller: Object
 
@@ -23,12 +25,14 @@ signal pause_toggled(paused: bool)
 func initialize(nodes: Dictionary) -> void:
 	pause_menu = nodes.get("pause_menu")
 	settings_menu = nodes.get("settings_menu")
+	asset_studio = nodes.get("asset_studio")
 	game_over_screen = nodes.get("game_over_screen")
 	difficulty_screen = nodes.get("difficulty_screen")
 	game_mode_screen = nodes.get("game_mode_screen")
 	
 	pause_controller = nodes.get("pause_controller")
 	settings_controller = nodes.get("settings_controller")
+	asset_studio_controller = nodes.get("asset_studio_controller")
 	difficulty_controller = nodes.get("difficulty_controller")
 	game_mode_controller = nodes.get("game_mode_controller")
 
@@ -69,6 +73,11 @@ func resume() -> void:
 		settings_controller.hide()
 	elif settings_menu:
 		settings_menu.visible = false
+
+	if asset_studio_controller and asset_studio_controller.has_method("hide"):
+		asset_studio_controller.hide()
+	elif asset_studio:
+		asset_studio.visible = false
 		
 	Events.game_resumed.emit()
 	pause_toggled.emit(false)
@@ -90,6 +99,34 @@ func hide_settings() -> void:
 	elif settings_menu:
 		settings_menu.visible = false
 		
+	if pause_controller and pause_controller.has_method("show"):
+		pause_controller.show()
+	elif pause_menu:
+		pause_menu.visible = true
+
+func show_asset_studio() -> void:
+	if pause_controller and pause_controller.has_method("hide"):
+		pause_controller.hide()
+	elif pause_menu:
+		pause_menu.visible = false
+
+	if settings_controller and settings_controller.has_method("hide"):
+		settings_controller.hide()
+	elif settings_menu:
+		settings_menu.visible = false
+
+	if asset_studio_controller and asset_studio_controller.has_method("show"):
+		asset_studio_controller.show()
+	elif asset_studio:
+		asset_studio.visible = true
+
+
+func hide_asset_studio() -> void:
+	if asset_studio_controller and asset_studio_controller.has_method("hide"):
+		asset_studio_controller.hide()
+	elif asset_studio:
+		asset_studio.visible = false
+
 	if pause_controller and pause_controller.has_method("show"):
 		pause_controller.show()
 	elif pause_menu:

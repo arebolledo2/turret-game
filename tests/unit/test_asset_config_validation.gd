@@ -38,3 +38,32 @@ func test_rejects_invalid_collision_profile_path():
 	assert_eq(config.collision.collision_profile_path, "res://resources/collision_profiles/spider_enemy.tres",
 		"Invalid collision profile should fall back to base profile")
 
+
+func test_rejects_invalid_collision_profile_patch_and_preserves_previous():
+	var valid_path := AssetConfigService.upsert_collision_profile_override(
+		EntityAssetConfig.EntityKind.ENEMY,
+		"basic",
+		{
+			"physics_shape_type": CollisionProfile.ShapeType.CIRCLE,
+			"physics_size": Vector2(10, 10),
+			"hurtbox_shape_type": CollisionProfile.ShapeType.CIRCLE,
+			"hurtbox_size": Vector2(14, 14),
+		}
+	)
+	assert_false(valid_path.is_empty(), "Valid profile patch should write user collision profile")
+
+	var rejected_path := AssetConfigService.upsert_collision_profile_override(
+		EntityAssetConfig.EntityKind.ENEMY,
+		"basic",
+		{
+			"physics_shape_type": CollisionProfile.ShapeType.RECTANGLE,
+			"physics_size": Vector2(80, 80),
+			"hurtbox_shape_type": CollisionProfile.ShapeType.RECTANGLE,
+			"hurtbox_size": Vector2(8, 8),
+		}
+	)
+	assert_eq(rejected_path, "", "Invalid profile patch should be rejected")
+
+	var config := AssetConfigService.get_enemy_config("basic")
+	assert_eq(config.collision.collision_profile_path, valid_path,
+		"Rejected patch should preserve last valid collision profile path")
