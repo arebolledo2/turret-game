@@ -2,7 +2,7 @@
 
 ## Overview
 
-Game entities (enemies, turrets, player) use component-based architecture. Each entity delegates specific behaviors to focused component scripts. Enemy AI is driven by a pluggable behavior system. Items are organized by rarity tier.
+Game entities (enemies, turrets, player) use component-based architecture. Each entity delegates specific behaviors to focused component scripts. Enemy AI is driven by a pluggable behavior system. Visuals/collision for enemy/turret/player are now data-driven via `AssetConfigService`. Items are organized by rarity tier.
 
 ## Enemy Components
 
@@ -11,13 +11,21 @@ Located in `scripts/components/`:
 - **EnemyMovement** (`enemy_movement.gd`) — Movement patterns with behavior system integration. Delegates AI decisions to pluggable behavior classes.
 - **EnemyCombat** (`enemy_combat.gd`) — Projectile and ranged attack handling for shooter-type enemies.
 - **EnemyStatusEffects** (`enemy_status_effects.gd`) — DoT, slow, and other status effect tracking and application.
-- **EnemyVisuals** (`enemy_visuals.gd`) — Sprite animation, damage flash effects, and death effects.
+- **EnemyVisuals** (`enemy_visuals.gd`) — Asset-config-driven sprite orientation/textures, tint/scale/offset, damage flash, and death effects.
 - **EnemyHurtbox** (`enemy_hurtbox.gd`) — Collision detection and damage receipt validation.
 
 ## Turret Components
 
 - **TurretCombat** (`scripts/components/turret_combat.gd`) — All turret attack logic including: projectile, instant-hit, AOE, chain lightning, melee, and deployable attack styles.
-- **TurretVisuals** (`scripts/components/turret_visuals.gd`) — Sprite animation, rotation toward targets, and visual effects.
+- **TurretVisuals** (`scripts/components/turret_visuals.gd`) — Asset-config-driven sprite setup/tint/scale, rotation toward targets, and visual effects.
+
+## Player Components
+
+- **PlayerMovement** (`scripts/components/player_movement.gd`) — Movement and facing state only.
+- **PlayerCombat** (`scripts/components/player_combat.gd`) — Auto-fire targeting and projectile spawning.
+- **PlayerTurretHandler** (`scripts/components/player_turret_handler.gd`) — Turret pickup/carry/place flow.
+- **PlayerVisuals** (`scripts/components/player_visuals.gd`) — Asset-config-driven player sprite/orientation behavior.
+- **PlayerHurtbox** (`scripts/components/player_hurtbox.gd`) — Damage receipt/collision validation.
 
 ## Enemy Behaviors
 
@@ -34,6 +42,7 @@ Defined in **EnemyRegistry** (`scripts/registries/enemy_registry.gd`):
 - **basic** — Standard enemy
 - **fast** — High speed, low health
 - **tank** — High health, slow
+- **exploder** — Explodes on death
 - **lazy_wanderer** — Passive wandering enemy
 - **charger** — Charges at player on proximity
 - **neon_drone** — Drone-type enemy
@@ -50,6 +59,17 @@ Defined in **TurretRegistry** (`scripts/registries/turret_registry.gd`):
 - **tesla** — Chain lightning
 - **melee** — Close-range attacks
 - **mine** — Deployable explosives
+
+## Asset Config Source of Truth
+
+Gameplay metadata remains in registries, while visuals/collision are now resolved through `EntityAssetConfig` resources via `AssetConfigService`.
+
+For each entity kind:
+- **Enemy**: visual + collision profile live-apply enabled
+- **Turret**: visual live-apply enabled, collision runtime customization deferred
+- **Player**: visual + collision profile live-apply enabled
+
+See [asset-management.md](asset-management.md) for preset layout, override precedence, and runtime update behavior.
 
 ## Key Gameplay Entities
 

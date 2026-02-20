@@ -1,6 +1,6 @@
 # Services Reference
 
-This document provides a detailed reference for each of the 20 autoload service singletons located in `scripts/autoload/`. Group them by domain with file paths and descriptions.
+This document provides a detailed reference for autoload singletons in `scripts/autoload/`. Group them by domain with file paths and descriptions.
 
 ## Overview
 
@@ -51,6 +51,10 @@ Manages turret counts, type diversity tracking, stat calculation that incorporat
 ### ModifierService
 **File:** `scripts/autoload/modifier_service.gd`
 Autoload wrapper for ModifierSystem. Manages permanent stat modifications applied by items and tech upgrades. See [combat.md](combat.md) for modifier system details.
+
+### AssetConfigService
+**File:** `scripts/autoload/asset_config_service.gd`
+Unified asset configuration service for enemy/turret/player visuals and collision profiles. Loads built-in presets from `res://resources/asset_presets/`, merges user overrides from `user://asset_presets/`, validates paths, and emits live update events. See [asset-management.md](asset-management.md) for data model and API details.
 
 ## Progression & Tech
 

@@ -19,6 +19,7 @@ Quick reference for finding code by purpose:
 | Game balance | `scripts/data/game_constants.gd`, `GameConstants.DIFFICULTY_CONFIG` |
 | Service logic | `scripts/autoload/` |
 | Type definitions | `scripts/registries/` |
+| Asset config resources | `scripts/resources/assets/`, `resources/asset_presets/`, `resources/collision_profiles/` |
 | Entity behaviors | `scripts/turret.gd`, `scripts/enemy.gd`, `scripts/components/` |
 | UI scripts | `scripts/hud.gd`, `scripts/ui/` |
 | Tests | `tests/unit/`, `tests/integration/` |
@@ -47,6 +48,9 @@ Run tests using the PowerShell test runner:
 
 # Filter by test name
 .\run_tests.ps1 -filter "test_economy"
+
+# Asset config focused unit tests
+.\run_tests.ps1 -unit -filter "asset_config"
 ```
 
 ## Debug Output Management

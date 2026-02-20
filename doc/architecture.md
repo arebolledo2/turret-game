@@ -4,7 +4,7 @@ This document covers the high-level architectural patterns used in the game.
 
 ## Overview
 
-Game logic is split into focused service singletons (autoloads), with all cross-system communication using the Events signal bus. Type definitions live in static registries. Player, enemy, and turret entities use component-based architecture. No facade pattern — code accesses services directly.
+Game logic is split into focused service singletons (autoloads), with all cross-system communication using the Events signal bus. Type definitions live in static registries, while visuals/collision configuration is data-driven through asset preset resources. Player, enemy, and turret entities use component-based architecture. No facade pattern — code accesses services directly.
 
 ## Service-Oriented Architecture
 
@@ -25,6 +25,7 @@ Game logic split into **focused service singletons** in `scripts/autoload/`. Gro
 - **PlayerStatsService** - Player health (with regen), speed, luck, and crit stats
 - **TurretStatsService** - Turret counts, diversity, stat calculation with modifiers, and purchase penalties
 - **ModifierService** - Active modifiers management (uses ModifierSystem class)
+- **AssetConfigService** - Data-driven visuals/collision config for enemy/turret/player with presets and overrides
 
 **Progression & Tech:**
 - **TechTreeService** - Research points, tech tree unlocks, turret type unlocks, and shop modifiers
@@ -62,13 +63,32 @@ Type definitions stored in **static registry classes** in `scripts/registries/`:
 - **TechRegistry** (`tech_registry.gd`) - Tech tree definitions across 6 paths, delegating to `techs/` subdirectory
 - **GameModeRegistry** (`game_mode_registry.gd`) - Game mode definitions and categories
 
+Registries remain the source of truth for gameplay metadata (stats, spawn behavior, attack/damage categories). Visual and collision customization now resolves through typed asset config resources loaded by `AssetConfigService`.
+
+## Asset Configuration System
+
+Unified asset management is implemented through typed resources and preset layering:
+
+- Typed resource classes: `scripts/resources/assets/`
+- Built-in presets: `resources/asset_presets/{preset}/...`
+- User overrides: `user://asset_presets/{preset}.cfg`
+- Merge precedence: default built-in -> active built-in/user base -> active user override
+- Validation: texture paths restricted to `res://assets/...`; collision profile must resolve to `CollisionProfile`
+
+Runtime changes are broadcast with:
+- `Events.asset_preset_changed`
+- `Events.asset_config_changed`
+
+Consumers (`EnemyVisuals`, `TurretVisuals`, `PlayerVisuals`, plus collision manager integration) apply changes immediately for live updates.
+
 ## Component-Based Player System
 
 Player (`scripts/player.gd`) delegates to **behavior components** (plus PlayerHurtbox for damage receipt):
 
-- **PlayerMovement** (`scripts/components/player_movement.gd`) - Input, speed, and arena bounds clamping
+- **PlayerMovement** (`scripts/components/player_movement.gd`) - Input, speed, and arena bounds clamping (movement-only)
 - **PlayerCombat** (`scripts/components/player_combat.gd`) - Auto-fire targeting and projectile spawning
 - **PlayerTurretHandler** (`scripts/components/player_turret_handler.gd`) - Turret pickup, carry, and placement logic
+- **PlayerVisuals** (`scripts/components/player_visuals.gd`) - Asset-config-driven sprite orientation, texture, scale, tint
 - **PlayerHurtbox** (`scripts/components/player_hurtbox.gd`) - Damage receipt from enemy hurtboxes with collision validation
 
 ## Core Coordinators
