@@ -88,6 +88,10 @@ var _loot_review
 var player: Node2D = null
 var damage_number_scene: PackedScene
 
+## Cached parent for damage numbers. Resolved lazily on first use rather than in
+## _ready(), because the HUD can be ready before Main is in the tree.
+var _damage_number_parent: Node = null
+
 
 func _ready() -> void:
 	# Add to "hud" group so GameManager can find us for auto-pause
@@ -600,51 +604,56 @@ func _on_player_attack_toggled(toggled_on: bool) -> void:
 # DAMAGE NUMBERS
 # =============================================================================
 func _on_damage_dealt(pos: Vector2, amount: float, is_crit: bool, _enemy: Node2D) -> void:
-	if not SettingsService.show_damage_numbers:
+	var damage_number := _spawn_damage_number(pos)
+	if damage_number == null:
 		return
-	if damage_number_scene == null:
-		return
-
-	var damage_number = damage_number_scene.instantiate()
-	
-	# Add to world space (Main scene) so numbers stay anchored to map position
-	var main_scene = get_tree().root.get_node_or_null("Main")
-	if main_scene:
-		main_scene.add_child(damage_number)
-		damage_number.global_position = pos + Vector2(randf_range(-10, 10), -20)
-	else:
-		# Fallback to HUD layer if Main not found
-		damage_number_layer.add_child(damage_number)
-		damage_number.position = pos + Vector2(randf_range(-10, 10), -20)
-
 	damage_number.setup(amount, is_crit)
 
 
+## Handle DoT damage numbers with orange color for fire damage.
 func _on_dot_damage_dealt(pos: Vector2, amount: float) -> void:
-	"""Handle DoT damage numbers with orange color for fire damage."""
-	if not SettingsService.show_damage_numbers:
+	var damage_number := _spawn_damage_number(pos)
+	if damage_number == null:
 		return
-	if damage_number_scene == null:
-		return
-
-	var damage_number = damage_number_scene.instantiate()
-	
-	# Add to world space (Main scene) so numbers stay anchored to map position
-	var main_scene = get_tree().root.get_node_or_null("Main")
-	if main_scene:
-		main_scene.add_child(damage_number)
-		damage_number.global_position = pos + Vector2(randf_range(-10, 10), -20)
-	else:
-		# Fallback to HUD layer if Main not found
-		damage_number_layer.add_child(damage_number)
-		damage_number.position = pos + Vector2(randf_range(-10, 10), -20)
-
 	damage_number.setup(amount)
 
 	# Set orange color for DoT damage
-	if damage_number.has_node("Label"):
-		var label = damage_number.get_node("Label")
+	var label := damage_number.get_node_or_null("Label")
+	if label:
 		label.modulate = Color(1.0, 0.6, 0.2, 1.0) # Orange for fire DoT
+
+
+## Instantiate a damage number at a world position, or return null if damage
+## numbers are disabled. Caller is responsible for calling setup() on it.
+func _spawn_damage_number(pos: Vector2) -> Node2D:
+	if not SettingsService.show_damage_numbers:
+		return null
+	if damage_number_scene == null:
+		return null
+
+	var damage_number: Node2D = damage_number_scene.instantiate()
+	var offset := pos + Vector2(randf_range(-10, 10), -20)
+
+	# Add to world space (Main scene) so numbers stay anchored to map position
+	var world := _get_damage_number_parent()
+	if world:
+		world.add_child(damage_number)
+		damage_number.global_position = offset
+	else:
+		# Fallback to HUD layer if Main not found
+		damage_number_layer.add_child(damage_number)
+		damage_number.position = offset
+
+	return damage_number
+
+
+## Resolve and cache the Main scene node. Re-resolves if the cached node has been
+## freed, so a scene reload does not permanently fall back to the HUD layer.
+func _get_damage_number_parent() -> Node:
+	if _damage_number_parent != null and is_instance_valid(_damage_number_parent):
+		return _damage_number_parent
+	_damage_number_parent = get_tree().root.get_node_or_null("Main")
+	return _damage_number_parent
 
 
 # =============================================================================

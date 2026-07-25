@@ -94,11 +94,21 @@ if ($full -or $verbose) {
 # Run tests with timeout using background process
 $process = Start-Process -FilePath $godot -ArgumentList $gutArgs -PassThru -NoNewWindow -RedirectStandardOutput "$env:TEMP\gut_stdout.txt" -RedirectStandardError "$env:TEMP\gut_stderr.txt"
 
+# Touching .Handle forces PowerShell to cache the native process handle. Without
+# this, Start-Process -PassThru returns an object whose .ExitCode stays $null
+# after the process ends, which made this script report failure on a clean run.
+$null = $process.Handle
+
 if (-not $process.WaitForExit($timeout * 1000)) {
     Write-Host "TIMEOUT: Tests exceeded ${timeout}s limit. Killing process." -ForegroundColor Red
     $process.Kill()
     exit 1
 }
+
+# The WaitForExit(milliseconds) overload only waits on the process handle; it does
+# not wait for redirected output to be flushed, and leaves ExitCode unpopulated.
+# The parameterless overload completes that work. See .NET Process.WaitForExit docs.
+$process.WaitForExit()
 
 $exitCode = $process.ExitCode
 

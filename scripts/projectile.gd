@@ -18,16 +18,16 @@ var dot_damage: float = 0.0
 var dot_duration: float = 0.0
 var dot_tick_rate: float = 1.0
 var knockback_force: float = 0.0 # Knockback force for explosions
-var hit_enemies: Array = [] # Track enemies hit (for pierce)
+var hit_enemies: Array[Node2D] = [] # Track enemies hit (for pierce)
+
+var _time_alive: float = 0.0
+
+@onready var _sprite: Sprite2D = get_node_or_null("Sprite2D")
 
 func _ready() -> void:
 	# Render above all gameplay entities
 	z_index = 5
 
-	# Auto-destroy after lifetime
-	var timer = get_tree().create_timer(lifetime)
-	timer.timeout.connect(queue_free)
-	
 	# Connect area entered signal for hurtbox detection
 	area_entered.connect(_on_hurtbox_entered)
 
@@ -40,12 +40,8 @@ func setup(dir: Vector2, spd: float, dmg: float, from_player: bool, crit: bool =
 	is_crit = crit
 	is_setup = true
 
-	# Set collision - use call_deferred to avoid physics query error
-	call_deferred("set_collision_layer", GameConstants.COLLISION_LAYER_PROJECTILE)
-	if is_player_projectile:
-		call_deferred("set_collision_mask", GameConstants.COLLISION_MASK_ENEMY_AND_TUNNEL)
-	else:
-		call_deferred("set_collision_mask", GameConstants.COLLISION_MASK_PLAYER)
+	# Set collision - deferred to avoid physics query error
+	_apply_collision_deferred()
 
 ## Extended setup for turret-typed projectiles
 func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: GameEnums.DamageType, crit: bool = false) -> void:
@@ -64,20 +60,30 @@ func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: G
 	is_setup = true
 
 	# Set collision
-	call_deferred("set_collision_layer", GameConstants.COLLISION_LAYER_PROJECTILE)
+	_apply_collision_deferred()
+
+## Apply collision layer/mask on the next idle frame, so we never mutate them
+## while the physics server is mid-query.
+func _apply_collision_deferred() -> void:
+	set_deferred("collision_layer", GameConstants.COLLISION_LAYER_PROJECTILE)
 	if is_player_projectile:
-		call_deferred("set_collision_mask", GameConstants.COLLISION_MASK_ENEMY_AND_TUNNEL)
+		set_deferred("collision_mask", GameConstants.COLLISION_MASK_ENEMY_AND_TUNNEL)
 	else:
-		call_deferred("set_collision_mask", GameConstants.COLLISION_MASK_PLAYER)
+		set_deferred("collision_mask", GameConstants.COLLISION_MASK_PLAYER)
 
 func _physics_process(delta: float) -> void:
+	# Auto-destroy after lifetime
+	_time_alive += delta
+	if _time_alive >= lifetime:
+		queue_free()
+		return
+
 	position += direction * speed * delta
-	
+
 	# Rotate sprite counter-clockwise at 2 rotations per second
 	# 2 rotations/sec = 720 degrees/sec = -4π radians/sec (negative for counter-clockwise)
-	var sprite = get_node_or_null("Sprite2D")
-	if sprite:
-		sprite.rotation -= TAU * GameConstants.PROJECTILE_SPIN_RATE * delta
+	if _sprite:
+		_sprite.rotation -= TAU * GameConstants.PROJECTILE_SPIN_RATE * delta
 
 func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 	DebugService.log(DebugService.COMBAT, "Projectile: Collision with area: ", hurtbox, " name: ", hurtbox.name)

@@ -89,22 +89,25 @@ func find_target() -> void:
 	var current_range: float = stats.get("range", 250.0)
 	var targeting = stats.get("targeting", "nearest")
 	var best_target: Node2D = null
-	var best_dist: float = -1.0
-	
+	# Compared in squared space throughout - ordering is identical to real
+	# distance, and this avoids a sqrt per enemy per turret per frame.
+	var range_sq := current_range * current_range
+	var best_dist_sq: float = -1.0
+	var origin := turret.global_position
+
 	# In Tunneling mode, also check for tunnel door as a valid target
 	if GameModeService.should_spawn_tunnel_door():
 		var doors = turret.get_tree().get_nodes_in_group("tunnel_doors")
 		for door in doors:
 			if not is_instance_valid(door):
 				continue
-			var dist := turret.global_position.distance_to(door.global_position)
-			if dist <= current_range:
+			if origin.distance_squared_to(door.global_position) <= range_sq:
 				# Door is highest priority target
 				target = door
 				return
-	
+
 	# Standard enemy targeting
-	var enemies = turret.get_tree().get_nodes_in_group("enemies")
+	var enemies := EnemyQuery.get_enemies(turret.get_tree())
 	if enemies.is_empty():
 		target = null
 		return
@@ -113,42 +116,43 @@ func find_target() -> void:
 		if not is_instance_valid(enemy):
 			continue
 
-		var dist := turret.global_position.distance_to(enemy.global_position)
-		if dist > current_range:
+		var dist_sq := origin.distance_squared_to(enemy.global_position)
+		if dist_sq > range_sq:
 			continue
 
 		if best_target == null:
 			best_target = enemy
-			best_dist = dist
+			best_dist_sq = dist_sq
 			continue
 
 		if targeting == "farthest":
-			if dist > best_dist:
+			if dist_sq > best_dist_sq:
 				best_target = enemy
-				best_dist = dist
+				best_dist_sq = dist_sq
 		else: # nearest (default)
-			if dist < best_dist:
+			if dist_sq < best_dist_sq:
 				best_target = enemy
-				best_dist = dist
+				best_dist_sq = dist_sq
 
 	target = best_target
 
 func find_tracking_target() -> Node2D:
 	"""Find the closest enemy regardless of range (for tracking/rotation)."""
-	var enemies = turret.get_tree().get_nodes_in_group("enemies")
+	var enemies := EnemyQuery.get_enemies(turret.get_tree())
 	if enemies.is_empty():
 		return null
 
 	var best_target: Node2D = null
-	var best_dist: float = INF
+	var best_dist_sq: float = INF
+	var origin := turret.global_position
 
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
 			continue
-		var dist := turret.global_position.distance_to(enemy.global_position)
-		if dist < best_dist:
+		var dist_sq := origin.distance_squared_to(enemy.global_position)
+		if dist_sq < best_dist_sq:
 			best_target = enemy
-			best_dist = dist
+			best_dist_sq = dist_sq
 
 	return best_target
 
@@ -247,7 +251,7 @@ func _fire_instant() -> void:
 
 func _fire_aoe_pulse() -> void:
 	"""Damage all enemies in range with a pulse."""
-	var enemies = turret.get_tree().get_nodes_in_group("enemies")
+	var enemies := EnemyQuery.get_enemies(turret.get_tree())
 	var hit_count = 0
 	var current_range: float = stats.get("range", 250.0)
 	var base_damage: float = stats.get("damage", 15.0)
@@ -335,17 +339,17 @@ func _fire_chain() -> void:
 
 func _find_closest_enemy_excluding(pos: Vector2, range_limit: float, excluded: Array) -> Node2D:
 	"""Find closest enemy to a position, excluding specific enemies."""
-	var enemies = turret.get_tree().get_nodes_in_group("enemies")
+	var enemies := EnemyQuery.get_enemies(turret.get_tree())
 	var best_target: Node2D = null
-	var best_dist: float = range_limit
+	var best_dist_sq: float = range_limit * range_limit
 
 	for enemy in enemies:
 		if not is_instance_valid(enemy) or enemy in excluded:
 			continue
 
-		var dist = pos.distance_to(enemy.global_position)
-		if dist < best_dist:
-			best_dist = dist
+		var dist_sq := pos.distance_squared_to(enemy.global_position)
+		if dist_sq < best_dist_sq:
+			best_dist_sq = dist_sq
 			best_target = enemy
 
 	return best_target
