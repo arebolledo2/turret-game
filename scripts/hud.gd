@@ -92,6 +92,12 @@ var damage_number_scene: PackedScene
 ## _ready(), because the HUD can be ready before Main is in the tree.
 var _damage_number_parent: Node = null
 
+## Damage numbers are the highest-churn node in the game, so they are pooled
+## rather than instantiated per hit. The pool is tied to the parent it was built
+## against and rebuilt if that parent is replaced.
+var _damage_number_pool: NodePool = null
+var _damage_number_pool_parent: Node = null
+
 
 func _ready() -> void:
 	# Add to "hud" group so GameManager can find us for auto-pause
@@ -623,28 +629,50 @@ func _on_dot_damage_dealt(pos: Vector2, amount: float) -> void:
 		label.modulate = Color(1.0, 0.6, 0.2, 1.0) # Orange for fire DoT
 
 
-## Instantiate a damage number at a world position, or return null if damage
-## numbers are disabled. Caller is responsible for calling setup() on it.
+## Take a damage number from the pool at a world position, or return null if
+## damage numbers are disabled. Caller is responsible for calling setup() on it.
 func _spawn_damage_number(pos: Vector2) -> Node2D:
 	if not SettingsService.show_damage_numbers:
 		return null
 	if damage_number_scene == null:
 		return null
 
-	var damage_number: Node2D = damage_number_scene.instantiate()
+	var pool := _get_damage_number_pool()
+	if pool == null:
+		return null
+
+	var damage_number: Node2D = pool.acquire()
+	if damage_number == null:
+		return null
+
 	var offset := pos + Vector2(randf_range(-10, 10), -20)
 
-	# Add to world space (Main scene) so numbers stay anchored to map position
-	var world := _get_damage_number_parent()
-	if world:
-		world.add_child(damage_number)
-		damage_number.global_position = offset
-	else:
-		# Fallback to HUD layer if Main not found
-		damage_number_layer.add_child(damage_number)
+	# Numbers parented into world space stay anchored to their map position; the
+	# HUD-layer fallback is in canvas space, where global_position is meaningless.
+	if _damage_number_pool_parent == damage_number_layer:
 		damage_number.position = offset
+	else:
+		damage_number.global_position = offset
 
 	return damage_number
+
+
+## Pool of damage numbers, rebuilt if the parent it was built against goes away
+## (a scene reload frees Main and everything pooled under it).
+func _get_damage_number_pool() -> NodePool:
+	var parent := _get_damage_number_parent()
+	if parent == null:
+		parent = damage_number_layer
+	if parent == null:
+		return null
+
+	if _damage_number_pool == null or parent != _damage_number_pool_parent:
+		if _damage_number_pool != null:
+			_damage_number_pool.clear()
+		_damage_number_pool_parent = parent
+		_damage_number_pool = NodePool.new(damage_number_scene, parent, 16, 128)
+
+	return _damage_number_pool
 
 
 ## Resolve and cache the Main scene node. Re-resolves if the cached node has been
