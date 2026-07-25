@@ -102,9 +102,10 @@ func fire_at_enemy() -> void:
 		final_damage = PlayerStatsService.calculate_player_crit_damage(weapon_damage)
 
 	# Create projectile
-	var projectile = projectile_scene.instantiate()
 	var parent = spawn_parent if spawn_parent else player.get_tree().current_scene
-	parent.add_child(projectile)
+	var projectile := ProjectilePool.acquire(parent)
+	if projectile == null:
+		return
 	projectile.global_position = player.global_position
 	var dir = player.global_position.direction_to(closest_enemy.global_position)
 	projectile.setup(dir, projectile_speed, final_damage, true, is_crit)

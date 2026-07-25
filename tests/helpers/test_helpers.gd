@@ -150,8 +150,9 @@ static func reset_all_services() -> void:
 	# Presentation
 	OffScreenIndicatorService.tracked_entities.clear()
 
-	# Frame-cached queries (static state, outlives scene reloads)
+	# Static state that outlives scene reloads
 	EnemyQuery.reset_state()
+	ProjectilePool.reset_state()
 
 
 # =============================================================================

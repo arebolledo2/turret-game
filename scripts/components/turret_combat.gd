@@ -195,8 +195,6 @@ func _fire_projectile() -> void:
 	if is_crit:
 		final_damage = TurretStatsService.calculate_turret_crit_damage(base_damage)
 
-	var projectile = projectile_scene.instantiate()
-	
 	# Determine parent: use current_scene first, then fallback to turret's parent or root
 	# Using current_scene is important for the GUT integration test to find the projectile
 	var parent: Node = null
@@ -205,16 +203,18 @@ func _fire_projectile() -> void:
 			parent = turret.get_tree().current_scene
 		else:
 			parent = turret.get_tree().root
-	
+
 	if not parent and turret.get_parent():
 		parent = turret.get_parent()
-	
-	if parent:
-		parent.add_child(projectile)
-		projectile.global_position = turret.global_position
-	else:
-		# Bare unit tests fallback
-		turret.add_child(projectile)
+
+	# Bare unit tests fallback
+	if not parent:
+		parent = turret
+
+	var projectile := ProjectilePool.acquire(parent)
+	if projectile == null:
+		return
+	projectile.global_position = turret.global_position
 
 	# Determine damage type
 	var turret_def = TurretRegistry.get_type(turret_type)

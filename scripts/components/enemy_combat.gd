@@ -85,8 +85,9 @@ func fire_at_player() -> void:
 	fire_timer.start()
 
 	# Create projectile
-	var projectile = projectile_scene.instantiate()
-	enemy.get_tree().current_scene.add_child(projectile)
+	var projectile := ProjectilePool.acquire(enemy.get_tree().current_scene)
+	if projectile == null:
+		return
 	projectile.global_position = enemy.global_position
 
 	# Calculate direction to player

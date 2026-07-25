@@ -22,6 +22,13 @@ var hit_enemies: Array[Node2D] = [] # Track enemies hit (for pierce)
 
 var _time_alive: float = 0.0
 
+## Assigned by NodePool. Called instead of queue_free() at end of life.
+var pool_release: Callable = Callable()
+
+## Set between the despawn request and the deferred release, so a projectile
+## that hits several hurtboxes in one physics frame only despawns once.
+var _is_despawning: bool = false
+
 @onready var _sprite: Sprite2D = get_node_or_null("Sprite2D")
 
 func _ready() -> void:
@@ -30,6 +37,63 @@ func _ready() -> void:
 
 	# Connect area entered signal for hurtbox detection
 	area_entered.connect(_on_hurtbox_entered)
+
+
+## End of life. Returns to the pool when pooled, otherwise frees as before.
+## Safe to call repeatedly and from inside a physics callback.
+func _despawn() -> void:
+	if _is_despawning:
+		return
+	_is_despawning = true
+
+	# Stop interacting immediately, even though the release itself is deferred.
+	set_deferred("monitoring", false)
+	set_deferred("monitorable", false)
+
+	if pool_release.is_valid():
+		pool_release.call_deferred(self)
+	else:
+		queue_free()
+
+
+## Handed out of the pool: restore physics interaction. Collision layer and mask
+## are set by setup()/setup_extended() immediately after.
+func _pool_acquired() -> void:
+	_is_despawning = false
+	set_deferred("monitoring", true)
+	set_deferred("monitorable", true)
+
+
+## Returned to the pool. Every field set by setup() *or* setup_extended() must be
+## reset here: setup() does not touch the extended stats, so without this a
+## pierce/AoE/DoT projectile's properties would leak into a later basic one.
+func _pool_released() -> void:
+	_time_alive = 0.0
+	_is_despawning = false
+
+	direction = Vector2.RIGHT
+	speed = 500.0
+	damage = 10.0
+	is_player_projectile = true
+	is_setup = false
+	is_crit = false
+
+	pierce = 0
+	pierce_count = 0
+	aoe_radius = 0.0
+	damage_type = GameEnums.DamageType.PHYSICAL
+	dot_damage = 0.0
+	dot_duration = 0.0
+	dot_tick_rate = 1.0
+	knockback_force = 0.0
+	hit_enemies.clear()
+
+	rotation = 0.0
+	if _sprite:
+		_sprite.rotation = 0.0
+
+	set_deferred("collision_layer", 0)
+	set_deferred("collision_mask", 0)
 
 ## Basic setup for simple projectiles (backwards compatible)
 func setup(dir: Vector2, spd: float, dmg: float, from_player: bool, crit: bool = false) -> void:
@@ -75,7 +139,7 @@ func _physics_process(delta: float) -> void:
 	# Auto-destroy after lifetime
 	_time_alive += delta
 	if _time_alive >= lifetime:
-		queue_free()
+		_despawn()
 		return
 
 	position += direction * speed * delta
@@ -97,7 +161,7 @@ func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 		var player = hurtbox.get_parent()
 		if player and player.has_method("take_damage"):
 			player.take_damage(damage)
-			queue_free()
+			_despawn()
 		return
 
 	# Check if this is a tunnel door - handle specially
@@ -106,7 +170,7 @@ func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 		DebugService.log(DebugService.COMBAT, "Projectile: Hit tunnel door!")
 		if parent.has_method("take_damage"):
 			parent.take_damage(damage)
-			queue_free()
+			_despawn()
 		return
 
 	# Verify this is an enemy hurtbox
@@ -127,7 +191,7 @@ func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 	# Check for AoE explosion
 	if aoe_radius > 0:
 		_do_aoe_explosion()
-		queue_free()
+		_despawn()
 		return
 	
 	# Apply direct damage (with Executioner's Mark bonus)
@@ -142,12 +206,13 @@ func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 	# Handle pierce
 	pierce_count += 1
 	if pierce_count > pierce:
-		queue_free()
+		_despawn()
 
 ## Execute AoE explosion - damages all enemies in radius
 func _do_aoe_explosion() -> void:
-	var enemies = get_tree().get_nodes_in_group("enemies")
+	var enemies := EnemyQuery.get_enemies(get_tree())
 	var explosion_pos = global_position
+	var radius_sq := aoe_radius * aoe_radius
 
 	Events.aoe_explosion.emit(explosion_pos, aoe_radius, damage)
 
@@ -155,8 +220,7 @@ func _do_aoe_explosion() -> void:
 		if not is_instance_valid(enemy):
 			continue
 
-		var distance = explosion_pos.distance_to(enemy.global_position)
-		if distance <= aoe_radius:
+		if explosion_pos.distance_squared_to(enemy.global_position) <= radius_sq:
 			if enemy.has_method("take_damage"):
 				var aoe_damage := _calculate_damage_with_executioner(damage, enemy)
 				enemy.take_damage(aoe_damage, is_crit)

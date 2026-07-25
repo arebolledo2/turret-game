@@ -267,3 +267,76 @@ func get_health_percent() -> float:
 	script.reload()
 	enemy.set_script(script)
 	return enemy
+
+
+# =============================================================================
+# POOLED REUSE
+# =============================================================================
+
+func test_pool_released_clears_extended_stats():
+	# setup() does not touch the extended stats, so a pierce/AoE/DoT projectile
+	# returning to the pool must not carry those into the next basic use.
+	projectile.setup_extended({
+		"projectile_speed": 600.0,
+		"damage": 30.0,
+		"pierce": 3,
+		"aoe_radius": 50.0,
+		"dot_damage": 5.0,
+		"dot_duration": 3.0,
+		"dot_tick_rate": 0.5,
+		"knockback_force": 100.0,
+	}, Vector2.RIGHT, true, GameEnums.DamageType.FIRE, true)
+
+	projectile._pool_released()
+
+	assert_eq(projectile.pierce, 0, "pierce should reset")
+	assert_eq(projectile.pierce_count, 0, "pierce_count should reset")
+	assert_eq(projectile.aoe_radius, 0.0, "aoe_radius should reset")
+	assert_eq(projectile.dot_damage, 0.0, "dot_damage should reset")
+	assert_eq(projectile.dot_duration, 0.0, "dot_duration should reset")
+	assert_eq(projectile.dot_tick_rate, 1.0, "dot_tick_rate should reset")
+	assert_eq(projectile.knockback_force, 0.0, "knockback_force should reset")
+	assert_eq(projectile.damage_type, GameEnums.DamageType.PHYSICAL, "damage_type should reset")
+	assert_false(projectile.is_crit, "is_crit should reset")
+	assert_false(projectile.is_setup, "is_setup should reset")
+
+
+func test_pool_released_clears_pierce_hit_list():
+	projectile.setup_extended({"pierce": 2}, Vector2.RIGHT, true, GameEnums.DamageType.PHYSICAL, false)
+	var dummy := Node2D.new()
+	add_child_autofree(dummy)
+	projectile.hit_enemies.append(dummy)
+
+	projectile._pool_released()
+
+	assert_eq(projectile.hit_enemies.size(), 0, "hit_enemies must not carry into the next use")
+
+
+func test_basic_setup_after_extended_use_is_clean():
+	# The end-to-end version of the leak: an AoE shot, recycled, then a basic shot.
+	projectile.setup_extended({
+		"pierce": 3, "aoe_radius": 50.0, "dot_damage": 5.0,
+	}, Vector2.RIGHT, true, GameEnums.DamageType.FIRE, true)
+	projectile._pool_released()
+	projectile.setup(Vector2.LEFT, 400.0, 12.0, true, false)
+
+	assert_eq(projectile.aoe_radius, 0.0, "Recycled basic projectile must not explode")
+	assert_eq(projectile.pierce, 0, "Recycled basic projectile must not pierce")
+	assert_eq(projectile.dot_damage, 0.0, "Recycled basic projectile must not apply DoT")
+	assert_eq(projectile.damage, 12.0, "New setup values should apply")
+
+
+func test_despawn_is_idempotent():
+	projectile.setup(Vector2.RIGHT, 500.0, 10.0, true, false)
+
+	projectile._despawn()
+	assert_true(projectile._is_despawning, "First despawn should latch")
+	# A projectile overlapping several hurtboxes in one frame despawns repeatedly.
+	projectile._despawn()
+	assert_true(projectile._is_despawning, "Repeat despawn should be a no-op, not an error")
+
+
+func test_time_alive_resets_on_release():
+	projectile._time_alive = 2.9
+	projectile._pool_released()
+	assert_eq(projectile._time_alive, 0.0, "Lifetime counter must reset or the next use expires instantly")
