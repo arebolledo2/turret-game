@@ -4,7 +4,7 @@
 
 | Item              | Value                                      |
 | ----------------- | ------------------------------------------ |
-| Engine            | Godot 4.6                                  |
+| Engine            | Godot 4.7                                  |
 | Language          | GDScript (static typing)                   |
 | Architecture      | Service-oriented with event bus            |
 | Key Pattern       | Signal bus (`Events` autoload)             |
