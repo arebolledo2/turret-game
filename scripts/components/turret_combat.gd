@@ -181,6 +181,11 @@ func fire() -> void:
 	elif GameEnums.AttackStyle.AOE in attack_styles:
 		_fire_aoe_pulse()
 
+	# Keep the firing moment readable even for attacks whose projectile or
+	# impact happens later. TurretVisuals owns the actual presentation.
+	if turret.has_method("flash_muzzle"):
+		turret.flash_muzzle()
+
 	Events.turret_fired.emit(turret)
 
 func _fire_projectile() -> void:

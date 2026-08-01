@@ -12,7 +12,9 @@ var visual_config: AssetVisualConfig = null
 var _base_scale: Vector2 = Vector2.ONE
 var _base_position: Vector2 = Vector2.ZERO
 var _base_modulate: Color = Color.WHITE
+var _base_visual_scale: Vector2 = Vector2.ONE
 var _textures: Dictionary = {}
+var damage_reaction_tween: Tween = null
 
 
 func initialize(p_player: CharacterBody2D, p_movement: PlayerMovement, p_sprite: Sprite2D) -> void:
@@ -81,6 +83,23 @@ func get_base_modulate() -> Color:
 	return _base_modulate
 
 
+func play_damage_reaction(is_crit: bool = false) -> void:
+	"""Give the player a short squash-and-recover reaction when hit."""
+	if not sprite:
+		return
+
+	if damage_reaction_tween and damage_reaction_tween.is_valid():
+		damage_reaction_tween.kill()
+
+	var punch_scale := _base_visual_scale * Vector2(1.14, 0.86) if is_crit else _base_visual_scale * Vector2(1.08, 0.92)
+	damage_reaction_tween = player.create_tween()
+	damage_reaction_tween.set_ease(Tween.EASE_OUT)
+	damage_reaction_tween.set_trans(Tween.TRANS_QUAD)
+	damage_reaction_tween.tween_property(sprite, "scale", punch_scale, 0.04)
+	damage_reaction_tween.set_ease(Tween.EASE_IN)
+	damage_reaction_tween.tween_property(sprite, "scale", _base_visual_scale, 0.12 if is_crit else 0.1)
+
+
 func _load_textures() -> void:
 	_textures.clear()
 	for key in visual_config.texture_paths.keys():
@@ -94,6 +113,7 @@ func _apply_base_visuals() -> void:
 		return
 
 	sprite.scale = Vector2(_base_scale.x * visual_config.scale.x, _base_scale.y * visual_config.scale.y)
+	_base_visual_scale = sprite.scale
 	sprite.position = _base_position + visual_config.position_offset
 	_base_modulate = visual_config.modulate
 	sprite.modulate = _base_modulate

@@ -12,8 +12,22 @@ const ZOOM_STEP: float = 0.1
 var target_zoom: float = 1.0
 var base_zoom: float = 1.0 # Auto-calculated zoom to fit arena
 
+# Short, additive camera impulse used for damage, crits, and large explosions.
+# This lives in Camera2D.offset so the existing pixel-rounding behavior for the
+# follow position remains intact.
+var shake_time: float = 0.0
+var shake_duration: float = 0.0
+var shake_strength: float = 0.0
+
 func _ready() -> void:
 	get_viewport().size_changed.connect(_on_viewport_changed)
+	if not Events.damage_dealt.is_connected(_on_damage_dealt):
+		Events.damage_dealt.connect(_on_damage_dealt)
+	if not Events.aoe_explosion.is_connected(_on_aoe_explosion):
+		Events.aoe_explosion.connect(_on_aoe_explosion)
+	if not Events.enemy_exploded.is_connected(_on_enemy_exploded):
+		Events.enemy_exploded.connect(_on_enemy_exploded)
+
 	# Defer initial setup to ensure ArenaBoundsService is initialized
 	call_deferred("_on_viewport_changed")
 	call_deferred("_sync_target_zoom")
@@ -28,6 +42,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _physics_process(delta: float) -> void:
 	# Round camera position to prevent sub-pixel jitter
 	position = position.round()
+	_process_shake(delta)
 
 	# Handle gamepad zoom
 	var zoom_input := Input.get_axis("zoom_out", "zoom_in")
@@ -38,6 +53,48 @@ func _physics_process(delta: float) -> void:
 		var new_zoom: float = lerp(zoom.x, target_zoom, ZOOM_SPEED * delta)
 		zoom = Vector2(new_zoom, new_zoom)
 		setup_camera_limits() # Recalculate limits for new zoom level
+
+
+func shake(duration: float, strength: float) -> void:
+	"""Add a short camera impulse, keeping the strongest active request."""
+	shake_time = maxf(shake_time, maxf(duration, 0.0))
+	shake_duration = maxf(shake_duration, maxf(duration, 0.001))
+	shake_strength = maxf(shake_strength, maxf(strength, 0.0))
+
+
+func _process_shake(delta: float) -> void:
+	if shake_time > 0.0:
+		shake_time = maxf(shake_time - delta, 0.0)
+		var falloff := shake_time / maxf(shake_duration, 0.001)
+		offset = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * shake_strength * falloff
+		return
+
+	offset = offset.lerp(Vector2.ZERO, minf(delta * 30.0, 1.0))
+	shake_duration = 0.0
+	shake_strength = 0.0
+
+
+func _on_damage_dealt(_position: Vector2, _amount: float, is_crit: bool, enemy: Node2D) -> void:
+	# Regular hits already have local enemy reactions. Reserve camera motion for
+	# critical hits so a dense wave does not turn into constant screen jitter.
+	if is_crit and enemy != null:
+		shake(0.08, 3.0)
+
+
+func _on_aoe_explosion(world_position: Vector2, radius: float, _damage: float) -> void:
+	if _is_event_near_camera(world_position, radius):
+		shake(0.1, clampf(radius * 0.008, 1.5, 3.5))
+
+
+func _on_enemy_exploded(world_position: Vector2, radius: float, _damage: float) -> void:
+	if _is_event_near_camera(world_position, radius):
+		shake(0.2, clampf(radius * 0.035, 4.0, 8.0))
+
+
+func _is_event_near_camera(world_position: Vector2, radius: float) -> bool:
+	var half_visible := get_viewport().get_visible_rect().size / zoom / 2.0
+	var delta := world_position - global_position
+	return absf(delta.x) <= half_visible.x + radius and absf(delta.y) <= half_visible.y + radius
 
 func _sync_target_zoom() -> void:
 	target_zoom = base_zoom

@@ -222,6 +222,8 @@ func take_damage(amount: float, is_crit: bool = false) -> void:
 
 	# Visual feedback - flash red
 	sprite.modulate = GameConstants.PLAYER_DAMAGE_FLASH_COLOR
+	if visuals:
+		visuals.play_damage_reaction(is_crit)
 
 	# Defensive pulse - knockback nearby enemies
 	apply_defensive_pulse()

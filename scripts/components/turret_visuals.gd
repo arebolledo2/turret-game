@@ -42,6 +42,8 @@ var original_position: Vector2 = Vector2.ZERO
 var spawn_tween: Tween = null
 var idle_tween: Tween = null
 var effect_tween: Tween = null
+var muzzle_tween: Tween = null
+var recoil_tween: Tween = null
 
 func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary) -> void:
 	"""Initialize component with required references."""
@@ -378,17 +380,36 @@ func _update_status_indicators() -> void:
 		status_indicators.add_child(panel)
 
 func flash_muzzle() -> void:
-	"""Flash the sprite when firing."""
+	"""Flash and lightly recoil the turret when firing."""
 	var sprite_node: CanvasItem = null
 	if animated_sprite:
 		sprite_node = animated_sprite
 	else:
 		sprite_node = base_sprite
 	if sprite_node:
-		var original_color = sprite_node.modulate
+		if muzzle_tween and muzzle_tween.is_valid():
+			muzzle_tween.kill()
+
+		var resting_color := base_visual_modulate
+		if is_in_pickup_range:
+			resting_color = resting_color.lightened(0.4)
+
 		sprite_node.modulate = Color.WHITE
-		var tween = turret.create_tween()
-		tween.tween_property(sprite_node, "modulate", original_color, 0.1)
+		muzzle_tween = turret.create_tween()
+		muzzle_tween.tween_property(sprite_node, "modulate", resting_color, 0.08)
+
+	# The static turret art is bottom-anchored, so a short downward kick reads as
+	# recoil without fighting the idle bounce's scale animation.
+	if visual_node is Node2D:
+		if recoil_tween and recoil_tween.is_valid():
+			recoil_tween.kill()
+
+		var node_2d := visual_node as Node2D
+		node_2d.position = original_position + Vector2(0.0, 2.0)
+		recoil_tween = turret.create_tween()
+		recoil_tween.set_ease(Tween.EASE_OUT)
+		recoil_tween.set_trans(Tween.TRANS_QUAD)
+		recoil_tween.tween_property(node_2d, "position", original_position, 0.08)
 
 func play_spawn_animation() -> void:
 	"""Animate turret spawning in."""

@@ -30,6 +30,7 @@ var pool_release: Callable = Callable()
 var _is_despawning: bool = false
 
 @onready var _sprite: Sprite2D = get_node_or_null("Sprite2D")
+@onready var _trail: Line2D = get_node_or_null("Trail")
 
 func _ready() -> void:
 	# Render above all gameplay entities
@@ -62,6 +63,8 @@ func _pool_acquired() -> void:
 	_is_despawning = false
 	set_deferred("monitoring", true)
 	set_deferred("monitorable", true)
+	if _trail:
+		_trail.visible = false
 
 
 ## Returned to the pool. Every field set by setup() *or* setup_extended() must be
@@ -91,6 +94,11 @@ func _pool_released() -> void:
 	rotation = 0.0
 	if _sprite:
 		_sprite.rotation = 0.0
+		_sprite.modulate = Color.WHITE
+	if _trail:
+		_trail.visible = false
+		_trail.default_color = Color(1.0, 0.8, 0.25, 0.45)
+		_trail.width = 5.0
 
 	set_deferred("collision_layer", 0)
 	set_deferred("collision_mask", 0)
@@ -103,6 +111,7 @@ func setup(dir: Vector2, spd: float, dmg: float, from_player: bool, crit: bool =
 	is_player_projectile = from_player
 	is_crit = crit
 	is_setup = true
+	_configure_flight_visuals()
 
 	# Set collision - deferred to avoid physics query error
 	_apply_collision_deferred()
@@ -122,6 +131,7 @@ func setup_extended(stats: Dictionary, dir: Vector2, from_player: bool, dtype: G
 	is_player_projectile = from_player
 	is_crit = crit
 	is_setup = true
+	_configure_flight_visuals()
 
 	# Set collision
 	_apply_collision_deferred()
@@ -134,6 +144,31 @@ func _apply_collision_deferred() -> void:
 		set_deferred("collision_mask", GameConstants.COLLISION_MASK_ENEMY_AND_TUNNEL)
 	else:
 		set_deferred("collision_mask", GameConstants.COLLISION_MASK_PLAYER)
+
+
+func _configure_flight_visuals() -> void:
+	"""Aim the pooled projectile and configure a lightweight colored trail."""
+	rotation = direction.angle()
+	if not _trail:
+		return
+
+	var trail_color := _get_projectile_color()
+	trail_color.a = 0.8 if is_crit else 0.5
+	_trail.default_color = trail_color
+	_trail.width = 7.0 if is_crit else 5.0
+	_trail.visible = true
+
+
+func _get_projectile_color() -> Color:
+	match damage_type:
+		GameEnums.DamageType.PLASMA:
+			return Color("AA44DD")
+		GameEnums.DamageType.FIRE:
+			return Color("FF6633")
+		GameEnums.DamageType.ELECTRIC:
+			return Color("44DDDD")
+		_:
+			return Color("FFCC55") if is_player_projectile else Color("FF5566")
 
 func _physics_process(delta: float) -> void:
 	# Auto-destroy after lifetime

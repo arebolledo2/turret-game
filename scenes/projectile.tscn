@@ -17,3 +17,9 @@ shape = SubResource("CircleShape2D_1")
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1550611992]
 scale = Vector2(0.025, 0.025)
 texture = ExtResource("2_sprite")
+
+[node name="Trail" type="Line2D" parent="."]
+z_index = -1
+width = 5.0
+default_color = Color(1, 0.8, 0.25, 0.45)
+points = PackedVector2Array(0, 0, -18, 0)

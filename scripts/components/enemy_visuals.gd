@@ -10,12 +10,15 @@ var visual_config: AssetVisualConfig = null
 
 var _base_sprite_scale: Vector2 = Vector2.ONE
 var _base_sprite_position: Vector2 = Vector2.ZERO
+var _base_visual_scale: Vector2 = Vector2.ONE
 
 var _textures: Dictionary = {}
 var _last_direction_key: String = ""
 
 var fire_particles: GPUParticles2D = null
 var idle_tween: Tween = null
+var damage_flash_tween: Tween = null
+var impact_tween: Tween = null
 
 
 func initialize(p_enemy: CharacterBody2D, asset_config: EntityAssetConfig) -> void:
@@ -72,14 +75,20 @@ func update_direction_sprite(direction: Vector2) -> void:
 			_apply_left_right_animation(direction)
 
 
-func apply_damage_flash() -> void:
+func apply_damage_flash(is_crit: bool = false) -> void:
 	if not sprite_node:
 		return
 
+	if damage_flash_tween and damage_flash_tween.is_valid():
+		damage_flash_tween.kill()
+
 	var target_color := _get_visual_modulate()
 	sprite_node.modulate = Color.WHITE
-	var tween = enemy.create_tween()
-	tween.tween_property(sprite_node, "modulate", target_color, 0.1)
+	damage_flash_tween = enemy.create_tween()
+	damage_flash_tween.tween_property(sprite_node, "modulate", target_color, 0.08 if is_crit else 0.1)
+
+	_play_hit_reaction(is_crit)
+	_spawn_hit_burst(is_crit)
 
 
 func update_status_visual(active_effects: Dictionary) -> void:
@@ -117,12 +126,130 @@ func play_death_animation(callback: Callable) -> void:
 
 	_clear_fire_particles()
 	_stop_idle_bounce()
+	if damage_flash_tween and damage_flash_tween.is_valid():
+		damage_flash_tween.kill()
+	if impact_tween and impact_tween.is_valid():
+		impact_tween.kill()
 
 	var tween = enemy.create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(sprite_node, "scale", Vector2.ZERO, 0.15)
-	tween.tween_property(sprite_node, "modulate:a", 0.0, 0.15)
-	tween.chain().tween_callback(callback)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_BACK)
+	tween.tween_property(sprite_node, "scale", _base_visual_scale * 1.18, 0.04)
+	tween.parallel().tween_property(sprite_node, "modulate", Color.WHITE, 0.04)
+	tween.set_ease(Tween.EASE_IN)
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(sprite_node, "scale", Vector2.ZERO, 0.12)
+	tween.parallel().tween_property(sprite_node, "modulate:a", 0.0, 0.12)
+	tween.tween_callback(callback)
+
+
+func play_explosion_animation(radius: float) -> void:
+	"""Show a world-space burst for explosive enemies before they disappear."""
+	var parent := _get_effect_parent()
+	if parent == null or enemy == null:
+		return
+
+	var effect_radius := maxf(radius, 24.0)
+	var ring := Line2D.new()
+	ring.points = _create_circle_points(effect_radius, 32)
+	ring.width = maxf(3.0, effect_radius * 0.035)
+	ring.default_color = Color(1.0, 0.45, 0.08, 0.9)
+	ring.z_index = 10
+	ring.scale = Vector2.ONE * 0.2
+	parent.add_child(ring)
+	ring.global_position = enemy.global_position
+
+	var ring_tween := ring.create_tween()
+	ring_tween.set_ease(Tween.EASE_OUT)
+	ring_tween.set_trans(Tween.TRANS_QUAD)
+	ring_tween.tween_property(ring, "scale", Vector2.ONE, 0.22)
+	ring_tween.parallel().tween_property(ring, "modulate:a", 0.0, 0.22)
+	ring_tween.tween_callback(ring.queue_free)
+
+	var core := Polygon2D.new()
+	core.polygon = _create_circle_points(effect_radius * 0.22, 24)
+	core.color = Color(1.0, 0.85, 0.35, 0.65)
+	core.z_index = 9
+	core.scale = Vector2.ONE * 0.2
+	parent.add_child(core)
+	core.global_position = enemy.global_position
+
+	var core_tween := core.create_tween()
+	core_tween.set_ease(Tween.EASE_OUT)
+	core_tween.set_trans(Tween.TRANS_QUAD)
+	core_tween.tween_property(core, "scale", Vector2.ONE * 1.4, 0.1)
+	core_tween.parallel().tween_property(core, "modulate:a", 0.0, 0.1)
+	core_tween.tween_callback(core.queue_free)
+
+
+func _play_hit_reaction(is_crit: bool) -> void:
+	if not sprite_node:
+		return
+
+	var idle_was_active := idle_tween != null and idle_tween.is_valid()
+	if idle_was_active:
+		idle_tween.pause()
+
+	if impact_tween and impact_tween.is_valid():
+		impact_tween.kill()
+
+	var punch_scale := _base_visual_scale * Vector2(1.16, 0.86) if is_crit else _base_visual_scale * Vector2(1.09, 0.92)
+	var duration := 0.14 if is_crit else 0.1
+	impact_tween = enemy.create_tween()
+	impact_tween.set_ease(Tween.EASE_OUT)
+	impact_tween.set_trans(Tween.TRANS_QUAD)
+	impact_tween.tween_property(sprite_node, "scale", punch_scale, 0.035)
+	impact_tween.set_ease(Tween.EASE_IN)
+	impact_tween.tween_property(sprite_node, "scale", _base_visual_scale, duration)
+	if idle_was_active:
+		impact_tween.tween_callback(_resume_idle_bounce)
+
+
+func _resume_idle_bounce() -> void:
+	if idle_tween and idle_tween.is_valid():
+		idle_tween.play()
+
+
+func _spawn_hit_burst(is_crit: bool) -> void:
+	var parent := _get_effect_parent()
+	if parent == null or enemy == null:
+		return
+
+	var radius := 13.0 if is_crit else 8.0
+	var ring := Line2D.new()
+	ring.points = _create_circle_points(radius, 16)
+	ring.width = 2.8 if is_crit else 1.6
+	ring.default_color = Color(1.0, 0.85, 0.25, 0.95) if is_crit else Color(1.0, 1.0, 1.0, 0.8)
+	ring.z_index = 8
+	ring.scale = Vector2.ONE * 0.35
+	parent.add_child(ring)
+	ring.global_position = enemy.global_position
+
+	var duration := 0.18 if is_crit else 0.12
+	var tween := ring.create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.tween_property(ring, "scale", Vector2.ONE * (1.2 if is_crit else 1.0), duration)
+	tween.parallel().tween_property(ring, "modulate:a", 0.0, duration)
+	tween.tween_callback(ring.queue_free)
+
+
+func _get_effect_parent() -> Node:
+	if enemy == null or not is_instance_valid(enemy):
+		return null
+
+	var tree := enemy.get_tree()
+	if tree == null:
+		return null
+	return tree.current_scene if tree.current_scene else tree.root
+
+
+func _create_circle_points(radius: float, segments: int) -> PackedVector2Array:
+	var points := PackedVector2Array()
+	for i in range(segments + 1):
+		var angle := TAU * float(i) / float(segments)
+		points.append(Vector2(cos(angle), sin(angle)) * radius)
+	return points
 
 
 func _load_visual_resources() -> void:
@@ -145,6 +272,7 @@ func _apply_visual_base_state() -> void:
 
 	sprite_node.position = _base_sprite_position + visual_config.position_offset
 	sprite_node.scale = Vector2(_base_sprite_scale.x * visual_config.scale.x, _base_sprite_scale.y * visual_config.scale.y)
+	_base_visual_scale = sprite_node.scale
 	sprite_node.modulate = visual_config.modulate
 
 	if sprite_node is Sprite2D:

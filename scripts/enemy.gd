@@ -260,7 +260,7 @@ func take_damage(amount: float, is_crit: bool = false) -> void:
 	Events.damage_dealt.emit(global_position, amount, is_crit, self)
 
 	# Visual feedback - flash white
-	visuals.apply_damage_flash()
+	visuals.apply_damage_flash(is_crit)
 
 	if current_health <= 0:
 		die()
@@ -302,6 +302,7 @@ func _explode() -> void:
 	if explosion_radius <= 0 or explosion_damage <= 0:
 		return
 	
+	visuals.play_explosion_animation(explosion_radius)
 	Events.enemy_exploded.emit(global_position, explosion_radius, explosion_damage)
 	
 	# Damage player if in range

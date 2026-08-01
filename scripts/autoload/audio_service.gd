@@ -42,7 +42,7 @@ func _connect_signals() -> void:
 	if not Events.damage_dealt.is_connected(_on_damage_dealt):
 		Events.damage_dealt.connect(_on_damage_dealt)
 
-func _on_damage_dealt(_position: Vector2, _amount: float, _is_crit: bool, enemy: Node2D) -> void:
+func _on_damage_dealt(_position: Vector2, _amount: float, is_crit: bool, enemy: Node2D) -> void:
 	# Determine which hit sound to play based on enemy rank
 	var sound_to_play: AudioStream = null
 	
@@ -58,9 +58,9 @@ func _on_damage_dealt(_position: Vector2, _amount: float, _is_crit: bool, enemy:
 		sound_to_play = hit_sound_small
 	
 	if sound_to_play:
-		play_sfx(sound_to_play, _position)
+		play_sfx(sound_to_play, _position, 1.08 if is_crit else 1.0)
 
-func play_sfx(stream: AudioStream, pos: Vector2 = Vector2.ZERO) -> void:
+func play_sfx(stream: AudioStream, pos: Vector2 = Vector2.ZERO, base_pitch: float = 1.0) -> void:
 	if not stream:
 		return
 		
@@ -69,6 +69,8 @@ func play_sfx(stream: AudioStream, pos: Vector2 = Vector2.ZERO) -> void:
 	if player:
 		player.stream = stream
 		player.global_position = pos
+		# Small pitch variation keeps repeated impacts from sounding identical.
+		player.pitch_scale = clampf(base_pitch * randf_range(0.94, 1.06), 0.75, 1.25)
 		player.play()
 
 func _get_available_player() -> AudioStreamPlayer2D:
