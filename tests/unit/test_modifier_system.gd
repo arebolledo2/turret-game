@@ -379,6 +379,22 @@ func test_more_operation_multiplies_stat():
 	assert_eq(stats["damage"], base_stats["damage"] * 1.5, "Damage should be 50% more")
 
 
+func test_multiply_operation_alias_multiplies_turret_stat():
+	modifier_system.add_modifier({
+		"id": "damage_multiply",
+		"stat": "damage",
+		"operation": "multiply",
+		"value": 1.15
+	})
+
+	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var stats = modifier_system.get_turret_stats("normal", easy_config)
+	var base_stats = TurretRegistry.get_base_stats("normal")
+
+	assert_eq(stats["damage"], base_stats["damage"] * 1.15,
+		"Multiply should behave as an independent multiplier for turret stats")
+
+
 func test_multiple_more_operations_stack_multiplicatively():
 	# PoE-style: "more" modifiers multiply independently
 	modifier_system.add_modifier({
@@ -607,6 +623,18 @@ func test_apply_to_stat_with_more():
 
 	var result = modifier_system.apply_to_stat(100.0, "player_speed")
 	assert_eq(result, 150.0, "Should multiply base by 1.5 (50% more)")
+
+
+func test_apply_to_stat_with_multiply_alias():
+	modifier_system.add_modifier({
+		"id": "speed_multiply",
+		"stat": "player_speed",
+		"operation": "multiply",
+		"value": 1.25
+	})
+
+	var result = modifier_system.apply_to_stat(100.0, "player_speed")
+	assert_eq(result, 125.0, "Multiply should behave as an independent multiplier for player stats")
 
 
 func test_apply_to_stat_ignores_other_stats():

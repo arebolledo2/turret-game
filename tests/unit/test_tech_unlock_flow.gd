@@ -203,6 +203,18 @@ func test_unlock_tech_applies_modifiers():
 		"Should have added modifier(s) to ModifierService")
 
 
+func test_unlock_tech_changes_turret_damage():
+	ModifierService.clear_modifiers()
+	var base_damage = TurretStatsService.get_turret_stats("normal", 1.0)["damage"]
+
+	tech_tree_service.add_research_points(100)
+	tech_tree_service.unlock_tech("turret_damage_1")
+
+	var modified_damage = TurretStatsService.get_turret_stats("normal", 1.0)["damage"]
+	assert_almost_eq(modified_damage, base_damage * 1.15, 0.001,
+		"Enhanced Ammunition should increase turret damage by 15%")
+
+
 func test_modifier_has_correct_id():
 	tech_tree_service.add_research_points(100)
 	ModifierService.clear_modifiers()

@@ -6,6 +6,7 @@ extends RefCounted
 ##   - "add": Flat value added to base (stacks additively)
 ##   - "increase": Percentage modifier (all sources sum, then multiply base)
 ##   - "more": Multiplicative modifier (each source multiplies independently)
+##   - "multiply": Alias for "more" used by the tech registry
 ##
 ## Formula: final = (base + flat_total) × (1 + increase_total) × more1 × more2 × ...
 ##
@@ -18,7 +19,7 @@ extends RefCounted
 ## {
 ##   "id": String,           # Unique identifier
 ##   "stat": String,         # Which stat to modify (damage, fire_rate, etc.)
-##   "operation": String,    # "add", "increase", or "more"
+##   "operation": String,    # "add", "increase", "more", or "multiply"
 ##   "value": float,         # The modification value
 ##   "filter": {             # Optional filters (OR logic within each array)
 ##     "damage_type": [],    # Array of DamageType enums
@@ -89,6 +90,15 @@ func _modifier_matches_turret(modifier: Dictionary, turret_type: String) -> bool
 	return not has_filters
 
 
+## Normalize operation aliases used by different modifier registries.
+## Tech definitions use "multiply" for the same independent multiplier
+## represented as "more" by the item/modifier system.
+func _normalize_operation(operation: String) -> String:
+	if operation == "multiply":
+		return "more"
+	return operation
+
+
 ## Get turret stats with all modifiers applied
 ## Uses PoE formula: (base + flat) × (1 + increases) × more1 × more2 × ...
 func get_turret_stats(turret_type: String, difficulty_config: Dictionary) -> Dictionary:
@@ -110,7 +120,7 @@ func get_turret_stats(turret_type: String, difficulty_config: Dictionary) -> Dic
 			continue
 
 		var stat: String = modifier.get("stat", "")
-		var operation: String = modifier.get("operation", "add")
+		var operation: String = _normalize_operation(str(modifier.get("operation", "add")))
 		var value: float = modifier.get("value", 0.0)
 
 		match operation:
@@ -177,7 +187,7 @@ func apply_to_stat(base_value: float, stat_name: String, entity_type: String = "
 					continue
 
 		# Collect modifier by operation type
-		var operation = modifier.get("operation", "add")
+		var operation: String = _normalize_operation(str(modifier.get("operation", "add")))
 		var value = modifier.get("value", 0.0)
 
 		match operation:
