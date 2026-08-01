@@ -9,6 +9,8 @@
 [ext_resource type="Script" path="res://scripts/components/player_visuals.gd" id="8_visuals"]
 [ext_resource type="Script" path="res://scripts/components/collision_manager.gd" id="9_collision_manager"]
 [ext_resource type="Resource" path="res://resources/collision_profiles/player_default.tres" id="10_profile"]
+[ext_resource type="Texture2D" path="res://resources/radial_glow.tres" id="11_glow_texture"]
+[ext_resource type="Material" path="res://resources/additive_glow_material.tres" id="12_glow_material"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_Physics"]
 radius = 14.0
@@ -20,6 +22,15 @@ radius = 16.0
 motion_mode = 1
 collision_mask = 2
 script = ExtResource("1_1j2k3")
+
+[node name="Glow" type="Sprite2D" parent="." unique_id=1749302101]
+texture_filter = 2
+position = Vector2(0, -16)
+z_index = 0
+scale = Vector2(0.5, 0.5)
+modulate = Color(0.2, 0.65, 1, 0.18)
+material = ExtResource("12_glow_material")
+texture = ExtResource("11_glow_texture")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=468611414]
 shape = SubResource("CircleShape2D_Physics")

@@ -60,7 +60,9 @@ const TYPES: Dictionary = {
 			"speed": 40.0,
 			"contact_damage": 13.0,
 			"scrap_value": 1,
-			"scale": 2.0,
+			# The Heavy Bot source art is also 1024px, so keep its larger body
+			# readable without letting the raw source dimensions dominate the arena.
+			"scale": 0.1,
 			"mass": 3.0,
 		},
 		"hurtbox": {

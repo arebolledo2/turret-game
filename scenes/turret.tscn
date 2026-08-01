@@ -5,11 +5,22 @@
 [ext_resource type="Texture2D" uid="uid://dw3wlwxaxjfdc" path="res://assets/sprites/turret_basic/turret_static.png" id="3_static_sprite"]
 [ext_resource type="Script" uid="uid://bmr7o58ggw0m8" path="res://scripts/components/turret_combat.gd" id="5_combat"]
 [ext_resource type="Script" uid="uid://b74th4ao2wox2" path="res://scripts/components/turret_visuals.gd" id="6_visuals"]
+[ext_resource type="Texture2D" path="res://resources/radial_glow.tres" id="7_glow_texture"]
+[ext_resource type="Material" path="res://resources/additive_glow_material.tres" id="8_glow_material"]
 
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_weapon"]
 
 [node name="Turret" type="Node2D" unique_id=1311592068]
 script = ExtResource("1_turret")
+
+[node name="Glow" type="Sprite2D" parent="." unique_id=1749302102]
+texture_filter = 2
+position = Vector2(0, -28)
+z_index = 0
+scale = Vector2(0.45, 0.45)
+modulate = Color(0.35, 0.8, 1, 0.16)
+material = ExtResource("8_glow_material")
+texture = ExtResource("7_glow_texture")
 
 [node name="RangeIndicator" type="Node2D" parent="." unique_id=990003141]
 modulate = Color(1, 1, 1, 0)

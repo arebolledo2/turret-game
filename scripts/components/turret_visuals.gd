@@ -22,6 +22,7 @@ var base_visual_modulate: Color = Color.WHITE
 
 # Sprite nodes
 var base_sprite: Sprite2D = null
+var glow_sprite: Sprite2D = null
 var animated_sprite: AnimatedSprite2D = null
 var weapon_sprite: Sprite2D = null
 var icon_label: Label = null
@@ -54,6 +55,7 @@ func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary) ->
 
 	# Get sprite node references
 	base_sprite = turret.get_node_or_null("BaseSprite")
+	glow_sprite = turret.get_node_or_null("Glow")
 	animated_sprite = turret.get_node_or_null("AnimatedSprite")
 	weapon_sprite = turret.get_node_or_null("WeaponSprite")
 	icon_label = turret.get_node_or_null("IconLabel")
@@ -95,6 +97,7 @@ func setup_visuals() -> void:
 	if visual_config != null:
 		_setup_from_visual_config()
 		_store_visual_state()
+		_update_glow_color()
 		return
 
 	match turret_type:
@@ -119,6 +122,19 @@ func setup_visuals() -> void:
 
 	# Store visual state after type-specific setup
 	_store_visual_state()
+	_update_glow_color()
+
+
+func _update_glow_color() -> void:
+	"""Keep the local light accent aligned with the turret's identity color."""
+	if not glow_sprite:
+		return
+
+	var glow_color := TurretRegistry.get_color(turret_type)
+	if visual_config and visual_config.modulate != Color.WHITE:
+		glow_color = visual_config.modulate
+	glow_color.a = 0.16
+	glow_sprite.modulate = glow_color
 
 
 func apply_asset_config(new_config: EntityAssetConfig) -> void:

@@ -95,6 +95,55 @@ func fire_at_player() -> void:
 
 	# Setup as ENEMY projectile (is_player_projectile = false)
 	projectile.setup(direction, projectile_speed, projectile_damage, false, false)
+	_spawn_attack_feedback(enemy.global_position, player_target.global_position)
+
+
+func _spawn_attack_feedback(origin: Vector2, target_position: Vector2) -> void:
+	"""Make ranged enemy shots readable without adding a gameplay delay."""
+	if enemy == null or not enemy.is_inside_tree():
+		return
+
+	var scene_root := enemy.get_tree().current_scene
+	if scene_root == null:
+		return
+
+	var direction := origin.direction_to(target_position)
+	if direction == Vector2.ZERO:
+		return
+
+	# A short red firing line confirms where the projectile came from and gives
+	# the player a clean visual read even when the projectile crosses a crowd.
+	var firing_line := Line2D.new()
+	firing_line.points = PackedVector2Array([origin, target_position])
+	firing_line.width = 2.5
+	firing_line.default_color = Color(1.0, 0.2, 0.16, 0.45)
+	firing_line.z_index = 7
+	firing_line.antialiased = true
+	scene_root.add_child(firing_line)
+	var line_tween := firing_line.create_tween()
+	line_tween.tween_property(firing_line, "modulate:a", 0.0, 0.12)
+	line_tween.tween_callback(firing_line.queue_free)
+
+	# A small directional muzzle diamond makes the firing origin legible without
+	# requiring another enemy sprite or a texture asset.
+	var muzzle_flash := Polygon2D.new()
+	muzzle_flash.polygon = PackedVector2Array([
+		Vector2(12.0, 0.0),
+		Vector2(0.0, 4.0),
+		Vector2(-4.0, 0.0),
+		Vector2(0.0, -4.0),
+	])
+	muzzle_flash.position = origin + direction * 12.0
+	muzzle_flash.rotation = direction.angle()
+	muzzle_flash.color = Color(1.0, 0.68, 0.24, 0.85)
+	muzzle_flash.z_index = 8
+	scene_root.add_child(muzzle_flash)
+	var flash_tween := muzzle_flash.create_tween()
+	flash_tween.set_trans(Tween.TRANS_QUAD)
+	flash_tween.set_ease(Tween.EASE_OUT)
+	flash_tween.tween_property(muzzle_flash, "scale", Vector2(1.5, 1.5), 0.1)
+	flash_tween.parallel().tween_property(muzzle_flash, "modulate:a", 0.0, 0.1)
+	flash_tween.tween_callback(muzzle_flash.queue_free)
 
 func _on_fire_timer_timeout() -> void:
 	"""Re-enable firing after cooldown."""

@@ -22,6 +22,10 @@ var hit_enemies: Array[Node2D] = [] # Track enemies hit (for pierce)
 
 var _time_alive: float = 0.0
 
+# The projectile is a five-pixel-radius circle in the scene. A capsule sweep
+# uses that same radius while covering the complete path between physics frames.
+var _sweep_shape: CapsuleShape2D = null
+
 ## Assigned by NodePool. Called instead of queue_free() at end of life.
 var pool_release: Callable = Callable()
 
@@ -31,10 +35,16 @@ var _is_despawning: bool = false
 
 @onready var _sprite: Sprite2D = get_node_or_null("Sprite2D")
 @onready var _trail: Line2D = get_node_or_null("Trail")
+@onready var _glow: Sprite2D = get_node_or_null("Glow")
 
 func _ready() -> void:
 	# Render above all gameplay entities
 	z_index = 5
+
+	var collision_shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
+	var circle_shape := collision_shape.shape as CircleShape2D if collision_shape else null
+	_sweep_shape = CapsuleShape2D.new()
+	_sweep_shape.radius = circle_shape.radius if circle_shape else 5.0
 
 	# Connect area entered signal for hurtbox detection
 	area_entered.connect(_on_hurtbox_entered)
@@ -65,6 +75,8 @@ func _pool_acquired() -> void:
 	set_deferred("monitorable", true)
 	if _trail:
 		_trail.visible = false
+	if _glow:
+		_glow.visible = false
 
 
 ## Returned to the pool. Every field set by setup() *or* setup_extended() must be
@@ -99,6 +111,9 @@ func _pool_released() -> void:
 		_trail.visible = false
 		_trail.default_color = Color(1.0, 0.8, 0.25, 0.45)
 		_trail.width = 5.0
+	if _glow:
+		_glow.visible = false
+		_glow.modulate = Color.WHITE
 
 	set_deferred("collision_layer", 0)
 	set_deferred("collision_mask", 0)
@@ -149,6 +164,11 @@ func _apply_collision_deferred() -> void:
 func _configure_flight_visuals() -> void:
 	"""Aim the pooled projectile and configure a lightweight colored trail."""
 	rotation = direction.angle()
+	if _glow:
+		var glow_color := _get_projectile_color()
+		glow_color.a = 0.32 if is_crit else 0.2
+		_glow.modulate = glow_color
+		_glow.visible = true
 	if not _trail:
 		return
 
@@ -188,62 +208,67 @@ func _physics_process(delta: float) -> void:
 
 
 func _move_with_swept_collision(start_position: Vector2, end_position: Vector2) -> void:
-	"""Move across the full frame while checking the path for hurtboxes."""
+	"""Move across the full frame with a radius-aware capsule sweep."""
 	if not is_inside_tree() or get_world_2d() == null:
 		global_position = end_position
 		return
 
-	var sweep_direction := direction.normalized()
-	if sweep_direction == Vector2.ZERO:
+	var travel := end_position - start_position
+	var travel_distance := travel.length()
+	if travel_distance <= GameConstants.PROJECTILE_SWEEP_EPSILON or _sweep_shape == null:
 		global_position = end_position
 		return
+
+	var sweep_direction := travel / travel_distance
+	_sweep_shape.height = travel_distance + _sweep_shape.radius * 2.0
 
 	var space_state := get_world_2d().direct_space_state
 	var query_mask := GameConstants.COLLISION_MASK_ENEMY_AND_TUNNEL if is_player_projectile else GameConstants.COLLISION_MASK_PLAYER
 	var excluded_rids: Array[RID] = [get_rid()]
-	var sweep_start := start_position
-	var epsilon_squared := GameConstants.PROJECTILE_SWEEP_EPSILON * GameConstants.PROJECTILE_SWEEP_EPSILON
+	var query := PhysicsShapeQueryParameters2D.new()
+	query.shape = _sweep_shape
+	query.transform = Transform2D(sweep_direction.angle() - PI * 0.5, (start_position + end_position) * 0.5)
+	query.collision_mask = query_mask
+	query.collide_with_areas = true
+	query.collide_with_bodies = false
+	query.exclude = excluded_rids
 
-	for _hit_index in range(GameConstants.PROJECTILE_MAX_SWEEP_HITS):
-		if sweep_start.distance_squared_to(end_position) <= epsilon_squared:
-			global_position = end_position
-			return
-
-		var query := PhysicsRayQueryParameters2D.create(sweep_start, end_position, query_mask)
-		query.collide_with_areas = true
-		query.collide_with_bodies = false
-		query.exclude = excluded_rids
-		var hit := space_state.intersect_ray(query)
-		if hit.is_empty():
-			global_position = end_position
-			return
-
-		var collider := hit.get("collider") as Area2D
-		var hit_position: Vector2 = hit.get("position", sweep_start)
-		if collider == null:
-			sweep_start = hit_position + sweep_direction * GameConstants.PROJECTILE_SWEEP_EPSILON
+	var candidates: Array[Dictionary] = []
+	var candidate_rids: Dictionary = {}
+	for result in space_state.intersect_shape(query, GameConstants.PROJECTILE_MAX_SWEEP_HITS):
+		var collider := result.get("collider") as Area2D
+		if collider == null or not _is_swept_collision_target(collider):
 			continue
 
 		var collider_rid := collider.get_rid()
-		if collider_rid not in excluded_rids:
-			excluded_rids.append(collider_rid)
+		if candidate_rids.has(collider_rid):
+			continue
+		candidate_rids[collider_rid] = true
 
-		# Only the same targets handled by the area_entered callback should
-		# consume a swept hit. Other areas on the mask are simply passed over.
-		if not _is_swept_collision_target(collider):
-			sweep_start = hit_position + sweep_direction * GameConstants.PROJECTILE_SWEEP_EPSILON
+		# A single swept frame should not re-hit a target already consumed by a
+		# piercing projectile, even if that target has multiple hurtbox shapes.
+		var target := collider.get_parent()
+		if target != null and target in hit_enemies:
 			continue
 
-		global_position = hit_position
+		var hit_distance := clampf((collider.global_position - start_position).dot(sweep_direction), 0.0, travel_distance)
+		candidates.append({"collider": collider, "distance": hit_distance})
+
+	candidates.sort_custom(_sort_swept_hit_candidates)
+	for candidate in candidates:
+		var collider := candidate.get("collider") as Area2D
+		if collider == null or not is_instance_valid(collider):
+			continue
+		global_position = start_position + sweep_direction * float(candidate.get("distance", 0.0))
 		_on_hurtbox_entered(collider)
 		if _is_despawning:
 			return
 
-		# Pierce projectiles continue through the remainder of this frame. The
-		# collider is excluded above so a large step cannot get stuck inside it.
-		sweep_start = hit_position + sweep_direction * GameConstants.PROJECTILE_SWEEP_EPSILON
-
 	global_position = end_position
+
+
+func _sort_swept_hit_candidates(first: Dictionary, second: Dictionary) -> bool:
+	return float(first.get("distance", 0.0)) < float(second.get("distance", 0.0))
 
 
 func _is_swept_collision_target(collider: Area2D) -> bool:

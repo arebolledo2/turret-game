@@ -243,6 +243,32 @@ func test_swept_movement_hits_hurtbox_between_frames() -> void:
 	assert_true(projectile._is_despawning, "A non-piercing projectile should despawn at the swept hit")
 
 
+func test_swept_movement_accounts_for_projectile_radius() -> void:
+	var enemy := _create_mock_enemy(100.0, 100.0)
+	# The hurtbox center is deliberately eight pixels off the projectile center
+	# line. A center ray would miss; the projectile's five-pixel radius should not.
+	enemy.global_position = Vector2(50, 8)
+
+	var hurtbox := Area2D.new()
+	hurtbox.collision_layer = 32
+	hurtbox.collision_mask = 0
+	hurtbox.monitorable = true
+	hurtbox.add_to_group("enemy_hurtbox")
+	var hurtbox_shape := CollisionShape2D.new()
+	var circle := CircleShape2D.new()
+	circle.radius = 6.0
+	hurtbox_shape.shape = circle
+	hurtbox.add_child(hurtbox_shape)
+	enemy.add_child(hurtbox)
+	add_child_autofree(enemy)
+
+	projectile.setup(Vector2.RIGHT, 1000.0, 25.0, true)
+	await get_tree().physics_frame
+	projectile._physics_process(0.1)
+
+	assert_eq(enemy.damage_taken, 25.0, "A swept projectile should hit a glancing hurtbox within its radius")
+
+
 # =============================================================================
 # HELPERS
 # =============================================================================
