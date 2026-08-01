@@ -35,7 +35,9 @@ const TYPES: Dictionary = {
 			"speed": 130.0,
 			"contact_damage": 5.0,
 			"scrap_value": 1,
-			"scale": 1.2,
+			# The Scout Bot source art is 1024px; normalize it to the same
+			# roughly 50px gameplay footprint as the standard spider drone.
+			"scale": 0.075,
 			"mass": 0.6,
 		},
 		"hurtbox": {
