@@ -11,10 +11,14 @@ var visual_config: AssetVisualConfig = null
 
 var _base_scale: Vector2 = Vector2.ONE
 var _base_position: Vector2 = Vector2.ZERO
+var _base_visual_position: Vector2 = Vector2.ZERO
 var _base_modulate: Color = Color.WHITE
 var _base_visual_scale: Vector2 = Vector2.ONE
 var _textures: Dictionary = {}
 var damage_reaction_tween: Tween = null
+var _animation_phase: float = 0.0
+var _visual_bob: float = 0.0
+var _visual_rotation: float = 0.0
 
 
 func initialize(p_player: CharacterBody2D, p_movement: PlayerMovement, p_sprite: Sprite2D) -> void:
@@ -38,9 +42,11 @@ func initialize(p_player: CharacterBody2D, p_movement: PlayerMovement, p_sprite:
 	apply_asset_config(AssetConfigService.get_player_config())
 
 
-func process(_delta: float) -> void:
+func process(delta: float) -> void:
 	if not sprite or visual_config == null:
 		return
+
+	_update_movement_animation(delta)
 
 	match visual_config.orientation_mode:
 		AssetVisualConfig.OrientationMode.FIXED:
@@ -53,6 +59,32 @@ func process(_delta: float) -> void:
 			_apply_8dir_orientation()
 		AssetVisualConfig.OrientationMode.ANIMATED_LEFT_RIGHT:
 			_apply_left_right_orientation()
+
+
+func _update_movement_animation(delta: float) -> void:
+	if not movement:
+		return
+
+	var speed_limit := maxf(movement.effective_speed, 1.0)
+	var speed_ratio := clampf(movement.velocity.length() / speed_limit, 0.0, 1.0)
+	var is_moving := speed_ratio > GameConstants.PLAYER_MOVEMENT_DEADZONE
+	var bob_frequency := GameConstants.PLAYER_MOVEMENT_BOB_FREQUENCY if is_moving else GameConstants.PLAYER_IDLE_BOB_FREQUENCY
+	var bob_amplitude := lerpf(GameConstants.PLAYER_IDLE_BOB_AMPLITUDE, GameConstants.PLAYER_MOVEMENT_BOB_AMPLITUDE, speed_ratio)
+
+	# Asset presets can disable idle motion while retaining the movement bob.
+	if not is_moving and not visual_config.idle_bounce_enabled:
+		bob_amplitude = 0.0
+
+	_animation_phase = fmod(_animation_phase + delta * bob_frequency, TAU)
+	var target_bob := sin(_animation_phase) * bob_amplitude
+	_visual_bob = lerpf(_visual_bob, target_bob, clampf(delta * 14.0, 0.0, 1.0))
+
+	var horizontal_ratio := clampf(movement.velocity.x / speed_limit, -1.0, 1.0)
+	var target_rotation := deg_to_rad(GameConstants.PLAYER_MOVEMENT_LEAN_DEGREES) * horizontal_ratio
+	_visual_rotation = lerpf(_visual_rotation, target_rotation, clampf(delta * 12.0, 0.0, 1.0))
+
+	sprite.position = _base_visual_position + Vector2(0.0, -_visual_bob)
+	sprite.rotation = _visual_rotation
 
 
 func apply_asset_config(asset_config: EntityAssetConfig) -> void:
@@ -114,7 +146,12 @@ func _apply_base_visuals() -> void:
 
 	sprite.scale = Vector2(_base_scale.x * visual_config.scale.x, _base_scale.y * visual_config.scale.y)
 	_base_visual_scale = sprite.scale
-	sprite.position = _base_position + visual_config.position_offset
+	_base_visual_position = _base_position + visual_config.position_offset
+	sprite.position = _base_visual_position
+	sprite.rotation = 0.0
+	_animation_phase = 0.0
+	_visual_bob = 0.0
+	_visual_rotation = 0.0
 	_base_modulate = visual_config.modulate
 	sprite.modulate = _base_modulate
 	sprite.flip_h = false

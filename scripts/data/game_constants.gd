@@ -20,6 +20,9 @@ const CAMERA_DEFAULT_ZOOM_BOOST: float = 2 # Zoomed in for better visibility
 # =============================================================================
 const PLAYER_BASE_MAX_HEALTH: float = 25.0
 const PLAYER_SPEED: float = 250.0
+const PLAYER_ACCELERATION: float = 1400.0
+const PLAYER_DECELERATION: float = 1800.0
+const PLAYER_MOVEMENT_DEADZONE: float = 0.1
 const PLAYER_PICKUP_RADIUS: float = 50.0
 const PLAYER_INVINCIBILITY_TIME: float = 0.5
 
@@ -43,6 +46,7 @@ const PLAYER_DEFENSIVE_PULSE_KNOCKBACK_FORCE: float = 250.0
 const PLAYER_DEFENSIVE_PULSE_RADIUS: float = 120.0
 const KNOCKBACK_DECAY_RATE: float = 8.0 # Per second
 const KNOCKBACK_MIN_VELOCITY: float = 5.0 # Stop when below this
+const KNOCKBACK_MAX_VELOCITY: float = 900.0 # Prevent stacked hits from launching enemies
 
 # =============================================================================
 # CRITICAL HIT SYSTEM
@@ -75,6 +79,8 @@ const TURRET_IN_RANGE_INDICATOR_ALPHA: float = 0.5
 const ENEMY_BASE_HEALTH: float = 8.0
 const ENEMY_BASE_SPEED: float = 100.0
 const ENEMY_BASE_CONTACT_DAMAGE: float = 8.0
+const ENEMY_SEPARATION_RADIUS: float = 32.0
+const ENEMY_SEPARATION_STRENGTH: float = 0.8
 
 # Enemy Ranks
 const ENEMY_RANK_LT_HP_MULT: float = 8.0
@@ -192,6 +198,8 @@ const PROJECTILE_SPIN_RATE: float = 2.0 # Rotations per second
 const COLLISION_LAYER_PROJECTILE: int = 4
 const COLLISION_MASK_ENEMY_AND_TUNNEL: int = 96 # enemy_hurtbox (32) + tunnel_door (64)
 const COLLISION_MASK_PLAYER: int = 16
+const PROJECTILE_SWEEP_EPSILON: float = 0.5
+const PROJECTILE_MAX_SWEEP_HITS: int = 8
 
 # =============================================================================
 # VISUAL & ANIMATION
@@ -199,6 +207,11 @@ const COLLISION_MASK_PLAYER: int = 16
 const PLAYER_DAMAGE_FLASH_COLOR: Color = Color(1, 0.3, 0.3, 1)
 const PLAYER_EVASION_FLASH_COLOR: Color = Color(0.5, 0.8, 1.0, 1.0)
 const DEFENSIVE_PULSE_COLOR: Color = Color(1.0, 0.8, 0.3)
+const PLAYER_IDLE_BOB_AMPLITUDE: float = 0.7
+const PLAYER_MOVEMENT_BOB_AMPLITUDE: float = 1.6
+const PLAYER_IDLE_BOB_FREQUENCY: float = 4.0
+const PLAYER_MOVEMENT_BOB_FREQUENCY: float = 10.0
+const PLAYER_MOVEMENT_LEAN_DEGREES: float = 4.0
 const PLAYER_ANIMATION_FRAME_COUNT: int = 16
 const VISUAL_POLYGON_SEGMENTS: int = 32
 const INVINCIBILITY_FLASH_INTERVAL_MS: int = 100

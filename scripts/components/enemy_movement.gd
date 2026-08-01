@@ -79,10 +79,14 @@ func process(delta: float, speed_multiplier: float) -> Vector2:
 
 	# Apply knockback first (overrides AI movement temporarily)
 	if knockback_velocity.length() > GameConstants.KNOCKBACK_MIN_VELOCITY:
-		var velocity := knockback_velocity
-		# Decay knockback over time
-		knockback_velocity *= (1.0 - GameConstants.KNOCKBACK_DECAY_RATE * delta)
-		return velocity
+		var current_knockback := knockback_velocity
+		# Exponential-style drag with a clamped move_toward keeps the impulse
+		# smooth while remaining stable if a frame takes unusually long.
+		var decay_fraction := clampf(GameConstants.KNOCKBACK_DECAY_RATE * maxf(delta, 0.0), 0.0, 1.0)
+		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, current_knockback.length() * decay_fraction)
+		if knockback_velocity.length() <= GameConstants.KNOCKBACK_MIN_VELOCITY:
+			knockback_velocity = Vector2.ZERO
+		return current_knockback
 	else:
 		knockback_velocity = Vector2.ZERO
 		# Normal AI movement with behavior-based direction
@@ -93,7 +97,14 @@ func process(delta: float, speed_multiplier: float) -> Vector2:
 			var charge_behavior := behavior_instance as ChargeBehavior
 			effective_speed *= charge_behavior.get_speed_multiplier()
 
-		return movement_direction.normalized() * effective_speed
+		# Keep enemies readable as a group without enabling enemy-enemy body
+		# collisions, which can make a wave lock up against itself.
+		var desired_direction := movement_direction.normalized()
+		var separation_direction := _get_separation_direction()
+		if separation_direction.length_squared() > 0.0:
+			desired_direction = (desired_direction + separation_direction * GameConstants.ENEMY_SEPARATION_STRENGTH).normalized()
+
+		return desired_direction * effective_speed
 
 func apply_knockback(force: float, direction: Vector2) -> void:
 	"""Apply knockback impulse."""
@@ -101,8 +112,55 @@ func apply_knockback(force: float, direction: Vector2) -> void:
 		return
 
 	# F = ma → a = F/m → velocity (instant impulse)
+	var knockback_direction := direction.normalized()
+	if knockback_direction == Vector2.ZERO:
+		return
+
 	var knockback_magnitude: float = force / mass
-	knockback_velocity = direction.normalized() * knockback_magnitude
+	# Treat each hit as an impulse so rapid hits build naturally, but cap the
+	# result to keep large explosions from producing unplayable launches.
+	knockback_velocity = (knockback_velocity + knockback_direction * knockback_magnitude).limit_length(GameConstants.KNOCKBACK_MAX_VELOCITY)
+
+
+func _get_separation_direction() -> Vector2:
+	"""Return a normalized steering vector away from nearby living enemies."""
+	if enemy == null or not is_instance_valid(enemy) or not enemy.is_inside_tree():
+		return Vector2.ZERO
+
+	var separation := Vector2.ZERO
+	var radius := GameConstants.ENEMY_SEPARATION_RADIUS
+	var radius_squared := radius * radius
+	var enemies := EnemyQuery.get_enemies(enemy.get_tree())
+
+	for other in enemies:
+		if other == enemy or not is_instance_valid(other):
+			continue
+		# Tech drops share the enemies group for targeting, but should not push
+		# combatants around while they are being collected or destroyed.
+		if not other.has_method("apply_knockback") or other.get("is_dying") == true:
+			continue
+
+		var other_node := other as Node2D
+		if other_node == null:
+			continue
+
+		var offset := enemy.global_position - other_node.global_position
+		var distance_squared := offset.length_squared()
+		if distance_squared >= radius_squared:
+			continue
+
+		if distance_squared <= 0.0001:
+			# Give perfectly overlapping enemies a deterministic nudge so they can
+			# separate instead of remaining locked at the same position.
+			var angle := float(enemy.get_instance_id() % 16) * TAU / 16.0
+			offset = Vector2.from_angle(angle)
+			distance_squared = 1.0
+
+		var distance := sqrt(distance_squared)
+		var weight := 1.0 - distance / radius
+		separation += offset / distance * weight
+
+	return separation.normalized()
 
 # =============================================================================
 # BEHAVIOR SYSTEM - Strategy Pattern

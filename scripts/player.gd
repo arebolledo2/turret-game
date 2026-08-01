@@ -120,6 +120,7 @@ func _physics_process(delta: float) -> void:
 	if not global_position.is_equal_approx(clamped_pos):
 		global_position = clamped_pos
 		velocity = Vector2.ZERO # Stop movement when hitting boundary
+		movement.stop()
 
 	# Turret pickup/placement system
 	turret_handler.process(delta)

@@ -4,6 +4,6 @@
 
 [resource]
 script = ExtResource("1")
-physics_size = Vector2(16, 16)
-hurtbox_size = Vector2(14, 14)
+physics_size = Vector2(14, 14)
+hurtbox_size = Vector2(16, 16)
 deals_contact_damage = false

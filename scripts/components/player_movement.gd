@@ -17,14 +17,16 @@ var is_moving: bool = false
 # Dependencies (set via initialize)
 var player: CharacterBody2D = null
 var speed: float = 300.0
+var effective_speed: float = 300.0
 
 func initialize(p_player: CharacterBody2D, _p_sprite: Sprite2D = null) -> void:
 	"""Initialize component with required references."""
 	player = p_player
 	speed = PlayerStatsService.get_player_speed()
+	effective_speed = speed
 	assert(player != null, "PlayerMovement: player reference required")
 
-func process(_delta: float) -> Vector2:
+func process(delta: float) -> Vector2:
 	"""Main update function - returns velocity for move_and_slide."""
 	var input_vector := Vector2.ZERO
 
@@ -34,28 +36,43 @@ func process(_delta: float) -> Vector2:
 
 	# Gamepad input (left stick)
 	var gamepad_input := Input.get_vector("gamepad_left", "gamepad_right", "gamepad_up", "gamepad_down")
-	if gamepad_input.length() > 0.1:
+	if gamepad_input.length() > GameConstants.PLAYER_MOVEMENT_DEADZONE:
 		input_vector = gamepad_input
 
-	# Normalize and apply speed (instant response, no acceleration)
-	input_vector = input_vector.normalized()
+	var has_input := input_vector.length() > GameConstants.PLAYER_MOVEMENT_DEADZONE
+	if has_input:
+		input_vector = input_vector.normalized()
+	else:
+		input_vector = Vector2.ZERO
 
 	# Apply speed penalty if carrying turret
-	var effective_speed := speed
+	effective_speed = speed
 	var turret_handler = player.get_node_or_null("Components/PlayerTurretHandler")
 	if turret_handler and turret_handler.is_carrying_turret():
 		effective_speed *= GameConstants.TURRET_CARRY_SPEED_PENALTY
 
-	velocity = input_vector * effective_speed
+	var target_velocity := input_vector * effective_speed
+	var response := GameConstants.PLAYER_ACCELERATION if has_input else GameConstants.PLAYER_DECELERATION
+	velocity = velocity.move_toward(target_velocity, response * maxf(delta, 0.0))
+	if not has_input and velocity.length_squared() < 1.0:
+		velocity = Vector2.ZERO
 
 	# Handle sprite flip based on movement direction
-	if input_vector.length() > 0.1:
+	if velocity.length() > GameConstants.PLAYER_MOVEMENT_DEADZONE * maxf(effective_speed, 1.0):
 		is_moving = true
-		facing_direction = get_direction_from_vector(input_vector)
 	else:
 		is_moving = false
 
+	if has_input:
+		facing_direction = get_direction_from_vector(input_vector)
+
 	return velocity
+
+
+func stop() -> void:
+	"""Immediately stop movement when the player is clamped by the arena."""
+	velocity = Vector2.ZERO
+	is_moving = false
 
 func get_direction_from_vector(dir: Vector2) -> int:
 	"""Convert movement vector to 8-direction index."""

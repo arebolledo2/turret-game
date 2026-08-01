@@ -177,12 +177,83 @@ func _physics_process(delta: float) -> void:
 		_despawn()
 		return
 
-	position += direction * speed * delta
+	var start_position := global_position
+	var end_position := start_position + direction * speed * delta
+	_move_with_swept_collision(start_position, end_position)
 
 	# Rotate sprite counter-clockwise at 2 rotations per second
 	# 2 rotations/sec = 720 degrees/sec = -4π radians/sec (negative for counter-clockwise)
 	if _sprite:
 		_sprite.rotation -= TAU * GameConstants.PROJECTILE_SPIN_RATE * delta
+
+
+func _move_with_swept_collision(start_position: Vector2, end_position: Vector2) -> void:
+	"""Move across the full frame while checking the path for hurtboxes."""
+	if not is_inside_tree() or get_world_2d() == null:
+		global_position = end_position
+		return
+
+	var sweep_direction := direction.normalized()
+	if sweep_direction == Vector2.ZERO:
+		global_position = end_position
+		return
+
+	var space_state := get_world_2d().direct_space_state
+	var query_mask := GameConstants.COLLISION_MASK_ENEMY_AND_TUNNEL if is_player_projectile else GameConstants.COLLISION_MASK_PLAYER
+	var excluded_rids: Array[RID] = [get_rid()]
+	var sweep_start := start_position
+	var epsilon_squared := GameConstants.PROJECTILE_SWEEP_EPSILON * GameConstants.PROJECTILE_SWEEP_EPSILON
+
+	for _hit_index in range(GameConstants.PROJECTILE_MAX_SWEEP_HITS):
+		if sweep_start.distance_squared_to(end_position) <= epsilon_squared:
+			global_position = end_position
+			return
+
+		var query := PhysicsRayQueryParameters2D.create(sweep_start, end_position, query_mask)
+		query.collide_with_areas = true
+		query.collide_with_bodies = false
+		query.exclude = excluded_rids
+		var hit := space_state.intersect_ray(query)
+		if hit.is_empty():
+			global_position = end_position
+			return
+
+		var collider := hit.get("collider") as Area2D
+		var hit_position: Vector2 = hit.get("position", sweep_start)
+		if collider == null:
+			sweep_start = hit_position + sweep_direction * GameConstants.PROJECTILE_SWEEP_EPSILON
+			continue
+
+		var collider_rid := collider.get_rid()
+		if collider_rid not in excluded_rids:
+			excluded_rids.append(collider_rid)
+
+		# Only the same targets handled by the area_entered callback should
+		# consume a swept hit. Other areas on the mask are simply passed over.
+		if not _is_swept_collision_target(collider):
+			sweep_start = hit_position + sweep_direction * GameConstants.PROJECTILE_SWEEP_EPSILON
+			continue
+
+		global_position = hit_position
+		_on_hurtbox_entered(collider)
+		if _is_despawning:
+			return
+
+		# Pierce projectiles continue through the remainder of this frame. The
+		# collider is excluded above so a large step cannot get stuck inside it.
+		sweep_start = hit_position + sweep_direction * GameConstants.PROJECTILE_SWEEP_EPSILON
+
+	global_position = end_position
+
+
+func _is_swept_collision_target(collider: Area2D) -> bool:
+	if is_player_projectile and collider.is_in_group("enemy_hurtbox"):
+		return true
+	if not is_player_projectile and collider.is_in_group("player_hurtbox"):
+		return true
+
+	var parent := collider.get_parent()
+	return parent != null and parent.is_in_group("tunnel_doors")
 
 func _on_hurtbox_entered(hurtbox: Area2D) -> void:
 	DebugService.log(DebugService.COMBAT, "Projectile: Collision with area: ", hurtbox, " name: ", hurtbox.name)
