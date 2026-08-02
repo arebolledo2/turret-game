@@ -129,29 +129,29 @@ func _get_tech_definition(tech_id: String) -> Dictionary:
 func _apply_tech_effects(tech_id: String, tech_def: Dictionary) -> void:
 	var effect_type: String = tech_def.get("effect_type", "modifier")
 	var unlock_count: int = tech_unlock_counts[tech_id]
+	var modifier_count: int = 0
 
 	match effect_type:
 		"modifier":
-			# Add modifiers to ModifierService
-			var modifiers: Array = tech_def.get("modifiers", [])
-			for modifier in modifiers:
-				var mod_id: String = "tech_%s_%d" % [tech_id, unlock_count]
-				var full_modifier: Dictionary = modifier.duplicate(true)
-				full_modifier["id"] = mod_id
-				full_modifier["source"] = "tech"
-				full_modifier["source_id"] = tech_id
-				ModifierService.add_modifier(full_modifier)
+			modifier_count = _apply_tech_modifiers(tech_id, tech_def, unlock_count)
 
 			# Notify that modifiers changed
-			Events.modifiers_changed.emit()
-			DebugService.log(DebugService.SYSTEMS, "Applied ", modifiers.size(), " modifier(s) from tech '", tech_id, "'")
+			if modifier_count > 0:
+				Events.modifiers_changed.emit()
+			DebugService.log(DebugService.SYSTEMS, "Applied ", modifier_count, " modifier(s) from tech '", tech_id, "'")
 
 		"unlock_mechanic":
-			# Set flags for special mechanics (queried by game systems)
+			# Set flags for special mechanics (queried by game systems). Mechanic
+			# techs may also carry stat modifiers for the unlocked mechanic.
+			modifier_count = _apply_tech_modifiers(tech_id, tech_def, unlock_count)
+			if modifier_count > 0:
+				Events.modifiers_changed.emit()
+
 			var special_effect: String = tech_def.get("special_effect", "")
 			if special_effect:
 				DebugService.log(DebugService.SYSTEMS, "Unlocked mechanic '", special_effect, "' from tech '", tech_id, "'")
-			# Specific mechanics will be queried via helper methods
+			if modifier_count > 0:
+				DebugService.log(DebugService.SYSTEMS, "Applied ", modifier_count, " modifier(s) for mechanic tech '", tech_id, "'")
 
 		"shop_improvement":
 			# Shop improvements are queried by shop system when generating offers/prices
@@ -159,6 +159,19 @@ func _apply_tech_effects(tech_id: String, tech_def: Dictionary) -> void:
 
 		_:
 			push_warning("Unknown tech effect type: %s" % effect_type)
+
+
+## Add all stat modifiers defined by a tech and return the number applied.
+func _apply_tech_modifiers(tech_id: String, tech_def: Dictionary, unlock_count: int) -> int:
+	var modifiers: Array = tech_def.get("modifiers", [])
+	for modifier in modifiers:
+		var mod_id: String = "tech_%s_%d" % [tech_id, unlock_count]
+		var full_modifier: Dictionary = modifier.duplicate(true)
+		full_modifier["id"] = mod_id
+		full_modifier["source"] = "tech"
+		full_modifier["source_id"] = tech_id
+		ModifierService.add_modifier(full_modifier)
+	return modifiers.size()
 
 
 ## Helper method to check if a specific mechanic is unlocked

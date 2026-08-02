@@ -118,6 +118,9 @@ func test_get_tech_with_unlock_mechanic():
 
 	assert_eq(tech.get("effect_type"), "unlock_mechanic")
 	assert_eq(tech.get("special_effect"), "turret_aoe_damage")
+	assert_eq(tech.get("modifiers", []).size(), 1,
+		"Splash Damage should define its projectile AOE modifier")
+	assert_eq(tech.get("modifiers", [])[0].get("stat"), "aoe_radius")
 
 
 # =============================================================================

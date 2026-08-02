@@ -77,6 +77,27 @@ func test_extended_setup_defaults():
 	assert_eq(projectile.aoe_radius, 0.0, "Should default aoe_radius to 0")
 
 
+func test_aoe_explosion_damages_enemies_inside_radius():
+	projectile.setup_extended({"damage": 25.0, "aoe_radius": 50.0}, Vector2.RIGHT, true, GameEnums.DamageType.PHYSICAL)
+	projectile.global_position = Vector2.ZERO
+
+	var nearby_enemy = _create_mock_enemy(100.0, 100.0)
+	nearby_enemy.global_position = Vector2(30, 0)
+	add_child_autofree(nearby_enemy)
+
+	var distant_enemy = _create_mock_enemy(100.0, 100.0)
+	distant_enemy.global_position = Vector2(80, 0)
+	add_child_autofree(distant_enemy)
+
+	await get_tree().physics_frame
+	projectile._do_aoe_explosion()
+
+	assert_eq(nearby_enemy.damage_taken, 25.0,
+		"Enemies inside the splash radius should take damage")
+	assert_eq(distant_enemy.damage_taken, 0.0,
+		"Enemies outside the splash radius should not take damage")
+
+
 # =============================================================================
 # DIRECTION NORMALIZATION
 # =============================================================================

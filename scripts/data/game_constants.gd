@@ -64,6 +64,7 @@ const TURRET_FIRE_RATE: float = 2.0 # shots per second
 const TURRET_RANGE: float = 600.0
 const TURRET_PROJECTILE_SPEED: float = 500.0
 const TURRET_ROTATION_SPEED: float = 180.0 # degrees per second
+const TURRET_SPLASH_AOE_RADIUS: float = 40.0 # Base radius granted by Splash Damage tech
 const TURRET_MIN_DISTANCE: float = 100.0 # from other turrets
 const TURRET_PLAYER_EXCLUSION: float = 150.0 # won't spawn on player
 

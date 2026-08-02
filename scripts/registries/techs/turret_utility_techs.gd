@@ -13,7 +13,7 @@ static func get_techs() -> Array:
 			"id": "splash_damage",
 			"name": "Splash Damage Module",
 			"icon": "💧",
-			"description": "Turret projectiles deal AOE damage",
+			"description": "Turret projectiles deal AOE damage in a 40px radius",
 			"path": "turret_utility",
 			"tier": 1,
 			"cost": 10,
@@ -21,7 +21,12 @@ static func get_techs() -> Array:
 			"repeatable": false,
 			"max_unlocks": 1,
 			"effect_type": "unlock_mechanic",
-			"modifiers": [],
+			"modifiers": [{
+				"stat": "aoe_radius",
+				"operation": "add",
+				"value": GameConstants.TURRET_SPLASH_AOE_RADIUS,
+				"filter": {"attack_style": [GameEnums.AttackStyle.PROJECTILE]}
+			}],
 			"special_effect": "turret_aoe_damage"
 		},
 

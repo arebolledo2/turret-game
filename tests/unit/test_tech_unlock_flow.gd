@@ -9,6 +9,7 @@ func before_each():
 	tech_tree_service = TechTreeService
 	tech_tree_service.reset_state()
 	ModifierService.clear_modifiers()
+	ItemTrackingService.reset_state()
 
 
 # =============================================================================
@@ -287,6 +288,24 @@ func test_unlock_mechanic_tech():
 	assert_true(result, "Should successfully unlock mechanic tech")
 	assert_true(tech_tree_service.has_mechanic_unlocked("turret_aoe_damage"),
 		"Should have mechanic unlocked")
+
+
+func test_splash_damage_applies_projectile_aoe_modifier():
+	tech_tree_service.add_research_points(100)
+
+	var before_stats = TurretStatsService.get_turret_stats("normal", 1.0)
+	assert_eq(before_stats.get("aoe_radius", 0.0), 0.0,
+		"Normal turrets should not have splash radius before the tech")
+
+	tech_tree_service.unlock_tech("splash_damage")
+
+	var after_stats = TurretStatsService.get_turret_stats("normal", 1.0)
+	assert_eq(after_stats.get("aoe_radius", 0.0), GameConstants.TURRET_SPLASH_AOE_RADIUS,
+		"Splash Damage should add its radius to projectile turrets")
+
+	var sniper_stats = TurretStatsService.get_turret_stats("sniper", 1.0)
+	assert_eq(sniper_stats.get("aoe_radius", 0.0), 0.0,
+		"Splash Damage should not affect instant-hit turrets")
 
 
 func test_has_mechanic_unlocked_returns_false_for_unlocked_mechanic():
