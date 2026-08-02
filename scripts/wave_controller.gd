@@ -21,6 +21,27 @@ var tech_drop_spawner: Node2D = null
 var turret_manager: Node = null
 
 
+func _ready() -> void:
+	if not FeatureFlagService.flag_changed.is_connected(_on_feature_flag_changed):
+		FeatureFlagService.flag_changed.connect(_on_feature_flag_changed)
+
+
+func _on_feature_flag_changed(flag_id: String, enabled: bool) -> void:
+	if not GameStateMachine.is_in_combat():
+		return
+
+	if flag_id == FeatureFlagService.ENEMY_SPAWNING and enemy_spawner:
+		if enabled:
+			enemy_spawner.start_spawning(GameStateService.current_wave)
+		else:
+			enemy_spawner.stop_spawning()
+	elif flag_id == FeatureFlagService.TECH_DROPS and tech_drop_spawner:
+		if enabled and tech_drop_spawner.has_method("start_spawning"):
+			tech_drop_spawner.start_spawning(GameStateService.current_wave)
+		elif not enabled and tech_drop_spawner.has_method("stop_spawning"):
+			tech_drop_spawner.stop_spawning()
+
+
 # =============================================================================
 # WAVE ANNOUNCEMENT
 # =============================================================================
@@ -55,9 +76,11 @@ func start_combat() -> void:
 		enemy_spawner.start_spawning(GameStateService.current_wave)
 		spawning_started.emit(GameStateService.current_wave)
 
-	# Start tech drop spawning
-	if tech_drop_spawner and tech_drop_spawner.has_method("start_spawning"):
+	# Start tech drop spawning only when the feature is enabled.
+	if FeatureFlagService.is_enabled(FeatureFlagService.TECH_DROPS) and tech_drop_spawner and tech_drop_spawner.has_method("start_spawning"):
 		tech_drop_spawner.start_spawning(GameStateService.current_wave)
+	elif tech_drop_spawner and tech_drop_spawner.has_method("stop_spawning"):
+		tech_drop_spawner.stop_spawning()
 
 
 func process_combat(delta: float) -> bool:

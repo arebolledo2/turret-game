@@ -4,6 +4,8 @@ extends ScalableUIPanel
 ## Handles settings menu display and interactions
 
 var show_damage_check: CheckButton
+var player_auto_attack_check: CheckButton
+var reduced_motion_check: CheckButton
 var physics_hitboxes_check: CheckButton
 var player_hurtbox_check: CheckButton
 var enemy_hurtbox_check: CheckButton
@@ -26,6 +28,8 @@ const BASE_BUTTON_HEIGHT: float = 40.0
 func setup(nodes: Dictionary, owner: Node) -> void:
 	DebugService.log(DebugService.UI, "SettingsMenuUI setup called. Nodes: %s" % [nodes.keys()])
 	show_damage_check = nodes.get("show_damage_check")
+	player_auto_attack_check = nodes.get("player_auto_attack_check")
+	reduced_motion_check = nodes.get("reduced_motion_check")
 	physics_hitboxes_check = nodes.get("physics_hitboxes_check")
 	player_hurtbox_check = nodes.get("player_hurtbox_check")
 	enemy_hurtbox_check = nodes.get("enemy_hurtbox_check")
@@ -51,6 +55,12 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 	# Initialize checkbox states
 	if show_damage_check:
 		show_damage_check.button_pressed = SettingsService.show_damage_numbers
+
+	if player_auto_attack_check:
+		player_auto_attack_check.button_pressed = SettingsService.player_auto_attack_enabled
+
+	if reduced_motion_check:
+		reduced_motion_check.button_pressed = FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION)
 		
 	if isometric_debug_check:
 		DebugService.log(DebugService.UI, "Connecting isometric_debug_check")
@@ -118,6 +128,14 @@ func hide() -> void:
 
 func on_show_damage_toggled(toggled_on: bool) -> void:
 	SettingsService.show_damage_numbers = toggled_on
+
+
+func on_player_auto_attack_toggled(toggled_on: bool) -> void:
+	SettingsService.player_auto_attack_enabled = toggled_on
+
+
+func on_reduced_motion_toggled(toggled_on: bool) -> void:
+	FeatureFlagService.set_enabled(FeatureFlagService.REDUCED_MOTION, toggled_on)
 
 
 func on_isometric_debug_toggled(toggled_on: bool) -> void:

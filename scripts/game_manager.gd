@@ -74,7 +74,14 @@ func _on_difficulty_selected(difficulty: int) -> void:
 
 
 func _on_game_mode_selected(game_mode: int) -> void:
-	GameModeService.set_mode(game_mode as GameEnums.GameMode)
+	if not GameModeService.set_mode(game_mode as GameEnums.GameMode):
+		return
+
+	# Preserve the legacy three-stage selector while keeping the consolidated
+	# start-settings flow explicit. The latter emits this signal only as a
+	# notification while still in DIFFICULTY_SELECT.
+	if not GameStateService.is_game_active and GameStateMachine.current_state == GameStateMachine.GameState.GAME_MODE_SELECT:
+		start_game()
 
 
 func show_start_settings() -> void:
@@ -195,6 +202,10 @@ func _start_wave_announcement() -> void:
 	# Tech Defense Setup (Static)
 	elif GameModeService.should_spawn_defense_target() and GameStateService.current_wave == 1:
 		entity_spawner.spawn_game_mode_entities()
+	# Tunneling modes need a fresh door for each wave. The entity spawner owns
+	# both door variants; this branch makes the normal launch path reach it.
+	elif GameModeService.should_spawn_tunnel_door() and not entity_spawner.has_tunnel_door():
+		entity_spawner.spawn_game_mode_entities()
 
 
 func _start_combat() -> void:
@@ -208,6 +219,15 @@ func _start_combat() -> void:
 
 
 func _end_wave() -> void:
+	# Tunneling waves are objective-based: surviving the timer is not enough.
+	# A missing door is treated as a failed setup rather than an accidental win.
+	if GameModeService.should_spawn_tunnel_door():
+		var tunnel_door = entity_spawner.get_tunnel_door()
+		if not is_instance_valid(tunnel_door) or not bool(tunnel_door.get("is_breached")):
+			DebugService.log(DebugService.SYSTEMS, "Tunneling failed: timer expired before the door was breached.")
+			_trigger_game_over()
+			return
+
 	# Special case for Escort Mode: if timer runs out before reaching destination, it's a loss
 	if GameModeService.is_escort_mode_active():
 		var defense_target = entity_spawner.get_defense_target()
@@ -250,6 +270,11 @@ func _on_loot_review_completed() -> void:
 
 
 func _start_shop_phase() -> void:
+	if not FeatureFlagService.is_enabled(FeatureFlagService.SHOP):
+		DebugService.log(DebugService.SYSTEMS, "Shop feature is disabled; advancing to the next wave.")
+		_advance_without_shop()
+		return
+
 	GameStateMachine.transition_to(GameStateMachine.GameState.SHOP)
 	EconomyService.shop_reroll_count = 0
 	Events.shop_opened.emit(GameStateService.current_wave)
@@ -257,6 +282,11 @@ func _start_shop_phase() -> void:
 
 func end_shop_phase() -> void:
 	"""Called externally when player closes shop."""
+	_advance_without_shop()
+
+
+func _advance_without_shop() -> void:
+	"""Finish the between-wave cleanup and continue without opening the shop."""
 	wave_controller.reset_wave_state()
 
 	# Spawn purchased turrets
@@ -272,12 +302,16 @@ func end_shop_phase() -> void:
 # =============================================================================
 
 func _trigger_victory() -> void:
+	if entity_spawner:
+		entity_spawner.cleanup_entities()
 	GameStateMachine.force_transition(GameStateMachine.GameState.VICTORY)
 	GameStateService.is_game_active = false
 	Events.game_over.emit(true)
 
 
 func _trigger_game_over() -> void:
+	if entity_spawner:
+		entity_spawner.cleanup_entities()
 	GameStateMachine.force_transition(GameStateMachine.GameState.GAME_OVER)
 	GameStateService.is_game_active = false
 	wave_controller.stop_spawning()
@@ -360,6 +394,8 @@ func skip_wave() -> void:
 
 
 func _reset_all_services() -> void:
+	if entity_spawner:
+		entity_spawner.cleanup_entities()
 	DifficultyService.reset_state()
 	GameStateService.reset_state()
 	EconomyService.reset_state()
@@ -368,6 +404,10 @@ func _reset_all_services() -> void:
 	ItemTrackingService.reset_state()
 	ModifierService.clear_modifiers()
 	GameModeService.reset_state()
-	SettingsService.reset_state()
-	AssetConfigService.reset_state()
+	# User feature/settings flags persist across runs. Only reset developer
+	# hitbox overlays as part of a new run.
+	SettingsService.reset_debug_state()
+	# Asset preset selection is a user/configuration choice, not per-run state.
+	# Reload it without forcing the active preset back to "default".
+	AssetConfigService.reload_all()
 	TechTreeService.reset_state()

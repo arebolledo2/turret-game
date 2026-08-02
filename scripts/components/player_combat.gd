@@ -64,7 +64,7 @@ func process(_delta: float) -> void:
 	if not is_equal_approx(fire_timer.wait_time, target_wait_time):
 		fire_timer.wait_time = target_wait_time
 
-	if not SettingsService.player_auto_attack_enabled:
+	if not FeatureFlagService.is_enabled(FeatureFlagService.PLAYER_AUTO_ATTACK):
 		return
 
 	find_closest_enemy()

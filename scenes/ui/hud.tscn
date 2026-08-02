@@ -683,6 +683,31 @@ text = "Show Damage Numbers"
 layout_mode = 2
 button_pressed = true
 
+[node name="PlayerAutoAttackContainer" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="PlayerAutoAttackLabel" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAutoAttackContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Player Auto Attack"
+
+[node name="PlayerAutoAttackCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+button_pressed = true
+
+[node name="ReducedMotionContainer" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
+[node name="ReducedMotionLabel" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ReducedMotionContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Reduced Motion"
+
+[node name="ReducedMotionCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+layout_mode = 2
+
 [node name="IsometricDebugContainer" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer" unique_id=318234831]
 layout_mode = 2
 
@@ -1061,6 +1086,8 @@ script = ExtResource("3_off_screen_indicators")
 [connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/AssetStudioButton" to="." method="_on_asset_studio_pressed"]
 [connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/QuitButton" to="." method="_on_quit_pressed"]
 [connection signal="toggled" from="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageCheck" to="." method="_on_show_damage_toggled"]
+[connection signal="toggled" from="SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAutoAttackCheck" to="." method="_on_player_auto_attack_toggled"]
+[connection signal="toggled" from="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ReducedMotionCheck" to="." method="_on_reduced_motion_toggled"]
 [connection signal="pressed" from="SettingsMenu/Panel/VBoxContainer/BackButton" to="." method="_on_settings_back_pressed"]
 [connection signal="pressed" from="GameModeSelect/Panel/VBoxContainer/ButtonContainer/SentinelButton" to="." method="_on_sentinel_pressed"]
 [connection signal="pressed" from="GameModeSelect/Panel/VBoxContainer/ButtonContainer/InvasionButton" to="." method="_on_invasion_pressed"]

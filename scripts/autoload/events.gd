@@ -36,6 +36,7 @@ signal turret_dropped(turret: Node2D, position: Vector2)
 signal turret_range_toggled(show_range: bool)
 signal hitbox_debug_toggled(type: int, enabled: bool)
 signal isometric_debug_toggled(enabled: bool)
+signal feature_flag_changed(flag_id: String, enabled: bool)
 
 
 # Pickup Events (Scrap)
@@ -103,6 +104,7 @@ signal tunnel_door_breached()
 signal escort_reached_destination()
 signal escort_position_updated(position: Vector2, progress: float)
 signal arena_background_selected(index: int)
+signal game_mode_changed(group: String, mode_id: int)
 
 # Asset configuration events
 signal asset_preset_changed(preset_name: String)

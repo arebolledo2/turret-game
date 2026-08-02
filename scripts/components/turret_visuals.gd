@@ -161,7 +161,12 @@ func _setup_from_visual_config() -> void:
 		"normal", "mine", "melee":
 			fallback_path = "res://assets/sprites/turrets/turret_basic.png"
 
-	_setup_static_visual(_resolve_primary_texture_path(fallback_path))
+	var wants_animation := visual_config.sprite_kind == AssetVisualConfig.SpriteKind.ANIMATED \
+		or visual_config.orientation_mode == AssetVisualConfig.OrientationMode.ANIMATED_LEFT_RIGHT
+	if wants_animation and not _setup_animated_visual():
+		_setup_static_visual(_resolve_primary_texture_path(fallback_path))
+	elif not wants_animation:
+		_setup_static_visual(_resolve_primary_texture_path(fallback_path))
 
 	if turret_type == "melee":
 		_setup_melee_weapon()
@@ -216,6 +221,53 @@ func _setup_static_visual(texture_path: String) -> void:
 		base_sprite.offset = Vector2(0, -base_sprite.texture.get_height() / 2.0)
 	else:
 		base_sprite.offset = Vector2.ZERO
+
+
+func _setup_animated_visual() -> bool:
+	"""Configure the scene's AnimatedSprite2D when the asset requests it."""
+	if not animated_sprite:
+		return false
+
+	var frames := animated_sprite.sprite_frames
+	if visual_config and not visual_config.sprite_frames_path.is_empty() and ResourceLoader.exists(visual_config.sprite_frames_path):
+		var candidate = load(visual_config.sprite_frames_path)
+		if candidate is SpriteFrames:
+			frames = candidate
+			animated_sprite.sprite_frames = frames
+
+	if frames == null or frames.get_animation_names().is_empty():
+		return false
+
+	_clear_dynamic_weapon()
+	if base_sprite:
+		base_sprite.visible = false
+	animated_sprite.visible = true
+	if icon_label:
+		icon_label.visible = false
+
+	var scale := Vector2(0.125, 0.125)
+	var modulate := Color.WHITE
+	var position_offset := Vector2.ZERO
+	if visual_config:
+		scale = visual_config.scale
+		modulate = visual_config.modulate
+		position_offset = visual_config.position_offset
+
+	animated_sprite.scale = scale
+	animated_sprite.modulate = modulate
+	animated_sprite.position = position_offset
+	base_visual_modulate = modulate
+	original_position = animated_sprite.position
+	if visual_config.animation_speed_fps > 0.0:
+		animated_sprite.speed_scale = visual_config.animation_speed_fps / 12.0
+
+	var animation_name := str(visual_config.animation_map.get("default", ""))
+	if visual_config.orientation_mode == AssetVisualConfig.OrientationMode.ANIMATED_LEFT_RIGHT:
+		animation_name = str(visual_config.animation_map.get("right", animation_name))
+	if animation_name.is_empty() or not frames.has_animation(animation_name):
+		animation_name = frames.get_animation_names()[0]
+	animated_sprite.play(animation_name)
+	return true
 
 
 func _clear_dynamic_weapon() -> void:
@@ -431,6 +483,10 @@ func play_spawn_animation() -> void:
 	"""Animate turret spawning in."""
 	if not visual_node:
 		return
+	if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
+		visual_node.scale = original_scale
+		_start_idle_animation()
+		return
 
 	# Store target scale and zero the visual
 	var target_scale = original_scale
@@ -453,7 +509,7 @@ func play_spawn_animation() -> void:
 
 func play_stat_boost_effect() -> void:
 	"""Brief visual effect indicating stat boost."""
-	if not visual_node:
+	if not visual_node or FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
 		return
 
 	# Kill any existing effect tween
@@ -565,19 +621,28 @@ func _on_asset_config_changed(entity_kind: int, asset_id: String) -> void:
 		_on_asset_preset_changed(AssetConfigService.get_active_preset())
 
 
+func _stop_idle_animation() -> void:
+	if idle_tween and idle_tween.is_valid():
+		idle_tween.kill()
+	idle_tween = null
+	if visual_node:
+		visual_node.scale = original_scale
+
+
 func _start_idle_animation() -> void:
 	"""Start idle animation if turret type supports it."""
-	if not visual_node or is_being_carried:
+	if not visual_node or is_being_carried or FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
+		_stop_idle_animation()
 		return
 
 	if visual_config and visual_config.idle_bounce_enabled:
 		_start_idle_bounce()
 		return
 
-	# Backward-compatible fallback for legacy visual config
-	var static_sprite_types = ["normal", "fire", "shock", "sniper", "tesla", "plasma", "melee", "mine"]
-	if turret_type in static_sprite_types:
-		_start_idle_bounce()
+	# Config is authoritative. Legacy fallback previously re-enabled this
+	# animation after an explicit false value, making the flag impossible to
+	# turn off reliably.
+	_stop_idle_animation()
 
 
 func _start_idle_bounce() -> void:

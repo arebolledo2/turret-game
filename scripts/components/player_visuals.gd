@@ -7,7 +7,9 @@ class_name PlayerVisuals
 var player: CharacterBody2D = null
 var movement: PlayerMovement = null
 var sprite: Sprite2D = null
+var animated_sprite: AnimatedSprite2D = null
 var visual_config: AssetVisualConfig = null
+var _is_animated: bool = false
 
 var _base_scale: Vector2 = Vector2.ONE
 var _base_position: Vector2 = Vector2.ZERO
@@ -25,6 +27,7 @@ func initialize(p_player: CharacterBody2D, p_movement: PlayerMovement, p_sprite:
 	player = p_player
 	movement = p_movement
 	sprite = p_sprite
+	animated_sprite = player.get_node_or_null("AnimatedSprite2D")
 
 	assert(player != null, "PlayerVisuals: player reference required")
 	assert(movement != null, "PlayerVisuals: movement reference required")
@@ -64,6 +67,14 @@ func process(delta: float) -> void:
 func _update_movement_animation(delta: float) -> void:
 	if not movement:
 		return
+	if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
+		_visual_bob = 0.0
+		_visual_rotation = 0.0
+		var reduced_visual := get_visual_node()
+		if reduced_visual:
+			reduced_visual.position = _base_visual_position
+			reduced_visual.rotation = 0.0
+		return
 
 	var speed_limit := maxf(movement.effective_speed, 1.0)
 	var speed_ratio := clampf(movement.velocity.length() / speed_limit, 0.0, 1.0)
@@ -83,8 +94,10 @@ func _update_movement_animation(delta: float) -> void:
 	var target_rotation := deg_to_rad(GameConstants.PLAYER_MOVEMENT_LEAN_DEGREES) * horizontal_ratio
 	_visual_rotation = lerpf(_visual_rotation, target_rotation, clampf(delta * 12.0, 0.0, 1.0))
 
-	sprite.position = _base_visual_position + Vector2(0.0, -_visual_bob)
-	sprite.rotation = _visual_rotation
+	var visual_node := get_visual_node()
+	if visual_node:
+		visual_node.position = _base_visual_position + Vector2(0.0, -_visual_bob)
+		visual_node.rotation = _visual_rotation
 
 
 func apply_asset_config(asset_config: EntityAssetConfig) -> void:
@@ -92,20 +105,23 @@ func apply_asset_config(asset_config: EntityAssetConfig) -> void:
 		return
 
 	visual_config = asset_config.visual
+	_ensure_renderer_for_config()
 	_load_textures()
+	_load_sprite_frames()
 
-	if visual_config.texture_paths.has("default"):
-		var tex: Texture2D = _textures.get("default", null)
-		if tex:
-			sprite.texture = tex
-	elif visual_config.texture_paths.has("left"):
-		var left_tex: Texture2D = _textures.get("left", null)
-		if left_tex:
-			sprite.texture = left_tex
-	elif visual_config.texture_paths.has("right"):
-		var right_tex: Texture2D = _textures.get("right", null)
-		if right_tex:
-			sprite.texture = right_tex
+	if not _is_animated:
+		if visual_config.texture_paths.has("default"):
+			var tex: Texture2D = _textures.get("default", null)
+			if tex:
+				sprite.texture = tex
+		elif visual_config.texture_paths.has("left"):
+			var left_tex: Texture2D = _textures.get("left", null)
+			if left_tex:
+				sprite.texture = left_tex
+		elif visual_config.texture_paths.has("right"):
+			var right_tex: Texture2D = _textures.get("right", null)
+			if right_tex:
+				sprite.texture = right_tex
 
 	_apply_base_visuals()
 	process(0.0)
@@ -115,9 +131,16 @@ func get_base_modulate() -> Color:
 	return _base_modulate
 
 
+func get_visual_node() -> Node2D:
+	if _is_animated and animated_sprite:
+		return animated_sprite
+	return sprite
+
+
 func play_damage_reaction(is_crit: bool = false) -> void:
 	"""Give the player a short squash-and-recover reaction when hit."""
-	if not sprite:
+	var visual_node := get_visual_node()
+	if not visual_node or FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
 		return
 
 	if damage_reaction_tween and damage_reaction_tween.is_valid():
@@ -127,9 +150,9 @@ func play_damage_reaction(is_crit: bool = false) -> void:
 	damage_reaction_tween = player.create_tween()
 	damage_reaction_tween.set_ease(Tween.EASE_OUT)
 	damage_reaction_tween.set_trans(Tween.TRANS_QUAD)
-	damage_reaction_tween.tween_property(sprite, "scale", punch_scale, 0.04)
+	damage_reaction_tween.tween_property(visual_node, "scale", punch_scale, 0.04)
 	damage_reaction_tween.set_ease(Tween.EASE_IN)
-	damage_reaction_tween.tween_property(sprite, "scale", _base_visual_scale, 0.12 if is_crit else 0.1)
+	damage_reaction_tween.tween_property(visual_node, "scale", _base_visual_scale, 0.12 if is_crit else 0.1)
 
 
 func _load_textures() -> void:
@@ -140,21 +163,60 @@ func _load_textures() -> void:
 			_textures[key] = load(path)
 
 
+func _load_sprite_frames() -> void:
+	if not _is_animated or not animated_sprite or visual_config.sprite_frames_path.is_empty():
+		return
+	if not ResourceLoader.exists(visual_config.sprite_frames_path):
+		return
+	var frames = load(visual_config.sprite_frames_path)
+	if frames is SpriteFrames:
+		animated_sprite.sprite_frames = frames
+
+
 func _apply_base_visuals() -> void:
-	if not sprite:
+	var visual_node := get_visual_node()
+	if not visual_node:
 		return
 
-	sprite.scale = Vector2(_base_scale.x * visual_config.scale.x, _base_scale.y * visual_config.scale.y)
-	_base_visual_scale = sprite.scale
+	visual_node.scale = Vector2(_base_scale.x * visual_config.scale.x, _base_scale.y * visual_config.scale.y)
+	_base_visual_scale = visual_node.scale
 	_base_visual_position = _base_position + visual_config.position_offset
-	sprite.position = _base_visual_position
-	sprite.rotation = 0.0
+	visual_node.position = _base_visual_position
+	visual_node.rotation = 0.0
 	_animation_phase = 0.0
 	_visual_bob = 0.0
 	_visual_rotation = 0.0
 	_base_modulate = visual_config.modulate
-	sprite.modulate = _base_modulate
-	sprite.flip_h = false
+	visual_node.modulate = _base_modulate
+	if visual_node is Sprite2D:
+		(visual_node as Sprite2D).flip_h = false
+	if visual_node is AnimatedSprite2D:
+		var animated := visual_node as AnimatedSprite2D
+		if visual_config.animation_speed_fps > 0.0:
+			animated.speed_scale = visual_config.animation_speed_fps / 12.0
+		if visual_config.orientation_mode == AssetVisualConfig.OrientationMode.ANIMATED_LEFT_RIGHT:
+			_play_left_right_animation(Vector2.RIGHT)
+		else:
+			_play_default_animation()
+
+
+func _ensure_renderer_for_config() -> void:
+	var wants_animation := visual_config.sprite_kind == AssetVisualConfig.SpriteKind.ANIMATED \
+		or visual_config.orientation_mode == AssetVisualConfig.OrientationMode.ANIMATED_LEFT_RIGHT
+	if wants_animation and animated_sprite == null:
+		animated_sprite = AnimatedSprite2D.new()
+		animated_sprite.name = "AnimatedSprite2D_Runtime"
+		animated_sprite.position = _base_position
+		animated_sprite.scale = _base_scale
+		player.add_child(animated_sprite)
+
+	var has_frames_path := not visual_config.sprite_frames_path.is_empty() and ResourceLoader.exists(visual_config.sprite_frames_path)
+	var has_existing_frames := animated_sprite != null and animated_sprite.sprite_frames != null and not animated_sprite.sprite_frames.get_animation_names().is_empty()
+	_is_animated = wants_animation and animated_sprite != null and (has_frames_path or has_existing_frames)
+	if sprite:
+		sprite.visible = not _is_animated
+	if animated_sprite:
+		animated_sprite.visible = _is_animated
 
 
 func _apply_flip_x_orientation() -> void:
@@ -162,14 +224,26 @@ func _apply_flip_x_orientation() -> void:
 		return
 
 	var facing := movement.get_facing_direction()
+	var visual_node := get_visual_node()
+	if not visual_node:
+		return
 	if facing in [2, 3, 1]:
-		sprite.flip_h = true
+		if visual_node is Sprite2D:
+			(visual_node as Sprite2D).flip_h = true
+		elif visual_node is AnimatedSprite2D:
+			(visual_node as AnimatedSprite2D).flip_h = true
 	elif facing in [6, 5, 7]:
-		sprite.flip_h = false
+		if visual_node is Sprite2D:
+			(visual_node as Sprite2D).flip_h = false
+		elif visual_node is AnimatedSprite2D:
+			(visual_node as AnimatedSprite2D).flip_h = false
 
 
 func _apply_left_right_orientation() -> void:
 	if not movement:
+		return
+	if _is_animated:
+		_play_left_right_animation(Vector2.LEFT if movement.get_facing_direction() in [2, 3, 1] else Vector2.RIGHT)
 		return
 
 	var facing := movement.get_facing_direction()
@@ -181,6 +255,29 @@ func _apply_left_right_orientation() -> void:
 		var right_tex: Texture2D = _textures.get("right", null)
 		if right_tex:
 			sprite.texture = right_tex
+
+
+func _play_left_right_animation(direction: Vector2) -> void:
+	if not _is_animated or not animated_sprite or animated_sprite.sprite_frames == null:
+		return
+	var side_key := "right" if direction.x >= 0.0 else "left"
+	var animation_name := str(visual_config.animation_map.get(side_key, ""))
+	if animation_name.is_empty():
+		animation_name = "move_right" if side_key == "right" else "move_left"
+	if animated_sprite.sprite_frames.has_animation(animation_name):
+		animated_sprite.play(animation_name)
+
+
+func _play_default_animation() -> void:
+	if not _is_animated or not animated_sprite or animated_sprite.sprite_frames == null:
+		return
+	var animation_name := str(visual_config.animation_map.get("default", ""))
+	if animation_name.is_empty() or not animated_sprite.sprite_frames.has_animation(animation_name):
+		var animation_names := animated_sprite.sprite_frames.get_animation_names()
+		if animation_names.is_empty():
+			return
+		animation_name = animation_names[0]
+	animated_sprite.play(animation_name)
 
 
 func _apply_8dir_orientation() -> void:
@@ -209,7 +306,7 @@ func _apply_8dir_orientation() -> void:
 			key = "south_east"
 
 	var tex: Texture2D = _textures.get(key, null)
-	if tex:
+	if tex and not _is_animated:
 		sprite.texture = tex
 
 

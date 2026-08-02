@@ -2,7 +2,7 @@
 
 ## Overview
 
-The game uses a state machine with 10 states to manage flow from menus through combat waves and shop phases. Three distinct game modes provide unique objectives and mechanics. Core coordinators (managers) orchestrate spawning, wave progression, and entity lifecycle.
+The game uses a state machine with 10 states to manage flow from menus through combat waves and shop phases. Game modes are grouped into spawn location, win condition, and arena type selections. Core coordinators (managers) orchestrate spawning, wave progression, and entity lifecycle.
 
 ## Game State Machine
 
@@ -60,9 +60,9 @@ Protect the target from enemy attacks. Failure if the DefenseTarget is destroyed
 
 ### Tunneling Mode
 
-**TunnelDoor** entities must be damaged by turrets to breach and progress. Doors have progressive health that must be fully depleted to advance. Introduces a secondary combat objective alongside surviving enemies.
+**TunnelDoor** entities must be damaged by turrets to breach and complete the wave. Doors have progressive health that must be fully depleted before the wave timer expires; surviving the timer without a breach is a loss. Alert mode additionally accelerates enemy spawn intervals every configured escalation interval, controlled by the `tunneling_alert_escalation` feature flag.
 
-Game modes are defined in **GameModeRegistry** (`scripts/registries/game_mode_registry.gd`) and managed by **GameModeService** (`scripts/autoload/game_mode_service.gd`).
+The registry currently exposes two spawn-location modes, five win-condition modes, and two arena modes. Each mode has a feature flag and is selected before a run begins. Runtime mode changes during combat are rejected because entity lifecycle and win-condition setup are run-scoped. Game modes are defined in **GameModeRegistry** (`scripts/registries/game_mode_registry.gd`) and managed by **GameModeService** (`scripts/autoload/game_mode_service.gd`).
 
 ## Core Coordinators
 

@@ -8,6 +8,11 @@ var sprite_node: Node = null # Sprite2D or AnimatedSprite2D
 var is_animated: bool = false
 var visual_config: AssetVisualConfig = null
 
+# Scene-provided renderers are reused when available. Runtime fallbacks let a
+# static enemy opt into an AnimatedSprite2D through its asset preset.
+var _static_sprite_node: Sprite2D = null
+var _animated_sprite_node: AnimatedSprite2D = null
+
 var _base_sprite_scale: Vector2 = Vector2.ONE
 var _base_sprite_position: Vector2 = Vector2.ZERO
 var _base_visual_scale: Vector2 = Vector2.ONE
@@ -25,11 +30,13 @@ func initialize(p_enemy: CharacterBody2D, asset_config: EntityAssetConfig) -> vo
 	enemy = p_enemy
 	assert(enemy != null, "EnemyVisuals: enemy reference required")
 
-	if enemy.has_node("AnimatedSprite2D"):
-		sprite_node = enemy.get_node("AnimatedSprite2D")
+	_static_sprite_node = enemy.get_node_or_null("Sprite2D")
+	_animated_sprite_node = enemy.get_node_or_null("AnimatedSprite2D")
+	if _animated_sprite_node:
+		sprite_node = _animated_sprite_node
 		is_animated = true
-	elif enemy.has_node("Sprite2D"):
-		sprite_node = enemy.get_node("Sprite2D")
+	elif _static_sprite_node:
+		sprite_node = _static_sprite_node
 		is_animated = false
 
 	if sprite_node:
@@ -44,10 +51,12 @@ func apply_asset_config(asset_config: EntityAssetConfig) -> void:
 		return
 
 	visual_config = asset_config.visual
+	_ensure_renderer_for_config()
 	_load_visual_resources()
+	_fallback_to_static_if_animation_has_no_frames()
 	_apply_visual_base_state()
 
-	if visual_config.idle_bounce_enabled and not is_animated:
+	if visual_config.idle_bounce_enabled and not is_animated and not FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
 		_start_idle_bounce()
 	else:
 		_stop_idle_bounce()
@@ -76,7 +85,7 @@ func update_direction_sprite(direction: Vector2) -> void:
 
 
 func apply_damage_flash(is_crit: bool = false) -> void:
-	if not sprite_node:
+	if not sprite_node or FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
 		return
 
 	if damage_flash_tween and damage_flash_tween.is_valid():
@@ -123,6 +132,9 @@ func play_death_animation(callback: Callable) -> void:
 	if not sprite_node:
 		callback.call()
 		return
+	if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
+		callback.call()
+		return
 
 	_clear_fire_particles()
 	_stop_idle_bounce()
@@ -145,6 +157,8 @@ func play_death_animation(callback: Callable) -> void:
 
 func play_explosion_animation(radius: float) -> void:
 	"""Show a world-space burst for explosive enemies before they disappear."""
+	if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
+		return
 	var parent := _get_effect_parent()
 	if parent == null or enemy == null:
 		return
@@ -183,7 +197,7 @@ func play_explosion_animation(radius: float) -> void:
 
 
 func _play_hit_reaction(is_crit: bool) -> void:
-	if not sprite_node:
+	if not sprite_node or FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
 		return
 
 	var idle_was_active := idle_tween != null and idle_tween.is_valid()
@@ -211,6 +225,9 @@ func _resume_idle_bounce() -> void:
 
 
 func _spawn_hit_burst(is_crit: bool) -> void:
+	if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
+		return
+
 	var parent := _get_effect_parent()
 	if parent == null or enemy == null:
 		return
@@ -266,6 +283,56 @@ func _load_visual_resources() -> void:
 			animated.sprite_frames = sprite_frames
 
 
+func _ensure_renderer_for_config() -> void:
+	"""Select the renderer declared by the asset config."""
+	if visual_config == null or enemy == null:
+		return
+
+	var wants_animation := visual_config.sprite_kind == AssetVisualConfig.SpriteKind.ANIMATED \
+		or visual_config.orientation_mode == AssetVisualConfig.OrientationMode.ANIMATED_LEFT_RIGHT
+
+	if wants_animation:
+		if _animated_sprite_node == null:
+			_animated_sprite_node = AnimatedSprite2D.new()
+			_animated_sprite_node.name = "AnimatedSprite2D_Runtime"
+			_animated_sprite_node.position = _base_sprite_position
+			_animated_sprite_node.scale = _base_sprite_scale
+			enemy.add_child(_animated_sprite_node)
+		sprite_node = _animated_sprite_node
+		is_animated = true
+	else:
+		if _static_sprite_node == null:
+			_static_sprite_node = Sprite2D.new()
+			_static_sprite_node.name = "Sprite2D_Runtime"
+			_static_sprite_node.position = _base_sprite_position
+			_static_sprite_node.scale = _base_sprite_scale
+			enemy.add_child(_static_sprite_node)
+		sprite_node = _static_sprite_node
+		is_animated = false
+
+	if _static_sprite_node:
+		_static_sprite_node.visible = not is_animated
+	if _animated_sprite_node:
+		_animated_sprite_node.visible = is_animated
+
+
+func _fallback_to_static_if_animation_has_no_frames() -> void:
+	if not is_animated or not (sprite_node is AnimatedSprite2D):
+		return
+
+	var animated := sprite_node as AnimatedSprite2D
+	if animated.sprite_frames != null and not animated.sprite_frames.get_animation_names().is_empty():
+		return
+	if _static_sprite_node == null:
+		return
+
+	DebugService.warn(DebugService.VALIDATION, "Animated asset %s has no SpriteFrames; falling back to Sprite2D." % visual_config.resource_name)
+	sprite_node = _static_sprite_node
+	is_animated = false
+	_static_sprite_node.visible = true
+	animated.visible = false
+
+
 func _apply_visual_base_state() -> void:
 	if not sprite_node:
 		return
@@ -288,7 +355,10 @@ func _apply_visual_base_state() -> void:
 		if visual_config.animation_speed_fps > 0.0:
 			speed_scale = visual_config.animation_speed_fps / 12.0
 		animated.speed_scale = speed_scale
-		_apply_left_right_animation(Vector2.RIGHT)
+		if visual_config.orientation_mode == AssetVisualConfig.OrientationMode.ANIMATED_LEFT_RIGHT:
+			_apply_left_right_animation(Vector2.RIGHT)
+		else:
+			_play_default_animation()
 	else:
 		match visual_config.orientation_mode:
 			AssetVisualConfig.OrientationMode.TEXTURE_LEFT_RIGHT:
@@ -338,6 +408,23 @@ func _apply_left_right_animation(direction: Vector2) -> void:
 	if animated.sprite_frames and animated.sprite_frames.has_animation(animation_name):
 		animated.play(animation_name)
 		_last_direction_key = side_key
+
+
+func _play_default_animation() -> void:
+	if not (sprite_node is AnimatedSprite2D):
+		return
+
+	var animated: AnimatedSprite2D = sprite_node
+	if animated.sprite_frames == null:
+		return
+
+	var animation_name := str(visual_config.animation_map.get("default", ""))
+	if animation_name.is_empty() or not animated.sprite_frames.has_animation(animation_name):
+		var animation_names := animated.sprite_frames.get_animation_names()
+		if animation_names.is_empty():
+			return
+		animation_name = animation_names[0]
+	animated.play(animation_name)
 
 
 func _direction_key_from_vector(direction: Vector2) -> String:

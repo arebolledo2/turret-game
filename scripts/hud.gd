@@ -36,6 +36,8 @@ const LootReviewScreenScript = preload("res://scripts/ui/loot_review_screen.gd")
 @onready var settings_menu: Control = $SettingsMenu
 @onready var asset_studio: Control = $AssetStudio
 @onready var show_damage_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageCheck
+@onready var player_auto_attack_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAutoAttackCheck
+@onready var reduced_motion_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ReducedMotionCheck
 @onready var isometric_debug_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/IsometricDebugCheck
 @onready var physics_hitboxes_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PhysicsHitboxes/PhysicsHitboxesCheck
 @onready var player_hurtbox_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerHurtbox/PlayerHurtboxCheck
@@ -48,6 +50,7 @@ const LootReviewScreenScript = preload("res://scripts/ui/loot_review_screen.gd")
 @onready var add_turret_button: Button = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/DebugTurretContainer/AddTurretButton
 @onready var debug_turret_description_label: Label = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/TurretDescriptionLabel
 @onready var settings_back_button: Button = $SettingsMenu/Panel/VBoxContainer/BackButton
+@onready var asset_studio_button: Button = $PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/AssetStudioButton
 @onready var easy_button: Button = $DifficultySelect/Panel/VBoxContainer/ButtonContainer/EasyButton
 @onready var sentinel_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/SentinelButton
 @onready var invasion_button: Button = $GameModeSelect/Panel/VBoxContainer/ButtonContainer/InvasionButton
@@ -111,7 +114,11 @@ func _ready() -> void:
 	pause_menu.visible = false
 	settings_menu.visible = false
 	asset_studio.visible = false
+	if asset_studio_button:
+		asset_studio_button.visible = FeatureFlagService.is_enabled(FeatureFlagService.ASSET_STUDIO)
 	loot_review_screen.visible = false
+	if not FeatureFlagService.flag_changed.is_connected(_on_feature_flag_changed):
+		FeatureFlagService.flag_changed.connect(_on_feature_flag_changed)
 
 	# Create low health overlay
 	low_health_overlay = ColorRect.new()
@@ -271,6 +278,8 @@ func _setup_components() -> void:
 		"container": settings_menu,
 		"panel": $SettingsMenu/Panel,
 		"show_damage_check": show_damage_check,
+		"player_auto_attack_check": player_auto_attack_check,
+		"reduced_motion_check": reduced_motion_check,
 		"isometric_debug_check": isometric_debug_check,
 		"physics_hitboxes_check": physics_hitboxes_check,
 		"player_hurtbox_check": player_hurtbox_check,
@@ -559,7 +568,16 @@ func _on_settings_pressed() -> void:
 
 
 func _on_asset_studio_pressed() -> void:
+	if not FeatureFlagService.is_enabled(FeatureFlagService.ASSET_STUDIO):
+		return
 	menu_manager.show_asset_studio()
+
+
+func _on_feature_flag_changed(flag_id: String, enabled: bool) -> void:
+	if flag_id == FeatureFlagService.ASSET_STUDIO and asset_studio_button:
+		asset_studio_button.visible = enabled
+		if not enabled and asset_studio.visible:
+			_on_asset_studio_back_pressed()
 
 
 func _on_quit_pressed() -> void:
@@ -588,6 +606,14 @@ func _on_asset_studio_back_pressed() -> void:
 
 func _on_show_damage_toggled(toggled_on: bool) -> void:
 	_settings_menu.on_show_damage_toggled(toggled_on)
+
+
+func _on_player_auto_attack_toggled(toggled_on: bool) -> void:
+	_settings_menu.on_player_auto_attack_toggled(toggled_on)
+
+
+func _on_reduced_motion_toggled(toggled_on: bool) -> void:
+	_settings_menu.on_reduced_motion_toggled(toggled_on)
 
 
 func _on_physics_hitboxes_toggled(toggled_on: bool) -> void:
@@ -632,7 +658,7 @@ func _on_dot_damage_dealt(pos: Vector2, amount: float) -> void:
 ## Take a damage number from the pool at a world position, or return null if
 ## damage numbers are disabled. Caller is responsible for calling setup() on it.
 func _spawn_damage_number(pos: Vector2) -> Node2D:
-	if not SettingsService.show_damage_numbers:
+	if not FeatureFlagService.is_enabled(FeatureFlagService.SHOW_DAMAGE_NUMBERS):
 		return null
 	if damage_number_scene == null:
 		return null

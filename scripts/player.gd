@@ -137,10 +137,12 @@ func _physics_process(delta: float) -> void:
 	visuals.process(delta)
 	
 	# Handle invincibility visual
-	if is_invincible:
-		sprite.modulate.a = 0.5 if fmod(Time.get_ticks_msec(), GameConstants.INVINCIBILITY_FLASH_INTERVAL_MS) < GameConstants.INVINCIBILITY_FLASH_THRESHOLD_MS else 1.0
-	else:
-		sprite.modulate.a = 1.0
+	var active_visual := _get_active_visual()
+	if active_visual:
+		if is_invincible and not FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
+			active_visual.modulate.a = 0.5 if fmod(Time.get_ticks_msec(), GameConstants.INVINCIBILITY_FLASH_INTERVAL_MS) < GameConstants.INVINCIBILITY_FLASH_THRESHOLD_MS else 1.0
+		else:
+			active_visual.modulate.a = 1.0
 
 	# Health regeneration
 	update_heal_timer()
@@ -222,7 +224,9 @@ func take_damage(amount: float, is_crit: bool = false) -> void:
 	invincibility_timer.start()
 
 	# Visual feedback - flash red
-	sprite.modulate = GameConstants.PLAYER_DAMAGE_FLASH_COLOR
+	var active_visual := _get_active_visual()
+	if active_visual and not FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
+		active_visual.modulate = GameConstants.PLAYER_DAMAGE_FLASH_COLOR
 	if visuals:
 		visuals.play_damage_reaction(is_crit)
 
@@ -246,22 +250,41 @@ func take_damage(amount: float, is_crit: bool = false) -> void:
 
 func _show_evasion_effect() -> void:
 	"""Show visual feedback for successful evasion."""
+	if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
+		return
 	# Flash white/blue for dodge
-	var original_modulate = sprite.modulate
-	sprite.modulate = GameConstants.PLAYER_EVASION_FLASH_COLOR
+	var active_visual := _get_active_visual()
+	if not active_visual:
+		return
+	var original_modulate = active_visual.modulate
+	active_visual.modulate = GameConstants.PLAYER_EVASION_FLASH_COLOR
 	var tween = create_tween()
-	tween.tween_property(sprite, "modulate", original_modulate, 0.2)
+	tween.tween_property(active_visual, "modulate", original_modulate, 0.2)
 
 func _on_invincibility_timeout() -> void:
 	is_invincible = false
+	var active_visual := _get_active_visual()
+	if not active_visual:
+		return
 	if visuals:
-		sprite.modulate = visuals.get_base_modulate()
+		active_visual.modulate = visuals.get_base_modulate()
 	else:
-		sprite.modulate = Color.WHITE
+		active_visual.modulate = Color.WHITE
 
 func _on_animation_timer_timeout() -> void:
 	# Cycle through walk animation frames (0-15 for 4x4 grid)
-	sprite.frame = (sprite.frame + 1) % GameConstants.PLAYER_ANIMATION_FRAME_COUNT
+	if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
+		return
+	var active_visual := _get_active_visual()
+	if active_visual is Sprite2D:
+		var active_sprite := active_visual as Sprite2D
+		active_sprite.frame = (active_sprite.frame + 1) % GameConstants.PLAYER_ANIMATION_FRAME_COUNT
+
+
+func _get_active_visual() -> Node2D:
+	if visuals:
+		return visuals.get_visual_node()
+	return sprite
 
 func die() -> void:
 	if is_dead:
@@ -339,6 +362,8 @@ func apply_defensive_pulse() -> void:
 
 func spawn_defensive_pulse_visual() -> void:
 	"""Create visual effect for defensive pulse."""
+	if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
+		return
 	var viz = Polygon2D.new()
 	var points = PackedVector2Array()
 	var segments = GameConstants.VISUAL_POLYGON_SEGMENTS

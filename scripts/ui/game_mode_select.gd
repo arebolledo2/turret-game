@@ -12,6 +12,7 @@ var survival_button: Button
 var tech_defense_button: Button
 var tunneling_timed_button: Button
 var tunneling_alert_button: Button
+var escort_button: Button
 
 # Arena type buttons
 var classic_arena_button: Button
@@ -51,6 +52,7 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 	title_label = nodes.get("title_label")
 	subtitle_label = nodes.get("subtitle_label")
 	button_container = nodes.get("button_container")
+	_ensure_dynamic_mode_buttons()
 	
 	# Note: Button connections are handled in hud.tscn scene file
 	
@@ -63,12 +65,15 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 func _scale_fonts(scale: float) -> void:
 	# Scale button heights if needed
 	for button in [sentinel_button, invasion_button, survival_button, tech_defense_button,
-			tunneling_timed_button, tunneling_alert_button, classic_arena_button, isometric_arena_button]:
+			tunneling_timed_button, tunneling_alert_button, classic_arena_button, isometric_arena_button, escort_button]:
 		if button:
 			button.custom_minimum_size.y = UIScaler.scale(BASE_BUTTON_HEIGHT)
 
 
 func show() -> void:
+	selected_spawn_mode = GameModeRegistry.get_default_mode_for_group("spawn_location") as GameEnums.GameMode
+	selected_win_mode = GameModeRegistry.get_default_mode_for_group("win_condition") as GameEnums.GameMode
+	selected_arena_mode = GameModeRegistry.get_default_mode_for_group("arena_type") as GameEnums.GameMode
 	current_stage = 1
 	_show_spawn_location_selection()
 	
@@ -82,9 +87,30 @@ func show() -> void:
 func _hide_all_buttons() -> void:
 	"""Helper to hide all selection buttons."""
 	for button in [sentinel_button, invasion_button, survival_button, tech_defense_button,
-			tunneling_timed_button, tunneling_alert_button, classic_arena_button, isometric_arena_button]:
+			tunneling_timed_button, tunneling_alert_button, classic_arena_button, isometric_arena_button, escort_button]:
 		if button:
 			button.visible = false
+
+
+func _ensure_dynamic_mode_buttons() -> void:
+	"""Keep the legacy selector usable for registry modes not in the scene."""
+	if not button_container or escort_button:
+		return
+
+	escort_button = Button.new()
+	escort_button.name = "EscortButton"
+	escort_button.custom_minimum_size = Vector2(0, BASE_BUTTON_HEIGHT)
+	escort_button.add_theme_font_size_override("font_size", 20)
+	escort_button.text = "Escort - Defend the moving target"
+	escort_button.pressed.connect(func(): on_win_condition_selected(GameEnums.GameMode.ESCORT))
+	button_container.add_child(escort_button)
+
+
+func _show_mode_button(button: Button, mode_id: GameEnums.GameMode) -> bool:
+	if not button:
+		return false
+	button.visible = GameModeRegistry.is_mode_enabled(mode_id)
+	return button.visible
 
 
 func _show_spawn_location_selection() -> void:
@@ -99,11 +125,12 @@ func _show_spawn_location_selection() -> void:
 	_hide_all_buttons()
 	
 	# Show only spawn location buttons
-	if sentinel_button:
-		sentinel_button.visible = true
-		sentinel_button.grab_focus()
-	if invasion_button:
-		invasion_button.visible = true
+	var first_button: Button = null
+	if _show_mode_button(sentinel_button, GameEnums.GameMode.SENTINEL):
+		first_button = sentinel_button
+	_show_mode_button(invasion_button, GameEnums.GameMode.INVASION)
+	if first_button:
+		first_button.grab_focus()
 
 
 func _show_win_condition_selection() -> void:
@@ -125,15 +152,16 @@ func _show_win_condition_selection() -> void:
 	_hide_all_buttons()
 	
 	# Show win condition buttons
-	if survival_button:
-		survival_button.visible = true
-		survival_button.grab_focus()
-	if tech_defense_button:
-		tech_defense_button.visible = true
-	if tunneling_timed_button:
-		tunneling_timed_button.visible = true
-	if tunneling_alert_button:
-		tunneling_alert_button.visible = true
+	var first_button: Button = null
+	if _show_mode_button(survival_button, GameEnums.GameMode.SURVIVAL):
+		first_button = survival_button
+	if first_button == null and _show_mode_button(tech_defense_button, GameEnums.GameMode.TECH_DEFENSE):
+		first_button = tech_defense_button
+	_show_mode_button(tunneling_timed_button, GameEnums.GameMode.TUNNELING_TIMED)
+	_show_mode_button(tunneling_alert_button, GameEnums.GameMode.TUNNELING_ALERT)
+	_show_mode_button(escort_button, GameEnums.GameMode.ESCORT)
+	if first_button:
+		first_button.grab_focus()
 
 
 func _show_arena_type_selection() -> void:
@@ -154,27 +182,34 @@ func _show_arena_type_selection() -> void:
 	_hide_all_buttons()
 	
 	# Show arena type buttons
-	if classic_arena_button:
-		classic_arena_button.visible = true
-		classic_arena_button.grab_focus()
-	if isometric_arena_button:
-		isometric_arena_button.visible = true
-
+	var first_button: Button = null
+	if _show_mode_button(classic_arena_button, GameEnums.GameMode.ARENA_RECTANGULAR):
+		first_button = classic_arena_button
+	if first_button == null and _show_mode_button(isometric_arena_button, GameEnums.GameMode.ARENA_ISOMETRIC):
+		first_button = isometric_arena_button
+	if first_button:
+		first_button.grab_focus()
 
 func on_spawn_mode_selected(mode: GameEnums.GameMode) -> void:
 	"""Called when a spawn location mode is selected."""
+	if not GameModeRegistry.is_mode_enabled(mode):
+		return
 	selected_spawn_mode = mode
 	_show_win_condition_selection()
 
 
 func on_win_condition_selected(mode: GameEnums.GameMode) -> void:
 	"""Called when a win condition mode is selected. Advances to arena selection."""
+	if not GameModeRegistry.is_mode_enabled(mode):
+		return
 	selected_win_mode = mode
 	_show_arena_type_selection()
 
 
 func on_arena_type_selected(mode: GameEnums.GameMode) -> void:
 	"""Called when an arena type is selected. Sets all modes and starts game."""
+	if not GameModeRegistry.is_mode_enabled(mode):
+		return
 	selected_arena_mode = mode
 	
 	# Set all three modes via GameModeService

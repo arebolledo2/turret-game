@@ -35,6 +35,8 @@ func setup(nodes: Dictionary, owner: Node) -> void:
 	# Connect start button
 	if start_button:
 		start_button.pressed.connect(_on_start_pressed)
+	if not FeatureFlagService.flag_changed.is_connected(_on_feature_flag_changed):
+		FeatureFlagService.flag_changed.connect(_on_feature_flag_changed)
 
 
 func _setup_options() -> void:
@@ -49,31 +51,17 @@ func _setup_options() -> void:
 
 	# Spawn Mode (Wave Structure) Options
 	if spawn_dropdown:
-		spawn_dropdown.clear()
-		spawn_dropdown.add_item("Sentinel (Edges)", GameEnums.GameMode.SENTINEL)
-		spawn_dropdown.add_item("Invasion (Anywhere)", GameEnums.GameMode.INVASION)
-		# Default to Sentinel
-		spawn_dropdown.select(0)
+		_populate_mode_dropdown(spawn_dropdown, "spawn_location")
 
 	# Game Mode (Win Condition) Options
 	if mode_dropdown:
-		mode_dropdown.clear()
-		mode_dropdown.add_item("Survival", GameEnums.GameMode.SURVIVAL)
-		mode_dropdown.add_item("Tech Defense", GameEnums.GameMode.TECH_DEFENSE)
-		mode_dropdown.add_item("Tunneling (Timed)", GameEnums.GameMode.TUNNELING_TIMED)
-		mode_dropdown.add_item("Tunneling (Alert)", GameEnums.GameMode.TUNNELING_ALERT)
-		mode_dropdown.add_item("Escort", GameEnums.GameMode.ESCORT)
-		# Default to Defense (Tech Defense is index 1)
-		mode_dropdown.select(1)
+		_populate_mode_dropdown(mode_dropdown, "win_condition")
 
 	# Arena Type Options
 	if arena_dropdown:
-		arena_dropdown.clear()
-		arena_dropdown.add_item("Classic", GameEnums.GameMode.ARENA_RECTANGULAR)
-		arena_dropdown.add_item("Isometric", GameEnums.GameMode.ARENA_ISOMETRIC)
-		# Default to Isometric
-		arena_dropdown.select(1)
-		arena_dropdown.item_selected.connect(_on_arena_type_selected)
+		_populate_mode_dropdown(arena_dropdown, "arena_type")
+		if not arena_dropdown.item_selected.is_connected(_on_arena_type_selected):
+			arena_dropdown.item_selected.connect(_on_arena_type_selected)
 
 	# Background Options (populated from GameConstants)
 	if bg_dropdown:
@@ -84,6 +72,36 @@ func _setup_options() -> void:
 		bg_dropdown.select(1)
 		# Initially visible only if isometric is selected (which is default)
 		bg_dropdown.disabled = false
+		if arena_dropdown:
+			bg_dropdown.disabled = arena_dropdown.get_selected_id() != GameEnums.GameMode.ARENA_ISOMETRIC
+
+
+func _populate_mode_dropdown(dropdown: OptionButton, group: String) -> void:
+	"""Build mode choices from the registry so disabled modes disappear everywhere."""
+	dropdown.clear()
+	var available_modes := GameModeRegistry.get_modes_in_group(group)
+	var default_mode := GameModeRegistry.get_default_mode_for_group(group)
+
+	for mode_id in available_modes:
+		var config := GameModeRegistry.get_mode_config(mode_id)
+		dropdown.add_item(str(config.get("name", mode_id)), mode_id)
+
+	if available_modes.is_empty():
+		dropdown.disabled = true
+		return
+
+	dropdown.disabled = false
+	var selected_index := 0
+	for index in range(available_modes.size()):
+		if available_modes[index] == default_mode:
+			selected_index = index
+			break
+	dropdown.select(selected_index)
+
+
+func _on_feature_flag_changed(flag_id: String, _enabled: bool) -> void:
+	if flag_id.begins_with("mode_"):
+		_setup_options()
 
 
 func _scale_fonts(scale: float) -> void:
@@ -113,6 +131,11 @@ func hide_screen() -> void:
 
 
 func _on_start_pressed() -> void:
+	if difficulty_dropdown == null or spawn_dropdown == null or mode_dropdown == null or arena_dropdown == null:
+		return
+	if spawn_dropdown.get_selected_id() < 0 or mode_dropdown.get_selected_id() < 0 or arena_dropdown.get_selected_id() < 0:
+		return
+
 	var difficulty = difficulty_dropdown.get_selected_id()
 	var spawn_mode = spawn_dropdown.get_selected_id()
 	var win_mode = mode_dropdown.get_selected_id()

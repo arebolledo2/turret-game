@@ -64,7 +64,10 @@ func setup_spawn_zones() -> void:
 func start_spawning(wave: int) -> void:
 	current_wave = wave
 	enemies_spawned_by_type.clear()
-	is_spawning = true
+	is_spawning = FeatureFlagService.is_enabled(FeatureFlagService.ENEMY_SPAWNING)
+	if not is_spawning:
+		queued_spawns.clear()
+		return
 
 	# Initialize rank spawn counts for the wave
 	remaining_lts = 0
@@ -96,9 +99,27 @@ func _update_spawn_interval() -> void:
 	
 	# Add randomness (e.g. +/- 20%)
 	var random_factor := randf_range(0.8, 1.2)
-	spawn_timer.wait_time = base_interval * random_factor
+	var alert_multiplier := GameModeService.get_spawn_rate_multiplier(_get_wave_elapsed_time())
+	spawn_timer.wait_time = base_interval * random_factor / maxf(alert_multiplier, 1.0)
+
+
+func _get_wave_elapsed_time() -> float:
+	"""Return combat time elapsed for mode-driven spawn escalation."""
+	var controller = GameStateService.wave_controller
+	if controller == null:
+		return 0.0
+
+	var max_duration := float(controller.get("wave_max_duration"))
+	var remaining := float(controller.get("wave_timer"))
+	if max_duration <= 0.0:
+		return 0.0
+	return maxf(max_duration - remaining, 0.0)
 
 func _process(delta: float) -> void:
+	if not FeatureFlagService.is_enabled(FeatureFlagService.ENEMY_SPAWNING):
+		queued_spawns.clear()
+		return
+
 	# Process queued spawns
 	var i := 0
 	while i < queued_spawns.size():
@@ -112,7 +133,7 @@ func _process(delta: float) -> void:
 			i += 1
 
 func _on_spawn_timer_timeout() -> void:
-	if not is_spawning:
+	if not is_spawning or not FeatureFlagService.is_enabled(FeatureFlagService.ENEMY_SPAWNING):
 		return
 
 	_spawn_random_enemy()
@@ -122,6 +143,8 @@ func _on_spawn_timer_timeout() -> void:
 
 func _spawn_random_enemy() -> void:
 	"""Select a random enemy type and spawn it (possibly multiple for swarm types)."""
+	if not FeatureFlagService.is_enabled(FeatureFlagService.ENEMY_SPAWNING):
+		return
 	# Roll for special rank spawns
 	var rank := GameEnums.EnemyRank.NORMAL
 	

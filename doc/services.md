@@ -4,7 +4,7 @@ This document provides a detailed reference for autoload singletons in `scripts/
 
 ## Overview
 
-The game uses service-oriented architecture with focused autoload singletons. Each service manages a specific domain concern. Services are accessed directly — no facade pattern. Cross-service communication goes through the `Events` signal bus.
+The game uses service-oriented architecture with focused autoload singletons. Each service manages a specific domain concern. Services are accessed directly; `SettingsService` exposes compatibility properties for older settings callers, while new runtime gates belong to `FeatureFlagService`. Cross-service communication goes through the `Events` signal bus.
 
 ## Core Game State
 
@@ -22,7 +22,11 @@ Manages game state transitions with validation. 10 states: IDLE, DIFFICULTY_SELE
 
 ### GameModeService
 **File:** `scripts/autoload/game_mode_service.gd`
-Manages the active game mode and provides mode-specific logic hooks. Supports multiple game modes (Escort, Tech Defense, Tunneling) with distinct win/loss conditions and mechanics.
+Manages the active mode in each registry group and provides mode-specific logic hooks. Modes are validated against `GameModeRegistry` and can only change before an active run. The registry's feature flags control which modes appear in selection screens.
+
+### FeatureFlagService
+**File:** `scripts/autoload/feature_flag_service.gd`
+Central source of truth for named runtime gates. It exposes defaults, scopes, `is_enabled`, `set_enabled`, `toggle`, and change signals. Existing `SettingsService` properties remain compatibility facades over the corresponding flags. System flags include enemy spawning, tech drops, shop, Asset Studio, reduced motion, and tunneling alert escalation.
 
 ## Economy & Progression
 

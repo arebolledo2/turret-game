@@ -4,7 +4,7 @@ This document covers the high-level architectural patterns used in the game.
 
 ## Overview
 
-Game logic is split into focused service singletons (autoloads), with all cross-system communication using the Events signal bus. Type definitions live in static registries, while visuals/collision configuration is data-driven through asset preset resources. Player, enemy, and turret entities use component-based architecture. No facade pattern — code accesses services directly.
+Game logic is split into focused service singletons (autoloads), with all cross-system communication using the Events signal bus. Type definitions live in static registries, while visuals/collision configuration is data-driven through asset preset resources. Player, enemy, and turret entities use component-based architecture. Services are accessed directly; `SettingsService` retains a small compatibility facade for older callers while new feature-gated code uses `FeatureFlagService`.
 
 ## Service-Oriented Architecture
 
@@ -15,6 +15,7 @@ Game logic split into **focused service singletons** in `scripts/autoload/`. Gro
 - **GameStateService** - Wave number, scrap, kills, time, level
 - **GameStateMachine** - State transitions with validation
 - **GameModeService** - Active game mode and mode-specific logic hooks
+- **FeatureFlagService** - Named runtime gates for systems, settings, modes, and accessibility
 
 **Economy & Progression:**
 - **EconomyService** - Scrap, shop offers, rerolls, purchases
@@ -45,7 +46,7 @@ Game logic split into **focused service singletons** in `scripts/autoload/`. Gro
 **Special Systems:**
 - **SpecialEffectService** - Complex item effects and proximity-based turret logic
 
-> **Note:** All code uses services directly. No facade pattern. See [services.md](services.md) for detailed service documentation.
+> **Note:** All new code should use the owning service directly. `SettingsService`'s flag-backed properties exist as a compatibility layer for existing callers. See [services.md](services.md) for detailed service documentation.
 
 ## Signal Bus Pattern
 
@@ -80,6 +81,18 @@ Runtime changes are broadcast with:
 - `Events.asset_config_changed`
 
 Consumers (`EnemyVisuals`, `TurretVisuals`, `PlayerVisuals`, plus collision manager integration) apply changes immediately for live updates.
+
+## Feature Flags
+
+`FeatureFlagService` (`scripts/autoload/feature_flag_service.gd`) is the runtime switchboard for systems, modes, settings, and accessibility behavior:
+
+```gdscript
+FeatureFlagService.set_enabled(FeatureFlagService.SHOP, false)
+FeatureFlagService.set_enabled(FeatureFlagService.REDUCED_MOTION, true)
+var can_use_escort := FeatureFlagService.is_enabled(FeatureFlagService.MODE_ESCORT)
+```
+
+Game-mode selection screens read the registry and omit disabled modes. Mode changes are accepted before a run and rejected during combat. Existing `SettingsService` properties are compatibility facades over the matching flags.
 
 ## Component-Based Player System
 

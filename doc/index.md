@@ -15,7 +15,7 @@
 
 ## Project Overview
 
-Wave-based survival tower defense game. Player dodges enemies while turrets provide primary damage. Purchase turrets and items between waves using scrap earned from kills. The game features multiple difficulty levels, 3 game modes (Escort, Tech Defense, Tunneling), 8 turret types, 8 enemy types, a tech tree, and items across 5 rarity tiers.
+Wave-based survival tower defense game. Player dodges enemies while turrets provide primary damage. Purchase turrets and items between waves using scrap earned from kills. The game features multiple difficulty levels, 2 spawn-location modes, 5 win-condition modes, 2 arena modes, 8 turret types, 8 enemy types, a tech tree, and items across 5 rarity tiers.
 
 ## Documentation Index
 

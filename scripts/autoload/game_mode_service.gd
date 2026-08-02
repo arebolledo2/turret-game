@@ -24,13 +24,22 @@ func _initialize_defaults() -> void:
 		active_modes["arena_type"] = arena_mode
 		_update_arena_bounds()
 
-func set_mode(mode_id: GameEnums.GameMode) -> void:
+func set_mode(mode_id: GameEnums.GameMode) -> bool:
 	var config: Dictionary = GameModeRegistry.get_mode_config(mode_id)
 	if config.is_empty():
 		DebugService.error(DebugService.SYSTEMS, "Game mode config not found for ID: %s" % mode_id)
-		return
+		return false
+
+	if not GameModeRegistry.is_mode_enabled(mode_id):
+		DebugService.warn(DebugService.SYSTEMS, "Game mode is disabled: %s" % config.get("name", mode_id))
+		return false
 
 	var group: String = config.get("group")
+	if GameStateService.is_game_active and active_modes.get(group) != mode_id:
+		DebugService.warn(DebugService.SYSTEMS, "Cannot switch game mode during an active run: %s" % config.get("name", mode_id))
+		return false
+
+	var changed: bool = active_modes.get(group) != mode_id
 	active_modes[group] = mode_id
 
 	# Update arena bounds if arena type changed
@@ -38,6 +47,9 @@ func set_mode(mode_id: GameEnums.GameMode) -> void:
 		_update_arena_bounds()
 
 	DebugService.log(DebugService.SYSTEMS, "Game Mode Set: %s (Group: %s)" % [config.get("name"), group])
+	if changed:
+		Events.game_mode_changed.emit(group, mode_id)
+	return true
 
 func _update_arena_bounds() -> void:
 	"""Synchronize ArenaBoundsService with selected arena type mode."""
@@ -191,7 +203,7 @@ func get_spawn_rate_multiplier(time_since_alert: float) -> float:
 	Returns:
 		Multiplier for spawn rate (1.0 = normal, 1.3 = 30% faster, etc.)
 	"""
-	if not is_alert_mode_active():
+	if not is_alert_mode_active() or not FeatureFlagService.is_enabled(FeatureFlagService.TUNNEL_ALERT_ESCALATION):
 		return 1.0
 	
 	if time_since_alert <= 0:

@@ -10,11 +10,16 @@ var _asset_id: String = ""
 var _config: EntityAssetConfig = null
 var _collision_profile: CollisionProfileClass = null
 var _time: float = 0.0
+var _animated_preview: AnimatedSprite2D = null
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process(true)
+	_animated_preview = AnimatedSprite2D.new()
+	_animated_preview.name = "AnimatedPreview"
+	_animated_preview.visible = false
+	add_child(_animated_preview)
 
 
 func _process(delta: float) -> void:
@@ -93,6 +98,9 @@ func _draw_entity_sprite(center: Vector2) -> void:
 		return
 
 	var visual := _config.visual
+	if _draw_animated_preview(center, visual):
+		return
+
 	var texture_path := _resolve_preview_texture_path(visual)
 	if texture_path.is_empty() or not ResourceLoader.exists(texture_path):
 		return
@@ -110,6 +118,38 @@ func _draw_entity_sprite(center: Vector2) -> void:
 	var draw_size := Vector2(base_size.x * final_scale.x, base_size.y * final_scale.y)
 	var pos := center + visual.position_offset - (draw_size * 0.5)
 	draw_texture_rect(texture, Rect2(pos, draw_size), false, visual.modulate)
+
+
+func _draw_animated_preview(center: Vector2, visual: AssetVisualConfig) -> bool:
+	if _animated_preview == null:
+		return false
+
+	_animated_preview.visible = false
+	var wants_animation := visual.sprite_kind == AssetVisualConfig.SpriteKind.ANIMATED \
+		or visual.orientation_mode == AssetVisualConfig.OrientationMode.ANIMATED_LEFT_RIGHT
+	if not wants_animation or visual.sprite_frames_path.is_empty() or not ResourceLoader.exists(visual.sprite_frames_path):
+		return false
+
+	var frames = ResourceLoader.load(visual.sprite_frames_path)
+	if not (frames is SpriteFrames) or frames.get_animation_names().is_empty():
+		return false
+
+	_animated_preview.sprite_frames = frames
+	_animated_preview.position = center + visual.position_offset
+	_animated_preview.scale = visual.scale * 0.35
+	_animated_preview.modulate = visual.modulate
+	if visual.animation_speed_fps > 0.0:
+		_animated_preview.speed_scale = visual.animation_speed_fps / 12.0
+
+	var animation_name := str(visual.animation_map.get("default", ""))
+	if visual.orientation_mode == AssetVisualConfig.OrientationMode.ANIMATED_LEFT_RIGHT:
+		var side := "right" if sin(_time * 2.0) >= 0.0 else "left"
+		animation_name = str(visual.animation_map.get(side, animation_name))
+	if animation_name.is_empty() or not frames.has_animation(animation_name):
+		animation_name = frames.get_animation_names()[0]
+	_animated_preview.play(animation_name)
+	_animated_preview.visible = true
+	return true
 
 
 func _resolve_preview_texture_path(visual: AssetVisualConfig) -> String:

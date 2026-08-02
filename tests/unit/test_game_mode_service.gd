@@ -4,6 +4,8 @@ extends GutTest
 
 func before_each() -> void:
 	# Reset service state before each test
+	FeatureFlagService.reset_state()
+	GameStateService.reset_state()
 	GameModeService.reset_state()
 
 func test_default_modes_initialized() -> void:
@@ -85,6 +87,12 @@ func test_spawn_rate_multiplier_alert_mode() -> void:
 	
 	# Partial intervals should floor
 	assert_eq(GameModeService.get_spawn_rate_multiplier(15.9), 1.3, "Partial second interval should be 1.3")
+
+
+func test_spawn_rate_multiplier_can_be_disabled() -> void:
+	GameModeService.set_mode(GameEnums.GameMode.TUNNELING_ALERT)
+	FeatureFlagService.set_enabled(FeatureFlagService.TUNNEL_ALERT_ESCALATION, false)
+	assert_eq(GameModeService.get_spawn_rate_multiplier(100.0), 1.0, "Alert escalation flag should disable multiplier")
 
 func test_reset_state_restores_defaults() -> void:
 	# Change modes away from defaults

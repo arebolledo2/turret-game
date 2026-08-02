@@ -70,22 +70,22 @@ func _on_progress_changed(current_hp: float, max_hp: float) -> void:
 
 func _update_alert_mode(delta: float) -> void:
 	"""Handle alert mode UI updates for TUNNELING_ALERT."""
-	# Get wave duration and calculate if alert should activate
-	var wave_duration = GameStateService.get_wave_duration(GameStateService.current_wave)
-	var soft_timer = wave_duration * GameConstants.TUNNELING_ALERT_SOFT_TIMER_MULTIPLIER
-	
-	# Check if we've passed the soft timer
-	var time_in_wave = wave_duration - alert_time # Simplified, would need actual wave time tracking
+	if not FeatureFlagService.is_enabled(FeatureFlagService.TUNNEL_ALERT_ESCALATION):
+		is_alert_active = false
+		alert_indicator.visible = false
+		return
+
 	alert_time += delta
-	
-	if alert_time >= soft_timer and not is_alert_active:
+	var spawn_multiplier := GameModeService.get_spawn_rate_multiplier(alert_time)
+	if spawn_multiplier > 1.0 and not is_alert_active:
 		is_alert_active = true
 		alert_indicator.visible = true
-	
+		alert_indicator.text = "ALERT x%.1f" % spawn_multiplier
 	# Flash the alert indicator
 	if is_alert_active:
 		var flash = sin(Time.get_ticks_msec() / 200.0) * 0.5 + 0.5
 		alert_indicator.modulate = Color(1.0, 0.3, 0.3, flash)
+		alert_indicator.text = "ALERT x%.1f" % spawn_multiplier
 
 func _on_door_breached() -> void:
 	"""Hide the progress bar when door is breached."""

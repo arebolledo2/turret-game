@@ -17,6 +17,7 @@ func before_all() -> void:
 func before_each() -> void:
 	GameStateService.reset_state()
 	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
+	FeatureFlagService.reset_state()
 
 	main = main_scene.instantiate()
 	add_child_autofree(main)
@@ -130,6 +131,20 @@ func test_wave_announcement_signal_emitted_after_shop():
 	# Wave announcement signals emitted when game starts
 	assert_signal_emitted(Events, "wave_announcement_started")
 	assert_signal_emitted(Events, "show_wave_announcement")
+
+
+func test_tunneling_mode_spawns_door_during_announcement():
+	Events.start_settings_applied.emit(
+		GameEnums.Difficulty.EASY,
+		GameEnums.GameMode.SENTINEL,
+		GameEnums.GameMode.TUNNELING_TIMED,
+		GameEnums.GameMode.ARENA_ISOMETRIC,
+		0
+	)
+	await get_tree().process_frame
+
+	assert_true(GameModeService.is_mode_active(GameEnums.GameMode.TUNNELING_TIMED))
+	assert_true(game_manager.entity_spawner.has_tunnel_door(), "Tunneling should spawn its door before combat")
 
 
 # =============================================================================

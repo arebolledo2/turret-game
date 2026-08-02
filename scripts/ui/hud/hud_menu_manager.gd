@@ -105,6 +105,9 @@ func hide_settings() -> void:
 		pause_menu.visible = true
 
 func show_asset_studio() -> void:
+	if not FeatureFlagService.is_enabled(FeatureFlagService.ASSET_STUDIO):
+		return
+
 	if pause_controller and pause_controller.has_method("hide"):
 		pause_controller.hide()
 	elif pause_menu:

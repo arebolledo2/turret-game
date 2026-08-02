@@ -2,16 +2,17 @@
 
 ## Overview
 
-The game now uses a unified, data-driven asset system for enemy, turret, and player visuals/collision. This is the backend foundation for future in-game asset customization UI.
+The game now uses a unified, data-driven asset system for enemy, turret, and player visuals/collision. Built-in and user presets can be edited through the in-game Asset Studio and applied to live entities.
 
 Scope in this phase:
 - Typed asset config resources
 - Built-in named presets in `res://resources/asset_presets/`
 - User overrides in `user://asset_presets/`
 - Runtime live-apply for spawned entities
+- In-game Asset Studio for preset and visual-field editing
+- Static/animated renderer selection where the entity supports it
 
-Out of scope in this phase:
-- In-game preset editor UI
+Still deferred:
 - Turret collision runtime customization (schema exists, runtime deferred)
 
 ## Data Model
@@ -22,7 +23,7 @@ Typed resources live in `scripts/resources/assets/`.
 File: `scripts/resources/assets/asset_visual_config.gd`
 
 Defines visual behavior and presentation:
-- `sprite_kind`: `STATIC`, `DIRECTIONAL_TEXTURES`, `ANIMATED`
+- `sprite_kind`: `STATIC`, `DIRECTIONAL_TEXTURES`, `ANIMATED`. Enemy and player visuals can create an animated renderer from the config; turrets use their scene-provided `AnimatedSprite2D` renderer.
 - `orientation_mode`: `FIXED`, `FLIP_X_BY_VELOCITY`, `TEXTURE_LEFT_RIGHT`, `TEXTURE_8_DIR`, `ANIMATED_LEFT_RIGHT`
 - `texture_paths`, `sprite_frames_path`, `animation_map`, `animation_speed_fps`
 - `scale`, `modulate`, `position_offset`, `anchor_bottom`
@@ -113,6 +114,7 @@ Live behavior:
 - Enemies refresh visuals/collision when relevant config changes
 - Turrets refresh visuals when relevant config changes
 - Player refreshes visuals/collision when player config changes
+- `FeatureFlagService.REDUCED_MOTION` disables idle/reaction animation paths globally
 
 ## Runtime Integration Notes
 

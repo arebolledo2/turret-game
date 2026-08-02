@@ -93,7 +93,11 @@ func has_defense_target() -> bool:
 
 
 func has_tunnel_door() -> bool:
-	return is_instance_valid(current_tunnel_door)
+	if not is_instance_valid(current_tunnel_door):
+		return false
+	# A breached door is already completing (or has completed) its wave and
+	# must not prevent the next wave from getting a fresh objective.
+	return not bool(current_tunnel_door.get("is_breached"))
 
 
 func get_defense_target() -> Node2D:
