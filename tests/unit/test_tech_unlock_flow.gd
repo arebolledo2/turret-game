@@ -6,6 +6,7 @@ extends GutTest
 var tech_tree_service: Node
 
 func before_each():
+	TestHelpers.reset_all_services()
 	tech_tree_service = TechTreeService
 	tech_tree_service.reset_state()
 	ModifierService.clear_modifiers()

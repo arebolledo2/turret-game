@@ -9,6 +9,7 @@ var wave_controller: Node = null
 
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	# Reset game state
 	GameStateService.reset_state()
 	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)

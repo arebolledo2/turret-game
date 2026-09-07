@@ -140,3 +140,7 @@ func test_upsert_collision_profile_override_creates_and_applies_user_profile():
 
 	var config := AssetConfigService.get_enemy_config("basic")
 	assert_eq(config.collision.collision_profile_path, written_path, "Enemy config should reference written user collision profile")
+
+
+func before_each() -> void:
+	TestHelpers.reset_all_services()

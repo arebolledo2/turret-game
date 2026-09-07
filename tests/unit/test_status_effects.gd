@@ -275,3 +275,7 @@ func test_get_type_name_plasma():
 func test_get_type_name_physical():
 	var effect = StatusEffect.new(GameEnums.DamageType.PHYSICAL, 5.0, 3.0)
 	assert_eq(effect.get_type_name(), "Bleeding", "Physical type name should be Bleeding")
+
+
+func before_each() -> void:
+	TestHelpers.reset_all_services()

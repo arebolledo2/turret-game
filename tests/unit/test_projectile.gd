@@ -11,6 +11,7 @@ var projectile: Area2D
 
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	projectile = Projectile.instantiate()
 	add_child_autofree(projectile)
 

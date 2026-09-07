@@ -162,3 +162,7 @@ func test_scale_very_large_value() -> void:
 func test_scale_font_very_large_base() -> void:
 	var result = ui_scaler.scale_font(200)
 	assert_gt(result, 100, "Very large font should scale to large result")
+
+
+func before_each() -> void:
+	TestHelpers.reset_all_services()

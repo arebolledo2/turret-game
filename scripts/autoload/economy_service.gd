@@ -25,16 +25,21 @@ func reset_state() -> void:
 
 ## Calculate reroll cost based on current reroll count, wave, and modifiers
 func get_reroll_cost(wave: int, reroll_cost_multiplier: float) -> int:
-	# Wave-based base cost: wave × 1.5
+	# Wave-based base cost: wave Ã— 1.5
 	var wave_base_cost := wave * GameConstants.REROLL_WAVE_BASE_MULTIPLIER
 	# Add increment for each reroll this wave
 	var total_cost := wave_base_cost + shop_reroll_count * GameConstants.REROLL_COST_INCREMENT
 	return int(total_cost * reroll_cost_multiplier)
 
 
+## Authoritative base payout. Wave 1 awards 5 scrap; each wave adds 5.
+func get_wave_scrap_base(wave: int) -> int:
+	return GameConstants.SCRAP_WAVE_BONUS_BASE + maxi(wave, 0) * 5
+
+
 ## Calculate wave completion scrap bonus
 func get_wave_scrap_bonus(wave: int, wave_bonus_mult: float) -> int:
-	var base_bonus := GameConstants.SCRAP_WAVE_BONUS_BASE + (wave - 1) * 5
+	var base_bonus := get_wave_scrap_base(wave)
 	return int(base_bonus * wave_bonus_mult)
 
 

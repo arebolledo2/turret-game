@@ -14,6 +14,7 @@ func before_all() -> void:
 
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	GameStateService.reset_state()
 	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
 	GameStateService.current_wave = 1

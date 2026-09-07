@@ -4,6 +4,7 @@ var _preset_name: String = "unit_validation_preset"
 
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	AssetConfigService.delete_user_preset(_preset_name)
 	AssetConfigService.create_user_preset(_preset_name, "default")
 	AssetConfigService.set_active_preset(_preset_name)

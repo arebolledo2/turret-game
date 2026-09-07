@@ -7,6 +7,7 @@ extends GutTest
 
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	GameStateMachine.reset()
 
 

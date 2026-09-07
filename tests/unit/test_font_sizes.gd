@@ -178,3 +178,7 @@ func test_get_icon_size_unknown_returns_medium() -> void:
 		"Unknown category should return ICON_MEDIUM")
 	assert_eq(font_sizes.get_icon_size(""), FontSizes.ICON_MEDIUM,
 		"Empty category should return ICON_MEDIUM")
+
+
+func before_each() -> void:
+	TestHelpers.reset_all_services()

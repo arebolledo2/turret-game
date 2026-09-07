@@ -129,6 +129,17 @@ static func create_mock_player_hurtbox(player: Node2D) -> Area2D:
 ## Reset all service states for clean testing
 ## Call this in before_each() to ensure test isolation
 static func reset_all_services() -> void:
+	# Reset lifecycle and preferences before mode defaults are calculated.
+	GameStateMachine.reset()
+	GameStateService.wave_controller = null
+	GameStateService.is_game_active = false
+	SettingsService.reset_state()
+	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
+	ArenaBoundsService.set_arena_type(GameEnums.ArenaType.RECTANGULAR)
+	SpecialEffectService.set_turret_manager(null)
+	BuffSystem.set_turret_manager(null)
+	OffScreenIndicatorService.set_enemy_spawner(null)
+	seed(12345)
 	# Core game state
 	GameStateService.reset_state()
 	EconomyService.reset_state()
@@ -140,7 +151,7 @@ static func reset_all_services() -> void:
 	PlayerStatsService.reset_state()
 	TurretStatsService.reset_state()
 	ModifierService.clear_modifiers()
-	BuffSystem.active_buffs.clear()
+	BuffSystem.reset_state()
 
 	# Economy & progression
 	ItemTrackingService.reset_state()

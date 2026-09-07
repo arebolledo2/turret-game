@@ -3,6 +3,7 @@ extends GutTest
 ## Unit tests for GameModeService
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	# Reset service state before each test
 	FeatureFlagService.reset_state()
 	GameStateService.reset_state()

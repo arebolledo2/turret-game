@@ -168,3 +168,7 @@ func test_wander_switches_state_when_timer_expires():
 	behavior.execute(0.2)
 	
 	assert_true(behavior.is_wandering, "Should switch to wandering when pause timer expires")
+
+
+func before_each() -> void:
+	TestHelpers.reset_all_services()

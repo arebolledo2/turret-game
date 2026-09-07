@@ -12,6 +12,7 @@ func before_all() -> void:
 	buff_system = get_node("/root/BuffSystem")
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	buff_system.active_buffs.clear()
 	# Create a mock turret for testing
 	mock_turret = Node2D.new()
@@ -245,7 +246,7 @@ func test_get_buff_multiplier_max_stacks():
 		buff_system.apply_buff(mock_turret, buff)
 
 	var mult = buff_system.get_buff_multiplier(mock_turret, "fire_rate")
-	var expected = pow(1.08, 5)  # (1.08)^5 ≈ 1.469
+	var expected = pow(1.08, 5)  # (1.08)^5 â‰ˆ 1.469
 	assert_almost_eq(mult, expected, 0.001,
 		"Should calculate max stack multiplier")
 

@@ -9,6 +9,7 @@ var modifier_system: ModifierSystem
 
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	modifier_system = ModifierSystem.new()
 
 

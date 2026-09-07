@@ -1,6 +1,7 @@
 extends GutTest
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	GameStateService.reset_state()
 	GameModeService.reset_state()
 	ArenaBoundsService.reset_state() # Reset to rectangular dimensions

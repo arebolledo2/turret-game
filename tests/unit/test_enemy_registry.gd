@@ -400,3 +400,7 @@ func test_get_sprite_folder_invalid_type():
 	var folder = EnemyRegistry.get_sprite_folder("nonexistent")
 	assert_eq(folder, "res://assets/sprites/enemy_spider_drone",
 		"Invalid type should fall back to basic enemy sprite folder")
+
+
+func before_each() -> void:
+	TestHelpers.reset_all_services()

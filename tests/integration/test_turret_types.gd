@@ -4,6 +4,7 @@ extends GutTest
 ## Focus on data/configuration rather than full integration behavior
 
 func before_each():
+	TestHelpers.reset_all_services()
 	GameStateService.reset_state()
 	ModifierService.active_modifiers.clear()
 

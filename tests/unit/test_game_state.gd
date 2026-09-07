@@ -9,6 +9,7 @@ var game_state: RuntimeGameState
 
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	game_state = RuntimeGameState.new()
 
 

@@ -13,6 +13,7 @@ func before_all() -> void:
 	modifier_service = get_node("/root/ModifierService")
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	item_tracking_service.reset_state()
 	modifier_service.clear_modifiers()
 

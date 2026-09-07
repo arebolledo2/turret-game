@@ -103,8 +103,9 @@ func _create_path_visual() -> void:
 	for point in escort_path:
 		path_visual.add_point(point)
 		
-	# Move Line2D to the parent (World) so it doesn't move with the DefenseTarget
-	get_parent().call_deferred("add_child", path_visual)
+	# Own the path so teardown frees it; top_level keeps world coordinates.
+	path_visual.top_level = true
+	add_child(path_visual)
 	# Ensure it renders below the entities
 	path_visual.z_index = -1
 

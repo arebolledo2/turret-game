@@ -3,6 +3,7 @@ extends GutTest
 ## Unit tests for Escort Game Mode
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	GameModeService.reset_state()
 	GameStateMachine.reset()
 

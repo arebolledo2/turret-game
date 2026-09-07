@@ -7,6 +7,7 @@ const FIXED_ARENA_WIDTH: int = ArenaBoundsServiceType.FIXED_RECT_WIDTH
 const FIXED_ARENA_HEIGHT: int = ArenaBoundsServiceType.FIXED_RECT_HEIGHT
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	ArenaBoundsService.reset_state()
 
 # =============================================================================

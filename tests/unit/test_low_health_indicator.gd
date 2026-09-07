@@ -8,6 +8,7 @@ var hud_instance: CanvasLayer
 var low_health_overlay: ColorRect
 
 func before_each():
+	TestHelpers.reset_all_services()
 	# Create a minimal CanvasLayer to act as our test harness
 	hud_instance = CanvasLayer.new()
 	add_child(hud_instance)

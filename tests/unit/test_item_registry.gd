@@ -249,3 +249,7 @@ func test_modifier_has_required_fields():
 			assert_has(mod, "stat", "%s modifier should have stat" % item_id)
 			assert_has(mod, "operation", "%s modifier should have operation" % item_id)
 			assert_has(mod, "value", "%s modifier should have value" % item_id)
+
+
+func before_each() -> void:
+	TestHelpers.reset_all_services()

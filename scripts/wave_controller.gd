@@ -120,7 +120,7 @@ func process_wave_end(delta: float) -> bool:
 
 func award_wave_bonus() -> void:
 	"""Award scrap for completing the wave."""
-	var wave_bonus_base = GameConstants.SCRAP_WAVE_BONUS_BASE + (GameStateService.current_wave * 5)
+	var wave_bonus_base = EconomyService.get_wave_scrap_base(GameStateService.current_wave)
 
 	# Use probabilistic addition for consistency (though less critical for large numbers)
 	var wave_bonus = EconomyService.add_scrap_probabilistic(wave_bonus_base, ItemTrackingService.get_wave_bonus_multiplier())

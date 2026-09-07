@@ -19,6 +19,7 @@ const REQUIRED_KEYS := [
 ]
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	GameStateService.reset_state()
 
 

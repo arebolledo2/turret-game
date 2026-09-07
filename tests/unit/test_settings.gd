@@ -6,6 +6,7 @@ extends GutTest
 # =============================================================================
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	GameStateService.reset_state()
 	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
 	SettingsService.reset_state()

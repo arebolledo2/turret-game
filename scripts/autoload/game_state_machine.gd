@@ -30,10 +30,10 @@ const VALID_TRANSITIONS: Dictionary = {
 	GameState.IDLE: [GameState.DIFFICULTY_SELECT],
 	GameState.DIFFICULTY_SELECT: [GameState.GAME_MODE_SELECT, GameState.WAVE_ANNOUNCEMENT],
 	GameState.GAME_MODE_SELECT: [GameState.WAVE_ANNOUNCEMENT],
-	GameState.WAVE_ANNOUNCEMENT: [GameState.COMBAT],
+	GameState.WAVE_ANNOUNCEMENT: [GameState.COMBAT, GameState.WAVE_END],
 	GameState.COMBAT: [GameState.WAVE_END, GameState.VICTORY, GameState.GAME_OVER],
-	GameState.WAVE_END: [GameState.LOOT_REVIEW, GameState.SHOP, GameState.VICTORY],
-	GameState.LOOT_REVIEW: [GameState.SHOP],
+	GameState.WAVE_END: [GameState.LOOT_REVIEW, GameState.SHOP, GameState.VICTORY, GameState.WAVE_ANNOUNCEMENT],
+	GameState.LOOT_REVIEW: [GameState.SHOP, GameState.WAVE_ANNOUNCEMENT],
 	GameState.SHOP: [GameState.WAVE_ANNOUNCEMENT],
 	GameState.VICTORY: [GameState.IDLE],
 	GameState.GAME_OVER: [GameState.IDLE]

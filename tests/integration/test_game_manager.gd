@@ -15,6 +15,7 @@ func before_all() -> void:
 
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	GameStateService.reset_state()
 	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
 	FeatureFlagService.reset_state()
@@ -226,3 +227,76 @@ func test_time_survived_increments():
 		await get_tree().process_frame
 
 	assert_gt(GameStateService.time_survived, 0.0, "Time survived should increment during game")
+
+
+func _finish_first_wave(shop_enabled: bool, with_loot: bool) -> void:
+	FeatureFlagService.set_enabled(FeatureFlagService.SHOP, shop_enabled)
+	await _start_game_with_settings()
+	game_manager.set_process(false)
+	game_manager._process(GameConstants.WAVE_ANNOUNCEMENT_TIME + 0.1)
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.COMBAT)
+	if with_loot:
+		LootService.add_found_item("scrap_magnet")
+	var balance := EconomyService.total_scrap
+	watch_signals(Events)
+	game_manager._process(game_manager.wave_controller.wave_timer + 0.1)
+	game_manager._process(GameConstants.BETWEEN_WAVE_PAUSE + 0.1)
+	assert_eq(EconomyService.total_scrap - balance, EconomyService.get_wave_scrap_bonus(1, 1.0))
+	assert_signal_emit_count(Events, "scrap_collected", 1)
+	if with_loot:
+		assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.LOOT_REVIEW)
+		main.get_node("HUD")._loot_review._on_discard_pressed()
+	if shop_enabled:
+		assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.SHOP)
+		game_manager.end_shop_phase()
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_ANNOUNCEMENT)
+	assert_eq(GameStateService.current_wave, 2)
+	# Duplicate completion notifications must not award or advance again.
+	game_manager._finish_wave_end()
+	Events.loot_review_completed.emit()
+	assert_eq(GameStateService.current_wave, 2)
+	assert_signal_emit_count(Events, "scrap_collected", 1)
+	game_manager._process(GameConstants.WAVE_ANNOUNCEMENT_TIME + 0.1)
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.COMBAT)
+
+
+func test_shop_enabled_without_loot() -> void:
+	await _finish_first_wave(true, false)
+
+
+func test_shop_enabled_with_loot() -> void:
+	await _finish_first_wave(true, true)
+
+
+func test_shop_disabled_without_loot() -> void:
+	await _finish_first_wave(false, false)
+
+
+func test_shop_disabled_with_loot() -> void:
+	await _finish_first_wave(false, true)
+
+
+func test_restart_drops_pending_loot_and_buffs() -> void:
+	await _start_game_with_settings()
+	LootService.add_found_item("previous_run_item")
+	BuffSystem.active_buffs[123] = []
+	Events.player_died.emit()
+	main.free()
+	main = main_scene.instantiate()
+	add_child_autofree(main)
+	game_manager = main.get_node("GameManager")
+	await get_tree().process_frame
+	await _start_game_with_settings()
+	assert_false(LootService.has_pending_loot())
+	assert_true(BuffSystem.active_buffs.is_empty())
+	assert_eq(GameStateService.current_wave, 1)
+
+
+func test_rejected_announcement_has_no_side_effects() -> void:
+	await _start_game_with_settings()
+	game_manager.set_process(false)
+	var wave := GameStateService.current_wave
+	watch_signals(Events)
+	game_manager._start_wave_announcement()
+	assert_eq(GameStateService.current_wave, wave)
+	assert_signal_not_emitted(Events, "wave_announcement_started")

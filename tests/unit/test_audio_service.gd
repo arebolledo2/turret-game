@@ -220,3 +220,7 @@ func test_play_sfx_at_negative_position() -> void:
 
 	audio_service.play_sfx(audio_service.hit_sound_small, Vector2(-500, -500))
 	pass_test("Negative position did not crash")
+
+
+func before_each() -> void:
+	TestHelpers.reset_all_services()

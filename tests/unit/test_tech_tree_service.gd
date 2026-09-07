@@ -11,6 +11,7 @@ func before_all() -> void:
 	tech_tree_service = get_node("/root/TechTreeService")
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	tech_tree_service.reset_state()
 
 

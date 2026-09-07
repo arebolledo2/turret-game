@@ -4,6 +4,7 @@ var EnemyScene = load("res://scenes/enemy.tscn")
 var _enemy: Node2D
 
 func before_each():
+	TestHelpers.reset_all_services()
 	_enemy = EnemyScene.instantiate()
 	add_child(_enemy)
 

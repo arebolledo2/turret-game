@@ -3,6 +3,7 @@ extends GutTest
 ## Unit coverage for the centralized feature-flag contract.
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	FeatureFlagService.reset_state()
 	GameStateService.reset_state()
 	GameModeService.reset_state()

@@ -152,3 +152,7 @@ func test_log_with_empty_string_does_not_crash() -> void:
 func test_log_with_all_arg_slots_filled() -> void:
 	DebugService.log(DebugService.VALIDATION, "a", "b", "c", "d", "e", "f", "g", "h", "i")
 	pass_test("log() with all arg slots did not crash")
+
+
+func before_each() -> void:
+	TestHelpers.reset_all_services()

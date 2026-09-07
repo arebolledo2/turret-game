@@ -87,3 +87,7 @@ func test_minimum_distance_between_drops():
 	var min_distance = 150.0
 	assert_gt(min_distance, 0.0, "Minimum distance should be positive")
 	assert_lt(min_distance, ArenaBoundsService.arena_width / 2.0, "Min distance should fit in arena")
+
+
+func before_each() -> void:
+	TestHelpers.reset_all_services()

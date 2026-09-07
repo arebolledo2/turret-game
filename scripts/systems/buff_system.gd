@@ -30,6 +30,10 @@ var active_buffs: Dictionary = {}
 var _turret_manager: Node = null
 
 
+func reset_state() -> void:
+	active_buffs.clear()
+
+
 func set_turret_manager(manager: Node) -> void:
 	_turret_manager = manager
 

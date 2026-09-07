@@ -4,6 +4,7 @@ var EconomyServiceScript = load("res://scripts/autoload/economy_service.gd")
 var economy_service
 
 func before_each():
+	TestHelpers.reset_all_services()
 	economy_service = autofree(EconomyServiceScript.new())
 	# Manually reset state
 	economy_service.reset_state()

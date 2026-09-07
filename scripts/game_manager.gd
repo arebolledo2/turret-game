@@ -69,7 +69,8 @@ func show_difficulty_select() -> void:
 
 func _on_difficulty_selected(difficulty: int) -> void:
 	DifficultyService.set_difficulty(difficulty as GameEnums.Difficulty)
-	GameStateMachine.transition_to(GameStateMachine.GameState.GAME_MODE_SELECT)
+	if not GameStateMachine.transition_to(GameStateMachine.GameState.GAME_MODE_SELECT):
+		return
 	Events.show_game_mode_select.emit()
 
 
@@ -161,8 +162,14 @@ func _process(delta: float) -> void:
 # WAVE PHASES
 # =============================================================================
 
-func _start_wave_announcement() -> void:
-	GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_ANNOUNCEMENT)
+func _start_wave_announcement(prepare_next_wave: bool = false) -> void:
+	if not GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_ANNOUNCEMENT):
+		return
+	if prepare_next_wave:
+		wave_controller.reset_wave_state()
+		if turret_manager and turret_manager.has_method("spawn_pending_turrets"):
+			turret_manager.spawn_pending_turrets()
+		Events.shop_closed.emit()
 	wave_controller.start_wave_announcement()
 
 	# Spawn game mode entities on wave 1 (during announcement so they are ready for combat start)
@@ -209,7 +216,8 @@ func _start_wave_announcement() -> void:
 
 
 func _start_combat() -> void:
-	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
+	if not GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT):
+		return
 	wave_controller.start_combat()
 
 	# Spawn game mode entities on wave 1
@@ -219,6 +227,8 @@ func _start_combat() -> void:
 
 
 func _end_wave() -> void:
+	if GameStateMachine.current_state not in [GameStateMachine.GameState.COMBAT, GameStateMachine.GameState.WAVE_ANNOUNCEMENT]:
+		return
 	# Tunneling waves are objective-based: surviving the timer is not enough.
 	# A missing door is treated as a failed setup rather than an accidental win.
 	if GameModeService.should_spawn_tunnel_door():
@@ -236,7 +246,8 @@ func _end_wave() -> void:
 			_trigger_game_over()
 			return
 			
-	GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_END)
+	if not GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_END):
+		return
 	wave_controller.end_wave()
 
 	# Check for victory
@@ -245,6 +256,8 @@ func _end_wave() -> void:
 
 
 func _finish_wave_end() -> void:
+	if GameStateMachine.current_state != GameStateMachine.GameState.WAVE_END:
+		return
 	wave_controller.award_wave_bonus()
 	_start_loot_review_or_shop()
 
@@ -259,12 +272,15 @@ func _start_loot_review_or_shop() -> void:
 
 func _start_loot_review() -> void:
 	"""Show loot review screen for found items."""
-	GameStateMachine.transition_to(GameStateMachine.GameState.LOOT_REVIEW)
+	if not GameStateMachine.transition_to(GameStateMachine.GameState.LOOT_REVIEW):
+		return
 	Events.loot_review_started.emit(LootService.get_found_items())
 
 
 func _on_loot_review_completed() -> void:
 	"""Called when player finishes reviewing loot."""
+	if GameStateMachine.current_state != GameStateMachine.GameState.LOOT_REVIEW:
+		return
 	LootService.clear_found_items()
 	_start_shop_phase()
 
@@ -275,7 +291,8 @@ func _start_shop_phase() -> void:
 		_advance_without_shop()
 		return
 
-	GameStateMachine.transition_to(GameStateMachine.GameState.SHOP)
+	if not GameStateMachine.transition_to(GameStateMachine.GameState.SHOP):
+		return
 	EconomyService.shop_reroll_count = 0
 	Events.shop_opened.emit(GameStateService.current_wave)
 
@@ -287,14 +304,7 @@ func end_shop_phase() -> void:
 
 func _advance_without_shop() -> void:
 	"""Finish the between-wave cleanup and continue without opening the shop."""
-	wave_controller.reset_wave_state()
-
-	# Spawn purchased turrets
-	if turret_manager and turret_manager.has_method("spawn_pending_turrets"):
-		turret_manager.spawn_pending_turrets()
-
-	Events.shop_closed.emit()
-	_start_wave_announcement()
+	_start_wave_announcement(true)
 
 
 # =============================================================================
@@ -411,3 +421,7 @@ func _reset_all_services() -> void:
 	# Reload it without forcing the active preset back to "default".
 	AssetConfigService.reload_all()
 	TechTreeService.reset_state()
+	LootService.reset_state()
+	BuffSystem.reset_state()
+	EnemyQuery.reset_state()
+	ProjectilePool.reset_state()

@@ -10,6 +10,7 @@ var _scene: PackedScene
 
 
 func before_each():
+	TestHelpers.reset_all_services()
 	_parent = Node2D.new()
 	add_child_autofree(_parent)
 	_scene = load("res://scenes/damage_number.tscn")

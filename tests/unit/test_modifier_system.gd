@@ -7,13 +7,14 @@ extends GutTest
 #   - "add": Flat value added to base
 #   - "increase": Percentage modifier (stacks additively)
 #   - "more": Multiplicative modifier (each stacks independently)
-# Formula: (base + flat) × (1 + increases) × more1 × more2 × ...
+# Formula: (base + flat) Ã— (1 + increases) Ã— more1 Ã— more2 Ã— ...
 # =============================================================================
 
 var modifier_system: ModifierSystem
 
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	modifier_system = ModifierSystem.new()
 
 
@@ -421,7 +422,7 @@ func test_multiple_more_operations_stack_multiplicatively():
 
 # =============================================================================
 # STAT APPLICATION - POE FORMULA ORDER
-# Formula: (base + flat) × (1 + increases) × more1 × more2 × ...
+# Formula: (base + flat) Ã— (1 + increases) Ã— more1 Ã— more2 Ã— ...
 # =============================================================================
 
 func test_poe_formula_flat_then_increase():

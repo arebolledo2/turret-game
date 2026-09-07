@@ -288,3 +288,7 @@ func test_unlock_mechanic_techs_have_special_effect():
 			var special_effect = tech.get("special_effect", "")
 			assert_false(special_effect.is_empty(),
 				"Unlock mechanic tech '%s' should have special_effect" % tech_id)
+
+
+func before_each() -> void:
+	TestHelpers.reset_all_services()

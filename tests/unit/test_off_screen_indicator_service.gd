@@ -13,6 +13,7 @@ func before_all() -> void:
 
 
 func before_each() -> void:
+	TestHelpers.reset_all_services()
 	service.tracked_entities.clear()
 
 
