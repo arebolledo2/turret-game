@@ -1,152 +1,75 @@
-# Run GUT tests from command line
-# Usage: .\run_tests.ps1 [options]
-#
-# Options:
-#   -unit        Run only unit tests
-#   -integration Run only integration tests
-#   -verbose     Show verbose output
-#   -full        Show full test output (default is quiet)
-#   -filter      Filter tests by name pattern
-
+#requires -Version 7.0
+# Run isolated GUT tests. Full logs and structured results are retained per run.
 param(
     [switch]$unit,
     [switch]$integration,
     [switch]$verbose,
     [switch]$full,
     [string]$filter = "",
-    [int]$timeout = 120
+    [ValidateRange(1, 3600)][int]$timeout = 120,
+    [string]$GodotPath = $env:GODOT_BIN
 )
-
-# Find Godot executable
-$godotPaths = @(
-    "$env:USERPROFILE\Godot\4.7\Godot_v4.7.1-stable_win64.exe",
-    "$env:USERPROFILE\Godot\4.6\Godot_v4.6-stable_win64.exe",
-    "C:\Users\AndresRebolledo\AppData\Local\Godot\Godot_v4.5.1-stable_win64.exe",
-    "$env:LOCALAPPDATA\Godot\Godot_v4.5.1-stable_win64.exe",
-    "C:\Users\AndresRebolledo\AppData\Local\Godot\Godot_v4.3-stable_win64.exe",
-    "$env:LOCALAPPDATA\Godot\godot.exe",
-    "godot",
-    "godot4"
-)
-
+$ErrorActionPreference = 'Stop'
+if ($unit -and $integration) { throw 'Select either -unit or -integration.' }
+$requiredVersion = (Get-Content (Join-Path $PSScriptRoot '.godot-version') -Raw).Trim()
+$candidates = @($GodotPath, "$env:USERPROFILE/Godot/4.7/Godot_v$($requiredVersion)-stable_win64.exe", 'godot', 'godot4')
 $godot = $null
-foreach ($path in $godotPaths) {
-    if (Get-Command $path -ErrorAction SilentlyContinue) {
-        $godot = $path
-        break
-    }
-    if (Test-Path $path) {
-        $godot = $path
-        break
-    }
+foreach ($candidate in $candidates) {
+    if (-not $candidate) { continue }
+    $command = Get-Command $candidate -ErrorAction SilentlyContinue
+    if ($command) { $godot = $command.Source; break }
 }
+if (-not $godot) { throw "Install Godot $requiredVersion and set GODOT_BIN or pass -GodotPath." }
+$version = (& $godot --version | Out-String).Trim()
+if ($version -notlike "$requiredVersion.stable.*") { throw "Expected Godot $requiredVersion stable, found $version." }
 
-if (-not $godot) {
-    Write-Error "Could not find Godot executable. Please add it to PATH or update this script."
-    exit 1
-}
+$runDirectory = Join-Path $PSScriptRoot ('.test-results/' + [guid]::NewGuid().ToString('N'))
+$null = New-Item -ItemType Directory -Path $runDirectory -Force
+$stdoutPath = Join-Path $runDirectory 'stdout.log'
+$stderrPath = Join-Path $runDirectory 'stderr.log'
+$resultPath = Join-Path $runDirectory 'results.json'
+Write-Host "Using Godot: $version"
+Write-Host "Test artifacts: $runDirectory"
 
-Write-Host "Using Godot: $godot" -ForegroundColor Cyan
+$testDirectory = if ($unit) { 'res://tests/unit' } elseif ($integration) { 'res://tests/integration' } else { 'res://tests/unit,res://tests/integration' }
+$arguments = @('--headless', '--path', $PSScriptRoot, '--log-file', (Join-Path $runDirectory 'engine.log'), '-s', 'addons/gut/gut_cmdln.gd', '-ginclude_subdirs', "-gdir=$testDirectory", '-gexit', '-gpost_run_script=res://tests/helpers/export_results.gd', '-gdisable_colors')
+$arguments += if ($verbose) { '-glog=3' } elseif ($full) { '-glog=2' } else { '-glog=1' }
+if ($filter) { $arguments += "-gselect=$filter" }
 
-# Build GUT command line arguments
-$gutArgs = @(
-    "--headless",
-    "-s", "addons/gut/gut_cmdln.gd",
-    "-ginclude_subdirs"
-)
-
-# Test directory selection
-if ($unit) {
-    $gutArgs += "-gdir=res://tests/unit"
-    Write-Host "Running unit tests only..." -ForegroundColor Yellow
-} elseif ($integration) {
-    $gutArgs += "-gdir=res://tests/integration"
-    Write-Host "Running integration tests only..." -ForegroundColor Yellow
-} else {
-    $gutArgs += "-gdir=res://tests"
-    Write-Host "Running all tests..." -ForegroundColor Yellow
-}
-
-# Verbose output
-if ($verbose) {
-    $gutArgs += "-glog=3"
-} elseif ($full) {
-    $gutArgs += "-glog=2"
-} else {
-    $gutArgs += "-glog=1"
-}
-
-# Filter by test name
-if ($filter) {
-    $gutArgs += "-gtest=$filter"
-    Write-Host "Filtering tests: $filter" -ForegroundColor Yellow
-}
-
-# Exit after tests complete
-$gutArgs += "-gexit"
-
-if ($full -or $verbose) {
-    Write-Host ""
-    Write-Host "Command: $godot $($gutArgs -join ' ')" -ForegroundColor DarkGray
-    Write-Host ""
-}
-
-# Run tests with timeout using background process
-$process = Start-Process -FilePath $godot -ArgumentList $gutArgs -PassThru -NoNewWindow -RedirectStandardOutput "$env:TEMP\gut_stdout.txt" -RedirectStandardError "$env:TEMP\gut_stderr.txt"
-
-# Touching .Handle forces PowerShell to cache the native process handle. Without
-# this, Start-Process -PassThru returns an object whose .ExitCode stays $null
-# after the process ends, which made this script report failure on a clean run.
-$null = $process.Handle
-
-if (-not $process.WaitForExit($timeout * 1000)) {
-    Write-Host "TIMEOUT: Tests exceeded ${timeout}s limit. Killing process." -ForegroundColor Red
-    $process.Kill()
-    exit 1
-}
-
-# The WaitForExit(milliseconds) overload only waits on the process handle; it does
-# not wait for redirected output to be flushed, and leaves ExitCode unpopulated.
-# The parameterless overload completes that work. See .NET Process.WaitForExit docs.
+$startInfo = [System.Diagnostics.ProcessStartInfo]::new($godot)
+$startInfo.WorkingDirectory = $PSScriptRoot
+$startInfo.UseShellExecute = $false
+$startInfo.CreateNoWindow = $true
+$startInfo.RedirectStandardOutput = $true
+$startInfo.RedirectStandardError = $true
+foreach ($argument in $arguments) { $startInfo.ArgumentList.Add($argument) }
+# Child-only isolation: Godot's user:// and logs never touch the player's data.
+$startInfo.Environment['APPDATA'] = $runDirectory
+$startInfo.Environment['XDG_DATA_HOME'] = $runDirectory
+$startInfo.Environment['TURRET_TEST_RESULTS'] = $resultPath
+$process = [System.Diagnostics.Process]::new()
+$process.StartInfo = $startInfo
+$null = $process.Start()
+$stdoutTask = $process.StandardOutput.ReadToEndAsync()
+$stderrTask = $process.StandardError.ReadToEndAsync()
+$timedOut = -not $process.WaitForExit($timeout * 1000)
+if ($timedOut) { $process.Kill($true) }
 $process.WaitForExit()
-
+$stdout = $stdoutTask.GetAwaiter().GetResult()
+$stderr = $stderrTask.GetAwaiter().GetResult()
+[IO.File]::WriteAllText($stdoutPath, $stdout)
+[IO.File]::WriteAllText($stderrPath, $stderr)
 $exitCode = $process.ExitCode
-
-# Read captured output
-$output = @()
-if (Test-Path "$env:TEMP\gut_stdout.txt") {
-    $output = Get-Content "$env:TEMP\gut_stdout.txt"
+$process.Dispose()
+if ($full -or $verbose) { Write-Host $stdout } else {
+    $stdout -split '\r?\n' | Where-Object { $_ -match '^(Totals|Tests |Passing Tests |Scripts |Asserts |Orphans |Time |Risky/Pending )|\[(Failed|Risky|Error)\]' } | ForEach-Object { Write-Host $_ }
 }
-
-if ($full -or $verbose) {
-    $output | ForEach-Object { Write-Host $_ }
-} else {
-    # Filter output to only show errors, failures, and summary
-    $inSummary = $false
-    $output | ForEach-Object {
-        $line = $_
-
-        # Detect start of summary
-        if ($line -match "--- GUT Finished ---" -or $line -match "Tests finished" -or $line -match "Passes.*Failures.*Pending" -or $line -match "\[  Summary  \]" -or $line -match "Totals") {
-            $inSummary = $true
-        }
-
-        # Output logic
-        if ($inSummary) {
-            Write-Host $line
-        } elseif ($line -match "\[ERROR\]" -or $line -match "\[FAIL\]" -or $line -match "failed" -or $line -match "error" -or $line -match "PARSE ERROR") {
-            Write-Host $line -ForegroundColor Red
-        } elseif ($line -match "SCRIPT ERROR") {
-            Write-Host $line -ForegroundColor Yellow
-        }
-    }
-}
-
-Write-Host ""
-if ($exitCode -eq 0) {
-    Write-Host "All tests passed!" -ForegroundColor Green
-} else {
-    Write-Host "Some tests failed. Exit code: $exitCode" -ForegroundColor Red
-}
-
-exit $exitCode
+# Always surface stderr; expected validation warnings remain informational.
+if ($stderr) { Write-Host $stderr }
+if ($timedOut) { throw "Tests exceeded ${timeout}s. See $runDirectory" }
+. (Join-Path $PSScriptRoot 'tools/test_gate.ps1')
+if (-not (Test-Path $resultPath)) { throw 'GUT did not produce a completed result file.' }
+$results = Get-Content $resultPath -Raw | ConvertFrom-Json
+Assert-CleanTestRun -ExitCode $exitCode -Stdout $stdout -Stderr $stderr -Results $results
+$totals = $results.test_scripts.props
+Write-Host "All $($totals.tests) tests passed with no risky tests, errors, or remaining orphans." -ForegroundColor Green

@@ -459,6 +459,7 @@ func test_reroll_insufficient_funds():
 func test_can_afford_reroll_with_gold():
 	EconomyService.total_scrap = 100
 	EconomyService.shop_reroll_count = 0
+	assert_true(shop_manager.can_afford_reroll())
 
 func test_can_afford_reroll_without_gold():
 	EconomyService.total_scrap = 0
