@@ -1,5 +1,7 @@
 extends Node
 
+var rng: RandomNumberGenerator = GameRandom.gameplay
+
 ## Turret Stats Service
 ## Manages turret counts, types, and stat calculations with modifiers
 
@@ -50,7 +52,7 @@ func get_turret_crit_multiplier() -> float:
 
 ## Roll for critical hit (returns true if crit)
 func roll_turret_crit() -> bool:
-	return randf() < get_turret_crit_chance()
+	return rng.randf() < get_turret_crit_chance()
 
 
 ## Calculate crit damage

@@ -446,8 +446,8 @@ func _spawn_scrap_drops() -> void:
 	
 	# Scatter multiple 1-scrap pickups for elite enemies
 	for i in drop_count:
-		var angle = randf() * TAU
-		var distance = randf() * scatter_radius
+		var angle = GameRandom.gameplay.randf() * TAU
+		var distance = GameRandom.gameplay.randf() * scatter_radius
 		var offset = Vector2(cos(angle), sin(angle)) * distance
 		var drop_pos = global_position + offset
 		Events.scrap_dropped.emit(drop_pos, 1)
@@ -462,7 +462,7 @@ func _handle_rank_loot() -> void:
 			# Guaranteed legendary item
 			var legendary_pool = ItemRegistry.get_items_by_rarity(GameEnums.ItemRarity.LEGENDARY)
 			if not legendary_pool.is_empty():
-				var drop_id = legendary_pool[randi() % legendary_pool.size()]
+				var drop_id = legendary_pool[GameRandom.gameplay.randi() % legendary_pool.size()]
 				_spawn_item_pickup(drop_id)
 
 

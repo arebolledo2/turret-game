@@ -16,7 +16,7 @@ func _ready() -> void:
 	var sprite_node = $Sprite2D
 	var scrap_sprite_1 = preload("res://assets/sprites/scrap_sprite.png")
 	var scrap_sprite_2 = preload("res://assets/sprites/scrap_sprite_2.png")
-	sprite_node.texture = scrap_sprite_1 if randf() < 0.5 else scrap_sprite_2
+	sprite_node.texture = scrap_sprite_1 if GameRandom.cosmetic.randf() < 0.5 else scrap_sprite_2
 	
 	# Small spawn animation
 	scale = Vector2.ZERO

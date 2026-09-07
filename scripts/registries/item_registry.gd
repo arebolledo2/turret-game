@@ -265,7 +265,7 @@ static func calculate_rarity_weights(wave: int, luck: float) -> Dictionary:
 
 ## Get a weighted random item based on wave and luck
 ## Filters out items already in the shop (excluded_ids) and items at max stacks
-static func get_weighted_random_item(wave: int, luck: float, item_counts: Dictionary, excluded_ids: Array) -> String:
+static func get_weighted_random_item(wave: int, luck: float, item_counts: Dictionary, excluded_ids: Array, rng: RandomNumberGenerator = GameRandom.gameplay) -> String:
 	var rarity_weights := calculate_rarity_weights(wave, luck)
 
 	# Build pool of available items per rarity
@@ -293,7 +293,7 @@ static func get_weighted_random_item(wave: int, luck: float, item_counts: Dictio
 		return ""
 
 	# Roll for rarity
-	var roll := randf() * total_weight
+	var roll := rng.randf() * total_weight
 	var cumulative: float = 0.0
 	var selected_rarity: GameEnums.ItemRarity = GameEnums.ItemRarity.COMMON
 
@@ -308,4 +308,4 @@ static func get_weighted_random_item(wave: int, luck: float, item_counts: Dictio
 	if pool.is_empty():
 		return ""
 
-	return pool[randi() % pool.size()]
+	return pool[rng.randi() % pool.size()]

@@ -1,5 +1,7 @@
 extends Node
 
+var rng: RandomNumberGenerator = GameRandom.gameplay
+
 ## Player Stats Service
 ## Manages player health, speed, luck, and stat modifiers
 
@@ -59,7 +61,7 @@ func get_player_crit_multiplier() -> float:
 
 ## Roll for critical hit (returns true if crit)
 func roll_player_crit() -> bool:
-	return randf() < get_player_crit_chance()
+	return rng.randf() < get_player_crit_chance()
 
 
 ## Calculate crit damage

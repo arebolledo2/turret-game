@@ -671,7 +671,7 @@ func _spawn_damage_number(pos: Vector2) -> Node2D:
 	if damage_number == null:
 		return null
 
-	var offset := pos + Vector2(randf_range(-10, 10), -20)
+	var offset := pos + Vector2(GameRandom.cosmetic.randf_range(-10, 10), -20)
 
 	# Numbers parented into world space stay anchored to their map position; the
 	# HUD-layer fallback is in canvas space, where global_position is meaningless.

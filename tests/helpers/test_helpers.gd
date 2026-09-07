@@ -139,7 +139,7 @@ static func reset_all_services() -> void:
 	SpecialEffectService.set_turret_manager(null)
 	BuffSystem.set_turret_manager(null)
 	OffScreenIndicatorService.set_enemy_spawner(null)
-	seed(12345)
+	GameRandom.reset(12345)
 	# Core game state
 	GameStateService.reset_state()
 	EconomyService.reset_state()

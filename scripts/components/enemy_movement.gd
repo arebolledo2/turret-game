@@ -226,7 +226,7 @@ func _check_defense_mode_aggro() -> void:
 	var is_targeting_player: bool = (player == player_character)
 	
 	# Debug output
-	if randf() < 0.01: # Only print 1% of the time to avoid spam
+	if GameRandom.cosmetic.randf() < 0.01: # Only print 1% of the time to avoid spam
 		DebugService.log(DebugService.AI, "Aggro Check: dist=%s targeting_player=%s aggro_range=%s" % [distance_to_player, is_targeting_player, GameConstants.DEFENSE_MODE_PLAYER_AGGRO_RANGE])
 	
 	if is_targeting_player:

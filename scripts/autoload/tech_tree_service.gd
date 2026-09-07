@@ -135,17 +135,12 @@ func _apply_tech_effects(tech_id: String, tech_def: Dictionary) -> void:
 		"modifier":
 			modifier_count = _apply_tech_modifiers(tech_id, tech_def, unlock_count)
 
-			# Notify that modifiers changed
-			if modifier_count > 0:
-				Events.modifiers_changed.emit()
 			DebugService.log(DebugService.SYSTEMS, "Applied ", modifier_count, " modifier(s) from tech '", tech_id, "'")
 
 		"unlock_mechanic":
 			# Set flags for special mechanics (queried by game systems). Mechanic
 			# techs may also carry stat modifiers for the unlocked mechanic.
 			modifier_count = _apply_tech_modifiers(tech_id, tech_def, unlock_count)
-			if modifier_count > 0:
-				Events.modifiers_changed.emit()
 
 			var special_effect: String = tech_def.get("special_effect", "")
 			if special_effect:
@@ -164,14 +159,16 @@ func _apply_tech_effects(tech_id: String, tech_def: Dictionary) -> void:
 ## Add all stat modifiers defined by a tech and return the number applied.
 func _apply_tech_modifiers(tech_id: String, tech_def: Dictionary, unlock_count: int) -> int:
 	var modifiers: Array = tech_def.get("modifiers", [])
+	var additions: Array = []
 	for modifier in modifiers:
 		var mod_id: String = "tech_%s_%d" % [tech_id, unlock_count]
 		var full_modifier: Dictionary = modifier.duplicate(true)
 		full_modifier["id"] = mod_id
 		full_modifier["source"] = "tech"
 		full_modifier["source_id"] = tech_id
-		ModifierService.add_modifier(full_modifier)
-	return modifiers.size()
+		additions.append(full_modifier)
+	ModifierService.add_modifiers(additions)
+	return additions.size()
 
 
 ## Helper method to check if a specific mechanic is unlocked

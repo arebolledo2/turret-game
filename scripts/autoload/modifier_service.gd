@@ -20,6 +20,7 @@ func load_modifiers(modifiers: Array) -> void:
 	_system.clear_modifiers()
 	for modifier in modifiers:
 		_system.add_modifier(modifier)
+	Events.modifiers_changed.emit()
 
 
 # =============================================================================
@@ -27,15 +28,21 @@ func load_modifiers(modifiers: Array) -> void:
 # =============================================================================
 
 func add_modifier(modifier: Dictionary) -> Dictionary:
-	return _system.add_modifier(modifier)
+	var added := _system.add_modifier(modifier)
+	Events.modifiers_changed.emit()
+	return added
 
 
 func remove_modifier(modifier_id: String) -> bool:
-	return _system.remove_modifier(modifier_id)
+	var removed := _system.remove_modifier(modifier_id)
+	if removed:
+		Events.modifiers_changed.emit()
+	return removed
 
 
 func clear_modifiers() -> void:
 	_system.clear_modifiers()
+	Events.modifiers_changed.emit()
 
 
 func get_all_modifiers() -> Array:
@@ -51,7 +58,7 @@ func apply_modifiers_to_stat(base_value: float, stat_name: String, entity_type: 
 
 
 func get_turret_stats(turret_type: String, difficulty_config: Dictionary) -> Dictionary:
-	return _system.get_turret_stats(turret_type, difficulty_config)
+	return _system.get_turret_stats(turret_type, difficulty_config, SpecialEffectService.apply_static_effects)
 
 
 func get_player_speed(base_speed: float) -> float:
@@ -72,3 +79,10 @@ func get_player_luck(base_luck: float) -> float:
 
 func get_reroll_cost_multiplier() -> float:
 	return _system.get_reroll_cost_multiplier()
+
+
+func add_modifiers(modifiers: Array) -> void:
+	for modifier in modifiers:
+		_system.add_modifier(modifier)
+	if not modifiers.is_empty():
+		Events.modifiers_changed.emit()

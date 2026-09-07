@@ -395,7 +395,7 @@ func _draw_lightning_arc(start_pos: Vector2, end_pos: Vector2) -> void:
 		var base_pos = start_pos + direction * (i * segment_length)
 		# Add perpendicular offset for jaggedness
 		var perp = Vector2(-direction.y, direction.x)
-		var offset = perp * randf_range(-15.0, 15.0)
+		var offset = perp * GameRandom.cosmetic.randf_range(-15.0, 15.0)
 		points.append(base_pos + offset)
 	
 	points.append(end_pos)
@@ -409,7 +409,7 @@ func _draw_lightning_arc(start_pos: Vector2, end_pos: Vector2) -> void:
 	
 	# Branching arcs (30% chance per segment)
 	for i in range(1, points.size() - 1):
-		if randf() < 0.3:
+		if GameRandom.cosmetic.randf() < 0.3:
 			_draw_lightning_branch(points[i], direction)
 	
 	var tween = turret.create_tween()
@@ -431,10 +431,10 @@ func _draw_lightning_branch(start_pos: Vector2, direction: Vector2) -> void:
 	var points = PackedVector2Array()
 	points.append(start_pos)
 	
-	var branch_dir = direction.rotated(randf_range(-PI / 3, PI / 3))
-	var branch_len = randf_range(20.0, 40.0)
+	var branch_dir = direction.rotated(GameRandom.cosmetic.randf_range(-PI / 3, PI / 3))
+	var branch_len = GameRandom.cosmetic.randf_range(20.0, 40.0)
 	
-	points.append(start_pos + branch_dir * branch_len * 0.5 + Vector2(randf_range(-5, 5), randf_range(-5, 5)))
+	points.append(start_pos + branch_dir * branch_len * 0.5 + Vector2(GameRandom.cosmetic.randf_range(-5, 5), GameRandom.cosmetic.randf_range(-5, 5)))
 	points.append(start_pos + branch_dir * branch_len)
 	
 	branch.points = points
@@ -572,8 +572,8 @@ func _fire_deployable() -> void:
 
 	# Random position within range
 	var deploy_range = stats.get("range", 150.0)
-	var angle = randf() * TAU
-	var distance = randf() * deploy_range
+	var angle = GameRandom.gameplay.randf() * TAU
+	var distance = GameRandom.gameplay.randf() * deploy_range
 	var spawn_offset = Vector2(cos(angle), sin(angle)) * distance
 	var spawn_pos = turret.global_position + spawn_offset
 

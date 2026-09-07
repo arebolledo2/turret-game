@@ -209,7 +209,7 @@ func take_damage(amount: float, is_crit: bool = false) -> void:
 
 	# Roll for evasion
 	var evasion_chance := PlayerStatsService.get_evasion_chance()
-	if evasion_chance > 0 and randf() < evasion_chance:
+	if evasion_chance > 0 and GameRandom.gameplay.randf() < evasion_chance:
 		DebugService.log(DebugService.COMBAT, "Player EVADED damage!")
 		_show_evasion_effect()
 		return

@@ -66,7 +66,7 @@ func _process_shake(delta: float) -> void:
 	if shake_time > 0.0:
 		shake_time = maxf(shake_time - delta, 0.0)
 		var falloff := shake_time / maxf(shake_duration, 0.001)
-		offset = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * shake_strength * falloff
+		offset = Vector2(GameRandom.cosmetic.randf_range(-1.0, 1.0), GameRandom.cosmetic.randf_range(-1.0, 1.0)) * shake_strength * falloff
 		return
 
 	offset = offset.lerp(Vector2.ZERO, minf(delta * 30.0, 1.0))

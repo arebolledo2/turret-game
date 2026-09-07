@@ -274,7 +274,7 @@ static func select_random_type(wave: int) -> String:
 		total_weight += TYPES[type_id].get("spawn_weight", 100)
 
 	# Random selection based on weight
-	var roll := randf() * total_weight
+	var roll := GameRandom.gameplay.randf() * total_weight
 	var cumulative: float = 0.0
 
 	for type_id in available:
@@ -301,7 +301,7 @@ static func get_spawn_count(type_id: String) -> int:
 	
 	# Handle array format for random range [min, max]
 	if spawn_count is Array and spawn_count.size() == 2:
-		return randi_range(spawn_count[0], spawn_count[1])
+		return GameRandom.gameplay.randi_range(spawn_count[0], spawn_count[1])
 	
 	# Handle fixed integer
 	return spawn_count

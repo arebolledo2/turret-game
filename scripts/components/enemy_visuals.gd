@@ -519,7 +519,7 @@ func _start_idle_bounce() -> void:
 	idle_tween.set_ease(Tween.EASE_IN_OUT)
 	idle_tween.set_trans(Tween.TRANS_SINE)
 
-	if randf() > 0.5:
+	if GameRandom.cosmetic.randf() > 0.5:
 		idle_tween.tween_property(sprite_node, "scale", Vector2(scale_x, scale_y_down), half_cycle)
 		idle_tween.tween_property(sprite_node, "scale", Vector2(scale_x, scale_y_up), half_cycle)
 	else:

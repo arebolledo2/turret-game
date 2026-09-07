@@ -1,5 +1,7 @@
 extends Node
 
+var rng: RandomNumberGenerator = GameRandom.gameplay
+
 ## Loot Service
 ## Manages items found during waves from tech drop destruction
 ## Items are reviewed at wave end before shop opens
@@ -35,7 +37,7 @@ func has_pending_loot() -> bool:
 
 func roll_for_item_drop(wave: int) -> String:
 	"""Roll for an item drop based on luck. Returns item_id or empty string."""
-	if randf() > GameConstants.TECH_DROP_ITEM_DROP_CHANCE:
+	if rng.randf() > GameConstants.TECH_DROP_ITEM_DROP_CHANCE:
 		return ""
 	
 	# Use same weighted random system as shop
@@ -43,7 +45,7 @@ func roll_for_item_drop(wave: int) -> String:
 		wave,
 		PlayerStatsService.get_player_luck(),
 		ItemTrackingService.item_counts,
-		[] # No exclusions for loot drops
+		[], rng # No exclusions for loot drops
 	)
 	
 	return item_id

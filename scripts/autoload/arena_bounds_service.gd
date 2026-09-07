@@ -189,8 +189,8 @@ func get_random_arena_position(margin: float = 40.0) -> Vector2:
 func _get_random_rectangular_position(margin: float) -> Vector2:
 	"""Get random position inside rectangular bounds."""
 	return Vector2(
-		randf_range(-_half_width + margin, _half_width - margin),
-		randf_range(-_half_height + margin, _half_height - margin)
+		GameRandom.gameplay.randf_range(-_half_width + margin, _half_width - margin),
+		GameRandom.gameplay.randf_range(-_half_height + margin, _half_height - margin)
 	)
 
 func _get_random_isometric_position(margin: float) -> Vector2:
@@ -204,8 +204,8 @@ func _get_random_isometric_position(margin: float) -> Vector2:
 	# Rejection sampling - try random points in bounding box until one is inside diamond
 	for _i in range(GameConstants.REJECTION_SAMPLING_MAX_ATTEMPTS):
 		var pos := Vector2(
-			randf_range(-effective_half_width, effective_half_width),
-			randf_range(-effective_half_height, effective_half_height)
+			GameRandom.gameplay.randf_range(-effective_half_width, effective_half_width),
+			GameRandom.gameplay.randf_range(-effective_half_height, effective_half_height)
 		)
 		if _is_inside_isometric(pos, margin):
 			return pos
@@ -227,23 +227,23 @@ func get_random_edge_spawn_position(edge_inset: float = 20.0, spawn_depth: float
 
 func _get_rectangular_edge_spawn(edge_inset: float, spawn_depth: float) -> Vector2:
 	"""Spawn near one of the 4 rectangular edges."""
-	var edge := randi() % 4
+	var edge := GameRandom.gameplay.randi() % 4
 	var x: float = 0.0
 	var y: float = 0.0
 	
 	match edge:
 		0: # Top
-			x = randf_range(-_half_width + edge_inset, _half_width - edge_inset)
-			y = randf_range(-_half_height + edge_inset, -_half_height + edge_inset + spawn_depth)
+			x = GameRandom.gameplay.randf_range(-_half_width + edge_inset, _half_width - edge_inset)
+			y = GameRandom.gameplay.randf_range(-_half_height + edge_inset, -_half_height + edge_inset + spawn_depth)
 		1: # Bottom
-			x = randf_range(-_half_width + edge_inset, _half_width - edge_inset)
-			y = randf_range(_half_height - edge_inset - spawn_depth, _half_height - edge_inset)
+			x = GameRandom.gameplay.randf_range(-_half_width + edge_inset, _half_width - edge_inset)
+			y = GameRandom.gameplay.randf_range(_half_height - edge_inset - spawn_depth, _half_height - edge_inset)
 		2: # Left
-			x = randf_range(-_half_width + edge_inset, -_half_width + edge_inset + spawn_depth)
-			y = randf_range(-_half_height + edge_inset, _half_height - edge_inset)
+			x = GameRandom.gameplay.randf_range(-_half_width + edge_inset, -_half_width + edge_inset + spawn_depth)
+			y = GameRandom.gameplay.randf_range(-_half_height + edge_inset, _half_height - edge_inset)
 		3: # Right
-			x = randf_range(_half_width - edge_inset - spawn_depth, _half_width - edge_inset)
-			y = randf_range(-_half_height + edge_inset, _half_height - edge_inset)
+			x = GameRandom.gameplay.randf_range(_half_width - edge_inset - spawn_depth, _half_width - edge_inset)
+			y = GameRandom.gameplay.randf_range(-_half_height + edge_inset, _half_height - edge_inset)
 	
 	return Vector2(x, y)
 
@@ -258,8 +258,8 @@ func _get_isometric_edge_spawn(edge_inset: float, spawn_depth: float) -> Vector2
 	var H := _half_height - edge_inset
 	
 	# Pick a random edge (0-3)
-	var edge := randi() % 4
-	var t := randf() # Parameter along the edge [0, 1]
+	var edge := GameRandom.gameplay.randi() % 4
+	var t := GameRandom.gameplay.randf() # Parameter along the edge [0, 1]
 	
 	var edge_point := Vector2.ZERO
 	var inward_dir := Vector2.ZERO
@@ -279,7 +279,7 @@ func _get_isometric_edge_spawn(edge_inset: float, spawn_depth: float) -> Vector2
 			inward_dir = Vector2(-1, -1).normalized()
 	
 	# Offset inward by a random amount within spawn_depth
-	var depth_offset := randf_range(0, spawn_depth * 0.5) # Halved for diamond since it's smaller
+	var depth_offset := GameRandom.gameplay.randf_range(0, spawn_depth * 0.5) # Halved for diamond since it's smaller
 	return edge_point + inward_dir * depth_offset
 
 # =============================================================================

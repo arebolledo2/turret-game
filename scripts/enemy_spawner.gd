@@ -74,7 +74,7 @@ func start_spawning(wave: int) -> void:
 	remaining_capts = 0
 
 	if wave >= GameConstants.ENEMY_RANK_LT_MIN_WAVE:
-		remaining_lts = randi_range(GameConstants.ENEMY_RANK_LT_PER_WAVE_MIN, GameConstants.ENEMY_RANK_LT_PER_WAVE_MAX)
+		remaining_lts = GameRandom.gameplay.randi_range(GameConstants.ENEMY_RANK_LT_PER_WAVE_MIN, GameConstants.ENEMY_RANK_LT_PER_WAVE_MAX)
 	
 	if wave == GameConstants.ENEMY_RANK_CAPT_WAVE:
 		remaining_capts = 1
@@ -98,7 +98,7 @@ func _update_spawn_interval() -> void:
 	var base_interval := lerpf(1.2, 0.35, clampf((current_wave - 1) / 9.0, 0.0, 1.0))
 	
 	# Add randomness (e.g. +/- 20%)
-	var random_factor := randf_range(0.8, 1.2)
+	var random_factor := GameRandom.gameplay.randf_range(0.8, 1.2)
 	var alert_multiplier := GameModeService.get_spawn_rate_multiplier(_get_wave_elapsed_time())
 	spawn_timer.wait_time = base_interval * random_factor / maxf(alert_multiplier, 1.0)
 
@@ -152,13 +152,13 @@ func _spawn_random_enemy() -> void:
 		# Random chance to spawn the captain if we have one (around middle of wave)
 		# Or just spawn it if we are halfway through the timer? 
 		# For now, let's just give it a 5% chance per spawn tick to start with
-		if randf() < 0.05:
+		if GameRandom.gameplay.randf() < 0.05:
 			rank = GameEnums.EnemyRank.CAPTAIN
 			remaining_capts -= 1
 	
 	if rank == GameEnums.EnemyRank.NORMAL and remaining_lts > 0:
 		# 15% chance to replace a normal spawn with a lieutenant
-		if randf() < 0.15:
+		if GameRandom.gameplay.randf() < 0.15:
 			rank = GameEnums.EnemyRank.LIEUTENANT
 			remaining_lts -= 1
 
@@ -194,8 +194,8 @@ func _queue_spawn_with_alert_at_position(enemy_type: String, base_pos: Vector2, 
 	var spawn_pos := base_pos
 	if swarm_index > 0:
 		# Offset subsequent enemies in a circular pattern around the base
-		var angle := (swarm_index * TAU / 5.0) + randf() * 0.5 # Slight randomness
-		var distance := SWARM_SPREAD * (0.7 + randf() * 0.6) # 42-78 pixels from center
+		var angle := (swarm_index * TAU / 5.0) + GameRandom.gameplay.randf() * 0.5 # Slight randomness
+		var distance := SWARM_SPREAD * (0.7 + GameRandom.gameplay.randf() * 0.6) # 42-78 pixels from center
 		spawn_pos = base_pos + Vector2(cos(angle), sin(angle)) * distance
 
 	# Create spawn alert indicator

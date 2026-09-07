@@ -61,7 +61,7 @@ func _on_spawn_timer_timeout() -> void:
 	active_tech_drops = active_tech_drops.filter(func(d): return is_instance_valid(d))
 
 	# 20% chance to spawn (no max limit)
-	if randf() < GameConstants.TECH_DROP_SPAWN_CHANCE:
+	if GameRandom.gameplay.randf() < GameConstants.TECH_DROP_SPAWN_CHANCE:
 		attempt_spawn()
 
 func attempt_spawn() -> void:

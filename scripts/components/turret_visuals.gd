@@ -661,7 +661,7 @@ func _start_idle_bounce() -> void:
 	idle_tween.set_trans(Tween.TRANS_SINE)
 
 	# Random starting phase to prevent synchronized bouncing
-	var random_phase = randf() * 0.6
+	var random_phase = GameRandom.cosmetic.randf() * 0.6
 
 	var min_scale := 0.95
 	var cycle := 0.6

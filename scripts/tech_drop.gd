@@ -125,8 +125,8 @@ func scatter_rewards() -> void:
 	Each pickup is worth 1 scrap. Total pickups = scrap_value (default 5)."""
 	for i in scrap_value:
 		# Calculate random position within scatter radius
-		var angle = randf() * TAU
-		var distance = randf() * scatter_radius
+		var angle = GameRandom.gameplay.randf() * TAU
+		var distance = GameRandom.gameplay.randf() * scatter_radius
 		var offset = Vector2(cos(angle), sin(angle)) * distance
 		var drop_pos = global_position + offset
 

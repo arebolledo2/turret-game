@@ -1,5 +1,7 @@
 extends Node
 
+var rng: RandomNumberGenerator = GameRandom.gameplay
+
 # Session-level duplicate tracking (persists across rerolls)
 var _session_turret_types: Array[String] = []
 var _session_item_ids: Array[String] = []
@@ -48,7 +50,7 @@ func generate_offers() -> void:
 	var new_offer_count = base_offer_count - locked_offers.size()
 
 	for i in range(new_offer_count):
-		var roll: float = randf()
+		var roll: float = rng.randf()
 		if roll < GameConstants.SHOP_ITEM_CHANCE:
 			generate_item_offer(generated_item_ids, generated_turret_ids, all_excluded_items, all_excluded_turrets)
 		else:
@@ -86,7 +88,7 @@ func generate_turret_offer(
 	if available_turrets.is_empty():
 		return false
 
-	var random_type: String = available_turrets[randi() % available_turrets.size()]
+	var random_type: String = available_turrets[rng.randi() % available_turrets.size()]
 
 	# Track in BOTH generation-level AND session-level
 	generated_turret_ids.append(random_type)
@@ -118,7 +120,7 @@ func generate_item_offer(
 		GameStateService.current_wave,
 		PlayerStatsService.get_player_luck(),
 		ItemTrackingService.item_counts,
-		all_excluded_item_ids
+		all_excluded_item_ids, rng
 	)
 
 	if random_item_id.is_empty():
@@ -226,13 +228,13 @@ func apply_item(item_id: String) -> void:
 	# Add all modifiers from this item to active_modifiers
 	var modifiers = ItemRegistry.get_modifiers(item_id)
 	var modifier_service = get_node("/root/ModifierService")
+	var additions: Array = []
 	for modifier in modifiers:
 		var mod_with_id = modifier.duplicate(true)
-		mod_with_id["id"] = item_id + "_" + str(modifier_service.active_modifiers.size())
-		modifier_service.active_modifiers.append(mod_with_id)
+		mod_with_id["id"] = item_id + "_" + str(modifier_service.active_modifiers.size() + additions.size())
+		additions.append(mod_with_id)
 
-	# Emit event to notify systems of modifier change
-	Events.modifiers_changed.emit()
+	modifier_service.add_modifiers(additions)
 
 	# Update player health if max health changed
 	var player = get_tree().get_first_node_in_group("player")

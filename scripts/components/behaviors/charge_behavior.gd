@@ -96,7 +96,7 @@ func _enter_charging_state() -> void:
 		charge_direction = enemy.global_position.direction_to(charge_target_pos)
 	else:
 		# If target disappeared, charge in random direction
-		charge_direction = Vector2.RIGHT.rotated(randf() * TAU)
+		charge_direction = Vector2.RIGHT.rotated(GameRandom.gameplay.randf() * TAU)
 
 	_cleanup_alert_indicator()
 

@@ -1,5 +1,7 @@
 extends Node
 
+var rng: RandomNumberGenerator = GameRandom.gameplay
+
 ## Economy Service
 ## Manages scrap, shop offers, rerolls, and turret purchases
 
@@ -50,7 +52,7 @@ func add_scrap_probabilistic(base_amount: int, multiplier: float) -> int:
 	var actual_amount: int = floori(calculated)
 	var chance: float = calculated - actual_amount
 
-	if randf() < chance:
+	if rng.randf() < chance:
 		actual_amount += 1
 
 	total_scrap += actual_amount

@@ -25,7 +25,7 @@ func enter() -> void:
 	# Initialize with pause state
 	var pause_min: float = params.get("wander_pause_min", get_default_params()["wander_pause_min"])
 	var pause_max: float = params.get("wander_pause_max", get_default_params()["wander_pause_max"])
-	wander_timer = randf_range(pause_min, pause_max)
+	wander_timer = GameRandom.gameplay.randf_range(pause_min, pause_max)
 	is_wandering = false
 
 ## Execute wander behavior
@@ -46,16 +46,16 @@ func execute(delta: float) -> Vector2:
 		if is_wandering:
 			# Pick random target anywhere in arena
 			wander_target = _get_random_arena_position()
-			wander_timer = randf_range(move_min, move_max)
+			wander_timer = GameRandom.gameplay.randf_range(move_min, move_max)
 		else:
 			# Pause
-			wander_timer = randf_range(pause_min, pause_max)
+			wander_timer = GameRandom.gameplay.randf_range(pause_min, pause_max)
 
 	# Check if reached target (within arrival distance)
 	if is_wandering and enemy.global_position.distance_to(wander_target) < arrival_distance:
 		# Reached target early - switch to pause
 		is_wandering = false
-		wander_timer = randf_range(pause_min, pause_max)
+		wander_timer = GameRandom.gameplay.randf_range(pause_min, pause_max)
 
 	# Return movement direction
 	if is_wandering:
@@ -75,6 +75,6 @@ func _get_random_arena_position() -> Vector2:
 	var max_y := arena_height / 2.0 - padding
 
 	return Vector2(
-		randf_range(min_x, max_x),
-		randf_range(min_y, max_y)
+		GameRandom.gameplay.randf_range(min_x, max_x),
+		GameRandom.gameplay.randf_range(min_y, max_y)
 	)

@@ -28,19 +28,19 @@ extends RefCounted
 ##   }
 ## }
 
-var _modifiers: Array = []
+var _modifiers: Array[StatModifier] = []
 
 
 ## Add a modifier (returns the modifier for chaining)
 func add_modifier(modifier: Dictionary) -> Dictionary:
-	_modifiers.append(modifier)
-	return modifier
+	_modifiers.append(StatModifier.new(modifier))
+	return modifier.duplicate(true)
 
 
 ## Remove a modifier by ID
 func remove_modifier(modifier_id: String) -> bool:
 	for i in range(_modifiers.size() - 1, -1, -1):
-		if _modifiers[i].get("id", "") == modifier_id:
+		if _modifiers[i].id == modifier_id:
 			_modifiers.remove_at(i)
 			return true
 	return false
@@ -53,13 +53,16 @@ func clear_modifiers() -> void:
 
 ## Get all active modifiers
 func get_all_modifiers() -> Array:
-	return _modifiers
+	var snapshot: Array = []
+	for modifier in _modifiers:
+		snapshot.append(modifier.to_dictionary())
+	return snapshot
 
 
 ## Check if a turret matches a modifier's filter
-func _modifier_matches_turret(modifier: Dictionary, turret_type: String) -> bool:
+func _modifier_matches_turret(modifier: StatModifier, turret_type: String) -> bool:
 	var turret_def := TurretRegistry.get_type(turret_type)
-	var filter: Dictionary = modifier.get("filter", {})
+	var filter: Dictionary = modifier.filter
 
 	# Empty filter matches all turrets
 	if filter.is_empty():
@@ -101,14 +104,15 @@ func _normalize_operation(operation: String) -> String:
 
 ## Get turret stats with all modifiers applied
 ## Uses PoE formula: (base + flat) × (1 + increases) × more1 × more2 × ...
-func get_turret_stats(turret_type: String, difficulty_config: Dictionary) -> Dictionary:
+func get_turret_stats(turret_type: String, difficulty_config: Dictionary, static_effects: Callable = Callable()) -> Dictionary:
 	var base_stats := TurretRegistry.get_base_stats(turret_type)
 
 	# Apply difficulty modifier to damage
 	base_stats["damage"] = base_stats["damage"] * difficulty_config["turret_damage_mult"]
 
 	# Apply special effects from items (dynamic modifiers)
-	SpecialEffectService.apply_static_effects(turret_type, base_stats)
+	if static_effects.is_valid():
+		static_effects.call(turret_type, base_stats)
 
 	# Collect applicable modifiers by type
 	var flat_mods: Dictionary = {}      # stat -> total flat value
@@ -119,9 +123,9 @@ func get_turret_stats(turret_type: String, difficulty_config: Dictionary) -> Dic
 		if not _modifier_matches_turret(modifier, turret_type):
 			continue
 
-		var stat: String = modifier.get("stat", "")
-		var operation: String = _normalize_operation(str(modifier.get("operation", "add")))
-		var value: float = modifier.get("value", 0.0)
+		var stat: String = modifier.stat
+		var operation: String = modifier.operation
+		var value: float = modifier.value
 
 		match operation:
 			"add":
@@ -173,11 +177,11 @@ func apply_to_stat(base_value: float, stat_name: String, entity_type: String = "
 
 	for modifier in _modifiers:
 		# Skip if stat name doesn't match
-		if modifier.get("stat", "") != stat_name:
+		if modifier.stat != stat_name:
 			continue
 
 		# Validate filter (similar to _modifier_matches_turret logic)
-		var filter: Dictionary = modifier.get("filter", {})
+		var filter: Dictionary = modifier.filter
 		if not filter.is_empty():
 			# Check entity_type filter
 			if filter.has("entity_type"):
@@ -187,8 +191,8 @@ func apply_to_stat(base_value: float, stat_name: String, entity_type: String = "
 					continue
 
 		# Collect modifier by operation type
-		var operation: String = _normalize_operation(str(modifier.get("operation", "add")))
-		var value = modifier.get("value", 0.0)
+		var operation: String = modifier.operation
+		var value = modifier.value
 
 		match operation:
 			"add":

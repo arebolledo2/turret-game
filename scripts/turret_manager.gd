@@ -85,12 +85,12 @@ func get_center_biased_position(margin: float) -> Vector2:
 	var max_radius: float = min(_get_arena_effective_radius(margin), _get_max_spawn_radius())
 
 	# Generate random angle
-	var angle := randf() * TAU
+	var angle := GameRandom.gameplay.randf() * TAU
 
 	# Generate radius using normal distribution (Box-Muller transform)
 	# Standard deviation = max_radius / 3 keeps most spawns within arena
-	var u1 := randf()
-	var u2 := randf()
+	var u1 := GameRandom.gameplay.randf()
+	var u2 := GameRandom.gameplay.randf()
 	var normal := sqrt(-2.0 * log(u1)) * cos(TAU * u2)
 	var radius: float = abs(normal) * (max_radius / 3.0)
 	radius = clamp(radius, 0.0, max_radius)

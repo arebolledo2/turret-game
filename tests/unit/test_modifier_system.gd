@@ -868,3 +868,29 @@ func test_modifier_for_nonexistent_stat():
 	# Should not crash, just not affect any real stats
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	assert_not_null(stats, "Should handle non-existent stat gracefully")
+
+
+func test_modifier_snapshots_cannot_mutate_owned_state() -> void:
+	var source := {"id": "owned", "stat": "damage", "operation": "add", "value": 5.0}
+	modifier_system.add_modifier(source)
+	source["value"] = 999.0
+	var snapshot := modifier_system.get_all_modifiers()
+	snapshot[0]["value"] = 800.0
+	snapshot.clear()
+	assert_eq(modifier_system.apply_to_stat(10.0, "damage"), 15.0)
+
+
+func test_pure_stats_do_not_read_global_items() -> void:
+	var easy_config := {"turret_damage_mult": 1.0}
+	var before := modifier_system.get_turret_stats("normal", easy_config)
+	ItemTrackingService.item_counts["elite_forces"] = 1
+	assert_eq(modifier_system.get_turret_stats("normal", easy_config), before)
+
+
+func test_service_mutation_emits_once_after_batch() -> void:
+	watch_signals(Events)
+	ModifierService.add_modifiers([
+		{"stat": "damage", "value": 1.0}, {"stat": "damage", "value": 2.0}
+	])
+	assert_signal_emit_count(Events, "modifiers_changed", 1)
+	assert_eq(ModifierService.apply_modifiers_to_stat(0.0, "damage"), 3.0)

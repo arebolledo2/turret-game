@@ -330,45 +330,21 @@ func test_purchase_invalid_index_too_high():
 # =============================================================================
 
 func test_purchase_item_adds_to_collected():
-	EconomyService.total_scrap = 500
-	shop_manager.generate_offers()
-
-	# Find item offer
-	var item_index = -1
-	var item_id = ""
-	for i in range(EconomyService.current_shop_offers.size()):
-		if EconomyService.current_shop_offers[i]["type"] == "item":
-			item_index = i
-			item_id = EconomyService.current_shop_offers[i]["item_id"]
-			break
-
-	if item_index >= 0:
-		shop_manager.purchase_offer(item_index)
-		assert_has(ItemTrackingService.collected_items, item_id,
-			"Purchased item should be added to collected items")
+	_set_item_offer("scrap_magnet")
+	assert_true(shop_manager.purchase_offer(0))
+	assert_has(ItemTrackingService.collected_items, "scrap_magnet")
 
 
 func test_purchase_item_adds_modifiers():
+	_set_item_offer("scrap_magnet")
+	var previous := ModifierService.active_modifiers.size()
+	assert_true(shop_manager.purchase_offer(0))
+	assert_gt(ModifierService.active_modifiers.size(), previous)
+
+
+func _set_item_offer(item_id: String) -> void:
 	EconomyService.total_scrap = 500
-	shop_manager.generate_offers()
-
-	var initial_modifier_count = ModifierService.active_modifiers.size()
-
-	# Find item offer
-	var item_index = -1
-	for i in range(EconomyService.current_shop_offers.size()):
-		if EconomyService.current_shop_offers[i]["type"] == "item":
-			item_index = i
-			break
-
-	# Skip test if no items in shop (due to probabilistic generation)
-	if item_index < 0:
-		pass_test("No item offers generated - skipping test")
-		return
-	
-	shop_manager.purchase_offer(item_index)
-	assert_gt(ModifierService.active_modifiers.size(), initial_modifier_count,
-		"Purchased item should add modifiers")
+	EconomyService.current_shop_offers = [{"type": "item", "item_id": item_id, "price": 40, "sold": false, "locked": false}]
 
 
 # =============================================================================

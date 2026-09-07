@@ -6,7 +6,7 @@ extends GutTest
 func before_each():
 	TestHelpers.reset_all_services()
 	GameStateService.reset_state()
-	ModifierService.active_modifiers.clear()
+	ModifierService.clear_modifiers()
 
 
 # =============================================================================

@@ -92,10 +92,10 @@ func get_random_spawn_position(spawn_zones: Array[Rect2]) -> Vector2:
 			# Rectangular: use legacy zones
 			if spawn_zones.is_empty():
 				return Vector2.ZERO
-			var zone := spawn_zones[randi() % spawn_zones.size()]
+			var zone := spawn_zones[GameRandom.gameplay.randi() % spawn_zones.size()]
 			return Vector2(
-				zone.position.x + randf() * zone.size.x,
-				zone.position.y + randf() * zone.size.y
+				zone.position.x + GameRandom.gameplay.randf() * zone.size.x,
+				zone.position.y + GameRandom.gameplay.randf() * zone.size.y
 			)
 			
 		GameEnums.GameMode.INVASION:
@@ -146,7 +146,7 @@ func generate_escort_path() -> Array[Vector2]:
 	var points: Array[Vector2] = []
 	
 	# Pick a random side and use its opposite
-	var start_side = randi() % 4
+	var start_side = GameRandom.gameplay.randi() % 4
 	var end_side: int
 	if start_side == 0: end_side = 1 # Top -> Bottom
 	elif start_side == 1: end_side = 0 # Bottom -> Top
@@ -159,12 +159,12 @@ func generate_escort_path() -> Array[Vector2]:
 	points.append(start_pos)
 	
 	# Add 1-2 middle points for "somewhat random route"
-	var middle_points_count = randi_range(1, 2)
+	var middle_points_count = GameRandom.gameplay.randi_range(1, 2)
 	for i in range(middle_points_count):
 		# Interpolate and add noise
 		var t = float(i + 1) / (middle_points_count + 1)
 		var lerp_pos = start_pos.lerp(end_pos, t)
-		var offset = Vector2(randf_range(-GameConstants.ESCORT_PATH_OFFSET, GameConstants.ESCORT_PATH_OFFSET), randf_range(-GameConstants.ESCORT_PATH_OFFSET, GameConstants.ESCORT_PATH_OFFSET))
+		var offset = Vector2(GameRandom.gameplay.randf_range(-GameConstants.ESCORT_PATH_OFFSET, GameConstants.ESCORT_PATH_OFFSET), GameRandom.gameplay.randf_range(-GameConstants.ESCORT_PATH_OFFSET, GameConstants.ESCORT_PATH_OFFSET))
 		points.append(lerp_pos + offset)
 		
 	points.append(end_pos)
@@ -176,13 +176,13 @@ func _get_random_point_on_side(side: int) -> Vector2:
 	
 	match side:
 		0: # Top
-			return Vector2(randf_range(-hw, hw), -hh)
+			return Vector2(GameRandom.gameplay.randf_range(-hw, hw), -hh)
 		1: # Bottom
-			return Vector2(randf_range(-hw, hw), hh)
+			return Vector2(GameRandom.gameplay.randf_range(-hw, hw), hh)
 		2: # Left
-			return Vector2(-hw, randf_range(-hh, hh))
+			return Vector2(-hw, GameRandom.gameplay.randf_range(-hh, hh))
 		3: # Right
-			return Vector2(hw, randf_range(-hh, hh))
+			return Vector2(hw, GameRandom.gameplay.randf_range(-hh, hh))
 	return Vector2.ZERO
 
 func is_alert_mode_active() -> bool:

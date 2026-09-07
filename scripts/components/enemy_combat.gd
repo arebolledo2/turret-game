@@ -49,7 +49,7 @@ func initialize(p_enemy: CharacterBody2D, combat_params: Dictionary) -> void:
 	add_child(fire_timer)
 
 	# Randomize initial fire delay to avoid synchronized volleys
-	var initial_delay = randf_range(0.5, 2.0)
+	var initial_delay = GameRandom.gameplay.randf_range(0.5, 2.0)
 	fire_timer.start(initial_delay)
 
 func process(_delta: float) -> void:

@@ -70,7 +70,7 @@ func play_sfx(stream: AudioStream, pos: Vector2 = Vector2.ZERO, base_pitch: floa
 		player.stream = stream
 		player.global_position = pos
 		# Small pitch variation keeps repeated impacts from sounding identical.
-		player.pitch_scale = clampf(base_pitch * randf_range(0.94, 1.06), 0.75, 1.25)
+		player.pitch_scale = clampf(base_pitch * GameRandom.cosmetic.randf_range(0.94, 1.06), 0.75, 1.25)
 		player.play()
 
 func _get_available_player() -> AudioStreamPlayer2D:
