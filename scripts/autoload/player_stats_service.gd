@@ -1,12 +1,16 @@
 extends Node
 
+var state: RunSessionState = RunSessionState.new()
+
 var rng: RandomNumberGenerator = GameRandom.gameplay
 
 ## Player Stats Service
 ## Manages player health, speed, luck, and stat modifiers
 
 # Core player stats
-var player_luck: float = GameConstants.PLAYER_BASE_LUCK
+var player_luck: float:
+	get: return state.player_luck
+	set(value): state.player_luck = value
 
 func reset_state() -> void:
 	player_luck = GameConstants.PLAYER_BASE_LUCK

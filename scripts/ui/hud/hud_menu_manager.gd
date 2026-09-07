@@ -18,6 +18,7 @@ var difficulty_controller: Object
 var game_mode_controller: Object
 
 var is_paused: bool = false
+var gameplay_overlays: Array[CanvasItem] = []
 
 signal pause_toggled(paused: bool)
 
@@ -46,6 +47,7 @@ func pause() -> void:
 	if is_paused:
 		return
 	
+	set_gameplay_overlays_visible(false)
 	is_paused = true
 	get_tree().paused = true
 	
@@ -61,6 +63,7 @@ func resume() -> void:
 	if not is_paused:
 		return
 		
+	set_gameplay_overlays_visible(true)
 	is_paused = false
 	get_tree().paused = false
 	
@@ -136,6 +139,7 @@ func hide_asset_studio() -> void:
 		pause_menu.visible = true
 
 func show_game_over(victory: bool, game_over_handler: Object) -> void:
+	set_gameplay_overlays_visible(false)
 	if game_over_screen:
 		game_over_screen.visible = true
 		game_over_handler.show_game_over(victory)
@@ -151,3 +155,14 @@ func show_game_mode_select() -> void:
 		game_mode_controller.show()
 	elif game_mode_screen:
 		game_mode_screen.visible = true
+
+
+func show_loot_review(item_ids: Array, controller: Object) -> void:
+	set_gameplay_overlays_visible(false)
+	controller.show_review(item_ids)
+
+
+func set_gameplay_overlays_visible(visible: bool) -> void:
+	for overlay in gameplay_overlays:
+		if is_instance_valid(overlay):
+			overlay.visible = visible

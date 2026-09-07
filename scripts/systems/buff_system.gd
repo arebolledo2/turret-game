@@ -24,7 +24,10 @@ class Buff:
 		max_stacks = max_stack
 
 # turret_instance_id -> Array[Buff]
-var active_buffs: Dictionary = {}
+var state: RunSessionState = RunSessionState.new()
+var active_buffs: Dictionary:
+	get: return state.active_buffs
+	set(value): state.active_buffs = value
 
 # Injected reference - set via set_turret_manager() during game setup
 var _turret_manager: Node = null

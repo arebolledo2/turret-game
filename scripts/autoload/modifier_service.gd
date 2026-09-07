@@ -4,7 +4,9 @@ extends Node
 ## Singleton wrapper that delegates to an internal ModifierSystem instance
 ## This provides global access while keeping ModifierSystem testable as a class
 
-var _system: ModifierSystem = ModifierSystem.new()
+var state: RunSessionState = RunSessionState.new()
+var _system: ModifierSystem:
+	get: return state.modifiers
 
 
 # =============================================================================

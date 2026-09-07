@@ -7,6 +7,7 @@ extends Node
 ## - GameModeEntitySpawner - defense targets, tunnel doors
 
 # Sub-components
+var session: RunSession
 var wave_controller: Node = null
 var entity_spawner: Node = null
 
@@ -17,6 +18,8 @@ var tech_drop_spawner: Node2D
 
 
 func _ready() -> void:
+	session = RunSession.new()
+	add_child(session)
 	# Create sub-components
 	wave_controller = preload("res://scripts/wave_controller.gd").new()
 	wave_controller.name = "WaveController"
@@ -406,22 +409,7 @@ func skip_wave() -> void:
 func _reset_all_services() -> void:
 	if entity_spawner:
 		entity_spawner.cleanup_entities()
-	DifficultyService.reset_state()
-	GameStateService.reset_state()
-	EconomyService.reset_state()
-	PlayerStatsService.reset_state()
-	TurretStatsService.reset_state()
-	ItemTrackingService.reset_state()
-	ModifierService.clear_modifiers()
-	GameModeService.reset_state()
-	# User feature/settings flags persist across runs. Only reset developer
-	# hitbox overlays as part of a new run.
+	session.begin_run()
+	# User settings, difficulty, game modes and assets persist across runs.
 	SettingsService.reset_debug_state()
-	# Asset preset selection is a user/configuration choice, not per-run state.
-	# Reload it without forcing the active preset back to "default".
 	AssetConfigService.reload_all()
-	TechTreeService.reset_state()
-	LootService.reset_state()
-	BuffSystem.reset_state()
-	EnemyQuery.reset_state()
-	ProjectilePool.reset_state()

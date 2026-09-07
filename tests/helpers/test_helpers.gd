@@ -129,6 +129,7 @@ static func create_mock_player_hurtbox(player: Node2D) -> Area2D:
 ## Reset all service states for clean testing
 ## Call this in before_each() to ensure test isolation
 static func reset_all_services() -> void:
+	RunSession.bind_state(RunSessionState.new())
 	# Reset lifecycle and preferences before mode defaults are calculated.
 	GameStateMachine.reset()
 	GameStateService.wave_controller = null

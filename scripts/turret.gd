@@ -84,10 +84,10 @@ func _show_stat_boost_effect() -> void:
 	if visuals:
 		visuals.play_stat_boost_effect()
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	"""Main turret update loop."""
 	if combat:
-		combat.process()
+		combat.process(delta)
 
 # =============================================================================
 # DELEGATED METHODS - Facades for components (test compatibility)

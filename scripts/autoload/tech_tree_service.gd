@@ -1,5 +1,7 @@
 extends Node
 
+var state: RunSessionState = RunSessionState.new()
+
 ## TechTreeService manages research points and tech tree unlocks.
 ##
 ## This service tracks:
@@ -11,9 +13,15 @@ extends Node
 ## During the shop phase, players can spend research points to unlock techs.
 
 # State tracking
-var total_research_points: int = 0
-var unlocked_tech_ids: Array[String] = []
-var tech_unlock_counts: Dictionary = {}  # tech_id -> unlock_count for repeatable techs
+var total_research_points: int:
+	get: return state.total_research_points
+	set(value): state.total_research_points = value
+var unlocked_tech_ids: Array[String]:
+	get: return state.unlocked_tech_ids
+	set(value): state.unlocked_tech_ids = value
+var tech_unlock_counts: Dictionary:
+	get: return state.tech_unlock_counts
+	set(value): state.tech_unlock_counts = value
 
 
 func _ready() -> void:

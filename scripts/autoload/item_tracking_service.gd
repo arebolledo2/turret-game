@@ -1,11 +1,17 @@
 extends Node
 
+var state: RunSessionState = RunSessionState.new()
+
 ## Item Tracking Service
 ## Manages collected items and provides modifier-related queries
 
 # Item tracking
-var collected_items: Array[String] = []
-var item_counts: Dictionary = {} # Tracks item counts for max_stacks
+var collected_items: Array[String]:
+	get: return state.collected_items
+	set(value): state.collected_items = value
+var item_counts: Dictionary:
+	get: return state.item_counts
+	set(value): state.item_counts = value
 
 func reset_state() -> void:
 	collected_items.clear()

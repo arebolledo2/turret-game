@@ -1,5 +1,7 @@
 extends Node
 
+var state: RunSessionState = RunSessionState.new()
+
 var rng: RandomNumberGenerator = GameRandom.gameplay
 
 ## Loot Service
@@ -7,7 +9,9 @@ var rng: RandomNumberGenerator = GameRandom.gameplay
 ## Items are reviewed at wave end before shop opens
 
 # Items found during the current wave
-var found_items: Array[String] = []
+var found_items: Array[String]:
+	get: return state.found_items
+	set(value): state.found_items = value
 
 
 func reset_state() -> void:

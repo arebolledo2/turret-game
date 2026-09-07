@@ -19,7 +19,10 @@ enum GameState {
 	GAME_OVER
 }
 
-var current_state: GameState = GameState.IDLE
+var state: RunSessionState = RunSessionState.new()
+var current_state: GameState:
+	get: return state.phase as GameState
+	set(value): state.phase = value
 
 
 # =============================================================================

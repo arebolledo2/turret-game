@@ -1,22 +1,38 @@
 extends Node
 
+var state: RunSessionState = RunSessionState.new()
+
 ## Game State Service
 ## Manages wave progression, kills, time, and game lifecycle
 
 # Wave system
-var current_wave: int = 0
+var current_wave: int:
+	get: return state.current_wave
+	set(value): state.current_wave = value
 
 # Stats tracking
-var total_kills: int = 0
-var total_scrap: int = 0
-var player_level: int = 1
+var total_kills: int:
+	get: return state.total_kills
+	set(value): state.total_kills = value
+var total_scrap: int:
+	get: return state.lifetime_scrap
+	set(value): state.lifetime_scrap = value
+var player_level: int:
+	get: return state.player_level
+	set(value): state.player_level = value
 
 # Time tracking
-var time_survived: float = 0.0
-var is_game_active: bool = false
+var time_survived: float:
+	get: return state.time_survived
+	set(value): state.time_survived = value
+var is_game_active: bool:
+	get: return state.is_game_active
+	set(value): state.is_game_active = value
 
 # Turret spawning
-var turrets_spawned: int = 0
+var turrets_spawned: int:
+	get: return state.turrets_spawned
+	set(value): state.turrets_spawned = value
 var wave_controller: Node = null # Reference set by GameManager
 
 

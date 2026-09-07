@@ -579,3 +579,17 @@ func test_reroll_then_purchase():
 	var result = shop_manager.purchase_offer(0)
 
 	assert_true(result, "Should be able to purchase after reroll")
+
+
+func test_invalid_offer_does_not_spend_or_grant_items() -> void:
+	EconomyService.total_scrap = 100
+	for offer in [
+		{"type": "item", "item_id": "scrap_magnet", "price": -10},
+		{"type": "item", "item_id": "missing", "price": 10},
+		{"type": "itme", "item_id": "scrap_magnet", "price": 10},
+		{"type": "item", "item_id": "scrap_magnet", "price": "10"}
+	]:
+		EconomyService.current_shop_offers = [offer]
+		assert_false(shop_manager.purchase_offer(0))
+		assert_eq(EconomyService.total_scrap, 100)
+	assert_true(ItemTrackingService.collected_items.is_empty())

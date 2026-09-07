@@ -1,20 +1,32 @@
 extends Node
 
+var state: RunSessionState = RunSessionState.new()
+
 var rng: RandomNumberGenerator = GameRandom.gameplay
 
 ## Economy Service
 ## Manages scrap, shop offers, rerolls, and turret purchases
 
 # Scrap tracking
-var total_scrap: int = 0
+var total_scrap: int:
+	get: return state.total_scrap
+	set(value): state.total_scrap = value
 
 # Shop system
-var shop_reroll_count: int = 0
-var current_shop_offers: Array = []
-var pending_turret_purchases: Array[String] = []
+var shop_reroll_count: int:
+	get: return state.shop_reroll_count
+	set(value): state.shop_reroll_count = value
+var current_shop_offers: Array:
+	get: return state.current_shop_offers
+	set(value): state.current_shop_offers = value
+var pending_turret_purchases: Array[String]:
+	get: return state.pending_turret_purchases
+	set(value): state.pending_turret_purchases = value
 
 # Turret purchase tracking (for price penalty calculation)
-var turrets_purchased: int = 0
+var turrets_purchased: int:
+	get: return state.turrets_purchased
+	set(value): state.turrets_purchased = value
 
 
 func reset_state() -> void:

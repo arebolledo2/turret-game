@@ -100,8 +100,15 @@ Single emoji prefix for all commits:
 
 ### GDScript Style
 - **Static typing** required for all variables and function signatures
-- **Signal bus** (`Events`) for all cross-system communication
-- **Services first** — access autoload services directly, no facades
+- **Notifications** use `Events`; commands/queries call the owning service explicitly
+- **Dependencies** — services bind run-owned state; inject scene, storage, RNG and presentation dependencies at composition boundaries
 - **Component-based** — player and entities use behavior components
 - **Test coverage** — all new features require GUT tests
 - **Debug categories** — use `DebugService.log()` with appropriate category
+
+
+## Reproducible verification
+
+See [tests/README.md](../tests/README.md) for the complete test contract. Use `./run_tests.ps1 -Import` on a clean checkout and `./tools/test_test_gate.ps1` to verify the gate itself. Engine version and archive checksum are pinned; CI executes these same commands on Windows. Test storage is isolated from player data. Unexpected engine errors, risky tests and remaining orphan nodes fail the run.
+
+Gameplay wave rewards use `EconomyService.get_wave_scrap_base()`: wave 1 awards five scrap and each wave adds five. The preview helper and live payout share this base; live fractional awards use probabilistic rounding.

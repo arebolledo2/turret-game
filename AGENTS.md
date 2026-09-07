@@ -7,7 +7,7 @@ Wave-based survival tower defense game built in **Godot 4.7** using GDScript. Pl
 - **Engine**: Godot 4.7
 - **Language**: GDScript with static typing
 - **Architecture**: Service-oriented with event bus pattern
-- **Key Pattern**: Signal bus (`Events`) for all cross-system communication
+- **Key Pattern**: Explicit commands/queries; signal bus (`Events`) for notifications
 - **Tests**: GUT framework - run with `.\run_tests.ps1`
 - **Launch**: `.\launch.ps1`
 - **Commit Style**: Single emoji prefix (e.g., `✨ Add feature`, `🐛 Fix bug`)
@@ -20,7 +20,7 @@ Full documentation is in `doc/index.md`. Key documents:
 | --- | --- |
 | [doc/index.md](doc/index.md) | Documentation hub with quick reference and directory guide |
 | [doc/architecture.md](doc/architecture.md) | System architecture, service-oriented design, signal bus, registries |
-| [doc/services.md](doc/services.md) | All 20 autoload services grouped by domain |
+| [doc/services.md](doc/services.md) | Autoload services grouped by domain |
 | [doc/combat.md](doc/combat.md) | Modifier/buff systems, projectiles, crits, status effects |
 | [doc/entities.md](doc/entities.md) | Entity components, enemy/turret types, behaviors, items |
 | [doc/game-modes.md](doc/game-modes.md) | Game state machine, wave cycle, game modes, coordinators |

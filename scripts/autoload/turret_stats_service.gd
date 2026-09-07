@@ -1,13 +1,19 @@
 extends Node
 
+var state: RunSessionState = RunSessionState.new()
+
 var rng: RandomNumberGenerator = GameRandom.gameplay
 
 ## Turret Stats Service
 ## Manages turret counts, types, and stat calculations with modifiers
 
 # Turret tracking
-var turret_counts: Dictionary = {}
-var selected_turret_type: String = ""
+var turret_counts: Dictionary:
+	get: return state.turret_counts
+	set(value): state.turret_counts = value
+var selected_turret_type: String:
+	get: return state.selected_turret_type
+	set(value): state.selected_turret_type = value
 
 func reset_state() -> void:
 	turret_counts.clear()

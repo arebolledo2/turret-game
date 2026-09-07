@@ -1,0 +1,31 @@
+name: Game tests
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  gut:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install pinned Godot
+        run: |
+          $godot = ./tools/install_godot.ps1 -Destination "$env:RUNNER_TEMP/godot"
+          "GODOT_BIN=$godot" >> $env:GITHUB_ENV
+      - name: Verify test gate
+        run: ./tools/test_test_gate.ps1
+      - name: Import and run full GUT suite
+        run: ./run_tests.ps1 -Import -timeout 300
+      - name: Retain results and diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: gut-results
+          path: .test-results/
+          include-hidden-files: true
+          retention-days: 7

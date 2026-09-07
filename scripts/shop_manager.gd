@@ -98,13 +98,7 @@ func generate_turret_offer(
 	var base_price: int = TurretRegistry.get_base_price(random_type)
 	var scaled_price: int = calculate_turret_price(base_price, GameStateService.current_wave)
 
-	var offer: Dictionary = {
-		"type": "turret",
-		"turret_id": random_type,
-		"price": scaled_price,
-		"sold": false,
-		"locked": false,
-	}
+	var offer := ShopOffer.new("turret", random_type, scaled_price).to_dictionary()
 	EconomyService.current_shop_offers.append(offer)
 	return true
 
@@ -136,13 +130,7 @@ func generate_item_offer(
 	if random_item_id not in _session_item_ids:
 		_session_item_ids.append(random_item_id)
 
-	var offer: Dictionary = {
-		"type": "item",
-		"item_id": random_item_id,
-		"price": scaled_price,
-		"sold": false,
-		"locked": false,
-	}
+	var offer := ShopOffer.new("item", random_item_id, scaled_price).to_dictionary()
 	EconomyService.current_shop_offers.append(offer)
 
 func calculate_turret_price(base_price: int, wave: int) -> int:
@@ -184,28 +172,36 @@ func purchase_offer(offer_index: int) -> bool:
 
 	var offer: Dictionary = EconomyService.current_shop_offers[offer_index]
 
-	if offer.get("sold", false):
+	var transaction := ShopOffer.from_dictionary(offer)
+	if transaction == null:
+		return false
+	if transaction.kind == "item" and not ItemRegistry.has_item(transaction.asset_id):
+		return false
+	if transaction.kind == "turret" and not TurretRegistry.TYPES.has(transaction.asset_id):
 		return false
 
-	if EconomyService.total_scrap < offer["price"]:
-		Events.shop_insufficient_funds.emit(offer["price"], EconomyService.total_scrap)
+	if transaction.sold:
 		return false
 
-	EconomyService.total_scrap -= offer["price"]
-	Events.scrap_spent.emit(offer["price"], EconomyService.total_scrap)
+	if EconomyService.total_scrap < transaction.price:
+		Events.shop_insufficient_funds.emit(transaction.price, EconomyService.total_scrap)
+		return false
+
+	EconomyService.total_scrap -= transaction.price
+	Events.scrap_spent.emit(transaction.price, EconomyService.total_scrap)
 
 	offer["sold"] = true
 	offer["locked"] = false # Clear lock when purchased
 
-	if offer["type"] == "turret":
+	if transaction.kind == "turret":
 		# Queue turret for spawning at wave start
-		EconomyService.pending_turret_purchases.append(offer["turret_id"])
+		EconomyService.pending_turret_purchases.append(transaction.asset_id)
 		EconomyService.turrets_purchased += 1
 		
 		# Recalculate remaining turret prices with new turrets_purchased value
 		_recalculate_turret_prices()
-	elif offer["type"] == "item":
-		apply_item(offer["item_id"])
+	elif transaction.kind == "item":
+		apply_item(transaction.asset_id)
 		# Recalculate turret prices in case item affects penalty/price multipliers
 		_recalculate_turret_prices()
 

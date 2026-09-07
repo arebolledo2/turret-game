@@ -4,7 +4,7 @@ This document covers the high-level architectural patterns used in the game.
 
 ## Overview
 
-Game logic is split into focused service singletons (autoloads), with all cross-system communication using the Events signal bus. Type definitions live in static registries, while visuals/collision configuration is data-driven through asset preset resources. Player, enemy, and turret entities use component-based architecture. Services are accessed directly; `SettingsService` retains a small compatibility facade for older callers while new feature-gated code uses `FeatureFlagService`.
+Game logic is split into focused service singletons (autoloads), with explicit service calls for commands/queries and the Events signal bus for notifications. Type definitions live in static registries, while visuals/collision configuration is data-driven through asset preset resources. Player, enemy, and turret entities use component-based architecture. Services are accessed directly; `SettingsService` retains a small compatibility facade for older callers while new feature-gated code uses `FeatureFlagService`.
 
 ## Service-Oriented Architecture
 
@@ -50,7 +50,7 @@ Game logic split into **focused service singletons** in `scripts/autoload/`. Gro
 
 ## Signal Bus Pattern
 
-**All cross-system communication** uses the `Events` autoload (`scripts/autoload/events.gd`). No direct service-to-service calls for cross-cutting concerns.
+**Notifications** use the `Events` autoload (`scripts/autoload/events.gd`). Commands and queries use explicit method calls to their owner. Parent/composition nodes inject scene dependencies; avoid encoding commands as broadcasts that depend on listener order.
 
 Signal categories: Game State, Waves, Combat, Turrets, Pickups, Tech Drops, Economy, Shop, Items, Loot, UI, Defense Mode, Player Progression.
 
@@ -116,3 +116,27 @@ Key manager scripts that coordinate between services:
 - **GameModeEntitySpawner** (`scripts/game_mode_entity_spawner.gd`) - Spawns game-mode-specific entities
 - **ArenaSetup** (`scripts/arena_setup.gd`) - Arena configuration and initialization
 - **CameraSetup** (`scripts/camera_setup.gd`) - Camera system with gamepad zoom support
+
+
+## Run ownership and calculation boundaries
+
+`GameManager` owns a `RunSession` node. Starting a game binds a fresh `RunSessionState` to the game-state, state-machine, economy, player/turret stats, inventory, loot, tech, modifier and buff services. Standalone service instances have private state. The session detaches its references on teardown only if it is still the current owner, so an old scene cannot erase a newer run. Difficulty, selected modes, feature settings and asset preferences are application configuration and persist across runs.
+
+`ModifierSystem` stores typed `StatModifier` records and returns copied dictionaries. Its calculations read only supplied inputs and modifiers; the service explicitly supplies special item effects. `ModifierService` owns mutation notifications, including one notification for batch additions. Shop and tech callers use these methods rather than mutating arrays.
+
+`GameRandom` supplies independent gameplay and cosmetic generators. Critical services expose an injectable generator, and item generation accepts one explicitly. Rendering, audio and debug random draws do not advance gameplay randomness.
+
+`CombatStats` parses frequently used combat values once. `ShopOffer` validates transaction records before any balance or inventory mutation; dictionaries remain the UI serialization boundary.
+
+## Scene adapters
+
+- `TargetSelection`: nearest/farthest/range/exclusion decisions over supplied candidates; no scene query or autoload access.
+- `ProjectileEmitter`: pool acquisition and shot setup, with an injected parent.
+- `TurretAttackEffects`: tracer, chain and pulse presentation.
+- `TurretCombat`: attack orchestration with injected emission/presentation and simulation-time melee cooldowns.
+- `DamageNumberPresenter`: damage-number pooling and world/canvas positioning.
+- `HUDMenuManager`: menu and gameplay-overlay visibility coordination.
+
+## Asset collaborators
+
+`AssetConfigService` is the public API and notification boundary. `AssetPresetStore` owns file paths, persistence and loaded preset data, with an injectable storage root. `AssetConfigResolver` merges copies of base resources and patches. `AssetConfigValidator` checks paths and collision resources and applies fallback rules. Persistence tests exercise each store in its own directory. Reserved state filenames are excluded from preset enumeration, and preset names cannot escape their storage directory.

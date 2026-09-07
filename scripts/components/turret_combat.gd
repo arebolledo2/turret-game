@@ -10,12 +10,16 @@ class_name TurretCombat
 ## - Instant hitscan attacks
 ## - Chain lightning attacks
 ## - AOE pulse attacks
-## - Visual effects (tracers, arcs, pulses)
+## Presentation and projectile creation are injected collaborators.
 
 # Dependencies (set via initialize)
 var turret: Node2D = null
 var turret_type: String = ""
 var stats: Dictionary = {}
+var combat_stats: CombatStats = CombatStats.new({})
+var effects: TurretAttackEffects
+var emitter: ProjectileEmitter
+var combat_time: float = 0.0
 
 # Combat state
 var target: Node2D = null
@@ -32,12 +36,20 @@ var melee_hit_cooldowns: Dictionary = {}
 var active_mines: Array = []
 var mine_scene: PackedScene = null
 
-func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary) -> void:
+func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary, presentation: TurretAttackEffects = null, projectile_emitter: ProjectileEmitter = null) -> void:
 	"""Initialize component with required references."""
+	assert(p_turret != null, "TurretCombat: turret reference required")
 	turret = p_turret
 	turret_type = p_turret_type
-	stats = p_stats
-	assert(turret != null, "TurretCombat: turret reference required")
+	combat_stats = CombatStats.new(p_stats)
+	stats = combat_stats.to_dictionary()
+	effects = presentation if presentation != null else TurretAttackEffects.new()
+	effects.turret = turret
+	effects.turret_type = turret_type
+	effects.stats = stats
+	emitter = projectile_emitter if projectile_emitter != null else ProjectileEmitter.new()
+	if emitter.parent == null:
+		emitter.parent = turret.get_tree().current_scene if turret.get_tree().current_scene else turret.get_tree().root
 
 	# Preload projectile scene
 	projectile_scene = preload("res://scenes/projectile.tscn")
@@ -59,23 +71,30 @@ func initialize(p_turret: Node2D, p_turret_type: String, p_stats: Dictionary) ->
 
 func update_stats(new_stats: Dictionary) -> void:
 	"""Update stats cache and fire timer."""
-	stats = new_stats
+	combat_stats = CombatStats.new(new_stats)
+	stats = combat_stats.to_dictionary()
+	if effects != null:
+		effects.stats = stats
 	if fire_timer:
 		_update_fire_timer()
 
 func _update_fire_timer() -> void:
 	"""Update fire timer based on current fire rate."""
-	var current_fire_rate: float = stats.get("fire_rate", 2.0)
+	var current_fire_rate: float = combat_stats.fire_rate
 	if current_fire_rate > 0:
 		fire_timer.wait_time = 1.0 / current_fire_rate
 	else:
 		fire_timer.wait_time = 1.0
 
-func process() -> void:
+func process(delta: float = 0.0) -> void:
 	"""Process combat logic (targeting and firing)."""
+	combat_time += delta
+	for enemy_id in melee_hit_cooldowns.keys():
+		if combat_time - melee_hit_cooldowns[enemy_id] >= 0.3:
+			melee_hit_cooldowns.erase(enemy_id)
 	# Handle melee rotation
 	if TurretRegistry.has_attack_style(turret_type, GameEnums.AttackStyle.MELEE):
-		_process_melee_rotation(get_process_delta_time())
+		_process_melee_rotation(delta)
 		return # Skip normal targeting
 
 	find_target()
@@ -86,13 +105,11 @@ func process() -> void:
 
 func find_target() -> void:
 	"""Find target in range for firing."""
-	var current_range: float = stats.get("range", 250.0)
-	var targeting = stats.get("targeting", "nearest")
-	var best_target: Node2D = null
+	var current_range: float = combat_stats.attack_range
+	var targeting = combat_stats.targeting
 	# Compared in squared space throughout - ordering is identical to real
 	# distance, and this avoids a sqrt per enemy per turret per frame.
 	var range_sq := current_range * current_range
-	var best_dist_sq: float = -1.0
 	var origin := turret.global_position
 
 	# In Tunneling mode, also check for tunnel door as a valid target
@@ -106,55 +123,10 @@ func find_target() -> void:
 				target = door
 				return
 
-	# Standard enemy targeting
-	var enemies := EnemyQuery.get_enemies(turret.get_tree())
-	if enemies.is_empty():
-		target = null
-		return
-
-	for enemy in enemies:
-		if not is_instance_valid(enemy):
-			continue
-
-		var dist_sq := origin.distance_squared_to(enemy.global_position)
-		if dist_sq > range_sq:
-			continue
-
-		if best_target == null:
-			best_target = enemy
-			best_dist_sq = dist_sq
-			continue
-
-		if targeting == "farthest":
-			if dist_sq > best_dist_sq:
-				best_target = enemy
-				best_dist_sq = dist_sq
-		else: # nearest (default)
-			if dist_sq < best_dist_sq:
-				best_target = enemy
-				best_dist_sq = dist_sq
-
-	target = best_target
+	target = TargetSelection.select(origin, EnemyQuery.get_enemies(turret.get_tree()), current_range, targeting == "farthest")
 
 func find_tracking_target() -> Node2D:
-	"""Find the closest enemy regardless of range (for tracking/rotation)."""
-	var enemies := EnemyQuery.get_enemies(turret.get_tree())
-	if enemies.is_empty():
-		return null
-
-	var best_target: Node2D = null
-	var best_dist_sq: float = INF
-	var origin := turret.global_position
-
-	for enemy in enemies:
-		if not is_instance_valid(enemy):
-			continue
-		var dist_sq := origin.distance_squared_to(enemy.global_position)
-		if dist_sq < best_dist_sq:
-			best_target = enemy
-			best_dist_sq = dist_sq
-
-	return best_target
+	return TargetSelection.select(turret.global_position, EnemyQuery.get_enemies(turret.get_tree()))
 
 func fire() -> void:
 	"""Execute firing logic based on turret attack style."""
@@ -195,31 +167,10 @@ func _fire_projectile() -> void:
 
 	# Roll for crit
 	var is_crit := TurretStatsService.roll_turret_crit()
-	var base_damage := float(stats.get("damage", 15.0))
+	var base_damage := combat_stats.damage_or(15.0)
 	var final_damage := base_damage
 	if is_crit:
 		final_damage = TurretStatsService.calculate_turret_crit_damage(base_damage)
-
-	# Determine parent: use current_scene first, then fallback to turret's parent or root
-	# Using current_scene is important for the GUT integration test to find the projectile
-	var parent: Node = null
-	if turret.get_tree():
-		if turret.get_tree().current_scene:
-			parent = turret.get_tree().current_scene
-		else:
-			parent = turret.get_tree().root
-
-	if not parent and turret.get_parent():
-		parent = turret.get_parent()
-
-	# Bare unit tests fallback
-	if not parent:
-		parent = turret
-
-	var projectile := ProjectilePool.acquire(parent)
-	if projectile == null:
-		return
-	projectile.global_position = turret.global_position
 
 	# Determine damage type
 	var turret_def = TurretRegistry.get_type(turret_type)
@@ -233,7 +184,7 @@ func _fire_projectile() -> void:
 	var modified_stats := stats.duplicate()
 	modified_stats["damage"] = final_damage
 
-	projectile.setup_extended(modified_stats, direction, true, dtype, is_crit)
+	emitter.emit_shot(turret.global_position, direction, modified_stats, true, dtype, is_crit)
 
 func _fire_instant() -> void:
 	"""Apply instant hitscan damage to target."""
@@ -242,7 +193,7 @@ func _fire_instant() -> void:
 
 	# Roll for crit
 	var is_crit := TurretStatsService.roll_turret_crit()
-	var base_damage := float(stats.get("damage", 15.0))
+	var base_damage := combat_stats.damage_or(15.0)
 	var final_damage := base_damage
 	if is_crit:
 		final_damage = TurretStatsService.calculate_turret_crit_damage(base_damage)
@@ -252,17 +203,17 @@ func _fire_instant() -> void:
 		target.take_damage(final_damage, is_crit)
 
 	# Visual tracer
-	_draw_tracer(target.global_position)
+	effects.draw_tracer(target.global_position)
 
 func _fire_aoe_pulse() -> void:
 	"""Damage all enemies in range with a pulse."""
 	var enemies := EnemyQuery.get_enemies(turret.get_tree())
 	var hit_count = 0
-	var current_range: float = stats.get("range", 250.0)
-	var base_damage: float = stats.get("damage", 15.0)
+	var current_range: float = combat_stats.attack_range
+	var base_damage: float = combat_stats.damage_or(15.0)
 
 	# Visual pulse
-	_spawn_pulse_effect()
+	effects.spawn_pulse_effect()
 
 	# Get slow parameters if this turret applies slow
 	var slow_intensity: float = stats.get("slow_intensity", 0.0)
@@ -302,7 +253,7 @@ func _fire_chain() -> void:
 	var chain_count = int(stats.get("chain_count", 3))
 	var chain_range = stats.get("chain_range", 150.0)
 	var chain_decay = stats.get("chain_decay", 0.7)
-	var base_damage: float = stats.get("damage", 15.0)
+	var base_damage: float = combat_stats.damage_or(15.0)
 
 	# Roll crit once for initial hit
 	var is_crit := TurretStatsService.roll_turret_crit()
@@ -328,7 +279,7 @@ func _fire_chain() -> void:
 		hit_enemies.append(current_target)
 
 		# Visual arc
-		_draw_lightning_arc(last_pos, current_target.global_position)
+		effects.draw_lightning_arc(last_pos, current_target.global_position)
 		Events.chain_lightning_hit.emit(last_pos, current_target.global_position, dmg)
 
 		last_pos = current_target.global_position
@@ -343,129 +294,7 @@ func _fire_chain() -> void:
 		current_target = next_target
 
 func _find_closest_enemy_excluding(pos: Vector2, range_limit: float, excluded: Array) -> Node2D:
-	"""Find closest enemy to a position, excluding specific enemies."""
-	var enemies := EnemyQuery.get_enemies(turret.get_tree())
-	var best_target: Node2D = null
-	var best_dist_sq: float = range_limit * range_limit
-
-	for enemy in enemies:
-		if not is_instance_valid(enemy) or enemy in excluded:
-			continue
-
-		var dist_sq := pos.distance_squared_to(enemy.global_position)
-		if dist_sq < best_dist_sq:
-			best_dist_sq = dist_sq
-			best_target = enemy
-
-	return best_target
-
-func _draw_tracer(end_pos: Vector2) -> void:
-	"""Draw instant hitscan tracer line."""
-	var line = Line2D.new()
-	line.width = 2.0
-	line.default_color = TurretRegistry.get_color(turret_type)
-	line.add_point(Vector2.ZERO) # Local space
-	line.add_point(turret.to_local(end_pos))
-	turret.add_child(line)
-
-	var tween = turret.create_tween()
-	tween.tween_property(line, "modulate:a", 0.0, 0.2)
-	tween.tween_callback(line.queue_free)
-
-func _draw_lightning_arc(start_pos: Vector2, end_pos: Vector2) -> void:
-	"""Draw chain lightning arc effect with jagged segments and glow."""
-	var main_line = Line2D.new()
-	var glow_line = Line2D.new()
-	
-	main_line.width = 2.5
-	main_line.default_color = Color(0.8, 0.9, 1.0, 1.0) # Bright core
-	
-	glow_line.width = 6.0
-	glow_line.default_color = Color(0.2, 0.5, 1.0, 0.4) # Blue glow
-	
-	var segments = 6
-	var points = PackedVector2Array()
-	points.append(start_pos)
-	
-	var direction = (end_pos - start_pos).normalized()
-	var distance = start_pos.distance_to(end_pos)
-	var segment_length = distance / segments
-	
-	for i in range(1, segments):
-		var base_pos = start_pos + direction * (i * segment_length)
-		# Add perpendicular offset for jaggedness
-		var perp = Vector2(-direction.y, direction.x)
-		var offset = perp * GameRandom.cosmetic.randf_range(-15.0, 15.0)
-		points.append(base_pos + offset)
-	
-	points.append(end_pos)
-	
-	main_line.points = points
-	glow_line.points = points
-	
-	var parent = turret.get_tree().current_scene if turret.get_tree().current_scene else turret.get_tree().root
-	parent.add_child(glow_line)
-	parent.add_child(main_line)
-	
-	# Branching arcs (30% chance per segment)
-	for i in range(1, points.size() - 1):
-		if GameRandom.cosmetic.randf() < 0.3:
-			_draw_lightning_branch(points[i], direction)
-	
-	var tween = turret.create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(main_line, "width", 0.0, 0.25)
-	tween.tween_property(glow_line, "width", 0.0, 0.35)
-	tween.tween_property(main_line, "modulate:a", 0.0, 0.25)
-	tween.tween_property(glow_line, "modulate:a", 0.0, 0.35)
-	tween.set_parallel(false)
-	tween.tween_callback(main_line.queue_free)
-	tween.tween_callback(glow_line.queue_free)
-
-func _draw_lightning_branch(start_pos: Vector2, direction: Vector2) -> void:
-	"""Draw a small branching arc from a lightning point."""
-	var branch = Line2D.new()
-	branch.width = 1.5
-	branch.default_color = Color(0.4, 0.7, 1.0, 0.6)
-	
-	var points = PackedVector2Array()
-	points.append(start_pos)
-	
-	var branch_dir = direction.rotated(GameRandom.cosmetic.randf_range(-PI / 3, PI / 3))
-	var branch_len = GameRandom.cosmetic.randf_range(20.0, 40.0)
-	
-	points.append(start_pos + branch_dir * branch_len * 0.5 + Vector2(GameRandom.cosmetic.randf_range(-5, 5), GameRandom.cosmetic.randf_range(-5, 5)))
-	points.append(start_pos + branch_dir * branch_len)
-	
-	branch.points = points
-	var parent = turret.get_tree().current_scene if turret.get_tree().current_scene else turret.get_tree().root
-	parent.add_child(branch)
-	
-	var tween = turret.create_tween()
-	tween.tween_property(branch, "width", 0.0, 0.2)
-	tween.tween_callback(branch.queue_free)
-
-func _spawn_pulse_effect() -> void:
-	"""Spawn AOE pulse visual effect."""
-	var current_range: float = stats.get("range", 250.0)
-	var viz = Polygon2D.new()
-
-	# Create circle polygon
-	var points = PackedVector2Array()
-	for i in range(32):
-		var angle = i * TAU / 32.0
-		points.append(Vector2(cos(angle), sin(angle)) * current_range)
-	viz.polygon = points
-	viz.color = TurretRegistry.get_color(turret_type)
-	viz.color.a = 0.3
-
-	turret.add_child(viz)
-	viz.scale = Vector2.ZERO
-
-	var tween = turret.create_tween()
-	tween.tween_property(viz, "scale", Vector2.ONE, 0.2)
-	tween.parallel().tween_property(viz, "modulate:a", 0.0, 0.2)
-	tween.tween_callback(viz.queue_free)
+	return TargetSelection.select(pos, EnemyQuery.get_enemies(turret.get_tree()), range_limit, false, excluded)
 
 func _on_fire_timer_timeout() -> void:
 	"""Re-enable firing after cooldown."""
@@ -513,7 +342,7 @@ func _on_melee_hit(hurtbox: Area2D) -> void:
 
 	# Cooldown check (0.3 second cooldown per enemy)
 	var enemy_id = enemy.get_instance_id()
-	var current_time = Time.get_ticks_msec() / 1000.0
+	var current_time = combat_time
 	if melee_hit_cooldowns.has(enemy_id):
 		if current_time - melee_hit_cooldowns[enemy_id] < 0.3:
 			return
@@ -521,7 +350,7 @@ func _on_melee_hit(hurtbox: Area2D) -> void:
 
 	# Roll for crit
 	var is_crit := TurretStatsService.roll_turret_crit()
-	var base_damage := float(stats.get("damage", 8.0))
+	var base_damage := combat_stats.damage_or(8.0)
 	var final_damage := base_damage
 	if is_crit:
 		final_damage = TurretStatsService.calculate_turret_crit_damage(base_damage)
@@ -584,7 +413,7 @@ func _fire_deployable() -> void:
 	mine.global_position = spawn_pos
 
 	# Setup mine with stats
-	var damage = stats.get("damage", 15.0)
+	var damage = combat_stats.damage_or(15.0)
 	var explosive_radius = stats.get("explosive_radius", 70.0)
 	var proximity_radius = stats.get("proximity_radius", 40.0)
 	var knockback = stats.get("knockback_force", 150.0)

@@ -7,7 +7,7 @@
 | Engine            | Godot 4.7                                  |
 | Language          | GDScript (static typing)                   |
 | Architecture      | Service-oriented with event bus            |
-| Key Pattern       | Signal bus (`Events` autoload)             |
+| Key Pattern       | Explicit calls; `Events` notifications    |
 | Testing           | GUT framework                              |
 | Launch game       | `.\launch.ps1`                             |
 | Run tests         | `.\run_tests.ps1`                          |
@@ -51,3 +51,5 @@ Wave-based survival tower defense game. Player dodges enemies while turrets prov
 ---
 
 Art and sprite reference documentation is also available in `doc/`: MainCharSprite.md, PixelLabCharacterGen.md, PixelLabSpriteHelp.md, Prompts.md, Scrap.md, StyleMatrix.md.
+
+See [audit-improvements.md](audit-improvements.md) for the September 2026 maintenance changes and verification results.
