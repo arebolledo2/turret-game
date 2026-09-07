@@ -22,3 +22,10 @@ foreach ($case in $cases) {
     if (-not $rejected) { throw "Gate accepted invalid case: $case" }
 }
 Write-Host 'Test gate: clean run accepted; all 9 invalid cases rejected.'
+
+$result = New-Result
+$result.expected_engine_errors = @('expected parse error')
+Assert-CleanTestRun -ExitCode 0 -Stderr 'ERROR: expected parse error' -Results $result
+$rejected = $false
+try { Assert-CleanTestRun -ExitCode 0 -Stderr "ERROR: expected parse error`nERROR: expected parse error" -Results $result } catch { $rejected = $true }
+if (-not $rejected) { throw 'Gate allowed an extra unasserted occurrence.' }

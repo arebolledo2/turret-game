@@ -132,3 +132,8 @@ Primary unit tests:
 Regression coverage includes:
 - Registry adaptation (`tests/unit/test_enemy_registry.gd`)
 - Existing unit/integration suites for enemy/turret/player runtime behavior
+
+
+## Testability and storage
+
+The public service delegates to `AssetPresetStore`, `AssetConfigResolver`, and `AssetConfigValidator` under `scripts/systems/assets/`. Configure an isolated service with `configure_storage(root)` before adding it to the tree. Store save methods return Godot error codes; tests cover malformed files and failed writes. Preset names are single safe filename components; `state` is reserved for the active-selection file.
