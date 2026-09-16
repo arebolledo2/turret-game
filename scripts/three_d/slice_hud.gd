@@ -9,10 +9,11 @@ var health_text: Label
 var panel: PanelContainer
 var title: Label
 var description: Label
-var turret_button: Button
-var plasma_button: Button
-var damage_button: Button
+var offer_buttons: Array[Button] = []
+var reroll_button: Button
 var repair_button: Button
+var actions: HBoxContainer
+var build_text: Label
 var continue_button: Button
 var restart_button: Button
 var previous_phase: int = -1
@@ -71,21 +72,51 @@ func _ready() -> void:
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(center)
 	panel = PanelContainer.new()
-	panel.custom_minimum_size.x = 480
+	panel.custom_minimum_size.x = 1200
 	panel.add_theme_stylebox_override("panel", _panel_style())
 	center.add_child(panel)
+	var columns := HBoxContainer.new()
+	columns.add_theme_constant_override("separation", 24)
+	panel.add_child(columns)
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 14)
-	panel.add_child(column)
+	column.custom_minimum_size.x = 700
+	column.add_theme_constant_override("separation", 8)
+	columns.add_child(column)
 	title = _label(column, "", 32, Color("d7f2eb"))
 	description = _label(column, "", 17, Color("a3bbc6"))
-	turret_button = _button(column, "", func() -> void: world.purchase("turret"))
-	plasma_button = _button(column, "", func() -> void: world.purchase("plasma"))
-	plasma_button.tooltip_text = "Explosive orbs hit nearby enemies and interrupt chargers with knockback."
-	damage_button = _button(column, "", func() -> void: world.purchase("damage"))
-	repair_button = _button(column, "", func() -> void: world.purchase("repair"))
+	for index in range(4):
+		var button := _button(column, "", _purchase.bind(index))
+		button.custom_minimum_size.y = 76
+		button.add_theme_font_size_override("font_size", 20)
+		offer_buttons.append(button)
+	actions = HBoxContainer.new()
+	actions.add_theme_constant_override("separation", 8)
+	column.add_child(actions)
+	reroll_button = _button(actions, "", func() -> void: world.shop.reroll())
+	reroll_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	repair_button = _button(actions, "REPAIR 10 HULL / 5", func() -> void: world.repair())
+	repair_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	continue_button = _button(column, "DEPLOY NEXT WAVE", _continue)
 	restart_button = _button(column, "START NEW RUN", func() -> void: world.start_run())
+	var build := VBoxContainer.new()
+	build.custom_minimum_size.x = 400
+	columns.add_child(build)
+	_label(build, "YOUR BUILD", 20, Color("54c5c5"))
+	_label(build, "Damage · shots/sec · range", 14, Color("a3bbc6"))
+	var scroll := ScrollContainer.new()
+	scroll.focus_mode = Control.FOCUS_ALL
+	scroll.custom_minimum_size = Vector2(400, 200)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	build.add_child(scroll)
+	build_text = _label(scroll, "", 20, Color("cfecea"))
+	build_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	build_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	build_text.add_theme_constant_override("line_spacing", 8)
+	_label(build, "Max hull upgrades do not repair damage.", 13, Color("a3bbc6"))
+
+func _purchase(index: int) -> void:
+	world.shop.purchase(index)
 
 func _label(parent: Node, text: String, size: int, color: Color) -> Label:
 	var label := Label.new()
@@ -136,19 +167,22 @@ func _process(_delta: float) -> void:
 	status.text = "DEPLOYING WAVE %d  ·  %d" % [GameStateService.current_wave, ceili(world.announcement_left)] if phase == GameStateMachine.GameState.WAVE_ANNOUNCEMENT else ""
 	hint.text = "WASD / LEFT STICK  Move     E / A  Carry or place turret     ESC / START  Pause\n" + world.message
 	panel.visible = in_shop or ended or world.paused
-	for button: Button in [turret_button, plasma_button, damage_button, repair_button]:
-		button.visible = in_shop and not world.paused
+	for index in range(offer_buttons.size()):
+		var button := offer_buttons[index]
+		button.visible = in_shop and not world.paused and index < EconomyService.current_shop_offers.size()
+		if button.visible:
+			var offer: Dictionary = EconomyService.current_shop_offers[index]
+			button.text = "%s   /   %s\n%s" % [SliceShop.offer_name(offer), "INSTALLED" if offer["sold"] else "%d scrap" % offer["price"], SliceShop.offer_description(offer)]
+			button.disabled = offer["sold"] or EconomyService.total_scrap < int(offer["price"])
+	actions.visible = in_shop and not world.paused
 	continue_button.visible = not ended
 	continue_button.text = "RESUME" if world.paused else "DEPLOY NEXT WAVE"
 	restart_button.visible = ended
-	turret_button.text = "ION TURRET     /     %d scrap" % world.turret_price()
-	plasma_button.text = "PLASMA · SPLASH + KNOCKBACK     /     %d scrap" % world.turret_price("plasma")
-	damage_button.text = "+20%% TURRET DAMAGE     /     %d scrap" % (10 + world.upgrade_count * 5)
-	repair_button.text = "REPAIR 10 HULL     /     5 scrap"
-	turret_button.disabled = EconomyService.total_scrap < world.turret_price()
-	plasma_button.disabled = EconomyService.total_scrap < world.turret_price("plasma")
-	damage_button.disabled = EconomyService.total_scrap < 10 + world.upgrade_count * 5
+	reroll_button.text = "REROLL / %d scrap" % world.shop.reroll_cost()
+	reroll_button.disabled = EconomyService.total_scrap < world.shop.reroll_cost()
 	repair_button.disabled = EconomyService.total_scrap < 5 or world.player.health >= world.player.max_health
+	if panel.visible:
+		build_text.text = world.shop.build_summary()
 	if world.paused:
 		title.text = "SYSTEM PAUSED"
 		description.text = "Take a breath. The arena can wait."

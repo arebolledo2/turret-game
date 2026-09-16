@@ -31,10 +31,10 @@ func setup() -> void:
 		if stress:
 			enemy.health = 10000
 	world.add_turret(Vector3(-3, 0, 0), "plasma")
-	world.add_turret(Vector3(3, 0, 0))
+	world.add_turret(Vector3(3, 0, 0), "shock")
 	if stress:
 		for index in range(7):
-			world.add_turret(Vector3(-6 + index * 2, 0, -2), "plasma" if index % 2 == 0 else "normal")
+			world.add_turret(Vector3(-6 + index * 2, 0, -2), SliceShop.TURRETS[index % 3])
 	last_tick = Time.get_ticks_usec()
 
 func _process(_delta: float) -> void:
@@ -79,5 +79,11 @@ func stage_combat_demo() -> void:
 	target.set_physics_process(false)
 	world.combat.impact(target, target.position, Vector3.RIGHT,
 		CombatShot3D.from_stats(TurretStatsService.get_turret_stats("plasma", 1.0), GameEnums.DamageType.PLASMA), world.enemies)
+	var slowed := world.spawn_enemy(Vector3(3.8, 0, -.4))
+	slowed.health = 100
+	slowed.set_physics_process(false)
+	var shock := world.turrets[2]
+	shock.cooldown = 0
+	shock._physics_process(.01)
 	world.effects._physics_process(.14)
 	world.effects.set_physics_process(false)

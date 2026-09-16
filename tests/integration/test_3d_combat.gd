@@ -204,12 +204,12 @@ func test_plasma_purchase_counts_and_damage_upgrade_use_shared_services() -> voi
 	world.finish_wave()
 	EconomyService.total_scrap = 100
 	var price := world.turret_price("plasma")
-	assert_true(world.purchase("plasma"))
+	assert_true(buy("turret", "plasma"))
 	assert_eq(EconomyService.total_scrap, 100 - price)
 	assert_eq(TurretStatsService.turret_counts["normal"], 1)
 	assert_eq(TurretStatsService.turret_counts["plasma"], 1)
-	assert_true(world.purchase("damage"))
-	assert_almost_eq(float(TurretStatsService.get_turret_stats("plasma", 1.0)["damage"]), 12.0, .001)
+	assert_true(buy("item", "dense_rounds"))
+	assert_almost_eq(float(TurretStatsService.get_turret_stats("plasma", 1.0)["damage"]), 10.6, .001)
 	var manager = autofree(load("res://scripts/shop_manager.gd").new())
 	assert_eq(world.turret_price("plasma"), manager.calculate_turret_price(16, 1))
 	world.start_run()
@@ -249,3 +249,8 @@ func test_new_asset_pivots_and_effect_pool_are_bounded() -> void:
 	world.effects.show_explosion(Vector3.ZERO, 2)
 	assert_eq(world.effects.pulses.size(), CombatEffects3D.MAX_PULSES)
 	assert_true(world.effects.pulses[0].visible)
+
+func buy(kind: String, id: String) -> bool:
+	var price := world.turret_price(id) if kind == "turret" else world.shop.item_price(id)
+	EconomyService.current_shop_offers.append(ShopOffer.new(kind, id, price).to_dictionary())
+	return world.shop.purchase(EconomyService.current_shop_offers.size() - 1)

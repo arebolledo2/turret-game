@@ -5,7 +5,8 @@ extends Node3D
 ## legacy Node2D event bus. Progression uses the existing run-owned services.
 @export var auto_start: bool = true
 @export var show_hud: bool = true
-@export var wave_limit: int = 3
+@export var wave_limit: int = 6
+var shop := SliceShop.new()
 var session: RunSession
 var combat: Combat3D = Combat3D.new()
 var crowd: CrowdGrid3D = CrowdGrid3D.new()
@@ -28,13 +29,13 @@ var announcement_left: float = 0.0
 var spawn_clock: float = 0.0
 var spawn_interval: float = 1.0
 var remaining_spawns: int = 0
-var upgrade_count: int = 0
 var message: String = ""
 
 func _ready() -> void:
 	# This slice has a fixed Easy preset; do not mutate the user's 2D difficulty.
 	difficulty_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY].duplicate()
 	session = RunSession.new()
+	shop.world = self
 	add_child(session)
 	actor_root = Node3D.new()
 	actor_root.name = "Actors"
@@ -63,7 +64,6 @@ func start_run() -> void:
 	GameStateService.is_game_active = true
 	GameStateService.current_wave = 0
 	paused = false
-	upgrade_count = 0
 	message = ""
 	player = SliceActor.new()
 	player.world = self
@@ -157,6 +157,7 @@ func finish_wave() -> bool:
 		GameStateService.is_game_active = false
 	else:
 		GameStateMachine.transition_to(GameStateMachine.GameState.SHOP)
+		shop.open()
 	return true
 
 func spawn_enemy(at: Vector3, type_id: String = "basic") -> SliceActor:
@@ -254,37 +255,11 @@ func _on_player_died(_actor: SliceActor) -> void:
 func turret_price(type_id: String = "normal") -> int:
 	return EconomyService.calculate_turret_price(TurretRegistry.get_base_price(type_id), GameStateService.current_wave)
 
-func purchase(kind: String) -> bool:
-	if paused or GameStateMachine.current_state != GameStateMachine.GameState.SHOP:
+func repair() -> bool:
+	if not shop.is_open() or player.health >= player.max_health or not EconomyService.deduct_scrap(5):
 		return false
-	var price: int
-	var spawn_at := Vector3.INF
-	match kind:
-		"turret", "plasma":
-			price = turret_price("plasma" if kind == "plasma" else "normal")
-			spawn_at = find_placement()
-			if spawn_at == Vector3.INF:
-				message = "No room for another turret."
-				return false
-		"damage": price = 10 + upgrade_count * 5
-		"repair":
-			price = 5
-			if player.health >= player.max_health:
-				return false
-		_: return false
-	if not EconomyService.deduct_scrap(price):
-		message = "Need %d scrap." % price
-		return false
-	match kind:
-		"turret", "plasma":
-			add_turret(spawn_at, "plasma" if kind == "plasma" else "normal")
-			EconomyService.turrets_purchased += 1
-		"damage":
-			upgrade_count += 1
-			ModifierService.add_modifier({"id": "slice_damage_%d" % upgrade_count,
-				"stat": "damage", "operation": "increase", "value": .2, "filter": {"turret_type": ["normal", "plasma"]}})
-		"repair": player.health = minf(player.max_health, player.health + 10.0)
-	message = "Upgrade installed."
+	player.health = minf(player.max_health, player.health + 10.0)
+	message = "Hull repaired."
 	return true
 
 func find_placement() -> Vector3:

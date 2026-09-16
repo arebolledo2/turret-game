@@ -32,14 +32,14 @@ func test_wave_shop_purchase_and_restart_use_shared_run_services() -> void:
 	assert_false(world.finish_wave(), "A duplicate end must not pay twice")
 	EconomyService.total_scrap = 100
 	var price := world.turret_price()
-	assert_true(world.purchase("turret"))
+	assert_true(buy("turret", "normal"))
 	assert_eq(world.turrets.size(), 2)
 	assert_eq(EconomyService.total_scrap, 100 - price)
 	assert_eq(TurretStatsService.get_total_turret_count(), 2)
 	assert_true(world.begin_next_wave())
 	assert_false(world.begin_next_wave(), "Duplicate deployment must not increment the wave")
 	assert_eq(GameStateService.current_wave, 2)
-	assert_false(world.purchase("turret"), "No combat purchases")
+	assert_false(buy("turret", "normal"), "No combat purchases")
 	world.start_run()
 	assert_eq(world.turrets.size(), 1)
 	assert_eq(GameStateService.current_wave, 1)
@@ -52,15 +52,15 @@ func test_upgrade_uses_existing_modifier_calculation_and_rejects_invalid_purchas
 	world.finish_wave()
 	EconomyService.total_scrap = 100
 	var before: float = TurretStatsService.get_turret_stats("normal", 1.0)["damage"]
-	assert_true(world.purchase("damage"))
+	assert_true(buy("item", "dense_rounds"))
 	var after: float = TurretStatsService.get_turret_stats("normal", 1.0)["damage"]
-	assert_almost_eq(after, before * 1.2, .001)
+	assert_almost_eq(after, before * 1.06, .001)
 	var balance := EconomyService.total_scrap
-	assert_false(world.purchase("repair"), "Full health must not charge for a repair")
-	assert_false(world.purchase("unknown"))
+	assert_false(world.repair(), "Full health must not charge for a repair")
+	assert_false(world.shop.purchase(-1))
 	assert_eq(EconomyService.total_scrap, balance)
 	EconomyService.total_scrap = 0
-	assert_false(world.purchase("turret"))
+	assert_false(buy("turret", "normal"))
 	assert_eq(world.turrets.size(), 1)
 	world.start_run()
 	assert_almost_eq(float(TurretStatsService.get_turret_stats("normal", 1.0)["damage"]), before, .001)
@@ -114,7 +114,7 @@ func test_pause_freezes_timer_and_blocks_shop_mutation() -> void:
 	world.toggle_pause()
 	world.finish_wave()
 	world.toggle_pause()
-	assert_false(world.purchase("turret"))
+	assert_false(buy("turret", "normal"))
 
 func test_carry_placement_and_wave_end_restore_ground_position() -> void:
 	combat()
@@ -185,7 +185,7 @@ func test_contact_damage_has_invulnerability_and_repair_is_capped() -> void:
 	assert_eq(world.player.health, before - 4)
 	world.finish_wave()
 	EconomyService.total_scrap = 20
-	assert_true(world.purchase("repair"))
+	assert_true(world.repair())
 	assert_eq(world.player.health, world.player.max_health)
 	assert_eq(EconomyService.total_scrap, 15)
 
@@ -201,3 +201,8 @@ func test_spawn_overlap_hits_once_and_wave_cleanup_releases_all_projectiles() ->
 	world.finish_wave()
 	assert_false(another.active)
 	assert_eq(world.enemies.size(), 0)
+
+func buy(kind: String, id: String) -> bool:
+	var price := world.turret_price(id) if kind == "turret" else world.shop.item_price(id)
+	EconomyService.current_shop_offers.append(ShopOffer.new(kind, id, price).to_dictionary())
+	return world.shop.purchase(EconomyService.current_shop_offers.size() - 1)

@@ -36,6 +36,8 @@ Manages the scrap economy: earning from kills and wave bonuses, shop offer gener
 
 `calculate_turret_price(base_price, wave)` owns the shared turret-pricing policy: wave scaling, purchase penalty, item price modifiers, and Quantity Discount. Both `ShopManager` and the [3D proving ground](3d-slice.md) call it.
 
+`calculate_item_price(base_price, wave, item_id)` similarly owns item wave scaling and applicable discounts. The 3D shop supplies its short-run base price; legacy callers retain their existing base prices.
+
 ### ItemTrackingService
 **File:** `scripts/autoload/item_tracking_service.gd`
 Tracks collected items across the game session. Maintains the player's item inventory and provides lookup capabilities.

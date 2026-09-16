@@ -137,21 +137,7 @@ func calculate_turret_price(base_price: int, wave: int) -> int:
 	return EconomyService.calculate_turret_price(base_price, wave)
 
 func calculate_item_price(base_price: int, wave: int, item_id: String = "") -> int:
-	var price := base_price * (1.0 + GameConstants.WAVE_PRICE_SCALE * wave)
-
-	# Apply Fortune's Favor discount for rare+ items
-	if not item_id.is_empty() and ItemRegistry.has_special_effect("fortune_discount"):
-		var rarity := ItemRegistry.get_rarity(item_id)
-		if rarity >= GameEnums.ItemRarity.RARE:
-			# Check if player has Fortune's Favor
-			if ItemTrackingService.item_counts.get("fortunes_favor", 0) > 0:
-				price *= 0.85 # 15% discount
-
-	# Apply shop price multiplier from items
-	var shop_price_mult: float = ItemTrackingService.get_shop_price_multiplier()
-	price *= shop_price_mult
-
-	return int(price)
+	return EconomyService.calculate_item_price(base_price, wave, item_id)
 
 func purchase_offer(offer_index: int) -> bool:
 	if offer_index < 0 or offer_index >= EconomyService.current_shop_offers.size():
