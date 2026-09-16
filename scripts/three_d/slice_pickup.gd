@@ -2,6 +2,7 @@ class_name SlicePickup
 extends Area3D
 
 var world: Node
+var amount: int = 1
 var collected: bool = false
 var age: float = 0.0
 var visual: MeshInstance3D
@@ -38,5 +39,5 @@ func collect() -> void:
 	if collected:
 		return
 	collected = true
-	world.collect_scrap(1)
+	world.collect_scrap(amount)
 	queue_free()

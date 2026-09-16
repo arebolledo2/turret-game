@@ -10,6 +10,7 @@ var panel: PanelContainer
 var title: Label
 var description: Label
 var turret_button: Button
+var plasma_button: Button
 var damage_button: Button
 var repair_button: Button
 var continue_button: Button
@@ -79,6 +80,8 @@ func _ready() -> void:
 	title = _label(column, "", 32, Color("d7f2eb"))
 	description = _label(column, "", 17, Color("a3bbc6"))
 	turret_button = _button(column, "", func() -> void: world.purchase("turret"))
+	plasma_button = _button(column, "", func() -> void: world.purchase("plasma"))
+	plasma_button.tooltip_text = "Explosive orbs hit nearby enemies and interrupt chargers with knockback."
 	damage_button = _button(column, "", func() -> void: world.purchase("damage"))
 	repair_button = _button(column, "", func() -> void: world.purchase("repair"))
 	continue_button = _button(column, "DEPLOY NEXT WAVE", _continue)
@@ -133,15 +136,17 @@ func _process(_delta: float) -> void:
 	status.text = "DEPLOYING WAVE %d  ·  %d" % [GameStateService.current_wave, ceili(world.announcement_left)] if phase == GameStateMachine.GameState.WAVE_ANNOUNCEMENT else ""
 	hint.text = "WASD / LEFT STICK  Move     E / A  Carry or place turret     ESC / START  Pause\n" + world.message
 	panel.visible = in_shop or ended or world.paused
-	for button: Button in [turret_button, damage_button, repair_button]:
+	for button: Button in [turret_button, plasma_button, damage_button, repair_button]:
 		button.visible = in_shop and not world.paused
 	continue_button.visible = not ended
 	continue_button.text = "RESUME" if world.paused else "DEPLOY NEXT WAVE"
 	restart_button.visible = ended
 	turret_button.text = "ION TURRET     /     %d scrap" % world.turret_price()
+	plasma_button.text = "PLASMA · SPLASH + KNOCKBACK     /     %d scrap" % world.turret_price("plasma")
 	damage_button.text = "+20%% TURRET DAMAGE     /     %d scrap" % (10 + world.upgrade_count * 5)
 	repair_button.text = "REPAIR 10 HULL     /     5 scrap"
 	turret_button.disabled = EconomyService.total_scrap < world.turret_price()
+	plasma_button.disabled = EconomyService.total_scrap < world.turret_price("plasma")
 	damage_button.disabled = EconomyService.total_scrap < 10 + world.upgrade_count * 5
 	repair_button.disabled = EconomyService.total_scrap < 5 or world.player.health >= world.player.max_health
 	if world.paused:

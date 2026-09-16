@@ -56,4 +56,4 @@ See [audit-improvements.md](audit-improvements.md) for the September 2026 mainte
 
 See [3D migration investigation](3d-migration-investigation.md) for the proposed replacement of the 2D game and an AI-assisted Blender asset pipeline.
 
-The first [playable 3D proving ground](3d-slice.md) is available via `./launch_3d.ps1`.
+The [playable 3D proving ground](3d-slice.md) is available via `./launch_3d.ps1`, including plasma splash, telegraphed chargers, crowd separation, and five scripted Blender models.

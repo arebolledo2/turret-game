@@ -2,7 +2,7 @@
 
 Investigated 2026-09-16. This is a proposal, not an implemented migration. Source inspection and local hardware checks were performed; no 3D generation service, Blender model-building workflow, or game benchmark was run.
 
-Implementation follow-up: the first playable loop and scripted Blender asset pair are now available. See [3D proving ground](3d-slice.md) for implemented scope and verification; the broader migration below remains a proposal.
+Implementation follow-up: two playable slices now include ion/plasma turrets, chasing/charging drones, a player bot, five scripted Blender assets, native 3D combat contracts, and crowd separation. See [3D proving ground](3d-slice.md) for implemented scope and verification; the broader migration below remains a proposal.
 
 ## Recommendation
 

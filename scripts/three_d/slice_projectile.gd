@@ -9,9 +9,15 @@ var damage: float = 0.0
 var speed: float = 0.0
 var remaining: float = 0.0
 var sweep: ShapeCast3D
+var shot: CombatShot3D
+var visual: MeshInstance3D
+var normal_material: StandardMaterial3D
+var plasma_material: StandardMaterial3D
 
 func _ready() -> void:
-	SliceGeometry.sphere(self, .075, Vector3.ZERO, SliceGeometry.material(Color("8ffff4"), true))
+	normal_material = SliceGeometry.material(Color("8ffff4"), true)
+	plasma_material = SliceGeometry.material(Color("b56cff"), true)
+	visual = SliceGeometry.sphere(self, .075, Vector3.ZERO, normal_material)
 	sweep = ShapeCast3D.new()
 	var sphere := SphereShape3D.new()
 	sphere.radius = .075
@@ -24,10 +30,19 @@ func _ready() -> void:
 	release()
 
 func acquire(origin: Vector3, heading: Vector3, hit_damage: float, shot_speed: float) -> void:
+	var spec := CombatShot3D.new()
+	spec.damage = hit_damage
+	spec.speed = shot_speed
+	acquire_shot(origin, heading, spec)
+
+func acquire_shot(origin: Vector3, heading: Vector3, spec: CombatShot3D) -> void:
 	position = origin
 	direction = SliceGeometry.planar(heading).normalized()
-	damage = hit_damage
-	speed = shot_speed
+	shot = spec.copy()
+	damage = shot.damage
+	speed = shot.speed
+	visual.material_override = plasma_material if shot.damage_type == GameEnums.DamageType.PLASMA else normal_material
+	visual.scale = Vector3.ONE * (2.0 if shot.splash_radius > 0.0 else 1.0)
 	remaining = 3.0
 	active = true
 	visible = true
@@ -39,6 +54,10 @@ func release() -> void:
 	damage = 0.0
 	speed = 0.0
 	remaining = 0.0
+	shot = null
+	if visual:
+		visual.scale = Vector3.ONE
+		visual.material_override = normal_material
 	set_physics_process(false)
 
 func _physics_process(delta: float) -> void:
@@ -66,7 +85,7 @@ func advance(delta: float) -> void:
 			closest = distance
 			hit = actor
 	if hit:
-		hit.take_damage(damage)
+		world.combat.impact(hit, hit.position, direction, shot, world.enemies)
 		release()
 		return
 	position += motion

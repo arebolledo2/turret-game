@@ -34,6 +34,8 @@ Central source of truth for named runtime gates. It exposes defaults, scopes, `i
 **File:** `scripts/autoload/economy_service.gd`
 Manages the scrap economy: earning from kills and wave bonuses, shop offer generation (65% items / 35% turrets), rerolls, and purchases. Handles shop pricing and availability.
 
+`calculate_turret_price(base_price, wave)` owns the shared turret-pricing policy: wave scaling, purchase penalty, item price modifiers, and Quantity Discount. Both `ShopManager` and the [3D proving ground](3d-slice.md) call it.
+
 ### ItemTrackingService
 **File:** `scripts/autoload/item_tracking_service.gd`
 Tracks collected items across the game session. Maintains the player's item inventory and provides lookup capabilities.

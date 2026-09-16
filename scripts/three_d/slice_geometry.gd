@@ -25,6 +25,19 @@ static func material(color: Color, emission: bool = false) -> StandardMaterial3D
 		result.emission_energy_multiplier = 1.5
 	return result
 
+static func ring(parent: Node3D, radius: float, color: Color) -> MeshInstance3D:
+	var mesh := TorusMesh.new()
+	mesh.inner_radius = maxf(.01, radius - .025)
+	mesh.outer_radius = radius + .025
+	mesh.rings = 24
+	mesh.ring_segments = 6
+	var instance := MeshInstance3D.new()
+	instance.mesh = mesh
+	instance.material_override = material(color, true)
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(instance)
+	return instance
+
 static func box(parent: Node3D, size: Vector3, at: Vector3, mat: Material) -> MeshInstance3D:
 	var mesh := BoxMesh.new()
 	mesh.size = size
