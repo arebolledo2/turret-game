@@ -9,7 +9,6 @@ const TYPES: Dictionary = {
 		"icon": "🕷️",
 		"description": "Spider-like drone with sleek neon design.",
 		"behaviors": [GameEnums.EnemyBehavior.CHASE],
-		"scene_path": "res://scenes/enemy_spider_drone.tscn",
 		"sprite_folder": "res://assets/sprites/enemy_spider_drone",
 		"base_stats": {
 			"health": 8.0,
@@ -165,7 +164,6 @@ const TYPES: Dictionary = {
 		"icon": "💠",
 		"description": "Animated hovering drone with neon synth aesthetics.",
 		"behaviors": [GameEnums.EnemyBehavior.CHASE],
-		"scene_path": "res://scenes/enemy_animated.tscn",
 		"base_stats": {
 			"health": 10.0,
 			"speed": 100.0,
@@ -296,13 +294,13 @@ static func has_behavior(type_id: String, behavior: GameEnums.EnemyBehavior) -> 
 static func get_spawn_count(type_id: String) -> int:
 	if not TYPES.has(type_id):
 		return 1
-	
+
 	var spawn_count = TYPES[type_id].get("spawn_count", 1)
-	
+
 	# Handle array format for random range [min, max]
 	if spawn_count is Array and spawn_count.size() == 2:
 		return GameRandom.gameplay.randi_range(spawn_count[0], spawn_count[1])
-	
+
 	# Handle fixed integer
 	return spawn_count
 

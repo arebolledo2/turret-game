@@ -30,7 +30,7 @@ func test_rejects_non_assets_texture_path():
 	service.upsert_override(
 		EntityAssetConfig.EntityKind.PLAYER,
 		"main",
-		{"visual.texture_paths.left": "res://scripts/player.gd"}
+		{"visual.texture_paths.left": "res://scripts/game/combat_actor.gd"}
 	)
 
 	var config := service.get_player_config()

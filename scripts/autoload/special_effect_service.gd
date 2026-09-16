@@ -3,17 +3,9 @@ extends Node
 ## Special Effect Service
 ## Centralizes complex item logic and proximity-based turret effects
 
-# Injected reference - set via set_turret_manager() during game setup
-var _turret_manager: Node = null
-
-
-func set_turret_manager(manager: Node) -> void:
-	_turret_manager = manager
-
-
 func apply_static_effects(turret_type: String, stats: Dictionary) -> void:
 	"""Apply effects that depend on global game state (e.g., owned items, total turrets)."""
-	
+
 	# Elemental Conduit: +15% damage per damage type diversity
 	if ItemRegistry.has_special_effect("elemental_conduit") and ItemTrackingService.item_counts.get("elemental_conduit", 0) > 0:
 		var diversity = ItemTrackingService.get_damage_type_diversity()
@@ -76,49 +68,6 @@ func apply_static_effects(turret_type: String, stats: Dictionary) -> void:
 		if diversity == 6:
 			damage_bonus += 0.25 # Completion bonus
 		stats["damage"] = stats.get("damage", 0.0) * (1.0 + damage_bonus)
-
-
-func apply_instance_effects(turret: Node2D, stats: Dictionary) -> void:
-	"""Apply effects that depend on a specific turret instance (e.g., proximity to others)."""
-	if not _turret_manager:
-		return
-
-	# Signal Amplifier: +15% range if clustered, -10% fire rate if isolated
-	if ItemRegistry.has_special_effect("signal_amplifier") and ItemTrackingService.item_counts.get("signal_amplifier", 0) > 0:
-		var stacks = ItemTrackingService.item_counts.get("signal_amplifier", 0)
-		var nearby = _turret_manager.get_turrets_within_radius(turret.global_position, GameConstants.SIGNAL_AMPLIFIER_RANGE)
-		if nearby.size() > 0:
-			# Clustered: +15% range per stack
-			var range_mult = 1.0 + (0.15 * stacks)
-			stats["range"] = stats.get("range", 0.0) * range_mult
-		else:
-			# Isolated: -10% fire rate per stack
-			var fire_rate_mult = 1.0 - (0.10 * stacks)
-			stats["fire_rate"] = stats.get("fire_rate", 1.0) * fire_rate_mult
-
-	# Isolation Protocol: +40% damage if isolated, -15% damage if clustered
-	if ItemRegistry.has_special_effect("isolation_protocol") and ItemTrackingService.item_counts.get("isolation_protocol", 0) > 0:
-		var stacks = ItemTrackingService.item_counts.get("isolation_protocol", 0)
-		var nearby = _turret_manager.get_turrets_within_radius(turret.global_position, GameConstants.ISOLATION_PROTOCOL_RANGE)
-		if nearby.size() == 0:
-			# Isolated: +40% damage per stack
-			var damage_mult = 1.0 + (0.40 * stacks)
-			stats["damage"] = stats.get("damage", 0.0) * damage_mult
-		else:
-			# Clustered: -15% damage per stack
-			var damage_mult = 1.0 - (0.15 * stacks)
-			stats["damage"] = stats.get("damage", 0.0) * damage_mult
-
-	# Feedback Loop: +6% fire rate per nearby turret (max +30% per stack)
-	if ItemRegistry.has_special_effect("feedback_loop") and ItemTrackingService.item_counts.get("feedback_loop", 0) > 0:
-		var stacks = ItemTrackingService.item_counts.get("feedback_loop", 0)
-		var nearby = _turret_manager.get_turrets_within_radius(turret.global_position, GameConstants.FEEDBACK_LOOP_RANGE)
-		var fire_rate_bonus = min(nearby.size() * 0.06, 0.30) * stacks
-		stats["fire_rate"] = stats.get("fire_rate", 1.0) * (1.0 + fire_rate_bonus)
-
-	# Apply temporary buffs from Chain Reaction
-	var fire_rate_buff: float = BuffSystem.get_buff_multiplier(turret, "fire_rate")
-	stats["fire_rate"] = stats.get("fire_rate", 1.0) * fire_rate_buff
 
 
 func get_turret_min_distance(item_counts: Dictionary) -> float:

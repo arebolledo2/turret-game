@@ -29,43 +29,11 @@ var active_buffs: Dictionary:
 	get: return state.active_buffs
 	set(value): state.active_buffs = value
 
-# Injected reference - set via set_turret_manager() during game setup
-var _turret_manager: Node = null
-
-
 func reset_state() -> void:
 	active_buffs.clear()
 
 
-func set_turret_manager(manager: Node) -> void:
-	_turret_manager = manager
-
-
-func _ready() -> void:
-	# Listen for Chain Reaction triggers
-	Events.turret_fired.connect(_on_turret_fired)
-
-func _on_turret_fired(turret: Node2D) -> void:
-	# Chain Reaction: When a turret fires, turrets within 150px +8% fire rate for 2s (stacks 5x)
-	if not ItemRegistry.has_special_effect("chain_reaction"):
-		return
-	if ItemTrackingService.item_counts.get("chain_reaction", 0) == 0:
-		return
-
-	if not _turret_manager:
-		return
-
-	# Get turrets within range of the firing turret
-	var nearby = _turret_manager.get_turrets_within_radius(turret.global_position, GameConstants.CHAIN_REACTION_RANGE)
-
-	# Apply buff to nearby turrets
-	# Uses "more" operation since Chain Reaction stacks multiplicatively
-	for nearby_turret in nearby:
-		if is_instance_valid(nearby_turret):
-			var buff = Buff.new("fire_rate", GameConstants.CHAIN_REACTION_FIRE_RATE_MULT, "more", GameConstants.CHAIN_REACTION_DURATION, GameConstants.CHAIN_REACTION_MAX_STACKS)
-			apply_buff(nearby_turret, buff)
-
-func apply_buff(turret: Node2D, buff: Buff) -> void:
+func apply_buff(turret: Node, buff: Buff) -> void:
 	var turret_id = turret.get_instance_id()
 	if not active_buffs.has(turret_id):
 		active_buffs[turret_id] = []
@@ -118,7 +86,7 @@ func _process(delta: float) -> void:
 			turret.update_stats()
 
 ## Get total flat (add) value from active buffs for a turret's stat
-func get_buff_flat(turret: Node2D, stat: String) -> float:
+func get_buff_flat(turret: Node, stat: String) -> float:
 	var turret_id = turret.get_instance_id()
 	if not active_buffs.has(turret_id):
 		return 0.0
@@ -133,7 +101,7 @@ func get_buff_flat(turret: Node2D, stat: String) -> float:
 
 ## Get total increase value from active buffs for a turret's stat
 ## Returns the sum of all increase percentages (to be used as: 1 + increase_total)
-func get_buff_increase(turret: Node2D, stat: String) -> float:
+func get_buff_increase(turret: Node, stat: String) -> float:
 	var turret_id = turret.get_instance_id()
 	if not active_buffs.has(turret_id):
 		return 0.0
@@ -148,7 +116,7 @@ func get_buff_increase(turret: Node2D, stat: String) -> float:
 
 ## Get combined "more" multiplier from active buffs for a turret's stat
 ## Each "more" buff multiplies independently (PoE style)
-func get_buff_more_multiplier(turret: Node2D, stat: String) -> float:
+func get_buff_more_multiplier(turret: Node, stat: String) -> float:
 	var turret_id = turret.get_instance_id()
 	if not active_buffs.has(turret_id):
 		return 1.0
@@ -164,10 +132,10 @@ func get_buff_more_multiplier(turret: Node2D, stat: String) -> float:
 
 
 ## Legacy compatibility: Get total additive value (alias for get_buff_flat)
-func get_buff_add_value(turret: Node2D, stat: String) -> float:
+func get_buff_add_value(turret: Node, stat: String) -> float:
 	return get_buff_flat(turret, stat)
 
 
 ## Legacy compatibility: Get total multiplier (now returns "more" multiplier)
-func get_buff_multiplier(turret: Node2D, stat: String) -> float:
+func get_buff_multiplier(turret: Node, stat: String) -> float:
 	return get_buff_more_multiplier(turret, stat)

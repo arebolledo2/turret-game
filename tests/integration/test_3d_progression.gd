@@ -1,10 +1,10 @@
 extends GutTest
 
-var world: SliceWorld
+var world: ArenaWorld
 
 func before_each() -> void:
 	TestHelpers.reset_all_services()
-	world = SliceWorld.new()
+	world = ArenaWorld.new()
 	world.auto_start = false
 	world.show_hud = false
 	add_child_autofree(world)
@@ -23,7 +23,7 @@ func stock(kind: String, id: String, cost: int = -1) -> int:
 	EconomyService.current_shop_offers.append(ShopOffer.new(kind, id, price).to_dictionary())
 	return EconomyService.current_shop_offers.size() - 1
 
-func enemy(at: Vector3, type_id: String = "basic") -> SliceActor:
+func enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
 	var actor := world.spawn_enemy(at, type_id)
 	actor.set_physics_process(false)
 	actor.max_health = 100
@@ -48,10 +48,10 @@ func test_catalog_generates_unique_supported_offers_at_registry_prices() -> void
 			assert_false(offer.asset_id in seen)
 			seen.append(offer.asset_id)
 			if offer.kind == "turret":
-				assert_true(offer.asset_id in SliceShop.TURRETS)
+				assert_true(offer.asset_id in ArenaShop.TURRETS)
 				assert_eq(offer.price, world.turret_price(offer.asset_id))
 			else:
-				assert_true(offer.asset_id in SliceShop.ITEMS)
+				assert_true(offer.asset_id in ArenaShop.ITEMS)
 				assert_eq(offer.price, world.shop.item_price(offer.asset_id))
 				assert_lte(ItemRegistry.get_rarity(offer.asset_id), GameEnums.ItemRarity.UNCOMMON)
 	assert_eq(world.shop.item_price("dense_rounds"), 12)
@@ -121,7 +121,7 @@ func test_item_modifiers_affect_all_weapons_and_respect_filters() -> void:
 	assert_true(world.shop.purchase(stock("item", "rapid_coolant")))
 	assert_true(world.shop.purchase(stock("item", "extended_barrel")))
 	assert_true(world.shop.purchase(stock("item", "ammo_surplus")))
-	for type_id in SliceShop.TURRETS:
+	for type_id in ArenaShop.TURRETS:
 		var base: Dictionary = TurretRegistry.TYPES[type_id]["base_stats"]
 		var stats := TurretStatsService.get_turret_stats(type_id, 1.0)
 		assert_almost_eq(float(stats["range"]), float(base["range"]) * 1.05, .001)
@@ -139,7 +139,7 @@ func test_hull_speed_and_pickup_upgrades_apply_and_restart_clears_build() -> voi
 	assert_true(world.shop.purchase(stock("item", "scrap_magnet")))
 	assert_almost_eq(PlayerStatsService.get_pickup_radius(), GameConstants.PLAYER_PICKUP_RADIUS * 1.3, .001)
 	assert_string_contains(world.shop.build_summary(), "Reinforced Hull")
-	assert_string_contains(SliceShop.item_description("reinforced_hull"), "+4 max hull")
+	assert_string_contains(ArenaShop.item_description("reinforced_hull"), "+4 max hull")
 	assert_true(world.repair())
 	assert_eq(world.player.health, 29.0)
 	world.start_run()
@@ -162,7 +162,7 @@ func test_status_refresh_uses_strongest_slow_and_expires_without_multiplying() -
 	assert_true(actor.statuses.effects.is_empty())
 
 func test_pickup_and_movement_use_purchased_stats_in_the_world() -> void:
-	var pickup := SlicePickup.new()
+	var pickup := ScrapPickup.new()
 	pickup.world = world
 	pickup.position = world.player.position + Vector3(1.05, 0, 0)
 	world.pickup_root.add_child(pickup)
@@ -175,7 +175,7 @@ func test_pickup_and_movement_use_purchased_stats_in_the_world() -> void:
 	assert_true(world.shop.purchase(stock("item", "shock_absorbers")))
 	world.begin_next_wave()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
-	pickup = SlicePickup.new()
+	pickup = ScrapPickup.new()
 	pickup.world = world
 	pickup.position = before
 	world.pickup_root.add_child(pickup)
@@ -281,7 +281,7 @@ func test_six_wave_loop_supports_distinct_builds_and_only_ends_after_wave_six() 
 			assert_eq(TurretStatsService.turret_counts["shock"], 1)
 
 func test_hud_shows_offers_build_and_terminal_summary() -> void:
-	var hud := preload("res://scripts/three_d/slice_hud.gd").new()
+	var hud := preload("res://scripts/game/game_hud.gd").new()
 	hud.world = world
 	world.add_child(hud)
 	world.finish_wave()

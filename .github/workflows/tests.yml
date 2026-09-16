@@ -21,8 +21,28 @@ jobs:
           "GODOT_BIN=$godot" >> $env:GITHUB_ENV
       - name: Verify test gate
         run: ./tools/test_test_gate.ps1
+      - name: Audit game resources
+        run: python tools/audit_game_resources.py
       - name: Import and run full GUT suite
         run: ./run_tests.ps1 -Import -timeout 300
+      - name: Smoke six-wave builds
+        timeout-minutes: 6
+        run: |
+          foreach ($route in @('ion', 'control')) {
+            $arguments = @('--headless', '--path', '.', 'res://tools/smoke_progression.tscn')
+            if ($route -eq 'control') { $arguments += @('--', '--control') }
+            $output = & $env:GODOT_BIN @arguments 2>&1
+            $result = $LASTEXITCODE
+            $output | Tee-Object -FilePath ".test-results/smoke-$route.log"
+            $report = ($output | Where-Object { "$_" -like 'PROGRESSION_SMOKE *' } | Select-Object -Last 1)
+            if ($result -ne 0 -or -not $report -or ($output -match '(SCRIPT ERROR:|ERROR:)')) {
+              throw "Progression smoke failed: $route"
+            }
+            $data = ("$report" -replace '^PROGRESSION_SMOKE ', '') | ConvertFrom-Json
+            if (-not $data.victory -or $data.wave -ne 6 -or $data.route -ne $route) {
+              throw "Progression smoke did not complete six waves: $route"
+            }
+          }
       - name: Retain results and diagnostics
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

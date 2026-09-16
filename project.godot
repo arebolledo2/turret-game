@@ -37,9 +37,7 @@ TechTreeService="*res://scripts/autoload/tech_tree_service.gd"
 BuffSystem="*res://scripts/systems/buff_system.gd"
 UIScaler="*res://scripts/autoload/ui_scaler.gd"
 FontSizes="*res://scripts/autoload/font_sizes.gd"
-OffScreenIndicatorService="*res://scripts/autoload/off_screen_indicator_service.gd"
 SpecialEffectService="*res://scripts/autoload/special_effect_service.gd"
-AudioService="*res://scripts/autoload/audio_service.gd"
 
 [debug]
 

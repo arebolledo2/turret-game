@@ -10,7 +10,7 @@ Wave-based survival tower defense game built in **Godot 4.7** using GDScript. Pl
 - **Key Pattern**: Explicit commands/queries; signal bus (`Events`) for notifications
 - **Tests**: GUT framework - run with `.\run_tests.ps1`
 - **Launch**: `.\launch.ps1`
-- **3D slice**: `.\launch_3d.ps1` (see `doc/3d-slice.md`)
+- **Current game**: Native 3D; see `doc/gameplay.md`. The 2D runtime is retired.
 - **Commit Style**: Single emoji prefix (e.g., `✨ Add feature`, `🐛 Fix bug`)
 
 ## Documentation

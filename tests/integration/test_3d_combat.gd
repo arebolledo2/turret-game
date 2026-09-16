@@ -1,10 +1,10 @@
 extends GutTest
 
-var world: SliceWorld
+var world: ArenaWorld
 
 func before_each() -> void:
 	TestHelpers.reset_all_services()
-	world = SliceWorld.new()
+	world = ArenaWorld.new()
 	world.auto_start = false
 	world.show_hud = false
 	add_child_autofree(world)
@@ -15,7 +15,7 @@ func before_each() -> void:
 	world.pickup_root.process_mode = Node.PROCESS_MODE_DISABLED
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 
-func enemy(at: Vector3, type_id: String = "basic") -> SliceActor:
+func enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
 	var actor := world.spawn_enemy(at, type_id)
 	actor.set_physics_process(false)
 	actor.health = 100
@@ -210,8 +210,7 @@ func test_plasma_purchase_counts_and_damage_upgrade_use_shared_services() -> voi
 	assert_eq(TurretStatsService.turret_counts["plasma"], 1)
 	assert_true(buy("item", "dense_rounds"))
 	assert_almost_eq(float(TurretStatsService.get_turret_stats("plasma", 1.0)["damage"]), 10.6, .001)
-	var manager = autofree(load("res://scripts/shop_manager.gd").new())
-	assert_eq(world.turret_price("plasma"), manager.calculate_turret_price(16, 1))
+	assert_eq(world.turret_price("plasma"), EconomyService.calculate_turret_price(16, 1))
 	world.start_run()
 	assert_false(TurretStatsService.turret_counts.has("plasma"))
 

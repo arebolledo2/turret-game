@@ -1,5 +1,56 @@
 extends Node
 
+var preferences_path: String = "user://game_preferences.cfg"
+var fullscreen: bool = false
+var vsync: bool = true
+
+func _ready() -> void:
+	load_preferences()
+
+func load_preferences() -> void:
+	var config := ConfigFile.new()
+	if config.load(preferences_path) == OK:
+		var saved_fullscreen: Variant = config.get_value("display", "fullscreen", false)
+		var saved_vsync: Variant = config.get_value("display", "vsync", true)
+		var saved_motion: Variant = config.get_value("accessibility", "reduced_motion", false)
+		if saved_fullscreen is bool:
+			fullscreen = saved_fullscreen
+		if saved_vsync is bool:
+			vsync = saved_vsync
+		if saved_motion is bool:
+			FeatureFlagService.set_enabled(FeatureFlagService.REDUCED_MOTION, saved_motion)
+	apply_display_preferences()
+
+func save_preferences() -> Error:
+	var config := ConfigFile.new()
+	config.set_value("display", "fullscreen", fullscreen)
+	config.set_value("display", "vsync", vsync)
+	config.set_value("accessibility", "reduced_motion", FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
+	return config.save(preferences_path)
+
+func apply_display_preferences() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED)
+	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED)
+
+func set_fullscreen(enabled: bool, persist: bool = true) -> void:
+	fullscreen = enabled
+	apply_display_preferences()
+	if persist:
+		save_preferences()
+
+func set_vsync(enabled: bool, persist: bool = true) -> void:
+	vsync = enabled
+	apply_display_preferences()
+	if persist:
+		save_preferences()
+
+func set_reduced_motion(enabled: bool, persist: bool = true) -> void:
+	FeatureFlagService.set_enabled(FeatureFlagService.REDUCED_MOTION, enabled)
+	if persist:
+		save_preferences()
+
 ## Settings Service
 ## Manages runtime preferences and debug flags
 
@@ -37,8 +88,7 @@ var debug_hitbox_flags: Dictionary = {
 }
 
 func reset_state() -> void:
-	# Resets all settings flags to defaults. GameManager intentionally uses
-	# reset_debug_state() between runs so user-selected settings persist.
+	# Explicit test/debug reset. RunSession keeps app preferences across runs.
 	FeatureFlagService.reset_state()
 	reset_debug_state()
 

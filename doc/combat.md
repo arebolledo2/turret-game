@@ -1,74 +1,27 @@
-# Combat & Modifier Systems
+# Combat
 
-## Overview
+Native 3D combat is implemented in `scripts/game/`. Turrets and player auto-fire use shared stat/modifier services; registry distances and speeds convert to metres through `WorldGeometry.METRES_PER_PIXEL`.
 
-The combat system encompasses projectile mechanics, status effects, critical hits, modifier stacking, and temporary buffs. Turrets and the player use nearest-neighbor targeting. The economy system ties into combat through scrap rewards from kills.
+## Damage and attacks
 
-## Modifier System
+`CombatShot3D` snapshots damage, projectile speed, splash radius, knockback, slow intensity/duration and damage type when fired. `CombatHit3D` carries one resolved hit. `Combat3D` applies damage and emits local notifications for cosmetics and rewards. Splash snapshots its targets before deaths mutate the enemy list.
 
-### ModifierService
-**File:** `scripts/autoload/modifier_service.gd`
-Autoload wrapper for ModifierSystem. Manages permanent stat modifications applied by items and tech tree upgrades.
+`Projectile3D` uses ShapeCast3D sweeps and reusable instances. Reuse resets the complete shot state. Actor contact checks sweep movement segments, including charger dashes. Player invulnerability prevents repeated contact damage during its cooldown.
 
-### ModifierSystem
-**File:** `scripts/systems/modifier_system.gd`
-Core modifier logic using **PoE-style stacking** with three operation types:
-- **Add** — Flat value additions (applied first)
-- **Increase** — Percentage increases that stack additively with each other
-- **More** — Percentage multipliers that stack multiplicatively
+| Weapon | Runtime behavior |
+|---|---|
+| Ion | Rapid single-target projectile fire |
+| Plasma | Cluster targeting, splash and knockback; interrupts charges |
+| Shock | Radial electric pulse with 25% slow for 0.5 seconds |
 
-Supports **filter dimensions**: turret_type, damage_type, attack_style, entity_type. Filters allow modifiers to target specific contexts (e.g., "fire turrets deal 20% more damage").
+## Status, movement and queries
 
-## Buff System
+`StatusEffects3D` reuses shared `StatusEffect` lifetime/refresh rules. Refresh keeps the strongest slow of a damage type and replaces its remaining duration. Across types, the strongest slow wins; slows do not multiply. Intensity is capped at 90%. Slow changes pursuit and dash distance, not knockback or charge timers.
 
-### BuffSystem
-**File:** `scripts/systems/buff_system.gd`
-Manages **temporary, stackable, time-based buffs** per turret instance. Uses the same add/increase/more operations as the modifier system. Buffs have duration and are automatically removed when expired.
+`ChargeController3D` locks a dash heading at the start of a 0.9-second amber warning, then dashes and recovers. Separation is suspended during warning/dash to preserve the indicated path. Knockback interrupts the charge.
 
-## Projectile System
+`CrowdGrid3D` snapshots enemies once per physics tick, supports local separation, and shares plasma cluster counts across turrets. Target acquisition runs at 5 Hz. Enemies do not collide physically with each other, and there is no obstacle navigation; dense crowds can overlap.
 
-Supports multiple damage delivery mechanics:
-- **Pierce** — Projectiles pass through enemies, hitting multiple targets
-- **AOE** — Area-of-effect damage on impact
-- **DoT** — Damage over time applied as status effects
-- **Knockback** — Push enemies away from impact point
-- **Chain** — Lightning-style damage that jumps between enemies
+Pause freezes combat and effect lifetimes. Death, wave end and restart clear temporary effects, impulses and warnings. Carried turrets do not attack. Reduced motion disables bobbing, recoil and hit blinking while preserving warnings, range indicators and effect lifetimes.
 
-## Critical Hit System
-
-Player combat includes critical hit calculations with visual feedback. Crit chance and crit damage are tracked by PlayerStatsService and can be modified through items and tech upgrades.
-
-## Status Effects
-
-Component-based status effect handling on enemies via **EnemyStatusEffects** (`scripts/components/enemy_status_effects.gd`):
-- **DoT (Damage over Time)** — Periodic damage (fire, poison, etc.)
-- **Slow** — Movement speed reduction
-- Other debuffs as defined by items and turret types
-
-## Barrier System
-
-DefenseTarget barrier mechanics for Tech Defense mode:
-- **Activation** — Barrier activates when enemies are in range
-- **Cooldown** — Barrier has activation cooldown between uses
-- **Reflection Damage** — Barrier reflects damage back at attackers
-- **Visual Representation** — Barrier state shown through visual effects
-
-## Visual Feedback
-
-### Damage Numbers
-**File:** `scripts/damage_number.gd`
-Floating damage text with centralized font scaling via FontSizes service. Shows damage values, crits, and status effect ticks.
-
-### Range Indicators
-**File:** `scripts/range_indicator.gd`
-Visual turret range display that can be toggled on/off. Shows the effective area of each turret type.
-
-### Off-Screen Indicators
-UI system for tracking off-screen enemies and objectives. Managed by OffScreenIndicatorService.
-
-## Economy
-
-- **Scrap Sources**: Enemy kills, wave completion bonuses, tech drops
-- **Shop Weights**: 65% items, 35% turrets
-- **Targeting**: Nearest-neighbor for both player auto-fire and turret targeting
-- **Arena Bounds**: `ArenaBoundsService` handles rectangular and isometric diamond bounds for movement clamping and spawn zones
+The retained buff/modifier services have additional calculations tested independently. Damage-over-time attacks, temporary turret buffs, chain reactions and other unsupported effects are not exposed by the current shop. See [gameplay](gameplay.md) for the item allowlist and pricing.

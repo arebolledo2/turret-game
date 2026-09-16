@@ -137,9 +137,6 @@ static func reset_all_services() -> void:
 	SettingsService.reset_state()
 	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
 	ArenaBoundsService.set_arena_type(GameEnums.ArenaType.RECTANGULAR)
-	SpecialEffectService.set_turret_manager(null)
-	BuffSystem.set_turret_manager(null)
-	OffScreenIndicatorService.set_enemy_spawner(null)
 	GameRandom.reset(12345)
 	# Core game state
 	GameStateService.reset_state()
@@ -160,11 +157,8 @@ static func reset_all_services() -> void:
 	LootService.reset_state()
 
 	# Presentation
-	OffScreenIndicatorService.tracked_entities.clear()
 
 	# Static state that outlives scene reloads
-	EnemyQuery.reset_state()
-	ProjectilePool.reset_state()
 
 
 # =============================================================================

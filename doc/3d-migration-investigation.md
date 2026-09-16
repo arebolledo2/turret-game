@@ -1,8 +1,10 @@
 # 3D migration and AI asset investigation
 
+> Historical record written before the 3D cutover. Current implementation and supported features are documented in [gameplay](gameplay.md) and [the cutover record](3d-cutover.md).
+
 Investigated 2026-09-16. This is a proposal, not an implemented migration. Source inspection and local hardware checks were performed; no 3D generation service, Blender model-building workflow, or game benchmark was run.
 
-Implementation follow-up: three playable slices now include a six-wave run, registry-backed shop with 13 supported items, ion/plasma/shock turrets, chasing/charging drones, a player bot, six scripted Blender assets, native 3D combat/status contracts, and crowd separation. See [3D proving ground](3d-slice.md) for implemented scope and verification; the broader migration below remains a proposal.
+Implementation follow-up: three playable slices now include a six-wave run, registry-backed shop with 13 supported items, ion/plasma/shock turrets, chasing/charging drones, a player bot, six scripted Blender assets, native 3D combat/status contracts, and crowd separation. See [current 3D game](gameplay.md) for implemented scope and verification; the broader migration below remains a proposal.
 
 ## Recommendation
 

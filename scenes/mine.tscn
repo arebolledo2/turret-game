@@ -1,8 +1,0 @@
-[gd_scene format=3 uid="uid://7wxh123uj45m"]
-
-[ext_resource type="Script" uid="uid://cwji2uxthvk4x" path="res://scripts/mine.gd" id="1_mine"]
-
-[node name="Mine" type="Area2D" unique_id=1042862545]
-collision_layer = 0
-collision_mask = 32
-script = ExtResource("1_mine")

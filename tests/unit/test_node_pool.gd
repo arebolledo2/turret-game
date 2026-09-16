@@ -13,7 +13,10 @@ func before_each():
 	TestHelpers.reset_all_services()
 	_parent = Node2D.new()
 	add_child_autofree(_parent)
-	_scene = load("res://scenes/damage_number.tscn")
+	_scene = PackedScene.new()
+	var fixture := preload("res://tests/helpers/pool_fixture.gd").new()
+	_scene.pack(fixture)
+	fixture.free()
 
 
 # =============================================================================

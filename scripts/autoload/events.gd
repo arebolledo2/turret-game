@@ -16,23 +16,10 @@ signal wave_ended(wave_number: int)
 signal wave_timer_updated(time_remaining: float)
 
 # Combat Events
-signal enemy_killed(enemy: Node2D, position: Vector2)
-signal enemy_spawned(enemy: Node2D)
-signal enemy_exploded(position: Vector2, radius: float, damage: float)
 signal player_damaged(current_health: float, max_health: float)
 signal player_died()
-signal damage_dealt(position: Vector2, amount: float, is_crit: bool, enemy: Node2D)
-signal dot_damage_dealt(position: Vector2, amount: float)
-signal status_effect_applied(enemy: Node2D, damage_type: int)
-signal aoe_explosion(position: Vector2, radius: float, damage: float)
-signal chain_lightning_hit(from_pos: Vector2, to_pos: Vector2, damage: float)
 
 # Turret Events
-signal turret_spawned(turret: Node2D, position: Vector2)
-signal turret_fired(turret: Node2D)
-signal turret_picked_up(turret: Node2D)
-signal turret_placed(turret: Node2D, position: Vector2)
-signal turret_dropped(turret: Node2D, position: Vector2)
 signal turret_range_toggled(show_range: bool)
 signal hitbox_debug_toggled(type: int, enabled: bool)
 signal isometric_debug_toggled(enabled: bool)
@@ -40,14 +27,8 @@ signal feature_flag_changed(flag_id: String, enabled: bool)
 
 
 # Pickup Events (Scrap)
-signal scrap_dropped(position: Vector2, amount: int)
 signal scrap_collected(amount: int, total: int)
 signal scrap_spent(amount: int, remaining: int)
-
-# Tech Drop Events
-signal tech_drop_spawned(tech_drop: Node2D, position: Vector2)
-signal tech_drop_destroyed(tech_drop: Node2D, position: Vector2)
-signal tech_drop_despawned(tech_drop: Node2D) # Wave ended
 
 # Shop Events
 signal shop_opened(wave_number: int)
@@ -90,19 +71,12 @@ signal start_settings_applied(difficulty: int, spawn_mode: int, win_mode: int, a
 signal update_hud()
 
 # Game Mode Events
-signal defense_target_spawned(target: Node2D, position: Vector2)
 signal defense_target_hp_changed(current_hp: float, max_hp: float)
 signal defense_target_destroyed()
-signal defense_target_reflect_damage(enemy: Node2D, damage: float)
-signal defense_target_barrier_activated(target: Node2D)
-signal defense_target_barrier_expired(target: Node2D)
-signal defense_target_barrier_cooldown_ready(target: Node2D)
 signal defense_target_healed(current_hp: float, max_hp: float, amount: float)
-signal tunnel_door_spawned(door: Node2D, position: Vector2)
 signal tunnel_door_progress_changed(current_hp: float, max_hp: float)
 signal tunnel_door_breached()
 signal escort_reached_destination()
-signal escort_position_updated(position: Vector2, progress: float)
 signal arena_background_selected(index: int)
 signal game_mode_changed(group: String, mode_id: int)
 
