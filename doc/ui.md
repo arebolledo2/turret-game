@@ -1,89 +1,15 @@
-# UI Architecture
+# User interface
 
-## Overview
+`GameApp` in `scripts/game/game_app.gd` builds the default start screen: Play, Settings and Quit, plus current controls and supported mode. Play receives initial focus. Keyboard arrows/Enter and controller directional input/A navigate menus; Escape or controller B returns from settings.
 
-UI components are organized by function into HUD elements, full-screen menus, shop panels, and display overlays. The font system uses centralized semantic sizing via Theme Variations. Dynamic scaling ensures UI works across different resolutions.
+## Settings
 
-## Core HUD
+Fullscreen, VSync and Reduced motion apply immediately and persist in `user://game_preferences.cfg` through `SettingsService`. Display operations are skipped in headless runs. Reduced motion removes model bobbing, recoil and hit blinking; combat warnings and effect ranges remain visible. There are no exposed controls for unavailable audio or legacy 2D debugging features.
 
-In-game heads-up display during combat:
+## In-game presentation
 
-- **HUDGameDisplay** — Shows player health, current wave number, and scrap count
-- **HUDMenuManager** — Manages HUD menu states and transitions between UI overlays
+`scripts/game/game_hud.gd` is a CanvasLayer presentation adapter for `ArenaWorld`. It displays hull, wave/time, scrap, kills and contextual controls. Refit shows four supported offers, reroll, repair and Continue. Pause/end panels show the current turret/item/player build; Main Menu tears down the run. Escape/controller Start toggles pause. End states support the restart button or R.
 
-Main HUD script: `scripts/hud.gd`
+The project uses the shared theme and a 1920×1080 reference canvas with canvas-item stretching. App screens and game panels were inspected at 1280×720. Focus is refreshed on phase changes, and controller navigation is exercised using real InputEvent dispatch in integration tests. Physical controller testing remains a human playtest step.
 
-## Screens
-
-Full-screen UI states for game flow:
-
-| Screen | Purpose |
-| --- | --- |
-| StartSettings | Initial game launch settings |
-| DifficultySelect | Difficulty level selection |
-| GameModeSelect | Game mode selection |
-| WaveAnnouncement | Brief wave number display before combat |
-| PauseMenu | In-game pause menu |
-| GameOverScreen | End-of-game results display |
-| SettingsMenu | Runtime settings adjustment |
-| LootReviewScreen | Post-wave item review and collection |
-
-## Shop Components
-
-Shop UI during the SHOP game state:
-
-- **ShopOffersPanel** — Displays available items and turrets for purchase
-- **TechTreePanel** — Tech tree visualization with node connections
-- **TechNodeButton** — Individual tech node interaction button
-
-**Shop Tabs:**
-- **EconomyTab** — Scrap balance and purchase history
-- **PlayerTab** — Player stats and equipped items
-- **ItemsTab** — Item inventory and details
-- **TurretsTab** — Turret inventory and management
-
-## Display Panels
-
-Contextual information overlays during gameplay:
-
-- **TurretDisplayUI** — Turret stats and info when hovering/selecting turrets
-- **ItemDisplayUI** — Item details and effects display
-- **BuildDisplayUI** — Turret placement preview and constraints
-- **DefenseTargetHP** — Health bar for DefenseTarget entity (Tech Defense / Escort modes)
-- **TunnelDoorProgress** — Progress indicator for TunnelDoor breaching (Tunneling mode)
-
-## Utilities
-
-Shared UI infrastructure:
-
-- **UIHelpers** — Common UI utility functions
-- **ScalableUIPanel** — Base panel with dynamic scaling support
-- **InventoryPanel** — Reusable inventory display component
-- **StatsPanel** — Reusable stats display component
-- **OffScreenIndicators** — UI layer for off-screen entity tracking arrows
-
-## Font System
-
-Centralized font sizing using the **FontSizes** service (`scripts/autoload/font_sizes.gd`).
-
-UI components use semantic **Theme Variations** instead of manual size overrides:
-
-| Variation | Use Case |
-| --- | --- |
-| Header1 | Primary headings |
-| Header2 | Secondary headings |
-| Header3 | Section headings |
-| Header4 | Sub-section headings |
-| Body | Standard body text |
-| BodySmall | Compact text |
-| ButtonLarge | Large action buttons |
-
-The **UIScaler** service (`scripts/autoload/ui_scaler.gd`) coordinates with FontSizes to dynamically adjust all UI proportions based on screen resolution and scaling settings.
-
-## UI Scripts Location
-
-- HUD and screens: `scripts/hud.gd`, `scripts/ui/`
-- UI utilities: `scripts/ui/`
-- Font management: `scripts/autoload/font_sizes.gd`
-- UI scaling: `scripts/autoload/ui_scaler.gd`
-- Off-screen indicators: `scripts/autoload/off_screen_indicator_service.gd`
+Native screenshots can be generated with `res://tools/capture_app.tscn`, which captures start, settings, pause, defeat, victory and return-to-menu screens. `res://tools/capture_game.tscn` provides refit, staged combat and stress captures. Both write under ignored `.test-results/`.

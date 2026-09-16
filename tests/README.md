@@ -9,7 +9,7 @@ Use PowerShell 7 and the Godot version in `.godot-version`. GUT 9.5.1 is vendore
 ./run_tests.ps1 -Import
 ./run_tests.ps1 -unit
 ./run_tests.ps1 -integration
-./run_tests.ps1 -filter "shop_manager"
+./run_tests.ps1 -filter "game_app"
 ./run_tests.ps1 -filter "asset" -full
 ./tools/test_test_gate.ps1
 ```
@@ -18,7 +18,7 @@ Set `GODOT_BIN` or pass `-GodotPath` for an installation outside the standard lo
 
 The runner isolates Godot's user data in `.test-results/<run-id>/`, by setting APPDATA/XDG_DATA_HOME only in its child process. It retains stdout, stderr, engine logs and `results.json`. It rejects nonzero exits, timeouts, missing/empty results, failures, risky/pending tests, unexpected engine errors and remaining orphan nodes. Errors explicitly asserted with GUT's engine-error assertions are exported individually; the gate exempts exactly those occurrences. It never suppresses a whole error category. Windows is the supported CI platform.
 
-`.github/workflows/tests.yml` downloads the pinned engine, verifies its SHA512 checksum, tests the gate, imports the project and runs the full suite. Results are uploaded even after failure. Updating Godot requires updating `.godot-version` and `.godot-windows-sha512` together.
+`.github/workflows/tests.yml` downloads the pinned engine, verifies its SHA512 checksum, tests the gate, audits resource links, imports the project, runs the full suite and exercises both six-wave progression builds. Results are uploaded even after failure. Updating Godot requires updating `.godot-version` and `.godot-windows-sha512` together.
 
 ## Test boundaries
 
@@ -49,4 +49,6 @@ Use `autofree()` for nodes outside the tree and `add_child_autofree()` for scene
 
 Persistence tests create a local AssetConfigService instance, call `configure_storage()` before adding it to the tree, and remove only their own temporary directory. They do not change the global service's active preset, including when launched from the GUT editor UI.
 
-The regression suite covers the four shop/loot combinations, restart cleanup, rejected/duplicate phase actions, authoritative wave payouts, session teardown ownership, modifier snapshot isolation, random-stream independence, invalid purchase records, and asset storage failure paths.
+The regression suite covers native 3D combat, supported purchases, session teardown, wave/shop/restart flow, keyboard/controller menu input, settings, shared registries/stat/modifier rules and asset storage failure paths. The cutover gate passes 784 tests: 365 retired 2D runtime tests were removed from the former 1,142, and seven new app/preferences tests were added.
+
+Run `python tools/audit_game_resources.py` for resource closure. Real-physics six-wave checks use `res://tools/smoke_progression.tscn`, with `-- --control` selecting plasma/shock instead of ion. Both run in CI. See [development](../doc/development.md) for commands.

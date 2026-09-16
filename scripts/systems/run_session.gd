@@ -9,9 +9,6 @@ func begin_run() -> void:
 	# Starting settings have already selected the announcement transition's origin.
 	state.phase = GameStateMachine.current_state
 	bind_state(state)
-	EnemyQuery.reset_state()
-	ProjectilePool.reset_state()
-	OffScreenIndicatorService.tracked_entities.clear()
 	Events.modifiers_changed.emit()
 
 static func bind_state(value: RunSessionState) -> void:
@@ -31,9 +28,3 @@ func _exit_tree() -> void:
 		return # A newer scene already owns the services.
 	bind_state(RunSessionState.new())
 	GameStateService.wave_controller = null
-	SpecialEffectService.set_turret_manager(null)
-	BuffSystem.set_turret_manager(null)
-	OffScreenIndicatorService.set_enemy_spawner(null)
-	OffScreenIndicatorService.tracked_entities.clear()
-	EnemyQuery.reset_state()
-	ProjectilePool.reset_state()

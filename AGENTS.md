@@ -10,6 +10,7 @@ Wave-based survival tower defense game built in **Godot 4.7** using GDScript. Pl
 - **Key Pattern**: Explicit commands/queries; signal bus (`Events`) for notifications
 - **Tests**: GUT framework - run with `.\run_tests.ps1`
 - **Launch**: `.\launch.ps1`
+- **Current game**: Native 3D; see `doc/gameplay.md`. The 2D runtime is retired.
 - **Commit Style**: Single emoji prefix (e.g., `✨ Add feature`, `🐛 Fix bug`)
 
 ## Documentation
@@ -26,3 +27,7 @@ Full documentation is in `doc/index.md`. Key documents:
 | [doc/game-modes.md](doc/game-modes.md) | Game state machine, wave cycle, game modes, coordinators |
 | [doc/ui.md](doc/ui.md) | UI architecture, HUD, screens, shop, font system |
 | [doc/development.md](doc/development.md) | File guide, debug output, commands, testing, conventions |
+
+## Asset workflow skills
+
+- [.claude/skills/blender-assets/SKILL.md](.claude/skills/blender-assets/SKILL.md) — Rebuild and validate the scripted Blender turret/drone model family.

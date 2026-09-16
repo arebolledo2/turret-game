@@ -1,5 +1,7 @@
 # Audit improvement implementation
 
+> Historical record written before the 3D cutover. Current implementation and supported features are documented in [gameplay](gameplay.md) and [the cutover record](3d-cutover.md).
+
 Scope: implement the September 2026 testability and maintainability audit, preserving current gameplay unless correcting identified lifecycle defects.
 
 - [x] Isolated runner storage, unique logs, strict structured result gate, pinned engine.

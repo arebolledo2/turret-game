@@ -1,57 +1,22 @@
-# Turret Game — Documentation
+# Turret Survivor documentation
 
-## Quick Reference
+Turret Survivor is a native 3D survival game in Godot 4.7.1. Move through a flat arena, reposition automated turrets, and buy upgrades between six waves. The supported mode is Easy survival, with ion, plasma and shock turrets, spider drones and chargers, and 13 shop items. Other registry entries are retained data, not playable content.
 
-| Item              | Value                                      |
-| ----------------- | ------------------------------------------ |
-| Engine            | Godot 4.7                                  |
-| Language          | GDScript (static typing)                   |
-| Architecture      | Service-oriented with event bus            |
-| Key Pattern       | Explicit calls; `Events` notifications    |
-| Testing           | GUT framework                              |
-| Launch game       | `.\launch.ps1`                             |
-| Run tests         | `.\run_tests.ps1`                          |
-| Commit style      | Single emoji prefix                        |
+Launch with `./launch.ps1` or Godot F5. Run `./run_tests.ps1 -Import` on a fresh checkout.
 
-## Project Overview
+| Guide | Purpose |
+|---|---|
+| [Gameplay](gameplay.md) | Controls, supported content, balancing and validation |
+| [Architecture](architecture.md) | App, arena and shared service boundaries |
+| [Services](services.md) | Runtime services and retained data systems |
+| [Combat](combat.md) | Hits, projectiles, slow, crowd queries and units |
+| [Entities](entities.md) | Native 3D actors and supported catalogs |
+| [Game flow](game-modes.md) | Six-wave lifecycle and session cleanup |
+| [UI](ui.md) | Start screen, settings, HUD and controller focus |
+| [Assets](asset-management.md) | Blender sources, GLBs and preserved 2D references |
+| [Development](development.md) | Commands, tests, CI and conventions |
+| [3D cutover](3d-cutover.md) | Retirement scope and verification record |
 
-Wave-based survival tower defense game. Player dodges enemies while turrets provide primary damage. Purchase turrets and items between waves using scrap earned from kills. The game features multiple difficulty levels, 2 spawn-location modes, 5 win-condition modes, 2 arena modes, 8 turret types, 8 enemy types, a tech tree, and items across 5 rarity tiers.
+Current world code is under `scripts/game/`, scenes under `scenes/game/`, shared services under `scripts/autoload/` and `scripts/systems/`, and data under `scripts/registries/` and `scripts/data/`. Editable Blender sources are in `art-source/blender/`; runtime models are in `assets/models/game/`.
 
-## Documentation Index
-
-| Document                              | Description                                                                               | When to use                                        |
-| ------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| [architecture.md](architecture.md)    | System architecture, service-oriented design, signal bus, registry and component patterns  | Understanding overall design and code organization  |
-| [services.md](services.md)            | Autoload services grouped by domain, responsibilities, key signals                          | Adding or modifying game services                   |
-| [asset-management.md](asset-management.md) | Unified asset config model, presets, overrides, validation, and live-apply behavior        | Working on visuals/collision config or preset logic |
-| [combat.md](combat.md)               | Modifier/buff systems, projectiles, crits, status effects, economy                         | Working on combat mechanics or item effects         |
-| [entities.md](entities.md)            | Entity component systems, enemy/turret components, behaviors, items                        | Adding enemies, turrets, items, or behaviors        |
-| [game-modes.md](game-modes.md)        | Game state machine, wave cycle, game modes, core coordinators                              | Working on game flow, modes, or wave spawning       |
-| [ui.md](ui.md)                        | UI architecture, HUD, screens, shop, font system, scaling                                  | Modifying or adding UI elements                     |
-| [development.md](development.md)      | File guide, debug output, commands, testing, conventions                                   | Getting started, debugging, running commands        |
-
-## Key Directories
-
-| Directory            | Contents                                                      |
-| -------------------- | ------------------------------------------------------------- |
-| `scripts/autoload/`  | Service/autoload singletons and the `Events` signal bus        |
-| `scripts/registries/`| Type definitions (enemies, turrets, items, techs, game modes) |
-| `scripts/resources/assets/` | Typed asset config resources (visual/collision/entity config)      |
-| `scripts/components/`| Entity components (player, enemy, turret) and behaviors       |
-| `scripts/systems/`   | Core systems (modifier, buff)                                 |
-| `scripts/ui/`        | UI screen and panel scripts                                   |
-| `scripts/data/`      | Game constants and balance data                               |
-| `resources/asset_presets/` | Built-in asset preset resources (`.tres`)                     |
-| `resources/collision_profiles/` | Collision profile resources consumed by asset config      |
-| `scenes/`            | Godot scene files                                             |
-| `assets/`            | Sprites, audio, and other assets                              |
-| `tests/`             | GUT unit and integration tests                                |
-| `doc/`               | Project documentation                                         |
-
----
-
-Art and sprite reference documentation is also available in `doc/`: MainCharSprite.md, PixelLabCharacterGen.md, PixelLabSpriteHelp.md, Prompts.md, Scrap.md, StyleMatrix.md.
-
-See [audit-improvements.md](audit-improvements.md) for the September 2026 maintenance changes and verification results.
-
-See [3D migration investigation](3d-migration-investigation.md) for the proposed replacement of the 2D game and an AI-assisted Blender asset pipeline.
+[The migration investigation](3d-migration-investigation.md) and [the earlier maintenance audit](audit-improvements.md) are historical records. Art notes under `doc/notes/` remain useful references. The 2D runtime is archived in Git at `prototype-2d-final`; it is no longer maintained.

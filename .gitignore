@@ -48,3 +48,9 @@ logs/
 
 # Isolated test artifacts and user data
 .test-results/
+
+# Blender working files; approved sources and GLBs are tracked through LFS.
+*.blend1
+*.blend2
+art-source/previews/
+__pycache__/

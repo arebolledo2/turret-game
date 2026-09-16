@@ -1,114 +1,33 @@
-# Development Workflow
+# Development
 
-## Commands
+Use Godot 4.7.1 (pinned in `.godot-version`) and statically typed GDScript. The repository is a standalone Git repository inside `turret-dev`. Commit messages use a single emoji prefix. Run relevant tests before committing.
 
-| Command | Description |
-| --- | --- |
-| `.\launch.ps1` | Launch the game in the Godot editor |
-| `.\run_tests.ps1` | Run all GUT tests |
-| `.\run_tests.ps1 -unit` | Run unit tests only |
-| `.\run_tests.ps1 -integration` | Run integration tests only |
-| `.\run_tests.ps1 -filter "pattern"` | Run tests matching a name pattern |
-
-## File Guide
-
-Quick reference for finding code by purpose:
-
-| Purpose | Location |
-| --- | --- |
-| Game balance | `scripts/data/game_constants.gd`, `GameConstants.DIFFICULTY_CONFIG` |
-| Service logic | `scripts/autoload/` |
-| Type definitions | `scripts/registries/` |
-| Asset config resources | `scripts/resources/assets/`, `resources/asset_presets/`, `resources/collision_profiles/` |
-| Entity behaviors | `scripts/turret.gd`, `scripts/enemy.gd`, `scripts/components/` |
-| UI scripts | `scripts/hud.gd`, `scripts/ui/` |
-| Tests | `tests/unit/`, `tests/integration/` |
-| Debug output | `scripts/autoload/debug_service.gd` |
-| Scenes | `scenes/` |
-| Assets | `assets/sprites/`, `assets/audio/` |
-
-## Testing
-
-**Framework:** GUT (Godot Unit Testing)
-
-Tests are located in:
-- `tests/unit/` — Unit tests for individual services and components
-- `tests/integration/` — Integration tests for cross-system behavior
-
-Run tests using the PowerShell test runner:
 ```powershell
-# All tests
-.\run_tests.ps1
-
-# Unit tests only
-.\run_tests.ps1 -unit
-
-# Integration tests only
-.\run_tests.ps1 -integration
-
-# Filter by test name
-.\run_tests.ps1 -filter "test_economy"
-
-# Asset config focused unit tests
-.\run_tests.ps1 -unit -filter "asset_config"
+./launch.ps1
+./run_tests.ps1 -Import
+./run_tests.ps1 -filter game_app
+./run_tests.ps1 -filter 3d_
+python tools/audit_game_resources.py
+./tools/test_test_gate.ps1
 ```
 
-## Debug Output Management
+`launch_3d.ps1` is a compatibility alias for the default launcher. Set `GODOT_BIN` or use `-GodotPath` for another installation of the pinned version. Godot F5 opens the start screen; F6 on `scenes/game/arena.tscn` opens an arena directly.
 
-**DebugService** (`scripts/autoload/debug_service.gd`) provides compile-time debug output control with **7 categories**:
+## Complete runs and visual checks
 
-| Category | Scope |
-| --- | --- |
-| ENTITY | Entity lifecycle (enemies, turrets, defense targets) |
-| COMBAT | Combat mechanics (damage, collisions, projectiles) |
-| AI | Enemy AI and movement |
-| ARENA | Arena setup and configuration |
-| UI | User interface systems |
-| SYSTEMS | Core game systems (state machine, spawning) |
-| VALIDATION | Warnings and errors (default: enabled) |
+Using the Godot console executable as `godot`:
 
-### Usage
-
-```gdscript
-DebugService.log(DebugService.ENTITY, "Enemy spawned at: ", position)
-DebugService.warn(DebugService.VALIDATION, "Missing component")
-DebugService.error(DebugService.VALIDATION, "Invalid state")
+```powershell
+godot --headless --path . res://tools/smoke_progression.tscn
+godot --headless --path . res://tools/smoke_progression.tscn -- --control
+godot --path . --resolution 1280x720 res://tools/capture_app.tscn
+godot --path . --resolution 1280x720 res://tools/capture_game.tscn -- --shop
+godot --path . --resolution 1280x720 res://tools/capture_game.tscn -- --combat-demo
+godot --path . --resolution 1280x720 res://tools/capture_game.tscn -- --stress
 ```
 
-### Controlling Output
+Smoke runs use a seeded dodge bot, actual physics and earned budgets; success requires victory. Native captures require a GPU driver and write ignored `.test-results/` PNGs. Inspect images and stdout/stderr. Stress samples are development measurements, not minimum-spec guarantees.
 
-Edit const flags in `scripts/autoload/debug_service.gd`:
+CI installs the pinned engine, verifies the test gate, audits resource links, imports assets, runs the complete GUT suite and both progression routes, and retains diagnostics. See [tests/README.md](../tests/README.md) for isolation and strict error handling.
 
-```gdscript
-const ENABLED: bool = true      # Master switch
-const ENTITY: bool = true       # Enable/disable ENTITY logs
-const COMBAT: bool = false      # Enable/disable COMBAT logs
-# ... etc
-```
-
-**Zero runtime overhead** — disabled categories are optimized away by the GDScript compiler at compile time.
-
-## Conventions
-
-### Commit Style
-Single emoji prefix for all commits:
-- `✨ Add feature` — New feature
-- `🐛 Fix bug` — Bug fix
-- `♻️ Refactor code` — Refactoring
-- `🧪 Add tests` — Test additions
-- `📝 Update docs` — Documentation
-
-### GDScript Style
-- **Static typing** required for all variables and function signatures
-- **Notifications** use `Events`; commands/queries call the owning service explicitly
-- **Dependencies** — services bind run-owned state; inject scene, storage, RNG and presentation dependencies at composition boundaries
-- **Component-based** — player and entities use behavior components
-- **Test coverage** — all new features require GUT tests
-- **Debug categories** — use `DebugService.log()` with appropriate category
-
-
-## Reproducible verification
-
-See [tests/README.md](../tests/README.md) for the complete test contract. Use `./run_tests.ps1 -Import` on a clean checkout and `./tools/test_test_gate.ps1` to verify the gate itself. Engine version and archive checksum are pinned; CI executes these same commands on Windows. Test storage is isolated from player data. Unexpected engine errors, risky tests and remaining orphan nodes fail the run.
-
-Gameplay wave rewards use `EconomyService.get_wave_scrap_base()`: wave 1 awards five scrap and each wave adds five. The preview helper and live payout share this base; live fractional awards use probabilistic rounding.
+Current implementation directories and ownership are listed in [architecture](architecture.md). Use the [Blender asset skill](../.claude/skills/blender-assets/SKILL.md) for geometry/model edits. Historical 2D code is available at `prototype-2d-final`; preserve shared contracts, but do not maintain a second gameplay runtime.
