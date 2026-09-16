@@ -53,3 +53,5 @@ Wave-based survival tower defense game. Player dodges enemies while turrets prov
 Art and sprite reference documentation is also available in `doc/`: MainCharSprite.md, PixelLabCharacterGen.md, PixelLabSpriteHelp.md, Prompts.md, Scrap.md, StyleMatrix.md.
 
 See [audit-improvements.md](audit-improvements.md) for the September 2026 maintenance changes and verification results.
+
+See [3D migration investigation](3d-migration-investigation.md) for the proposed replacement of the 2D game and an AI-assisted Blender asset pipeline.
