@@ -7,8 +7,16 @@ var pulses: Array[MeshInstance3D] = []
 var ages: Array[float] = []
 var radii: Array[float] = []
 var world: Node
+var plasma_material := SliceGeometry.material(Color("b56cff"), true)
+var shock_material := SliceGeometry.material(Color("55dcff"), true)
 
 func show_explosion(at: Vector3, radius: float) -> void:
+	_show_pulse(at, radius, plasma_material)
+
+func show_shock(at: Vector3, radius: float) -> void:
+	_show_pulse(at, radius, shock_material)
+
+func _show_pulse(at: Vector3, radius: float, material: Material) -> void:
 	var index := ages.find(-1.0)
 	if index < 0:
 		if pulses.size() >= MAX_PULSES:
@@ -18,6 +26,7 @@ func show_explosion(at: Vector3, radius: float) -> void:
 		ages.append(-1.0)
 		radii.append(0.0)
 	ages[index] = 0.0
+	pulses[index].material_override = material
 	radii[index] = radius
 	pulses[index].position = SliceGeometry.planar(at) + Vector3(0, .045, 0)
 	pulses[index].scale = Vector3(.12, .12, .12)

@@ -197,8 +197,31 @@ def build_player():
     return save_asset("player_bot", "assets/sprites/player/player_static.png", ["Muzzle"])
 
 
+def build_shock():
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    shell = material("Shock silver", (.65, .76, .8), .65)
+    dark = material("Shock graphite", (.035, .07, .1), .7)
+    energy = material("Shock cyan", (.04, .75, 1), .2, True)
+    root = empty("ShockModel")
+    cylinder("Foot", (0, 0, .12), .47, .24, dark, root)
+    cylinder("Rim", (0, 0, .26), .44, .08, shell, root)
+    cylinder("Core", (0, 0, .49), .17, .42, energy, root)
+    for angle in (0, 2.094, 4.189):
+        x, y = math.cos(angle), math.sin(angle)
+        strut("Support", (x * .17, y * .17, .67), (x * .37, y * .37, .25), .065, shell, root)
+    aim = empty("Aim", (0, 0, .74), root)
+    cylinder("EmitterRing", (0, 0, 0), .4, .1, shell, aim)
+    sphere("PulseDome", (0, 0, .07), .27, energy, aim, (1, 1, .8))
+    for index in range(6):
+        angle = index * math.tau / 6
+        box("Electrode", (.34 * math.cos(angle), .34 * math.sin(angle), .11), (.11, .11, .18), dark, aim)
+    empty("Muzzle", (0, .45, .08), aim)
+    return save_asset("shock_turret", "assets/sprites/turrets/turret_shock.png", ["Aim", "Muzzle"])
+
+
 builders = {"ion_turret": build_turret, "spider_drone": build_drone,
-            "plasma_turret": build_plasma, "charger_drone": lambda: build_drone(True), "player_bot": build_player}
+            "plasma_turret": build_plasma, "charger_drone": lambda: build_drone(True), "player_bot": build_player,
+            "shock_turret": build_shock}
 parser = argparse.ArgumentParser()
 parser.add_argument("--only", nargs="+", choices=list(builders))
 args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])

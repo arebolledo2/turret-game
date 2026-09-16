@@ -15,6 +15,8 @@ func _ready() -> void:
 	var model: Node3D
 	if turret_type == "plasma":
 		model = preload("res://assets/models/slice/plasma_turret.glb").instantiate()
+	elif turret_type == "shock":
+		model = preload("res://assets/models/slice/shock_turret.glb").instantiate()
 	else:
 		model = preload("res://assets/models/slice/ion_turret.glb").instantiate()
 	add_child(model)
@@ -32,6 +34,15 @@ func _physics_process(delta: float) -> void:
 	aim.position = aim.position.lerp(aim_rest, minf(delta * 16.0, 1.0))
 	var stats: Dictionary = TurretStatsService.get_turret_stats(turret_type, float(world.difficulty_config["turret_damage_mult"]))
 	var range_metres := float(stats.get("range", 240.0)) * SliceGeometry.METRES_PER_PIXEL
+	if turret_type == "shock":
+		if cooldown <= 0.0 and world.nearest_enemy(position, range_metres):
+			var pulse := CombatShot3D.from_stats(stats, GameEnums.DamageType.ELECTRIC)
+			pulse.splash_radius = range_metres
+			if TurretStatsService.roll_turret_crit():
+				pulse.damage = TurretStatsService.calculate_turret_crit_damage(pulse.damage)
+			world.combat.impact(null, position, Vector3.ZERO, pulse, world.enemies)
+			cooldown = 1.0 / maxf(float(stats["fire_rate"]), .01)
+		return
 	target_clock -= delta
 	# Cluster scans run five times per second, not for every turret every frame.
 	if target_clock <= 0.0:

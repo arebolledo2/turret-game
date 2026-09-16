@@ -14,6 +14,8 @@ var charge: ChargeController3D
 var warning: Node3D
 var marker: MeshInstance3D
 var weapon_muzzle: Node3D
+var statuses := StatusEffects3D.new()
+var slow_marker: MeshInstance3D
 var health: float = 25.0
 var max_health: float = 25.0
 var speed: float = 2.5
@@ -67,6 +69,9 @@ func _ready() -> void:
 		add_child(hurtbox)
 		marker = SliceGeometry.ring(self, .36, Color("f5a447") if charge else Color("9c545e"))
 		marker.position.y = .025
+		slow_marker = SliceGeometry.ring(self, .43, Color("55dcff"))
+		slow_marker.position.y = .04
+		slow_marker.visible = false
 		if charge:
 			_build_warning()
 	else:
@@ -92,6 +97,9 @@ func _build_warning() -> void:
 	warning.visible = false
 
 func clear_transients() -> void:
+	statuses.clear()
+	if slow_marker:
+		slow_marker.visible = false
 	knockback_velocity = Vector3.ZERO
 	velocity = Vector3.ZERO
 	flash_time = 0.0
@@ -109,9 +117,12 @@ func _physics_process(delta: float) -> void:
 	visual.visible = flash_time <= 0.0 or int(flash_time * 25.0) % 2 == 0
 	var direction := Vector3.ZERO
 	if is_enemy:
-		var movement := SliceGeometry.planar(world.player.position - position).normalized() * speed
+		statuses.advance(delta)
+		slow_marker.visible = statuses.speed_multiplier() < 1.0
+		var effective_speed := speed * statuses.speed_multiplier()
+		var movement := SliceGeometry.planar(world.player.position - position).normalized() * effective_speed
 		if charge:
-			movement = charge.advance(delta, position, world.player.position, speed)
+			movement = charge.advance(delta, position, world.player.position, effective_speed)
 			warning.visible = charge.phase in [ChargeController3D.Phase.WINDUP, ChargeController3D.Phase.DASH]
 			if warning.visible:
 				warning.global_position = charge.origin
@@ -178,6 +189,9 @@ func receive_hit(hit: CombatHit3D) -> float:
 		invulnerability = GameConstants.PLAYER_INVINCIBILITY_TIME
 	var applied := minf(health, amount)
 	health = maxf(0.0, health - amount)
+	if is_enemy:
+		statuses.apply(hit)
+		slow_marker.visible = statuses.speed_multiplier() < 1.0
 	if is_enemy and not hit.impulse.is_zero_approx():
 		knockback_velocity = (knockback_velocity + hit.impulse / maxf(mass, .1)).limit_length(GameConstants.KNOCKBACK_MAX_VELOCITY * SliceGeometry.METRES_PER_PIXEL)
 		if charge:
@@ -187,6 +201,9 @@ func receive_hit(hit: CombatHit3D) -> float:
 	damaged.emit(self, amount)
 	if health <= 0.0:
 		dead = true
+		statuses.clear()
+		if slow_marker:
+			slow_marker.visible = false
 		if hurtbox:
 			hurtbox.set_deferred("collision_layer", 0)
 		visible = false

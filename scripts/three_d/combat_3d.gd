@@ -5,6 +5,7 @@ extends RefCounted
 ## No autoload/scene queries, and no 3D values enter the legacy 2D event bus.
 signal hit_applied(target: Node3D, hit: CombatHit3D, actual_damage: float)
 signal explosion(position: Vector3, radius: float)
+signal shock_pulse(position: Vector3, radius: float)
 signal actor_defeated(actor: Node3D, position: Vector3)
 
 func apply_hit(target: SliceActor, hit: CombatHit3D) -> float:
@@ -23,7 +24,7 @@ func impact(primary: SliceActor, at: Vector3, heading: Vector3, shot: CombatShot
 	if shot.splash_radius > 0.0:
 		for candidate in candidates:
 			if is_instance_valid(candidate) and not candidate.dead and not targets.has(candidate):
-				if SliceGeometry.planar(candidate.position - at).length_squared() <= shot.splash_radius * shot.splash_radius:
+				if SliceGeometry.planar(candidate.position - at).length_squared() <= shot.splash_radius * shot.splash_radius + .000001:
 					targets.append(candidate)
 	if is_instance_valid(primary) and not primary.dead and not targets.has(primary):
 		targets.append(primary)
@@ -33,10 +34,15 @@ func impact(primary: SliceActor, at: Vector3, heading: Vector3, shot: CombatShot
 		if away.is_zero_approx():
 			away = SliceGeometry.planar(heading).normalized()
 		var hit := CombatHit3D.new(shot.damage, at, away * shot.knockback, shot.damage_type)
+		hit.slow_intensity = shot.slow_intensity
+		hit.slow_duration = shot.slow_duration
 		if apply_hit(target, hit) > 0.0:
 			hits += 1
 	if shot.splash_radius > 0.0:
-		explosion.emit(SliceGeometry.planar(at), shot.splash_radius)
+		if shot.damage_type == GameEnums.DamageType.ELECTRIC:
+			shock_pulse.emit(SliceGeometry.planar(at), shot.splash_radius)
+		else:
+			explosion.emit(SliceGeometry.planar(at), shot.splash_radius)
 	return hits
 
 func select_target(origin: Vector3, range_metres: float, candidates: Array[SliceActor], cluster_radius: float = 0.0, grid: CrowdGrid3D = null) -> SliceActor:
@@ -47,7 +53,7 @@ func select_target(origin: Vector3, range_metres: float, candidates: Array[Slice
 		if not is_instance_valid(candidate) or candidate.dead:
 			continue
 		var distance := SliceGeometry.planar(candidate.position - origin).length_squared()
-		if distance > range_metres * range_metres:
+		if distance > range_metres * range_metres + .000001:
 			continue
 		var count: int = 0
 		if cluster_radius > 0.0 and grid and grid.positions.has(candidate.get_instance_id()):

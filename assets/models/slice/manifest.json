@@ -94,6 +94,23 @@
       "units": "metres",
       "origin": "ground centre",
       "animation": "Runtime rigid-part articulation; no skeletal rig"
+    },
+    {
+      "id": "shock_turret",
+      "triangles": 748,
+      "mesh_parts": 14,
+      "materials": 3,
+      "reference": "assets/sprites/turrets/turret_shock.png",
+      "required_nodes": [
+        "Aim",
+        "Muzzle"
+      ],
+      "source": "art-source/blender/shock_turret.blend",
+      "model": "assets/models/slice/shock_turret.glb",
+      "forward": "Godot -Z",
+      "units": "metres",
+      "origin": "ground centre",
+      "animation": "Runtime rigid-part articulation; no skeletal rig"
     }
   ]
 }

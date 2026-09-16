@@ -46,6 +46,7 @@ func _ready() -> void:
 	effects.world = self
 	add_child(effects)
 	combat.explosion.connect(effects.show_explosion)
+	combat.shock_pulse.connect(effects.show_shock)
 	combat.actor_defeated.connect(_on_actor_defeated)
 	_build_stage()
 	if show_hud:
