@@ -35,10 +35,10 @@ const LootReviewScreenScript = preload("res://scripts/ui/loot_review_screen.gd")
 @onready var pause_menu: Control = $PauseMenu
 @onready var settings_menu: Control = $SettingsMenu
 @onready var asset_studio: Control = $AssetStudio
-@onready var show_damage_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageCheck
-@onready var player_auto_attack_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAutoAttackCheck
-@onready var reduced_motion_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ReducedMotionCheck
-@onready var isometric_debug_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/IsometricDebugCheck
+@onready var show_damage_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageContainer/ShowDamageCheck
+@onready var player_auto_attack_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAutoAttackContainer/PlayerAutoAttackCheck
+@onready var reduced_motion_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/ReducedMotionContainer/ReducedMotionCheck
+@onready var isometric_debug_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/IsometricDebugContainer/IsometricDebugCheck
 @onready var physics_hitboxes_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PhysicsHitboxes/PhysicsHitboxesCheck
 @onready var player_hurtbox_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerHurtbox/PlayerHurtboxCheck
 @onready var enemy_hurtbox_check: CheckButton = $SettingsMenu/Panel/VBoxContainer/SettingsContainer/EnemyHurtbox/EnemyHurtboxCheck
@@ -63,6 +63,7 @@ const LootReviewScreenScript = preload("res://scripts/ui/loot_review_screen.gd")
 @onready var restart_button: Button = $GameOverScreen/Panel/VBoxContainer/RestartButton
 @onready var loot_review_screen: Control = $LootReview
 @onready var damage_number_layer: Node2D = $DamageNumberLayer
+@onready var off_screen_indicator_container: Control = $OffScreenIndicatorContainer
 var low_health_overlay: ColorRect
 
 # Pause Menu References
@@ -89,17 +90,7 @@ var _asset_studio
 var _loot_review
 
 var player: Node2D = null
-var damage_number_scene: PackedScene
-
-## Cached parent for damage numbers. Resolved lazily on first use rather than in
-## _ready(), because the HUD can be ready before Main is in the tree.
-var _damage_number_parent: Node = null
-
-## Damage numbers are the highest-churn node in the game, so they are pooled
-## rather than instantiated per hit. The pool is tied to the parent it was built
-## against and rebuilt if that parent is replaced.
-var _damage_number_pool: NodePool = null
-var _damage_number_pool_parent: Node = null
+var damage_numbers: DamageNumberPresenter
 
 
 func _ready() -> void:
@@ -129,8 +120,10 @@ func _ready() -> void:
 	add_child(low_health_overlay)
 	move_child(low_health_overlay, 0) # Place at the back so it doesn't cover UI
 
-	# Load damage number scene
-	damage_number_scene = preload("res://scenes/damage_number.tscn")
+	damage_numbers = DamageNumberPresenter.new()
+	damage_numbers.world_parent = get_parent()
+	damage_numbers.fallback_parent = damage_number_layer
+	add_child(damage_numbers)
 
 	# Initialize new component handlers
 	game_display = HUDGameDisplay.new()
@@ -146,6 +139,7 @@ func _ready() -> void:
 
 	menu_manager = HUDMenuManager.new()
 	add_child(menu_manager)
+	menu_manager.gameplay_overlays.assign([off_screen_indicator_container, damage_number_layer])
 
 	# Setup fonts with centralized constants
 	_setup_fonts()
@@ -167,9 +161,10 @@ func _ready() -> void:
 	Events.show_game_mode_select.connect(_on_show_game_mode_select)
 	Events.show_start_settings.connect(_on_show_start_settings)
 	Events.game_started.connect(_on_game_started)
-	Events.damage_dealt.connect(_on_damage_dealt)
-	Events.dot_damage_dealt.connect(_on_dot_damage_dealt)
+	Events.damage_dealt.connect(damage_numbers.show_damage)
+	Events.dot_damage_dealt.connect(damage_numbers.show_dot)
 	Events.loot_review_started.connect(_on_loot_review_started)
+	Events.loot_review_completed.connect(_on_loot_review_completed)
 	Events.research_points_changed.connect(_on_research_points_changed)
 	Events.research_points_gained.connect(_on_research_points_gained)
 
@@ -476,7 +471,11 @@ func _on_game_over(victory: bool) -> void:
 
 
 func _on_loot_review_started(item_ids: Array) -> void:
-	_loot_review.show_review(item_ids)
+	menu_manager.show_loot_review(item_ids, _loot_review)
+
+
+func _on_loot_review_completed() -> void:
+	menu_manager.set_gameplay_overlays_visible(true)
 
 
 func _on_restart_pressed() -> void:
@@ -635,81 +634,6 @@ func _on_player_attack_toggled(toggled_on: bool) -> void:
 # =============================================================================
 # DAMAGE NUMBERS
 # =============================================================================
-func _on_damage_dealt(pos: Vector2, amount: float, is_crit: bool, _enemy: Node2D) -> void:
-	var damage_number := _spawn_damage_number(pos)
-	if damage_number == null:
-		return
-	damage_number.setup(amount, is_crit)
-
-
-## Handle DoT damage numbers with orange color for fire damage.
-func _on_dot_damage_dealt(pos: Vector2, amount: float) -> void:
-	var damage_number := _spawn_damage_number(pos)
-	if damage_number == null:
-		return
-	damage_number.setup(amount)
-
-	# Set orange color for DoT damage
-	var label := damage_number.get_node_or_null("Label")
-	if label:
-		label.modulate = Color(1.0, 0.6, 0.2, 1.0) # Orange for fire DoT
-
-
-## Take a damage number from the pool at a world position, or return null if
-## damage numbers are disabled. Caller is responsible for calling setup() on it.
-func _spawn_damage_number(pos: Vector2) -> Node2D:
-	if not FeatureFlagService.is_enabled(FeatureFlagService.SHOW_DAMAGE_NUMBERS):
-		return null
-	if damage_number_scene == null:
-		return null
-
-	var pool := _get_damage_number_pool()
-	if pool == null:
-		return null
-
-	var damage_number: Node2D = pool.acquire()
-	if damage_number == null:
-		return null
-
-	var offset := pos + Vector2(GameRandom.cosmetic.randf_range(-10, 10), -20)
-
-	# Numbers parented into world space stay anchored to their map position; the
-	# HUD-layer fallback is in canvas space, where global_position is meaningless.
-	if _damage_number_pool_parent == damage_number_layer:
-		damage_number.position = offset
-	else:
-		damage_number.global_position = offset
-
-	return damage_number
-
-
-## Pool of damage numbers, rebuilt if the parent it was built against goes away
-## (a scene reload frees Main and everything pooled under it).
-func _get_damage_number_pool() -> NodePool:
-	var parent := _get_damage_number_parent()
-	if parent == null:
-		parent = damage_number_layer
-	if parent == null:
-		return null
-
-	if _damage_number_pool == null or parent != _damage_number_pool_parent:
-		if _damage_number_pool != null:
-			_damage_number_pool.clear()
-		_damage_number_pool_parent = parent
-		_damage_number_pool = NodePool.new(damage_number_scene, parent, 16, 128)
-
-	return _damage_number_pool
-
-
-## Resolve and cache the Main scene node. Re-resolves if the cached node has been
-## freed, so a scene reload does not permanently fall back to the HUD layer.
-func _get_damage_number_parent() -> Node:
-	if _damage_number_parent != null and is_instance_valid(_damage_number_parent):
-		return _damage_number_parent
-	_damage_number_parent = get_tree().root.get_node_or_null("Main")
-	return _damage_number_parent
-
-
 # =============================================================================
 # LEGACY API (kept for backward compatibility)
 # =============================================================================

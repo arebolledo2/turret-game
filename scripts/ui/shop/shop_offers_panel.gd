@@ -50,6 +50,11 @@ var shop_manager: Node
 var _offer_buttons: Array[Button] = []
 var _lock_buttons: Array[Button] = []
 
+const OFFER_CARD_WIDTH := 220.0
+const OFFER_CARD_HEIGHT := 300.0
+const COMPACT_OFFER_CARD_WIDTH := 190.0
+const COMPACT_OFFER_CARD_HEIGHT := 250.0
+
 signal purchase_requested(index: int)
 signal reroll_requested()
 signal focus_restored()
@@ -90,7 +95,11 @@ func _on_offers_generated(offers: Array) -> void:
 
 func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(220, 300)
+	var display_height: float = float(get_window().size.y)
+	var compact_layout := display_height <= 800.0
+	var card_width := COMPACT_OFFER_CARD_WIDTH if compact_layout else OFFER_CARD_WIDTH
+	var card_height := COMPACT_OFFER_CARD_HEIGHT if compact_layout else OFFER_CARD_HEIGHT
+	panel.custom_minimum_size = Vector2(card_width, card_height)
 	panel.process_mode = Control.PROCESS_MODE_ALWAYS
 
 	# Add custom panel style with less transparency
@@ -103,7 +112,7 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 
 	var vbox = VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_BEGIN
-	vbox.add_theme_constant_override("separation", 15)
+	vbox.add_theme_constant_override("separation", 8 if compact_layout else 15)
 	panel.add_child(vbox)
 
 	if offer["type"] == "turret":
@@ -139,7 +148,7 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 	purchase_button.add_theme_constant_override("outline_size", 4)
 	purchase_button.add_theme_color_override("font_outline_color", Color.BLACK)
 	purchase_button.process_mode = Control.PROCESS_MODE_ALWAYS
-	purchase_button.custom_minimum_size.x = 140
+	purchase_button.custom_minimum_size = Vector2(130, 32 if compact_layout else 0)
 
 	# Add button style for better visibility
 	var button_style = StyleBoxFlat.new()
@@ -167,7 +176,7 @@ func create_offer_slot(offer: Dictionary, index: int) -> PanelContainer:
 		lock_button.add_theme_constant_override("outline_size", 4)
 		lock_button.add_theme_color_override("font_outline_color", Color.BLACK)
 		lock_button.process_mode = Control.PROCESS_MODE_ALWAYS
-		lock_button.custom_minimum_size.x = 140
+		lock_button.custom_minimum_size = Vector2(130, 32 if compact_layout else 0)
 
 		# Add custom style with color based on lock state
 		var lock_style = StyleBoxFlat.new()

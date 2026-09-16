@@ -134,6 +134,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="GameOverScreen" type="Control" parent="." unique_id=612724537]
+z_index = 100
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -190,6 +191,7 @@ layout_mode = 2
 text = "Restart"
 
 [node name="DifficultySelect" type="Control" parent="." unique_id=1872576001]
+z_index = 100
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -261,6 +263,7 @@ theme_override_font_sizes/font_size = 20
 text = "Hard - For experienced survivors"
 
 [node name="PauseMenu" type="Control" parent="." unique_id=597853706]
+z_index = 100
 process_mode = 3
 visible = false
 layout_mode = 3
@@ -555,75 +558,8 @@ theme_override_colors/font_color = Color(1, 0.84, 0, 1)
 theme_override_font_sizes/font_size = 13
 text = "• DPS: --"
 
-[node name="ItemsSection" type="VBoxContainer" parent="PauseMenu/MainPanel/MainVBox" unique_id=75535076]
-custom_minimum_size = Vector2(0, 80)
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="ItemsTitle" type="Label" parent="PauseMenu/MainPanel/MainVBox/ItemsSection" unique_id=892165244]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "ITEMS (0)"
-
-[node name="HSeparator" type="HSeparator" parent="PauseMenu/MainPanel/MainVBox/ItemsSection" unique_id=1257334368]
-layout_mode = 2
-
-[node name="ItemsHint" type="Label" parent="PauseMenu/MainPanel/MainVBox/ItemsSection" unique_id=1804260098]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
-theme_override_font_sizes/font_size = 14
-text = "No items collected"
-horizontal_alignment = 1
-
-[node name="ItemsScrollContainer" type="ScrollContainer" parent="PauseMenu/MainPanel/MainVBox/ItemsSection" unique_id=1151521653]
-visible = false
-custom_minimum_size = Vector2(0, 50)
-layout_mode = 2
-horizontal_scroll_mode = 2
-vertical_scroll_mode = 0
-
-[node name="ItemsHBox" type="HBoxContainer" parent="PauseMenu/MainPanel/MainVBox/ItemsSection/ItemsScrollContainer" unique_id=2040856944]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="ItemDetailsPanel" type="PanelContainer" parent="PauseMenu/MainPanel/MainVBox/ItemsSection" unique_id=1904368922]
-visible = false
-custom_minimum_size = Vector2(0, 80)
-layout_mode = 2
-
-[node name="ItemDetailsVBox" type="VBoxContainer" parent="PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel" unique_id=1214434973]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="ItemHeader" type="HBoxContainer" parent="PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox" unique_id=431426930]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="ItemIcon" type="Label" parent="PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader" unique_id=1405973479]
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "🧲"
-
-[node name="ItemName" type="Label" parent="PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader" unique_id=379725839]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 16
-text = "Item Name"
-
-[node name="ItemRarity" type="Label" parent="PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox/ItemHeader" unique_id=1451422701]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-theme_override_font_sizes/font_size = 12
-text = "Common"
-
-[node name="ItemDescription" type="Label" parent="PauseMenu/MainPanel/MainVBox/ItemsSection/ItemDetailsPanel/ItemDetailsVBox" unique_id=767344969]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 13
-text = "Item description goes here"
-autowrap_mode = 2
-
 [node name="SettingsMenu" type="Control" parent="." unique_id=1302316500]
+z_index = 100
 process_mode = 3
 visible = false
 layout_mode = 3
@@ -671,7 +607,9 @@ layout_mode = 2
 theme_override_constants/separation = 15
 
 [node name="ShowDamageContainer" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer" unique_id=1887181957]
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
+alignment = 1
 
 [node name="ShowDamageLabel" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageContainer" unique_id=330971683]
 layout_mode = 2
@@ -679,12 +617,14 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 18
 text = "Show Damage Numbers"
 
-[node name="ShowDamageCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer" unique_id=806226532]
+[node name="ShowDamageCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageContainer" unique_id=806226532]
 layout_mode = 2
 button_pressed = true
 
 [node name="PlayerAutoAttackContainer" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
+alignment = 1
 
 [node name="PlayerAutoAttackLabel" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAutoAttackContainer"]
 layout_mode = 2
@@ -692,12 +632,14 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 18
 text = "Player Auto Attack"
 
-[node name="PlayerAutoAttackCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+[node name="PlayerAutoAttackCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAutoAttackContainer"]
 layout_mode = 2
 button_pressed = true
 
 [node name="ReducedMotionContainer" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
+alignment = 1
 
 [node name="ReducedMotionLabel" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ReducedMotionContainer"]
 layout_mode = 2
@@ -705,11 +647,13 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 18
 text = "Reduced Motion"
 
-[node name="ReducedMotionCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer"]
+[node name="ReducedMotionCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ReducedMotionContainer"]
 layout_mode = 2
 
 [node name="IsometricDebugContainer" type="HBoxContainer" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer" unique_id=318234831]
+custom_minimum_size = Vector2(0, 36)
 layout_mode = 2
+alignment = 1
 
 [node name="IsometricDebugLabel" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/IsometricDebugContainer" unique_id=227307646]
 layout_mode = 2
@@ -717,7 +661,7 @@ size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 18
 text = "Edit Isometric BG"
 
-[node name="IsometricDebugCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer" unique_id=1692514648]
+[node name="IsometricDebugCheck" type="CheckButton" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer/IsometricDebugContainer" unique_id=1692514648]
 layout_mode = 2
 
 [node name="HitboxSettingsTitle" type="Label" parent="SettingsMenu/Panel/VBoxContainer/SettingsContainer" unique_id=187449445]
@@ -836,9 +780,11 @@ theme_override_font_sizes/font_size = 18
 text = "Back"
 
 [node name="AssetStudio" parent="." unique_id=2045546207 instance=ExtResource("4_asset_studio")]
+z_index = 100
 layout_mode = 3
 
 [node name="StartSettings" type="Control" parent="." unique_id=1723186957]
+z_index = 100
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -954,8 +900,10 @@ theme_override_font_sizes/font_size = 24
 text = "START GAME"
 
 [node name="LootReview" parent="." unique_id=395501123 instance=ExtResource("2_loot_review")]
+z_index = 100
 
 [node name="GameModeSelect" type="Control" parent="." unique_id=1224379400]
+z_index = 100
 visible = false
 layout_mode = 3
 anchors_preset = 15
@@ -1067,7 +1015,7 @@ text = "Isometric Arena - Diamond-shaped bounds"
 z_index = 5
 
 [node name="OffScreenIndicatorContainer" type="Control" parent="." unique_id=1262019250]
-z_index = 50
+z_index = 10
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -1085,9 +1033,9 @@ script = ExtResource("3_off_screen_indicators")
 [connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/SettingsButton" to="." method="_on_settings_pressed"]
 [connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/AssetStudioButton" to="." method="_on_asset_studio_pressed"]
 [connection signal="pressed" from="PauseMenu/MainPanel/MainVBox/TopSection/LeftPanel/QuitButton" to="." method="_on_quit_pressed"]
-[connection signal="toggled" from="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageCheck" to="." method="_on_show_damage_toggled"]
-[connection signal="toggled" from="SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAutoAttackCheck" to="." method="_on_player_auto_attack_toggled"]
-[connection signal="toggled" from="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ReducedMotionCheck" to="." method="_on_reduced_motion_toggled"]
+[connection signal="toggled" from="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ShowDamageContainer/ShowDamageCheck" to="." method="_on_show_damage_toggled"]
+[connection signal="toggled" from="SettingsMenu/Panel/VBoxContainer/SettingsContainer/PlayerAutoAttackContainer/PlayerAutoAttackCheck" to="." method="_on_player_auto_attack_toggled"]
+[connection signal="toggled" from="SettingsMenu/Panel/VBoxContainer/SettingsContainer/ReducedMotionContainer/ReducedMotionCheck" to="." method="_on_reduced_motion_toggled"]
 [connection signal="pressed" from="SettingsMenu/Panel/VBoxContainer/BackButton" to="." method="_on_settings_back_pressed"]
 [connection signal="pressed" from="GameModeSelect/Panel/VBoxContainer/ButtonContainer/SentinelButton" to="." method="_on_sentinel_pressed"]
 [connection signal="pressed" from="GameModeSelect/Panel/VBoxContainer/ButtonContainer/InvasionButton" to="." method="_on_invasion_pressed"]

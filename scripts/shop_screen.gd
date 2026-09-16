@@ -11,7 +11,7 @@ const ShopOffersPanelScript = preload("res://scripts/ui/shop/shop_offers_panel.g
 @onready var title_label: Label = $MainContainer/ContentVBox/Header/TitleLabel
 @onready var scrap_label: Label = $MainContainer/ContentVBox/TabBar/ScrapLabel
 @onready var research_label: Label = $MainContainer/ContentVBox/TabBar/ResearchLabel
-@onready var offers_container: HBoxContainer = $MainContainer/ContentVBox/MainHBox/LeftPanel/OffersContainer
+@onready var offers_container: HBoxContainer = $MainContainer/ContentVBox/MainHBox/LeftPanel/OffersScroll/OffersContainer
 @onready var tech_tree_panel: TechTreePanel = $MainContainer/ContentVBox/MainHBox/LeftPanel/TechTreePanel
 @onready var reroll_button: Button = $MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer/RerollButton
 @onready var continue_button: Button = $MainContainer/ContentVBox/MainHBox/LeftPanel/RerollContainer/ContinueButton
@@ -20,7 +20,7 @@ const ShopOffersPanelScript = preload("res://scripts/ui/shop/shop_offers_panel.g
 
 # Component references
 @onready var stats_panel: VBoxContainer = $MainContainer/ContentVBox/MainHBox/RightPanel/StatsPanel
-@onready var inventory_panel: VBoxContainer = $MainContainer/ContentVBox/BottomPanel/InventoryPanel
+@onready var inventory_panel: VBoxContainer = $MainContainer/ContentVBox/BottomPanel/InventoryScroll/InventoryPanel
 
 # Panel handler for shop offers
 var offers_panel
