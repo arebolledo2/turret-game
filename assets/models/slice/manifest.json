@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "generator": "tools/blender/build_slice_assets.py",
+  "blender": "5.2.1 LTS",
+  "assets": [
+    {
+      "id": "ion_turret",
+      "triangles": 448,
+      "mesh_parts": 12,
+      "materials": 3,
+      "reference": "assets/sprites/turrets/turret_basic.png",
+      "required_nodes": [
+        "Aim",
+        "Muzzle"
+      ],
+      "source": "art-source/blender/ion_turret.blend",
+      "model": "assets/models/slice/ion_turret.glb",
+      "forward": "Godot -Z",
+      "units": "metres",
+      "origin": "ground centre",
+      "animation": "Runtime rigid-part articulation; no skeletal rig"
+    },
+    {
+      "id": "spider_drone",
+      "triangles": 2216,
+      "mesh_parts": 22,
+      "materials": 3,
+      "reference": "assets/sprites/enemy_spider_drone/spider_drone_right.png",
+      "required_nodes": [
+        "Leg_L_0",
+        "Leg_L_1",
+        "Leg_L_2",
+        "Leg_R_0",
+        "Leg_R_1",
+        "Leg_R_2"
+      ],
+      "source": "art-source/blender/spider_drone.blend",
+      "model": "assets/models/slice/spider_drone.glb",
+      "forward": "Godot -Z",
+      "units": "metres",
+      "origin": "ground centre",
+      "animation": "Runtime rigid-part articulation; no skeletal rig"
+    }
+  ]
+}
