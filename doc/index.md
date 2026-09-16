@@ -55,3 +55,5 @@ Art and sprite reference documentation is also available in `doc/`: MainCharSpri
 See [audit-improvements.md](audit-improvements.md) for the September 2026 maintenance changes and verification results.
 
 See [3D migration investigation](3d-migration-investigation.md) for the proposed replacement of the 2D game and an AI-assisted Blender asset pipeline.
+
+The first [playable 3D proving ground](3d-slice.md) is available via `./launch_3d.ps1`.

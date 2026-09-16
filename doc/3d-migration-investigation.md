@@ -2,6 +2,8 @@
 
 Investigated 2026-09-16. This is a proposal, not an implemented migration. Source inspection and local hardware checks were performed; no 3D generation service, Blender model-building workflow, or game benchmark was run.
 
+Implementation follow-up: the first playable loop and scripted Blender asset pair are now available. See [3D proving ground](3d-slice.md) for implemented scope and verification; the broader migration below remains a proposal.
+
 ## Recommendation
 
 Keep Godot/GDScript. Replace the existing game's world with native 3D scenes and physics, initially constrained to an XZ ground plane with a fixed elevated orthographic camera. Preserve the survival loop, turret placement, progression, and UI. Retire the 2D implementation after the 3D slice passes; do not build a permanent compatibility layer.
