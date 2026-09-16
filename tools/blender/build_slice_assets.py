@@ -5,6 +5,8 @@ No external packages or model services. Blender +Y becomes Godot -Z (forward).
 """
 import json
 import math
+import argparse
+import sys
 from pathlib import Path
 
 import bpy
@@ -122,7 +124,7 @@ def build_turret():
     return save_asset("ion_turret", "assets/sprites/turrets/turret_basic.png", ["Aim", "Muzzle"])
 
 
-def build_drone():
+def build_drone(charger=False):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     shell = material("Drone graphite", (.12, .16, .2), .6)
     orange = material("Hazard copper", (.95, .34, .04), .45)
@@ -133,6 +135,12 @@ def build_drone():
     eye = cylinder("EyeRing", (0, .32, .5), .15, .09, orange, root)
     eye.rotation_euler.x = math.pi / 2
     sphere("Eye", (0, .375, .5), .112, red, root, (1, .4, 1))
+    if charger:
+        # Broad amber armor and forward horns identify a charger at gameplay scale.
+        box("RamArmor", (0, .04, .69), (.63, .55, .12), orange, root)
+        for side in (-1, 1):
+            strut("RamHorn", (side * .2, .28, .59), (side * .26, .66, .49), .055, orange, root)
+        box("Spine", (0, -.16, .81), (.1, .3, .07), red, root)
     for side in (-1, 1):
         for index, y in enumerate((-.23, 0, .23)):
             leg = empty(f"Leg_{'L' if side < 0 else 'R'}_{index}", (side * .25, y, .43), root)
@@ -141,11 +149,65 @@ def build_drone():
             strut("Upper", (0, 0, 0), knee, .048, orange, leg)
             strut("Lower", knee, foot, .04, shell, leg)
             sphere("Joint", knee, .063, red, leg)
-    return save_asset("spider_drone", "assets/sprites/enemy_spider_drone/spider_drone_right.png",
+    return save_asset("charger_drone" if charger else "spider_drone", "assets/sprites/enemy_spider_drone/spider_drone_right.png",
                       [f"Leg_{side}_{i}" for side in ("L", "R") for i in range(3)])
 
 
-assets = [build_turret(), build_drone()]
-(OUT / "manifest.json").write_text(json.dumps({"version": 1, "generator": "tools/blender/build_slice_assets.py",
+def build_plasma():
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    shell = material("Ceramic silver", (.65, .76, .8), .65)
+    dark = material("Graphite", (.035, .07, .1), .7)
+    energy = material("Plasma violet", (.48, .08, 1), .2, True)
+    root = empty("PlasmaModel")
+    cylinder("Foot", (0, 0, .13), .47, .26, dark, root)
+    cylinder("BaseRim", (0, 0, .29), .43, .07, shell, root)
+    cylinder("Reactor", (0, 0, .48), .18, .34, energy, root)
+    for angle in (0, 2.094, 4.189):
+        x, y = math.cos(angle), math.sin(angle)
+        strut("Support", (x * .2, y * .2, .6), (x * .4, y * .4, .15), .045, shell, root)
+    aim = empty("Aim", (0, 0, .67), root)
+    sphere("Chamber", (0, 0, .03), .24, dark, aim, (1, 1.2, 1))
+    for y in (.05, .23, .4):
+        ring = cylinder("AccelerationRing", (0, y, .03), .23, .045, shell, aim)
+        ring.rotation_euler.x = math.pi / 2
+    sphere("PlasmaCore", (0, .28, .03), .16, energy, aim, (1, 1.7, 1))
+    for x in (-.21, .21):
+        box("Rail", (x, .22, .03), (.055, .6, .1), dark, aim)
+    empty("Muzzle", (0, .55, .03), aim)
+    return save_asset("plasma_turret", "assets/sprites/turrets/turret_plasma_static.png", ["Aim", "Muzzle"])
+
+
+def build_player():
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    shell = material("Scout silver", (.62, .75, .77), .6)
+    copper = material("Scout copper", (.65, .3, .1), .55)
+    cyan = material("Scout cyan", (.03, .9, .85), .2, True)
+    root = empty("PlayerModel")
+    sphere("Hull", (0, 0, .52), .32, shell, root, (1, .85, 1.12))
+    cylinder("Waist", (0, 0, .4), .305, .08, copper, root)
+    cylinder("HoverRing", (0, 0, .17), .18, .055, cyan, root)
+    sphere("Dome", (0, 0, .87), .245, copper, root, (1, 1, .8))
+    sphere("Visor", (0, .205, .88), .175, cyan, root, (1, .35, .65))
+    for side in (-1, 1):
+        sphere("Shoulder", (side * .33, 0, .58), .115, copper, root)
+        box("SidePlate", (side * .34, 0, .48), (.12, .25, .27), shell, root)
+    strut("Gun", (.34, 0, .58), (.34, .47, .58), .065, copper, root)
+    sphere("Emitter", (.34, .47, .58), .05, cyan, root)
+    empty("Muzzle", (.34, .53, .58), root)
+    return save_asset("player_bot", "assets/sprites/player/player_static.png", ["Muzzle"])
+
+
+builders = {"ion_turret": build_turret, "spider_drone": build_drone,
+            "plasma_turret": build_plasma, "charger_drone": lambda: build_drone(True), "player_bot": build_player}
+parser = argparse.ArgumentParser()
+parser.add_argument("--only", nargs="+", choices=list(builders))
+args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])
+manifest_path = OUT / "manifest.json"
+previous = json.loads(manifest_path.read_text(encoding="utf-8"))["assets"] if manifest_path.exists() else []
+by_id = {asset["id"]: asset for asset in previous}
+for name in args.only or builders:
+    by_id[name] = builders[name]()
+assets = [by_id[name] for name in builders if name in by_id]
+manifest_path.write_text(json.dumps({"version": 2, "generator": "tools/blender/build_slice_assets.py",
     "blender": bpy.app.version_string, "assets": assets}, indent=2) + "\n", encoding="utf-8", newline="\n")
 print("ASSET_MANIFEST " + json.dumps(assets))
