@@ -49,6 +49,6 @@ Use `autofree()` for nodes outside the tree and `add_child_autofree()` for scene
 
 Persistence tests create a local AssetConfigService instance, call `configure_storage()` before adding it to the tree, and remove only their own temporary directory. They do not change the global service's active preset, including when launched from the GUT editor UI.
 
-The regression suite covers native 3D combat, supported purchases, session teardown, wave/shop/restart flow, keyboard/controller menu input, settings, shared registries/stat/modifier rules and asset storage failure paths. The cutover gate passes 784 tests: 365 retired 2D runtime tests were removed from the former 1,142, and seven new app/preferences tests were added.
+The regression suite covers native 3D combat, supported purchases, session teardown, wave/shop/restart flow, keyboard/controller menu input, settings, shared registries/stat/modifier rules and asset storage failure paths. The cutover passed 784 tests after retiring the 2D runtime. The native audio/feedback slice adds six integration tests for a current total of 790; preference tests also cover SFX persistence and mute.
 
 Run `python tools/audit_game_resources.py` for resource closure. Real-physics six-wave checks use `res://tools/smoke_progression.tscn`, with `-- --control` selecting plasma/shock instead of ion. Both run in CI. See [development](../doc/development.md) for commands.

@@ -35,7 +35,7 @@ jobs:
             $result = $LASTEXITCODE
             $output | Tee-Object -FilePath ".test-results/smoke-$route.log"
             $report = ($output | Where-Object { "$_" -like 'PROGRESSION_SMOKE *' } | Select-Object -Last 1)
-            if ($result -ne 0 -or -not $report -or ($output -match '(SCRIPT ERROR:|ERROR:)')) {
+            if ($result -ne 0 -or -not $report -or ($output -match '(SCRIPT ERROR:|ERROR:|ObjectDB instances were leaked)')) {
               throw "Progression smoke failed: $route"
             }
             $data = ("$report" -replace '^PROGRESSION_SMOKE ', '') | ConvertFrom-Json

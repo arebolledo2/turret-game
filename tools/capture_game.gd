@@ -9,6 +9,9 @@ var stress: bool = false
 var shop: bool = false
 var combat_demo: bool = false
 var last_tick: int = 0
+var physics_samples: Array[float] = []
+var process_samples: Array[float] = []
+var peak_voices: int = 0
 
 func _ready() -> void:
 	call_deferred("setup")
@@ -44,6 +47,13 @@ func _process(_delta: float) -> void:
 	var tick := Time.get_ticks_usec()
 	if frames > 120:
 		samples.append(float(tick - last_tick) / 1000.0)
+		physics_samples.append(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0)
+		process_samples.append(Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0)
+		var active_voices: int = 0
+		for remaining: float in world.audio.remaining:
+			if remaining > 0.0:
+				active_voices += 1
+		peak_voices = maxi(peak_voices, active_voices)
 	last_tick = tick
 	if frames == 180 and shop:
 		world.finish_wave()
@@ -58,10 +68,15 @@ func capture() -> void:
 	var output := ProjectSettings.globalize_path("res://.test-results/game%s.png" % suffix)
 	get_viewport().get_texture().get_image().save_png(output)
 	samples.sort()
+	physics_samples.sort()
+	process_samples.sort()
 	print("GAME_CAPTURE ", output)
 	print("GAME_METRICS ", JSON.stringify({"frames": samples.size(), "median_frame_ms": samples[samples.size() / 2],
 		"p95_frame_ms": samples[int(samples.size() * .95)], "enemies": world.enemies.size(),
-		"projectiles": world.projectiles.size(), "draw_calls": Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)}))
+		"projectiles": world.projectiles.size(), "peak_audio_voices": peak_voices,
+		"spark_instances": world.effects.sparks.size(), "turrets": world.turrets.size(),
+		"physics_p95_ms": physics_samples[int(physics_samples.size() * .95)],
+		"process_p95_ms": process_samples[int(process_samples.size() * .95)], "draw_calls": Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)}))
 	get_tree().quit()
 
 func stage_combat_demo() -> void:

@@ -4,7 +4,7 @@
 
 ## Settings
 
-Fullscreen, VSync and Reduced motion apply immediately and persist in `user://game_preferences.cfg` through `SettingsService`. Display operations are skipped in headless runs. Reduced motion removes model bobbing, recoil and hit blinking; combat warnings and effect ranges remain visible. There are no exposed controls for unavailable audio or legacy 2D debugging features.
+Fullscreen, VSync, Reduced motion and Sound effects volume apply immediately and persist in `user://game_preferences.cfg` through `SettingsService`. Display operations are skipped in headless runs. Reduced motion removes model bobbing, recoil and hit blinking; combat warnings and effect ranges remain visible. Sound effects default to 70%; zero mutes the SFX bus. Legacy 2D debugging features remain unexposed.
 
 ## In-game presentation
 

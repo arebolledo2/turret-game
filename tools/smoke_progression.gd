@@ -28,8 +28,8 @@ func _physics_process(delta: float) -> void:
 			"kills": GameStateService.total_kills, "scrap": EconomyService.total_scrap,
 			"items": ItemTrackingService.item_counts, "turrets": TurretStatsService.turret_counts,
 			"simulated_seconds": elapsed}))
-		get_tree().quit(0 if won else 1)
 		set_physics_process(false)
+		finish.call_deferred(won)
 		return
 	if GameStateMachine.current_state == GameStateMachine.GameState.SHOP:
 		if shopping_wave != GameStateService.current_wave:
@@ -52,6 +52,14 @@ func _physics_process(delta: float) -> void:
 	Input.action_press("move_left", maxf(-steering.x, 0))
 	Input.action_press("move_down", maxf(steering.z, 0))
 	Input.action_press("move_up", maxf(-steering.z, 0))
+
+func finish(won: bool) -> void:
+	# Let the audio mixer consume stop/free commands before the process exits.
+	# Victory cues can otherwise still be queued on this same physics boundary.
+	world.queue_free()
+	await get_tree().process_frame
+	await get_tree().create_timer(.1, true, false, true).timeout
+	get_tree().quit(0 if won else 1)
 
 func shop() -> void:
 	while world.player.health < world.player.max_health - 5 and EconomyService.total_scrap >= 5:

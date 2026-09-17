@@ -32,9 +32,10 @@ func separation(actor: CombatActor) -> Vector3:
 				if not is_instance_valid(other) or other == actor or other.dead:
 					continue
 				var offset := WorldGeometry.planar(origin - Vector3(positions[other.get_instance_id()]))
-				var distance := offset.length()
-				if distance >= SPACING:
+				var squared_distance := offset.length_squared()
+				if squared_distance >= SPACING * SPACING:
 					continue
+				var distance := sqrt(squared_distance)
 				if distance < .001:
 					# Deterministic, opposite impulses even at exactly coincident spawns.
 					offset = Vector3.RIGHT if actor.get_instance_id() < other.get_instance_id() else Vector3.LEFT

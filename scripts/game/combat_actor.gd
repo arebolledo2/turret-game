@@ -123,7 +123,10 @@ func _physics_process(delta: float) -> void:
 		var effective_speed := speed * statuses.speed_multiplier()
 		var movement := WorldGeometry.planar(world.player.position - position).normalized() * effective_speed
 		if charge:
+			var previous_phase := charge.phase
 			movement = charge.advance(delta, position, world.player.position, effective_speed)
+			if charge.phase == ChargeController3D.Phase.WINDUP and previous_phase != charge.phase:
+				world.audio.play_cue("warning", position)
 			warning.visible = charge.phase in [ChargeController3D.Phase.WINDUP, ChargeController3D.Phase.DASH]
 			if warning.visible:
 				warning.global_position = charge.origin

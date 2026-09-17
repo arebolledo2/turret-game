@@ -25,15 +25,23 @@ static func material(color: Color, emission: bool = false) -> StandardMaterial3D
 		result.emission_energy_multiplier = 1.5
 	return result
 
+static var ring_meshes: Dictionary = {}
+static var ring_materials: Dictionary = {}
+
 static func ring(parent: Node3D, radius: float, color: Color) -> MeshInstance3D:
-	var mesh := TorusMesh.new()
-	mesh.inner_radius = maxf(.01, radius - .025)
-	mesh.outer_radius = radius + .025
-	mesh.rings = 24
-	mesh.ring_segments = 6
+	# Shared immutable resources permit renderer batching across identical markers.
+	if not ring_meshes.has(radius):
+		var mesh := TorusMesh.new()
+		mesh.inner_radius = maxf(.01, radius - .025)
+		mesh.outer_radius = radius + .025
+		mesh.rings = 24
+		mesh.ring_segments = 6
+		ring_meshes[radius] = mesh
+	if not ring_materials.has(color):
+		ring_materials[color] = material(color, true)
 	var instance := MeshInstance3D.new()
-	instance.mesh = mesh
-	instance.material_override = material(color, true)
+	instance.mesh = ring_meshes[radius]
+	instance.material_override = ring_materials[color]
 	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(instance)
 	return instance

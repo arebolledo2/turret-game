@@ -11,6 +11,8 @@ var options: VBoxContainer
 var fullscreen_check: CheckButton
 var vsync_check: CheckButton
 var motion_check: CheckButton
+var volume_slider: HSlider
+var volume_label: Label
 
 func _ready() -> void:
 	_build_menu()
@@ -60,6 +62,19 @@ func _build_menu() -> void:
 	vsync_check = _check(options, "VSync", func(value: bool) -> void: SettingsService.set_vsync(value))
 	motion_check = _check(options, "Reduced motion", func(value: bool) -> void: SettingsService.set_reduced_motion(value))
 	_label(options, "Reduced motion removes bobbing, recoil and hit blinking.\nAttack warnings and effect ranges remain visible.", 20)
+	volume_label = Label.new()
+	volume_label.add_theme_font_size_override("font_size", 22)
+	options.add_child(volume_label)
+	volume_slider = HSlider.new()
+	volume_slider.min_value = 0
+	volume_slider.max_value = 100
+	volume_slider.step = 5
+	volume_slider.custom_minimum_size.y = 32
+	volume_slider.accessibility_name = "Sound effects volume; zero mutes"
+	options.add_child(volume_slider)
+	volume_slider.value_changed.connect(func(value: float) -> void:
+		SettingsService.set_sfx_volume(value / 100.0)
+		_update_volume_label())
 	back_button = _button(options, "BACK", show_home)
 
 func _label(parent: Node, text: String, size: int, color: Color = Color("c8dddf")) -> void:
@@ -99,7 +114,12 @@ func show_settings() -> void:
 	fullscreen_check.set_pressed_no_signal(SettingsService.fullscreen)
 	vsync_check.set_pressed_no_signal(SettingsService.vsync)
 	motion_check.set_pressed_no_signal(FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
+	volume_slider.set_value_no_signal(SettingsService.sfx_volume * 100.0)
+	_update_volume_label()
 	fullscreen_check.grab_focus()
+
+func _update_volume_label() -> void:
+	volume_label.text = "SOUND EFFECTS  %d%%%s" % [roundi(SettingsService.sfx_volume * 100), " / MUTED" if SettingsService.sfx_volume <= 0 else ""]
 
 func start_game() -> void:
 	if is_instance_valid(arena):

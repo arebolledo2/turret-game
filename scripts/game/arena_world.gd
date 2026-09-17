@@ -12,6 +12,7 @@ var session: RunSession
 var combat: Combat3D = Combat3D.new()
 var crowd: CrowdGrid3D = CrowdGrid3D.new()
 var effects: CombatEffects3D
+var audio: GameAudio
 var difficulty_config: Dictionary
 var spawned_this_wave: int = 0
 var player: CombatActor
@@ -47,6 +48,13 @@ func _ready() -> void:
 	effects = CombatEffects3D.new()
 	effects.world = self
 	add_child(effects)
+	audio = GameAudio.new()
+	audio.world = self
+	add_child(audio)
+	combat.hit_applied.connect(audio.on_hit)
+	combat.hit_applied.connect(effects.show_hit)
+	combat.explosion.connect(audio.on_explosion)
+	combat.shock_pulse.connect(audio.on_shock)
 	combat.explosion.connect(effects.show_explosion)
 	combat.shock_pulse.connect(effects.show_shock)
 	combat.actor_defeated.connect(_on_actor_defeated)
@@ -72,10 +80,14 @@ func start_run() -> void:
 	player.health = player.max_health
 	player.position = Vector3(0, 0, 1)
 	actor_root.add_child(player)
+	var listener := AudioListener3D.new()
+	player.add_child(listener)
+	listener.make_current()
 	add_turret(Vector3(0, 0, -1))
 	begin_next_wave()
 
 func _clear_actors() -> void:
+	audio.reset()
 	carried_turret = null
 	enemies.clear()
 	turrets.clear()
@@ -119,6 +131,7 @@ func begin_next_wave() -> bool:
 	if not GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_ANNOUNCEMENT):
 		return false
 	GameStateService.current_wave += 1
+	audio.play_cue("wave", player.position)
 	announcement_left = 2.0
 	spawned_this_wave = 0
 	time_left = GameStateService.get_wave_duration(GameStateService.current_wave)
@@ -152,13 +165,16 @@ func finish_wave() -> bool:
 		carried_turret = null
 	var reward := EconomyService.get_wave_scrap_base(GameStateService.current_wave)
 	collect_scrap(reward)
+	audio.reset()
 	message = "Wave secured · +%d scrap bonus" % reward
 	if GameStateService.current_wave >= wave_limit:
+		audio.play_cue("victory", player.position)
 		GameStateMachine.transition_to(GameStateMachine.GameState.VICTORY)
 		GameStateService.is_game_active = false
 	else:
 		GameStateMachine.transition_to(GameStateMachine.GameState.SHOP)
 		shop.open()
+		audio.play_cue("wave", player.position)
 	return true
 
 func spawn_enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
@@ -210,6 +226,8 @@ func fire_shot(origin: Vector3, target: CombatActor, spec: CombatShot3D) -> Proj
 		actor_root.add_child(shot)
 		projectiles.append(shot)
 	shot.acquire_shot(origin, target.position - origin, spec)
+	audio.play_cue("plasma" if spec.damage_type == GameEnums.DamageType.PLASMA else "ion", origin)
+	effects.show_muzzle(origin, spec.damage_type)
 	return shot
 
 func add_turret(at: Vector3, type_id: String = "normal") -> TurretActor:
@@ -226,6 +244,8 @@ func add_turret(at: Vector3, type_id: String = "normal") -> TurretActor:
 func collect_scrap(amount: int) -> void:
 	var added := EconomyService.add_scrap_probabilistic(amount, 1.0)
 	GameStateService.total_scrap += added
+	if is_combat():
+		audio.play_cue("pickup", player.position)
 
 func _on_enemy_died(enemy: CombatActor) -> void:
 	GameStateService.total_kills += 1
@@ -245,6 +265,8 @@ func _on_actor_defeated(actor: Node3D, _at: Vector3) -> void:
 		_on_player_died(victim)
 
 func _on_player_died(_actor: CombatActor) -> void:
+	audio.reset()
+	audio.play_cue("defeat", player.position)
 	GameStateService.is_game_active = false
 	GameStateMachine.transition_to(GameStateMachine.GameState.GAME_OVER)
 	effects.reset()
@@ -260,6 +282,7 @@ func repair() -> bool:
 	if not shop.is_open() or player.health >= player.max_health or not EconomyService.deduct_scrap(5):
 		return false
 	player.health = minf(player.max_health, player.health + 10.0)
+	audio.play_cue("purchase", player.position)
 	message = "Hull repaired."
 	return true
 

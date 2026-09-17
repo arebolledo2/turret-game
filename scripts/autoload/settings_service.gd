@@ -3,6 +3,7 @@ extends Node
 var preferences_path: String = "user://game_preferences.cfg"
 var fullscreen: bool = false
 var vsync: bool = true
+var sfx_volume: float = .7
 
 func _ready() -> void:
 	load_preferences()
@@ -19,6 +20,10 @@ func load_preferences() -> void:
 			vsync = saved_vsync
 		if saved_motion is bool:
 			FeatureFlagService.set_enabled(FeatureFlagService.REDUCED_MOTION, saved_motion)
+		var saved_volume: Variant = config.get_value("audio", "sfx_volume", .7)
+		if (saved_volume is float or saved_volume is int) and is_finite(float(saved_volume)):
+			sfx_volume = clampf(float(saved_volume), 0.0, 1.0)
+	apply_audio_preferences()
 	apply_display_preferences()
 
 func save_preferences() -> Error:
@@ -26,6 +31,7 @@ func save_preferences() -> Error:
 	config.set_value("display", "fullscreen", fullscreen)
 	config.set_value("display", "vsync", vsync)
 	config.set_value("accessibility", "reduced_motion", FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
+	config.set_value("audio", "sfx_volume", sfx_volume)
 	return config.save(preferences_path)
 
 func apply_display_preferences() -> void:
@@ -33,6 +39,23 @@ func apply_display_preferences() -> void:
 		return
 	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED)
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if vsync else DisplayServer.VSYNC_DISABLED)
+
+func apply_audio_preferences() -> void:
+	var bus := AudioServer.get_bus_index("SFX")
+	if bus < 0:
+		AudioServer.add_bus()
+		bus = AudioServer.bus_count - 1
+		AudioServer.set_bus_name(bus, "SFX")
+	AudioServer.set_bus_mute(bus, sfx_volume <= 0.0)
+	AudioServer.set_bus_volume_db(bus, linear_to_db(maxf(sfx_volume, .0001)))
+
+func set_sfx_volume(value: float, persist: bool = true) -> void:
+	if not is_finite(value):
+		return
+	sfx_volume = clampf(value, 0.0, 1.0)
+	apply_audio_preferences()
+	if persist:
+		save_preferences()
 
 func set_fullscreen(enabled: bool, persist: bool = true) -> void:
 	fullscreen = enabled

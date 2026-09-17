@@ -79,6 +79,7 @@ func purchase(index: int) -> bool:
 	if not EconomyService.deduct_scrap(offer.price):
 		world.message = "Need %d scrap." % offer.price
 		return false
+	world.audio.play_cue("purchase", world.player.position)
 	data["sold"] = true
 	if offer.kind == "turret":
 		world.add_turret(placement, offer.asset_id)

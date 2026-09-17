@@ -2,7 +2,7 @@
 
 Launch with **`./launch.ps1`** or Godot F5. The default main scene opens Play, Settings and Quit. `launch_3d.ps1` remains an alias. F6 on `scenes/game/arena.tscn` opens the arena directly. The 2D runtime is retired; see [the cutover record](3d-cutover.md).
 
-Settings persist fullscreen, VSync and reduced motion. Pause/end screens can return to the start menu; each Play creates a fresh session.
+Settings persist fullscreen, VSync, reduced motion and SFX volume (70% by default; zero mutes). Pause/end screens can return to the start menu; each Play creates a fresh session.
 
 ## Playable scope
 
@@ -19,7 +19,7 @@ Settings persist fullscreen, VSync and reduced motion. Pause/end screens can ret
 - Shop, pause, and end screens show the current build: turret counts/damage/fire rate/range, player stats, and purchased item stacks.
 - Defeat and victory screens, with a fresh run via the button or R.
 
-The player has a scripted Blender hover-bot model. Other turret attacks, enemy behaviors, unsupported items, research, difficulty/mode selectors, full VFX/audio, save migration, and production balancing are outside the supported game. No image-generation web app changes or hosted generation services are required.
+The player has a scripted Blender hover-bot model. Other turret attacks, enemy behaviors, unsupported items, research, difficulty/mode selectors, music and final VFX/audio polish, save migration, and production balancing are outside the supported game. No image-generation web app changes or hosted generation services are required.
 
 ## Shop and build choices
 
@@ -60,7 +60,7 @@ Editable `.blend` files live in `art-source/blender/`; approved GLBs and provena
 
 ## Verification
 
-Final full GUT gate: **784 tests passed**, with no risky tests, unexpected errors, or remaining orphans (Godot 4.7.1). This run included a fresh asset import.
+Final full GUT gate: **790 tests passed**, with no risky tests, unexpected errors, or remaining orphans (Godot 4.7.1). This run included a fresh asset import.
 
 The arena integration tests cover wave/shop/restart lifecycle, shared service state/pricing, damage modifiers, rejected purchases, targeting and cluster-cache invalidation, fast swept hits, projectile reuse, simultaneous splash deaths, pause, carry/placement, terminal states, imported pivots, movement input, invulnerability, repair caps, and spawn-overlap hits. Charger checks include warning timing, locked heading, the warning-to-dash transition, swept contact, and knockback interruption. Progression checks add supported stock generation, purchase atomicity, dynamic pricing, rerolls, hull capacity, actual movement/pickup changes, filtered weapon stats, pulse boundaries/cooldowns, slow refresh/expiry/cleanup, HUD states, and both six-wave build paths.
 
@@ -74,6 +74,8 @@ The third-slice RTX 4090 sample retained **150 enemies, 10 turrets (4 ion / 3 pl
 
 On the local RTX 4090, the second-slice sample retained **150 enemies (38 chargers), 10 turrets (5 plasma), and 11 projectile instances**: **11.528 ms median / 16.705 ms p95**, with 533 draw calls at capture. Enemies have 10,000 health to remain present, use registry movement speeds, and the player is invulnerable. This intentionally crowded sample exercises separation, charging, splash, and knockback. The first slice measured 2.248 ms median / 9.568 ms p95 with slower basic enemies and no new combat behavior; the workloads differ and are not a controlled regression comparison. These short development-machine samples do not establish minimum-spec performance. Raw logs and captures are ignored under `.test-results/`.
 
-## Next increment
+## Combat polish follow-up
 
-The six-wave human playtest succeeded and the 3D cutover is complete. Next, improve native audio/combat feedback and profile crowded encounters against an explicit frame budget. Expand supported content only after those checks; the image-generation web app remains unchanged.
+Native spatial weapon, warning, impact, pickup, purchase and run-state sounds are implemented, with bounded voices and persistent SFX volume. Muzzle/hit sparks are pooled. Shared marker resources reduce render overhead. See [combat polish](combat-polish.md) for validation, current measurements and remaining frame-budget work.
+
+Playtest the audio mix and warning readability across six waves. Crowded-scene p95 still needs attention before claiming a consistent 60 fps budget or expanding the content catalog.

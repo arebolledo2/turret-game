@@ -21,4 +21,4 @@ Autoload configuration in `project.godot` is authoritative. Commands and queries
 
 `GameModeService`, `ArenaBoundsService`, `LootService`, `TechTreeService`, `BuffSystem`, `SpecialEffectService` and `AssetConfigService` retain shared data, calculations or storage contracts. The current arena does not expose all their capabilities. In particular, research, alternate objectives, 2D asset live-apply, chain reactions and temporary turret buffs are not active features. Do not equate a feature flag or registry entry with a supported native 3D implementation.
 
-The 2D AudioService, off-screen indicator service, entity query, projectile pool/emitter and target-selection runtime were removed. Native projectile reuse and crowd queries live in `scripts/game/`. Audio work will require a native 3D integration.
+The 2D AudioService, off-screen indicator service, entity query, projectile pool/emitter and target-selection runtime were removed. Native projectile reuse and crowd queries live in `scripts/game/`. The run-owned `GameAudio` now provides native spatial cues through the SFX bus; app-wide volume belongs to `SettingsService`.

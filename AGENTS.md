@@ -31,3 +31,5 @@ Full documentation is in `doc/index.md`. Key documents:
 ## Asset workflow skills
 
 - [.claude/skills/blender-assets/SKILL.md](.claude/skills/blender-assets/SKILL.md) — Rebuild and validate the scripted Blender turret/drone model family.
+
+- [.claude/skills/game-audio/SKILL.md](.claude/skills/game-audio/SKILL.md) — Rebuild procedural cues and validate the native 3D SFX mixer.

@@ -10,6 +10,7 @@
 | `ArenaWorld` | Stage/camera, wave lifecycle, actors, spawning, pause, rewards and carry/placement |
 | `RunSession` | Fresh `RunSessionState` and shared service binding/teardown |
 | `Combat3D` | Authoritative damage and local hit/explosion/pulse/defeat notifications |
+| `GameAudio` | Bounded spatial SFX voices and cue throttling |
 | `ArenaShop` | Supported stock, validation, transactions and rerolls |
 | `game_hud.gd` | HUD, refit, build summary and pause/end presentation |
 
