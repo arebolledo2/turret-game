@@ -152,7 +152,11 @@ func _physics_process(delta: float) -> void:
 		var acceleration := GameConstants.PLAYER_ACCELERATION if direction.length_squared() > 0 else GameConstants.PLAYER_DECELERATION
 		velocity = velocity.move_toward(direction * desired_speed, acceleration * WorldGeometry.METRES_PER_PIXEL * delta)
 	var previous_position := position
-	move_and_slide()
+	if is_enemy:
+		# Enemies only collide with the arena bounds, which clamp_position enforces, so skip the physics-server sweep.
+		position += velocity * delta
+	else:
+		move_and_slide()
 	position = WorldGeometry.clamp_position(position)
 	if charge and charge.phase == ChargeController3D.Phase.DASH and velocity.length_squared() > .000001 and position.distance_squared_to(previous_position) < .000001:
 		charge.interrupt()
@@ -161,7 +165,9 @@ func _physics_process(delta: float) -> void:
 		visual.rotation.y = lerp_angle(visual.rotation.y, atan2(-direction.x, -direction.z), minf(delta * 14.0, 1.0))
 	gait += velocity.length() * delta * 10.0
 	visual.position.y = 0.0 if reduced_motion else sin(gait * 2.0) * 0.025
-	for index in range(legs.size()):
+	# Leg posing is cosmetic: pose each enemy every other physics tick, staggered by instance.
+	var pose_legs := not is_enemy or (Engine.get_physics_frames() + get_instance_id()) % 2 == 0
+	for index in range(legs.size() if pose_legs else 0):
 		if legs[index]:
 			legs[index].rotation.y = 0.0 if reduced_motion else sin(gait + float(index % 2) * PI) * 0.24
 			legs[index].rotation.z = 0.0 if reduced_motion else cos(gait + float(index % 2) * PI) * 0.12
