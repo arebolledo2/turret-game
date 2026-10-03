@@ -5,12 +5,15 @@ No external packages or model services. Blender +Y becomes Godot -Z (forward).
 """
 import json
 import math
+import random
 import argparse
 import sys
 from pathlib import Path
 
+import bmesh
 import bpy
 from mathutils import Vector
+from mathutils.bvhtree import BVHTree
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "assets/models/game"
@@ -48,21 +51,53 @@ def finish(obj, name, mat, parent):
     return obj
 
 
+SHARP_ANGLE = math.radians(35)
+AO_SAMPLES = 96
+AO_DISTANCE = 0.4
+AO_FLOOR = 0.3  # darkest baked value; keeps crevices readable instead of black
+
+
+def bevel(obj, width, segments=2):
+    """Round hard edges so they catch highlights; the angle limit leaves smooth curved surfaces alone."""
+    modifier = obj.modifiers.new("Machined edges", "BEVEL")
+    modifier.width = width
+    modifier.segments = segments
+    modifier.limit_method = "ANGLE"
+    modifier.angle_limit = SHARP_ANGLE
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.modifier_apply(modifier=modifier.name)
+
+
+def smooth_by_angle(obj):
+    """Smooth shading with hard edges kept above SHARP_ANGLE, so bevels shade as a gradient and flat faces stay flat."""
+    mesh = obj.data
+    mesh.shade_smooth()
+    editor = bmesh.new()
+    editor.from_mesh(mesh)
+    for edge in editor.edges:
+        if len(edge.link_faces) == 2 and edge.calc_face_angle(0.0) > SHARP_ANGLE:
+            edge.smooth = False
+    editor.to_mesh(mesh)
+    editor.free()
+
+
 def box(name, pos, size, mat, parent=None):
     bpy.ops.mesh.primitive_cube_add(size=1, location=pos)
     obj = bpy.context.object
     obj.scale = size
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-    bevel = obj.modifiers.new("Machined edges", "BEVEL")
-    bevel.width = 0.025
-    bevel.segments = 1
-    bpy.ops.object.modifier_apply(modifier=bevel.name)
+    bevel(obj, min(0.03, min(size) * 0.3))
+    smooth_by_angle(obj)
     return finish(obj, name, mat, parent)
 
 
 def cylinder(name, pos, radius, depth, mat, parent=None, vertices=12):
     bpy.ops.mesh.primitive_cylinder_add(vertices=vertices, radius=radius, depth=depth, location=pos)
-    return finish(bpy.context.object, name, mat, parent)
+    obj = bpy.context.object
+    # Thin struts get a single narrow bevel; chunky bodies get a rounder two-segment one.
+    bevel(obj, min(0.02, radius * 0.25, depth * 0.25), 1 if radius < 0.1 else 2)
+    smooth_by_angle(obj)
+    return finish(obj, name, mat, parent)
 
 
 def sphere(name, pos, radius, mat, parent=None, scale=(1, 1, 1)):
@@ -82,8 +117,54 @@ def strut(name, start, end, radius, mat, parent=None):
     return obj
 
 
+def bake_ambient_occlusion(meshes):
+    """Bake AO into a per-corner vertex colour (exported as COLOR_0, which Godot multiplies into albedo).
+
+    Rays are cast against the whole assembled model in its rest pose, so parts shade each other. Emission is
+    unaffected by vertex colour, so glowing parts keep their glow. Runtime-rotated parts (Aim, legs) keep the
+    rest-pose AO; the term is subtle enough that this is not visible in motion.
+    """
+    bpy.context.view_layer.update()
+    vertices, triangles = [], []
+    for obj in meshes:
+        base = len(vertices)
+        vertices.extend(obj.matrix_world @ v.co for v in obj.data.vertices)
+        obj.data.calc_loop_triangles()
+        triangles.extend(tuple(base + i for i in tri.vertices) for tri in obj.data.loop_triangles)
+    tree = BVHTree.FromPolygons(vertices, triangles)
+    rng = random.Random(7)  # fixed seed keeps rebuilt GLBs byte-stable
+    for obj in meshes:
+        mesh = obj.data
+        normal_matrix = obj.matrix_world.to_3x3().inverted().transposed()
+        colors = mesh.color_attributes.new("AO", "BYTE_COLOR", "CORNER")
+        normals = mesh.corner_normals
+        values = []
+        for loop in mesh.loops:
+            position = obj.matrix_world @ mesh.vertices[loop.vertex_index].co
+            normal = (normal_matrix @ normals[loop.index].vector).normalized()
+            tangent = normal.cross(Vector((0, 0, 1) if abs(normal.z) < 0.9 else (1, 0, 0))).normalized()
+            bitangent = normal.cross(tangent)
+            origin = position + normal * 0.004
+            hits = 0.0
+            for _ in range(AO_SAMPLES):
+                # Cosine-weighted hemisphere sample.
+                r1, r2 = rng.random(), rng.random()
+                radius, angle = math.sqrt(r1), math.tau * r2
+                direction = tangent * (radius * math.cos(angle)) + bitangent * (radius * math.sin(angle))                     + normal * math.sqrt(1 - r1)
+                hit = tree.ray_cast(origin, direction, AO_DISTANCE)
+                if hit[0] is not None:
+                    hits += 1.0 - hit[3] / AO_DISTANCE  # nearer occluders darken more
+            occlusion = hits / AO_SAMPLES
+            values.append(AO_FLOOR + (1.0 - AO_FLOOR) * (1.0 - occlusion) ** 1.5)
+        for loop_index, value in enumerate(values):
+            colors.data[loop_index].color = (value, value, value, 1.0)
+        mesh.color_attributes.active_color = colors
+        mesh.color_attributes.render_color_index = list(mesh.color_attributes).index(colors)
+
+
 def save_asset(name, reference, sockets):
     meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
+    bake_ambient_occlusion(meshes)
     triangles = 0
     for obj in meshes:
         obj.data.calc_loop_triangles()
@@ -91,7 +172,7 @@ def save_asset(name, reference, sockets):
     bpy.ops.wm.save_as_mainfile(filepath=str(SOURCE / f"{name}.blend"))
     bpy.ops.export_scene.gltf(filepath=str(OUT / f"{name}.glb"), export_format="GLB",
                               export_yup=True, export_animations=False, export_cameras=False,
-                              export_lights=False)
+                              export_lights=False, export_vertex_color="ACTIVE")
     return {"id": name, "triangles": triangles, "mesh_parts": len(meshes),
             "materials": len({m.name for o in meshes for m in o.data.materials}),
             "reference": reference, "required_nodes": sockets,

@@ -6,6 +6,8 @@ Approved game models and their provenance manifest live in `assets/models/game/`
 
 `tools/blender/build_assets.py` generates the six-model turret/drone/player family. Follow the [Blender asset skill](../.claude/skills/blender-assets/SKILL.md) when modifying it: inspect reference images, build with Blender's Python, preserve metre scale and pivots, import, run tests, and inspect native-rendered captures. Models use rigid-part runtime animation, not exported skeleton clips.
 
+`build_assets.py` bevels hard edges (angle-limited, smoothed by angle) and bakes ambient occlusion into a per-corner vertex colour (`COLOR_0`, fixed RNG seed, rest pose). `tools/import_vertex_ao.gd` is the import post-script on each `.glb.import` that enables `vertex_color_use_as_albedo`; new model imports need the same `import_script/path`.
+
 The contract is a ground-centred origin, `Aim` and `Muzzle` nodes for weapons, and six `Leg_L/R_0/1/2` pivots for drones. Blender +Y exports to Godot -Z. Geometry/material budgets and reference/source/model paths are recorded in the manifest. `tools/audit_game_resources.py` checks resource and model-record links.
 
 ## Preserved 2D references and storage

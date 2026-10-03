@@ -5,7 +5,7 @@
   "assets": [
     {
       "id": "ion_turret",
-      "triangles": 448,
+      "triangles": 1280,
       "mesh_parts": 12,
       "materials": 3,
       "reference": "assets/sprites/turrets/turret_basic.png",
@@ -22,7 +22,7 @@
     },
     {
       "id": "spider_drone",
-      "triangles": 2216,
+      "triangles": 3176,
       "mesh_parts": 22,
       "materials": 3,
       "reference": "assets/sprites/enemy_spider_drone/spider_drone_right.png",
@@ -43,7 +43,7 @@
     },
     {
       "id": "plasma_turret",
-      "triangles": 884,
+      "triangles": 1780,
       "mesh_parts": 13,
       "materials": 3,
       "reference": "assets/sprites/turrets/turret_plasma_static.png",
@@ -60,7 +60,7 @@
     },
     {
       "id": "charger_drone",
-      "triangles": 2360,
+      "triangles": 3576,
       "mesh_parts": 26,
       "materials": 3,
       "reference": "assets/sprites/enemy_spider_drone/spider_drone_right.png",
@@ -81,7 +81,7 @@
     },
     {
       "id": "player_bot",
-      "triangles": 1548,
+      "triangles": 1932,
       "mesh_parts": 11,
       "materials": 3,
       "reference": "assets/sprites/player/player_static.png",
@@ -97,7 +97,7 @@
     },
     {
       "id": "shock_turret",
-      "triangles": 748,
+      "triangles": 1708,
       "mesh_parts": 14,
       "materials": 3,
       "reference": "assets/sprites/turrets/turret_shock.png",
