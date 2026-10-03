@@ -12,6 +12,7 @@ from pathlib import Path
 
 import bmesh
 import bpy
+import numpy as np
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 
@@ -20,6 +21,52 @@ OUT = ROOT / "assets/models/game"
 SOURCE = ROOT / "art-source/blender"
 OUT.mkdir(parents=True, exist_ok=True)
 SOURCE.mkdir(parents=True, exist_ok=True)
+
+
+TEXTURE_DIR = SOURCE / "textures"
+PANEL_TILE_METRES = 0.5  # one repeat of the 4x4 panel texture; panels come out ~12 cm wide
+
+
+def build_panel_texture(path, size=512, cells=4):
+    """Seamless greyscale panel detail: grooves, lips, rivets, vent slits and speckle.
+
+    Multiplied into each material's base colour, so it adds structure without changing hue. Seeded for stable output.
+    """
+    rng = np.random.default_rng(11)
+    cell = size // cells
+    yy, xx = np.mgrid[0:size, 0:size]
+    lx, ly = xx % cell, yy % cell
+    edge = np.minimum.reduce([lx, cell - 1 - lx, ly, cell - 1 - ly])
+    img = 0.95 - rng.random((size, size)) * 0.07
+    img = np.where((edge >= 3) & (edge < 6), img * 0.9 + 0.1, img)  # raised lip beside the seam
+    img = np.where(edge < 3, 0.38, img)  # groove
+    cx, cy = lx - cell / 2, ly - cell / 2
+    for sx in (-1, 1):
+        for sy in (-1, 1):
+            dist = np.hypot(lx - (cell / 2 + sx * (cell / 2 - 14)), ly - (cell / 2 + sy * (cell / 2 - 14)))
+            img = np.where(dist < 3.2, 1.0, np.where(dist < 4.8, img * 0.7, img))  # rivet with shadow ring
+    cell_x, cell_y = xx // cell, yy // cell
+    vent = ((cell_x + 2 * cell_y) % 5 == 1) & (np.abs(cx) < cell * 0.28) & (np.abs(cy) < cell * 0.24)
+    slats = (ly // 6) % 2 == 0
+    img = np.where(vent & slats, 0.3, np.where(vent, img * 0.82, img))
+    img = np.clip(img, 0.0, 1.0)
+    pixels = np.stack([img, img, img, np.ones_like(img)], axis=-1).astype(np.float32)
+    image = bpy.data.images.new("panel_detail_gen", size, size, alpha=False)
+    image.pixels.foreach_set(pixels.ravel())
+    image.filepath_raw = str(path)
+    image.file_format = "PNG"
+    image.save()
+    bpy.data.images.remove(image)
+
+
+def panel_image():
+    path = TEXTURE_DIR / "panel_detail.png"
+    if not path.exists():
+        TEXTURE_DIR.mkdir(parents=True, exist_ok=True)
+        build_panel_texture(path)
+    image = bpy.data.images.get("panel_detail") or bpy.data.images.load(str(path))
+    image.name = "panel_detail"
+    return image
 
 
 def material(name, color, metal=0.0, glow=False):
@@ -33,6 +80,19 @@ def material(name, color, metal=0.0, glow=False):
     if glow:
         shader.inputs["Emission Color"].default_value = (*color, 1)
         shader.inputs["Emission Strength"].default_value = 2.0
+    else:
+        # Emissive parts stay clean; everything else gets the panel detail multiplied into its colour.
+        nodes, links = mat.node_tree.nodes, mat.node_tree.links
+        texture = nodes.new("ShaderNodeTexImage")
+        texture.image = panel_image()
+        texture.extension = "REPEAT"
+        mix = nodes.new("ShaderNodeMix")
+        mix.data_type = "RGBA"
+        mix.blend_type = "MULTIPLY"
+        mix.inputs["Factor"].default_value = 1.0
+        mix.inputs[6].default_value = (*color, 1)
+        links.new(texture.outputs["Color"], mix.inputs[7])
+        links.new(mix.outputs[2], shader.inputs["Base Color"])
     return mat
 
 
@@ -44,7 +104,37 @@ def empty(name, pos=(0, 0, 0), parent=None):
     return obj
 
 
-def finish(obj, name, mat, parent):
+def project_uvs(obj, mapping):
+    """World-density UVs so the tiled panel texture has the same scale on every part.
+
+    "cyl" wraps around the Z axis (barrels, struts, rims) with caps projected flat; "box" projects each face
+    along its dominant normal axis.
+    """
+    mesh = obj.data
+    layer = mesh.uv_layers.active or mesh.uv_layers.new(name="UVMap")
+    for polygon in mesh.polygons:
+        normal = polygon.normal
+        axis = max(range(3), key=lambda i: abs(normal[i]))
+        angles = []
+        for loop_index in polygon.loop_indices:
+            co = mesh.vertices[mesh.loops[loop_index].vertex_index].co
+            if mapping == "cyl" and axis != 2:
+                angle = math.atan2(co.y, co.x)
+                if angles:  # keep the face contiguous across the +-pi seam
+                    angle += math.tau * round((angles[0] - angle) / math.tau)
+                angles.append(angle)
+                u, v = angle * math.hypot(co.x, co.y), co.z
+            elif axis == 0:
+                u, v = co.y, co.z
+            elif axis == 1:
+                u, v = co.x, co.z
+            else:
+                u, v = co.x, co.y
+            layer.data[loop_index].uv = (u / PANEL_TILE_METRES, v / PANEL_TILE_METRES)
+
+
+def finish(obj, name, mat, parent, mapping="box"):
+    project_uvs(obj, mapping)
     obj.name = name
     obj.data.materials.append(mat)
     obj.parent = parent
@@ -97,7 +187,7 @@ def cylinder(name, pos, radius, depth, mat, parent=None, vertices=12):
     # Thin struts get a single narrow bevel; chunky bodies get a rounder two-segment one.
     bevel(obj, min(0.02, radius * 0.25, depth * 0.25), 1 if radius < 0.1 else 2)
     smooth_by_angle(obj)
-    return finish(obj, name, mat, parent)
+    return finish(obj, name, mat, parent, "cyl")
 
 
 def sphere(name, pos, radius, mat, parent=None, scale=(1, 1, 1)):
