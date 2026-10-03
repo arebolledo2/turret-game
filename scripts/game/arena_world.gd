@@ -57,6 +57,8 @@ func _ready() -> void:
 	combat.shock_pulse.connect(audio.on_shock)
 	combat.explosion.connect(effects.show_explosion)
 	combat.shock_pulse.connect(effects.show_shock)
+	combat.chain_arc.connect(audio.on_arc)
+	combat.chain_arc.connect(effects.show_arc)
 	combat.actor_defeated.connect(_on_actor_defeated)
 	_build_stage()
 	if show_hud:

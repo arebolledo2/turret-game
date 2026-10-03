@@ -8,6 +8,7 @@ var samples: Array[float] = []
 var stress: bool = false
 var shop: bool = false
 var combat_demo: bool = false
+var new_turrets: bool = false
 var last_tick: int = 0
 var physics_samples: Array[float] = []
 var process_samples: Array[float] = []
@@ -25,6 +26,7 @@ func setup() -> void:
 	stress = "--stress" in OS.get_cmdline_user_args()
 	shop = "--shop" in OS.get_cmdline_user_args()
 	combat_demo = "--combat-demo" in OS.get_cmdline_user_args()
+	new_turrets = "--new-turrets" in OS.get_cmdline_user_args()
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	GameRandom.gameplay.seed = 42
 	for index in range(150 if stress else 18):
@@ -35,6 +37,9 @@ func setup() -> void:
 			enemy.health = 10000
 	world.add_turret(Vector3(-3, 0, 0), "plasma")
 	world.add_turret(Vector3(3, 0, 0), "shock")
+	if new_turrets:
+		world.add_turret(Vector3(0, 0, 2.5), "tesla")
+		world.add_turret(Vector3(0, 0, -2.5), "melee")
 	if stress:
 		for index in range(7):
 			world.add_turret(Vector3(-6 + index * 2, 0, -2), ArenaShop.TURRETS[index % 3])
@@ -64,7 +69,7 @@ func _process(_delta: float) -> void:
 
 func capture() -> void:
 	await RenderingServer.frame_post_draw
-	var suffix := "-stress" if stress else ("-shop" if shop else ("-combat" if combat_demo else ""))
+	var suffix := "-stress" if stress else ("-turrets" if new_turrets else "-shop" if shop else ("-combat" if combat_demo else ""))
 	var output := ProjectSettings.globalize_path("res://.test-results/game%s.png" % suffix)
 	get_viewport().get_texture().get_image().save_png(output)
 	samples.sort()

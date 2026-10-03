@@ -6,6 +6,7 @@ extends RefCounted
 signal hit_applied(target: Node3D, hit: CombatHit3D, actual_damage: float)
 signal explosion(position: Vector3, radius: float)
 signal shock_pulse(position: Vector3, radius: float)
+signal chain_arc(from: Vector3, to: Vector3)
 signal actor_defeated(actor: Node3D, position: Vector3)
 
 func apply_hit(target: CombatActor, hit: CombatHit3D) -> float:
@@ -44,6 +45,40 @@ func impact(primary: CombatActor, at: Vector3, heading: Vector3, shot: CombatSho
 		else:
 			explosion.emit(WorldGeometry.planar(at), shot.splash_radius)
 	return hits
+
+## Instant chain lightning: hits `primary`, then jumps to the nearest unhit living enemy within
+## `jump_range`, up to `jumps` more times, each hit scaled by `decay`.
+func chain(origin: Vector3, primary: CombatActor, shot: CombatShot3D, jumps: int, jump_range: float,
+		decay: float, candidates: Array[CombatActor]) -> int:
+	var struck: Array[CombatActor] = []
+	var current := primary
+	var from := origin
+	var damage := shot.damage
+	var hits: int = 0
+	for step in range(jumps + 1):
+		if not is_instance_valid(current) or current.dead:
+			break
+		var to := current.position + Vector3(0, .45, 0)
+		chain_arc.emit(from, to)
+		struck.append(current)
+		if apply_hit(current, CombatHit3D.new(damage, from, Vector3.ZERO, shot.damage_type)) > 0.0:
+			hits += 1
+		from = to
+		damage *= decay
+		current = _nearest_unstruck(current.position, jump_range, struck, candidates)
+	return hits
+
+func _nearest_unstruck(at: Vector3, jump_range: float, struck: Array[CombatActor], candidates: Array[CombatActor]) -> CombatActor:
+	var best: CombatActor = null
+	var best_distance := jump_range * jump_range + .000001
+	for candidate in candidates:
+		if not is_instance_valid(candidate) or candidate.dead or struck.has(candidate):
+			continue
+		var distance := WorldGeometry.planar(candidate.position - at).length_squared()
+		if distance <= best_distance:
+			best = candidate
+			best_distance = distance
+	return best
 
 func select_target(origin: Vector3, range_metres: float, candidates: Array[CombatActor], cluster_radius: float = 0.0, grid: CrowdGrid3D = null) -> CombatActor:
 	var best: CombatActor = null

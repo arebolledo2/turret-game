@@ -44,6 +44,18 @@ func separation(actor: CombatActor) -> Vector3:
 				push += offset * (1.0 - distance / SPACING)
 	return push.limit_length(1.0) * 1.1
 
+## Actors whose snapshot position is within `radius` of `origin` (planar), via the grid cells.
+func query_radius(origin: Vector3, radius: float) -> Array[CombatActor]:
+	var found: Array[CombatActor] = []
+	var cell := _cell(origin)
+	var extent := ceili(radius / CELL_SIZE)
+	for x in range(-extent, extent + 1):
+		for z in range(-extent, extent + 1):
+			for other: CombatActor in cells.get(cell + Vector2i(x, z), []):
+				if is_instance_valid(other) and not other.dead and 						WorldGeometry.planar(Vector3(positions[other.get_instance_id()]) - origin).length_squared() <= radius * radius:
+					found.append(other)
+	return found
+
 func count_near(actor: CombatActor, radius: float) -> int:
 	# Turrets share these counts within a physics tick instead of rescanning groups.
 	if not neighbor_counts.has(radius):

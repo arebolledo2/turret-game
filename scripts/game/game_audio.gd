@@ -82,6 +82,9 @@ func on_hit(actor: Node3D, _hit: CombatHit3D, _amount: float) -> void:
 func on_explosion(at: Vector3, _radius: float) -> void:
 	play_cue("plasma", at)
 
+func on_arc(from: Vector3, _to: Vector3) -> void:
+	play_cue("shock", from)
+
 func on_shock(at: Vector3, _radius: float) -> void:
 	play_cue("shock", at)
 

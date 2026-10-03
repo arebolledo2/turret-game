@@ -36,9 +36,11 @@ static func body_scale(type_id: String) -> float:
 
 ## Shared per-(type, source material) copies keep identical enemies batchable.
 static func apply_tint(model: Node, type_id: String) -> void:
-	if not VARIANTS.has(type_id):
-		return
-	var variant: Dictionary = VARIANTS[type_id]
+	if VARIANTS.has(type_id):
+		tint_model(model, type_id, VARIANTS[type_id]["tint"], float(VARIANTS[type_id]["emission"]))
+
+static func tint_model(model: Node, type_id: String, tint: Color, emission: float) -> void:
+	var variant := {"tint": tint, "emission": emission}
 	for node in model.find_children("*", "MeshInstance3D", true, false):
 		var mesh_instance := node as MeshInstance3D
 		for surface in range(mesh_instance.mesh.get_surface_count()):

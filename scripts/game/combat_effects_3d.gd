@@ -4,6 +4,11 @@ extends Node3D
 ## Bounded, reusable cosmetic effects. Lifetime advances only with simulation.
 const MAX_PULSES: int = 32
 const MAX_SPARKS: int = 24
+const MAX_ARCS: int = 16
+const ARC_LIFETIME: float = .12
+var arcs: Array[MeshInstance3D] = []
+var arc_lifetimes: Array[float] = []
+var arc_mesh: BoxMesh
 var sparks: Array[MeshInstance3D] = []
 var spark_lifetimes: Array[float] = []
 var spark_mesh: SphereMesh
@@ -49,6 +54,32 @@ func _show_spark(at: Vector3, material: Material, radius: float, lifetime: float
 	spark.visible = true
 	spark_lifetimes[index] = lifetime
 
+func show_arc(from: Vector3, to: Vector3) -> void:
+	var index := arc_lifetimes.find(0.0)
+	if index < 0:
+		if arcs.size() >= MAX_ARCS:
+			return
+		if not arc_mesh:
+			arc_mesh = BoxMesh.new()
+			arc_mesh.size = Vector3(.07, .07, 1.0)
+		var arc := MeshInstance3D.new()
+		arc.mesh = arc_mesh
+		arc.material_override = shock_material
+		arc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(arc)
+		arcs.append(arc)
+		arc_lifetimes.append(0.0)
+		index = arcs.size() - 1
+	var length := from.distance_to(to)
+	if length < .01:
+		return
+	var arc := arcs[index]
+	arc.position = (from + to) * .5
+	arc.scale = Vector3(1, 1, length)
+	arc.basis = Basis.looking_at(to - from, Vector3.UP if absf((to - from).normalized().y) < .99 else Vector3.RIGHT).scaled(Vector3(1, 1, length))
+	arc.visible = true
+	arc_lifetimes[index] = ARC_LIFETIME
+
 func show_explosion(at: Vector3, radius: float) -> void:
 	_show_pulse(at, radius, plasma_material)
 
@@ -79,6 +110,9 @@ func _physics_process(delta: float) -> void:
 	for index in range(sparks.size()):
 		spark_lifetimes[index] = maxf(0.0, spark_lifetimes[index] - delta)
 		sparks[index].visible = spark_lifetimes[index] > 0.0
+	for index in range(arcs.size()):
+		arc_lifetimes[index] = maxf(0.0, arc_lifetimes[index] - delta)
+		arcs[index].visible = arc_lifetimes[index] > 0.0
 	for index in range(pulses.size()):
 		if ages[index] < 0:
 			continue
@@ -96,6 +130,9 @@ func reset() -> void:
 	for index in range(sparks.size()):
 		spark_lifetimes[index] = 0.0
 		sparks[index].visible = false
+	for index in range(arcs.size()):
+		arc_lifetimes[index] = 0.0
+		arcs[index].visible = false
 	for index in range(pulses.size()):
 		ages[index] = -1.0
 		pulses[index].visible = false

@@ -64,7 +64,7 @@ func test_purchase_is_atomic_and_rejects_sold_unsupported_maxed_and_unaffordable
 	assert_false(world.shop.purchase(index))
 	assert_eq(EconomyService.total_scrap, 88)
 	assert_eq(ItemTrackingService.item_counts["dense_rounds"], 1)
-	assert_false(world.shop.purchase(stock("turret", "tesla", 1)))
+	assert_false(world.shop.purchase(stock("turret", "sniper", 1)))
 	assert_false(world.shop.purchase(stock("item", "nanite_injector", 1)))
 	assert_false(world.shop.purchase(stock("item", "scrap_magnet", 999)))
 	ItemTrackingService.item_counts["compact_design"] = 3
@@ -125,8 +125,8 @@ func test_item_modifiers_affect_all_weapons_and_respect_filters() -> void:
 		var base: Dictionary = TurretRegistry.TYPES[type_id]["base_stats"]
 		var stats := TurretStatsService.get_turret_stats(type_id, 1.0)
 		assert_almost_eq(float(stats["range"]), float(base["range"]) * 1.05, .001)
-		assert_almost_eq(float(stats["damage"]), float(base["damage"]) * (1.06 if type_id == "shock" else 1.03), .001)
-		assert_almost_eq(float(stats["fire_rate"]), float(base["fire_rate"]) * (1.03 if type_id == "shock" else 1.09), .001)
+		assert_almost_eq(float(stats["damage"]), float(base["damage"]) * (1.06 if type_id in ["shock", "tesla", "melee"] else 1.03), .001)
+		assert_almost_eq(float(stats["fire_rate"]), float(base["fire_rate"]) * (1.03 if type_id in ["shock", "tesla"] else 1.09), .001)
 
 func test_hull_speed_and_pickup_upgrades_apply_and_restart_clears_build() -> void:
 	world.finish_wave()
