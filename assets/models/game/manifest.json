@@ -59,6 +59,20 @@
       "animation": "Runtime rigid-part articulation; no skeletal rig"
     },
     {
+      "id": "scrap_shard",
+      "triangles": 344,
+      "mesh_parts": 4,
+      "materials": 2,
+      "reference": "assets/sprites/scrap_sprite.png",
+      "required_nodes": [],
+      "source": "art-source/blender/scrap_shard.blend",
+      "model": "assets/models/game/scrap_shard.glb",
+      "forward": "Godot -Z",
+      "units": "metres",
+      "origin": "model centre",
+      "animation": "Runtime rigid-part articulation; no skeletal rig"
+    },
+    {
       "id": "charger_drone",
       "triangles": 3576,
       "mesh_parts": 26,

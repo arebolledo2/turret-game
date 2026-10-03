@@ -69,7 +69,7 @@ def panel_image():
     return image
 
 
-def material(name, color, metal=0.0, glow=False):
+def material(name, color, metal=0.0, glow=False, textured=True, glow_strength=2.0):
     mat = bpy.data.materials.new(name)
     mat.diffuse_color = (*color, 1)
     mat.use_nodes = True
@@ -79,8 +79,8 @@ def material(name, color, metal=0.0, glow=False):
     shader.inputs["Roughness"].default_value = 0.38
     if glow:
         shader.inputs["Emission Color"].default_value = (*color, 1)
-        shader.inputs["Emission Strength"].default_value = 2.0
-    else:
+        shader.inputs["Emission Strength"].default_value = glow_strength
+    elif textured:
         # Emissive parts stay clean; everything else gets the panel detail multiplied into its colour.
         nodes, links = mat.node_tree.nodes, mat.node_tree.links
         texture = nodes.new("ShaderNodeTexImage")
@@ -252,7 +252,7 @@ def bake_ambient_occlusion(meshes):
         mesh.color_attributes.render_color_index = list(mesh.color_attributes).index(colors)
 
 
-def save_asset(name, reference, sockets):
+def save_asset(name, reference, sockets, origin="ground centre"):
     meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
     bake_ambient_occlusion(meshes)
     triangles = 0
@@ -268,7 +268,7 @@ def save_asset(name, reference, sockets):
             "reference": reference, "required_nodes": sockets,
             "source": f"art-source/blender/{name}.blend",
             "model": f"assets/models/game/{name}.glb",
-            "forward": "Godot -Z", "units": "metres", "origin": "ground centre",
+            "forward": "Godot -Z", "units": "metres", "origin": origin,
             "animation": "Runtime rigid-part articulation; no skeletal rig"}
 
 
@@ -390,8 +390,26 @@ def build_shock():
     return save_asset("shock_turret", "assets/sprites/turrets/turret_shock.png", ["Aim", "Muzzle"])
 
 
+def build_scrap():
+    """Scrap pickup: a faceted energy crystal with a few salvaged plates, centred on its own origin so it spins in place."""
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    amber = material("Scrap amber", (1, .34, .02), .1, True, glow_strength=0.55)
+    metal = material("Scrap metal", (.1, .13, .16), .7, textured=False)
+    root = empty("ScrapModel")
+    bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=1, radius=.1, location=(0, 0, 0))
+    crystal = bpy.context.object
+    crystal.scale = (.8, .8, 1.5)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    finish(crystal, "Crystal", amber, root)  # flat shaded on purpose: the facets are the look
+    for index, angle in enumerate((0.4, 2.5, 4.4)):
+        plate = box(f"Plate{index}", (math.cos(angle) * .105, math.sin(angle) * .105, (-.05, .03, -.015)[index]),
+                    (.06, .11, .014), metal, root)
+        plate.rotation_euler = (.5 + index * .25, .35, angle)
+    return save_asset("scrap_shard", "assets/sprites/scrap_sprite.png", [], origin="model centre")
+
+
 builders = {"ion_turret": build_turret, "spider_drone": build_drone,
-            "plasma_turret": build_plasma, "charger_drone": lambda: build_drone(True), "player_bot": build_player,
+            "plasma_turret": build_plasma, "scrap_shard": build_scrap, "charger_drone": lambda: build_drone(True), "player_bot": build_player,
             "shock_turret": build_shock}
 parser = argparse.ArgumentParser()
 parser.add_argument("--only", nargs="+", choices=list(builders))
