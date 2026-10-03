@@ -117,7 +117,7 @@ func _physics_process(delta: float) -> void:
 	time_left = maxf(0.0, time_left - delta)
 	spawn_clock -= delta
 	if remaining_spawns > 0 and spawn_clock <= 0.0:
-		var type_id := "charger" if GameStateService.current_wave >= int(EnemyRegistry.TYPES["charger"]["min_wave"]) and spawned_this_wave % 4 == 0 else "basic"
+		var type_id := EnemyVariants.pick_type(GameStateService.current_wave, spawned_this_wave)
 		spawn_enemy(_spawn_position(), type_id)
 		spawned_this_wave += 1
 		remaining_spawns -= 1
@@ -139,8 +139,7 @@ func begin_next_wave() -> bool:
 	spawn_interval = time_left / maxf(float(remaining_spawns), 1.0)
 	spawn_clock = .2
 	message = ""
-	if GameStateService.current_wave >= int(EnemyRegistry.TYPES["charger"]["min_wave"]):
-		message = "Chargers incoming · dodge the amber lanes · plasma interrupts charges"
+	message = EnemyVariants.notice_for_wave(GameStateService.current_wave)
 	return true
 
 func finish_wave() -> bool:
@@ -189,6 +188,9 @@ func spawn_enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
 	enemy.contact_damage = float(base["contact_damage"])
 	enemy.mass = float(base["mass"])
 	enemy.scrap_value = int(base["scrap_value"])
+	enemy.body_scale = EnemyVariants.body_scale(type_id)
+	enemy.explosion_radius = float(base.get("explosion_radius", 0.0)) * WorldGeometry.METRES_PER_PIXEL
+	enemy.explosion_damage = float(base.get("explosion_damage", 0.0))
 	enemy.position = at
 	actor_root.add_child(enemy)
 	enemies.append(enemy)
@@ -256,6 +258,22 @@ func _on_enemy_died(enemy: CombatActor) -> void:
 	pickup_root.add_child(pickup)
 	enemies.erase(enemy)
 	enemy.queue_free()
+	if enemy.explosion_radius > 0.0:
+		_detonate(enemy)
+
+## Boom bot blast: hurts the player and every other enemy in range (chains are allowed and finite).
+func _detonate(source: CombatActor) -> void:
+	var at := source.position
+	var radius_squared := source.explosion_radius * source.explosion_radius
+	var victims: Array[CombatActor] = []
+	for other in enemies:
+		if is_instance_valid(other) and not other.dead and WorldGeometry.planar(other.position - at).length_squared() <= radius_squared:
+			victims.append(other)
+	combat.explosion.emit(WorldGeometry.planar(at), source.explosion_radius)
+	for victim in victims:
+		combat.apply_hit(victim, CombatHit3D.new(source.explosion_damage, at))
+	if WorldGeometry.planar(player.position - at).length_squared() <= radius_squared:
+		combat.apply_hit(player, CombatHit3D.new(source.explosion_damage, at))
 
 func _on_actor_defeated(actor: Node3D, _at: Vector3) -> void:
 	var victim := actor as CombatActor

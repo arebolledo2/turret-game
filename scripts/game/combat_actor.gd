@@ -20,6 +20,9 @@ var health: float = 25.0
 var max_health: float = 25.0
 var speed: float = 2.5
 var contact_damage: float = 8.0
+var body_scale: float = 1.0
+var explosion_radius: float = 0.0
+var explosion_damage: float = 0.0
 var dead: bool = false
 var invulnerability: float = 0.0
 var visual: Node3D
@@ -51,7 +54,9 @@ func _ready() -> void:
 			charge.configure(EnemyRegistry.TYPES["charger"]["behavior_params"])
 		else:
 			model = preload("res://assets/models/game/spider_drone.glb").instantiate()
+		EnemyVariants.apply_tint(model, enemy_type)
 		visual.add_child(model)
+		visual.scale = Vector3.ONE * body_scale
 		for side in ["L", "R"]:
 			for index in range(3):
 				legs.append(model.find_child("Leg_%s_%d" % [side, index], true, false) as Node3D)
@@ -61,15 +66,15 @@ func _ready() -> void:
 		hurtbox.monitoring = false
 		var hit_shape := CollisionShape3D.new()
 		var hit_capsule := CapsuleShape3D.new()
-		hit_capsule.radius = 0.36
-		hit_capsule.height = 1.3
+		hit_capsule.radius = 0.36 * body_scale
+		hit_capsule.height = 1.3 * body_scale
 		hit_shape.shape = hit_capsule
-		hit_shape.position.y = 0.6
+		hit_shape.position.y = 0.6 * body_scale
 		hurtbox.add_child(hit_shape)
 		add_child(hurtbox)
-		marker = WorldGeometry.ring(self, .36, Color("f5a447") if charge else Color("9c545e"))
+		marker = WorldGeometry.ring(self, .36 * body_scale, Color("f5a447") if charge else Color("9c545e"))
 		marker.position.y = .025
-		slow_marker = WorldGeometry.ring(self, .43, Color("55dcff"))
+		slow_marker = WorldGeometry.ring(self, .43 * body_scale, Color("55dcff"))
 		slow_marker.position.y = .04
 		slow_marker.visible = false
 		if charge:
@@ -173,7 +178,7 @@ func _physics_process(delta: float) -> void:
 			legs[index].rotation.z = 0.0 if reduced_motion else cos(gait + float(index % 2) * PI) * 0.12
 	if is_enemy:
 		var closest := Geometry3D.get_closest_point_to_segment(world.player.position, previous_position, position)
-		if WorldGeometry.planar(world.player.position - closest).length_squared() < .5 * .5:
+		if WorldGeometry.planar(world.player.position - closest).length_squared() < .5 * .5 * body_scale * body_scale:
 			world.combat.apply_hit(world.player, CombatHit3D.new(contact_damage, position))
 	else:
 		weapon_clock -= delta
