@@ -270,6 +270,7 @@ func _on_enemy_died(enemy: CombatActor) -> void:
 	pickup.position = enemy.position
 	pickup_root.add_child(pickup)
 	enemies.erase(enemy)
+	DeathDissolve.spawn(actor_root, enemy)
 	enemy.queue_free()
 	if enemy.explosion_radius > 0.0:
 		_detonate(enemy)

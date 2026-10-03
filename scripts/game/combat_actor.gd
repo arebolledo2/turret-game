@@ -30,6 +30,11 @@ var hurtbox: Area3D
 var legs: Array[Node3D] = []
 var gait: float = 0.0
 var flash_time: float = 0.0
+var hit_flash: HitFlash
+
+const FLASH_DURATION: float = .18
+const ENEMY_FLASH_COLOR := Color(1.0, .92, .8)
+const PLAYER_FLASH_COLOR := Color(1.0, .28, .22)
 var weapon_clock: float = 0.0
 
 func _ready() -> void:
@@ -108,6 +113,8 @@ func clear_transients() -> void:
 	knockback_velocity = Vector3.ZERO
 	velocity = Vector3.ZERO
 	flash_time = 0.0
+	if hit_flash:
+		hit_flash.clear()
 	visual.visible = true
 	if warning:
 		warning.visible = false
@@ -120,7 +127,8 @@ func _physics_process(delta: float) -> void:
 	invulnerability = maxf(0.0, invulnerability - delta)
 	flash_time = maxf(0.0, flash_time - delta)
 	var reduced_motion := FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION)
-	visual.visible = reduced_motion or flash_time <= 0.0 or int(flash_time * 25.0) % 2 == 0
+	if hit_flash:
+		hit_flash.update(flash_time / FLASH_DURATION, reduced_motion)
 	var direction := Vector3.ZERO
 	if is_enemy:
 		statuses.advance(delta)
@@ -212,7 +220,9 @@ func receive_hit(hit: CombatHit3D) -> float:
 		if charge:
 			charge.interrupt()
 			warning.visible = false
-	flash_time = .18
+	flash_time = FLASH_DURATION
+	if not hit_flash:
+		hit_flash = HitFlash.new(visual, ENEMY_FLASH_COLOR if is_enemy else PLAYER_FLASH_COLOR)
 	damaged.emit(self, amount)
 	if health <= 0.0:
 		dead = true
@@ -221,6 +231,8 @@ func receive_hit(hit: CombatHit3D) -> float:
 			slow_marker.visible = false
 		if hurtbox:
 			hurtbox.set_deferred("collision_layer", 0)
+		if hit_flash:
+			hit_flash.clear()
 		visible = false
 		if warning:
 			warning.visible = false
