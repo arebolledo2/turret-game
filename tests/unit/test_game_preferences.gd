@@ -40,6 +40,29 @@ func test_preferences_round_trip_and_reject_invalid_types() -> void:
 	SettingsService.apply_display_preferences()
 	SettingsService.set_reduced_motion(false, false)
 
+func test_window_size_persists_and_rejects_invalid_values() -> void:
+	var service := preload("res://scripts/autoload/settings_service.gd").new()
+	service.preferences_path = "user://preferences_%d.cfg" % Time.get_ticks_usec()
+	add_child_autofree(service)
+	service.set_window_size(Vector2i(1600, 900), false)
+	assert_eq(service.save_preferences(), OK)
+	service.window_size = Vector2i.ZERO
+	service.load_preferences()
+	assert_eq(service.window_size, Vector2i(1600, 900))
+	var config := ConfigFile.new()
+	config.set_value("display", "window_width", 10)
+	config.set_value("display", "window_height", "bad")
+	config.save(service.preferences_path)
+	service.load_preferences()
+	assert_eq(service.window_size, Vector2i(1600, 900), "Invalid sizes must not overwrite a valid one")
+	DirAccess.remove_absolute(service.preferences_path)
+
+func test_fit_window_size_keeps_the_window_on_screen() -> void:
+	var script := preload("res://scripts/autoload/settings_service.gd")
+	assert_eq(script.fit_window_size(Vector2i(1280, 720), Vector2i(1920, 1040)), Vector2i(1280, 720))
+	assert_eq(script.fit_window_size(Vector2i(2560, 1440), Vector2i(1920, 1040)), Vector2i(1920, 1000))
+	assert_eq(script.fit_window_size(Vector2i(100, 100), Vector2i(1920, 1040)), script.MIN_WINDOW_SIZE)
+
 func test_shop_price_policies_remain_independent_of_retired_scene_manager() -> void:
 	EconomyService.turrets_purchased = 2
 	assert_eq(EconomyService.calculate_turret_price(10, 5), 40)

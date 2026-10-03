@@ -1,0 +1,80 @@
+class_name Minimap
+extends Control
+
+## Whole-arena radar drawn straight from world state (no second render). Screen-up is world -Z, matching the camera.
+const MAP_SIZE: Vector2 = Vector2(256, 144) # the arena is 16:9, so one pixel is about 0.225 m
+const REDRAW_INTERVAL: float = 0.05
+const ENEMY_COLORS: Dictionary = {
+	"basic": Color("ff6b8a"), "fast": Color("7fe3ff"), "tank": Color("e08a4a"),
+	"exploder": Color("ff5a2a"), "charger": Color("ffc23d"),
+}
+
+var world: ArenaWorld
+var suppressed: bool = false # set by the HUD while a full-screen panel is open
+var enabled: bool = true # the M key toggles this
+var redraw_clock: float = 0.0
+
+static func world_to_map(position: Vector3, map_size: Vector2 = MAP_SIZE) -> Vector2:
+	var half := WorldGeometry.HALF_ARENA
+	return Vector2(clampf(position.x / (half.x * 2.0) + 0.5, 0.0, 1.0) * map_size.x,
+		clampf(position.z / (half.y * 2.0) + 0.5, 0.0, 1.0) * map_size.y)
+
+func _ready() -> void:
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	custom_minimum_size = MAP_SIZE
+	set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	offset_left = -MAP_SIZE.x - 28.0
+	offset_top = -MAP_SIZE.y - 28.0
+	offset_right = -28.0
+	offset_bottom = -28.0
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_M:
+		enabled = not enabled
+
+func _process(delta: float) -> void:
+	var should_show := enabled and not suppressed and is_instance_valid(world) and is_instance_valid(world.player)
+	visible = should_show
+	redraw_clock += delta
+	if should_show and redraw_clock >= REDRAW_INTERVAL:
+		redraw_clock = 0.0
+		queue_redraw()
+
+func _draw() -> void:
+	if not is_instance_valid(world) or not is_instance_valid(world.player):
+		return
+	var area := Rect2(Vector2.ZERO, MAP_SIZE)
+	draw_rect(area, Color(.025, .065, .09, .82))
+	for step in range(1, 4):
+		var fraction := float(step) / 4.0
+		draw_line(Vector2(MAP_SIZE.x * fraction, 0), Vector2(MAP_SIZE.x * fraction, MAP_SIZE.y), Color(.17, .26, .3, .6))
+		draw_line(Vector2(0, MAP_SIZE.y * fraction), Vector2(MAP_SIZE.x, MAP_SIZE.y * fraction), Color(.17, .26, .3, .6))
+	for pickup in world.pickup_root.get_children():
+		if pickup is Node3D:
+			draw_rect(Rect2(world_to_map((pickup as Node3D).position) - Vector2.ONE, Vector2(2, 2)), Color("f4d298"))
+	for turret in world.turrets:
+		if is_instance_valid(turret):
+			var turret_at := world_to_map(turret.position)
+			var color := Color("ffffff") if turret.carried else Color("5de6e6")
+			draw_rect(Rect2(turret_at - Vector2(3, 3), Vector2(6, 6)), color)
+	for enemy in world.enemies:
+		if is_instance_valid(enemy) and not enemy.dead:
+			draw_circle(world_to_map(enemy.position), 2.0, ENEMY_COLORS.get(enemy.enemy_type, ENEMY_COLORS["basic"]))
+	_draw_camera_view()
+	_draw_player()
+	draw_rect(area, Color("2b5963"), false, 1.0)
+
+func _draw_camera_view() -> void:
+	if not world.camera_rig:
+		return
+	var half := world.camera_rig.visible_half_extents(world.camera_rig.zoom)
+	var corner_a := world_to_map(world.camera_rig.focus - Vector3(half.x, 0, half.y))
+	var corner_b := world_to_map(world.camera_rig.focus + Vector3(half.x, 0, half.y))
+	draw_rect(Rect2(corner_a, corner_b - corner_a), Color(1, 1, 1, .75), false, 1.0)
+
+func _draw_player() -> void:
+	var at := world_to_map(world.player.position)
+	var forward := -world.player.visual.global_basis.z
+	var heading := Vector2(forward.x, forward.z).normalized() if forward.length_squared() > .0001 else Vector2.UP
+	var side := heading.orthogonal()
+	draw_colored_polygon(PackedVector2Array([at + heading * 6.0, at - heading * 4.0 + side * 4.0, at - heading * 4.0 - side * 4.0]), Color("a9ece4"))

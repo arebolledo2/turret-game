@@ -125,7 +125,8 @@ func test_carry_placement_and_wave_end_restore_ground_position() -> void:
 	assert_true(world.interact())
 	assert_false(world.turrets[0].carried)
 	assert_almost_eq(world.turrets[0].position.y, 0, .001)
-	assert_false(world.valid_placement(Vector3(10, 0, 0)))
+	assert_true(world.valid_placement(Vector3(10, 0, 0)), "The enlarged arena keeps the old edge placeable")
+	assert_false(world.valid_placement(Vector3(WorldGeometry.HALF_ARENA.x + 1.0, 0, 0)))
 	assert_false(world.valid_placement(world.turrets[0].position))
 	assert_true(world.interact())
 	world.turrets[0].position.y = 1.5

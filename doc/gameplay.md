@@ -6,7 +6,9 @@ Settings persist fullscreen, VSync, reduced motion and SFX volume (70% by defaul
 
 ## Playable scope
 
-- Fixed elevated orthographic camera and a 19.2 x 10.8 metre flat arena.
+- Elevated orthographic follow camera (`CameraRig`) over a 57.6 x 32.4 metre flat arena. The camera only translates, stays clamped to the floor, and zooms 0.5x-2x with the mouse wheel, `+`/`-` keys or gamepad triggers.
+- Enemies spawn on a ring just outside the default-zoom view around the player (`ArenaWorld._spawn_position`).
+- The window is resizable with a title bar (1280 x 720 by default); settings offers size presets and fullscreen. Stretch mode is `canvas_items` with `expand` aspect.
 - WASD/arrow keys or left stick to move; auto-fire targets nearby enemies.
 - E / controller A to pick up and place a nearby turret; carrying slows movement and disables that turret's fire.
 - Escape / controller Start to pause; refit buttons support keyboard/controller focus.

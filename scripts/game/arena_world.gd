@@ -17,6 +17,7 @@ var difficulty_config: Dictionary
 var spawned_this_wave: int = 0
 var player: CombatActor
 var camera: Camera3D
+var camera_rig: CameraRig
 var hud: CanvasLayer
 var enemies: Array[CombatActor] = []
 var turrets: Array[TurretActor] = []
@@ -86,6 +87,7 @@ func start_run() -> void:
 	player.add_child(listener)
 	listener.make_current()
 	add_turret(Vector3(0, 0, -1))
+	camera_rig.snap()
 	begin_next_wave()
 
 func _clear_actors() -> void:
@@ -198,16 +200,25 @@ func spawn_enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
 	enemies.append(enemy)
 	return enemy
 
+## Enemies appear on a ring just outside the default-zoom view around the player, clamped to the arena, so they
+## reach the fight quickly on the large map. A spot clamped back into view is retried a few times.
 func _spawn_position() -> Vector3:
-	var edge := GameRandom.gameplay.randi_range(0, 3)
-	var x := GameRandom.gameplay.randf_range(-9.1, 9.1)
-	var z := GameRandom.gameplay.randf_range(-4.9, 4.9)
-	match edge:
-		0: x = -9.1
-		1: x = 9.1
-		2: z = -4.9
-		3: z = 4.9
-	return Vector3(x, 0, z)
+	var centre := WorldGeometry.planar(player.position) if is_instance_valid(player) else Vector3.ZERO
+	var ring := camera_rig.visible_half_extents(GameConstants.CAMERA_DEFAULT_ZOOM) + Vector2.ONE * GameConstants.ENEMY_SPAWN_VIEW_MARGIN
+	var result := Vector3.ZERO
+	for attempt in 8:
+		var edge := GameRandom.gameplay.randi_range(0, 3)
+		var x := GameRandom.gameplay.randf_range(-ring.x, ring.x)
+		var z := GameRandom.gameplay.randf_range(-ring.y, ring.y)
+		match edge:
+			0: x = -ring.x
+			1: x = ring.x
+			2: z = -ring.y
+			3: z = ring.y
+		result = WorldGeometry.clamp_position(centre + Vector3(x, 0, z))
+		if WorldGeometry.planar(result - centre).length() >= GameConstants.ENEMY_SPAWN_MIN_DISTANCE:
+			break
+	return result
 
 func nearest_enemy(origin: Vector3, range_metres: float) -> CombatActor:
 	return combat.select_target(origin, range_metres, enemies)
@@ -306,10 +317,12 @@ func repair() -> bool:
 	message = "Hull repaired."
 	return true
 
+## First free spot on a grid around the player (the origin when no player exists yet).
 func find_placement() -> Vector3:
+	var origin := WorldGeometry.planar(player.position) if is_instance_valid(player) else Vector3.ZERO
 	for z: float in [-1.0, 1.0, -3.0, 3.0]:
 		for x: float in [0.0, -2.0, 2.0, -4.0, 4.0, -6.0, 6.0]:
-			var candidate := Vector3(x, 0, z)
+			var candidate := origin + Vector3(x, 0, z)
 			if valid_placement(candidate):
 				return candidate
 	return Vector3.INF
@@ -371,6 +384,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_R:
 				if not GameStateService.is_game_active:
 					start_run()
+	if event is InputEventMouseButton and event.pressed and camera_rig:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			camera_rig.zoom_steps(1.0)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			camera_rig.zoom_steps(-1.0)
 	if event is InputEventJoypadButton and event.pressed:
 		if event.button_index == JOY_BUTTON_START:
 			toggle_pause()
@@ -379,40 +397,41 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _build_stage() -> void:
 	_build_lighting()
+	var half := WorldGeometry.HALF_ARENA
 	var ground := StaticBody3D.new()
 	ground.collision_layer = WorldGeometry.WORLD_LAYER
 	ground.collision_mask = 0
 	add_child(ground)
-	WorldGeometry.box(ground, Vector3(19.8, .35, 11.4), Vector3(0, -.2, 0), WorldGeometry.material(Color("172c37")))
+	var floor_size := Vector3(half.x * 2.0 + .6, .35, half.y * 2.0 + .6)
+	WorldGeometry.box(ground, floor_size, Vector3(0, -.2, 0), WorldGeometry.material(Color("172c37")))
 	var floor_shape := CollisionShape3D.new()
 	var floor_box := BoxShape3D.new()
-	floor_box.size = Vector3(19.8, .35, 11.4)
+	floor_box.size = floor_size
 	floor_shape.shape = floor_box
 	floor_shape.position.y = -.2
 	ground.add_child(floor_shape)
+	# Grid lines: one MultiMesh per direction keeps the larger arena at two draw calls.
 	var grid := WorldGeometry.material(Color("29434c"))
-	for x in range(-9, 10):
-		WorldGeometry.box(self, Vector3(.012, .005, 10.8), Vector3(x, -.018, 0), grid)
-	for z in range(-5, 6):
-		WorldGeometry.box(self, Vector3(19.2, .005, .012), Vector3(0, -.018, z), grid)
+	var x_lines := range(-int(half.x), int(half.x) + 1)
+	var z_lines := range(-int(half.y), int(half.y) + 1)
+	_add_grid_lines(Vector3(.012, .005, half.y * 2.0), x_lines.map(func(x: int) -> Vector3: return Vector3(x, -.018, 0)), grid)
+	_add_grid_lines(Vector3(half.x * 2.0, .005, .012), z_lines.map(func(z: int) -> Vector3: return Vector3(0, -.018, z)), grid)
 	var rim := WorldGeometry.material(Color("258e99"), true)
-	for z: float in [-5.45, 5.45]:
-		WorldGeometry.box(self, Vector3(19.5, .08, .06), Vector3(0, .02, z), rim)
-	for x: float in [-9.65, 9.65]:
-		WorldGeometry.box(self, Vector3(.06, .08, 10.9), Vector3(x, .02, 0), rim)
+	for z: float in [-half.y - .05, half.y + .05]:
+		WorldGeometry.box(self, Vector3(half.x * 2.0 + .3, .08, .06), Vector3(0, .02, z), rim)
+	for x: float in [-half.x - .05, half.x + .05]:
+		WorldGeometry.box(self, Vector3(.06, .08, half.y * 2.0 + .1), Vector3(x, .02, 0), rim)
 	var markings := WorldGeometry.material(Color("c48c48"))
-	for x: float in [-9.25, 9.25]:
-		for z in range(-4, 5):
-			var stripe := WorldGeometry.box(self, Vector3(.16, .015, .4), Vector3(x, 0, z), markings)
-			stripe.rotation.y = -.5
+	var stripe_transforms: Array[Transform3D] = []
+	for x: float in [-half.x + .35, half.x - .35]:
+		for z in range(-int(half.y) + 1, int(half.y)):
+			stripe_transforms.append(Transform3D(Basis(Vector3.UP, -.5), Vector3(x, 0, z)))
+	_add_multimesh(Vector3(.16, .015, .4), stripe_transforms, markings)
 	camera = Camera3D.new()
-	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.position = Vector3(0, 17, 13)
 	add_child(camera)
-	camera.look_at(Vector3.ZERO)
-	camera.current = true
-	_resize_camera()
-	get_viewport().size_changed.connect(_resize_camera)
+	camera_rig = CameraRig.new()
+	add_child(camera_rig)
+	camera_rig.setup(camera, self)
 
 func _build_lighting() -> void:
 	# A dark gradient sky doubles as the ambient and reflection source, so metal parts have something to mirror.
@@ -469,7 +488,23 @@ func _build_lighting() -> void:
 	rim.shadow_enabled = false
 	add_child(rim)
 
-func _resize_camera() -> void:
-	var viewport_size := get_viewport().get_visible_rect().size
-	var aspect := viewport_size.x / maxf(viewport_size.y, 1.0)
-	camera.size = maxf(15.0, 23.0 / aspect)
+func _add_grid_lines(size: Vector3, positions: Array, mat: Material) -> void:
+	var transforms: Array[Transform3D] = []
+	for at: Vector3 in positions:
+		transforms.append(Transform3D(Basis.IDENTITY, at))
+	_add_multimesh(size, transforms, mat)
+
+func _add_multimesh(size: Vector3, transforms: Array[Transform3D], mat: Material) -> void:
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	var multimesh := MultiMesh.new()
+	multimesh.transform_format = MultiMesh.TRANSFORM_3D
+	multimesh.mesh = mesh
+	multimesh.instance_count = transforms.size()
+	for index in transforms.size():
+		multimesh.set_instance_transform(index, transforms[index])
+	var instance := MultiMeshInstance3D.new()
+	instance.multimesh = multimesh
+	instance.material_override = mat
+	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(instance)

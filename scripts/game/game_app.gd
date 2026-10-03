@@ -9,6 +9,7 @@ var back_button: Button
 var home: VBoxContainer
 var options: VBoxContainer
 var fullscreen_check: CheckButton
+var window_size_option: OptionButton
 var vsync_check: CheckButton
 var motion_check: CheckButton
 var volume_slider: HSlider
@@ -59,6 +60,14 @@ func _build_menu() -> void:
 	column.add_child(options)
 	_label(options, "SETTINGS", 28)
 	fullscreen_check = _check(options, "Fullscreen", func(value: bool) -> void: SettingsService.set_fullscreen(value))
+	window_size_option = OptionButton.new()
+	window_size_option.custom_minimum_size.y = 54
+	window_size_option.add_theme_font_size_override("font_size", 23)
+	window_size_option.accessibility_name = "Window size; you can also drag the window edges"
+	for preset in SettingsService.WINDOW_SIZE_PRESETS:
+		window_size_option.add_item("Window  %d x %d" % [preset.x, preset.y])
+	window_size_option.item_selected.connect(func(index: int) -> void: SettingsService.set_window_size(SettingsService.WINDOW_SIZE_PRESETS[index]))
+	options.add_child(window_size_option)
 	vsync_check = _check(options, "VSync", func(value: bool) -> void: SettingsService.set_vsync(value))
 	motion_check = _check(options, "Reduced motion", func(value: bool) -> void: SettingsService.set_reduced_motion(value))
 	_label(options, "Reduced motion removes bobbing, recoil and hit blinking.\nAttack warnings and effect ranges remain visible.", 20)
@@ -113,6 +122,7 @@ func show_settings() -> void:
 	options.visible = true
 	fullscreen_check.set_pressed_no_signal(SettingsService.fullscreen)
 	vsync_check.set_pressed_no_signal(SettingsService.vsync)
+	window_size_option.select(SettingsService.WINDOW_SIZE_PRESETS.find(SettingsService.window_size))
 	motion_check.set_pressed_no_signal(FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
 	volume_slider.set_value_no_signal(SettingsService.sfx_volume * 100.0)
 	_update_volume_label()

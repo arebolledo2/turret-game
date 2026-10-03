@@ -14,6 +14,19 @@ const MAX_WAVES: int = 10
 # CAMERA
 # =============================================================================
 const CAMERA_DEFAULT_ZOOM_BOOST: float = 2 # Zoomed in for better visibility
+# 3D follow camera (orthographic). Size is the vertical view extent in metres at zoom 1.0.
+const CAMERA_BASE_SIZE: float = 10.0
+const CAMERA_DEFAULT_ZOOM: float = 1.5
+const CAMERA_ZOOM_MIN: float = 0.5
+const CAMERA_ZOOM_MAX: float = 2.0
+const CAMERA_ZOOM_SPEED: float = 10.0 # smoothing rate toward the target zoom
+const CAMERA_ZOOM_WHEEL_STEP: float = 1.12 # multiplier per wheel notch
+const CAMERA_ZOOM_HELD_RATE: float = 1.6 # exp rate/second while a zoom key or trigger is held
+const CAMERA_FOLLOW_SPEED: float = 8.0 # smoothing rate toward the player
+const CAMERA_EDGE_MARGIN: float = 0.5 # metres of floor rim allowed past the arena bounds
+# Enemies appear this far outside the default-zoom view, never closer than SPAWN_MIN_DISTANCE to the player.
+const ENEMY_SPAWN_VIEW_MARGIN: float = 2.0
+const ENEMY_SPAWN_MIN_DISTANCE: float = 6.0
 
 # =============================================================================
 # PLAYER

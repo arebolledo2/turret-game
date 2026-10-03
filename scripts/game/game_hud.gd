@@ -6,6 +6,7 @@ var status: Label
 var hint: Label
 var health: ProgressBar
 var health_text: Label
+var minimap: Minimap
 var panel: PanelContainer
 var title: Label
 var description: Label
@@ -68,6 +69,9 @@ func _ready() -> void:
 	hint.add_theme_font_size_override("font_size", 17)
 	hint.add_theme_color_override("font_color", Color("b3cdd3"))
 	root.add_child(hint)
+	minimap = Minimap.new()
+	minimap.world = world
+	root.add_child(minimap)
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -167,8 +171,9 @@ func _process(_delta: float) -> void:
 	stats.text = "WAVE %02d / %02d     %02ds\n%d SCRAP     %d KILLS" % [GameStateService.current_wave,
 		world.wave_limit, ceili(world.time_left), EconomyService.total_scrap, GameStateService.total_kills]
 	status.text = "DEPLOYING WAVE %d  ·  %d" % [GameStateService.current_wave, ceili(world.announcement_left)] if phase == GameStateMachine.GameState.WAVE_ANNOUNCEMENT else ""
-	hint.text = "WASD / LEFT STICK  Move     E / A  Carry or place turret     ESC / START  Pause\n" + world.message
+	hint.text = "WASD / LEFT STICK  Move     E / A  Carry or place turret     M  Map     ESC / START  Pause\n" + world.message
 	panel.visible = in_shop or ended or world.paused
+	minimap.suppressed = panel.visible
 	for index in range(offer_buttons.size()):
 		var button := offer_buttons[index]
 		button.visible = in_shop and not world.paused and index < EconomyService.current_shop_offers.size()
