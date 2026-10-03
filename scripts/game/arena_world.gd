@@ -403,19 +403,20 @@ func _build_stage() -> void:
 	ground.collision_mask = 0
 	add_child(ground)
 	var floor_size := Vector3(half.x * 2.0 + .6, .35, half.y * 2.0 + .6)
-	WorldGeometry.box(ground, floor_size, Vector3(0, -.2, 0), WorldGeometry.material(Color("172c37")))
+	# The collider is a slab; the visible surface is one textured plane on top of it (a single draw call).
+	var floor_plane := PlaneMesh.new()
+	floor_plane.size = Vector2(floor_size.x, floor_size.z)
+	var floor_visual := MeshInstance3D.new()
+	floor_visual.mesh = floor_plane
+	floor_visual.material_override = WorldGeometry.floor_material(floor_plane.size)
+	floor_visual.position.y = -.02
+	ground.add_child(floor_visual)
 	var floor_shape := CollisionShape3D.new()
 	var floor_box := BoxShape3D.new()
 	floor_box.size = floor_size
 	floor_shape.shape = floor_box
 	floor_shape.position.y = -.2
 	ground.add_child(floor_shape)
-	# Grid lines: one MultiMesh per direction keeps the larger arena at two draw calls.
-	var grid := WorldGeometry.material(Color("29434c"))
-	var x_lines := range(-int(half.x), int(half.x) + 1)
-	var z_lines := range(-int(half.y), int(half.y) + 1)
-	_add_grid_lines(Vector3(.012, .005, half.y * 2.0), x_lines.map(func(x: int) -> Vector3: return Vector3(x, -.018, 0)), grid)
-	_add_grid_lines(Vector3(half.x * 2.0, .005, .012), z_lines.map(func(z: int) -> Vector3: return Vector3(0, -.018, z)), grid)
 	var rim := WorldGeometry.material(Color("258e99"), true)
 	for z: float in [-half.y - .05, half.y + .05]:
 		WorldGeometry.box(self, Vector3(half.x * 2.0 + .3, .08, .06), Vector3(0, .02, z), rim)
@@ -487,12 +488,6 @@ func _build_lighting() -> void:
 	rim.light_energy = .55
 	rim.shadow_enabled = false
 	add_child(rim)
-
-func _add_grid_lines(size: Vector3, positions: Array, mat: Material) -> void:
-	var transforms: Array[Transform3D] = []
-	for at: Vector3 in positions:
-		transforms.append(Transform3D(Basis.IDENTITY, at))
-	_add_multimesh(size, transforms, mat)
 
 func _add_multimesh(size: Vector3, transforms: Array[Transform3D], mat: Material) -> void:
 	var mesh := BoxMesh.new()

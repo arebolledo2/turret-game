@@ -10,6 +10,8 @@ Approved game models and their provenance manifest live in `assets/models/game/`
 
 The contract is a ground-centred origin, `Aim` and `Muzzle` nodes for weapons, and six `Leg_L/R_0/1/2` pivots for drones. Blender +Y exports to Godot -Z. Geometry/material budgets and reference/source/model paths are recorded in the manifest. `tools/audit_game_resources.py` checks resource and model-record links.
 
+The arena floor is one `PlaneMesh` with `WorldGeometry.floor_material()`: a seamless 6.4 m tile (4x4 plates with grooves, vents, hazard bands, hatches, emissive seams) from `assets/textures/floor/`. Regenerate it with `python tools/build_floor_textures.py` (numpy and Pillow); keep `FLOOR_TILE_METRES` in sync with the script, and keep mipmaps on and `compress/normal_map=1` in the `.import` files.
+
 ## Preserved 2D references and storage
 
 2D artwork remains useful for concept and silhouette references. The separate image-generation web app is unchanged. Image generation can supply reference images for scripted Blender work; this cutover does not add a web-to-3D generation service.

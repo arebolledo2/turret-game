@@ -25,6 +25,25 @@ static func material(color: Color, emission: bool = false) -> StandardMaterial3D
 		result.emission_energy_multiplier = 1.5
 	return result
 
+const FLOOR_TILE_METRES: float = 6.4 # one repeat of the floor textures; keep in sync with tools/build_floor_textures.py
+
+## Tiling sci-fi plating for a flat floor covering `area` metres. Albedo, normal, roughness and emission come from
+## `assets/textures/floor/`; the emission map carries the seam lines and status lights.
+static func floor_material(area: Vector2) -> StandardMaterial3D:
+	var result := StandardMaterial3D.new()
+	result.albedo_texture = load("res://assets/textures/floor/floor_albedo.png")
+	result.roughness = 1.0
+	result.roughness_texture = load("res://assets/textures/floor/floor_roughness.png")
+	result.metallic = 0.3
+	result.normal_enabled = true
+	result.normal_texture = load("res://assets/textures/floor/floor_normal.png")
+	result.emission_enabled = true
+	result.emission_texture = load("res://assets/textures/floor/floor_emission.png")
+	result.emission_energy_multiplier = 0.9
+	result.uv1_scale = Vector3(area.x / FLOOR_TILE_METRES, area.y / FLOOR_TILE_METRES, 1.0)
+	result.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	return result
+
 static var ring_meshes: Dictionary = {}
 static var ring_materials: Dictionary = {}
 
