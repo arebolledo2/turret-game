@@ -378,22 +378,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			interact()
 
 func _build_stage() -> void:
-	var environment := WorldEnvironment.new()
-	var settings := Environment.new()
-	settings.background_mode = Environment.BG_COLOR
-	settings.background_color = Color("08151e")
-	settings.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	settings.ambient_light_color = Color("92cbd4")
-	settings.ambient_light_energy = .55
-	settings.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	environment.environment = settings
-	add_child(environment)
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-55, -25, 0)
-	sun.light_color = Color("d0eaff")
-	sun.light_energy = 1.6
-	sun.shadow_enabled = true
-	add_child(sun)
+	_build_lighting()
 	var ground := StaticBody3D.new()
 	ground.collision_layer = WorldGeometry.WORLD_LAYER
 	ground.collision_mask = 0
@@ -428,6 +413,61 @@ func _build_stage() -> void:
 	camera.current = true
 	_resize_camera()
 	get_viewport().size_changed.connect(_resize_camera)
+
+func _build_lighting() -> void:
+	# A dark gradient sky doubles as the ambient and reflection source, so metal parts have something to mirror.
+	var sky_material := ProceduralSkyMaterial.new()
+	sky_material.sky_top_color = Color("0b2233")
+	sky_material.sky_horizon_color = Color("2a5a6a")
+	sky_material.ground_horizon_color = Color("2a5a6a")
+	sky_material.ground_bottom_color = Color("08151e")
+	sky_material.sky_energy_multiplier = .9
+	var sky := Sky.new()
+	sky.sky_material = sky_material
+	var settings := Environment.new()
+	settings.background_mode = Environment.BG_SKY
+	settings.sky = sky
+	settings.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	settings.ambient_light_energy = .7
+	settings.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
+	settings.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	settings.tonemap_white = 6.0
+	# Bloom: only emissive/very bright surfaces cross the threshold, which makes muzzles, eyes and shots glow.
+	settings.glow_enabled = true
+	settings.glow_intensity = .8
+	settings.glow_strength = 1.0
+	settings.glow_bloom = .05
+	settings.glow_hdr_threshold = 1.0
+	settings.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
+	# Contact shadows where models meet the floor and in crevices.
+	settings.ssao_enabled = true
+	settings.ssao_radius = 1.2
+	settings.ssao_intensity = 2.0
+	settings.ssao_power = 1.6
+	settings.ssil_enabled = true
+	settings.ssil_intensity = .6
+	# Depth fog pulls the far arena edge into the background colour.
+	settings.fog_enabled = true
+	settings.fog_light_color = Color("0f2a38")
+	settings.fog_density = .012
+	settings.fog_sky_affect = .4
+	var environment := WorldEnvironment.new()
+	environment.environment = settings
+	add_child(environment)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-55, -25, 0)
+	sun.light_color = Color("d0eaff")
+	sun.light_energy = 1.4
+	sun.shadow_enabled = true
+	sun.directional_shadow_max_distance = 45.0 # the follow camera only ever sees a small slice of the arena
+	add_child(sun)
+	# Warm back light, opposite the sun and without shadows, so silhouettes separate from the teal floor.
+	var rim := DirectionalLight3D.new()
+	rim.rotation_degrees = Vector3(-30, 155, 0)
+	rim.light_color = Color("ff7a45")
+	rim.light_energy = .55
+	rim.shadow_enabled = false
+	add_child(rim)
 
 func _resize_camera() -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
