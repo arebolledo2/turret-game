@@ -65,6 +65,13 @@ const TURRET_MIN_DISTANCE: float = 100.0 # from other turrets
 # Turret Pickup System
 const TURRET_CARRY_SPEED_PENALTY: float = 0.7
 
+# ITEM CONDITIONS
+const LAST_STAND_HULL_FRACTION: float = 0.3
+const STORM_LINK_RANGE: float = 4.0 # metres between linked electric turrets
+const REACTOR_BLAST_DAMAGE_FRACTION: float = 0.4
+const REACTOR_BLAST_RADIUS_FRACTION: float = 0.6
+const REACTOR_MAX_CHAIN_DEPTH: int = 3
+
 # ENTRENCH (turrets earn stacks by staying put; picking one up resets them)
 const ENTRENCH_STACK_SECONDS: float = 4.0
 const ENTRENCH_MAX_STACKS: int = 5

@@ -6,16 +6,16 @@ extends Node
 func apply_static_effects(turret_type: String, stats: Dictionary) -> void:
 	"""Apply effects that depend on global game state (e.g., owned items, total turrets)."""
 
-	# Elemental Conduit: +15% damage per damage type diversity
+	# Elemental Conduit: +15% damage per turret family owned (max +60% with all four)
 	if ItemRegistry.has_special_effect("elemental_conduit") and ItemTrackingService.item_counts.get("elemental_conduit", 0) > 0:
-		var diversity: int = ItemTrackingService.get_damage_type_diversity()
+		var diversity: int = TurretStatsService.get_family_diversity()
 		var damage_bonus: float = diversity * 0.15
 		stats["damage"] = stats.get("damage", 0.0) * (1.0 + damage_bonus)
 
-	# Army Doctrine: +3% fire rate per turret beyond 5th (max +30%)
+	# Army Doctrine: +3% fire rate per turret beyond the 3rd (max +30%)
 	if ItemRegistry.has_special_effect("army_doctrine") and ItemTrackingService.item_counts.get("army_doctrine", 0) > 0:
 		var total_turrets: int = TurretStatsService.get_total_turret_count()
-		var bonus: float = min(max(0, total_turrets - 5) * 0.03, 0.30)
+		var bonus: float = min(max(0, total_turrets - 3) * 0.03, 0.30)
 		stats["fire_rate"] = stats.get("fire_rate", 1.0) * (1.0 + bonus)
 
 	# Elite Forces: +40% damage, +25% range if ≤5 turrets

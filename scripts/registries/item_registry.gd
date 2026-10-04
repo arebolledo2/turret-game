@@ -57,7 +57,7 @@ const LEGACY_TAGS: Dictionary = {
 	"scrap_magnet": "ECON", "budget_capacitor": "ECON", "reinforced_hull": "HULL", "heavy_plating": "HULL",
 	"shock_absorbers": "HULL", "compact_design": "WIDE", "mass_production": "WIDE", "army_doctrine": "WIDE",
 	"elite_forces": "TALL", "glass_cannon_core": "TALL", "mono_type_mastery": "TALL",
-	"kinetic_enhancer": "ION", "overcharged_cells": "ELECTRIC", "plasma_capacitor": "PLASMA",
+	"quality_over_quantity": "ECON", "elemental_conduit": "WIDE", "kinetic_enhancer": "ION", "overcharged_cells": "ELECTRIC", "plasma_capacitor": "PLASMA",
 }
 
 # Cached item dictionaries (lazy loaded)

@@ -210,7 +210,7 @@ func add_turret(at: Vector3, type_id: String = "normal") -> TurretActor:
 	return turret
 
 func collect_scrap(amount: int) -> void:
-	var added := EconomyService.add_scrap_probabilistic(amount, 1.0)
+	var added := EconomyService.add_scrap_probabilistic(amount, ItemTrackingService.get_scrap_earn_multiplier())
 	telemetry.record_scrap_earned(added)
 	GameStateService.lifetime_scrap += added
 	if is_combat():
@@ -221,6 +221,8 @@ func _record_hit(target: Node3D, hit: CombatHit3D, applied: float) -> void:
 	var victim := target as CombatActor
 	if not victim:
 		return
+	if victim.is_enemy and victim.dead:
+		_reactor_overload(victim, hit)
 	if not victim.is_enemy:
 		telemetry.record_hull_lost(applied)
 	elif victim.dead:
@@ -243,6 +245,28 @@ func _on_enemy_died(enemy: CombatActor) -> void:
 	enemy.queue_free()
 	if enemy.explosion_radius > 0.0:
 		_detonate(enemy)
+
+## Reactor Overload: plasma kills detonate for a fraction of the killing hit, and those kills can chain (depth capped).
+func _reactor_overload(victim: CombatActor, hit: CombatHit3D) -> void:
+	if hit.damage_type != GameEnums.DamageType.PLASMA or hit.blast_depth >= GameConstants.REACTOR_MAX_CHAIN_DEPTH:
+		return
+	if ModifierService.apply_modifiers_to_stat(0.0, "reactor_overload") <= 0.0:
+		return
+	var stats := TurretStatsService.get_turret_stats("plasma", float(difficulty_config["turret_damage_mult"]))
+	var radius := float(stats.get("aoe_radius", 0.0)) * WorldGeometry.METRES_PER_PIXEL * GameConstants.REACTOR_BLAST_RADIUS_FRACTION
+	if radius <= 0.0:
+		return
+	var at := victim.position
+	var victims: Array[CombatActor] = []
+	for other in enemies:
+		if other != victim and is_instance_valid(other) and not other.dead and WorldGeometry.planar(other.position - at).length_squared() <= radius * radius:
+			victims.append(other)
+	combat.explosion.emit(WorldGeometry.planar(at), radius)
+	for other in victims:
+		var blast := CombatHit3D.new(hit.damage * GameConstants.REACTOR_BLAST_DAMAGE_FRACTION, at, Vector3.ZERO, GameEnums.DamageType.PLASMA)
+		blast.source_id = hit.source_id
+		blast.blast_depth = hit.blast_depth + 1
+		combat.apply_hit(other, blast)
 
 ## Boom bot blast: hurts the player and every other enemy in range (chains are allowed and finite).
 func _detonate(source: CombatActor) -> void:

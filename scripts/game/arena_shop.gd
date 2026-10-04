@@ -138,6 +138,10 @@ static func offer_description(offer: ShopOffer) -> String:
 	return item_description(offer.asset_id)
 
 static func item_description(item_id: String) -> String:
+	# Special-effect items (Army Doctrine, Mono-Type Mastery...) carry rules the modifier list cannot show.
+	var info := ItemRegistry.get_item_dict(item_id)
+	if info.has("special_effect") or ItemRegistry.get_modifiers(item_id).is_empty():
+		return str(info.get("description", ""))
 	var parts := PackedStringArray()
 	for modifier: Dictionary in ItemRegistry.get_modifiers(item_id):
 		var value := float(modifier["value"])

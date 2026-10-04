@@ -92,6 +92,16 @@ func get_damage_type_diversity() -> int:
 	return damage_types_seen.size()
 
 
+## Number of build families (ion, plasma, electric, melee) represented among owned turrets.
+func get_family_diversity() -> int:
+	var seen: Array = []
+	for turret_type in turret_counts.keys():
+		var family := TurretRegistry.get_family(turret_type)
+		if turret_counts[turret_type] > 0 and not family.is_empty() and family not in seen:
+			seen.append(family)
+	return seen.size()
+
+
 ## Get the most common turret type (returns empty string if no turrets)
 func get_most_common_turret_type() -> String:
 	var max_count := 0

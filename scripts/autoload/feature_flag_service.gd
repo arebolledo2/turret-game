@@ -24,6 +24,7 @@ const DEBUG_OVERLAYS: String = "debug_overlays"
 const ENTRENCH: String = "entrench"
 const PLACEMENT_PREVIEW: String = "placement_preview"
 const ITEMS_V2: String = "items_v2"
+const ITEMS_V2_HOOKS: String = "items_v2_hooks"
 
 const SCOPE_USER: String = "user"
 const SCOPE_DEV: String = "dev"
@@ -57,6 +58,10 @@ const FLAG_DEFINITIONS: Dictionary = {
 	ITEMS_V2: {
 		"name": "Item Pool v2", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 2,
 		"description": "Adds the build-direction items (family Doctrines, specialists, tall and wide trades) to the shop pool. Applies from the next shop.",
+	},
+	ITEMS_V2_HOOKS: {
+		"name": "Item Pool v2 Rares", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 2, "requires": [ITEMS_V2],
+		"description": "Adds the rare, epic and legendary items, including those with new mechanics (Reactor Overload, Storm Conductor, Last Stand).",
 	},
 	PLACEMENT_PREVIEW: {
 		"name": "Placement Preview", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 1,

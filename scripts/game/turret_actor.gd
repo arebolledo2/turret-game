@@ -99,9 +99,11 @@ func _spin_bat(delta: float, stats: Dictionary, reach: float) -> void:
 		if TurretStatsService.roll_turret_crit():
 			damage = TurretStatsService.calculate_turret_crit_damage(damage)
 		var push := offset.normalized() * float(stats.get("knockback_force", 0.0)) * WorldGeometry.METRES_PER_PIXEL
-		rehit_lockouts[enemy.get_instance_id()] = MELEE_REHIT_DELAY
+		rehit_lockouts[enemy.get_instance_id()] = maxf(.05, float(stats.get("rehit_delay", MELEE_REHIT_DELAY)))
 		var bat_hit := CombatHit3D.new(damage, position, push, GameEnums.DamageType.PHYSICAL)
 		bat_hit.source_id = turret_id
+		bat_hit.slow_intensity = clampf(float(stats.get("slow_intensity", 0.0)), 0.0, .9)
+		bat_hit.slow_duration = maxf(float(stats.get("slow_duration", 0.0)), 0.0)
 		world.combat.apply_hit(enemy, bat_hit)
 
 func invalidate_stats() -> void:
@@ -165,12 +167,29 @@ func _update_entrench_ring() -> void:
 	var size := .8 + .25 * fill + .1 * entrench_progress()
 	entrench_ring.scale = Vector3(size, 1.0, size)
 
+## Situational item bonuses, resolved with the cached stats: Last Stand (low hull) and Storm Conductor (linked electric turrets).
+func _apply_item_conditions(stats: Dictionary) -> void:
+	var last_stand := ModifierService.apply_modifiers_to_stat(0.0, "last_stand_fire_rate")
+	if last_stand > 0.0 and is_instance_valid(world.player) and world.player.health < world.player.max_health * GameConstants.LAST_STAND_HULL_FRACTION:
+		stats["fire_rate"] = float(stats.get("fire_rate", 1.0)) * (1.0 + last_stand)
+	var link := ModifierService.apply_modifiers_to_stat(0.0, "storm_link_damage")
+	if link > 0.0 and TurretRegistry.get_family(turret_type) == "electric" and _has_electric_neighbour():
+		stats["damage"] = float(stats.get("damage", 0.0)) * (1.0 + link)
+
+func _has_electric_neighbour() -> bool:
+	for other in world.turrets:
+		if other != self and not other.carried and TurretRegistry.get_family(other.turret_type) == "electric":
+			if WorldGeometry.planar(other.position - position).length() <= GameConstants.STORM_LINK_RANGE:
+				return true
+	return false
+
 func _current_stats(delta: float) -> Dictionary:
 	stats_age += delta
 	if cached_stats.is_empty() or stats_age >= STATS_REFRESH:
 		cached_stats = TurretStatsService.get_turret_stats(turret_type, float(world.difficulty_config["turret_damage_mult"]))
+		cached_stats = cached_stats.duplicate()
+		_apply_item_conditions(cached_stats)
 		if entrench_stacks_cached > 0:
-			cached_stats = cached_stats.duplicate()
 			cached_stats["damage"] = float(cached_stats.get("damage", 0.0)) * (1.0 + entrench_damage_bonus())
 			cached_stats["fire_rate"] = float(cached_stats.get("fire_rate", 1.0)) * (1.0 + entrench_fire_rate_bonus())
 		stats_age = 0.0

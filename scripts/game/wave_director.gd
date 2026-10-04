@@ -47,7 +47,7 @@ func begin_next_wave() -> bool:
 	announcement_left = ANNOUNCEMENT_TIME
 	spawned_this_wave = 0
 	time_left = GameStateService.get_wave_duration(GameStateService.current_wave)
-	remaining_spawns = GameStateService.get_wave_enemy_count(GameStateService.current_wave, float(world.difficulty_config["enemy_count_mult"]), 1.0)
+	remaining_spawns = GameStateService.get_wave_enemy_count(GameStateService.current_wave, float(world.difficulty_config["enemy_count_mult"]), ItemTrackingService.get_enemy_count_multiplier())
 	spawn_interval = time_left / maxf(float(remaining_spawns), 1.0)
 	spawn_clock = FIRST_SPAWN_DELAY
 	world.message = EnemyVariants.notice_for_wave(GameStateService.current_wave)

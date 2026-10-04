@@ -19,6 +19,12 @@ const DEFAULT_ENTRIES: Dictionary = {
 		"ion_doctrine": "items_v2", "plasma_doctrine": "items_v2", "voltage_doctrine": "items_v2", "bat_doctrine": "items_v2",
 		"piercing_rounds": "items_v2", "cluster_warheads": "items_v2", "superconductors": "items_v2", "spiked_bat": "items_v2",
 		"hardpoint": "items_v2",
+		# Item pool v2: rare, epic, legendary
+		"arc_rod": "items_v2_hooks", "plasma_capacitor": "items_v2_hooks", "killzone_bat": "items_v2_hooks",
+		"overwatch_optics": "items_v2_hooks", "army_doctrine": "items_v2_hooks", "elite_forces": "items_v2_hooks",
+		"last_stand": "items_v2_hooks", "quality_over_quantity": "items_v2_hooks", "glass_cannon_core": "items_v2_hooks",
+		"mono_type_mastery": "items_v2_hooks", "reactor_overload": "items_v2_hooks", "storm_conductor": "items_v2_hooks",
+		"elemental_conduit": "items_v2_hooks", "whirlwind_frame": "items_v2_hooks",
 	},
 }
 

@@ -61,6 +61,45 @@ static func get_all() -> Dictionary:
 		Item.create_modifier("entrench_max_stacks", "add", 2), Item.create_modifier("entrench_bonus", "increase", .5),
 		Item.create_modifier("carry_speed", "increase", -.25)], "Entrench max stacks +2 and +50% bonus per stack, carrying a turret is 25% slower.", 2))
 
+	# ---- Rare -----------------------------------------------------------------------------------------------------
+	var rare := GameEnums.ItemRarity.RARE
+	items.append(_item("arc_rod", "Arc Rod", "🌩️", "ELECTRIC", rare, [
+		_stat("chain_count", 2, ["tesla"], "add", "turret_type"), _stat("chain_decay", .15, ["tesla"], "add", "turret_type"),
+		_dmg(-.15, ["tesla"], "turret_type")], "Tesla +2 chain jumps and chain decay 0.70 to 0.85, Tesla -15% damage.", 2))
+	items.append(_item("plasma_capacitor", "Plasma Capacitor", "🔆", "PLASMA", rare, [
+		_stat("aoe_radius", .60, ["plasma"]), _stat("knockback_force", .50, ["plasma"]), _stat("fire_rate", -.10, ["plasma"])],
+		"Plasma +60% splash radius and +50% knockback, -10% fire rate.", 2))
+	items.append(_item("killzone_bat", "Killzone Bat", "🔪", "MELEE", rare, [
+		_stat("rehit_delay", -.5, ["melee"]), _stat("knockback_force", -.25, ["melee"])],
+		"Melee hits the same enemy twice as often, -25% knockback.", 2))
+	items.append(_item("overwatch_optics", "Overwatch Optics", "🔭", "ION", rare, [
+		_stat("range", .30, ["ion"]), _dmg(.10, ["ion"]), _stat("fire_rate", -.10, ["ion"])],
+		"Ion +30% range and +10% damage, -10% fire rate.", 2))
+	items.append(_special("army_doctrine", "Army Doctrine", "🪖", "WIDE", rare, "army_doctrine", [
+		_all("range", -.10)], "+3% fire rate per turret beyond the 3rd (max +30%), all turrets -10% range.", 1))
+	items.append(_item("last_stand", "Last Stand", "🩸", "HULL", rare, [
+		Item.create_modifier("last_stand_fire_rate", "add", .4), Item.create_modifier("player_max_health", "increase", -.2)],
+		"Below 30% hull, turrets fire 40% faster. -20% max hull.", 1))
+
+	# ---- Epic -----------------------------------------------------------------------------------------------------
+	var epic := GameEnums.ItemRarity.EPIC
+	items.append(_item("reactor_overload", "Reactor Overload", "☢️", "PLASMA", epic, [
+		Item.create_modifier("reactor_overload", "add", 1), _dmg(-.20, ["plasma"])],
+		"Plasma kills explode for 40% of the killing damage in 60% of the radius, and those kills chain. Plasma -20% damage.", 1))
+	items.append(_item("storm_conductor", "Storm Conductor", "⛈️", "ELECTRIC", epic, [
+		Item.create_modifier("storm_link_damage", "add", .35), _stat("range", -.15, ["electric"])],
+		"Shock and Tesla turrets within 4 m of another Electric turret deal +35% damage. Electric -15% range.", 1))
+
+	# ---- Legendary ------------------------------------------------------------------------------------------------
+	var legendary := GameEnums.ItemRarity.LEGENDARY
+	items.append(_special("elemental_conduit", "Elemental Conduit", "🌀", "WIDE", legendary, "elemental_conduit", [],
+		"All turrets +15% damage per turret family owned (max +60% with Ion, Plasma, Electric and Melee).", 1))
+	items.append(_item("whirlwind_frame", "Whirlwind Frame", "🌪️", "MELEE", legendary, [
+		_stat("rotation_rate", 1.0, ["melee"]), _stat("range", .50, ["melee"]),
+		_stat("slow_intensity", .25, ["melee"], "add", "family"), _stat("slow_duration", .5, ["melee"], "add"),
+		_dmg(-.30, ["ion", "plasma", "electric"])],
+		"Bat spin rate doubled, reach +50%, hits slow 25% for 0.5s. All other turrets -30% damage.", 1))
+
 	var result: Dictionary = {}
 	for item in items:
 		result[item.item_id] = item
@@ -81,13 +120,19 @@ static func _item(id: String, display_name: String, icon: String, tag: String, r
 		item.modifiers.append(modifier)
 	return item
 
+static func _special(id: String, display_name: String, icon: String, tag: String, rarity: GameEnums.ItemRarity,
+		effect: String, modifiers: Array, description: String, stacks: int) -> Item:
+	var item := _item(id, display_name, icon, tag, rarity, modifiers, description, stacks)
+	item.special_effect = effect
+	return item
+
 static func _doctrine(id: String, display_name: String, icon: String, tag: String, family: String) -> Item:
 	return _item(id, display_name, icon, tag, GameEnums.ItemRarity.UNCOMMON, [
 		_dmg(.25, [family]), _dmg(-.08, OTHERS_OF[family])],
 		"%s turrets +25%% damage, every other turret -8%%." % family.capitalize(), 2)
 
-static func _dmg(amount: float, families: Array) -> Dictionary:
-	return _stat("damage", amount, families)
+static func _dmg(amount: float, families: Array, filter_key: String = "family") -> Dictionary:
+	return _stat("damage", amount, families, "increase", filter_key)
 
 ## Increase (or `operation`) on `stat` for turrets in `families`; `filter_key` "turret_type" lists turret ids instead.
 static func _stat(stat: String, amount: float, families: Array, operation: String = "increase", filter_key: String = "family") -> Dictionary:

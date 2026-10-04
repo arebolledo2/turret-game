@@ -145,6 +145,7 @@ const TYPES: Dictionary = {
 			"rotation_speed": 0.0,
 			"rotation_rate": 360.0,
 			"knockback_force": 80.0,
+			"rehit_delay": 0.5,
 		}
 	},
 	"mine": {
