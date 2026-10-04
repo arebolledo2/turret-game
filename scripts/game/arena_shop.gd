@@ -30,10 +30,7 @@ func generate() -> void:
 		var selected := rng.randi_range(0, turrets.size() - 1)
 		var type_id: String = turrets.pop_at(selected)
 		EconomyService.current_shop_offers.append(ShopOffer.new("turret", type_id, world.turret_price(type_id)))
-	var excluded: Array = []
-	for item_id in ItemRegistry.get_all_item_ids():
-		if not ShopCatalog.is_available("item", item_id):
-			excluded.append(item_id)
+	var excluded := unavailable_item_ids()
 	for slot in range(GameConstants.SHOP_ITEM_SLOTS):
 		var item_id := ItemRegistry.get_weighted_random_item(GameStateService.current_wave,
 			PlayerStatsService.get_player_luck(), ItemTrackingService.item_counts, excluded, rng)
@@ -41,6 +38,18 @@ func generate() -> void:
 			break
 		excluded.append(item_id)
 		EconomyService.current_shop_offers.append(ShopOffer.new("item", item_id, item_price(item_id)))
+
+func unavailable_item_ids() -> Array:
+	var excluded: Array = []
+	for item_id in ItemRegistry.get_all_item_ids():
+		if not ShopCatalog.is_available("item", item_id):
+			excluded.append(item_id)
+	return excluded
+
+## One item from the shop's weighted pool (for rewards outside the shop); "" when nothing is left.
+func roll_item_reward() -> String:
+	return ItemRegistry.get_weighted_random_item(GameStateService.current_wave, PlayerStatsService.get_player_luck(),
+		ItemTrackingService.item_counts, unavailable_item_ids(), rng)
 
 func item_price(item_id: String) -> int:
 	var base := maxi(1, roundi(ItemRegistry.get_item_price(item_id) * ITEM_PRICE_SCALE))

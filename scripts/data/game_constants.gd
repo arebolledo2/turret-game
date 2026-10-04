@@ -120,6 +120,24 @@ const CORE_AGGRO_RANGE: float = 2.5 # an enemy this close to the hero chases the
 const CORE_DEAGGRO_RANGE: float = 5.0 # ...and gives up and returns to the core beyond this (2D: 500 px)
 const CORE_SPAWN_BOX: float = .6 # enemies spawn on this fraction of the arena's half-size, so they reach the fight in time
 const CORE_START_OFFSET: float = 2.5 # hero and first turret start this far from the core
+
+# =============================================================================
+# TECH DROPS (destructible reward crates; 2D tech drop rules)
+# =============================================================================
+const TECH_DROP_ROLL_INTERVAL: float = 5.0 # seconds between spawn rolls during a wave
+const TECH_DROP_SPAWN_CHANCE: float = .20
+const TECH_DROP_MAX_ACTIVE: int = 1 # alive drops plus pending warnings
+const TECH_DROP_MIN_TIME_LEFT: float = 10.0 # no new drops in the last seconds of a wave
+const TECH_DROP_WARNING_TIME: float = 1.5
+const TECH_DROP_HEALTH_FRACTION: float = .5 # of a tank at the current wave and difficulty
+const TECH_DROP_BODY_SCALE: float = 1.4
+const TECH_DROP_MIN_CORE_DISTANCE: float = 12.0 # metres from the core (core mode)
+const TECH_DROP_MIN_TURRET_DISTANCE: float = 8.0 # metres from every turret (and from the hero in survive mode)
+const TECH_DROP_EDGE_MARGIN: float = 3.0
+const TECH_DROP_SCRAP_PICKUPS: int = 5
+const TECH_DROP_SCRAP_EACH: int = 2
+const TECH_DROP_SCATTER_RADIUS: float = 1.2
+const TECH_DROP_ITEM_CHANCE: float = .5 # chance a destroyed drop also grants a free item
 const SHOP_OFFER_COUNT: int = 4
 # 3D shop layout: one weapon choice and three upgrades (SHOP_TURRET_SLOTS + SHOP_ITEM_SLOTS = SHOP_OFFER_COUNT)
 const SHOP_TURRET_SLOTS: int = 1

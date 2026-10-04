@@ -6,7 +6,7 @@ const MAP_SIZE: Vector2 = Vector2(256, 144) # the arena is 16:9, so one pixel is
 const REDRAW_INTERVAL: float = 0.05
 const ENEMY_COLORS: Dictionary = {
 	"basic": Color("ff6b8a"), "fast": Color("7fe3ff"), "tank": Color("e08a4a"),
-	"exploder": Color("ff5a2a"), "charger": Color("ffc23d"),
+	"exploder": Color("ff5a2a"), "charger": Color("ffc23d"), "tech_drop": Color("f4b942"),
 }
 
 var world: ArenaWorld
@@ -63,7 +63,11 @@ func _draw() -> void:
 			draw_rect(Rect2(turret_at - Vector2(3, 3), Vector2(6, 6)), color)
 	for enemy in world.enemies:
 		if is_instance_valid(enemy) and not enemy.dead:
-			draw_circle(world_to_map(enemy.position), 2.0, ENEMY_COLORS.get(enemy.enemy_type, ENEMY_COLORS["basic"]))
+			var enemy_at := world_to_map(enemy.position)
+			if enemy.stationary:
+				draw_rect(Rect2(enemy_at - Vector2(4, 4), Vector2(8, 8)), ENEMY_COLORS["tech_drop"])
+			else:
+				draw_circle(enemy_at, 2.0, ENEMY_COLORS.get(enemy.enemy_type, ENEMY_COLORS["basic"]))
 	_draw_camera_view()
 	_draw_player()
 	draw_rect(area, Color("2b5963"), false, 1.0)

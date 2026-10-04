@@ -26,6 +26,7 @@ const PLACEMENT_PREVIEW: String = "placement_preview"
 const ITEMS_V2: String = "items_v2"
 const ITEMS_V2_HOOKS: String = "items_v2_hooks"
 const MODE_PROTECT_CORE: String = "mode_protect_core"
+const TECH_DROPS: String = "tech_drops"
 
 const SCOPE_USER: String = "user"
 const SCOPE_DEV: String = "dev"
@@ -67,6 +68,10 @@ const FLAG_DEFINITIONS: Dictionary = {
 	MODE_PROTECT_CORE: {
 		"name": "Protect the Core", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 5,
 		"description": "Allows the Protect the Core mode: enemies head for a fixed core and chase the hero only within aggro range. Applies from the next run.",
+	},
+	TECH_DROPS: {
+		"name": "Tech Drops", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 5,
+		"description": "Destructible crates appear away from your turrets during a wave. Destroy one for scrap and a chance at a free item; it is lost when the wave ends.",
 	},
 	PLACEMENT_PREVIEW: {
 		"name": "Placement Preview", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 1,

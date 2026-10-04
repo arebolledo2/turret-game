@@ -33,6 +33,9 @@ var chasing_hero: bool = false
 ## Core mode: this enemy never switches to the hero.
 var ignores_hero: bool = false
 var core_clock: float = 0.0
+## Tech drops: never moves, never attacks. Built from a crate model instead of a spider.
+var stationary: bool = false
+var drop_bar_fill: MeshInstance3D
 
 const FLASH_DURATION: float = .18
 const ENEMY_FLASH_COLOR := Color(1.0, .92, .8)
@@ -57,7 +60,9 @@ func _ready() -> void:
 	add_child(visual)
 	if is_enemy:
 		var model: Node3D
-		if enemy_type == "charger":
+		if stationary:
+			model = _build_drop_model()
+		elif enemy_type == "charger":
 			model = preload("res://assets/models/game/charger_drone.glb").instantiate()
 			charge = ChargeController3D.new()
 			charge.configure(EnemyRegistry.TYPES["charger"]["behavior_params"])
@@ -66,7 +71,7 @@ func _ready() -> void:
 		EnemyVariants.apply_tint(model, enemy_type)
 		visual.add_child(model)
 		visual.scale = Vector3.ONE * body_scale
-		for side in ["L", "R"]:
+		for side in (["L", "R"] if not stationary else []):
 			for index in range(3):
 				legs.append(model.find_child("Leg_%s_%d" % [side, index], true, false) as Node3D)
 		hurtbox = Area3D.new()
@@ -94,6 +99,28 @@ func _ready() -> void:
 		weapon_muzzle = model.find_child("Muzzle", true, false) as Node3D
 		marker = WorldGeometry.ring(self, .3, Color("58ece1"))
 		marker.position.y = .025
+
+## A tech drop: dark plinth, amber crystal and a health bar that shrinks as it takes damage.
+func _build_drop_model() -> Node3D:
+	var model := Node3D.new()
+	var plinth_material := WorldGeometry.material(Color("2a3a44"))
+	plinth_material.metallic = .5
+	var amber := WorldGeometry.material(Color("f4b942"), true)
+	WorldGeometry.box(model, Vector3(.9, .3, .9), Vector3(0, .15, 0), plinth_material)
+	var crystal := WorldGeometry.box(model, Vector3(.5, .5, .5), Vector3(0, .75, 0), amber)
+	crystal.rotation = Vector3(.6, .785, 0)
+	for side: float in [-1.0, 1.0]:
+		WorldGeometry.box(model, Vector3(.1, .7, .1), Vector3(side * .38, .55, 0), plinth_material)
+	var bar_back := WorldGeometry.material(Color("14232b"))
+	var bar_front := WorldGeometry.material(Color("f4b942"), true)
+	WorldGeometry.box(model, Vector3(1.24, .12, .1), Vector3(0, 1.55, 0), bar_back)
+	drop_bar_fill = WorldGeometry.box(model, Vector3(1.2, .13, .12), Vector3(0, 1.55, 0), bar_front)
+	return model
+
+func _refresh_drop_bar() -> void:
+	var fraction := clampf(health / maxf(max_health, .001), 0.0, 1.0)
+	drop_bar_fill.scale.x = maxf(fraction, .001)
+	drop_bar_fill.position.x = -.6 * (1.0 - fraction)
 
 func _build_warning() -> void:
 	warning = Node3D.new()
@@ -133,6 +160,8 @@ func _physics_process(delta: float) -> void:
 	var reduced_motion := FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION)
 	if hit_flash:
 		hit_flash.update(flash_time / FLASH_DURATION, reduced_motion)
+	if stationary:
+		return
 	var direction := Vector3.ZERO
 	if is_enemy:
 		var speed_factor := 1.0
@@ -255,6 +284,8 @@ func receive_hit(hit: CombatHit3D) -> float:
 		invulnerability = GameConstants.PLAYER_INVINCIBILITY_TIME
 	var applied := minf(health, amount)
 	health = maxf(0.0, health - amount)
+	if drop_bar_fill:
+		_refresh_drop_bar()
 	if is_enemy:
 		statuses.apply(hit)
 		slow_marker.visible = statuses.speed_multiplier() < 1.0

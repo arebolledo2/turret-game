@@ -31,6 +31,7 @@ func tick(delta: float) -> void:
 		spawned_this_wave += 1
 		remaining_spawns -= 1
 		spawn_clock += spawn_interval
+	world.drops.tick(delta)
 	if time_left <= 0.0:
 		finish_wave()
 
@@ -64,6 +65,7 @@ func finish_wave() -> bool:
 	world.enemies.clear()
 	world.crowd.rebuild(world.enemies)
 	world.effects.reset()
+	world.drops.reset()
 	world.player.clear_transients()
 	for projectile in world.projectiles:
 		projectile.release()

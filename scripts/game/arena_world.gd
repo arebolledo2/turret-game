@@ -18,6 +18,7 @@ var dev_panel: DevPanel
 var _next_turret_id: int = 1
 var shop := ArenaShop.new()
 var waves := WaveDirector.new()
+var drops := TechDropDirector.new()
 var placement := TurretPlacement.new()
 var stage: ArenaStage
 var session: RunSession
@@ -79,6 +80,7 @@ func _ready() -> void:
 	session = RunSession.new()
 	shop.world = self
 	waves.world = self
+	drops.world = self
 	placement.world = self
 	add_child(session)
 	actor_root = Node3D.new()
@@ -156,6 +158,7 @@ func start_run() -> void:
 func _clear_actors() -> void:
 	audio.reset()
 	core = null
+	drops.reset()
 	placement.carried = null
 	enemies.clear()
 	turrets.clear()
@@ -242,7 +245,7 @@ func _record_hit(target: Node3D, hit: CombatHit3D, applied: float) -> void:
 		_reactor_overload(victim, hit)
 	if not victim.is_enemy:
 		telemetry.record_hull_lost(applied)
-	elif victim.dead:
+	elif victim.dead and not victim.stationary:
 		var label := ""
 		for turret in turrets:
 			if turret.turret_id == hit.source_id and hit.source_id != 0:
@@ -251,6 +254,11 @@ func _record_hit(target: Node3D, hit: CombatHit3D, applied: float) -> void:
 		telemetry.record_kill(label)
 
 func _on_enemy_died(enemy: CombatActor) -> void:
+	if enemy.stationary:
+		enemies.erase(enemy)
+		drops.reward(enemy)
+		enemy.queue_free()
+		return
 	GameStateService.total_kills += 1
 	var pickup := ScrapPickup.new()
 	pickup.world = self
@@ -413,6 +421,7 @@ func dev_jump_to_wave(target_wave: int) -> bool:
 	enemies.clear()
 	crowd.rebuild(enemies)
 	effects.reset()
+	drops.reset()
 	player.clear_transients()
 	for projectile in projectiles:
 		projectile.release()
