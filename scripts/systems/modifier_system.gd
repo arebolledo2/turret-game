@@ -93,15 +93,6 @@ func _modifier_matches_turret(modifier: StatModifier, turret_type: String) -> bo
 	return not has_filters
 
 
-## Normalize operation aliases used by different modifier registries.
-## Tech definitions use "multiply" for the same independent multiplier
-## represented as "more" by the item/modifier system.
-func _normalize_operation(operation: String) -> String:
-	if operation == "multiply":
-		return "more"
-	return operation
-
-
 ## Get turret stats with all modifiers applied
 ## Uses PoE formula: (base + flat) × (1 + increases) × more1 × more2 × ...
 func get_turret_stats(turret_type: String, difficulty_config: Dictionary, static_effects: Callable = Callable()) -> Dictionary:

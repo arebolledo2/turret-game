@@ -50,7 +50,7 @@ func _build_menu() -> void:
 	home = VBoxContainer.new()
 	home.add_theme_constant_override("separation", 18)
 	column.add_child(home)
-	_label(home, "Six waves · Easy difficulty · Three turret types", 22)
+	_label(home, "Six waves · Easy difficulty · Five turret types", 22)
 	_label(home, "Move     WASD / arrows / left stick\nCarry or place turret     E / controller A\nPause     Esc / controller Start\nAuto-fire targets nearby enemies.", 22)
 	play_button = _button(home, "PLAY", start_game)
 	settings_button = _button(home, "SETTINGS", show_settings)

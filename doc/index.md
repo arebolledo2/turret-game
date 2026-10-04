@@ -1,6 +1,6 @@
 # Turret Survivor documentation
 
-Turret Survivor is a native 3D survival game in Godot 4.7.1. Move through a flat arena, reposition automated turrets, and buy upgrades between six waves. The supported mode is Easy survival, with ion, plasma and shock turrets, spider drones and chargers, and 13 shop items. Other registry entries are retained data, not playable content.
+Turret Survivor is a native 3D survival game in Godot 4.7.1. Move through a flat arena, reposition automated turrets, and buy upgrades between six waves. The supported mode is Easy survival, with ion, plasma, shock, tesla and melee turrets, spider drones and chargers, and 13 shop items. Other registry entries are retained data, not playable content.
 
 Launch with `./launch.ps1` or Godot F5. Run `./run_tests.ps1 -Import` on a fresh checkout.
 

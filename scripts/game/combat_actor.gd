@@ -1,9 +1,6 @@
 class_name CombatActor
 extends CharacterBody3D
 
-signal died(actor: CombatActor)
-signal damaged(actor: CombatActor, amount: float)
-
 var world: Node
 var is_enemy: bool = false
 var enemy_type: String = "basic"
@@ -223,7 +220,6 @@ func receive_hit(hit: CombatHit3D) -> float:
 	flash_time = FLASH_DURATION
 	if not hit_flash:
 		hit_flash = HitFlash.new(visual, ENEMY_FLASH_COLOR if is_enemy else PLAYER_FLASH_COLOR)
-	damaged.emit(self, amount)
 	if health <= 0.0:
 		dead = true
 		statuses.clear()
@@ -236,5 +232,4 @@ func receive_hit(hit: CombatHit3D) -> float:
 		visible = false
 		if warning:
 			warning.visible = false
-		died.emit(self)
 	return applied

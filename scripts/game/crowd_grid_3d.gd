@@ -52,7 +52,7 @@ func query_radius(origin: Vector3, radius: float) -> Array[CombatActor]:
 	for x in range(-extent, extent + 1):
 		for z in range(-extent, extent + 1):
 			for other: CombatActor in cells.get(cell + Vector2i(x, z), []):
-				if is_instance_valid(other) and not other.dead and 						WorldGeometry.planar(Vector3(positions[other.get_instance_id()]) - origin).length_squared() <= radius * radius:
+				if is_instance_valid(other) and not other.dead and WorldGeometry.planar(Vector3(positions[other.get_instance_id()]) - origin).length_squared() <= radius * radius:
 					found.append(other)
 	return found
 

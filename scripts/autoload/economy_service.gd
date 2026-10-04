@@ -35,7 +35,7 @@ func reset_state() -> void:
 
 ## Calculate reroll cost based on current reroll count, wave, and modifiers
 func get_reroll_cost(wave: int, reroll_cost_multiplier: float) -> int:
-	# Wave-based base cost: wave Ã— 1.5
+	# Wave-based base cost: wave × 1.5
 	var wave_base_cost := wave * GameConstants.REROLL_WAVE_BASE_MULTIPLIER
 	# Add increment for each reroll this wave
 	var total_cost := wave_base_cost + shop_reroll_count * GameConstants.REROLL_COST_INCREMENT
