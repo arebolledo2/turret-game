@@ -99,7 +99,7 @@ func _ready() -> void:
 	column.add_child(actions)
 	reroll_button = _button(actions, "", func() -> void: world.shop.reroll())
 	reroll_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	repair_button = _button(actions, "REPAIR 10 HULL / 5", func() -> void: world.repair())
+	repair_button = _button(actions, "REPAIR %d HULL / %d" % [GameConstants.REPAIR_HEAL_AMOUNT, GameConstants.REPAIR_COST], func() -> void: world.repair())
 	repair_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	continue_button = _button(column, "DEPLOY NEXT WAVE", _continue)
 	restart_button = _button(column, "START NEW RUN", func() -> void: world.start_run())
@@ -188,7 +188,7 @@ func _process(_delta: float) -> void:
 	menu_button.visible = ended or world.paused
 	reroll_button.text = "REROLL / %d scrap" % world.shop.reroll_cost()
 	reroll_button.disabled = EconomyService.total_scrap < world.shop.reroll_cost()
-	repair_button.disabled = EconomyService.total_scrap < 5 or world.player.health >= world.player.max_health
+	repair_button.disabled = EconomyService.total_scrap < GameConstants.REPAIR_COST or world.player.health >= world.player.max_health
 	if panel.visible:
 		build_text.text = world.shop.build_summary()
 	if world.paused:

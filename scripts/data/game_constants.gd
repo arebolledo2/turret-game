@@ -87,6 +87,9 @@ const WAVE_DURATION_CAP_THRESHOLD: int = 7
 # =============================================================================
 const STARTING_SCRAP: int = 20
 const SCRAP_WAVE_BONUS_BASE: int = 0
+const SCRAP_WAVE_BONUS_PER_WAVE: int = 5 # added to the wave bonus for each wave number
+const REPAIR_COST: int = 5
+const REPAIR_HEAL_AMOUNT: float = 10.0
 const SHOP_OFFER_COUNT: int = 4
 const REROLL_COST_INCREMENT: int = 1
 const REROLL_WAVE_BASE_MULTIPLIER: float = 1.5 # Wave-based base cost multiplier

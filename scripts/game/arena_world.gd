@@ -239,9 +239,9 @@ func turret_price(type_id: String = "normal") -> int:
 	return EconomyService.calculate_turret_price(TurretRegistry.get_base_price(type_id), GameStateService.current_wave)
 
 func repair() -> bool:
-	if not shop.is_open() or player.health >= player.max_health or not EconomyService.deduct_scrap(5):
+	if not shop.is_open() or player.health >= player.max_health or not EconomyService.deduct_scrap(GameConstants.REPAIR_COST):
 		return false
-	player.health = minf(player.max_health, player.health + 10.0)
+	player.health = minf(player.max_health, player.health + GameConstants.REPAIR_HEAL_AMOUNT)
 	audio.play_cue("purchase", player.position)
 	message = "Hull repaired."
 	return true

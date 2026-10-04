@@ -42,9 +42,9 @@ func get_reroll_cost(wave: int, reroll_cost_multiplier: float) -> int:
 	return int(total_cost * reroll_cost_multiplier)
 
 
-## Authoritative base payout. Wave 1 awards 5 scrap; each wave adds 5.
+## Authoritative base payout: SCRAP_WAVE_BONUS_BASE plus SCRAP_WAVE_BONUS_PER_WAVE for each wave number.
 func get_wave_scrap_base(wave: int) -> int:
-	return GameConstants.SCRAP_WAVE_BONUS_BASE + maxi(wave, 0) * 5
+	return GameConstants.SCRAP_WAVE_BONUS_BASE + maxi(wave, 0) * GameConstants.SCRAP_WAVE_BONUS_PER_WAVE
 
 
 ## Calculate wave completion scrap bonus
