@@ -19,6 +19,7 @@ const _ensure_loaded = [
 	preload("res://scripts/registries/items/rare_items.gd"),
 	preload("res://scripts/registries/items/epic_items.gd"),
 	preload("res://scripts/registries/items/legendary_items.gd"),
+	preload("res://scripts/registries/items/items_v2.gd"),
 ]
 
 # Rarity color scheme
@@ -83,6 +84,8 @@ static func _load_all_items() -> void:
 	_all_items.merge(RareItems.get_all())
 	_all_items.merge(EpicItems.get_all())
 	_all_items.merge(LegendaryItems.get_all())
+	# Phase 2 definitions replace same-id tier entries.
+	_all_items.merge(ItemsV2.get_all(), true)
 
 
 ## Get Item resource by ID

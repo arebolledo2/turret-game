@@ -123,13 +123,13 @@ func test_item_modifiers_affect_all_weapons_and_respect_filters() -> void:
 	assert_true(world.shop.purchase(stock("item", "dense_rounds")))
 	assert_true(world.shop.purchase(stock("item", "rapid_coolant")))
 	assert_true(world.shop.purchase(stock("item", "extended_barrel")))
-	assert_true(world.shop.purchase(stock("item", "ammo_surplus")))
+	assert_true(world.shop.purchase(stock("item", "polished_barrels")))
 	for type_id in ArenaShop.TURRETS:
 		var base: Dictionary = TurretRegistry.TYPES[type_id]["base_stats"]
 		var stats := TurretStatsService.get_turret_stats(type_id, 1.0)
 		assert_almost_eq(float(stats["range"]), float(base["range"]) * 1.05, .001)
-		assert_almost_eq(float(stats["damage"]), float(base["damage"]) * (1.06 if type_id in ["shock", "tesla", "melee"] else 1.03), .001)
-		assert_almost_eq(float(stats["fire_rate"]), float(base["fire_rate"]) * (1.03 if type_id in ["shock", "tesla"] else 1.09), .001)
+		assert_almost_eq(float(stats["damage"]), float(base["damage"]) * (1.07 + (.10 if type_id == "normal" else 0.0)), .001)
+		assert_almost_eq(float(stats["fire_rate"]), float(base["fire_rate"]) * 1.02, .001)
 
 func test_hull_speed_and_pickup_upgrades_apply_and_restart_clears_build() -> void:
 	world.finish_wave()
@@ -140,7 +140,7 @@ func test_hull_speed_and_pickup_upgrades_apply_and_restart_clears_build() -> voi
 	assert_eq(world.player.health, 20.0, "Capacity upgrades are not repairs")
 	assert_almost_eq(PlayerStatsService.get_player_speed(), GameConstants.PLAYER_SPEED * .97, .001)
 	assert_true(world.shop.purchase(stock("item", "scrap_magnet")))
-	assert_almost_eq(PlayerStatsService.get_pickup_radius(), GameConstants.PLAYER_PICKUP_RADIUS * 1.3, .001)
+	assert_almost_eq(PlayerStatsService.get_pickup_radius(), GameConstants.PLAYER_PICKUP_RADIUS * 1.2, .001)
 	assert_string_contains(world.shop.build_summary(), "Reinforced Hull")
 	assert_string_contains(ArenaShop.item_description("reinforced_hull"), "+4 max hull")
 	assert_true(world.repair())
@@ -175,7 +175,7 @@ func test_pickup_and_movement_use_purchased_stats_in_the_world() -> void:
 	world.finish_wave()
 	EconomyService.total_scrap = 100
 	assert_true(world.shop.purchase(stock("item", "scrap_magnet")))
-	assert_true(world.shop.purchase(stock("item", "shock_absorbers")))
+	assert_true(world.shop.purchase(stock("item", "reinforced_hull")))
 	world.begin_next_wave()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	pickup = ScrapPickup.new()
@@ -187,7 +187,7 @@ func test_pickup_and_movement_use_purchased_stats_in_the_world() -> void:
 	Input.action_press("move_right")
 	world.player._physics_process(1)
 	Input.action_release("move_right")
-	assert_almost_eq(world.player.velocity.length(), GameConstants.PLAYER_SPEED * 1.05 * .01, .001)
+	assert_almost_eq(world.player.velocity.length(), GameConstants.PLAYER_SPEED * .97 * .01, .001)
 
 func test_full_arena_rejects_purchase_without_spending_or_selling_offer() -> void:
 	world.finish_wave()

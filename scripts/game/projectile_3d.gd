@@ -11,6 +11,7 @@ var speed: float = 0.0
 var remaining: float = 0.0
 var sweep: ShapeCast3D
 var shot: CombatShot3D
+var pierced: Array[CombatActor] = []
 var visual: MeshInstance3D
 var orb: MeshInstance3D
 var trail: MeshInstance3D
@@ -60,6 +61,7 @@ func acquire_shot(origin: Vector3, heading: Vector3, spec: CombatShot3D) -> void
 	position = origin
 	direction = WorldGeometry.planar(heading).normalized()
 	shot = spec.copy()
+	pierced.clear()
 	damage = shot.damage
 	speed = shot.speed
 	var plasma := shot.damage_type == GameEnums.DamageType.PLASMA
@@ -107,7 +109,7 @@ func advance(delta: float) -> void:
 		if not area:
 			continue
 		var actor := area.get_parent() as CombatActor
-		if not actor or actor.dead:
+		if not actor or actor.dead or actor in pierced:
 			continue
 		var distance := position.distance_squared_to(sweep.get_collision_point(index))
 		if distance < closest:
@@ -115,8 +117,12 @@ func advance(delta: float) -> void:
 			hit = actor
 	if hit:
 		world.combat.impact(hit, hit.position, direction, shot, world.enemies)
-		release()
-		return
+		if shot.pierce > 0 and shot.splash_radius <= 0.0:
+			shot.pierce -= 1
+			pierced.append(hit)
+		else:
+			release()
+			return
 	position += motion
 	remaining -= delta
 	if remaining <= 0.0:

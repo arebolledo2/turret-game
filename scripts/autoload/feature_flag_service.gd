@@ -23,6 +23,7 @@ const DEV_PANEL: String = "dev_panel"
 const DEBUG_OVERLAYS: String = "debug_overlays"
 const ENTRENCH: String = "entrench"
 const PLACEMENT_PREVIEW: String = "placement_preview"
+const ITEMS_V2: String = "items_v2"
 
 const SCOPE_USER: String = "user"
 const SCOPE_DEV: String = "dev"
@@ -52,6 +53,10 @@ const FLAG_DEFINITIONS: Dictionary = {
 	ENTRENCH: {
 		"name": "Entrench", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 1,
 		"description": "Turrets earn damage and fire rate for every few seconds they stay in place. Picking one up resets its stacks.",
+	},
+	ITEMS_V2: {
+		"name": "Item Pool v2", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 2,
+		"description": "Adds the build-direction items (family Doctrines, specialists, tall and wide trades) to the shop pool. Applies from the next shop.",
 	},
 	PLACEMENT_PREVIEW: {
 		"name": "Placement Preview", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 1,

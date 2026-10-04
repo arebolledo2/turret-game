@@ -10,10 +10,15 @@ const DEFAULT_ENTRIES: Dictionary = {
 		"normal": "", "plasma": "", "shock": "", "tesla": "", "melee": "",
 	},
 	"item": {
-		"scrap_magnet": "", "reinforced_hull": "", "quick_loader": "", "shock_absorbers": "",
-		"dense_rounds": "", "budget_capacitor": "", "ammo_surplus": "", "overclock_module": "",
-		"compact_design": "", "extended_barrel": "", "rapid_coolant": "", "kinetic_enhancer": "",
-		"heavy_plating": "",
+		# Kept from the original pool
+		"scrap_magnet": "", "reinforced_hull": "", "quick_loader": "", "dense_rounds": "", "budget_capacitor": "",
+		"compact_design": "", "extended_barrel": "", "rapid_coolant": "", "heavy_plating": "", "mass_production": "",
+		# Item pool v2 (Phase 2)
+		"polished_barrels": "items_v2", "blast_charges": "items_v2", "capacitor_bank": "items_v2", "weighted_bat": "items_v2",
+		"concrete_footings": "items_v2", "static_grounding": "items_v2", "faulty_wiring": "items_v2",
+		"ion_doctrine": "items_v2", "plasma_doctrine": "items_v2", "voltage_doctrine": "items_v2", "bat_doctrine": "items_v2",
+		"piercing_rounds": "items_v2", "cluster_warheads": "items_v2", "superconductors": "items_v2", "spiked_bat": "items_v2",
+		"hardpoint": "items_v2",
 	},
 }
 

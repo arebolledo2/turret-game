@@ -10,6 +10,8 @@ var slow_intensity: float = 0.0
 var slow_duration: float = 0.0
 var damage_type: GameEnums.DamageType = GameEnums.DamageType.PHYSICAL
 var source_id: int = 0
+## Extra enemies a non-splash projectile passes through after its first hit.
+var pierce: int = 0
 
 static func from_stats(stats: Dictionary, type: GameEnums.DamageType = GameEnums.DamageType.PHYSICAL) -> CombatShot3D:
 	var shot := CombatShot3D.new()
@@ -20,6 +22,7 @@ static func from_stats(stats: Dictionary, type: GameEnums.DamageType = GameEnums
 	shot.damage_type = type
 	shot.slow_intensity = clampf(float(stats.get("slow_intensity", 0.0)), 0.0, .9)
 	shot.slow_duration = maxf(float(stats.get("slow_duration", 0.0)), 0.0)
+	shot.pierce = maxi(int(stats.get("pierce", 0)), 0)
 	return shot
 
 func copy() -> CombatShot3D:
@@ -32,4 +35,5 @@ func copy() -> CombatShot3D:
 	shot.slow_intensity = slow_intensity
 	shot.slow_duration = slow_duration
 	shot.source_id = source_id
+	shot.pierce = pierce
 	return shot

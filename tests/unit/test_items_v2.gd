@@ -1,0 +1,83 @@
+extends GutTest
+
+const V2_IDS := ["polished_barrels", "blast_charges", "capacitor_bank", "weighted_bat", "concrete_footings", "static_grounding",
+	"faulty_wiring", "ion_doctrine", "plasma_doctrine", "voltage_doctrine", "bat_doctrine", "piercing_rounds",
+	"cluster_warheads", "superconductors", "spiked_bat", "hardpoint"]
+
+func before_each() -> void:
+	FeatureFlagService.reset_state()
+	ModifierService.clear_modifiers()
+
+func after_each() -> void:
+	ShopCatalog.reset()
+	ModifierService.clear_modifiers()
+	FeatureFlagService.reset_state()
+
+func _stat(type_id: String, stat: String) -> float:
+	return float(ModifierService.get_turret_stats(type_id, {"turret_damage_mult": 1.0}).get(stat, 0.0))
+
+func _base(type_id: String, stat: String) -> float:
+	return float(TurretRegistry.get_base_stats(type_id).get(stat, 0.0))
+
+func _own(item_id: String) -> void:
+	for modifier: Dictionary in ItemRegistry.get_modifiers(item_id):
+		ModifierService.add_modifier(modifier.duplicate(true))
+
+func test_every_v2_item_exists_with_tag_and_modifiers() -> void:
+	for item_id in V2_IDS:
+		assert_true(ItemRegistry.has_item(item_id), item_id)
+		assert_true(ItemRegistry.get_tag(item_id) in ItemRegistry.TAGS, item_id)
+		assert_false(ItemRegistry.get_modifiers(item_id).is_empty(), item_id)
+		assert_false(ArenaShop.item_description(item_id).is_empty(), item_id)
+
+func test_pool_has_13_commons_and_13_uncommons() -> void:
+	var commons := 0
+	var uncommons := 0
+	for item_id in ShopCatalog.ids("item"):
+		match ItemRegistry.get_rarity(item_id):
+			GameEnums.ItemRarity.COMMON: commons += 1
+			GameEnums.ItemRarity.UNCOMMON: uncommons += 1
+	assert_eq(commons, 13)
+	assert_eq(uncommons, 13)
+
+func test_doctrine_boosts_its_family_and_taxes_the_rest() -> void:
+	_own("ion_doctrine")
+	assert_almost_eq(_stat("normal", "damage"), _base("normal", "damage") * 1.25, .001)
+	for other in ["plasma", "shock", "tesla", "melee"]:
+		assert_almost_eq(_stat(other, "damage"), _base(other, "damage") * .92, .001, other)
+
+func test_each_family_doctrine_targets_only_that_family() -> void:
+	var targets := {"plasma_doctrine": ["plasma"], "voltage_doctrine": ["shock", "tesla"], "bat_doctrine": ["melee"]}
+	for item_id: String in targets:
+		ModifierService.clear_modifiers()
+		_own(item_id)
+		for type_id in ["normal", "plasma", "shock", "tesla", "melee"]:
+			var expected := 1.25 if type_id in targets[item_id] else .92
+			assert_almost_eq(_stat(type_id, "damage"), _base(type_id, "damage") * expected, .001, "%s %s" % [item_id, type_id])
+
+func test_specialists_change_the_right_stats() -> void:
+	_own("superconductors")
+	assert_eq(_stat("tesla", "chain_count"), _base("tesla", "chain_count") + 1.0)
+	assert_eq(_stat("normal", "chain_count"), 0.0)
+	assert_almost_eq(_stat("shock", "slow_intensity"), _base("shock", "slow_intensity") * 1.25, .001)
+	assert_almost_eq(_stat("shock", "fire_rate"), _base("shock", "fire_rate") * .88, .001)
+	ModifierService.clear_modifiers()
+	_own("static_grounding")
+	assert_almost_eq(_stat("shock", "slow_intensity"), _base("shock", "slow_intensity") + .10, .001)
+	assert_eq(_stat("tesla", "slow_intensity"), 0.0, "Tesla must not gain a slow")
+	ModifierService.clear_modifiers()
+	_own("piercing_rounds")
+	assert_eq(_stat("normal", "pierce"), 1.0)
+	assert_eq(_stat("plasma", "pierce"), 0.0)
+
+func test_pool_flag_gates_the_new_items() -> void:
+	assert_true(ShopCatalog.is_available("item", "ion_doctrine"))
+	FeatureFlagService.set_enabled(FeatureFlagService.ITEMS_V2, false)
+	assert_false(ShopCatalog.is_available("item", "ion_doctrine"))
+	assert_true(ShopCatalog.is_available("item", "dense_rounds"))
+	assert_eq(ShopCatalog.available_ids("item").size(), 10)
+
+func test_tall_items_use_entrench_and_carry_stats() -> void:
+	_own("hardpoint")
+	assert_eq(ModifierService.apply_modifiers_to_stat(5.0, "entrench_max_stacks"), 7.0)
+	assert_almost_eq(ModifierService.apply_modifiers_to_stat(1.0, "carry_speed"), .75, .001)
