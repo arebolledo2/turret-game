@@ -128,3 +128,23 @@ func test_survive_mode_enemies_still_chase_the_hero() -> void:
 	var start := enemy.position.distance_to(world.player.position)
 	await wait_physics_frames(30)
 	assert_lt(enemy.position.distance_to(world.player.position), start)
+
+func test_shot_that_ends_the_run_mid_impact_does_not_error() -> void:
+	# An exploder shot next to a nearly dead core: its blast destroys the core, the run ends and every projectile is
+	# released while this one is still inside its own impact call.
+	world = await _core_world()
+	_to_combat(world)
+	world.turrets[0].set_physics_process(false)
+	world.core.health = 1.0
+	var exploder := world.spawn_enemy(Vector3(2.0, 0, 0), "exploder")
+	exploder.set_physics_process(false)
+	exploder.health = 1.0
+	await wait_physics_frames(2)
+	var spec := CombatShot3D.new()
+	spec.damage = 50.0
+	spec.speed = 20.0
+	spec.pierce = 2
+	var projectile := world.fire_shot(Vector3(2.0, 0, 3.0), exploder, spec)
+	projectile.advance(0.2)
+	assert_true(world.core.dead)
+	assert_false(projectile.active)

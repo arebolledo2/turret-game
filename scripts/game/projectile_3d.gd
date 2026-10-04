@@ -117,6 +117,9 @@ func advance(delta: float) -> void:
 			hit = actor
 	if hit:
 		world.combat.impact(hit, hit.position, direction, shot, world.enemies)
+		# The impact can end the run (an exploder's blast killing the hero or core), which releases every projectile.
+		if not active:
+			return
 		if shot.pierce > 0 and shot.splash_radius <= 0.0:
 			shot.pierce -= 1
 			pierced.append(hit)
