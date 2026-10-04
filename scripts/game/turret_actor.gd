@@ -5,7 +5,11 @@ var world: ArenaWorld
 var turret_type: String = "normal"
 ## Unique within a run (assigned by `ArenaWorld.add_turret`); stamped on shots for kill attribution.
 var turret_id: int = 0
-var carried: bool = false
+var carried: bool = false:
+	set(value):
+		carried = value
+		if value:
+			reset_entrench()
 var cooldown: float = 0.0
 var aim: Node3D
 var muzzle: Node3D
@@ -17,6 +21,10 @@ var rehit_lockouts: Dictionary = {}
 ## Modifier math is costly and static between purchases, so stats are rebuilt on change or every STATS_REFRESH seconds.
 var cached_stats: Dictionary = {}
 var stats_age: float = 0.0
+## Seconds spent deployed in combat at the current spot; drives Entrench stacks.
+var stay_time: float = 0.0
+var entrench_stacks_cached: int = 0
+var entrench_ring: MeshInstance3D
 
 const STATS_REFRESH: float = .25
 const MELEE_HIT_PADDING: float = .3
@@ -97,10 +105,52 @@ func _spin_bat(delta: float, stats: Dictionary, reach: float) -> void:
 func invalidate_stats() -> void:
 	cached_stats = {}
 
+func entrench_stacks() -> int:
+	if not FeatureFlagService.is_enabled(FeatureFlagService.ENTRENCH):
+		return 0
+	return mini(int(stay_time / GameConstants.ENTRENCH_STACK_SECONDS), GameConstants.ENTRENCH_MAX_STACKS)
+
+func reset_entrench() -> void:
+	stay_time = 0.0
+	entrench_stacks_cached = 0
+	cached_stats = {}
+	_update_entrench_ring()
+
+## Fraction (0..1) toward the next stack; 1 when maxed.
+func entrench_progress() -> float:
+	if entrench_stacks_cached >= GameConstants.ENTRENCH_MAX_STACKS:
+		return 1.0
+	return fmod(stay_time, GameConstants.ENTRENCH_STACK_SECONDS) / GameConstants.ENTRENCH_STACK_SECONDS
+
+func _tick_entrench(delta: float) -> void:
+	if FeatureFlagService.is_enabled(FeatureFlagService.ENTRENCH):
+		stay_time += delta
+	elif stay_time > 0.0:
+		stay_time = 0.0
+	var stacks := entrench_stacks()
+	if stacks != entrench_stacks_cached:
+		entrench_stacks_cached = stacks
+		cached_stats = {}
+	_update_entrench_ring()
+
+func _update_entrench_ring() -> void:
+	if not entrench_ring:
+		entrench_ring = WorldGeometry.ring(self, .62, Color("ffd05a"))
+		entrench_ring.position.y = .03
+	entrench_ring.visible = entrench_stacks_cached > 0 and not carried
+	var fill := float(entrench_stacks_cached) / float(GameConstants.ENTRENCH_MAX_STACKS)
+	var size := .8 + .25 * fill + .1 * entrench_progress()
+	entrench_ring.scale = Vector3(size, 1.0, size)
+
 func _current_stats(delta: float) -> Dictionary:
 	stats_age += delta
 	if cached_stats.is_empty() or stats_age >= STATS_REFRESH:
 		cached_stats = TurretStatsService.get_turret_stats(turret_type, float(world.difficulty_config["turret_damage_mult"]))
+		if entrench_stacks_cached > 0:
+			var stacks := float(entrench_stacks_cached)
+			cached_stats = cached_stats.duplicate()
+			cached_stats["damage"] = float(cached_stats.get("damage", 0.0)) * (1.0 + GameConstants.ENTRENCH_DAMAGE_PER_STACK * stacks)
+			cached_stats["fire_rate"] = float(cached_stats.get("fire_rate", 1.0)) * (1.0 + GameConstants.ENTRENCH_FIRE_RATE_PER_STACK * stacks)
 		stats_age = 0.0
 	return cached_stats
 
@@ -110,6 +160,7 @@ func _physics_process(delta: float) -> void:
 	if carried:
 		position = world.player.position + Vector3(0, 1.15, .25)
 		return
+	_tick_entrench(delta)
 	cooldown = maxf(0.0, cooldown - delta)
 	aim.position = aim.position.lerp(aim_rest, minf(delta * 16.0, 1.0))
 	var stats: Dictionary = _current_stats(delta)

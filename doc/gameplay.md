@@ -81,3 +81,11 @@ On the local RTX 4090, the second-slice sample retained **150 enemies (38 charge
 Native spatial weapon, warning, impact, pickup, purchase and run-state sounds are implemented, with bounded voices and persistent SFX volume. Muzzle/hit sparks are pooled. Shared marker resources reduce render overhead. See [combat polish](combat-polish.md) for validation, current measurements and remaining frame-budget work.
 
 Playtest the audio mix and warning readability across six waves. Crowded-scene p95 still needs attention before claiming a consistent 60 fps budget or expanding the content catalog.
+
+## Entrench (Phase 1)
+
+A deployed turret earns one **Entrench** stack for every `ENTRENCH_STACK_SECONDS` (4 s) it spends in combat without being moved, up to `ENTRENCH_MAX_STACKS` (5). Each stack adds +6% damage and +4% fire rate (`GameConstants.ENTRENCH_*`). Picking a turret up resets it, including when the turret is returned to its old spot at wave end. Shop time does not count. A gold ring at the base grows with stacks, and the HUD hint shows the stacks of the nearest turret in reach.
+
+While carrying, a **placement preview** ring shows where the turret will land (cyan clear, red blocked).
+
+Both are experiment flags (`entrench`, `placement_preview`), on by default and off in the `release` preset. Stacks are applied on top of the cached modifier stats in `TurretActor._current_stats`, so shop modifiers still multiply as before.

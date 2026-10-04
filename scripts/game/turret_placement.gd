@@ -9,6 +9,8 @@ const EDGE_MARGIN: float = .55
 var world: ArenaWorld
 var carried: TurretActor
 var carry_origin: Vector3
+var preview: MeshInstance3D
+var preview_ok: bool = true
 
 ## First free spot on a grid around the player (the origin when no player exists yet).
 func find_placement() -> Vector3:
@@ -33,8 +35,7 @@ func interact() -> bool:
 	if not world.is_combat():
 		return false
 	if is_instance_valid(carried):
-		var forward := -world.player.visual.global_basis.z
-		var at := WorldGeometry.planar(world.player.position + forward * DROP_DISTANCE)
+		var at := drop_position()
 		if not valid_placement(at, carried):
 			world.message = "Move clear of the edge or another turret."
 			return false
@@ -59,6 +60,34 @@ func interact() -> bool:
 		world.message = "Carrying turret · press E / A to place"
 		return true
 	return false
+
+## Marker at the spot the carried turret would be deployed; hidden when nothing is carried or the flag is off.
+func update_preview() -> void:
+	var showing := is_instance_valid(carried) and FeatureFlagService.is_enabled(FeatureFlagService.PLACEMENT_PREVIEW)
+	if not showing:
+		if preview:
+			preview.visible = false
+		return
+	var at := drop_position()
+	var ok := valid_placement(at, carried)
+	if not preview:
+		preview = WorldGeometry.ring(world.actor_root, .55, Color("58ece1"))
+		preview.position.y = .035
+	preview_ok = ok
+	preview.material_override = _preview_material(ok)
+	preview.position = Vector3(at.x, .035, at.z)
+	preview.visible = true
+
+func drop_position() -> Vector3:
+	var forward := -world.player.visual.global_basis.z
+	return WorldGeometry.planar(world.player.position + forward * DROP_DISTANCE)
+
+static var _preview_materials: Dictionary = {}
+
+static func _preview_material(ok: bool) -> StandardMaterial3D:
+	if not _preview_materials.has(ok):
+		_preview_materials[ok] = WorldGeometry.material(Color("58ece1") if ok else Color("ff5a5a"), true)
+	return _preview_materials[ok]
 
 ## Returns a carried turret to where it was picked up (wave end).
 func drop_carried() -> void:

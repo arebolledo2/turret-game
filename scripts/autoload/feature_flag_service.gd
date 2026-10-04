@@ -21,6 +21,8 @@ signal pending_changed()
 const REDUCED_MOTION: String = "reduced_motion"
 const DEV_PANEL: String = "dev_panel"
 const DEBUG_OVERLAYS: String = "debug_overlays"
+const ENTRENCH: String = "entrench"
+const PLACEMENT_PREVIEW: String = "placement_preview"
 
 const SCOPE_USER: String = "user"
 const SCOPE_DEV: String = "dev"
@@ -46,6 +48,14 @@ const FLAG_DEFINITIONS: Dictionary = {
 		"name": "Debug Overlays", "default": false, "scope": SCOPE_DEV, "live_safe": true, "phase": 0,
 		"requires": [DEV_PANEL],
 		"description": "Shows live counts (wave, enemies, turrets, projectiles, pending flags) on screen.",
+	},
+	ENTRENCH: {
+		"name": "Entrench", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 1,
+		"description": "Turrets earn damage and fire rate for every few seconds they stay in place. Picking one up resets its stacks.",
+	},
+	PLACEMENT_PREVIEW: {
+		"name": "Placement Preview", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 1,
+		"description": "While carrying a turret, shows a marker where it would be deployed (green clear, red blocked).",
 	},
 }
 

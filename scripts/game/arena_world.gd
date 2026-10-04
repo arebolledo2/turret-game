@@ -157,6 +157,7 @@ func _physics_process(delta: float) -> void:
 	if paused or not GameStateService.is_game_active:
 		return
 	waves.tick(delta)
+	placement.update_preview()
 
 func begin_next_wave() -> bool:
 	return waves.begin_next_wave()

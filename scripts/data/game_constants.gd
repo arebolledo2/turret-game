@@ -65,6 +65,12 @@ const TURRET_MIN_DISTANCE: float = 100.0 # from other turrets
 # Turret Pickup System
 const TURRET_CARRY_SPEED_PENALTY: float = 0.7
 
+# ENTRENCH (turrets earn stacks by staying put; picking one up resets them)
+const ENTRENCH_STACK_SECONDS: float = 4.0
+const ENTRENCH_MAX_STACKS: int = 5
+const ENTRENCH_DAMAGE_PER_STACK: float = 0.06
+const ENTRENCH_FIRE_RATE_PER_STACK: float = 0.04
+
 # =============================================================================
 # ENEMY (Base values for Wave 1)
 # =============================================================================

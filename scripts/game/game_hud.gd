@@ -159,6 +159,24 @@ func _continue() -> void:
 	else:
 		world.begin_next_wave()
 
+## One line about the turret within reach (or carried) so the Entrench bonus is readable.
+func _entrench_readout() -> String:
+	if not FeatureFlagService.is_enabled(FeatureFlagService.ENTRENCH) or not is_instance_valid(world.player):
+		return ""
+	var best: TurretActor = null
+	var best_distance := TurretPlacement.PICKUP_RANGE
+	for turret in world.turrets:
+		var distance := turret.position.distance_to(world.player.position)
+		if distance < best_distance and not turret.carried:
+			best_distance = distance
+			best = turret
+	if not best:
+		return ""
+	var stacks := best.entrench_stacks_cached
+	return "
+ENTRENCH %d / %d  +%d%% damage  +%d%% fire rate" % [stacks, GameConstants.ENTRENCH_MAX_STACKS,
+		roundi(stacks * GameConstants.ENTRENCH_DAMAGE_PER_STACK * 100.0), roundi(stacks * GameConstants.ENTRENCH_FIRE_RATE_PER_STACK * 100.0)]
+
 func _process(_delta: float) -> void:
 	if not is_instance_valid(world.player):
 		return
@@ -171,7 +189,7 @@ func _process(_delta: float) -> void:
 	stats.text = "WAVE %02d / %02d     %02ds\n%d SCRAP     %d KILLS" % [GameStateService.current_wave,
 		world.wave_limit, ceili(world.time_left), EconomyService.total_scrap, GameStateService.total_kills]
 	status.text = "DEPLOYING WAVE %d  ·  %d" % [GameStateService.current_wave, ceili(world.announcement_left)] if phase == GameStateMachine.GameState.WAVE_ANNOUNCEMENT else ""
-	hint.text = "WASD / LEFT STICK  Move     E / A  Carry or place turret     M  Map     ESC / START  Pause\n" + world.message
+	hint.text = "WASD / LEFT STICK  Move     E / A  Carry or place turret     M  Map     ESC / START  Pause\n" + world.message + _entrench_readout()
 	panel.visible = (in_shop or ended or world.paused) and not world.dev_menu_open
 	minimap.suppressed = panel.visible
 	for index in range(offer_buttons.size()):
