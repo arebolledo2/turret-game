@@ -66,12 +66,12 @@ func shop() -> void:
 		world.repair()
 	for attempt in range(3):
 		for index in range(EconomyService.current_shop_offers.size()):
-			var offer: Dictionary = EconomyService.current_shop_offers[index]
-			if offer["type"] == "turret":
-				var type_id: String = offer["turret_id"]
+			var offer := EconomyService.current_shop_offers[index]
+			if offer.kind == "turret":
+				var type_id := offer.asset_id
 				if (control_build and type_id in ["plasma", "shock"]) or (not control_build and type_id == "normal"):
 					world.shop.purchase(index)
-			elif offer["item_id"] in ["quick_loader", "rapid_coolant", "dense_rounds", "ammo_surplus", "reinforced_hull"]:
+			elif offer.asset_id in ["quick_loader", "rapid_coolant", "dense_rounds", "ammo_surplus", "reinforced_hull"]:
 				world.shop.purchase(index)
 		if attempt < 2 and EconomyService.total_scrap > 20:
 			world.shop.reroll()

@@ -205,5 +205,5 @@ func test_spawn_overlap_hits_once_and_wave_cleanup_releases_all_projectiles() ->
 
 func buy(kind: String, id: String) -> bool:
 	var price := world.turret_price(id) if kind == "turret" else world.shop.item_price(id)
-	EconomyService.current_shop_offers.append(ShopOffer.new(kind, id, price).to_dictionary())
+	EconomyService.current_shop_offers.append(ShopOffer.new(kind, id, price))
 	return world.shop.purchase(EconomyService.current_shop_offers.size() - 1)

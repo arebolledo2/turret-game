@@ -25,7 +25,7 @@ func generate() -> void:
 	for slot in range(2):
 		var selected := rng.randi_range(0, turrets.size() - 1)
 		var type_id: String = turrets.pop_at(selected)
-		EconomyService.current_shop_offers.append(ShopOffer.new("turret", type_id, world.turret_price(type_id)).to_dictionary())
+		EconomyService.current_shop_offers.append(ShopOffer.new("turret", type_id, world.turret_price(type_id)))
 	var excluded: Array = []
 	for item_id in ItemRegistry.get_all_item_ids():
 		if item_id not in ITEMS:
@@ -36,7 +36,7 @@ func generate() -> void:
 		if item_id.is_empty():
 			break
 		excluded.append(item_id)
-		EconomyService.current_shop_offers.append(ShopOffer.new("item", item_id, item_price(item_id)).to_dictionary())
+		EconomyService.current_shop_offers.append(ShopOffer.new("item", item_id, item_price(item_id)))
 
 func item_price(item_id: String) -> int:
 	var base := maxi(1, roundi(ItemRegistry.get_item_price(item_id) * ITEM_PRICE_SCALE))
@@ -47,8 +47,8 @@ func is_open() -> bool:
 
 func reroll_cost() -> int:
 	var all_sold := not EconomyService.current_shop_offers.is_empty()
-	for offer: Dictionary in EconomyService.current_shop_offers:
-		all_sold = all_sold and bool(offer.get("sold", false))
+	for offer in EconomyService.current_shop_offers:
+		all_sold = all_sold and offer.sold
 	return 0 if all_sold else EconomyService.get_reroll_cost(GameStateService.current_wave, ItemTrackingService.get_reroll_cost_multiplier())
 
 func reroll() -> bool:
@@ -62,9 +62,8 @@ func reroll() -> bool:
 func purchase(index: int) -> bool:
 	if not is_open() or index < 0 or index >= EconomyService.current_shop_offers.size():
 		return false
-	var data: Dictionary = EconomyService.current_shop_offers[index]
-	var offer := ShopOffer.from_dictionary(data)
-	if not offer or offer.sold:
+	var offer := EconomyService.current_shop_offers[index]
+	if offer.sold:
 		return false
 	var placement := Vector3.INF
 	if offer.kind == "turret":
@@ -80,16 +79,16 @@ func purchase(index: int) -> bool:
 		world.message = "Need %d scrap." % offer.price
 		return false
 	world.audio.play_cue("purchase", world.player.position)
-	data["sold"] = true
+	offer.sold = true
 	if offer.kind == "turret":
 		world.add_turret(placement, offer.asset_id)
 		EconomyService.turrets_purchased += 1
 	else:
 		apply_item(offer.asset_id)
-	for remaining: Dictionary in EconomyService.current_shop_offers:
-		if not remaining["sold"]:
-			remaining["price"] = world.turret_price(remaining["turret_id"]) if remaining["type"] == "turret" else item_price(remaining["item_id"])
-	world.message = "Installed: " + offer_name(data)
+	for remaining in EconomyService.current_shop_offers:
+		if not remaining.sold:
+			remaining.price = world.turret_price(remaining.asset_id) if remaining.kind == "turret" else item_price(remaining.asset_id)
+	world.message = "Installed: " + offer_name(offer)
 	return true
 
 func apply_item(item_id: String) -> void:
@@ -104,20 +103,20 @@ func apply_item(item_id: String) -> void:
 	world.player.max_health = maxf(1.0, PlayerStatsService.get_player_max_health(float(world.difficulty_config["player_health_mult"])))
 	world.player.health = minf(world.player.health, world.player.max_health)
 
-static func offer_name(offer: Dictionary) -> String:
-	if offer["type"] == "turret":
-		return "Ion Turret" if offer["turret_id"] == "normal" else str(TurretRegistry.TYPES[offer["turret_id"]]["name"])
-	return str(ItemRegistry.get_item_dict(offer["item_id"])["name"])
+static func offer_name(offer: ShopOffer) -> String:
+	if offer.kind == "turret":
+		return "Ion Turret" if offer.asset_id == "normal" else str(TurretRegistry.TYPES[offer.asset_id]["name"])
+	return str(ItemRegistry.get_item_dict(offer.asset_id)["name"])
 
-static func offer_description(offer: Dictionary) -> String:
-	if offer["type"] == "turret":
-		match offer["turret_id"]:
+static func offer_description(offer: ShopOffer) -> String:
+	if offer.kind == "turret":
+		match offer.asset_id:
 			"normal": return "Reliable single-target fire"
 			"plasma": return "Splash damage + charge-interrupting knockback"
 			"shock": return "Electric pulse · 25% slow for 0.5s"
 			"tesla": return "Chain lightning · jumps to 3 more enemies"
 			"melee": return "Spinning bat · contact damage + knockback"
-	return item_description(offer["item_id"])
+	return item_description(offer.asset_id)
 
 static func item_description(item_id: String) -> String:
 	var parts := PackedStringArray()

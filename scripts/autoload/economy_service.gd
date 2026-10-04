@@ -16,7 +16,7 @@ var total_scrap: int:
 var shop_reroll_count: int:
 	get: return state.shop_reroll_count
 	set(value): state.shop_reroll_count = value
-var current_shop_offers: Array:
+var current_shop_offers: Array[ShopOffer]:
 	get: return state.current_shop_offers
 	set(value): state.current_shop_offers = value
 

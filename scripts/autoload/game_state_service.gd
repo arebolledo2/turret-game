@@ -14,7 +14,7 @@ var current_wave: int:
 var total_kills: int:
 	get: return state.total_kills
 	set(value): state.total_kills = value
-var total_scrap: int:
+var lifetime_scrap: int: # scrap earned this run; EconomyService.total_scrap is the spendable balance
 	get: return state.lifetime_scrap
 	set(value): state.lifetime_scrap = value
 
@@ -35,7 +35,7 @@ var turrets_spawned: int:
 func reset_state() -> void:
 	current_wave = 0
 	total_kills = 0
-	total_scrap = 0
+	lifetime_scrap = 0
 	turrets_spawned = 0
 	time_survived = 0.0
 	is_game_active = false

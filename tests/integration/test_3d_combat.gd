@@ -251,5 +251,5 @@ func test_new_asset_pivots_and_effect_pool_are_bounded() -> void:
 
 func buy(kind: String, id: String) -> bool:
 	var price := world.turret_price(id) if kind == "turret" else world.shop.item_price(id)
-	EconomyService.current_shop_offers.append(ShopOffer.new(kind, id, price).to_dictionary())
+	EconomyService.current_shop_offers.append(ShopOffer.new(kind, id, price))
 	return world.shop.purchase(EconomyService.current_shop_offers.size() - 1)

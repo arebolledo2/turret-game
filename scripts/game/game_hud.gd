@@ -178,9 +178,9 @@ func _process(_delta: float) -> void:
 		var button := offer_buttons[index]
 		button.visible = in_shop and not world.paused and index < EconomyService.current_shop_offers.size()
 		if button.visible:
-			var offer: Dictionary = EconomyService.current_shop_offers[index]
-			button.text = "%s   /   %s\n%s" % [ArenaShop.offer_name(offer), "INSTALLED" if offer["sold"] else "%d scrap" % offer["price"], ArenaShop.offer_description(offer)]
-			button.disabled = offer["sold"] or EconomyService.total_scrap < int(offer["price"])
+			var offer := EconomyService.current_shop_offers[index]
+			button.text = "%s   /   %s\n%s" % [ArenaShop.offer_name(offer), "INSTALLED" if offer.sold else "%d scrap" % offer.price, ArenaShop.offer_description(offer)]
+			button.disabled = offer.sold or EconomyService.total_scrap < offer.price
 	actions.visible = in_shop and not world.paused
 	continue_button.visible = not ended
 	continue_button.text = "RESUME" if world.paused else "DEPLOY NEXT WAVE"
@@ -199,7 +199,7 @@ func _process(_delta: float) -> void:
 		description.text = "Wave %d secured. Spend scrap before deploying." % GameStateService.current_wave
 	elif ended:
 		title.text = "SECTOR SECURED" if phase == GameStateMachine.GameState.VICTORY else "SIGNAL LOST"
-		description.text = "%d kills · %d scrap recovered · %ds survived" % [GameStateService.total_kills, GameStateService.total_scrap, int(GameStateService.time_survived)]
+		description.text = "%d kills · %d scrap recovered · %ds survived" % [GameStateService.total_kills, GameStateService.lifetime_scrap, int(GameStateService.time_survived)]
 	if phase != previous_phase or world.paused != previous_pause:
 		if ended:
 			restart_button.grab_focus()

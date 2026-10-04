@@ -186,7 +186,7 @@ func add_turret(at: Vector3, type_id: String = "normal") -> TurretActor:
 
 func collect_scrap(amount: int) -> void:
 	var added := EconomyService.add_scrap_probabilistic(amount, 1.0)
-	GameStateService.total_scrap += added
+	GameStateService.lifetime_scrap += added
 	if is_combat():
 		audio.play_cue("pickup", player.position)
 

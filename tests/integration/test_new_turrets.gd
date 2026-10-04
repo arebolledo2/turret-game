@@ -157,7 +157,7 @@ func test_crowd_radius_query_returns_only_living_actors_inside_radius() -> void:
 func test_shop_sells_new_turrets_with_descriptions_and_summary() -> void:
 	for type_id in ["tesla", "melee"]:
 		assert_true(ArenaShop.TURRETS.has(type_id))
-		var offer := {"type": "turret", "turret_id": type_id}
+		var offer := ShopOffer.new("turret", type_id, 0)
 		assert_ne(ArenaShop.offer_description(offer), "")
 		assert_ne(ArenaShop.offer_name(offer), "")
 		assert_gt(world.turret_price(type_id), 0)

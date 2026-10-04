@@ -16,11 +16,14 @@ func before_each() -> void:
 	world.shop.rng = RandomNumberGenerator.new()
 	world.shop.rng.seed = 42
 
+func _offer_snapshot() -> Array:
+	return EconomyService.current_shop_offers.map(func(offer: ShopOffer) -> Array: return [offer.kind, offer.asset_id, offer.price, offer.sold])
+
 func stock(kind: String, id: String, cost: int = -1) -> int:
 	var price := cost
 	if price < 0:
 		price = world.turret_price(id) if kind == "turret" else world.shop.item_price(id)
-	EconomyService.current_shop_offers.append(ShopOffer.new(kind, id, price).to_dictionary())
+	EconomyService.current_shop_offers.append(ShopOffer.new(kind, id, price))
 	return EconomyService.current_shop_offers.size() - 1
 
 func enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
@@ -42,9 +45,7 @@ func test_catalog_generates_unique_supported_offers_at_registry_prices() -> void
 		world.shop.generate()
 		assert_eq(EconomyService.current_shop_offers.size(), 4)
 		var seen: Array[String] = []
-		for data: Dictionary in EconomyService.current_shop_offers:
-			var offer := ShopOffer.from_dictionary(data)
-			assert_not_null(offer)
+		for offer in EconomyService.current_shop_offers:
 			assert_false(offer.asset_id in seen)
 			seen.append(offer.asset_id)
 			if offer.kind == "turret":
@@ -79,14 +80,14 @@ func test_turret_purchase_and_compact_design_reprice_unsold_offers() -> void:
 	var normal := stock("turret", "normal")
 	var plasma := stock("turret", "plasma")
 	var compact := stock("item", "compact_design")
-	var before: int = EconomyService.current_shop_offers[plasma]["price"]
+	var before: int = EconomyService.current_shop_offers[plasma].price
 	assert_true(world.shop.purchase(normal))
-	var after: int = EconomyService.current_shop_offers[plasma]["price"]
+	var after: int = EconomyService.current_shop_offers[plasma].price
 	assert_gt(after, before)
 	assert_eq(EconomyService.turrets_purchased, 1)
 	assert_true(world.shop.purchase(compact))
-	assert_lt(int(EconomyService.current_shop_offers[plasma]["price"]), after)
-	assert_eq(int(EconomyService.current_shop_offers[plasma]["price"]), EconomyService.calculate_turret_price(16, 5))
+	assert_lt(EconomyService.current_shop_offers[plasma].price, after)
+	assert_eq(EconomyService.current_shop_offers[plasma].price, EconomyService.calculate_turret_price(16, 5))
 
 func test_reroll_cost_pause_empty_wallet_free_refresh_and_wave_reset() -> void:
 	world.finish_wave()
@@ -95,17 +96,17 @@ func test_reroll_cost_pause_empty_wallet_free_refresh_and_wave_reset() -> void:
 	assert_true(world.shop.reroll())
 	assert_eq(EconomyService.total_scrap, 20 - cost)
 	assert_gt(world.shop.reroll_cost(), cost)
-	var offers := EconomyService.current_shop_offers.duplicate(true)
+	var offers := _offer_snapshot()
 	world.toggle_pause()
 	assert_false(world.shop.reroll())
 	assert_false(world.shop.purchase(0))
 	assert_false(world.repair())
-	assert_eq(EconomyService.current_shop_offers, offers)
+	assert_eq(_offer_snapshot(), offers)
 	world.toggle_pause()
 	EconomyService.total_scrap = 0
 	assert_false(world.shop.reroll())
-	for offer: Dictionary in EconomyService.current_shop_offers:
-		offer["sold"] = true
+	for offer in EconomyService.current_shop_offers:
+		offer.sold = true
 	assert_eq(world.shop.reroll_cost(), 0)
 	assert_true(world.shop.reroll())
 	world.begin_next_wave()
@@ -193,7 +194,7 @@ func test_full_arena_rejects_purchase_without_spending_or_selling_offer() -> voi
 	var index := stock("turret", "shock")
 	assert_false(world.shop.purchase(index))
 	assert_eq(EconomyService.total_scrap, 100)
-	assert_false(EconomyService.current_shop_offers[index]["sold"])
+	assert_false(EconomyService.current_shop_offers[index].sold)
 
 func test_shock_pulse_hits_each_in_range_enemy_and_applies_slow_without_projectiles() -> void:
 	var shock := world.add_turret(Vector3.ZERO, "shock")

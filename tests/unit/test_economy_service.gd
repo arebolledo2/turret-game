@@ -33,7 +33,7 @@ func test_reset_state_clears_shop_rerolls():
 
 
 func test_reset_state_clears_shop_offers():
-	economy_service.current_shop_offers = [ {"type": "turret"}]
+	economy_service.current_shop_offers.append(ShopOffer.new("turret", "normal", 10))
 	economy_service.reset_state()
 	assert_eq(economy_service.current_shop_offers.size(), 0,
 		"Reset should clear shop offers")
