@@ -27,6 +27,14 @@ const BASE_PRICES: Dictionary = {
 	"mine": 15,
 }
 
+## Player-facing build families. Items target these (modifier filter `family`) so a tag reads the same on the card and on the turret.
+const FAMILIES: Dictionary = {
+	"ion": ["normal"],
+	"plasma": ["plasma"],
+	"electric": ["shock", "tesla"],
+	"melee": ["melee"],
+}
+
 const TYPES: Dictionary = {
 	"normal": {
 		"name": "Normal Turret",
@@ -162,6 +170,14 @@ const TYPES: Dictionary = {
 ## Get the definition for a turret type
 static func get_type(type_id: String) -> Dictionary:
 	return TYPES.get(type_id, TYPES["normal"])
+
+
+## Family id ("ion", "plasma", "electric", "melee") a turret type belongs to, or "" if it has none.
+static func get_family(type_id: String) -> String:
+	for family: String in FAMILIES:
+		if type_id in FAMILIES[family]:
+			return family
+	return ""
 
 
 ## Get all type IDs

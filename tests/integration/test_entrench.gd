@@ -9,6 +9,7 @@ func before_each() -> void:
 	await wait_process_frames(2)
 
 func after_each() -> void:
+	ModifierService.clear_modifiers()
 	FeatureFlagService.reset_state()
 
 func _turret() -> TurretActor:
@@ -44,6 +45,17 @@ func test_stacks_raise_damage_and_fire_rate() -> void:
 	var stats := turret._current_stats(0.0)
 	assert_almost_eq(float(stats["damage"]), float(base["damage"]) * (1.0 + 3.0 * GameConstants.ENTRENCH_DAMAGE_PER_STACK), .001)
 	assert_almost_eq(float(stats["fire_rate"]), float(base["fire_rate"]) * (1.0 + 3.0 * GameConstants.ENTRENCH_FIRE_RATE_PER_STACK), .001)
+
+func test_items_retune_entrench() -> void:
+	var turret := await _turret()
+	ModifierService.add_modifier({"id": "t1", "stat": "entrench_stack_seconds", "operation": "increase", "value": -0.5})
+	ModifierService.add_modifier({"id": "t2", "stat": "entrench_max_stacks", "operation": "add", "value": 2})
+	ModifierService.add_modifier({"id": "t3", "stat": "entrench_bonus", "operation": "increase", "value": 0.5})
+	turret.stay_time = GameConstants.ENTRENCH_STACK_SECONDS * .5 * 7.0
+	assert_eq(turret.entrench_stacks(), GameConstants.ENTRENCH_MAX_STACKS + 2)
+	turret.entrench_stacks_cached = 7
+	assert_almost_eq(turret.entrench_damage_bonus(), 7.0 * GameConstants.ENTRENCH_DAMAGE_PER_STACK * 1.5, .0001)
+
 
 func test_stay_time_accrues_only_in_combat() -> void:
 	var turret := await _turret()

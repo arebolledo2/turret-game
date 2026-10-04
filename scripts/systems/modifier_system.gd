@@ -76,6 +76,11 @@ func _modifier_matches_turret(modifier: StatModifier, turret_type: String) -> bo
 		if turret_type in filter["turret_type"]:
 			return true
 
+	# Check family filter (OR logic): ion, plasma, electric, melee
+	if filter.has("family") and not filter["family"].is_empty():
+		if TurretRegistry.get_family(turret_type) in filter["family"]:
+			return true
+
 	# Check damage_type filter (OR logic)
 	if filter.has("damage_type") and not filter["damage_type"].is_empty():
 		for dtype in filter["damage_type"]:
@@ -89,7 +94,7 @@ func _modifier_matches_turret(modifier: StatModifier, turret_type: String) -> bo
 				return true
 
 	# If filters were specified but none matched
-	var has_filters := filter.has("turret_type") or filter.has("damage_type") or filter.has("attack_style")
+	var has_filters := filter.has("turret_type") or filter.has("damage_type") or filter.has("attack_style") or filter.has("family")
 	return not has_filters
 
 

@@ -25,6 +25,8 @@ var stats_age: float = 0.0
 var stay_time: float = 0.0
 var entrench_stacks_cached: int = 0
 var entrench_ring: MeshInstance3D
+## Shop items retune Entrench through modifier stats; resolved lazily and dropped whenever modifiers change.
+var entrench_config: Dictionary = {}
 
 const STATS_REFRESH: float = .25
 const MELEE_HIT_PADDING: float = .3
@@ -104,11 +106,31 @@ func _spin_bat(delta: float, stats: Dictionary, reach: float) -> void:
 
 func invalidate_stats() -> void:
 	cached_stats = {}
+	entrench_config = {}
+
+func _entrench() -> Dictionary:
+	if entrench_config.is_empty():
+		entrench_config = {
+			"seconds": maxf(.5, ModifierService.apply_modifiers_to_stat(GameConstants.ENTRENCH_STACK_SECONDS, "entrench_stack_seconds")),
+			"max": maxi(0, roundi(ModifierService.apply_modifiers_to_stat(float(GameConstants.ENTRENCH_MAX_STACKS), "entrench_max_stacks"))),
+			"bonus": maxf(0.0, ModifierService.apply_modifiers_to_stat(1.0, "entrench_bonus")),
+		}
+	return entrench_config
+
+func entrench_max() -> int:
+	return int(_entrench()["max"])
+
+## Fractional damage / fire rate granted by the current stacks (before shop modifiers, which apply to the base stat).
+func entrench_damage_bonus() -> float:
+	return GameConstants.ENTRENCH_DAMAGE_PER_STACK * float(entrench_stacks_cached) * float(_entrench()["bonus"])
+
+func entrench_fire_rate_bonus() -> float:
+	return GameConstants.ENTRENCH_FIRE_RATE_PER_STACK * float(entrench_stacks_cached) * float(_entrench()["bonus"])
 
 func entrench_stacks() -> int:
 	if not FeatureFlagService.is_enabled(FeatureFlagService.ENTRENCH):
 		return 0
-	return mini(int(stay_time / GameConstants.ENTRENCH_STACK_SECONDS), GameConstants.ENTRENCH_MAX_STACKS)
+	return mini(int(stay_time / float(_entrench()["seconds"])), entrench_max())
 
 func reset_entrench() -> void:
 	stay_time = 0.0
@@ -118,9 +140,10 @@ func reset_entrench() -> void:
 
 ## Fraction (0..1) toward the next stack; 1 when maxed.
 func entrench_progress() -> float:
-	if entrench_stacks_cached >= GameConstants.ENTRENCH_MAX_STACKS:
+	if entrench_stacks_cached >= entrench_max():
 		return 1.0
-	return fmod(stay_time, GameConstants.ENTRENCH_STACK_SECONDS) / GameConstants.ENTRENCH_STACK_SECONDS
+	var seconds := float(_entrench()["seconds"])
+	return fmod(stay_time, seconds) / seconds
 
 func _tick_entrench(delta: float) -> void:
 	if FeatureFlagService.is_enabled(FeatureFlagService.ENTRENCH):
@@ -138,7 +161,7 @@ func _update_entrench_ring() -> void:
 		entrench_ring = WorldGeometry.ring(self, .62, Color("ffd05a"))
 		entrench_ring.position.y = .03
 	entrench_ring.visible = entrench_stacks_cached > 0 and not carried
-	var fill := float(entrench_stacks_cached) / float(GameConstants.ENTRENCH_MAX_STACKS)
+	var fill := float(entrench_stacks_cached) / float(maxi(entrench_max(), 1))
 	var size := .8 + .25 * fill + .1 * entrench_progress()
 	entrench_ring.scale = Vector3(size, 1.0, size)
 
@@ -147,10 +170,9 @@ func _current_stats(delta: float) -> Dictionary:
 	if cached_stats.is_empty() or stats_age >= STATS_REFRESH:
 		cached_stats = TurretStatsService.get_turret_stats(turret_type, float(world.difficulty_config["turret_damage_mult"]))
 		if entrench_stacks_cached > 0:
-			var stacks := float(entrench_stacks_cached)
 			cached_stats = cached_stats.duplicate()
-			cached_stats["damage"] = float(cached_stats.get("damage", 0.0)) * (1.0 + GameConstants.ENTRENCH_DAMAGE_PER_STACK * stacks)
-			cached_stats["fire_rate"] = float(cached_stats.get("fire_rate", 1.0)) * (1.0 + GameConstants.ENTRENCH_FIRE_RATE_PER_STACK * stacks)
+			cached_stats["damage"] = float(cached_stats.get("damage", 0.0)) * (1.0 + entrench_damage_bonus())
+			cached_stats["fire_rate"] = float(cached_stats.get("fire_rate", 1.0)) * (1.0 + entrench_fire_rate_bonus())
 		stats_age = 0.0
 	return cached_stats
 

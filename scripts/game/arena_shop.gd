@@ -8,7 +8,13 @@ static var ITEMS: Array[String] = ShopCatalog.ids("item")
 const ITEM_PRICE_SCALE: float = .5
 const STAT_NAMES: Dictionary = {"damage": "turret damage", "fire_rate": "turret fire rate",
 	"range": "turret range", "player_speed": "move speed", "player_max_health": "max hull",
-	"pickup_radius": "pickup radius", "reroll_cost": "reroll cost", "turret_penalty_reduction": "purchase penalty"}
+	"pickup_radius": "pickup radius", "reroll_cost": "reroll cost", "turret_penalty_reduction": "purchase penalty",
+	"aoe_radius": "turret splash radius", "knockback_force": "turret knockback", "chain_count": "turret chain jumps",
+	"slow_intensity": "turret slow strength", "slow_duration": "turret slow duration", "rotation_rate": "turret spin rate",
+	"projectile_speed": "turret projectile speed", "scrap_earn_mult": "scrap from kills", "enemy_count_mult": "enemies per wave",
+	"shop_price_mult": "shop prices", "player_luck": "luck", "turret_crit_chance": "turret crit chance",
+	"player_crit_chance": "crit chance", "player_health_regen": "hull regen", "entrench_stack_seconds": "entrench stack time",
+	"entrench_max_stacks": "entrench stacks", "entrench_bonus": "entrench bonus", "carry_speed": "carry speed"}
 var world: ArenaWorld
 var rng: RandomNumberGenerator = GameRandom.gameplay
 
@@ -19,8 +25,8 @@ func open() -> void:
 func generate() -> void:
 	EconomyService.current_shop_offers.clear()
 	var turrets := ShopCatalog.available_ids("turret")
-	# Two weapon choices and two weighted upgrades keep both build routes available.
-	for slot in range(2):
+	# One weapon choice and three weighted upgrades: the build is steered by items, the turret is a supplement.
+	for slot in range(mini(GameConstants.SHOP_TURRET_SLOTS, turrets.size())):
 		var selected := rng.randi_range(0, turrets.size() - 1)
 		var type_id: String = turrets.pop_at(selected)
 		EconomyService.current_shop_offers.append(ShopOffer.new("turret", type_id, world.turret_price(type_id)))
@@ -28,7 +34,7 @@ func generate() -> void:
 	for item_id in ItemRegistry.get_all_item_ids():
 		if not ShopCatalog.is_available("item", item_id):
 			excluded.append(item_id)
-	for slot in range(2):
+	for slot in range(GameConstants.SHOP_ITEM_SLOTS):
 		var item_id := ItemRegistry.get_weighted_random_item(GameStateService.current_wave,
 			PlayerStatsService.get_player_luck(), ItemTrackingService.item_counts, excluded, rng)
 		if item_id.is_empty():
@@ -104,6 +110,18 @@ func apply_item(item_id: String) -> void:
 	world.player.max_health = maxf(1.0, PlayerStatsService.get_player_max_health(float(world.difficulty_config["player_health_mult"])))
 	world.player.health = minf(world.player.health, world.player.max_health)
 
+## "ION 2 · TALL 1": how many installed items carry each build tag, so a direction is visible at a glance.
+static func tag_summary() -> String:
+	var counts: Dictionary = {}
+	for item_id: String in ItemTrackingService.item_counts:
+		var tag := ItemRegistry.get_tag(item_id)
+		counts[tag] = int(counts.get(tag, 0)) + int(ItemTrackingService.item_counts[item_id])
+	var parts := PackedStringArray()
+	for tag in ItemRegistry.TAGS:
+		if counts.has(tag):
+			parts.append("%s %d" % [tag, counts[tag]])
+	return "Tags: " + " · ".join(parts)
+
 static func offer_name(offer: ShopOffer) -> String:
 	if offer.kind == "turret":
 		return "Ion Turret" if offer.asset_id == "normal" else str(TurretRegistry.TYPES[offer.asset_id]["name"])
@@ -128,13 +146,23 @@ static func item_description(item_id: String) -> String:
 		var unit := "pp" if stat == "turret_penalty_reduction" else ("%" if percentage else "")
 		var amount := "%+.0f%s" % [value * 100.0 if percentage else value, unit]
 		var label: String = STAT_NAMES.get(stat, stat)
-		var filter: Dictionary = modifier.get("filter", {})
-		if filter.has("attack_style"):
-			label = label.replace("turret", "projectile turret")
-		if filter.has("damage_type"):
-			label = label.replace("turret", "physical turret" if GameEnums.DamageType.PHYSICAL in filter["damage_type"] else "electric turret")
-		parts.append(amount + " " + label)
+		parts.append(amount + " " + _scoped_label(label, modifier.get("filter", {})))
 	return " · ".join(parts)
+
+## Narrows "turret x" to the filter's audience: "Ion turret x", "projectile turret x", "electric turret x".
+static func _scoped_label(label: String, filter: Dictionary) -> String:
+	var scope := ""
+	if filter.has("family"):
+		scope = " / ".join(PackedStringArray((filter["family"] as Array).map(func(family: String) -> String: return family.capitalize())))
+	elif filter.has("turret_type") and not ("all" in filter["turret_type"]):
+		scope = " / ".join(PackedStringArray((filter["turret_type"] as Array).map(func(type_id: String) -> String: return "Ion" if type_id == "normal" else type_id.capitalize())))
+	elif filter.has("attack_style"):
+		scope = "projectile"
+	elif filter.has("damage_type"):
+		scope = " / ".join(PackedStringArray((filter["damage_type"] as Array).map(func(kind: int) -> String: return GameEnums.DamageType.keys()[kind].to_lower())))
+	if scope.is_empty() or not label.begins_with("turret "):
+		return label
+	return scope + " " + label
 
 func build_summary() -> String:
 	var lines := PackedStringArray()
@@ -149,6 +177,8 @@ func build_summary() -> String:
 	lines.append("Hull %.0f/%.0f · Move %.2fm/s · Pickup %.2fm" % [world.player.health, world.player.max_health, PlayerStatsService.get_player_speed() * WorldGeometry.METRES_PER_PIXEL, PlayerStatsService.get_pickup_radius() * WorldGeometry.METRES_PER_PIXEL])
 	if ItemTrackingService.item_counts.is_empty():
 		lines.append("No upgrades installed yet.")
+	else:
+		lines.append(tag_summary())
 	for item_id: String in ItemTrackingService.item_counts:
 		lines.append("%s ×%d" % [ItemRegistry.get_item_dict(item_id)["name"], ItemTrackingService.item_counts[item_id]])
 	return "\n".join(lines)

@@ -12,6 +12,8 @@ extends Resource
 @export var max_stacks: int = 0  ## 0 = unlimited stacking
 @export var always_show_description: bool = false
 @export var special_effect: String = ""  ## ID for special effect logic
+## Build tag shown on the shop card: ION, PLASMA, ELECTRIC, MELEE, WIDE, TALL, HULL, ECON or ANY. Empty falls back to ItemRegistry.LEGACY_TAGS.
+@export var tag: String = ""
 
 ## Array of modifier dictionaries
 ## Each modifier: {"stat": String, "operation": String, "value": float, "filter": Dictionary}
@@ -44,6 +46,11 @@ static func create_more(stat: String, value: float, filter: Dictionary = {}) -> 
 ## Helper to create turret type filter
 static func filter_turret_type(types: Array) -> Dictionary:
 	return {"turret_type": types}
+
+
+## Helper to create turret family filter (family ids: ion, plasma, electric, melee)
+static func filter_family(families: Array) -> Dictionary:
+	return {"family": families}
 
 
 ## Helper to create damage type filter

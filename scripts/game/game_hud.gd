@@ -174,8 +174,8 @@ func _entrench_readout() -> String:
 		return ""
 	var stacks := best.entrench_stacks_cached
 	return "
-ENTRENCH %d / %d  +%d%% damage  +%d%% fire rate" % [stacks, GameConstants.ENTRENCH_MAX_STACKS,
-		roundi(stacks * GameConstants.ENTRENCH_DAMAGE_PER_STACK * 100.0), roundi(stacks * GameConstants.ENTRENCH_FIRE_RATE_PER_STACK * 100.0)]
+ENTRENCH %d / %d  +%d%% damage  +%d%% fire rate" % [stacks, best.entrench_max(),
+		roundi(best.entrench_damage_bonus() * 100.0), roundi(best.entrench_fire_rate_bonus() * 100.0)]
 
 func _process(_delta: float) -> void:
 	if not is_instance_valid(world.player):
@@ -197,7 +197,8 @@ func _process(_delta: float) -> void:
 		button.visible = in_shop and not world.paused and index < EconomyService.current_shop_offers.size()
 		if button.visible:
 			var offer := EconomyService.current_shop_offers[index]
-			button.text = "%s   /   %s\n%s" % [ArenaShop.offer_name(offer), "INSTALLED" if offer.sold else "%d scrap" % offer.price, ArenaShop.offer_description(offer)]
+			var tag := "" if offer.kind == "turret" else "[%s]  " % ItemRegistry.get_tag(offer.asset_id)
+			button.text = "%s%s   /   %s\n%s" % [tag, ArenaShop.offer_name(offer),"INSTALLED" if offer.sold else "%d scrap" % offer.price, ArenaShop.offer_description(offer)]
 			button.disabled = offer.sold or EconomyService.total_scrap < offer.price
 	actions.visible = in_shop and not world.paused
 	continue_button.visible = not ended

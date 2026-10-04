@@ -49,6 +49,16 @@ const BASE_PRICES: Dictionary = {
 	GameEnums.ItemRarity.UNIQUE: 175,
 }
 
+const TAGS: Array[String] = ["ION", "PLASMA", "ELECTRIC", "MELEE", "WIDE", "TALL", "HULL", "ECON", "ANY"]
+
+## Tags for items that predate `Item.tag`.
+const LEGACY_TAGS: Dictionary = {
+	"scrap_magnet": "ECON", "budget_capacitor": "ECON", "reinforced_hull": "HULL", "heavy_plating": "HULL",
+	"shock_absorbers": "HULL", "compact_design": "WIDE", "mass_production": "WIDE", "army_doctrine": "WIDE",
+	"elite_forces": "TALL", "glass_cannon_core": "TALL", "mono_type_mastery": "TALL",
+	"kinetic_enhancer": "ION", "overcharged_cells": "ELECTRIC", "plasma_capacitor": "PLASMA",
+}
+
 # Cached item dictionaries (lazy loaded)
 static var _all_items: Dictionary = {}
 static var _items_by_rarity: Dictionary = {}
@@ -97,6 +107,14 @@ static func get_all_item_ids() -> Array:
 ## Check if an item exists
 static func has_item(item_id: String) -> bool:
 	return get_all_items().has(item_id)
+
+
+## Build tag for an item (see TAGS); "ANY" for generic stat trades.
+static func get_tag(item_id: String) -> String:
+	var item: Item = get_item(item_id)
+	if item and not item.tag.is_empty():
+		return item.tag
+	return LEGACY_TAGS.get(item_id, "ANY")
 
 
 ## Get item rarity

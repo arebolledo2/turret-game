@@ -165,7 +165,7 @@ func _physics_process(delta: float) -> void:
 		var carrying: bool = is_instance_valid(world.carried_turret)
 		var desired_speed := PlayerStatsService.get_player_speed() * WorldGeometry.METRES_PER_PIXEL
 		if carrying:
-			desired_speed *= GameConstants.TURRET_CARRY_SPEED_PENALTY
+			desired_speed *= GameConstants.TURRET_CARRY_SPEED_PENALTY * ModifierService.apply_modifiers_to_stat(1.0, "carry_speed")
 		var acceleration := GameConstants.PLAYER_ACCELERATION if direction.length_squared() > 0 else GameConstants.PLAYER_DECELERATION
 		velocity = velocity.move_toward(direction * desired_speed, acceleration * WorldGeometry.METRES_PER_PIXEL * delta)
 	var previous_position := position

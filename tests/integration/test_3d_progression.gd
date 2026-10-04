@@ -45,6 +45,8 @@ func test_catalog_generates_unique_supported_offers_at_registry_prices() -> void
 	for roll in range(30):
 		world.shop.generate()
 		assert_eq(EconomyService.current_shop_offers.size(), 4)
+		assert_eq(EconomyService.current_shop_offers.filter(func(o: ShopOffer) -> bool: return o.kind == "turret").size(), GameConstants.SHOP_TURRET_SLOTS)
+		assert_eq(EconomyService.current_shop_offers.filter(func(o: ShopOffer) -> bool: return o.kind == "item").size(), GameConstants.SHOP_ITEM_SLOTS)
 		var seen: Array[String] = []
 		for offer in EconomyService.current_shop_offers:
 			assert_false(offer.asset_id in seen)
