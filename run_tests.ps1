@@ -8,7 +8,8 @@ param(
     [switch]$Import,
     [string]$filter = "",
     [ValidateRange(1, 3600)][int]$timeout = 120,
-    [string]$GodotPath = $env:GODOT_BIN
+    [string]$GodotPath = $env:GODOT_BIN,
+    [ValidateRange(1, 1000)][int]$KeepRuns = 10
 )
 $ErrorActionPreference = 'Stop'
 if ($unit -and $integration) { throw 'Select either -unit or -integration.' }
@@ -26,6 +27,11 @@ if (-not $godot) { throw "Install Godot $requiredVersion and set GODOT_BIN or pa
 $version = (& $godot --version | Out-String).Trim()
 if ($version -notlike "$requiredVersion.stable.*") { throw "Expected Godot $requiredVersion stable, found $version." }
 
+# Older isolated runs are disposable; keep the newest few for comparison.
+$resultsRoot = Join-Path $PSScriptRoot '.test-results'
+if (Test-Path $resultsRoot) {
+    Get-ChildItem $resultsRoot -Directory | Sort-Object LastWriteTime -Descending | Select-Object -Skip ($KeepRuns - 1) | Remove-Item -Recurse -Force
+}
 $runDirectory = Join-Path $PSScriptRoot ('.test-results/' + [guid]::NewGuid().ToString('N'))
 $null = New-Item -ItemType Directory -Path $runDirectory -Force
 $stdoutPath = Join-Path $runDirectory 'stdout.log'
