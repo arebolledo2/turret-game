@@ -5,6 +5,7 @@ var world: ArenaWorld
 func before_each() -> void:
 	TestHelpers.reset_all_services()
 	world = ArenaWorld.new()
+	world.run_config = RunConfig.slice() # These tests cover the original six-wave loop.
 	world.auto_start = false
 	world.show_hud = false
 	add_child_autofree(world)

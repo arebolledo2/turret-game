@@ -40,6 +40,9 @@ func begin_next_wave() -> bool:
 	if not GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_ANNOUNCEMENT):
 		return false
 	GameStateService.current_wave += 1
+	# Flags requested during the previous wave land here, before this wave's systems start.
+	FeatureFlagService.apply_pending()
+	world.telemetry.begin_wave(GameStateService.current_wave)
 	world.audio.play_cue("wave", world.player.position)
 	announcement_left = ANNOUNCEMENT_TIME
 	spawned_this_wave = 0

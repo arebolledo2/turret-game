@@ -1,6 +1,6 @@
 # Turret Survivor documentation
 
-Turret Survivor is a native 3D survival game in Godot 4.7.1. Move through a flat arena, reposition automated turrets, and buy upgrades between six waves. The supported mode is Easy survival, with ion, plasma, shock, tesla and melee turrets, spider drones and chargers, and 13 shop items. Other registry entries are retained data, not playable content.
+Turret Survivor is a native 3D survival game in Godot 4.7.1. Move through a flat arena, reposition automated turrets, and buy upgrades between waves (20 by default). The supported mode is Easy survival, with ion, plasma, shock, tesla and melee turrets, spider drones and chargers, and 13 shop items. Other registry entries are retained data, not playable content.
 
 Launch with `./launch.ps1` or Godot F5. Run `./run_tests.ps1 -Import` on a fresh checkout.
 
@@ -11,7 +11,8 @@ Launch with `./launch.ps1` or Godot F5. Run `./run_tests.ps1 -Import` on a fresh
 | [Services](services.md) | Runtime services and retained data systems |
 | [Combat](combat.md) | Hits, projectiles, slow, crowd queries and units |
 | [Entities](entities.md) | Native 3D actors and supported catalogs |
-| [Game flow](game-modes.md) | Six-wave lifecycle and session cleanup |
+| [Game flow](game-modes.md) | Wave lifecycle, run configuration and session cleanup |
+| [Dev tools](dev-tools.md) | Feature flags, flag presets, dev panel, telemetry and smoke options |
 | [UI](ui.md) | Start screen, settings, HUD and controller focus |
 | [Assets](asset-management.md) | Blender sources, GLBs and preserved 2D references |
 | [Development](development.md) | Commands, tests, CI and conventions |

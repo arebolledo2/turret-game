@@ -1,11 +1,9 @@
 class_name ArenaShop
 extends RefCounted
 
-## Restricted catalog until each legacy effect has a 3D consumer.
-const TURRETS: Array[String] = ["normal", "plasma", "shock", "tesla", "melee"]
-const ITEMS: Array[String] = ["scrap_magnet", "reinforced_hull", "quick_loader", "shock_absorbers",
-	"dense_rounds", "budget_capacitor", "ammo_surplus", "overclock_module", "compact_design",
-	"extended_barrel", "rapid_coolant", "kinetic_enhancer", "heavy_plating"]
+## Every catalogued id. Stock and purchases additionally require `ShopCatalog.is_available` (feature flags).
+static var TURRETS: Array[String] = ShopCatalog.ids("turret")
+static var ITEMS: Array[String] = ShopCatalog.ids("item")
 # Short-run balance: common upgrades start at 10, uncommon at 18, before wave scaling.
 const ITEM_PRICE_SCALE: float = .5
 const STAT_NAMES: Dictionary = {"damage": "turret damage", "fire_rate": "turret fire rate",
@@ -20,7 +18,7 @@ func open() -> void:
 
 func generate() -> void:
 	EconomyService.current_shop_offers.clear()
-	var turrets := TURRETS.duplicate()
+	var turrets := ShopCatalog.available_ids("turret")
 	# Two weapon choices and two weighted upgrades keep both build routes available.
 	for slot in range(2):
 		var selected := rng.randi_range(0, turrets.size() - 1)
@@ -28,7 +26,7 @@ func generate() -> void:
 		EconomyService.current_shop_offers.append(ShopOffer.new("turret", type_id, world.turret_price(type_id)))
 	var excluded: Array = []
 	for item_id in ItemRegistry.get_all_item_ids():
-		if item_id not in ITEMS:
+		if not ShopCatalog.is_available("item", item_id):
 			excluded.append(item_id)
 	for slot in range(2):
 		var item_id := ItemRegistry.get_weighted_random_item(GameStateService.current_wave,
@@ -52,8 +50,10 @@ func reroll_cost() -> int:
 	return 0 if all_sold else EconomyService.get_reroll_cost(GameStateService.current_wave, ItemTrackingService.get_reroll_cost_multiplier())
 
 func reroll() -> bool:
-	if not is_open() or not EconomyService.deduct_scrap(reroll_cost()):
+	var cost := reroll_cost()
+	if not is_open() or not EconomyService.deduct_scrap(cost):
 		return false
+	world.telemetry.record_spend("reroll", cost)
 	EconomyService.shop_reroll_count += 1
 	generate()
 	world.message = "New supplies available."
@@ -67,18 +67,19 @@ func purchase(index: int) -> bool:
 		return false
 	var placement := Vector3.INF
 	if offer.kind == "turret":
-		if offer.asset_id not in TURRETS:
+		if not ShopCatalog.is_available("turret", offer.asset_id):
 			return false
 		placement = world.find_placement()
 		if placement == Vector3.INF:
 			world.message = "No room for another turret."
 			return false
-	elif offer.asset_id not in ITEMS or ItemRegistry.is_at_max_stacks(offer.asset_id, ItemTrackingService.item_counts):
+	elif not ShopCatalog.is_available("item", offer.asset_id) or ItemRegistry.is_at_max_stacks(offer.asset_id, ItemTrackingService.item_counts):
 		return false
 	if not EconomyService.deduct_scrap(offer.price):
 		world.message = "Need %d scrap." % offer.price
 		return false
 	world.audio.play_cue("purchase", world.player.position)
+	world.telemetry.record_spend(offer.kind, offer.price)
 	offer.sold = true
 	if offer.kind == "turret":
 		world.add_turret(placement, offer.asset_id)

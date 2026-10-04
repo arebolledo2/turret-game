@@ -82,6 +82,10 @@ const WAVE_DURATION_INCREMENT: float = 5.0 # Per wave
 const WAVE_DURATION_CAP: float = 60.0 # Wave 7+ cap
 const WAVE_DURATION_CAP_THRESHOLD: int = 7
 
+# Run length (RunConfig default). Wave duration above caps at one minute from wave 7.
+const RUN_DEFAULT_WAVE_LIMIT: int = 20
+const RUN_MAX_WAVE_LIMIT: int = 100
+
 # =============================================================================
 # ECONOMY
 # =============================================================================

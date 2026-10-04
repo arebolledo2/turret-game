@@ -203,6 +203,8 @@ func take_damage(amount: float) -> void:
 func receive_hit(hit: CombatHit3D) -> float:
 	if dead or invulnerability > 0.0 or hit.damage <= 0.0 or not world.is_combat():
 		return 0.0
+	if not is_enemy and world.god_mode:
+		return 0.0
 	var amount := hit.damage
 	if not is_enemy:
 		amount *= PlayerStatsService.get_damage_reduction()

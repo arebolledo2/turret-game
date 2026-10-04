@@ -2,24 +2,45 @@ extends Node
 
 ## Accelerated real-physics run: real spawning, damage, pickups, stock and budget.
 ## -- --control buys plasma/shock; default buys ion/fire-rate upgrades.
+## Defaults to the six-wave slice so the regression gate stays fast; other options:
+##   --waves=N  --difficulty=easy|medium|hard  --preset=<flag preset>  --flags=a,-b
+##   --telemetry-out=<path>  writes the per-wave telemetry JSON (path may use user:// or be absolute)
 ## A deterministic dodge bot is a regression smoke check, not human playtesting.
 var world: ArenaWorld
 var control_build: bool = false
 var elapsed: float = 0.0
 var shopping_wave: int = 0
+var telemetry_path: String = ""
 
 func _ready() -> void:
-	control_build = "--control" in OS.get_cmdline_user_args()
+	var args := OS.get_cmdline_user_args()
+	control_build = "--control" in args
 	GameRandom.gameplay.seed = 20260916
 	Engine.time_scale = 4.0
+	var config := RunConfig.from_args(args)
+	var explicit_waves := false
+	for arg in args:
+		explicit_waves = explicit_waves or arg.begins_with("--waves=")
+	if not explicit_waves:
+		config.wave_limit = RunConfig.slice().wave_limit
+	if not config.flag_preset.is_empty():
+		FeatureFlagService.apply_preset(config.flag_preset)
+	for arg in args:
+		if arg.begins_with("--flags="):
+			var failed := FeatureFlagService.apply_flag_list(arg.trim_prefix("--flags="))
+			if not failed.is_empty():
+				push_error("Unknown or unmet flags: %s" % ", ".join(failed))
+		elif arg.begins_with("--telemetry-out="):
+			telemetry_path = arg.trim_prefix("--telemetry-out=")
 	world = preload("res://scenes/game/arena.tscn").instantiate()
+	world.run_config = config
 	add_child(world)
 	world.shop.rng = RandomNumberGenerator.new()
 	world.shop.rng.seed = 42
 
 func _physics_process(delta: float) -> void:
 	elapsed += delta
-	if not GameStateService.is_game_active or elapsed > 600:
+	if not GameStateService.is_game_active or elapsed > world.wave_limit * 80.0 + 120.0:
 		for action in ["move_left", "move_right", "move_up", "move_down"]:
 			Input.action_release(action)
 		var won := GameStateMachine.current_state == GameStateMachine.GameState.VICTORY
@@ -27,7 +48,8 @@ func _physics_process(delta: float) -> void:
 			"victory": won, "wave": GameStateService.current_wave, "health": world.player.health,
 			"kills": GameStateService.total_kills, "scrap": EconomyService.total_scrap,
 			"items": ItemTrackingService.item_counts, "turrets": TurretStatsService.turret_counts,
-			"simulated_seconds": elapsed}))
+			"simulated_seconds": elapsed, "flags": FeatureFlagService.get_snapshot()}))
+		write_telemetry()
 		set_physics_process(false)
 		finish.call_deferred(won)
 		return
@@ -52,6 +74,17 @@ func _physics_process(delta: float) -> void:
 	Input.action_press("move_left", maxf(-steering.x, 0))
 	Input.action_press("move_down", maxf(steering.z, 0))
 	Input.action_press("move_up", maxf(-steering.z, 0))
+
+func write_telemetry() -> void:
+	var report := JSON.stringify(world.telemetry.to_dict())
+	print("PROGRESSION_TELEMETRY ", report)
+	if telemetry_path.is_empty():
+		return
+	var file := FileAccess.open(telemetry_path, FileAccess.WRITE)
+	if file:
+		file.store_string(report)
+	else:
+		push_error("Cannot write telemetry to %s" % telemetry_path)
 
 func finish(won: bool) -> void:
 	# Let the audio mixer consume stop/free commands before the process exits.

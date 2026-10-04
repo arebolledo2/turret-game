@@ -8,7 +8,7 @@ Fullscreen, VSync, Reduced motion and Sound effects volume apply immediately and
 
 ## In-game presentation
 
-`scripts/game/game_hud.gd` is a CanvasLayer presentation adapter for `ArenaWorld`. It displays hull, wave/time, scrap, kills and contextual controls. Refit shows four supported offers, reroll, repair and Continue. Pause/end panels show the current turret/item/player build; Main Menu tears down the run. Escape/controller Start toggles pause. End states support the restart button or R.
+`scripts/game/game_hud.gd` is a CanvasLayer presentation adapter for `ArenaWorld`. It displays hull, wave/time, scrap, kills and contextual controls. Refit shows four supported offers, reroll, repair and Continue. Pause/end panels show the current turret/item/player build; Main Menu tears down the run. Escape/controller Start toggles pause. End states support the restart button or R. Dev builds add an overlay panel (F1, or Back plus right-stick click on a controller) described in [dev tools](dev-tools.md); the HUD hides its pause panel while it is open.
 
 The project uses the shared theme and a 1920×1080 reference canvas with canvas-item stretching. App screens and game panels were inspected at 1280×720. Focus is refreshed on phase changes, and controller navigation is exercised using real InputEvent dispatch in integration tests. Physical controller testing remains a human playtest step.
 

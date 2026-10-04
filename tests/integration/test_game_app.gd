@@ -40,7 +40,8 @@ func test_fresh_launch_waits_for_play_and_keyboard_starts_the_default_game() -> 
 	assert_not_null(app.arena)
 	assert_false(app.menu.visible)
 	assert_eq(GameStateService.current_wave, 1)
-	assert_eq(app.arena.wave_limit, 6)
+	assert_eq(app.arena.wave_limit, GameConstants.RUN_DEFAULT_WAVE_LIMIT)
+	assert_eq(GameConstants.RUN_DEFAULT_WAVE_LIMIT, 20)
 	assert_eq(app.arena.turrets.size(), 1)
 	assert_true(app.arena.difficulty_config == DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY])
 
@@ -97,7 +98,7 @@ func test_victory_defeat_restart_and_main_menu_paths() -> void:
 	assert_eq(GameStateService.current_wave, 1)
 	assert_false(arena.player.dead)
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
-	GameStateService.current_wave = 6
+	GameStateService.current_wave = arena.wave_limit
 	arena.finish_wave()
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.VICTORY)
 	arena.request_menu()

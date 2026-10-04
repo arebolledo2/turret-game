@@ -20,13 +20,14 @@ Using the Godot console executable as `godot`:
 ```powershell
 godot --headless --path . res://tools/smoke_progression.tscn
 godot --headless --path . res://tools/smoke_progression.tscn -- --control
+godot --headless --path . res://tools/smoke_progression.tscn -- --waves=20 --flags=dev_panel --telemetry-out=telemetry.json
 godot --path . --resolution 1280x720 res://tools/capture_app.tscn
 godot --path . --resolution 1280x720 res://tools/capture_game.tscn -- --shop
 godot --path . --resolution 1280x720 res://tools/capture_game.tscn -- --combat-demo
 godot --path . --resolution 1280x720 res://tools/capture_game.tscn -- --stress
 ```
 
-Smoke runs use a seeded dodge bot, actual physics and earned budgets; success requires victory. Native captures require a GPU driver and write ignored `.test-results/` PNGs. Inspect images and stdout/stderr. Stress samples are development measurements, not minimum-spec guarantees.
+Smoke runs default to the six-wave slice; see [dev tools](dev-tools.md) for `--waves`, `--preset`, `--flags` and `--telemetry-out`. They use a seeded dodge bot, actual physics and earned budgets; success requires victory. Native captures require a GPU driver and write ignored `.test-results/` PNGs. Inspect images and stdout/stderr. Stress samples are development measurements, not minimum-spec guarantees.
 
 CI installs the pinned engine, verifies the test gate, audits resource links, imports assets, runs the complete GUT suite and both progression routes, and retains diagnostics. See [tests/README.md](../tests/README.md) for isolation and strict error handling.
 

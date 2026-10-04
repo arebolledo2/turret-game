@@ -33,6 +33,7 @@ func load_preferences() -> void:
 		var saved_volume: Variant = config.get_value("audio", "sfx_volume", .7)
 		if (saved_volume is float or saved_volume is int) and is_finite(float(saved_volume)):
 			sfx_volume = clampf(float(saved_volume), 0.0, 1.0)
+		load_dev_flags(config)
 	apply_audio_preferences()
 	apply_display_preferences()
 
@@ -44,7 +45,26 @@ func save_preferences() -> Error:
 	config.set_value("display", "window_height", window_size.y)
 	config.set_value("accessibility", "reduced_motion", FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
 	config.set_value("audio", "sfx_volume", sfx_volume)
+	save_dev_flags(config)
 	return config.save(preferences_path)
+
+## Developer and experiment flags persist only in dev builds, so a release build can never load an experiment.
+func save_dev_flags(config: ConfigFile) -> void:
+	if not FeatureFlagService.is_dev_build():
+		return
+	for flag_id in FeatureFlagService.get_flag_ids():
+		if FeatureFlagService.get_definition(flag_id)["scope"] != FeatureFlagService.SCOPE_USER:
+			config.set_value("dev_flags", flag_id, FeatureFlagService.is_enabled(flag_id))
+
+func load_dev_flags(config: ConfigFile) -> void:
+	if not FeatureFlagService.is_dev_build() or not config.has_section("dev_flags"):
+		return
+	for flag_id in FeatureFlagService.get_flag_ids():
+		if FeatureFlagService.get_definition(flag_id)["scope"] == FeatureFlagService.SCOPE_USER:
+			continue
+		var saved: Variant = config.get_value("dev_flags", flag_id, null)
+		if saved is bool:
+			FeatureFlagService.set_enabled(flag_id, saved)
 
 func apply_display_preferences() -> void:
 	if DisplayServer.get_name() == "headless":

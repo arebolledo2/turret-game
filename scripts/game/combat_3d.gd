@@ -37,6 +37,7 @@ func impact(primary: CombatActor, at: Vector3, heading: Vector3, shot: CombatSho
 		var hit := CombatHit3D.new(shot.damage, at, away * shot.knockback, shot.damage_type)
 		hit.slow_intensity = shot.slow_intensity
 		hit.slow_duration = shot.slow_duration
+		hit.source_id = shot.source_id
 		if apply_hit(target, hit) > 0.0:
 			hits += 1
 	if shot.splash_radius > 0.0:
@@ -61,7 +62,9 @@ func chain(origin: Vector3, primary: CombatActor, shot: CombatShot3D, jumps: int
 		var to := current.position + Vector3(0, .45, 0)
 		chain_arc.emit(from, to)
 		struck.append(current)
-		if apply_hit(current, CombatHit3D.new(damage, from, Vector3.ZERO, shot.damage_type)) > 0.0:
+		var jump_hit := CombatHit3D.new(damage, from, Vector3.ZERO, shot.damage_type)
+		jump_hit.source_id = shot.source_id
+		if apply_hit(current, jump_hit) > 0.0:
 			hits += 1
 		from = to
 		damage *= decay

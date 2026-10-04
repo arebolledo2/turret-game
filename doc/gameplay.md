@@ -12,7 +12,7 @@ Settings persist fullscreen, VSync, reduced motion and SFX volume (70% by defaul
 - WASD/arrow keys or left stick to move; auto-fire targets nearby enemies.
 - E / controller A to pick up and place a nearby turret; carrying slows movement and disables that turret's fire.
 - Escape / controller Start to pause; refit buttons support keyboard/controller focus.
-- Six survival waves, using the existing wave-duration, enemy-count, and enemy-stat calculations with a fixed Easy preset.
+- Twenty survival waves by default (`RunConfig`, 30 s rising to a 60 s cap from wave 7), using the existing wave-duration, enemy-count, and enemy-stat calculations with the Easy preset. The original six-wave slice is `RunConfig.slice()`.
 - Chasing spider drones, soft crowd separation, contact damage and player invulnerability, swept 3D projectile hits, reusable projectile instances, and collectible scrap.
 - Plasma turrets prioritize clusters, deal splash damage, and push enemies back. Knockback interrupts charger warnings and dashes.
 - Armored chargers join every fourth spawn from wave 3. Amber rails show their locked dash direction during a 0.9-second warning; they dash, recover, and approach again. Their direction is fixed when the warning begins, so a dodge remains reliable. Contact checks sweep the entire movement segment.
@@ -25,7 +25,7 @@ The player has a scripted Blender hover-bot model. Other turret attacks, enemy b
 
 ## Shop and build choices
 
-`ArenaShop` draws two distinct weapons from the ion, plasma, shock, tesla and melee turrets, plus two distinct items using the existing registry rarity weights and stack limits. Its explicit allowlist contains 13 implemented items: Scrap Magnet, Reinforced Hull, Quick Loader, Shock Absorbers, Dense Rounds, Budget Capacitor, Ammo Surplus, Overclock Module, Compact Design, Extended Barrel, Rapid Coolant, Kinetic Enhancer, and Heavy Plating. All modifiers, including drawbacks and projectile/physical/electric filters, use the shared stat services.
+`ArenaShop` draws two distinct weapons from the ion, plasma, shock, tesla and melee turrets, plus two distinct items using the existing registry rarity weights and stack limits. Its catalog (`ShopCatalog`, one row per id with an optional required feature flag) contains 13 implemented items: Scrap Magnet, Reinforced Hull, Quick Loader, Shock Absorbers, Dense Rounds, Budget Capacitor, Ammo Surplus, Overclock Module, Compact Design, Extended Barrel, Rapid Coolant, Kinetic Enhancer, and Heavy Plating. All modifiers, including drawbacks and projectile/physical/electric filters, use the shared stat services.
 
 Item base prices are 50% of registry prices, rounded before applying the shared wave/item-price policy: common upgrades start at 10 scrap, uncommon at 18. Wave 1 therefore offers common upgrades for 12, compared with ion at 9, plasma at 19, and shock at 16. This is a deliberate six-wave balance setting, not a global economy change. Turret purchases update the remaining prices using the shared purchase penalty. Rerolls use shared escalating costs, reset each shop visit, and are free when every offer is sold. A reroll draws from the limited catalog again; stock is unique within a roll, not across the entire visit. Offer locking is not implemented.
 
@@ -68,7 +68,7 @@ The arena integration tests cover wave/shop/restart lifecycle, shared service st
 
 `godot --headless --path . res://tools/smoke_progression.tscn` runs an accelerated real-physics ion build; append `-- --control` for plasma/shock. The seeded dodge bot uses real damage, spawning, drops, shop stock, and budgets, with no invulnerability or injected funds. These checks exercise complete runs; they are not human playtesting or performance measurements.
 
-Both routes reached wave-6 victory in 267.5 simulated seconds. Ion finished with 7 ion turrets, 9 purchased item stacks, and 392 kills; control finished with the starter ion, 2 plasma, 4 shock, 3 item stacks, and 391 kills. Both retained 25 hull. Human playtesting is still needed to judge difficulty and upgrade value.
+Both routes (six-wave slice) reached victory in 267.5 simulated seconds. A re-run on 4 October 2026, identical with and without the Phase 0 tooling, gave: ion finished with 4 ion turrets, 11 purchased item stacks and 331 kills; control finished with the starter ion, 1 plasma, 4 shock, 5 item stacks and 347 kills. Both ended with 33 hull. The kill counts quoted in older sections of these docs predate later balance changes. Human playtesting is still needed to judge difficulty and upgrade value.
 
 Native Vulkan/Forward+ captures use 1280 x 720. `--combat-demo` stages and freezes a warning, plasma impact, and shock pulse for readability review; `--shop` captures refit. The live `--stress` tool warms up for 120 frames and measures 600 wall-clock frame intervals with VSync disabled. Its third-slice mix includes all three turret types.
 

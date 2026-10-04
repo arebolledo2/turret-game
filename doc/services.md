@@ -8,7 +8,7 @@ Autoload configuration in `project.godot` is authoritative. Commands and queries
 | `EconomyService` | Scrap, shared item/turret pricing, purchase penalties and reroll policy |
 | `PlayerStatsService`, `TurretStatsService` | Modifier-backed player and weapon stats |
 | `ItemTrackingService`, `ModifierService` | Purchased stacks and effective stat calculation |
-| `SettingsService`, `FeatureFlagService` | Persistent app preferences and named runtime flags |
+| `SettingsService`, `FeatureFlagService` | Persistent app preferences; typed feature flags with scopes, presets and next-wave queueing (see [dev tools](dev-tools.md)) |
 | `DifficultyService` | Supplies the Easy preset used by `ArenaWorld` |
 | `DebugService` | Structured debug output |
 

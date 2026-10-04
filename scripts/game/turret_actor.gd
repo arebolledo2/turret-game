@@ -3,6 +3,8 @@ extends Node3D
 
 var world: ArenaWorld
 var turret_type: String = "normal"
+## Unique within a run (assigned by `ArenaWorld.add_turret`); stamped on shots for kill attribution.
+var turret_id: int = 0
 var carried: bool = false
 var cooldown: float = 0.0
 var aim: Node3D
@@ -83,7 +85,9 @@ func _spin_bat(delta: float, stats: Dictionary, reach: float) -> void:
 			damage = TurretStatsService.calculate_turret_crit_damage(damage)
 		var push := offset.normalized() * float(stats.get("knockback_force", 0.0)) * WorldGeometry.METRES_PER_PIXEL
 		rehit_lockouts[enemy.get_instance_id()] = MELEE_REHIT_DELAY
-		world.combat.apply_hit(enemy, CombatHit3D.new(damage, position, push, GameEnums.DamageType.PHYSICAL))
+		var bat_hit := CombatHit3D.new(damage, position, push, GameEnums.DamageType.PHYSICAL)
+		bat_hit.source_id = turret_id
+		world.combat.apply_hit(enemy, bat_hit)
 
 func _physics_process(delta: float) -> void:
 	if not world.is_combat():
@@ -102,6 +106,7 @@ func _physics_process(delta: float) -> void:
 		if cooldown <= 0.0 and world.nearest_enemy(position, range_metres):
 			var pulse := CombatShot3D.from_stats(stats, GameEnums.DamageType.ELECTRIC)
 			pulse.splash_radius = range_metres
+			pulse.source_id = turret_id
 			if TurretStatsService.roll_turret_crit():
 				pulse.damage = TurretStatsService.calculate_turret_crit_damage(pulse.damage)
 			world.combat.impact(null, position, Vector3.ZERO, pulse, world.enemies)
@@ -119,6 +124,7 @@ func _physics_process(delta: float) -> void:
 	aim.rotation.y = atan2(-heading.x, -heading.z)
 	if cooldown <= 0.0 and turret_type == "tesla":
 		var bolt := CombatShot3D.from_stats(stats, GameEnums.DamageType.ELECTRIC)
+		bolt.source_id = turret_id
 		if TurretStatsService.roll_turret_crit():
 			bolt.damage = TurretStatsService.calculate_turret_crit_damage(bolt.damage)
 		world.combat.chain(muzzle.global_position, target, bolt, int(stats.get("chain_count", 0)),
@@ -127,6 +133,7 @@ func _physics_process(delta: float) -> void:
 	elif cooldown <= 0.0:
 		var type := GameEnums.DamageType.PLASMA if turret_type == "plasma" else GameEnums.DamageType.PHYSICAL
 		var shot := CombatShot3D.from_stats(stats, type)
+		shot.source_id = turret_id
 		if TurretStatsService.roll_turret_crit():
 			shot.damage = TurretStatsService.calculate_turret_crit_damage(shot.damage)
 		world.fire_shot(muzzle.global_position, target, shot)

@@ -6,7 +6,16 @@ signal menu_requested()
 ## Native 3D arena. Combat events remain local; progression uses run-owned services.
 @export var auto_start: bool = true
 @export var show_hud: bool = true
-@export var wave_limit: int = 6
+## Chosen by the start screen or tools before the node enters the tree; defaults when left null.
+var run_config: RunConfig
+var wave_limit: int = GameConstants.RUN_DEFAULT_WAVE_LIMIT
+## Developer state (dev panel). God mode makes the player ignore damage.
+var god_mode: bool = false
+## True while the dev panel is open; the panel pauses the run and hides the HUD overlay panel.
+var dev_menu_open: bool = false
+var telemetry: RunTelemetry = RunTelemetry.new()
+var dev_panel: DevPanel
+var _next_turret_id: int = 1
 var shop := ArenaShop.new()
 var waves := WaveDirector.new()
 var placement := TurretPlacement.new()
@@ -53,8 +62,13 @@ var carried_turret: TurretActor:
 	set(value): placement.carried = value
 
 func _ready() -> void:
-	# The supported six-wave mode uses the Easy preset.
-	difficulty_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY].duplicate()
+	if not run_config:
+		run_config = RunConfig.new()
+	run_config.sanitize()
+	wave_limit = run_config.wave_limit
+	difficulty_config = run_config.difficulty_config()
+	if not run_config.flag_preset.is_empty():
+		FeatureFlagService.apply_preset(run_config.flag_preset)
 	session = RunSession.new()
 	shop.world = self
 	waves.world = self
@@ -81,6 +95,7 @@ func _ready() -> void:
 	combat.chain_arc.connect(audio.on_arc)
 	combat.chain_arc.connect(effects.show_arc)
 	combat.actor_defeated.connect(_on_actor_defeated)
+	combat.hit_applied.connect(_record_hit)
 	stage = ArenaStage.new()
 	stage.name = "Stage"
 	add_child(stage)
@@ -91,12 +106,19 @@ func _ready() -> void:
 		hud = preload("res://scripts/game/game_hud.gd").new()
 		hud.world = self
 		add_child(hud)
+	if FeatureFlagService.dev_panel_available():
+		dev_panel = DevPanel.new()
+		dev_panel.world = self
+		add_child(dev_panel)
 	if auto_start:
 		start_run()
 
 func start_run() -> void:
 	_clear_actors()
 	session.begin_run()
+	telemetry.begin_run()
+	FeatureFlagService.clear_pending()
+	_next_turret_id = 1
 	GameStateMachine.force_transition(GameStateMachine.GameState.IDLE)
 	GameStateService.is_game_active = true
 	GameStateService.current_wave = 0
@@ -177,6 +199,8 @@ func add_turret(at: Vector3, type_id: String = "normal") -> TurretActor:
 	var turret := TurretActor.new()
 	turret.world = self
 	turret.turret_type = type_id
+	turret.turret_id = _next_turret_id
+	_next_turret_id += 1
 	turret.position = at
 	actor_root.add_child(turret)
 	turrets.append(turret)
@@ -186,9 +210,25 @@ func add_turret(at: Vector3, type_id: String = "normal") -> TurretActor:
 
 func collect_scrap(amount: int) -> void:
 	var added := EconomyService.add_scrap_probabilistic(amount, 1.0)
+	telemetry.record_scrap_earned(added)
 	GameStateService.lifetime_scrap += added
 	if is_combat():
 		audio.play_cue("pickup", player.position)
+
+## Feeds telemetry only; never changes combat results.
+func _record_hit(target: Node3D, hit: CombatHit3D, applied: float) -> void:
+	var victim := target as CombatActor
+	if not victim:
+		return
+	if not victim.is_enemy:
+		telemetry.record_hull_lost(applied)
+	elif victim.dead:
+		var label := ""
+		for turret in turrets:
+			if turret.turret_id == hit.source_id and hit.source_id != 0:
+				label = "%d:%s" % [turret.turret_id, turret.turret_type]
+				break
+		telemetry.record_kill(label)
 
 func _on_enemy_died(enemy: CombatActor) -> void:
 	GameStateService.total_kills += 1
@@ -241,6 +281,7 @@ func turret_price(type_id: String = "normal") -> int:
 func repair() -> bool:
 	if not shop.is_open() or player.health >= player.max_health or not EconomyService.deduct_scrap(GameConstants.REPAIR_COST):
 		return false
+	telemetry.record_spend("repair", GameConstants.REPAIR_COST)
 	player.health = minf(player.max_health, player.health + GameConstants.REPAIR_HEAL_AMOUNT)
 	audio.play_cue("purchase", player.position)
 	message = "Hull repaired."
@@ -254,6 +295,67 @@ func valid_placement(at: Vector3, excluding: TurretActor = null) -> bool:
 
 func interact() -> bool:
 	return placement.interact()
+
+# =============================================================================
+# DEVELOPER COMMANDS (dev panel and tests). None of these are reachable from normal play.
+# =============================================================================
+func dev_add_scrap(amount: int) -> bool:
+	EconomyService.total_scrap = maxi(0, EconomyService.total_scrap + amount)
+	return true
+
+func dev_restore_hull() -> bool:
+	if not is_instance_valid(player) or not GameStateService.is_game_active:
+		return false
+	player.health = player.max_health
+	return true
+
+func dev_spawn_enemy(type_id: String, count: int = 1) -> int:
+	if not is_instance_valid(player) or not GameStateService.is_game_active or not EnemyRegistry.TYPES.has(type_id):
+		return 0
+	for index in count:
+		spawn_enemy(waves.spawn_position(), type_id)
+	return count
+
+## Defeats every living enemy through the normal damage path, so drops and telemetry behave as usual.
+func dev_kill_all_enemies() -> int:
+	var was_paused := paused
+	paused = false
+	var killed := 0
+	for enemy in enemies.duplicate():
+		if is_instance_valid(enemy) and not enemy.dead and combat.apply_hit(enemy, CombatHit3D.new(enemy.health + 1.0, enemy.position)) > 0.0:
+			killed += 1
+	paused = was_paused
+	return killed
+
+## Lands in the shop that precedes `target_wave` (deploy to start it). Clears the field without rewards.
+func dev_jump_to_wave(target_wave: int) -> bool:
+	if not GameStateService.is_game_active or GameStateMachine.current_state not in [GameStateMachine.GameState.WAVE_ANNOUNCEMENT,
+			GameStateMachine.GameState.COMBAT, GameStateMachine.GameState.SHOP]:
+		return false
+	target_wave = clampi(target_wave, 1, wave_limit)
+	for enemy in enemies:
+		enemy.dead = true
+		enemy.clear_transients()
+		enemy.queue_free()
+	enemies.clear()
+	crowd.rebuild(enemies)
+	effects.reset()
+	player.clear_transients()
+	for projectile in projectiles:
+		projectile.release()
+	for pickup: ScrapPickup in pickup_root.get_children():
+		pickup.queue_free()
+	placement.drop_carried()
+	audio.reset()
+	GameStateService.current_wave = target_wave - 1
+	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
+	shop.open()
+	message = "Dev: ready to deploy wave %d." % target_wave
+	return true
+
+## Deploys the next wave immediately when the shop is open.
+func dev_skip_shop() -> bool:
+	return GameStateMachine.current_state == GameStateMachine.GameState.SHOP and begin_next_wave()
 
 func toggle_pause() -> void:
 	if GameStateService.is_game_active:

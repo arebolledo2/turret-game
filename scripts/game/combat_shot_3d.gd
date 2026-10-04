@@ -9,6 +9,7 @@ var knockback: float = 0.0
 var slow_intensity: float = 0.0
 var slow_duration: float = 0.0
 var damage_type: GameEnums.DamageType = GameEnums.DamageType.PHYSICAL
+var source_id: int = 0
 
 static func from_stats(stats: Dictionary, type: GameEnums.DamageType = GameEnums.DamageType.PHYSICAL) -> CombatShot3D:
 	var shot := CombatShot3D.new()
@@ -30,4 +31,5 @@ func copy() -> CombatShot3D:
 	shot.damage_type = damage_type
 	shot.slow_intensity = slow_intensity
 	shot.slow_duration = slow_duration
+	shot.source_id = source_id
 	return shot

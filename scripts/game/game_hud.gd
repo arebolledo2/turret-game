@@ -41,7 +41,7 @@ func _ready() -> void:
 	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(brand)
 	_label(brand, "T U R R E T   /   S U R V I V O R", 23, Color("cfecea"))
-	_label(brand, "SECTOR 01     /     SIX-WAVE SURVIVAL", 13, Color("54c5c5"))
+	_label(brand, "SECTOR 01     /     %d-WAVE SURVIVAL" % world.wave_limit, 13, Color("54c5c5"))
 	var vitals := VBoxContainer.new()
 	vitals.custom_minimum_size.x = 175
 	row.add_child(vitals)
@@ -172,7 +172,7 @@ func _process(_delta: float) -> void:
 		world.wave_limit, ceili(world.time_left), EconomyService.total_scrap, GameStateService.total_kills]
 	status.text = "DEPLOYING WAVE %d  ·  %d" % [GameStateService.current_wave, ceili(world.announcement_left)] if phase == GameStateMachine.GameState.WAVE_ANNOUNCEMENT else ""
 	hint.text = "WASD / LEFT STICK  Move     E / A  Carry or place turret     M  Map     ESC / START  Pause\n" + world.message
-	panel.visible = in_shop or ended or world.paused
+	panel.visible = (in_shop or ended or world.paused) and not world.dev_menu_open
 	minimap.suppressed = panel.visible
 	for index in range(offer_buttons.size()):
 		var button := offer_buttons[index]

@@ -38,6 +38,8 @@ func interact() -> bool:
 		if not valid_placement(at, carried):
 			world.message = "Move clear of the edge or another turret."
 			return false
+		if at.distance_to(carry_origin) > .01:
+			world.telemetry.record_turret_move()
 		carried.position = at
 		carried.carried = false
 		carried = null

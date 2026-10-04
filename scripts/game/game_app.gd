@@ -14,6 +14,9 @@ var vsync_check: CheckButton
 var motion_check: CheckButton
 var volume_slider: HSlider
 var volume_label: Label
+var home_summary: Label
+## Chosen for the next Play; tools and the dev panel may replace it.
+var run_config: RunConfig = RunConfig.new()
 
 func _ready() -> void:
 	_build_menu()
@@ -50,7 +53,7 @@ func _build_menu() -> void:
 	home = VBoxContainer.new()
 	home.add_theme_constant_override("separation", 18)
 	column.add_child(home)
-	_label(home, "Six waves · Easy difficulty · Five turret types", 22)
+	home_summary = _label(home, "", 22)
 	_label(home, "Move     WASD / arrows / left stick\nCarry or place turret     E / controller A\nPause     Esc / controller Start\nAuto-fire targets nearby enemies.", 22)
 	play_button = _button(home, "PLAY", start_game)
 	settings_button = _button(home, "SETTINGS", show_settings)
@@ -86,12 +89,13 @@ func _build_menu() -> void:
 		_update_volume_label())
 	back_button = _button(options, "BACK", show_home)
 
-func _label(parent: Node, text: String, size: int, color: Color = Color("c8dddf")) -> void:
+func _label(parent: Node, text: String, size: int, color: Color = Color("c8dddf")) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.add_theme_font_size_override("font_size", size)
 	label.add_theme_color_override("font_color", color)
 	parent.add_child(label)
+	return label
 
 func _button(parent: Node, text: String, action: Callable) -> Button:
 	var button := Button.new()
@@ -113,6 +117,7 @@ func _check(parent: Node, text: String, action: Callable) -> CheckButton:
 
 func show_home() -> void:
 	menu.visible = true
+	home_summary.text = "%d waves · %s difficulty · Five turret types" % [run_config.wave_limit, run_config.difficulty_name()]
 	home.visible = true
 	options.visible = false
 	play_button.grab_focus()
@@ -136,6 +141,7 @@ func start_game() -> void:
 		return
 	menu.visible = false
 	arena = preload("res://scenes/game/arena.tscn").instantiate()
+	arena.run_config = run_config
 	arena.menu_requested.connect(return_to_menu)
 	add_child(arena)
 
