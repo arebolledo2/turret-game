@@ -33,7 +33,7 @@ var hull_material := WorldGeometry.material(Color("ff675a"), true)
 var pulses: Array[MeshInstance3D] = []
 var ages: Array[float] = []
 var radii: Array[float] = []
-var world: Node
+var world: ArenaWorld
 var plasma_material := WorldGeometry.material(Color("b56cff"), true)
 var shock_material := WorldGeometry.material(Color("55dcff"), true)
 

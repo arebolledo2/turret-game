@@ -1,7 +1,7 @@
 class_name TurretActor
 extends Node3D
 
-var world: Node
+var world: ArenaWorld
 var turret_type: String = "normal"
 var carried: bool = false
 var cooldown: float = 0.0

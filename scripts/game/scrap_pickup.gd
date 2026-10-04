@@ -10,7 +10,7 @@ const PULL_SPEED: float = 5.0
 const PULL_RAMP: float = 18.0 # extra m/s per second of being pulled, capped below
 const PULL_MAX_EXTRA: float = 12.0
 
-var world: Node
+var world: ArenaWorld
 var amount: int = 1
 var collected: bool = false
 var age: float = 0.0

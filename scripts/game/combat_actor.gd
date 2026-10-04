@@ -1,7 +1,7 @@
 class_name CombatActor
 extends CharacterBody3D
 
-var world: Node
+var world: ArenaWorld
 var is_enemy: bool = false
 var enemy_type: String = "basic"
 var mass: float = 1.0

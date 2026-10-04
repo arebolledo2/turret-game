@@ -3,7 +3,7 @@ extends Node3D
 
 ## Reusable projectiles sweep their whole movement segment, including spawn overlaps.
 const TRAIL_LENGTH: float = 1.0
-var world: Node
+var world: ArenaWorld
 var active: bool = false
 var direction: Vector3 = Vector3.FORWARD
 var damage: float = 0.0
