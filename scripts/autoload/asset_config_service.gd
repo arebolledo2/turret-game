@@ -70,11 +70,11 @@ func list_asset_ids(entity_kind: int) -> Array[String]:
 
 	match entity_kind:
 		EntityAssetConfigClass.EntityKind.ENEMY:
-			var enemy_ids = EnemyRegistry.get_all_type_ids()
+			var enemy_ids: Array = EnemyRegistry.get_all_type_ids()
 			for id in enemy_ids:
 				_append_unique_string(ids, str(id))
 		EntityAssetConfigClass.EntityKind.TURRET:
-			var turret_ids = TurretRegistry.get_all_type_ids()
+			var turret_ids: Array = TurretRegistry.get_all_type_ids()
 			for id in turret_ids:
 				_append_unique_string(ids, str(id))
 		EntityAssetConfigClass.EntityKind.PLAYER:
@@ -402,7 +402,7 @@ func _load_collision_profile(path: String) -> CollisionProfileClass:
 		return null
 	if not resolver.validator._is_valid_collision_profile(path):
 		return null
-	var res = ResourceLoader.load(path)
+	var res: Resource = ResourceLoader.load(path)
 	if res is CollisionProfileClass:
 		return res
 	return null

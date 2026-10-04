@@ -68,7 +68,7 @@ func load_kind_resources(preset_name: String, folder_name: String, kind_key: Str
 	while not entry.is_empty():
 		if not dir.current_is_dir() and entry.ends_with(".tres"):
 			var full_path := "%s/%s/%s/%s" % [BUILTIN_PRESET_DIR, preset_name, folder_name, entry]
-			var res = load(full_path)
+			var res: Resource = load(full_path)
 			if res is EntityAssetConfigClass:
 				var cfg: EntityAssetConfig = res
 				if cfg.asset_id.is_empty():

@@ -32,7 +32,7 @@ const VALIDATION: bool = true      # Warnings and errors (always on by default)
 ## Only outputs if ENABLED and the category flag is true
 func log(category: bool, message: Variant, arg1: Variant = "", arg2: Variant = "", arg3: Variant = "", arg4: Variant = "", arg5: Variant = "", arg6: Variant = "", arg7: Variant = "", arg8: Variant = "") -> void:
 	if ENABLED and category:
-		var output = str(message)
+		var output: String = str(message)
 		if arg1 != null and not (arg1 is String and arg1 == ""):
 			output += str(arg1)
 		if arg2 != null and not (arg2 is String and arg2 == ""):
@@ -55,7 +55,7 @@ func log(category: bool, message: Variant, arg1: Variant = "", arg2: Variant = "
 ## Uses push_warning() for better visibility in editor
 func warn(category: bool, message: Variant, arg1: Variant = "", arg2: Variant = "", arg3: Variant = "", arg4: Variant = "", arg5: Variant = "") -> void:
 	if ENABLED and category:
-		var output = str(message)
+		var output: String = str(message)
 		if arg1 != null and not (arg1 is String and arg1 == ""):
 			output += str(arg1)
 		if arg2 != null and not (arg2 is String and arg2 == ""):
@@ -72,7 +72,7 @@ func warn(category: bool, message: Variant, arg1: Variant = "", arg2: Variant = 
 ## Uses push_error() for critical issues
 func error(category: bool, message: Variant, arg1: Variant = "", arg2: Variant = "", arg3: Variant = "", arg4: Variant = "", arg5: Variant = "") -> void:
 	if ENABLED and category:
-		var output = str(message)
+		var output: String = str(message)
 		if arg1 != null and not (arg1 is String and arg1 == ""):
 			output += str(arg1)
 		if arg2 != null and not (arg2 is String and arg2 == ""):

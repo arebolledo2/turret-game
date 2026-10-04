@@ -84,8 +84,8 @@ func get_damage_type_diversity() -> int:
 	var damage_types_seen: Array = []
 	for turret_type in turret_counts.keys():
 		if turret_counts[turret_type] > 0:
-			var turret_def = TurretRegistry.get_type(turret_type)
-			var dtypes = turret_def.get("damage_types", [])
+			var turret_def: Dictionary = TurretRegistry.get_type(turret_type)
+			var dtypes: Array = turret_def.get("damage_types", [])
 			for dtype in dtypes:
 				if dtype not in damage_types_seen:
 					damage_types_seen.append(dtype)
@@ -110,7 +110,7 @@ func get_turret_min_distance(item_counts: Dictionary) -> float:
 
 ## Get turret purchase penalty (base 0.25, can be reduced/increased by items)
 func get_turret_purchase_penalty() -> float:
-	var penalty = GameConstants.TURRET_PURCHASE_PENALTY
+	var penalty: float = GameConstants.TURRET_PURCHASE_PENALTY
 	# Apply reductions (e.g., Compact Design, Mass Production)
 	penalty = ModifierService.apply_modifiers_to_stat(penalty, "turret_penalty_reduction")
 	# Apply increases (e.g., Elite Forces, Diversity Matrix)

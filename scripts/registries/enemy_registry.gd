@@ -295,7 +295,7 @@ static func get_spawn_count(type_id: String) -> int:
 	if not TYPES.has(type_id):
 		return 1
 
-	var spawn_count = TYPES[type_id].get("spawn_count", 1)
+	var spawn_count: Variant = TYPES[type_id].get("spawn_count", 1)
 
 	# Handle array format for random range [min, max]
 	if spawn_count is Array and spawn_count.size() == 2:

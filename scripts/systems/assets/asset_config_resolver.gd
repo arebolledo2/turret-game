@@ -20,7 +20,7 @@ func resolve(base: EntityAssetConfig, patch: Dictionary) -> EntityAssetConfig:
 
 func _apply_patch(config: EntityAssetConfig, patch: Dictionary) -> void:
 	for key in patch.keys():
-		var value = patch[key]
+		var value: Variant = patch[key]
 		if key is String and key.find(".") >= 0:
 			_apply_patch_path(config, key.split("."), value)
 			continue
@@ -42,7 +42,7 @@ func _apply_collision_profile_patch(profile: CollisionProfileClass, patch: Dicti
 			var split := normalized_key.split(".")
 			if split.size() > 0:
 				normalized_key = str(split[split.size() - 1])
-		var value = patch[key]
+		var value: Variant = patch[key]
 
 		match normalized_key:
 			"physics_shape_type":
@@ -84,7 +84,7 @@ func _apply_patch_path(config: EntityAssetConfig, path: Array, value: Variant) -
 
 func _apply_visual_patch(config: EntityAssetConfig, patch: Dictionary) -> void:
 	for key in patch.keys():
-		var value = patch[key]
+		var value: Variant = patch[key]
 		if key is String and key.find(".") >= 0:
 			_apply_visual_patch_path(config, key.split("."), value)
 		else:
@@ -138,7 +138,7 @@ func _apply_visual_patch_path(config: EntityAssetConfig, path: Array, value: Var
 
 func _apply_collision_patch(config: EntityAssetConfig, patch: Dictionary) -> void:
 	for key in patch.keys():
-		var value = patch[key]
+		var value: Variant = patch[key]
 		if key is String and key.find(".") >= 0:
 			_apply_collision_patch_path(config, key.split("."), value)
 		else:

@@ -76,14 +76,14 @@ static func _load_all_items() -> void:
 
 
 ## Get Item resource by ID
-static func get_item(item_id: String):
+static func get_item(item_id: String) -> Item:
 	var items := get_all_items()
 	return items.get(item_id, null)
 
 
 ## Get item as Dictionary (for backward compatibility with old API)
 static func get_item_dict(item_id: String) -> Dictionary:
-	var item = get_item(item_id)
+	var item: Item = get_item(item_id)
 	if item:
 		return item.to_dict()
 	return {}
@@ -101,7 +101,7 @@ static func has_item(item_id: String) -> bool:
 
 ## Get item rarity
 static func get_rarity(item_id: String) -> GameEnums.ItemRarity:
-	var item = get_item(item_id)
+	var item: Item = get_item(item_id)
 	if item:
 		return item.rarity
 	return GameEnums.ItemRarity.COMMON
@@ -130,7 +130,7 @@ static func get_item_price(item_id: String) -> int:
 
 ## Get item modifiers
 static func get_modifiers(item_id: String) -> Array:
-	var item = get_item(item_id)
+	var item: Item = get_item(item_id)
 	if item:
 		return item.modifiers
 	return []
@@ -138,7 +138,7 @@ static func get_modifiers(item_id: String) -> Array:
 
 ## Get max stacks for an item (0 = unlimited)
 static func get_max_stacks(item_id: String) -> int:
-	var item = get_item(item_id)
+	var item: Item = get_item(item_id)
 	if item:
 		return item.max_stacks
 	return 0
@@ -164,7 +164,7 @@ static func get_available_item_ids(item_counts: Dictionary) -> Array:
 
 ## Determines if an item's description should be displayed.
 static func should_show_description(item_id: String) -> bool:
-	var item = get_item(item_id)
+	var item: Item = get_item(item_id)
 	if not item:
 		return false
 
@@ -199,7 +199,7 @@ static func should_show_description(item_id: String) -> bool:
 
 ## Check if item has a special effect
 static func has_special_effect(item_id: String) -> bool:
-	var item = get_item(item_id)
+	var item: Item = get_item(item_id)
 	if item:
 		return not item.special_effect.is_empty()
 	return false
@@ -207,7 +207,7 @@ static func has_special_effect(item_id: String) -> bool:
 
 ## Get special effect type
 static func get_special_effect(item_id: String) -> String:
-	var item = get_item(item_id)
+	var item: Item = get_item(item_id)
 	if item:
 		return item.special_effect
 	return ""
@@ -221,7 +221,7 @@ static func get_items_by_rarity(rarity: GameEnums.ItemRarity) -> Array:
 
 	var result: Array = []
 	for item_id in get_all_item_ids():
-		var item = get_item(item_id)
+		var item: Item = get_item(item_id)
 		if item and item.rarity == rarity:
 			result.append(item_id)
 

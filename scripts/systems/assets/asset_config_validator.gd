@@ -24,9 +24,9 @@ func _validate_visual_config(resolved: EntityAssetConfig, base_cfg: EntityAssetC
 
 	var cleaned_textures := resolved.visual.texture_paths.duplicate(true)
 	for key in cleaned_textures.keys():
-		var value = cleaned_textures[key]
+		var value: Variant = cleaned_textures[key]
 		if value is String and not _is_valid_asset_path(value):
-			var fallback = base_cfg.visual.texture_paths.get(key, "")
+			var fallback: Variant = base_cfg.visual.texture_paths.get(key, "")
 			DebugService.warn(DebugService.VALIDATION, "[AssetConfigService] Invalid texture path '%s' for %s:%s. Using fallback." % [value, _kind_to_key(resolved.entity_kind), resolved.asset_id])
 			if fallback is String and _is_valid_asset_path(fallback):
 				cleaned_textures[key] = fallback
@@ -76,7 +76,7 @@ func _is_valid_collision_profile(path: String) -> bool:
 			return false
 	elif not ResourceLoader.exists(path):
 		return false
-	var res = ResourceLoader.load(path)
+	var res: Resource = ResourceLoader.load(path)
 	return res is CollisionProfileClass
 
 

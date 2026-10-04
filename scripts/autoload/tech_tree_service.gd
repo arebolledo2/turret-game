@@ -56,7 +56,7 @@ func add_research_points(amount: int) -> void:
 func can_unlock_tech(tech_id: String) -> bool:
 	# Will be implemented in Phase 3 when TechRegistry exists
 	# For now, just check basic affordability
-	var tech_def = _get_tech_definition(tech_id)
+	var tech_def: Dictionary = _get_tech_definition(tech_id)
 	if not tech_def:
 		return false
 
@@ -89,7 +89,7 @@ func unlock_tech(tech_id: String) -> bool:
 		Events.tech_unlock_failed.emit(tech_id, "Cannot unlock tech")
 		return false
 
-	var tech_def = _get_tech_definition(tech_id)
+	var tech_def: Dictionary = _get_tech_definition(tech_id)
 	if not tech_def:
 		Events.tech_unlock_failed.emit(tech_id, "Tech definition not found")
 		return false
@@ -182,7 +182,7 @@ func _apply_tech_modifiers(tech_id: String, tech_def: Dictionary, unlock_count: 
 ## Helper method to check if a specific mechanic is unlocked
 func has_mechanic_unlocked(mechanic_id: String) -> bool:
 	for tech_id in unlocked_tech_ids:
-		var tech_def = _get_tech_definition(tech_id)
+		var tech_def: Dictionary = _get_tech_definition(tech_id)
 		if tech_def.get("effect_type") == "unlock_mechanic":
 			if tech_def.get("special_effect") == mechanic_id:
 				return true
@@ -198,13 +198,13 @@ func get_shop_modifiers() -> Dictionary:
 	var offer_count_bonus := 0
 
 	for tech_id in unlocked_tech_ids:
-		var tech_def = _get_tech_definition(tech_id)
+		var tech_def: Dictionary = _get_tech_definition(tech_id)
 		var modifiers: Array = tech_def.get("modifiers", [])
 
 		for modifier in modifiers:
 			var stat: String = modifier.get("stat", "")
 			var operation: String = modifier.get("operation", "")
-			var value = modifier.get("value", 0)
+			var value: float = modifier.get("value", 0)
 
 			# Shop price multiplier
 			if stat == "shop_price_mult" and operation == "multiply":
@@ -229,5 +229,5 @@ func is_turret_type_unlocked(turret_type: String) -> bool:
 		return true
 
 	# Check for unlock tech
-	var unlock_tech_id = "turret_unlock_%s" % turret_type
+	var unlock_tech_id: String = "turret_unlock_%s" % turret_type
 	return is_tech_unlocked(unlock_tech_id)

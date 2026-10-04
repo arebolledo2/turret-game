@@ -44,12 +44,12 @@ static func _ensure_initialized() -> void:
 	_techs_by_path.clear()
 
 	# Load techs from all path files
-	var turret_offense_techs = preload("res://scripts/registries/techs/turret_offense_techs.gd")
-	var turret_utility_techs = preload("res://scripts/registries/techs/turret_utility_techs.gd")
-	var turret_unlock_techs = preload("res://scripts/registries/techs/turret_unlock_techs.gd")
-	var player_combat_techs = preload("res://scripts/registries/techs/player_combat_techs.gd")
-	var player_defense_techs = preload("res://scripts/registries/techs/player_defense_techs.gd")
-	var economy_techs = preload("res://scripts/registries/techs/economy_techs.gd")
+	var turret_offense_techs: GDScript = preload("res://scripts/registries/techs/turret_offense_techs.gd")
+	var turret_utility_techs: GDScript = preload("res://scripts/registries/techs/turret_utility_techs.gd")
+	var turret_unlock_techs: GDScript = preload("res://scripts/registries/techs/turret_unlock_techs.gd")
+	var player_combat_techs: GDScript = preload("res://scripts/registries/techs/player_combat_techs.gd")
+	var player_defense_techs: GDScript = preload("res://scripts/registries/techs/player_defense_techs.gd")
+	var economy_techs: GDScript = preload("res://scripts/registries/techs/economy_techs.gd")
 
 	# Register techs from each path
 	_register_path_techs(turret_offense_techs.get_techs())

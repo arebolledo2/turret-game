@@ -112,7 +112,7 @@ static func from_legacy_config(hurtbox_config: Dictionary, _damage_zone_config: 
 	var hurtbox_type_str: String = hurtbox_config.get("type", "circle")
 	new_profile.hurtbox_shape_type = _string_to_shape_type(hurtbox_type_str)
 	
-	var legacy_hurtbox_size = hurtbox_config.get("size", Vector2(24, 24))
+	var legacy_hurtbox_size: Variant = hurtbox_config.get("size", Vector2(24, 24))
 	if legacy_hurtbox_size is float:
 		new_profile.hurtbox_size = Vector2(legacy_hurtbox_size, legacy_hurtbox_size)
 	else:

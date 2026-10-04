@@ -183,7 +183,7 @@ func apply_to_stat(base_value: float, stat_name: String, entity_type: String = "
 
 		# Collect modifier by operation type
 		var operation: String = modifier.operation
-		var value = modifier.value
+		var value: float = modifier.value
 
 		match operation:
 			"add":
@@ -194,7 +194,7 @@ func apply_to_stat(base_value: float, stat_name: String, entity_type: String = "
 				more_values.append(value)
 
 	# Apply PoE formula: (base + flat) × (1 + increases) × more1 × more2 × ...
-	var result = base_value + flat_value
+	var result: float = base_value + flat_value
 	result *= (1.0 + increase_value)
 	for more_mult in more_values:
 		result *= more_mult
