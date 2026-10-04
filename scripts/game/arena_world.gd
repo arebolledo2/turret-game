@@ -8,13 +8,15 @@ signal menu_requested()
 @export var show_hud: bool = true
 @export var wave_limit: int = 6
 var shop := ArenaShop.new()
+var waves := WaveDirector.new()
+var placement := TurretPlacement.new()
+var stage: ArenaStage
 var session: RunSession
 var combat: Combat3D = Combat3D.new()
 var crowd: CrowdGrid3D = CrowdGrid3D.new()
 var effects: CombatEffects3D
 var audio: GameAudio
 var difficulty_config: Dictionary
-var spawned_this_wave: int = 0
 var player: CombatActor
 var camera: Camera3D
 var camera_rig: CameraRig
@@ -24,21 +26,39 @@ var turrets: Array[TurretActor] = []
 var projectiles: Array[Projectile3D] = []
 var pickup_root: Node3D
 var actor_root: Node3D
-var carried_turret: TurretActor
-var carry_origin: Vector3
 var paused: bool = false
-var time_left: float = 0.0
-var announcement_left: float = 0.0
-var spawn_clock: float = 0.0
-var spawn_interval: float = 1.0
-var remaining_spawns: int = 0
 var message: String = ""
+
+# Wave and carry state live in the helpers; these keep the long-standing ArenaWorld surface for the HUD, tools and tests.
+var time_left: float:
+	get: return waves.time_left
+	set(value): waves.time_left = value
+var announcement_left: float:
+	get: return waves.announcement_left
+	set(value): waves.announcement_left = value
+var spawn_clock: float:
+	get: return waves.spawn_clock
+	set(value): waves.spawn_clock = value
+var spawn_interval: float:
+	get: return waves.spawn_interval
+	set(value): waves.spawn_interval = value
+var remaining_spawns: int:
+	get: return waves.remaining_spawns
+	set(value): waves.remaining_spawns = value
+var spawned_this_wave: int:
+	get: return waves.spawned_this_wave
+	set(value): waves.spawned_this_wave = value
+var carried_turret: TurretActor:
+	get: return placement.carried
+	set(value): placement.carried = value
 
 func _ready() -> void:
 	# The supported six-wave mode uses the Easy preset.
 	difficulty_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY].duplicate()
 	session = RunSession.new()
 	shop.world = self
+	waves.world = self
+	placement.world = self
 	add_child(session)
 	actor_root = Node3D.new()
 	actor_root.name = "Actors"
@@ -61,7 +81,12 @@ func _ready() -> void:
 	combat.chain_arc.connect(audio.on_arc)
 	combat.chain_arc.connect(effects.show_arc)
 	combat.actor_defeated.connect(_on_actor_defeated)
-	_build_stage()
+	stage = ArenaStage.new()
+	stage.name = "Stage"
+	add_child(stage)
+	stage.build(self)
+	camera = stage.camera
+	camera_rig = stage.camera_rig
 	if show_hud:
 		hud = preload("res://scripts/game/game_hud.gd").new()
 		hud.world = self
@@ -92,7 +117,7 @@ func start_run() -> void:
 
 func _clear_actors() -> void:
 	audio.reset()
-	carried_turret = null
+	placement.carried = null
 	enemies.clear()
 	turrets.clear()
 	projectiles.clear()
@@ -109,116 +134,19 @@ func is_combat() -> bool:
 func _physics_process(delta: float) -> void:
 	if paused or not GameStateService.is_game_active:
 		return
-	GameStateService.time_survived += delta
-	if GameStateMachine.current_state == GameStateMachine.GameState.WAVE_ANNOUNCEMENT:
-		announcement_left -= delta
-		if announcement_left <= 0.0:
-			GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
-		return
-	if not is_combat():
-		return
-	crowd.rebuild(enemies)
-	time_left = maxf(0.0, time_left - delta)
-	spawn_clock -= delta
-	if remaining_spawns > 0 and spawn_clock <= 0.0:
-		var type_id := EnemyVariants.pick_type(GameStateService.current_wave, spawned_this_wave)
-		spawn_enemy(_spawn_position(), type_id)
-		spawned_this_wave += 1
-		remaining_spawns -= 1
-		spawn_clock += spawn_interval
-	if time_left <= 0.0:
-		finish_wave()
+	waves.tick(delta)
 
 func begin_next_wave() -> bool:
-	if GameStateMachine.current_state not in [GameStateMachine.GameState.IDLE, GameStateMachine.GameState.SHOP]:
-		return false
-	if not GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_ANNOUNCEMENT):
-		return false
-	GameStateService.current_wave += 1
-	audio.play_cue("wave", player.position)
-	announcement_left = 2.0
-	spawned_this_wave = 0
-	time_left = GameStateService.get_wave_duration(GameStateService.current_wave)
-	remaining_spawns = GameStateService.get_wave_enemy_count(GameStateService.current_wave, float(difficulty_config["enemy_count_mult"]), 1.0)
-	spawn_interval = time_left / maxf(float(remaining_spawns), 1.0)
-	spawn_clock = .2
-	message = ""
-	message = EnemyVariants.notice_for_wave(GameStateService.current_wave)
-	return true
+	return waves.begin_next_wave()
 
 func finish_wave() -> bool:
-	if not is_combat():
-		return false
-	GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_END)
-	for enemy in enemies:
-		enemy.dead = true
-		enemy.clear_transients()
-		enemy.queue_free()
-	enemies.clear()
-	crowd.rebuild(enemies)
-	effects.reset()
-	player.clear_transients()
-	for projectile in projectiles:
-		projectile.release()
-	for pickup: ScrapPickup in pickup_root.get_children():
-		pickup.collect()
-	if is_instance_valid(carried_turret):
-		carried_turret.carried = false
-		carried_turret.position = carry_origin
-		carried_turret = null
-	var reward := EconomyService.get_wave_scrap_base(GameStateService.current_wave)
-	collect_scrap(reward)
-	audio.reset()
-	message = "Wave secured · +%d scrap bonus" % reward
-	if GameStateService.current_wave >= wave_limit:
-		audio.play_cue("victory", player.position)
-		GameStateMachine.transition_to(GameStateMachine.GameState.VICTORY)
-		GameStateService.is_game_active = false
-	else:
-		GameStateMachine.transition_to(GameStateMachine.GameState.SHOP)
-		shop.open()
-		audio.play_cue("wave", player.position)
-	return true
+	return waves.finish_wave()
 
 func spawn_enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
-	var enemy := CombatActor.new()
-	enemy.world = self
-	enemy.is_enemy = true
-	enemy.enemy_type = type_id
-	var base := EnemyRegistry.get_stats_for_wave(type_id, maxi(GameStateService.current_wave, 1), difficulty_config)
-	enemy.max_health = float(base["health"])
-	enemy.health = enemy.max_health
-	enemy.speed = float(base["speed"]) * WorldGeometry.METRES_PER_PIXEL
-	enemy.contact_damage = float(base["contact_damage"])
-	enemy.mass = float(base["mass"])
-	enemy.scrap_value = int(base["scrap_value"])
-	enemy.body_scale = EnemyVariants.body_scale(type_id)
-	enemy.explosion_radius = float(base.get("explosion_radius", 0.0)) * WorldGeometry.METRES_PER_PIXEL
-	enemy.explosion_damage = float(base.get("explosion_damage", 0.0))
-	enemy.position = at
-	actor_root.add_child(enemy)
-	enemies.append(enemy)
-	return enemy
+	return waves.spawn_enemy(at, type_id)
 
-## Enemies appear on a ring just outside the default-zoom view around the player, clamped to the arena, so they
-## reach the fight quickly on the large map. A spot clamped back into view is retried a few times.
 func _spawn_position() -> Vector3:
-	var centre := WorldGeometry.planar(player.position) if is_instance_valid(player) else Vector3.ZERO
-	var ring := camera_rig.visible_half_extents(GameConstants.CAMERA_DEFAULT_ZOOM) + Vector2.ONE * GameConstants.ENEMY_SPAWN_VIEW_MARGIN
-	var result := Vector3.ZERO
-	for attempt in 8:
-		var edge := GameRandom.gameplay.randi_range(0, 3)
-		var x := GameRandom.gameplay.randf_range(-ring.x, ring.x)
-		var z := GameRandom.gameplay.randf_range(-ring.y, ring.y)
-		match edge:
-			0: x = -ring.x
-			1: x = ring.x
-			2: z = -ring.y
-			3: z = ring.y
-		result = WorldGeometry.clamp_position(centre + Vector3(x, 0, z))
-		if WorldGeometry.planar(result - centre).length() >= GameConstants.ENEMY_SPAWN_MIN_DISTANCE:
-			break
-	return result
+	return waves.spawn_position()
 
 func nearest_enemy(origin: Vector3, range_metres: float) -> CombatActor:
 	return combat.select_target(origin, range_metres, enemies)
@@ -318,52 +246,14 @@ func repair() -> bool:
 	message = "Hull repaired."
 	return true
 
-## First free spot on a grid around the player (the origin when no player exists yet).
 func find_placement() -> Vector3:
-	var origin := WorldGeometry.planar(player.position) if is_instance_valid(player) else Vector3.ZERO
-	for z: float in [-1.0, 1.0, -3.0, 3.0]:
-		for x: float in [0.0, -2.0, 2.0, -4.0, 4.0, -6.0, 6.0]:
-			var candidate := origin + Vector3(x, 0, z)
-			if valid_placement(candidate):
-				return candidate
-	return Vector3.INF
+	return placement.find_placement()
 
 func valid_placement(at: Vector3, excluding: TurretActor = null) -> bool:
-	if WorldGeometry.clamp_position(at, .55).distance_squared_to(at) > .0001:
-		return false
-	for turret in turrets:
-		if turret != excluding and WorldGeometry.planar(turret.position - at).length() < 1.0:
-			return false
-	return true
+	return placement.valid_placement(at, excluding)
 
 func interact() -> bool:
-	if not is_combat():
-		return false
-	if is_instance_valid(carried_turret):
-		var forward := -player.visual.global_basis.z
-		var at := WorldGeometry.planar(player.position + forward * .9)
-		if not valid_placement(at, carried_turret):
-			message = "Move clear of the edge or another turret."
-			return false
-		carried_turret.position = at
-		carried_turret.carried = false
-		carried_turret = null
-		message = "Turret deployed."
-		return true
-	var nearest: TurretActor = null
-	var distance := 1.25
-	for turret in turrets:
-		var candidate_distance := turret.position.distance_to(player.position)
-		if candidate_distance < distance:
-			distance = candidate_distance
-			nearest = turret
-	if nearest:
-		carried_turret = nearest
-		carry_origin = nearest.position
-		nearest.carried = true
-		message = "Carrying turret · press E / A to place"
-		return true
-	return false
+	return placement.interact()
 
 func toggle_pause() -> void:
 	if GameStateService.is_game_active:
@@ -395,112 +285,3 @@ func _unhandled_input(event: InputEvent) -> void:
 			toggle_pause()
 		elif event.button_index == JOY_BUTTON_A:
 			interact()
-
-func _build_stage() -> void:
-	_build_lighting()
-	var half := WorldGeometry.HALF_ARENA
-	var ground := StaticBody3D.new()
-	ground.collision_layer = WorldGeometry.WORLD_LAYER
-	ground.collision_mask = 0
-	add_child(ground)
-	var floor_size := Vector3(half.x * 2.0 + .6, .35, half.y * 2.0 + .6)
-	# The collider is a slab; the visible surface is one textured plane on top of it (a single draw call).
-	var floor_plane := PlaneMesh.new()
-	floor_plane.size = Vector2(floor_size.x, floor_size.z)
-	var floor_visual := MeshInstance3D.new()
-	floor_visual.mesh = floor_plane
-	floor_visual.material_override = WorldGeometry.floor_material(floor_plane.size)
-	floor_visual.position.y = -.02
-	ground.add_child(floor_visual)
-	var floor_shape := CollisionShape3D.new()
-	var floor_box := BoxShape3D.new()
-	floor_box.size = floor_size
-	floor_shape.shape = floor_box
-	floor_shape.position.y = -.2
-	ground.add_child(floor_shape)
-	var rim := WorldGeometry.material(Color("258e99"), true)
-	for z: float in [-half.y - .05, half.y + .05]:
-		WorldGeometry.box(self, Vector3(half.x * 2.0 + .3, .08, .06), Vector3(0, .02, z), rim)
-	for x: float in [-half.x - .05, half.x + .05]:
-		WorldGeometry.box(self, Vector3(.06, .08, half.y * 2.0 + .1), Vector3(x, .02, 0), rim)
-	var markings := WorldGeometry.material(Color("c48c48"))
-	var stripe_transforms: Array[Transform3D] = []
-	for x: float in [-half.x + .35, half.x - .35]:
-		for z in range(-int(half.y) + 1, int(half.y)):
-			stripe_transforms.append(Transform3D(Basis(Vector3.UP, -.5), Vector3(x, 0, z)))
-	_add_multimesh(Vector3(.16, .015, .4), stripe_transforms, markings)
-	camera = Camera3D.new()
-	add_child(camera)
-	camera_rig = CameraRig.new()
-	add_child(camera_rig)
-	camera_rig.setup(camera, self)
-
-func _build_lighting() -> void:
-	# A dark gradient sky doubles as the ambient and reflection source, so metal parts have something to mirror.
-	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = Color("0b2233")
-	sky_material.sky_horizon_color = Color("2a5a6a")
-	sky_material.ground_horizon_color = Color("2a5a6a")
-	sky_material.ground_bottom_color = Color("08151e")
-	sky_material.sky_energy_multiplier = .9
-	var sky := Sky.new()
-	sky.sky_material = sky_material
-	var settings := Environment.new()
-	settings.background_mode = Environment.BG_SKY
-	settings.sky = sky
-	settings.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	settings.ambient_light_energy = .7
-	settings.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
-	settings.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	settings.tonemap_white = 6.0
-	# Bloom: only emissive/very bright surfaces cross the threshold, which makes muzzles, eyes and shots glow.
-	settings.glow_enabled = true
-	settings.glow_intensity = .8
-	settings.glow_strength = 1.0
-	settings.glow_bloom = .05
-	settings.glow_hdr_threshold = 1.0
-	settings.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
-	# Contact shadows where models meet the floor and in crevices.
-	settings.ssao_enabled = true
-	settings.ssao_radius = 1.2
-	settings.ssao_intensity = 2.0
-	settings.ssao_power = 1.6
-	settings.ssil_enabled = true
-	settings.ssil_intensity = .6
-	# Depth fog pulls the far arena edge into the background colour.
-	settings.fog_enabled = true
-	settings.fog_light_color = Color("0f2a38")
-	settings.fog_density = .012
-	settings.fog_sky_affect = .4
-	var environment := WorldEnvironment.new()
-	environment.environment = settings
-	add_child(environment)
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-55, -25, 0)
-	sun.light_color = Color("d0eaff")
-	sun.light_energy = 1.4
-	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 45.0 # the follow camera only ever sees a small slice of the arena
-	add_child(sun)
-	# Warm back light, opposite the sun and without shadows, so silhouettes separate from the teal floor.
-	var rim := DirectionalLight3D.new()
-	rim.rotation_degrees = Vector3(-30, 155, 0)
-	rim.light_color = Color("ff7a45")
-	rim.light_energy = .55
-	rim.shadow_enabled = false
-	add_child(rim)
-
-func _add_multimesh(size: Vector3, transforms: Array[Transform3D], mat: Material) -> void:
-	var mesh := BoxMesh.new()
-	mesh.size = size
-	var multimesh := MultiMesh.new()
-	multimesh.transform_format = MultiMesh.TRANSFORM_3D
-	multimesh.mesh = mesh
-	multimesh.instance_count = transforms.size()
-	for index in transforms.size():
-		multimesh.set_instance_transform(index, transforms[index])
-	var instance := MultiMeshInstance3D.new()
-	instance.multimesh = multimesh
-	instance.material_override = mat
-	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(instance)

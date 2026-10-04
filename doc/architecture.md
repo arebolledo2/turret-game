@@ -7,7 +7,10 @@
 | Owner | Responsibilities |
 |---|---|
 | `GameApp` | Start screen, settings, Play, Quit, menu focus and arena lifetime |
-| `ArenaWorld` | Stage/camera, wave lifecycle, actors, spawning, pause, rewards and carry/placement |
+| `ArenaWorld` | Composition root: actor lists, firing, scrap, death handling, pause and input; delegates to the three helpers below |
+| `ArenaStage` | Floor, rim, lighting and the follow camera, built once |
+| `WaveDirector` | Announcement, spawn schedule, wave timer and wave-end resolution |
+| `TurretPlacement` | Placement rules and the carry/place interaction |
 | `RunSession` | Fresh `RunSessionState` and shared service binding/teardown |
 | `Combat3D` | Authoritative damage and local hit/explosion/pulse/defeat notifications |
 | `GameAudio` | Bounded spatial SFX voices and cue throttling |
