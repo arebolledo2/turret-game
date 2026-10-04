@@ -52,6 +52,10 @@ func _draw() -> void:
 	for pickup in world.pickup_root.get_children():
 		if pickup is Node3D:
 			draw_rect(Rect2(world_to_map((pickup as Node3D).position) - Vector2.ONE, Vector2(2, 2)), Color("f4d298"))
+	if world.core and not world.core.dead:
+		var core_at := world_to_map(world.core.position)
+		draw_rect(Rect2(core_at - Vector2(5, 5), Vector2(10, 10)), Color("58ece1"), false, 2.0)
+		draw_rect(Rect2(core_at - Vector2(2, 2), Vector2(4, 4)), Color("58ece1"))
 	for turret in world.turrets:
 		if is_instance_valid(turret):
 			var turret_at := world_to_map(turret.position)

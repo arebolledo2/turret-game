@@ -107,6 +107,19 @@ const SCRAP_WAVE_BONUS_BASE: int = 0
 const SCRAP_WAVE_BONUS_PER_WAVE: int = 5 # added to the wave bonus for each wave number
 const REPAIR_COST: int = 5
 const REPAIR_HEAL_AMOUNT: float = 10.0
+
+# =============================================================================
+# PROTECT THE CORE (core mode)
+# =============================================================================
+const CORE_HEALTH_MULT: float = 6.0 # core hit points = base hull x this x the difficulty's core_health_mult
+const CORE_RADIUS: float = 1.1 # metres; enemies stop at its edge
+const CORE_PLACEMENT_CLEARANCE: float = .7 # turrets keep this far outside the core's radius
+const CORE_HIT_INTERVAL: float = 1.0 # seconds between one enemy's hits on the core
+const CORE_DAMAGE_FRACTION: float = .25 # share of an enemy's contact damage the core takes
+const CORE_AGGRO_RANGE: float = 2.5 # an enemy this close to the hero chases the hero (the 2D game's 250 px)
+const CORE_DEAGGRO_RANGE: float = 5.0 # ...and gives up and returns to the core beyond this (2D: 500 px)
+const CORE_SPAWN_BOX: float = .6 # enemies spawn on this fraction of the arena's half-size, so they reach the fight in time
+const CORE_START_OFFSET: float = 2.5 # hero and first turret start this far from the core
 const SHOP_OFFER_COUNT: int = 4
 # 3D shop layout: one weapon choice and three upgrades (SHOP_TURRET_SLOTS + SHOP_ITEM_SLOTS = SHOP_OFFER_COUNT)
 const SHOP_TURRET_SLOTS: int = 1

@@ -13,6 +13,10 @@ var description: Label
 var offer_buttons: Array[Button] = []
 var reroll_button: Button
 var repair_button: Button
+var core_repair_button: Button
+var core_panel: VBoxContainer
+var core_health: ProgressBar
+var core_text: Label
 var actions: HBoxContainer
 var build_text: Label
 var continue_button: Button
@@ -52,6 +56,19 @@ func _ready() -> void:
 	vitals.add_child(health)
 	stats = _label(row, "", 18, Color("f4d298"))
 	stats.custom_minimum_size.x = 290
+	core_panel = VBoxContainer.new()
+	core_panel.position = Vector2(28, 118)
+	core_panel.custom_minimum_size.x = 260
+	core_panel.visible = false
+	root.add_child(core_panel)
+	core_text = _label(core_panel, "CORE", 15, Color("58ece1"))
+	core_health = ProgressBar.new()
+	core_health.custom_minimum_size = Vector2(260, 14)
+	core_health.show_percentage = false
+	core_panel.add_child(core_health)
+	var indicator := CoreIndicator.new()
+	indicator.world = world
+	root.add_child(indicator)
 	status = Label.new()
 	status.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	status.offset_left = -350
@@ -101,6 +118,8 @@ func _ready() -> void:
 	reroll_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	repair_button = _button(actions, "REPAIR %d HULL / %d" % [GameConstants.REPAIR_HEAL_AMOUNT, GameConstants.REPAIR_COST], func() -> void: world.repair())
 	repair_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	core_repair_button = _button(actions, "REPAIR CORE %d HP / %d" % [GameConstants.REPAIR_HEAL_AMOUNT, GameConstants.REPAIR_COST], func() -> void: world.repair_core())
+	core_repair_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	continue_button = _button(column, "DEPLOY NEXT WAVE", _continue)
 	restart_button = _button(column, "START NEW RUN", func() -> void: world.start_run())
 	menu_button = _button(column, "MAIN MENU", func() -> void: world.request_menu())
@@ -186,6 +205,11 @@ func _process(_delta: float) -> void:
 	health.max_value = world.player.max_health
 	health.value = world.player.health
 	health_text.text = "HULL  %d / %d" % [ceili(world.player.health), ceili(world.player.max_health)]
+	core_panel.visible = world.core != null
+	if world.core:
+		core_health.max_value = world.core.max_health
+		core_health.value = world.core.health
+		core_text.text = "CORE  %d / %d" % [ceili(world.core.health), ceili(world.core.max_health)]
 	stats.text = "WAVE %02d / %02d     %02ds\n%d SCRAP     %d KILLS" % [GameStateService.current_wave,
 		world.wave_limit, ceili(world.time_left), EconomyService.total_scrap, GameStateService.total_kills]
 	status.text = "DEPLOYING WAVE %d  ·  %d" % [GameStateService.current_wave, ceili(world.announcement_left)] if phase == GameStateMachine.GameState.WAVE_ANNOUNCEMENT else ""
@@ -208,6 +232,9 @@ func _process(_delta: float) -> void:
 	reroll_button.text = "REROLL / %d scrap" % world.shop.reroll_cost()
 	reroll_button.disabled = EconomyService.total_scrap < world.shop.reroll_cost()
 	repair_button.disabled = EconomyService.total_scrap < GameConstants.REPAIR_COST or world.player.health >= world.player.max_health
+	core_repair_button.visible = world.core != null
+	if world.core:
+		core_repair_button.disabled = EconomyService.total_scrap < GameConstants.REPAIR_COST or world.core.health >= world.core.max_health
 	if panel.visible:
 		build_text.text = world.shop.build_summary()
 	if world.paused:
@@ -218,7 +245,8 @@ func _process(_delta: float) -> void:
 		description.text = "Wave %d secured. Spend scrap before deploying." % GameStateService.current_wave
 	elif ended:
 		title.text = "SECTOR SECURED" if phase == GameStateMachine.GameState.VICTORY else "SIGNAL LOST"
-		description.text = "%d kills · %d scrap recovered · %ds survived" % [GameStateService.total_kills, GameStateService.lifetime_scrap, int(GameStateService.time_survived)]
+		description.text = "%s%d kills · %d scrap recovered · %ds survived" % ["%s · " % world.defeat_reason if world.defeat_reason != "" else "",
+			GameStateService.total_kills, GameStateService.lifetime_scrap, int(GameStateService.time_survived)]
 	if phase != previous_phase or world.paused != previous_pause:
 		if ended:
 			restart_button.grab_focus()

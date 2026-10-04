@@ -27,7 +27,11 @@ var effects: CombatEffects3D
 var audio: GameAudio
 var difficulty_config: Dictionary
 ## The thing enemies try to destroy in core mode; null in survive mode.
-var core: Node3D
+var core: CoreObjective
+## True when this run protects a core (mode chosen and the `mode_protect_core` flag on).
+var core_mode: bool = false
+## Why the run ended in defeat ("" while running or after a victory); shown on the end screen.
+var defeat_reason: String = ""
 var player: CombatActor
 var camera: Camera3D
 var camera_rig: CameraRig
@@ -71,6 +75,7 @@ func _ready() -> void:
 	difficulty_config = run_config.difficulty_config()
 	if not run_config.flag_preset.is_empty():
 		FeatureFlagService.apply_preset(run_config.flag_preset)
+	core_mode = run_config.mode == RunConfig.MODE_CORE and FeatureFlagService.is_enabled(FeatureFlagService.MODE_PROTECT_CORE)
 	session = RunSession.new()
 	shop.world = self
 	waves.world = self
@@ -131,16 +136,26 @@ func start_run() -> void:
 	player.max_health = PlayerStatsService.get_player_max_health(float(difficulty_config["player_health_mult"]))
 	player.health = player.max_health
 	player.position = Vector3(0, 0, 1)
+	var turret_start := Vector3(0, 0, -1)
+	defeat_reason = ""
+	if core_mode:
+		core = CoreObjective.new()
+		core.name = "Core"
+		actor_root.add_child(core)
+		core.reset(core_max_health())
+		player.position = Vector3(0, 0, GameConstants.CORE_START_OFFSET)
+		turret_start = Vector3(0, 0, -GameConstants.CORE_START_OFFSET)
 	actor_root.add_child(player)
 	var listener := AudioListener3D.new()
 	player.add_child(listener)
 	listener.make_current()
-	add_turret(Vector3(0, 0, -1))
+	add_turret(turret_start)
 	camera_rig.snap()
 	begin_next_wave()
 
 func _clear_actors() -> void:
 	audio.reset()
+	core = null
 	placement.carried = null
 	enemies.clear()
 	turrets.clear()
@@ -283,6 +298,10 @@ func _detonate(source: CombatActor) -> void:
 		combat.apply_hit(victim, CombatHit3D.new(source.explosion_damage, at))
 	if WorldGeometry.planar(player.position - at).length_squared() <= radius_squared:
 		combat.apply_hit(player, CombatHit3D.new(source.explosion_damage, at))
+	if core and not core.dead:
+		var core_reach := source.explosion_radius + core.radius
+		if WorldGeometry.planar(core.position - at).length_squared() <= core_reach * core_reach:
+			damage_core(source.explosion_damage * GameConstants.CORE_DAMAGE_FRACTION)
 
 func _on_actor_defeated(actor: Node3D, _at: Vector3) -> void:
 	var victim := actor as CombatActor
@@ -292,6 +311,31 @@ func _on_actor_defeated(actor: Node3D, _at: Vector3) -> void:
 		_on_player_died(victim)
 
 func _on_player_died(_actor: CombatActor) -> void:
+	_end_run_in_defeat("HULL LOST" if core_mode else "")
+
+func core_max_health() -> float:
+	return GameConstants.PLAYER_BASE_MAX_HEALTH * GameConstants.CORE_HEALTH_MULT * float(difficulty_config.get("core_health_mult", 1.0))
+
+## Enemy contact and blasts land here. Ends the run when the core falls.
+func damage_core(amount: float) -> void:
+	if not core or core.dead or god_mode or not is_combat():
+		return
+	if core.take_hit(amount) > 0.0:
+		audio.play_cue("hull", core.position)
+		if core.dead:
+			_end_run_in_defeat("CORE DESTROYED")
+
+func repair_core() -> bool:
+	if not core or not shop.is_open() or core.dead or core.health >= core.max_health or not EconomyService.deduct_scrap(GameConstants.REPAIR_COST):
+		return false
+	telemetry.record_spend("repair_core", GameConstants.REPAIR_COST)
+	core.repair(GameConstants.REPAIR_HEAL_AMOUNT)
+	audio.play_cue("purchase", player.position)
+	message = "Core repaired."
+	return true
+
+func _end_run_in_defeat(reason: String) -> void:
+	defeat_reason = reason
 	audio.reset()
 	audio.play_cue("defeat", player.position)
 	GameStateService.is_game_active = false
@@ -334,6 +378,8 @@ func dev_restore_hull() -> bool:
 	if not is_instance_valid(player) or not GameStateService.is_game_active:
 		return false
 	player.health = player.max_health
+	if core:
+		core.reset(core.max_health)
 	return true
 
 func dev_spawn_enemy(type_id: String, count: int = 1) -> int:

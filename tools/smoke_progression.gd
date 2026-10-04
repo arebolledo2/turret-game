@@ -3,7 +3,7 @@ extends Node
 ## Accelerated real-physics run: real spawning, damage, pickups, stock and budget.
 ## -- --control buys plasma/shock; default buys ion/fire-rate upgrades.
 ## Defaults to the six-wave slice so the regression gate stays fast; other options:
-##   --waves=N  --difficulty=easy|medium|hard  --preset=<flag preset>  --flags=a,-b
+##   --waves=N  --difficulty=easy|medium|hard|brutal  --mode=survive|core  --preset=<flag preset>  --flags=a,-b
 ##   --telemetry-out=<path>  writes the per-wave telemetry JSON (path may use user:// or be absolute)
 ## A deterministic dodge bot is a regression smoke check, not human playtesting.
 var world: ArenaWorld
@@ -46,6 +46,7 @@ func _physics_process(delta: float) -> void:
 		var won := GameStateMachine.current_state == GameStateMachine.GameState.VICTORY
 		print("PROGRESSION_SMOKE ", JSON.stringify({"route": "control" if control_build else "ion",
 			"victory": won, "wave": GameStateService.current_wave, "health": world.player.health,
+			"core": world.core.health if world.core else -1.0, "defeat": world.defeat_reason,
 			"kills": GameStateService.total_kills, "scrap": EconomyService.total_scrap,
 			"items": ItemTrackingService.item_counts, "turrets": TurretStatsService.turret_counts,
 			"simulated_seconds": elapsed, "flags": FeatureFlagService.get_snapshot()}))
@@ -97,6 +98,8 @@ func finish(won: bool) -> void:
 func shop() -> void:
 	while world.player.health < world.player.max_health - 5 and EconomyService.total_scrap >= 5:
 		world.repair()
+	while world.core and world.core.health < world.core.max_health - 5 and EconomyService.total_scrap >= 5:
+		world.repair_core()
 	for attempt in range(3):
 		for index in range(EconomyService.current_shop_offers.size()):
 			var offer := EconomyService.current_shop_offers[index]

@@ -15,6 +15,8 @@ var motion_check: CheckButton
 var volume_slider: HSlider
 var volume_label: Label
 var home_summary: Label
+var difficulty_option: OptionButton
+var mode_option: OptionButton
 ## Chosen for the next Play; tools and the dev panel may replace it.
 var run_config: RunConfig = RunConfig.new()
 
@@ -57,6 +59,16 @@ func _build_menu() -> void:
 	_label(home, "Move     WASD / arrows / left stick\nCarry or place turret     E / controller A\nPause     Esc / controller Start\nAuto-fire targets nearby enemies.", 22)
 	play_button = _button(home, "PLAY", start_game)
 	settings_button = _button(home, "SETTINGS", show_settings)
+	difficulty_option = _option(home, "Difficulty", func(index: int) -> void:
+		run_config.difficulty = index as GameEnums.Difficulty
+		_update_summary())
+	for difficulty: int in DifficultyService.DIFFICULTY_CONFIG:
+		difficulty_option.add_item("Difficulty  %s  -  %s" % [DifficultyService.DIFFICULTY_CONFIG[difficulty]["name"], DifficultyService.DIFFICULTY_CONFIG[difficulty]["description"]], difficulty)
+	mode_option = _option(home, "Mode", func(index: int) -> void:
+		run_config.mode = RunConfig.MODES[index]
+		_update_summary())
+	mode_option.add_item("Mode  Survive  -  last all the waves")
+	mode_option.add_item("Mode  Protect the core  -  keep the reactor alive")
 	_button(home, "QUIT", func() -> void: get_tree().quit())
 	options = VBoxContainer.new()
 	options.add_theme_constant_override("separation", 18)
@@ -106,6 +118,19 @@ func _button(parent: Node, text: String, action: Callable) -> Button:
 	parent.add_child(button)
 	return button
 
+func _option(parent: Node, accessibility: String, action: Callable) -> OptionButton:
+	var button := OptionButton.new()
+	button.custom_minimum_size.y = 54
+	button.add_theme_font_size_override("font_size", 21)
+	button.accessibility_name = accessibility
+	button.item_selected.connect(action)
+	parent.add_child(button)
+	return button
+
+func _update_summary() -> void:
+	var mode_name := "Protect the core" if run_config.mode == RunConfig.MODE_CORE else "Survive"
+	home_summary.text = "%d waves · %s difficulty · %s" % [run_config.wave_limit, run_config.difficulty_name(), mode_name]
+
 func _check(parent: Node, text: String, action: Callable) -> CheckButton:
 	var button := CheckButton.new()
 	button.text = text
@@ -117,7 +142,14 @@ func _check(parent: Node, text: String, action: Callable) -> CheckButton:
 
 func show_home() -> void:
 	menu.visible = true
-	home_summary.text = "%d waves · %s difficulty · Five turret types" % [run_config.wave_limit, run_config.difficulty_name()]
+	# Core mode needs its experiment flag; without it the selector is hidden and the run is Survive.
+	var core_allowed := FeatureFlagService.is_enabled(FeatureFlagService.MODE_PROTECT_CORE)
+	mode_option.visible = core_allowed
+	if not core_allowed:
+		run_config.mode = RunConfig.MODE_SURVIVE
+	difficulty_option.select(difficulty_option.get_item_index(run_config.difficulty))
+	mode_option.select(RunConfig.MODES.find(run_config.mode))
+	_update_summary()
 	home.visible = true
 	options.visible = false
 	play_button.grab_focus()

@@ -28,6 +28,11 @@ var legs: Array[Node3D] = []
 var gait: float = 0.0
 var flash_time: float = 0.0
 var hit_flash: HitFlash
+## Core mode: true while this enemy is chasing the hero instead of the core (hysteresis between the aggro ranges).
+var chasing_hero: bool = false
+## Core mode: this enemy never switches to the hero.
+var ignores_hero: bool = false
+var core_clock: float = 0.0
 
 const FLASH_DURATION: float = .18
 const ENEMY_FLASH_COLOR := Color(1.0, .92, .8)
@@ -138,7 +143,12 @@ func _physics_process(delta: float) -> void:
 		if slow_marker.visible != slowed:
 			slow_marker.visible = slowed
 		var effective_speed := speed * speed_factor
-		var goal: Vector3 = world.player.position if not world.core else chase_position()
+		var goal: Vector3 = world.player.position
+		var at_core := false
+		if world.core:
+			goal = chase_position()
+			var stop := world.core.radius + .4 * body_scale
+			at_core = not chasing_hero and WorldGeometry.planar(goal - position).length_squared() < stop * stop
 		var movement := WorldGeometry.planar(goal - position).normalized() * effective_speed
 		if charge:
 			var previous_phase := charge.phase
@@ -151,6 +161,8 @@ func _physics_process(delta: float) -> void:
 				warning.rotation.y = atan2(-charge.heading.x, -charge.heading.z)
 				visual.rotation.y = warning.rotation.y
 		if not charge or charge.phase in [ChargeController3D.Phase.APPROACH, ChargeController3D.Phase.RECOVER]:
+			if at_core:
+				movement = Vector3.ZERO
 			movement += world.crowd.separation(self)
 		direction = movement.normalized()
 		velocity = movement + knockback_velocity
@@ -203,6 +215,13 @@ func _physics_process(delta: float) -> void:
 		var closest := Geometry3D.get_closest_point_to_segment(player_position, previous_position, position) if may_touch else position
 		if may_touch and WorldGeometry.planar(player_position - closest).length_squared() < reach * reach:
 			world.combat.apply_hit(world.player, CombatHit3D.new(contact_damage, position))
+		if world.core:
+			core_clock -= delta
+			if core_clock <= 0.0:
+				var core_reach := world.core.radius + reach
+				if WorldGeometry.planar(world.core.position - position).length_squared() < core_reach * core_reach:
+					core_clock = GameConstants.CORE_HIT_INTERVAL
+					world.damage_core(contact_damage * GameConstants.CORE_DAMAGE_FRACTION)
 	else:
 		weapon_clock -= delta
 		if weapon_clock <= 0.0:
@@ -218,7 +237,9 @@ func _physics_process(delta: float) -> void:
 ## Where an enemy is heading when the run has an objective: the hero while within aggro range, otherwise the objective.
 ## Survive mode has no objective and never calls this (the hero is always the goal).
 func chase_position() -> Vector3:
-	return world.player.position
+	var range_limit := GameConstants.CORE_DEAGGRO_RANGE if chasing_hero else GameConstants.CORE_AGGRO_RANGE
+	chasing_hero = not ignores_hero and WorldGeometry.planar(world.player.position - position).length_squared() <= range_limit * range_limit
+	return world.player.position if chasing_hero else world.core.position
 
 func take_damage(amount: float) -> void:
 	world.combat.apply_hit(self, CombatHit3D.new(amount, position))

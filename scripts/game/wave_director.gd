@@ -104,9 +104,30 @@ func spawn_enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
 	world.enemies.append(enemy)
 	return enemy
 
+## Core mode: a point on the rectangle at CORE_SPAWN_BOX of the arena, so waves arrive from every side of the core.
+## A spot too close to the hero is retried a few times.
+func _core_spawn_position() -> Vector3:
+	var half := WorldGeometry.HALF_ARENA * GameConstants.CORE_SPAWN_BOX
+	var result := Vector3.ZERO
+	for attempt in 6:
+		var along := GameRandom.gameplay.randf() * (half.x + half.y) * 4.0
+		if along < half.x * 2.0:
+			result = Vector3(-half.x + along, 0, -half.y)
+		elif along < half.x * 2.0 + half.y * 2.0:
+			result = Vector3(half.x, 0, -half.y + along - half.x * 2.0)
+		elif along < half.x * 4.0 + half.y * 2.0:
+			result = Vector3(half.x - (along - half.x * 2.0 - half.y * 2.0), 0, half.y)
+		else:
+			result = Vector3(-half.x, 0, half.y - (along - half.x * 4.0 - half.y * 2.0))
+		if not is_instance_valid(world.player) or WorldGeometry.planar(result - world.player.position).length() >= GameConstants.ENEMY_SPAWN_MIN_DISTANCE:
+			break
+	return result
+
 ## Enemies appear on a ring just outside the default-zoom view around the player, clamped to the arena, so they
 ## reach the fight quickly on the large map. A spot clamped back into view is retried a few times.
 func spawn_position() -> Vector3:
+	if world.core:
+		return _core_spawn_position()
 	var centre := WorldGeometry.planar(world.player.position) if is_instance_valid(world.player) else Vector3.ZERO
 	var ring := world.camera_rig.visible_half_extents(GameConstants.CAMERA_DEFAULT_ZOOM) + Vector2.ONE * GameConstants.ENEMY_SPAWN_VIEW_MARGIN
 	var result := Vector3.ZERO

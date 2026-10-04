@@ -25,6 +25,8 @@ func find_placement() -> Vector3:
 func valid_placement(at: Vector3, excluding: TurretActor = null) -> bool:
 	if WorldGeometry.clamp_position(at, EDGE_MARGIN).distance_squared_to(at) > .0001:
 		return false
+	if world.core and WorldGeometry.planar(world.core.position - at).length() < world.core.radius + GameConstants.CORE_PLACEMENT_CLEARANCE:
+		return false
 	for turret in world.turrets:
 		if turret != excluding and WorldGeometry.planar(turret.position - at).length() < MIN_SPACING:
 			return false

@@ -130,3 +130,23 @@ func test_reduced_motion_survives_runs_and_preserves_warning_and_pulse_informati
 	app.start_game()
 	assert_true(FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
 	SettingsService.set_reduced_motion(false, false)
+
+func test_home_screen_chooses_difficulty_and_mode_for_the_next_run() -> void:
+	app.difficulty_option.select(app.difficulty_option.get_item_index(GameEnums.Difficulty.HARD))
+	app.difficulty_option.item_selected.emit(app.difficulty_option.selected)
+	app.mode_option.select(1)
+	app.mode_option.item_selected.emit(1)
+	assert_eq(app.run_config.difficulty, GameEnums.Difficulty.HARD)
+	assert_eq(app.run_config.mode, RunConfig.MODE_CORE)
+	assert_string_contains(app.home_summary.text, "Protect the core")
+	app.start_game()
+	assert_true(app.arena.core_mode)
+	assert_not_null(app.arena.core)
+
+func test_mode_selector_hides_when_the_flag_is_off() -> void:
+	FeatureFlagService.set_enabled(FeatureFlagService.MODE_PROTECT_CORE, false)
+	app.run_config.mode = RunConfig.MODE_CORE
+	app.show_home()
+	assert_false(app.mode_option.visible)
+	assert_eq(app.run_config.mode, RunConfig.MODE_SURVIVE)
+	FeatureFlagService.reset_state()
