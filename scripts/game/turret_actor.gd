@@ -14,13 +14,18 @@ var target: CombatActor
 var target_clock: float = 0.0
 var spin_angle: float = 0.0
 var rehit_lockouts: Dictionary = {}
+## Modifier math is costly and static between purchases, so stats are rebuilt on change or every STATS_REFRESH seconds.
+var cached_stats: Dictionary = {}
+var stats_age: float = 0.0
 
+const STATS_REFRESH: float = .25
 const MELEE_HIT_PADDING: float = .3
 const MELEE_REHIT_DELAY: float = .5
 const TESLA_TINT := Color(.35, .9, 1.0)
 static var melee_materials: Dictionary = {}
 
 func _ready() -> void:
+	Events.modifiers_changed.connect(invalidate_stats)
 	var model: Node3D
 	if turret_type == "plasma":
 		model = preload("res://assets/models/game/plasma_turret.glb").instantiate()
@@ -89,6 +94,16 @@ func _spin_bat(delta: float, stats: Dictionary, reach: float) -> void:
 		bat_hit.source_id = turret_id
 		world.combat.apply_hit(enemy, bat_hit)
 
+func invalidate_stats() -> void:
+	cached_stats = {}
+
+func _current_stats(delta: float) -> Dictionary:
+	stats_age += delta
+	if cached_stats.is_empty() or stats_age >= STATS_REFRESH:
+		cached_stats = TurretStatsService.get_turret_stats(turret_type, float(world.difficulty_config["turret_damage_mult"]))
+		stats_age = 0.0
+	return cached_stats
+
 func _physics_process(delta: float) -> void:
 	if not world.is_combat():
 		return
@@ -97,7 +112,7 @@ func _physics_process(delta: float) -> void:
 		return
 	cooldown = maxf(0.0, cooldown - delta)
 	aim.position = aim.position.lerp(aim_rest, minf(delta * 16.0, 1.0))
-	var stats: Dictionary = TurretStatsService.get_turret_stats(turret_type, float(world.difficulty_config["turret_damage_mult"]))
+	var stats: Dictionary = _current_stats(delta)
 	var range_metres := float(stats.get("range", 240.0)) * WorldGeometry.METRES_PER_PIXEL
 	if turret_type == "melee":
 		_spin_bat(delta, stats, range_metres)

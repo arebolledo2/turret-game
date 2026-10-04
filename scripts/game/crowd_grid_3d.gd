@@ -7,11 +7,13 @@ const CELL_SIZE: float = 1.0
 const SPACING: float = 0.72
 var cells: Dictionary = {}
 var positions: Dictionary = {}
+var cell_xz: Dictionary = {}
 var neighbor_counts: Dictionary = {}
 
 func rebuild(actors: Array[CombatActor]) -> void:
 	cells.clear()
 	positions.clear()
+	cell_xz.clear()
 	neighbor_counts.clear()
 	for actor in actors:
 		if not is_instance_valid(actor) or actor.dead:
@@ -19,30 +21,48 @@ func rebuild(actors: Array[CombatActor]) -> void:
 		var cell := _cell(actor.position)
 		if not cells.has(cell):
 			cells[cell] = []
+			cell_xz[cell] = PackedFloat32Array()
 		cells[cell].append(actor)
+		cell_xz[cell].append(actor.position.x)
+		cell_xz[cell].append(actor.position.z)
 		positions[actor.get_instance_id()] = actor.position
 
 func separation(actor: CombatActor) -> Vector3:
 	var origin: Vector3 = positions.get(actor.get_instance_id(), actor.position)
+	var ox := origin.x
+	var oz := origin.z
 	var cell := _cell(origin)
-	var push := Vector3.ZERO
+	var push_x := 0.0
+	var push_z := 0.0
+	const spacing_sq := SPACING * SPACING
 	for x in range(-1, 2):
 		for z in range(-1, 2):
-			for other: CombatActor in cells.get(cell + Vector2i(x, z), []):
-				if not is_instance_valid(other) or other == actor or other.dead:
+			var key := cell + Vector2i(x, z)
+			if not cells.has(key):
+				continue
+			var members: Array = cells[key]
+			var coords: PackedFloat32Array = cell_xz[key]
+			for index in range(members.size()):
+				var other: CombatActor = members[index]
+				if other == actor or not is_instance_valid(other) or other.dead:
 					continue
-				var offset := WorldGeometry.planar(origin - Vector3(positions[other.get_instance_id()]))
-				var squared_distance := offset.length_squared()
-				if squared_distance >= SPACING * SPACING:
+				var dx := ox - coords[index * 2]
+				var dz := oz - coords[index * 2 + 1]
+				var squared_distance := dx * dx + dz * dz
+				if squared_distance >= spacing_sq:
 					continue
 				var distance := sqrt(squared_distance)
 				if distance < .001:
 					# Deterministic, opposite impulses even at exactly coincident spawns.
-					offset = Vector3.RIGHT if actor.get_instance_id() < other.get_instance_id() else Vector3.LEFT
+					dx = 1.0 if actor.get_instance_id() < other.get_instance_id() else -1.0
+					dz = 0.0
 				else:
-					offset /= distance
-				push += offset * (1.0 - distance / SPACING)
-	return push.limit_length(1.0) * 1.1
+					dx /= distance
+					dz /= distance
+				var weight := 1.0 - distance / SPACING
+				push_x += dx * weight
+				push_z += dz * weight
+	return Vector3(push_x, 0.0, push_z).limit_length(1.0) * 1.1
 
 ## Actors whose snapshot position is within `radius` of `origin` (planar), via the grid cells.
 func query_radius(origin: Vector3, radius: float) -> Array[CombatActor]:

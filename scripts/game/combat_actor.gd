@@ -36,15 +36,17 @@ var weapon_clock: float = 0.0
 
 func _ready() -> void:
 	collision_layer = 0 if is_enemy else WorldGeometry.PLAYER_LAYER
-	collision_mask = WorldGeometry.WORLD_LAYER
+	collision_mask = 0 if is_enemy else WorldGeometry.WORLD_LAYER
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
-	var shape := CollisionShape3D.new()
-	var capsule := CapsuleShape3D.new()
-	capsule.radius = 0.23
-	capsule.height = 0.8
-	shape.shape = capsule
-	shape.position.y = 0.4
-	add_child(shape)
+	# Enemies never sweep through the physics server (the hurtbox Area3D handles hits), so they skip the body shape.
+	if not is_enemy:
+		var shape := CollisionShape3D.new()
+		var capsule := CapsuleShape3D.new()
+		capsule.radius = 0.23
+		capsule.height = 0.8
+		shape.shape = capsule
+		shape.position.y = 0.4
+		add_child(shape)
 	visual = Node3D.new()
 	visual.name = "Visual"
 	add_child(visual)
@@ -128,9 +130,14 @@ func _physics_process(delta: float) -> void:
 		hit_flash.update(flash_time / FLASH_DURATION, reduced_motion)
 	var direction := Vector3.ZERO
 	if is_enemy:
-		statuses.advance(delta)
-		slow_marker.visible = statuses.speed_multiplier() < 1.0
-		var effective_speed := speed * statuses.speed_multiplier()
+		var speed_factor := 1.0
+		if not statuses.effects.is_empty():
+			statuses.advance(delta)
+			speed_factor = statuses.speed_multiplier()
+		var slowed := speed_factor < 1.0
+		if slow_marker.visible != slowed:
+			slow_marker.visible = slowed
+		var effective_speed := speed * speed_factor
 		var movement := WorldGeometry.planar(world.player.position - position).normalized() * effective_speed
 		if charge:
 			var previous_phase := charge.phase
@@ -164,26 +171,36 @@ func _physics_process(delta: float) -> void:
 	var previous_position := position
 	if is_enemy:
 		# Enemies only collide with the arena bounds, which clamp_position enforces, so skip the physics-server sweep.
-		position += velocity * delta
+		position = WorldGeometry.clamp_position(position + velocity * delta)
 	else:
 		move_and_slide()
-	position = WorldGeometry.clamp_position(position)
+		position = WorldGeometry.clamp_position(position)
 	if charge and charge.phase == ChargeController3D.Phase.DASH and velocity.length_squared() > .000001 and position.distance_squared_to(previous_position) < .000001:
 		charge.interrupt()
 		warning.visible = false
 	if direction.length_squared() > 0.001:
 		visual.rotation.y = lerp_angle(visual.rotation.y, atan2(-direction.x, -direction.z), minf(delta * 14.0, 1.0))
 	gait += velocity.length() * delta * 10.0
-	visual.position.y = 0.0 if reduced_motion else sin(gait * 2.0) * 0.025
+	if not reduced_motion or visual.position.y != 0.0:
+		visual.position.y = 0.0 if reduced_motion else sin(gait * 2.0) * 0.025
 	# Leg posing is cosmetic: pose each enemy every other physics tick, staggered by instance.
 	var pose_legs := not is_enemy or (Engine.get_physics_frames() + get_instance_id()) % 2 == 0
 	for index in range(legs.size() if pose_legs else 0):
-		if legs[index]:
-			legs[index].rotation.y = 0.0 if reduced_motion else sin(gait + float(index % 2) * PI) * 0.24
-			legs[index].rotation.z = 0.0 if reduced_motion else cos(gait + float(index % 2) * PI) * 0.12
+		var leg: Node3D = legs[index]
+		if leg:
+			var phase := gait + float(index % 2) * PI
+			leg.rotation = Vector3(leg.rotation.x, 0.0, 0.0) if reduced_motion else Vector3(leg.rotation.x, sin(phase) * 0.24, cos(phase) * 0.12)
 	if is_enemy:
-		var closest := Geometry3D.get_closest_point_to_segment(world.player.position, previous_position, position)
-		if WorldGeometry.planar(world.player.position - closest).length_squared() < .5 * .5 * body_scale * body_scale:
+		var player_position: Vector3 = world.player.position
+		var reach := .5 * body_scale
+		var near_x := absf(player_position.x - position.x)
+		var near_z := absf(player_position.z - position.z)
+		# Skip the segment test unless the player is within reach of the step's bounding box.
+		var step_x := absf(position.x - previous_position.x)
+		var step_z := absf(position.z - previous_position.z)
+		var may_touch := near_x < reach + step_x and near_z < reach + step_z
+		var closest := Geometry3D.get_closest_point_to_segment(player_position, previous_position, position) if may_touch else position
+		if may_touch and WorldGeometry.planar(player_position - closest).length_squared() < reach * reach:
 			world.combat.apply_hit(world.player, CombatHit3D.new(contact_damage, position))
 	else:
 		weapon_clock -= delta

@@ -86,3 +86,13 @@ godot --headless --path . res://tools/smoke_progression.tscn -- --waves=20 --pre
 | `--telemetry-out=<path>` | Write the telemetry JSON. It is also printed as `PROGRESSION_TELEMETRY` |
 
 The `PROGRESSION_SMOKE` line includes the flag snapshot so results from different flag sets can be compared.
+
+## Performance tools
+
+| Tool | Use |
+|---|---|
+| `res://tools/capture_game.tscn -- --stress` | Windowed stress capture. `GAME_METRICS` reports frame, physics, process, GPU and render-CPU medians and p95 |
+| `res://tools/bench_physics.tscn` | Headless ablation: switches enemy, turret, world, effects and HUD processing off one at a time |
+| `res://tools/bench_split.tscn` | Headless per-subsystem script timing per physics tick (engine-side physics cost is the remainder) |
+
+Run the headless tools with `godot --headless --path . <scene>`. They measure CPU only, so a busy GPU does not affect them.

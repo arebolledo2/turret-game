@@ -12,6 +12,8 @@ var new_turrets: bool = false
 var last_tick: int = 0
 var physics_samples: Array[float] = []
 var process_samples: Array[float] = []
+var gpu_samples: Array[float] = []
+var render_cpu_samples: Array[float] = []
 var peak_voices: int = 0
 
 func _ready() -> void:
@@ -28,6 +30,7 @@ func setup() -> void:
 	combat_demo = "--combat-demo" in OS.get_cmdline_user_args()
 	new_turrets = "--new-turrets" in OS.get_cmdline_user_args()
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	GameRandom.gameplay.seed = 42
 	for index in range(150 if stress else 18):
 		var angle := float(index) * 2.39996
@@ -54,6 +57,9 @@ func _process(_delta: float) -> void:
 		samples.append(float(tick - last_tick) / 1000.0)
 		physics_samples.append(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0)
 		process_samples.append(Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0)
+		var viewport_rid := get_viewport().get_viewport_rid()
+		gpu_samples.append(RenderingServer.viewport_get_measured_render_time_gpu(viewport_rid))
+		render_cpu_samples.append(RenderingServer.viewport_get_measured_render_time_cpu(viewport_rid))
 		var active_voices: int = 0
 		for remaining: float in world.audio.remaining:
 			if remaining > 0.0:
@@ -75,13 +81,18 @@ func capture() -> void:
 	samples.sort()
 	physics_samples.sort()
 	process_samples.sort()
+	gpu_samples.sort()
+	render_cpu_samples.sort()
 	print("GAME_CAPTURE ", output)
 	print("GAME_METRICS ", JSON.stringify({"frames": samples.size(), "median_frame_ms": samples[samples.size() / 2],
 		"p95_frame_ms": samples[int(samples.size() * .95)], "enemies": world.enemies.size(),
 		"projectiles": world.projectiles.size(), "peak_audio_voices": peak_voices,
 		"spark_instances": world.effects.sparks.size(), "turrets": world.turrets.size(),
 		"physics_p95_ms": physics_samples[int(physics_samples.size() * .95)],
-		"process_p95_ms": process_samples[int(process_samples.size() * .95)], "draw_calls": Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)}))
+		"process_p95_ms": process_samples[int(process_samples.size() * .95)],
+		"physics_median_ms": physics_samples[physics_samples.size() / 2], "process_median_ms": process_samples[process_samples.size() / 2],
+		"gpu_median_ms": gpu_samples[gpu_samples.size() / 2], "gpu_p95_ms": gpu_samples[int(gpu_samples.size() * .95)],
+		"render_cpu_median_ms": render_cpu_samples[render_cpu_samples.size() / 2], "render_cpu_p95_ms": render_cpu_samples[int(render_cpu_samples.size() * .95)], "draw_calls": Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)}))
 	get_tree().quit()
 
 func stage_combat_demo() -> void:
