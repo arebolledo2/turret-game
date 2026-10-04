@@ -1,8 +1,8 @@
 # Game flow
 
-The normal launch exposes one supported mode: six survival waves at fixed Easy difficulty. There are no difficulty, spawn-mode, arena-mode or win-condition selectors. Retained registry/state-machine entries describe shared data and possible future work.
+The normal launch exposes one supported mode: six survival waves at fixed Easy difficulty. There are no difficulty, spawn-mode, arena-mode or win-condition selectors. The Medium and Hard difficulty presets in `DifficultyService` are retained for future work.
 
-Play creates a fresh arena/session. Internally the shared state machine moves through its setup state into `WAVE_ANNOUNCEMENT`, waits two seconds, and enters `COMBAT`. The setup enum `DIFFICULTY_SELECT` does not represent a visible selection screen in this version.
+Play creates a fresh arena/session. Internally the shared state machine moves from `IDLE` into `WAVE_ANNOUNCEMENT`, waits two seconds, and enters `COMBAT`.
 
 When the wave timer expires, `ArenaWorld.finish_wave()` clears surviving enemies and transient combat effects, collects remaining scrap, and awards the wave bonus. Waves 1–5 enter `SHOP`; Continue begins the next announcement. Wave 6 ends in `VICTORY`. Player death ends in `GAME_OVER`.
 

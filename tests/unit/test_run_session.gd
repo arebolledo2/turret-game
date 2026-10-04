@@ -13,19 +13,17 @@ func test_standalone_service_instances_have_private_state() -> void:
 func test_run_binds_services_and_replaces_transient_state() -> void:
 	var session := RunSession.new()
 	add_child_autofree(session)
-	FeatureFlagService.set_enabled(FeatureFlagService.SHOP, false)
+	FeatureFlagService.set_enabled(FeatureFlagService.REDUCED_MOTION, true)
 	DifficultyService.set_difficulty(GameEnums.Difficulty.HARD)
 	session.begin_run()
 	var old := session.state
 	EconomyService.total_scrap = 777
-	LootService.add_found_item("scrap_magnet")
 	assert_eq(old.total_scrap, 777)
 	session.begin_run()
 	assert_ne(session.state, old)
 	assert_eq(old.total_scrap, 777)
 	assert_eq(EconomyService.total_scrap, GameConstants.STARTING_SCRAP)
-	assert_false(LootService.has_pending_loot())
-	assert_false(FeatureFlagService.is_enabled(FeatureFlagService.SHOP))
+	assert_true(FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
 	assert_eq(DifficultyService.current_difficulty, GameEnums.Difficulty.HARD)
 
 func test_teardown_detaches_current_run() -> void:
@@ -35,7 +33,6 @@ func test_teardown_detaches_current_run() -> void:
 	var old := session.state
 	session.free()
 	assert_ne(GameStateService.state, old)
-	assert_null(GameStateService.wave_controller)
 
 func test_old_scene_teardown_cannot_clear_new_run() -> void:
 	var old := RunSession.new()

@@ -20,25 +20,3 @@ enum EnemyRank {NORMAL, LIEUTENANT, CAPTAIN}
 
 # Item rarity levels
 enum ItemRarity {COMMON, UNCOMMON, RARE, EPIC, LEGENDARY, UNIQUE}
-
-# Collision hitbox types
-enum HitboxType {PHYSICS, PLAYER_HURTBOX, ENEMY_HURTBOX, PLAYER_ATTACK}
-
-# Game Mode IDs
-enum GameMode {
-	# Spawn location modes
-	SENTINEL, # Near edges
-	INVASION, # Anywhere
-	# Win condition modes
-	SURVIVAL, # Classic mode (default) - survive all waves
-	TECH_DEFENSE, # Defend static target with HP
-	TUNNELING_TIMED, # Unlock door within wave timer
-	TUNNELING_ALERT, # Unlock door, spawn rate escalates if slow
-	# Arena type modes
-	ARENA_RECTANGULAR, # Classic rectangular arena (default)
-	ARENA_ISOMETRIC, # Isometric diamond arena for AI backgrounds
-	ESCORT, # Defend moving target
-}
-
-# Arena geometry types
-enum ArenaType {RECTANGULAR, ISOMETRIC}

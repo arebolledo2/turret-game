@@ -72,7 +72,7 @@ func _ready() -> void:
 func start_run() -> void:
 	_clear_actors()
 	session.begin_run()
-	GameStateMachine.force_transition(GameStateMachine.GameState.DIFFICULTY_SELECT)
+	GameStateMachine.force_transition(GameStateMachine.GameState.IDLE)
 	GameStateService.is_game_active = true
 	GameStateService.current_wave = 0
 	paused = false
@@ -130,7 +130,7 @@ func _physics_process(delta: float) -> void:
 		finish_wave()
 
 func begin_next_wave() -> bool:
-	if GameStateMachine.current_state not in [GameStateMachine.GameState.DIFFICULTY_SELECT, GameStateMachine.GameState.SHOP]:
+	if GameStateMachine.current_state not in [GameStateMachine.GameState.IDLE, GameStateMachine.GameState.SHOP]:
 		return false
 	if not GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_ANNOUNCEMENT):
 		return false

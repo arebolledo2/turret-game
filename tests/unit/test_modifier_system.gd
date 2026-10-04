@@ -79,7 +79,7 @@ func test_empty_filter_matches_all_turrets():
 		"filter": {}
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 
 	# All turret types should get the +10 damage bonus
 	for turret_type in TurretRegistry.get_all_type_ids():
@@ -99,7 +99,7 @@ func test_no_filter_key_matches_all_turrets():
 		# No filter key
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 
 	for turret_type in TurretRegistry.get_all_type_ids():
 		var stats = modifier_system.get_turret_stats(turret_type, easy_config)
@@ -121,7 +121,7 @@ func test_turret_type_filter_matches_specific_turret():
 		"filter": {"turret_type": ["fire"]}
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 
 	var fire_stats = modifier_system.get_turret_stats("fire", easy_config)
 	var fire_base = TurretRegistry.get_base_stats("fire")
@@ -144,7 +144,7 @@ func test_turret_type_filter_or_logic():
 		"filter": {"turret_type": ["shock", "tesla"]}
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 
 	var shock_stats = modifier_system.get_turret_stats("shock", easy_config)
 	var shock_base = TurretRegistry.get_base_stats("shock")
@@ -176,7 +176,7 @@ func test_damage_type_filter_matches_turrets():
 		"filter": {"damage_type": [GameEnums.DamageType.ELECTRIC]}
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 
 	# Shock and Tesla have ELECTRIC damage type
 	var shock_stats = modifier_system.get_turret_stats("shock", easy_config)
@@ -206,7 +206,7 @@ func test_damage_type_filter_or_logic():
 		"filter": {"damage_type": [GameEnums.DamageType.FIRE, GameEnums.DamageType.ELECTRIC]}
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 
 	# Fire turret has FIRE damage
 	var fire_stats = modifier_system.get_turret_stats("fire", easy_config)
@@ -233,7 +233,7 @@ func test_attack_style_filter_matches_turrets():
 		"filter": {"attack_style": [GameEnums.AttackStyle.AOE]}
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 
 	# Shock and Plasma have AOE attack style
 	var shock_stats = modifier_system.get_turret_stats("shock", easy_config)
@@ -263,7 +263,7 @@ func test_attack_style_instant_filter():
 		"filter": {"attack_style": [GameEnums.AttackStyle.INSTANT]}
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 
 	var sniper_stats = modifier_system.get_turret_stats("sniper", easy_config)
 	var sniper_base = TurretRegistry.get_base_stats("sniper")
@@ -288,7 +288,7 @@ func test_add_operation_adds_to_stat():
 		"value": 10.0
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -309,7 +309,7 @@ func test_multiple_add_operations_stack():
 		"value": 7.0
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -328,7 +328,7 @@ func test_increase_operation_applies_percentage():
 		"value": 0.5  # +50% increase
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -351,7 +351,7 @@ func test_multiple_increase_operations_stack_additively():
 		"value": 0.5  # +50%
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -373,7 +373,7 @@ func test_more_operation_multiplies_stat():
 		"value": 1.5  # 50% more
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -388,7 +388,7 @@ func test_multiply_operation_alias_multiplies_turret_stat():
 		"value": 1.15
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -411,7 +411,7 @@ func test_multiple_more_operations_stack_multiplicatively():
 		"value": 1.5  # 50% more
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -440,7 +440,7 @@ func test_poe_formula_flat_then_increase():
 		"value": 0.5  # +50%
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -464,7 +464,7 @@ func test_poe_formula_increase_then_more():
 		"value": 1.5
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -506,7 +506,7 @@ func test_poe_formula_full_calculation():
 		"value": 1.3  # 30% more
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -539,7 +539,7 @@ func test_order_is_flat_increase_more_regardless_of_insertion_order():
 		"value": 10.0
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -553,8 +553,8 @@ func test_order_is_flat_increase_more_regardless_of_insertion_order():
 # =============================================================================
 
 func test_difficulty_modifier_applied_to_damage():
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
-	var hard_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.HARD]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var hard_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.HARD]
 
 	var easy_stats = modifier_system.get_turret_stats("normal", easy_config)
 	var hard_stats = modifier_system.get_turret_stats("normal", hard_config)
@@ -572,7 +572,7 @@ func test_modifiers_stack_with_difficulty():
 		"value": 10.0
 	})
 
-	var hard_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.HARD]
+	var hard_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.HARD]
 	var stats = modifier_system.get_turret_stats("normal", hard_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -774,7 +774,7 @@ func test_modifier_with_zero_add():
 		"value": 0.0
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -789,7 +789,7 @@ func test_modifier_with_zero_increase():
 		"value": 0.0  # 0% increase
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -804,7 +804,7 @@ func test_modifier_with_one_more():
 		"value": 1.0  # 1x (no change)
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -819,7 +819,7 @@ func test_negative_add_reduces_stat():
 		"value": -5.0
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -834,7 +834,7 @@ func test_negative_increase_reduces_stat():
 		"value": -0.5  # -50%
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -849,7 +849,7 @@ func test_less_modifier_reduces_stat():
 		"value": 0.5  # 50% less (0.5x multiplier)
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	var base_stats = TurretRegistry.get_base_stats("normal")
 
@@ -864,7 +864,7 @@ func test_modifier_for_nonexistent_stat():
 		"value": 100.0
 	})
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	# Should not crash, just not affect any real stats
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 	assert_not_null(stats, "Should handle non-existent stat gracefully")

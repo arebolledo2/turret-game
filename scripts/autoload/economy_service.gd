@@ -19,9 +19,6 @@ var shop_reroll_count: int:
 var current_shop_offers: Array:
 	get: return state.current_shop_offers
 	set(value): state.current_shop_offers = value
-var pending_turret_purchases: Array[String]:
-	get: return state.pending_turret_purchases
-	set(value): state.pending_turret_purchases = value
 
 # Turret purchase tracking (for price penalty calculation)
 var turrets_purchased: int:
@@ -33,7 +30,6 @@ func reset_state() -> void:
 	total_scrap = GameConstants.STARTING_SCRAP
 	shop_reroll_count = 0
 	current_shop_offers.clear()
-	pending_turret_purchases.clear()
 	turrets_purchased = 0
 
 

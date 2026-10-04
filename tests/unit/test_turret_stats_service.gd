@@ -29,11 +29,6 @@ func test_reset_state_clears_turret_counts():
 		"Reset should clear turret counts")
 
 
-func test_reset_state_clears_selected_turret():
-	turret_stats_service.selected_turret_type = "plasma"
-	turret_stats_service.reset_state()
-	assert_eq(turret_stats_service.selected_turret_type, "",
-		"Reset should clear selected turret")
 
 
 # =============================================================================

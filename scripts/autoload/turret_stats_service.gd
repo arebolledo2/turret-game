@@ -11,13 +11,9 @@ var rng: RandomNumberGenerator = GameRandom.gameplay
 var turret_counts: Dictionary:
 	get: return state.turret_counts
 	set(value): state.turret_counts = value
-var selected_turret_type: String:
-	get: return state.selected_turret_type
-	set(value): state.selected_turret_type = value
 
 func reset_state() -> void:
 	turret_counts.clear()
-	selected_turret_type = ""
 
 
 ## Get turret stats with all modifiers applied

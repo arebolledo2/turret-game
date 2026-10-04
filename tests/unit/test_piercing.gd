@@ -18,7 +18,7 @@ func test_shrapnel_rounds_adds_pierce_to_normal_turret():
 	var shrapnel_modifier = ItemRegistry.get_modifiers("shrapnel_rounds")[0]
 	modifier_system.add_modifier(shrapnel_modifier)
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 
 	# Normal turret base pierce is 0, should become 1
@@ -31,7 +31,7 @@ func test_shrapnel_rounds_adds_pierce_to_fire_turret():
 	var shrapnel_modifier = ItemRegistry.get_modifiers("shrapnel_rounds")[0]
 	modifier_system.add_modifier(shrapnel_modifier)
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("fire", easy_config)
 
 	# Fire turret base pierce is 99, should become 100
@@ -44,7 +44,7 @@ func test_shrapnel_rounds_adds_pierce_to_plasma_turret():
 	var shrapnel_modifier = ItemRegistry.get_modifiers("shrapnel_rounds")[0]
 	modifier_system.add_modifier(shrapnel_modifier)
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("plasma", easy_config)
 
 	# Plasma turret base pierce is 0, should become 1
@@ -57,7 +57,7 @@ func test_shrapnel_rounds_does_not_affect_sniper_turret():
 	var shrapnel_modifier = ItemRegistry.get_modifiers("shrapnel_rounds")[0]
 	modifier_system.add_modifier(shrapnel_modifier)
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("sniper", easy_config)
 
 	# Sniper doesn't have pierce stat in base stats, and shouldn't get it from Shrapnel
@@ -70,7 +70,7 @@ func test_shrapnel_rounds_does_not_affect_shock_turret():
 	var shrapnel_modifier = ItemRegistry.get_modifiers("shrapnel_rounds")[0]
 	modifier_system.add_modifier(shrapnel_modifier)
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("shock", easy_config)
 
 	assert_eq(stats.get("pierce", 0), 0,
@@ -82,7 +82,7 @@ func test_shrapnel_rounds_does_not_affect_tesla_turret():
 	var shrapnel_modifier = ItemRegistry.get_modifiers("shrapnel_rounds")[0]
 	modifier_system.add_modifier(shrapnel_modifier)
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("tesla", easy_config)
 
 	assert_eq(stats.get("pierce", 0), 0,
@@ -99,7 +99,7 @@ func test_multiple_shrapnel_rounds_stack():
 	modifier_system.add_modifier(shrapnel_modifier_1)
 	modifier_system.add_modifier(shrapnel_modifier_2)
 
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = modifier_system.get_turret_stats("normal", easy_config)
 
 	# Normal turret should have 2 pierce (0 base + 1 + 1)

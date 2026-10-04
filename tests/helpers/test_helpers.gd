@@ -132,29 +132,24 @@ static func reset_all_services() -> void:
 	RunSession.bind_state(RunSessionState.new())
 	# Reset lifecycle and preferences before mode defaults are calculated.
 	GameStateMachine.reset()
-	GameStateService.wave_controller = null
 	GameStateService.is_game_active = false
 	SettingsService.reset_state()
 	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
-	ArenaBoundsService.set_arena_type(GameEnums.ArenaType.RECTANGULAR)
 	GameRandom.reset(12345)
 	# Core game state
 	GameStateService.reset_state()
 	EconomyService.reset_state()
 	DifficultyService.reset_state()
-	GameModeService.reset_state()
 	SettingsService.reset_state()
 
 	# Player & combat
 	PlayerStatsService.reset_state()
 	TurretStatsService.reset_state()
 	ModifierService.clear_modifiers()
-	BuffSystem.reset_state()
 
 	# Economy & progression
 	ItemTrackingService.reset_state()
 	TechTreeService.reset_state()
-	LootService.reset_state()
 
 	# Presentation
 

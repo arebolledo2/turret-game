@@ -24,27 +24,11 @@ func test_initial_state_is_idle():
 # VALID TRANSITIONS
 # =============================================================================
 
-func test_idle_to_difficulty_select():
+func test_idle_to_wave_announcement():
 	GameStateMachine.reset()
-	var result = GameStateMachine.transition_to(GameStateMachine.GameState.DIFFICULTY_SELECT)
-
-	assert_true(result, "IDLE -> DIFFICULTY_SELECT should be valid")
-	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.DIFFICULTY_SELECT)
-
-
-func test_difficulty_select_to_game_mode_select():
-	GameStateMachine.force_transition(GameStateMachine.GameState.DIFFICULTY_SELECT)
-	var result = GameStateMachine.transition_to(GameStateMachine.GameState.GAME_MODE_SELECT)
-
-	assert_true(result, "DIFFICULTY_SELECT -> GAME_MODE_SELECT should be valid")
-	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.GAME_MODE_SELECT)
-
-
-func test_game_mode_select_to_wave_announcement():
-	GameStateMachine.force_transition(GameStateMachine.GameState.GAME_MODE_SELECT)
 	var result = GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_ANNOUNCEMENT)
 
-	assert_true(result, "GAME_MODE_SELECT -> WAVE_ANNOUNCEMENT should be valid")
+	assert_true(result, "IDLE -> WAVE_ANNOUNCEMENT should be valid")
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_ANNOUNCEMENT)
 
 
@@ -145,7 +129,7 @@ func test_transition_emits_state_changed_signal():
 	GameStateMachine.reset()
 	watch_signals(GameStateMachine)
 
-	GameStateMachine.transition_to(GameStateMachine.GameState.DIFFICULTY_SELECT)
+	GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_ANNOUNCEMENT)
 
 	assert_signal_emitted(GameStateMachine, "state_changed")
 
@@ -224,11 +208,6 @@ func test_is_victory():
 
 func test_is_in_menu_during_idle():
 	GameStateMachine.reset()
-	assert_true(GameStateMachine.is_in_menu())
-
-
-func test_is_in_menu_during_difficulty_select():
-	GameStateMachine.force_transition(GameStateMachine.GameState.DIFFICULTY_SELECT)
 	assert_true(GameStateMachine.is_in_menu())
 
 

@@ -18,13 +18,10 @@ static func bind_state(value: RunSessionState) -> void:
 	PlayerStatsService.state = value
 	TurretStatsService.state = value
 	ItemTrackingService.state = value
-	LootService.state = value
 	TechTreeService.state = value
 	ModifierService.state = value
-	BuffSystem.state = value
 
 func _exit_tree() -> void:
 	if GameStateService.state != state:
 		return # A newer scene already owns the services.
 	bind_state(RunSessionState.new())
-	GameStateService.wave_controller = null

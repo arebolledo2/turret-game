@@ -17,9 +17,6 @@ var total_kills: int:
 var total_scrap: int:
 	get: return state.lifetime_scrap
 	set(value): state.lifetime_scrap = value
-var player_level: int:
-	get: return state.player_level
-	set(value): state.player_level = value
 
 # Time tracking
 var time_survived: float:
@@ -33,14 +30,12 @@ var is_game_active: bool:
 var turrets_spawned: int:
 	get: return state.turrets_spawned
 	set(value): state.turrets_spawned = value
-var wave_controller: Node = null # Reference set by GameManager
 
 
 func reset_state() -> void:
 	current_wave = 0
 	total_kills = 0
 	total_scrap = 0
-	player_level = 1
 	turrets_spawned = 0
 	time_survived = 0.0
 	is_game_active = false

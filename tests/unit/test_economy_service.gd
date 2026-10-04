@@ -39,14 +39,6 @@ func test_reset_state_clears_shop_offers():
 		"Reset should clear shop offers")
 
 
-func test_reset_state_clears_pending_purchases():
-	economy_service.pending_turret_purchases.append("fire")
-	economy_service.pending_turret_purchases.append("sniper")
-	economy_service.reset_state()
-	assert_eq(economy_service.pending_turret_purchases.size(), 0,
-		"Reset should clear pending purchases")
-
-
 func test_reset_state_clears_turrets_purchased():
 	economy_service.turrets_purchased = 10
 	economy_service.reset_state()
@@ -231,10 +223,6 @@ func test_get_wave_scrap_bonus_increases_per_wave():
 # =============================================================================
 # SHOP STATE MANAGEMENT
 # =============================================================================
-
-func test_pending_turret_purchases_starts_empty():
-	assert_eq(economy_service.pending_turret_purchases.size(), 0,
-		"Should start with no pending purchases")
 
 
 func test_shop_offers_starts_empty():

@@ -77,7 +77,7 @@ func test_each_enemy_type_has_valid_stats():
 # =============================================================================
 
 func test_health_scaling_wave_1_easy():
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = EnemyRegistry.get_stats_for_wave("basic", 1, easy_config)
 	var base_stats = EnemyRegistry.get_base_stats("basic")
 
@@ -86,7 +86,7 @@ func test_health_scaling_wave_1_easy():
 
 
 func test_health_scaling_exponential():
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var wave1_stats = EnemyRegistry.get_stats_for_wave("basic", 1, easy_config)
 	var wave5_stats = EnemyRegistry.get_stats_for_wave("basic", 5, easy_config)
 
@@ -99,8 +99,8 @@ func test_health_scaling_exponential():
 
 
 func test_health_scaling_with_difficulty():
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
-	var hard_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.HARD]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var hard_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.HARD]
 
 	var easy_stats = EnemyRegistry.get_stats_for_wave("basic", 3, easy_config)
 	var hard_stats = EnemyRegistry.get_stats_for_wave("basic", 3, hard_config)
@@ -110,7 +110,7 @@ func test_health_scaling_with_difficulty():
 
 
 func test_health_scaling_different_enemy_types():
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 
 	var basic_stats = EnemyRegistry.get_stats_for_wave("basic", 3, easy_config)
 	var tank_stats = EnemyRegistry.get_stats_for_wave("tank", 3, easy_config)
@@ -125,7 +125,7 @@ func test_health_scaling_different_enemy_types():
 # =============================================================================
 
 func test_speed_scaling_wave_1_easy():
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var stats = EnemyRegistry.get_stats_for_wave("fast", 1, easy_config)
 	var base_stats = EnemyRegistry.get_base_stats("fast")
 
@@ -134,7 +134,7 @@ func test_speed_scaling_wave_1_easy():
 
 
 func test_speed_scaling_with_waves():
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var wave1_stats = EnemyRegistry.get_stats_for_wave("basic", 1, easy_config)
 	var wave5_stats = EnemyRegistry.get_stats_for_wave("basic", 5, easy_config)
 
@@ -150,7 +150,7 @@ func test_speed_scaling_with_waves():
 
 
 func test_fast_enemy_is_faster_than_basic():
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var basic_stats = EnemyRegistry.get_stats_for_wave("basic", 1, easy_config)
 	var fast_stats = EnemyRegistry.get_stats_for_wave("fast", 1, easy_config)
 
@@ -159,7 +159,7 @@ func test_fast_enemy_is_faster_than_basic():
 
 
 func test_tank_enemy_is_slower_than_basic():
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var basic_stats = EnemyRegistry.get_stats_for_wave("basic", 1, easy_config)
 	var tank_stats = EnemyRegistry.get_stats_for_wave("tank", 1, easy_config)
 
@@ -172,8 +172,8 @@ func test_tank_enemy_is_slower_than_basic():
 # =============================================================================
 
 func test_damage_scaling_with_difficulty():
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
-	var hard_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.HARD]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var hard_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.HARD]
 
 	var easy_stats = EnemyRegistry.get_stats_for_wave("basic", 1, easy_config)
 	var hard_stats = EnemyRegistry.get_stats_for_wave("basic", 1, hard_config)
@@ -183,7 +183,7 @@ func test_damage_scaling_with_difficulty():
 
 
 func test_tank_has_higher_contact_damage():
-	var easy_config = GameConstants.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
+	var easy_config = DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.EASY]
 	var basic_stats = EnemyRegistry.get_stats_for_wave("basic", 1, easy_config)
 	var tank_stats = EnemyRegistry.get_stats_for_wave("tank", 1, easy_config)
 

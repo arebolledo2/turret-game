@@ -87,7 +87,6 @@ func test_turret_purchase_and_compact_design_reprice_unsold_offers() -> void:
 	assert_true(world.shop.purchase(compact))
 	assert_lt(int(EconomyService.current_shop_offers[plasma]["price"]), after)
 	assert_eq(int(EconomyService.current_shop_offers[plasma]["price"]), EconomyService.calculate_turret_price(16, 5))
-	assert_true(EconomyService.pending_turret_purchases.is_empty(), "3D purchases deploy directly")
 
 func test_reroll_cost_pause_empty_wallet_free_refresh_and_wave_reset() -> void:
 	world.finish_wave()

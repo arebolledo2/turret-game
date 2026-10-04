@@ -8,12 +8,9 @@ signal state_changed(old_state: GameState, new_state: GameState)
 
 enum GameState {
 	IDLE,
-	DIFFICULTY_SELECT,
-	GAME_MODE_SELECT,
 	WAVE_ANNOUNCEMENT,
 	COMBAT,
 	WAVE_END,
-	LOOT_REVIEW,
 	SHOP,
 	VICTORY,
 	GAME_OVER
@@ -30,13 +27,10 @@ var current_state: GameState:
 # =============================================================================
 
 const VALID_TRANSITIONS: Dictionary = {
-	GameState.IDLE: [GameState.DIFFICULTY_SELECT],
-	GameState.DIFFICULTY_SELECT: [GameState.GAME_MODE_SELECT, GameState.WAVE_ANNOUNCEMENT],
-	GameState.GAME_MODE_SELECT: [GameState.WAVE_ANNOUNCEMENT],
+	GameState.IDLE: [GameState.WAVE_ANNOUNCEMENT],
 	GameState.WAVE_ANNOUNCEMENT: [GameState.COMBAT, GameState.WAVE_END],
 	GameState.COMBAT: [GameState.WAVE_END, GameState.VICTORY, GameState.GAME_OVER],
-	GameState.WAVE_END: [GameState.LOOT_REVIEW, GameState.SHOP, GameState.VICTORY, GameState.WAVE_ANNOUNCEMENT],
-	GameState.LOOT_REVIEW: [GameState.SHOP, GameState.WAVE_ANNOUNCEMENT],
+	GameState.WAVE_END: [GameState.SHOP, GameState.VICTORY, GameState.WAVE_ANNOUNCEMENT],
 	GameState.SHOP: [GameState.WAVE_ANNOUNCEMENT],
 	GameState.VICTORY: [GameState.IDLE],
 	GameState.GAME_OVER: [GameState.IDLE]
@@ -91,7 +85,6 @@ func is_playing() -> bool:
 		GameState.WAVE_ANNOUNCEMENT,
 		GameState.COMBAT,
 		GameState.WAVE_END,
-		GameState.LOOT_REVIEW,
 		GameState.SHOP
 	]
 
@@ -109,11 +102,7 @@ func is_victory() -> bool:
 
 
 func is_in_menu() -> bool:
-	return current_state in [
-		GameState.IDLE,
-		GameState.DIFFICULTY_SELECT,
-		GameState.GAME_MODE_SELECT
-	]
+	return current_state == GameState.IDLE
 
 
 # =============================================================================
@@ -123,12 +112,9 @@ func is_in_menu() -> bool:
 func get_state_name(state: GameState) -> String:
 	match state:
 		GameState.IDLE: return "IDLE"
-		GameState.DIFFICULTY_SELECT: return "DIFFICULTY_SELECT"
-		GameState.GAME_MODE_SELECT: return "GAME_MODE_SELECT"
 		GameState.WAVE_ANNOUNCEMENT: return "WAVE_ANNOUNCEMENT"
 		GameState.COMBAT: return "COMBAT"
 		GameState.WAVE_END: return "WAVE_END"
-		GameState.LOOT_REVIEW: return "LOOT_REVIEW"
 		GameState.SHOP: return "SHOP"
 		GameState.VICTORY: return "VICTORY"
 		GameState.GAME_OVER: return "GAME_OVER"
