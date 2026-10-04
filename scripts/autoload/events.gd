@@ -2,82 +2,17 @@ extends Node
 
 # Autoload singleton for global events (signal bus)
 # Add to Project Settings > Autoload as "Events"
+# World combat notifications live on the run-owned Combat3D, not here.
 
-# Game State
-signal game_started()
-signal game_paused()
-signal game_resumed()
-signal game_over(victory: bool)
-
-# Wave Events
-signal wave_announcement_started(wave_number: int)
-signal wave_started(wave_number: int)
-signal wave_ended(wave_number: int)
-signal wave_timer_updated(time_remaining: float)
-
-# Combat Events
-signal player_damaged(current_health: float, max_health: float)
-signal player_died()
-
-# Turret Events
-signal turret_range_toggled(show_range: bool)
-signal hitbox_debug_toggled(type: int, enabled: bool)
-signal isometric_debug_toggled(enabled: bool)
+signal modifiers_changed() # Emitted when items are purchased/modifiers added
 signal feature_flag_changed(flag_id: String, enabled: bool)
 
-
-# Pickup Events (Scrap)
-signal scrap_collected(amount: int, total: int)
-signal scrap_spent(amount: int, remaining: int)
-
-# Shop Events
-signal shop_opened(wave_number: int)
-signal shop_closed()
-signal shop_offers_generated(offers: Array)
-signal shop_purchase_made(offer: Dictionary)
-signal shop_rerolled(new_offers: Array, cost: int)
-signal shop_insufficient_funds(required: int, current: int)
-signal offer_locked(offer_index: int)
-signal offer_unlocked(offer_index: int)
-
-# Research Events
-signal research_points_gained(amount: int, total: int)
+# Research Events (TechTreeService)
 signal research_points_changed(total: int)
 signal tech_unlocked(tech_id: String)
 signal tech_unlock_failed(tech_id: String, reason: String)
-signal tech_tree_opened()
-signal tech_tree_closed()
 
-# Item Events
-signal item_collected(item_data: Dictionary)
-
-# Loot Events
-signal loot_item_found(item_id: String)
-signal loot_review_started(item_ids: Array)
-signal loot_item_accepted(item_id: String)
-signal loot_item_discarded(item_id: String)
-signal loot_review_completed()
-signal modifiers_changed() # Emitted when items are purchased/modifiers added
-
-# UI Events
-signal show_wave_announcement(wave_number: int)
-signal hide_wave_announcement()
-signal show_difficulty_select()
-signal difficulty_selected(difficulty: int)
-signal show_game_mode_select()
-signal game_mode_selected(game_mode: int)
-signal show_start_settings()
-signal start_settings_applied(difficulty: int, spawn_mode: int, win_mode: int, arena_mode: int, bg_index: int)
-signal update_hud()
-
-# Game Mode Events
-signal defense_target_hp_changed(current_hp: float, max_hp: float)
-signal defense_target_destroyed()
-signal defense_target_healed(current_hp: float, max_hp: float, amount: float)
-signal tunnel_door_progress_changed(current_hp: float, max_hp: float)
-signal tunnel_door_breached()
-signal escort_reached_destination()
-signal arena_background_selected(index: int)
+# Game Mode Events (GameModeService)
 signal game_mode_changed(group: String, mode_id: int)
 
 # Asset configuration events

@@ -11,7 +11,6 @@ Autoload configuration in `project.godot` is authoritative. Commands and queries
 | `SettingsService`, `FeatureFlagService` | Persistent app preferences and named runtime flags |
 | `DifficultyService` | Supplies the Easy preset used by `ArenaWorld` |
 | `DebugService` | Structured debug output |
-| `UIScaler`, `FontSizes` | Shared UI utilities |
 
 `ArenaShop` owns supported offer generation and transaction validation. It calls `EconomyService.calculate_turret_price()` and `calculate_item_price()` rather than duplicating pricing. Its short-run item base-price scale is local to the arena shop.
 

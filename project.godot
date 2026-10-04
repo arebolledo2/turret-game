@@ -35,8 +35,6 @@ AssetConfigService="*res://scripts/autoload/asset_config_service.gd"
 LootService="*res://scripts/autoload/loot_service.gd"
 TechTreeService="*res://scripts/autoload/tech_tree_service.gd"
 BuffSystem="*res://scripts/systems/buff_system.gd"
-UIScaler="*res://scripts/autoload/ui_scaler.gd"
-FontSizes="*res://scripts/autoload/font_sizes.gd"
 SpecialEffectService="*res://scripts/autoload/special_effect_service.gd"
 
 [debug]
