@@ -138,10 +138,11 @@ func _physics_process(delta: float) -> void:
 		if slow_marker.visible != slowed:
 			slow_marker.visible = slowed
 		var effective_speed := speed * speed_factor
-		var movement := WorldGeometry.planar(world.player.position - position).normalized() * effective_speed
+		var goal: Vector3 = world.player.position if not world.core else chase_position()
+		var movement := WorldGeometry.planar(goal - position).normalized() * effective_speed
 		if charge:
 			var previous_phase := charge.phase
-			movement = charge.advance(delta, position, world.player.position, effective_speed)
+			movement = charge.advance(delta, position, goal, effective_speed)
 			if charge.phase == ChargeController3D.Phase.WINDUP and previous_phase != charge.phase:
 				world.audio.play_cue("warning", position)
 			warning.visible = charge.phase in [ChargeController3D.Phase.WINDUP, ChargeController3D.Phase.DASH]
@@ -213,6 +214,11 @@ func _physics_process(delta: float) -> void:
 					shot.damage = PlayerStatsService.calculate_player_crit_damage(shot.damage)
 				world.fire_shot(weapon_muzzle.global_position, target, shot)
 				weapon_clock = 1.0 / maxf(PlayerStatsService.get_player_fire_rate(), .01)
+
+## Where an enemy is heading when the run has an objective: the hero while within aggro range, otherwise the objective.
+## Survive mode has no objective and never calls this (the hero is always the goal).
+func chase_position() -> Vector3:
+	return world.player.position
 
 func take_damage(amount: float) -> void:
 	world.combat.apply_hit(self, CombatHit3D.new(amount, position))

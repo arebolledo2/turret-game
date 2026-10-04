@@ -6,6 +6,11 @@ extends RefCounted
 ## Later phases add game mode, hero and run modifiers here.
 var wave_limit: int = GameConstants.RUN_DEFAULT_WAVE_LIMIT
 var difficulty: GameEnums.Difficulty = GameEnums.Difficulty.EASY
+## `survive` (classic) or `core` (protect the core). Core needs the `mode_protect_core` flag; otherwise the run is survive.
+const MODE_SURVIVE: String = "survive"
+const MODE_CORE: String = "core"
+const MODES: Array[String] = [MODE_SURVIVE, MODE_CORE]
+var mode: String = MODE_SURVIVE
 ## Flag preset applied when the arena starts. Empty keeps the current flags.
 var flag_preset: String = ""
 
@@ -26,9 +31,11 @@ func sanitize() -> RunConfig:
 	wave_limit = clampi(wave_limit, 1, GameConstants.RUN_MAX_WAVE_LIMIT)
 	if flag_preset != "" and flag_preset not in FeatureFlagService.PRESETS:
 		flag_preset = ""
+	if mode not in MODES:
+		mode = MODE_SURVIVE
 	return self
 
-## Parses tool arguments: `--waves=N`, `--difficulty=easy|medium|hard`, `--preset=id`.
+## Parses tool arguments: `--waves=N`, `--difficulty=easy|medium|hard`, `--mode=survive|core`, `--preset=id`.
 static func from_args(args: PackedStringArray) -> RunConfig:
 	var config := RunConfig.new()
 	for arg in args:
@@ -39,6 +46,8 @@ static func from_args(args: PackedStringArray) -> RunConfig:
 				"easy": config.difficulty = GameEnums.Difficulty.EASY
 				"medium": config.difficulty = GameEnums.Difficulty.MEDIUM
 				"hard": config.difficulty = GameEnums.Difficulty.HARD
+		elif arg.begins_with("--mode="):
+			config.mode = arg.trim_prefix("--mode=").to_lower()
 		elif arg.begins_with("--preset="):
 			config.flag_preset = arg.trim_prefix("--preset=")
 	return config.sanitize()

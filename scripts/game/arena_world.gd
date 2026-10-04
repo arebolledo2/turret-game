@@ -26,6 +26,8 @@ var crowd: CrowdGrid3D = CrowdGrid3D.new()
 var effects: CombatEffects3D
 var audio: GameAudio
 var difficulty_config: Dictionary
+## The thing enemies try to destroy in core mode; null in survive mode.
+var core: Node3D
 var player: CombatActor
 var camera: Camera3D
 var camera_rig: CameraRig

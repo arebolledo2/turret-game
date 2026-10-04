@@ -25,6 +25,7 @@ const ENTRENCH: String = "entrench"
 const PLACEMENT_PREVIEW: String = "placement_preview"
 const ITEMS_V2: String = "items_v2"
 const ITEMS_V2_HOOKS: String = "items_v2_hooks"
+const MODE_PROTECT_CORE: String = "mode_protect_core"
 
 const SCOPE_USER: String = "user"
 const SCOPE_DEV: String = "dev"
@@ -62,6 +63,10 @@ const FLAG_DEFINITIONS: Dictionary = {
 	ITEMS_V2_HOOKS: {
 		"name": "Item Pool v2 Rares", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 2, "requires": [ITEMS_V2],
 		"description": "Adds the rare, epic and legendary items, including those with new mechanics (Reactor Overload, Storm Conductor, Last Stand).",
+	},
+	MODE_PROTECT_CORE: {
+		"name": "Protect the Core", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 5,
+		"description": "Allows the Protect the Core mode: enemies head for a fixed core and chase the hero only within aggro range. Applies from the next run.",
 	},
 	PLACEMENT_PREVIEW: {
 		"name": "Placement Preview", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 1,
