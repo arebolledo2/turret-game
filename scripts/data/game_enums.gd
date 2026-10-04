@@ -4,7 +4,7 @@ extends RefCounted
 ## All game enumerations in one place for easy reference and type safety
 
 # Difficulty levels for the game
-enum Difficulty {EASY, MEDIUM, HARD}
+enum Difficulty {EASY, MEDIUM, HARD, BRUTAL}
 
 # Attack style tags - how damage is delivered
 enum AttackStyle {PROJECTILE, INSTANT, AOE, CHAIN, MELEE, DEPLOYABLE}

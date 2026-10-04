@@ -27,6 +27,7 @@ const ITEMS_V2: String = "items_v2"
 const ITEMS_V2_HOOKS: String = "items_v2_hooks"
 const MODE_PROTECT_CORE: String = "mode_protect_core"
 const TECH_DROPS: String = "tech_drops"
+const DIFFICULTY_RULES: String = "difficulty_rules"
 
 const SCOPE_USER: String = "user"
 const SCOPE_DEV: String = "dev"
@@ -72,6 +73,10 @@ const FLAG_DEFINITIONS: Dictionary = {
 	TECH_DROPS: {
 		"name": "Tech Drops", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 5,
 		"description": "Destructible crates appear away from your turrets during a wave. Destroy one for scrap and a chance at a free item; it is lost when the wave ends.",
+	},
+	DIFFICULTY_RULES: {
+		"name": "Difficulty Rules", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 5,
+		"description": "Higher difficulties add elite enemies and, in core mode, core seekers, a weaker core and faster waves. Applies from the next run.",
 	},
 	PLACEMENT_PREVIEW: {
 		"name": "Placement Preview", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 1,

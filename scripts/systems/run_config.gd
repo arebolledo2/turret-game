@@ -35,7 +35,7 @@ func sanitize() -> RunConfig:
 		mode = MODE_SURVIVE
 	return self
 
-## Parses tool arguments: `--waves=N`, `--difficulty=easy|medium|hard`, `--mode=survive|core`, `--preset=id`.
+## Parses tool arguments: `--waves=N`, `--difficulty=easy|medium|hard|brutal`, `--mode=survive|core`, `--preset=id`.
 static func from_args(args: PackedStringArray) -> RunConfig:
 	var config := RunConfig.new()
 	for arg in args:
@@ -46,6 +46,7 @@ static func from_args(args: PackedStringArray) -> RunConfig:
 				"easy": config.difficulty = GameEnums.Difficulty.EASY
 				"medium": config.difficulty = GameEnums.Difficulty.MEDIUM
 				"hard": config.difficulty = GameEnums.Difficulty.HARD
+				"brutal": config.difficulty = GameEnums.Difficulty.BRUTAL
 		elif arg.begins_with("--mode="):
 			config.mode = arg.trim_prefix("--mode=").to_lower()
 		elif arg.begins_with("--preset="):

@@ -73,9 +73,11 @@ func _ready() -> void:
 		run_config = RunConfig.new()
 	run_config.sanitize()
 	wave_limit = run_config.wave_limit
-	difficulty_config = run_config.difficulty_config()
 	if not run_config.flag_preset.is_empty():
 		FeatureFlagService.apply_preset(run_config.flag_preset)
+	difficulty_config = run_config.difficulty_config()
+	if not FeatureFlagService.is_enabled(FeatureFlagService.DIFFICULTY_RULES):
+		difficulty_config = DifficultyService.without_rules(difficulty_config)
 	core_mode = run_config.mode == RunConfig.MODE_CORE and FeatureFlagService.is_enabled(FeatureFlagService.MODE_PROTECT_CORE)
 	session = RunSession.new()
 	shop.world = self

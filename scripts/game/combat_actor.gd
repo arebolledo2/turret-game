@@ -35,6 +35,8 @@ var ignores_hero: bool = false
 var core_clock: float = 0.0
 ## Tech drops: never moves, never attacks. Built from a crate model instead of a spider.
 var stationary: bool = false
+## Difficulty rules: tougher, faster, gold-tinted. A seeker (`ignores_hero`) gets a red marker.
+var elite: bool = false
 var drop_bar_fill: MeshInstance3D
 
 const FLASH_DURATION: float = .18
@@ -69,6 +71,8 @@ func _ready() -> void:
 		else:
 			model = preload("res://assets/models/game/spider_drone.glb").instantiate()
 		EnemyVariants.apply_tint(model, enemy_type)
+		if elite:
+			EnemyVariants.tint_model(model, enemy_type + "_elite", Color(1.0, .85, .45), .7)
 		visual.add_child(model)
 		visual.scale = Vector3.ONE * body_scale
 		for side in (["L", "R"] if not stationary else []):
@@ -86,7 +90,12 @@ func _ready() -> void:
 		hit_shape.position.y = 0.6 * body_scale
 		hurtbox.add_child(hit_shape)
 		add_child(hurtbox)
-		marker = WorldGeometry.ring(self, .36 * body_scale, Color("f5a447") if charge else Color("9c545e"))
+		var marker_colour := Color("f5a447") if charge else Color("9c545e")
+		if elite:
+			marker_colour = Color("ffd23d")
+		elif ignores_hero:
+			marker_colour = Color("ff3b3b")
+		marker = WorldGeometry.ring(self, .36 * body_scale, marker_colour)
 		marker.position.y = .025
 		slow_marker = WorldGeometry.ring(self, .43 * body_scale, Color("55dcff"))
 		slow_marker.position.y = .04

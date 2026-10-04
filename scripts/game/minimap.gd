@@ -67,7 +67,7 @@ func _draw() -> void:
 			if enemy.stationary:
 				draw_rect(Rect2(enemy_at - Vector2(4, 4), Vector2(8, 8)), ENEMY_COLORS["tech_drop"])
 			else:
-				draw_circle(enemy_at, 2.0, ENEMY_COLORS.get(enemy.enemy_type, ENEMY_COLORS["basic"]))
+				draw_circle(enemy_at, 3.0 if enemy.elite else 2.0, ENEMY_COLORS.get(enemy.enemy_type, ENEMY_COLORS["basic"]))
 	_draw_camera_view()
 	_draw_player()
 	draw_rect(area, Color("2b5963"), false, 1.0)

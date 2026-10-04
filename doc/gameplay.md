@@ -89,3 +89,19 @@ A deployed turret earns one **Entrench** stack for every `ENTRENCH_STACK_SECONDS
 While carrying, a **placement preview** ring shows where the turret will land (cyan clear, red blocked).
 
 Both are experiment flags (`entrench`, `placement_preview`), on by default and off in the `release` preset. Stacks are applied on top of the cached modifier stats in `TurretActor._current_stats`, so shop modifiers still multiply as before.
+
+## Protect the Core, tech drops and difficulty (Phase 5)
+
+**Modes.** The home screen picks a mode and a difficulty for the next run. `survive` is the classic run. `core` (flag `mode_protect_core`) places a reactor core at the arena centre; enemies head for it and the run ends if the core **or** the hero dies. `RunConfig.mode` carries the choice (`--mode=survive|core` for tools); with the flag off a core request falls back to survive.
+
+**Core rules** (`GameConstants.CORE_*`, `CoreObjective`, `ArenaWorld.core`):
+- Core hit points are base hull x `CORE_HEALTH_MULT` x the tier's `core_health_mult`. Enemy contact hits it once per `CORE_HIT_INTERVAL` per enemy for `CORE_DAMAGE_FRACTION` of its contact damage; exploder blasts hurt it too. Enemies stop at its edge.
+- Repair in the shop (`REPAIR CORE`, same price per HP as hull repair). There is no passive regeneration.
+- Aggro is the 2D rule: an enemy within `CORE_AGGRO_RANGE` (2.5 m) of the hero chases the hero and returns to the core once the hero is beyond `CORE_DEAGGRO_RANGE` (5 m). The state is one bit per enemy (`chasing_hero`); the single goal-selection point is `CombatActor.chase_position()`, and survive mode never calls it.
+- Waves spawn on a rectangle at `CORE_SPAWN_BOX` of the arena instead of a ring around the hero. Turrets cannot be placed on the core. The HUD shows a core bar and an off-screen arrow; the minimap marks the core.
+
+**Tech drops** (flag `tech_drops`, `TechDropDirector`, `GameConstants.TECH_DROP_*`). Every 5 s of a wave there is a 20% roll (never in the last 10 s, one drop at a time) to place a crate at least 12 m from the core (8 m from every turret) after a 1.5 s amber warning ring. It is a stationary `CombatActor` in the enemy list, so turrets and the hero target it, with half a tank's HP at the current wave. Destroying it scatters scrap and has a 50% chance of a free item from the shop's weighted pool; an unclaimed drop vanishes at wave end. Drops do not count as kills.
+
+**Difficulty tiers** are Easy, Medium, Hard and Brutal (`--difficulty=brutal`). Each keeps the multipliers (health, damage, count, per-wave HP, hull, turret damage) and adds rules (flag `difficulty_rules`, ignored when off): **elites** (share of spawns with more HP, more speed, double scrap and a gold tint) from Hard, and in core mode **core seekers** (never chase the hero, red ring), a weaker core and a faster wave arrival. Elites and seekers are scheduled by a running credit, so the mix is even and uses no gameplay RNG. Tier values live in `DifficultyService.DIFFICULTY_CONFIG`.
+
+Untuned: core HP, damage fraction, spawn box and Brutal values are first guesses. The dodge-bot dies at core waves 4-6 on Easy/Medium and wave 1-2 on Brutal, so treat them as a floor and tune from a human playtest.

@@ -45,7 +45,8 @@ func _ready() -> void:
 	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(brand)
 	_label(brand, "T U R R E T   /   S U R V I V O R", 23, Color("cfecea"))
-	_label(brand, "SECTOR 01     /     %d-WAVE SURVIVAL" % world.wave_limit, 13, Color("54c5c5"))
+	_label(brand, "SECTOR 01     /     %d-WAVE %s     /     %s" % [world.wave_limit, "CORE DEFENSE" if world.core_mode else "SURVIVAL",
+		world.run_config.difficulty_name().to_upper()], 13, Color("54c5c5"))
 	var vitals := VBoxContainer.new()
 	vitals.custom_minimum_size.x = 175
 	row.add_child(vitals)

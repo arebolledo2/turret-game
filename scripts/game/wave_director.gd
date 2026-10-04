@@ -12,6 +12,10 @@ var spawn_clock: float = 0.0
 var spawn_interval: float = 1.0
 var time_left: float = 0.0
 var announcement_left: float = 0.0
+## Fractional accumulators: an elite (or core seeker) spawns each time the running share crosses 1, so the mix is
+## even and deterministic (no gameplay RNG is consumed).
+var elite_credit: float = 0.0
+var seeker_credit: float = 0.0
 
 func tick(delta: float) -> void:
 	GameStateService.time_survived += delta
@@ -27,7 +31,9 @@ func tick(delta: float) -> void:
 	spawn_clock -= delta
 	if remaining_spawns > 0 and spawn_clock <= 0.0:
 		var type_id := EnemyVariants.pick_type(GameStateService.current_wave, spawned_this_wave)
-		spawn_enemy(spawn_position(), type_id)
+		var elite := _take_credit("elite_chance")
+		var seeker := world.core != null and _take_credit("seeker_share")
+		spawn_enemy(spawn_position(), type_id, elite, seeker)
 		spawned_this_wave += 1
 		remaining_spawns -= 1
 		spawn_clock += spawn_interval
@@ -47,9 +53,13 @@ func begin_next_wave() -> bool:
 	world.audio.play_cue("wave", world.player.position)
 	announcement_left = ANNOUNCEMENT_TIME
 	spawned_this_wave = 0
+	elite_credit = 0.0
+	seeker_credit = 0.0
 	time_left = GameStateService.get_wave_duration(GameStateService.current_wave)
 	remaining_spawns = GameStateService.get_wave_enemy_count(GameStateService.current_wave, float(world.difficulty_config["enemy_count_mult"]), ItemTrackingService.get_enemy_count_multiplier())
 	spawn_interval = time_left / maxf(float(remaining_spawns), 1.0)
+	if world.core:
+		spawn_interval /= maxf(DifficultyService.rule(world.difficulty_config, "spawn_rate_mult"), .1)
 	spawn_clock = FIRST_SPAWN_DELAY
 	world.message = EnemyVariants.notice_for_wave(GameStateService.current_wave)
 	return true
@@ -86,7 +96,22 @@ func finish_wave() -> bool:
 		world.audio.play_cue("wave", world.player.position)
 	return true
 
-func spawn_enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
+func _take_credit(rule_key: String) -> bool:
+	var share := DifficultyService.rule(world.difficulty_config, rule_key)
+	if share <= 0.0:
+		return false
+	var credit := (elite_credit if rule_key == "elite_chance" else seeker_credit) + share
+	var taken := credit >= 1.0
+	if taken:
+		credit -= 1.0
+	if rule_key == "elite_chance":
+		elite_credit = credit
+	else:
+		seeker_credit = credit
+	return taken
+
+## `elite` toughens the enemy; `seeker` (core mode) makes it ignore the hero and head for the core.
+func spawn_enemy(at: Vector3, type_id: String = "basic", elite: bool = false, seeker: bool = false) -> CombatActor:
 	var enemy := CombatActor.new()
 	enemy.world = world
 	enemy.is_enemy = true
@@ -101,6 +126,14 @@ func spawn_enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
 	enemy.body_scale = EnemyVariants.body_scale(type_id)
 	enemy.explosion_radius = float(base.get("explosion_radius", 0.0)) * WorldGeometry.METRES_PER_PIXEL
 	enemy.explosion_damage = float(base.get("explosion_damage", 0.0))
+	if elite:
+		enemy.elite = true
+		enemy.max_health *= DifficultyService.rule(world.difficulty_config, "elite_health_mult")
+		enemy.health = enemy.max_health
+		enemy.speed *= DifficultyService.rule(world.difficulty_config, "elite_speed_mult")
+		enemy.scrap_value *= 2
+		enemy.body_scale *= 1.15
+	enemy.ignores_hero = seeker
 	enemy.position = at
 	world.actor_root.add_child(enemy)
 	world.enemies.append(enemy)

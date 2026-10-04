@@ -15,7 +15,7 @@ Every new system ships behind a feature flag so it can be switched on and off in
 | `live_safe` | `true` applies immediately. `false` (default) means the change lands when the next wave begins |
 | `phase` | Roadmap phase that introduced the flag |
 
-Current flags: `reduced_motion` (user), `dev_panel` (dev, default on), `debug_overlays` (dev, requires `dev_panel`).
+Current flags: `reduced_motion` (user), `dev_panel` (dev, default on), `debug_overlays` (dev, requires `dev_panel`); experiments `entrench`, `placement_preview`, `items_v2`, `items_v2_hooks`, `mode_protect_core`, `tech_drops`, `difficulty_rules`.
 
 APIs:
 
@@ -44,7 +44,7 @@ Developer and experiment flag values persist with the preferences file (`[dev_fl
 
 ## Run configuration
 
-`RunConfig` holds wave limit (default 20), difficulty (default Easy) and an optional flag preset. `GameApp` creates one for Play and hands it to `ArenaWorld.run_config`; `ArenaWorld` reads it once at startup, so a restart reuses it. `RunConfig.slice()` is the original six-wave run, used by older integration tests. Later phases add mode, hero and run modifiers here.
+`RunConfig` holds wave limit (default 20), difficulty (default Easy) and an optional flag preset. `GameApp` creates one for Play and hands it to `ArenaWorld.run_config`; `ArenaWorld` reads it once at startup, so a restart reuses it. `RunConfig.slice()` is the original six-wave run, used by older integration tests. `mode` is `survive` or `core` (Phase 5); difficulty includes Brutal. Later phases add hero and run modifiers here. Tool arguments: `--waves=N --difficulty=easy|medium|hard|brutal --mode=survive|core --preset=id`.
 
 ## Dev panel
 
