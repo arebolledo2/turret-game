@@ -8,7 +8,7 @@ var world: ArenaWorld
 
 func before_each() -> void:
 	TestHelpers.reset_all_services()
-	FeatureFlagService.reset_state()
+	TestHelpers.reset_flags()
 	ShopCatalog.reset()
 	world = _make_world(RunConfig.slice())
 

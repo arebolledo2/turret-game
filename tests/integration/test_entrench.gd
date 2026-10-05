@@ -3,14 +3,14 @@ extends GutTest
 var world: ArenaWorld
 
 func before_each() -> void:
-	FeatureFlagService.reset_state()
+	TestHelpers.reset_flags()
 	world = load("res://scenes/game/arena.tscn").instantiate() as ArenaWorld
 	add_child_autofree(world)
 	await wait_process_frames(2)
 
 func after_each() -> void:
 	ModifierService.clear_modifiers()
-	FeatureFlagService.reset_state()
+	TestHelpers.reset_flags()
 
 func _turret() -> TurretActor:
 	var turret := world.add_turret(Vector3(2, 0, 2), "normal")

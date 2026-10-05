@@ -49,6 +49,16 @@ func _draw() -> void:
 		var fraction := float(step) / 4.0
 		draw_line(Vector2(MAP_SIZE.x * fraction, 0), Vector2(MAP_SIZE.x * fraction, MAP_SIZE.y), Color(.17, .26, .3, .6))
 		draw_line(Vector2(0, MAP_SIZE.y * fraction), Vector2(MAP_SIZE.x, MAP_SIZE.y * fraction), Color(.17, .26, .3, .6))
+	if world.terrain:
+		var scale_x := MAP_SIZE.x / (WorldGeometry.HALF_ARENA.x * 2.0)
+		for zone in world.terrain.zones:
+			var tint := zone.color()
+			tint.a = .42
+			var zone_at := world_to_map(Vector3(zone.centre.x, 0, zone.centre.y))
+			if zone.is_circle:
+				draw_circle(zone_at, zone.radius * scale_x, tint)
+			else:
+				draw_rect(Rect2(zone_at - zone.half_extents * scale_x, zone.half_extents * scale_x * 2.0), tint)
 	for pickup in world.pickup_root.get_children():
 		if pickup is Node3D:
 			draw_rect(Rect2(world_to_map((pickup as Node3D).position) - Vector2.ONE, Vector2(2, 2)), Color("f4d298"))

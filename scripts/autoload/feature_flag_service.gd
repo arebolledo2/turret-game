@@ -28,6 +28,8 @@ const ITEMS_V2_HOOKS: String = "items_v2_hooks"
 const MODE_PROTECT_CORE: String = "mode_protect_core"
 const TECH_DROPS: String = "tech_drops"
 const DIFFICULTY_RULES: String = "difficulty_rules"
+const TERRAIN_ZONES: String = "terrain_zones"
+const DEBUG_ZONES: String = "debug_zones"
 
 const SCOPE_USER: String = "user"
 const SCOPE_DEV: String = "dev"
@@ -77,6 +79,15 @@ const FLAG_DEFINITIONS: Dictionary = {
 	DIFFICULTY_RULES: {
 		"name": "Difficulty Rules", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 5,
 		"description": "Higher difficulties add elite enemies and, in core mode, core seekers, a weaker core and faster waves. Applies from the next run.",
+	},
+	TERRAIN_ZONES: {
+		"name": "Terrain Zones", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 4,
+		"description": "Each run gets a random terrain layout: high ground (turret range), mud (slows enemies and you), no-build ground and power nodes (faster Entrench). Applies from the next run.",
+	},
+	DEBUG_ZONES: {
+		"name": "Debug Zones", "default": false, "scope": SCOPE_DEV, "live_safe": true, "phase": 4,
+		"requires": [DEV_PANEL],
+		"description": "Labels every terrain zone with its type and strength and plants a pole at its centre.",
 	},
 	PLACEMENT_PREVIEW: {
 		"name": "Placement Preview", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 1,

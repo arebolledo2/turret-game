@@ -177,6 +177,8 @@ func _physics_process(delta: float) -> void:
 		if not statuses.effects.is_empty():
 			statuses.advance(delta)
 			speed_factor = statuses.speed_multiplier()
+		if world.terrain:
+			speed_factor = maxf(1.0 - GameConstants.ZONE_MUD_MAX_SLOW, speed_factor * world.terrain.mud_factor_at(position))
 		var slowed := speed_factor < 1.0
 		if slow_marker.visible != slowed:
 			slow_marker.visible = slowed
@@ -217,6 +219,8 @@ func _physics_process(delta: float) -> void:
 		var desired_speed := PlayerStatsService.get_player_speed() * WorldGeometry.METRES_PER_PIXEL
 		if carrying:
 			desired_speed *= GameConstants.TURRET_CARRY_SPEED_PENALTY * ModifierService.apply_modifiers_to_stat(1.0, "carry_speed")
+		if world.terrain:
+			desired_speed *= world.terrain.mud_factor_at(position)
 		var acceleration := GameConstants.PLAYER_ACCELERATION if direction.length_squared() > 0 else GameConstants.PLAYER_DECELERATION
 		velocity = velocity.move_toward(direction * desired_speed, acceleration * WorldGeometry.METRES_PER_PIXEL * delta)
 	var previous_position := position

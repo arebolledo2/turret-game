@@ -19,6 +19,8 @@ var _next_turret_id: int = 1
 var shop := ArenaShop.new()
 var waves := WaveDirector.new()
 var drops := TechDropDirector.new()
+## This run's terrain (null when the `terrain_zones` flag is off). Chosen once per run and fixed for every wave.
+var terrain: TerrainZones
 var placement := TurretPlacement.new()
 var stage: ArenaStage
 var session: RunSession
@@ -149,6 +151,10 @@ func start_run() -> void:
 		core.reset(core_max_health())
 		player.position = Vector3(0, 0, GameConstants.CORE_START_OFFSET)
 		turret_start = Vector3(0, 0, -GameConstants.CORE_START_OFFSET)
+	if FeatureFlagService.is_enabled(FeatureFlagService.TERRAIN_ZONES):
+		var layout := ArenaLayouts.get_layout(run_config.layout_id) if run_config.layout_id != "" else ArenaLayouts.random_layout(GameRandom.gameplay)
+		terrain = TerrainZones.new(layout)
+		terrain.build_visuals(actor_root)
 	actor_root.add_child(player)
 	var listener := AudioListener3D.new()
 	player.add_child(listener)
@@ -160,6 +166,7 @@ func start_run() -> void:
 func _clear_actors() -> void:
 	audio.reset()
 	core = null
+	terrain = null
 	drops.reset()
 	placement.carried = null
 	enemies.clear()
@@ -180,6 +187,8 @@ func _physics_process(delta: float) -> void:
 		return
 	waves.tick(delta)
 	placement.update_preview()
+	if terrain:
+		terrain.update_debug(FeatureFlagService.dev_panel_available() and FeatureFlagService.is_enabled(FeatureFlagService.DEBUG_ZONES))
 
 func begin_next_wave() -> bool:
 	return waves.begin_next_wave()

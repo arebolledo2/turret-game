@@ -3,7 +3,7 @@ extends GutTest
 var world: ArenaWorld
 
 func before_each() -> void:
-	FeatureFlagService.reset_state()
+	TestHelpers.reset_flags()
 	TestHelpers.reset_all_services()
 
 func _core_world(difficulty: GameEnums.Difficulty = GameEnums.Difficulty.EASY) -> ArenaWorld:

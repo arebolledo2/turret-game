@@ -11,6 +11,8 @@ const MODE_SURVIVE: String = "survive"
 const MODE_CORE: String = "core"
 const MODES: Array[String] = [MODE_SURVIVE, MODE_CORE]
 var mode: String = MODE_SURVIVE
+## A specific terrain layout id (`--layout=`); empty picks one at random for the run.
+var layout_id: String = ""
 ## Flag preset applied when the arena starts. Empty keeps the current flags.
 var flag_preset: String = ""
 
@@ -33,6 +35,8 @@ func sanitize() -> RunConfig:
 		flag_preset = ""
 	if mode not in MODES:
 		mode = MODE_SURVIVE
+	if layout_id != "" and layout_id not in ArenaLayouts.ids():
+		layout_id = ""
 	return self
 
 ## Parses tool arguments: `--waves=N`, `--difficulty=easy|medium|hard|brutal`, `--mode=survive|core`, `--preset=id`.
@@ -47,6 +51,8 @@ static func from_args(args: PackedStringArray) -> RunConfig:
 				"medium": config.difficulty = GameEnums.Difficulty.MEDIUM
 				"hard": config.difficulty = GameEnums.Difficulty.HARD
 				"brutal": config.difficulty = GameEnums.Difficulty.BRUTAL
+		elif arg.begins_with("--layout="):
+			config.layout_id = arg.trim_prefix("--layout=").to_lower()
 		elif arg.begins_with("--mode="):
 			config.mode = arg.trim_prefix("--mode=").to_lower()
 		elif arg.begins_with("--preset="):

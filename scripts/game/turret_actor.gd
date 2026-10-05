@@ -106,6 +106,21 @@ func _spin_bat(delta: float, stats: Dictionary, reach: float) -> void:
 		bat_hit.slow_duration = maxf(float(stats.get("slow_duration", 0.0)), 0.0)
 		world.combat.apply_hit(enemy, bat_hit)
 
+## Terrain under this turret, refreshed with the cached stats: high ground range and power node Entrench speed.
+var zone_range_bonus: float = 0.0
+var zone_entrench_bonus: float = 0.0
+
+func _refresh_zone_bonuses() -> void:
+	if world.terrain:
+		zone_range_bonus = world.terrain.range_bonus_at(position)
+		zone_entrench_bonus = world.terrain.entrench_bonus_at(position)
+	else:
+		zone_range_bonus = 0.0
+		zone_entrench_bonus = 0.0
+
+func _stack_seconds() -> float:
+	return float(_entrench()["seconds"]) / (1.0 + zone_entrench_bonus)
+
 func invalidate_stats() -> void:
 	cached_stats = {}
 	entrench_config = {}
@@ -132,10 +147,11 @@ func entrench_fire_rate_bonus() -> float:
 func entrench_stacks() -> int:
 	if not FeatureFlagService.is_enabled(FeatureFlagService.ENTRENCH):
 		return 0
-	return mini(int(stay_time / float(_entrench()["seconds"])), entrench_max())
+	return mini(int(stay_time / _stack_seconds()), entrench_max())
 
 func reset_entrench() -> void:
 	stay_time = 0.0
+	_refresh_zone_bonuses()
 	entrench_stacks_cached = 0
 	cached_stats = {}
 	_update_entrench_ring()
@@ -144,7 +160,7 @@ func reset_entrench() -> void:
 func entrench_progress() -> float:
 	if entrench_stacks_cached >= entrench_max():
 		return 1.0
-	var seconds := float(_entrench()["seconds"])
+	var seconds := _stack_seconds()
 	return fmod(stay_time, seconds) / seconds
 
 func _tick_entrench(delta: float) -> void:
@@ -189,6 +205,9 @@ func _current_stats(delta: float) -> Dictionary:
 		cached_stats = TurretStatsService.get_turret_stats(turret_type, float(world.difficulty_config["turret_damage_mult"]))
 		cached_stats = cached_stats.duplicate()
 		_apply_item_conditions(cached_stats)
+		_refresh_zone_bonuses()
+		if zone_range_bonus > 0.0:
+			cached_stats["range"] = float(cached_stats.get("range", 240.0)) * (1.0 + zone_range_bonus)
 		if entrench_stacks_cached > 0:
 			cached_stats["damage"] = float(cached_stats.get("damage", 0.0)) * (1.0 + entrench_damage_bonus())
 			cached_stats["fire_rate"] = float(cached_stats.get("fire_rate", 1.0)) * (1.0 + entrench_fire_rate_bonus())

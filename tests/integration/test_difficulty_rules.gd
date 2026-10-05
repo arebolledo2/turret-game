@@ -1,7 +1,7 @@
 extends GutTest
 
 func before_each() -> void:
-	FeatureFlagService.reset_state()
+	TestHelpers.reset_flags()
 	TestHelpers.reset_all_services()
 
 func _world(difficulty: GameEnums.Difficulty, mode: String = RunConfig.MODE_SURVIVE) -> ArenaWorld:
@@ -18,7 +18,7 @@ func _world(difficulty: GameEnums.Difficulty, mode: String = RunConfig.MODE_SURV
 	return arena
 
 func after_each() -> void:
-	FeatureFlagService.reset_state()
+	TestHelpers.reset_flags()
 
 func test_brutal_exists_and_parses() -> void:
 	assert_true(DifficultyService.DIFFICULTY_CONFIG.has(GameEnums.Difficulty.BRUTAL))

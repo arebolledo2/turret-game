@@ -138,6 +138,15 @@ const TECH_DROP_SCRAP_PICKUPS: int = 5
 const TECH_DROP_SCRAP_EACH: int = 2
 const TECH_DROP_SCATTER_RADIUS: float = 1.2
 const TECH_DROP_ITEM_CHANCE: float = .5 # chance a destroyed drop also grants a free item
+
+# =============================================================================
+# TERRAIN ZONES (Phase 4)
+# =============================================================================
+const ZONE_HIGH_GROUND_RANGE_BONUS: float = .25 # turrets on high ground: +25% range
+const ZONE_MUD_SLOW: float = .45 # enemies and the hero move 45% slower in mud
+const ZONE_MUD_MAX_SLOW: float = .9 # whatever the layout asks for, mud never slows more than this
+const ZONE_POWER_NODE_ENTRENCH_BONUS: float = .5 # Entrench stacks arrive 50% faster on a power node
+const ZONE_CENTRE_CLEARANCE: float = 4.0 # layouts keep zones this far from the origin (hero, first turret, core)
 const SHOP_OFFER_COUNT: int = 4
 # 3D shop layout: one weapon choice and three upgrades (SHOP_TURRET_SLOTS + SHOP_ITEM_SLOTS = SHOP_OFFER_COUNT)
 const SHOP_TURRET_SLOTS: int = 1

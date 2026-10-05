@@ -149,4 +149,4 @@ func test_mode_selector_hides_when_the_flag_is_off() -> void:
 	app.show_home()
 	assert_false(app.mode_option.visible)
 	assert_eq(app.run_config.mode, RunConfig.MODE_SURVIVE)
-	FeatureFlagService.reset_state()
+	TestHelpers.reset_flags()

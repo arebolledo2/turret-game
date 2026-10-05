@@ -66,6 +66,8 @@ func find_position() -> Vector3:
 				continue
 		elif is_instance_valid(world.player) and WorldGeometry.planar(at - world.player.position).length() < GameConstants.TECH_DROP_MIN_TURRET_DISTANCE:
 			continue
+		if world.terrain and (world.terrain.blocks_build(at) or world.terrain.mud_factor_at(at) < 1.0):
+			continue
 		var clear := true
 		for turret in world.turrets:
 			if WorldGeometry.planar(turret.position - at).length() < GameConstants.TECH_DROP_MIN_TURRET_DISTANCE:

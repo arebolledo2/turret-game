@@ -3,7 +3,7 @@ extends GutTest
 var world: ArenaWorld
 
 func before_each() -> void:
-	FeatureFlagService.reset_state()
+	TestHelpers.reset_flags()
 	TestHelpers.reset_all_services()
 	world = load("res://scenes/game/arena.tscn").instantiate() as ArenaWorld
 	add_child_autofree(world)
@@ -14,7 +14,7 @@ func before_each() -> void:
 
 func after_each() -> void:
 	ModifierService.clear_modifiers()
-	FeatureFlagService.reset_state()
+	TestHelpers.reset_flags()
 
 func test_drop_is_a_stationary_target_that_never_moves_or_hurts() -> void:
 	var drop := world.drops.spawn(Vector3(12, 0, 8))

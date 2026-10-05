@@ -126,6 +126,12 @@ static func create_mock_player_hurtbox(player: Node2D) -> Area2D:
 # SERVICE STATE HELPERS
 # =============================================================================
 
+## Flags back to their defaults with terrain zones off, so a random layout cannot change what a test measures.
+## Tests that exercise terrain turn the flag on (or load a layout) themselves.
+static func reset_flags() -> void:
+	FeatureFlagService.reset_state()
+	FeatureFlagService.set_enabled(FeatureFlagService.TERRAIN_ZONES, false)
+
 ## Reset all service states for clean testing
 ## Call this in before_each() to ensure test isolation
 static func reset_all_services() -> void:
@@ -150,6 +156,7 @@ static func reset_all_services() -> void:
 	# Economy & progression
 	ItemTrackingService.reset_state()
 	TechTreeService.reset_state()
+	reset_flags()
 
 	# Presentation
 

@@ -27,6 +27,8 @@ func valid_placement(at: Vector3, excluding: TurretActor = null) -> bool:
 		return false
 	if world.core and WorldGeometry.planar(world.core.position - at).length() < world.core.radius + GameConstants.CORE_PLACEMENT_CLEARANCE:
 		return false
+	if world.terrain and world.terrain.blocks_build(at):
+		return false
 	for turret in world.turrets:
 		if turret != excluding and WorldGeometry.planar(turret.position - at).length() < MIN_SPACING:
 			return false
@@ -39,7 +41,7 @@ func interact() -> bool:
 	if is_instance_valid(carried):
 		var at := drop_position()
 		if not valid_placement(at, carried):
-			world.message = "Move clear of the edge or another turret."
+			world.message = "This ground cannot be built on." if world.terrain and world.terrain.blocks_build(at) else "Move clear of the edge or another turret."
 			return false
 		if at.distance_to(carry_origin) > .01:
 			world.telemetry.record_turret_move()

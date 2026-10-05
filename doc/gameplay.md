@@ -105,3 +105,18 @@ Both are experiment flags (`entrench`, `placement_preview`), on by default and o
 **Difficulty tiers** are Easy, Medium, Hard and Brutal (`--difficulty=brutal`). Each keeps the multipliers (health, damage, count, per-wave HP, hull, turret damage) and adds rules (flag `difficulty_rules`, ignored when off): **elites** (share of spawns with more HP, more speed, double scrap and a gold tint) from Hard, and in core mode **core seekers** (never chase the hero, red ring), a weaker core and a faster wave arrival. Elites and seekers are scheduled by a running credit, so the mix is even and uses no gameplay RNG. Tier values live in `DifficultyService.DIFFICULTY_CONFIG`.
 
 Untuned: core HP, damage fraction, spawn box and Brutal values are first guesses. The dodge-bot dies at core waves 4-6 on Easy/Medium and wave 1-2 on Brutal, so treat them as a floor and tune from a human playtest.
+
+## Terrain zones (Phase 4)
+
+Flag `terrain_zones` (experiment). Each run gets one random layout (`ArenaLayouts`: Crossroads, Highlands, The Sump) chosen with the gameplay RNG when the run starts; it stays the same for every wave and a new run picks again (`--layout=id` or `RunConfig.layout_id` forces one). A layout is data: a list of `TerrainZone`s (circle or axis-aligned rectangle, type, strength) that all keep `ZONE_CENTRE_CLEARANCE` (4 m) clear of the origin, where the hero, first turret and core stand.
+
+| Zone | Effect | Where it is applied |
+|---|---|---|
+| High ground | Turrets on it get +25% range (`ZONE_HIGH_GROUND_RANGE_BONUS`) | `TurretActor._current_stats`, refreshed with the cached stats |
+| Mud | Enemies **and the hero** move 45% slower, never more than 90% (`ZONE_MUD_SLOW`, `ZONE_MUD_MAX_SLOW`); stacks with shock slows within the cap | `CombatActor._physics_process` |
+| No-build | Turrets cannot be placed there (the preview ring goes red) | `TurretPlacement.valid_placement` |
+| Power node | Entrench stacks arrive 50% faster (`ZONE_POWER_NODE_ENTRENCH_BONUS`) | `TurretActor._stack_seconds` |
+
+`TerrainZones` is the runtime view: a 2 m cell grid storing the zones that overlap each cell, so a lookup is one cell read plus a shape test, and mud returns at once on a layout with none. Tech drops avoid no-build and mud ground. Zones read through a tinted ground decal, an edge ring, rim posts (one MultiMesh per zone) and a Blender prop at the centre (`zone_high_ground`, `zone_mud`, `zone_no_build`, `zone_power_node`, `zone_marker`, built by `tools/blender/build_assets.py`, merged to one mesh per material). The minimap tints zones. Flag `debug_zones` (dev, needs the dev panel) labels every zone with its type and strength.
+
+Not yet: no zone art for reduced-motion variants, no pause-screen legend, zones do not move between waves, and the hero is not affected by high ground, no-build or power nodes. High ground plus Entrench may reward never moving; compare against Entrench telemetry.
