@@ -125,6 +125,76 @@
       "units": "metres",
       "origin": "ground centre",
       "animation": "Runtime rigid-part articulation; no skeletal rig"
+    },
+    {
+      "id": "zone_high_ground",
+      "triangles": 1800,
+      "mesh_parts": 3,
+      "materials": 3,
+      "reference": "",
+      "required_nodes": [],
+      "source": "art-source/blender/zone_high_ground.blend",
+      "model": "assets/models/game/zone_high_ground.glb",
+      "forward": "Godot -Z",
+      "units": "metres",
+      "origin": "ground centre",
+      "animation": "Static prop, no articulation"
+    },
+    {
+      "id": "zone_mud",
+      "triangles": 2576,
+      "mesh_parts": 4,
+      "materials": 4,
+      "reference": "",
+      "required_nodes": [],
+      "source": "art-source/blender/zone_mud.blend",
+      "model": "assets/models/game/zone_mud.glb",
+      "forward": "Godot -Z",
+      "units": "metres",
+      "origin": "ground centre",
+      "animation": "Static prop, no articulation"
+    },
+    {
+      "id": "zone_no_build",
+      "triangles": 1900,
+      "mesh_parts": 3,
+      "materials": 3,
+      "reference": "",
+      "required_nodes": [],
+      "source": "art-source/blender/zone_no_build.blend",
+      "model": "assets/models/game/zone_no_build.glb",
+      "forward": "Godot -Z",
+      "units": "metres",
+      "origin": "ground centre",
+      "animation": "Static prop, no articulation"
+    },
+    {
+      "id": "zone_power_node",
+      "triangles": 1672,
+      "mesh_parts": 3,
+      "materials": 3,
+      "reference": "",
+      "required_nodes": [],
+      "source": "art-source/blender/zone_power_node.blend",
+      "model": "assets/models/game/zone_power_node.glb",
+      "forward": "Godot -Z",
+      "units": "metres",
+      "origin": "ground centre",
+      "animation": "Static prop, no articulation"
+    },
+    {
+      "id": "zone_marker",
+      "triangles": 404,
+      "mesh_parts": 2,
+      "materials": 2,
+      "reference": "",
+      "required_nodes": [],
+      "source": "art-source/blender/zone_marker.blend",
+      "model": "assets/models/game/zone_marker.glb",
+      "forward": "Godot -Z",
+      "units": "metres",
+      "origin": "ground centre",
+      "animation": "Static prop, no articulation"
     }
   ]
 }

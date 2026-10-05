@@ -252,7 +252,22 @@ def bake_ambient_occlusion(meshes):
         mesh.color_attributes.render_color_index = list(mesh.color_attributes).index(colors)
 
 
-def save_asset(name, reference, sockets, origin="ground centre"):
+def join_by_material():
+    """Static props: merge every part that shares a material, so a prop costs one draw call per material."""
+    groups = {}
+    for obj in [o for o in bpy.context.scene.objects if o.type == "MESH"]:
+        groups.setdefault(obj.data.materials[0].name, []).append(obj)
+    for material_name, objects in groups.items():
+        target = objects[0]
+        with bpy.context.temp_override(active_object=target, object=target, selected_editable_objects=objects,
+                                       selected_objects=objects):
+            bpy.ops.object.join()
+        target.name = "Part_" + material_name.replace(" ", "_")
+
+
+def save_asset(name, reference, sockets, origin="ground centre", join=False):
+    if join:
+        join_by_material()
     meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
     bake_ambient_occlusion(meshes)
     triangles = 0
@@ -269,7 +284,7 @@ def save_asset(name, reference, sockets, origin="ground centre"):
             "source": f"art-source/blender/{name}.blend",
             "model": f"assets/models/game/{name}.glb",
             "forward": "Godot -Z", "units": "metres", "origin": origin,
-            "animation": "Runtime rigid-part articulation; no skeletal rig"}
+            "animation": "Static prop, no articulation" if join else "Runtime rigid-part articulation; no skeletal rig"}
 
 
 def build_turret():
@@ -408,9 +423,106 @@ def build_scrap():
     return save_asset("scrap_shard", "assets/sprites/scrap_sprite.png", [], origin="model centre")
 
 
+# ---- Terrain zone props (Phase 4). Static, merged per material, ground-centred, each about 1 to 1.4 m tall.
+def build_zone_high_ground():
+    """Overwatch dais: a stepped hex platform with a sensor mast, so raised ground reads at a glance."""
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    shell = material("Dais silver", (.65, .76, .8), .65)
+    dark = material("Dais graphite", (.035, .07, .1), .7)
+    glow = material("Dais beacon", (.35, .85, 1), .2, True)
+    root = empty("HighGroundModel")
+    cylinder("DaisBase", (0, 0, .09), .95, .18, dark, root, 6)
+    cylinder("DaisStep", (0, 0, .24), .78, .12, shell, root, 6)
+    cylinder("DaisTop", (0, 0, .34), .62, .08, dark, root, 6)
+    for index in range(6):
+        angle = index * math.tau / 6 + math.pi / 6
+        cylinder(f"EdgeLight{index}", (.82 * math.cos(angle), .82 * math.sin(angle), .2), .05, .05, glow, root)
+    strut("Mast", (0, 0, .38), (0, 0, 1.25), .045, shell, root)
+    dish = sphere("Dish", (0, .1, 1.1), .24, shell, root, (1, .55, .28))
+    dish.rotation_euler.x = -.55
+    sphere("Beacon", (0, 0, 1.32), .075, glow, root)
+    for side in (-1, 1):
+        box(f"Brace{side}", (side * .06, 0, .62), (.03, .03, .5), dark, root)
+    return save_asset("zone_high_ground", "", [], join=True)
+
+
+def build_zone_mud():
+    """Sludge seep: a glossy puddle with leaking barrels and glowing spores."""
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    sludge = material("Sludge", (.09, .16, .05), .0, textured=False)
+    hazard = material("Barrel hazard", (.85, .55, .06), .5)
+    metal = material("Barrel steel", (.1, .13, .16), .7)
+    spore = material("Sludge spores", (.45, 1, .2), .1, True, glow_strength=1.4)
+    root = empty("MudModel")
+    for index, (x, y, radius, squash) in enumerate(((0, 0, .72, 1), (.55, .2, .42, .9), (-.5, -.25, .5, 1.1),
+                                                     (.1, -.55, .36, 1), (-.3, .55, .32, 1))):
+        sphere(f"Puddle{index}", (x, y, .02), radius, sludge, root, (1, squash, .09))
+    for index, (x, y, tilt) in enumerate(((-.35, .1, .5), (.3, -.2, -.35))):
+        barrel = cylinder(f"Barrel{index}", (x, y, .26), .21, .5, metal, root)
+        barrel.rotation_euler = (tilt, .25 * index, .6 + index)
+        band = cylinder(f"BarrelBand{index}", (x, y, .26), .22, .1, hazard, root)
+        band.rotation_euler = barrel.rotation_euler
+    for index, (x, y, z, radius) in enumerate(((.15, .3, .1, .055), (-.55, .2, .08, .04), (.5, -.1, .09, .05), (-.1, -.25, .08, .035))):
+        sphere(f"Spore{index}", (x, y, z), radius, spore, root)
+    return save_asset("zone_mud", "", [], join=True)
+
+
+def build_zone_no_build():
+    """Exclusion beacon: striped bollards around a red warning pylon."""
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    dark = material("Beacon graphite", (.035, .07, .1), .7)
+    stripe = material("Hazard stripe", (.9, .75, .08), .4)
+    red = material("Exclusion red", (1, .06, .06), .1, True)
+    root = empty("NoBuildModel")
+    cylinder("PylonBase", (0, 0, .08), .3, .16, dark, root)
+    box("Pylon", (0, 0, .55), (.2, .2, .8), dark, root)
+    for index in range(3):
+        box(f"PylonStripe{index}", (0, 0, .3 + index * .26), (.215, .215, .09), stripe, root)
+    sphere("WarnDome", (0, 0, 1.05), .17, red, root, (1, 1, .9))
+    for index in range(4):
+        angle = index * math.tau / 4 + math.pi / 4
+        x, y = .75 * math.cos(angle), .75 * math.sin(angle)
+        cylinder(f"Bollard{index}", (x, y, .24), .09, .48, dark, root)
+        cylinder(f"BollardBand{index}", (x, y, .35), .095, .1, stripe, root)
+        cylinder(f"BollardLight{index}", (x, y, .5), .06, .04, red, root)
+    return save_asset("zone_no_build", "", [], join=True)
+
+
+def build_zone_power_node():
+    """Conduit pylon: a ringed coil on a plate, glowing so a charged spot is obvious."""
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    shell = material("Node silver", (.65, .76, .8), .65)
+    dark = material("Node graphite", (.035, .07, .1), .7)
+    charge = material("Node charge", (.8, 1, .15), .2, True, glow_strength=2.4)
+    root = empty("PowerNodeModel")
+    cylinder("NodePlate", (0, 0, .04), .85, .08, dark, root, 16)
+    cylinder("NodeRim", (0, 0, .1), .7, .05, shell, root, 16)
+    cylinder("NodeCore", (0, 0, .62), .13, 1.0, charge, root)
+    for index, (z, radius) in enumerate(((.28, .3), (.5, .26), (.72, .22), (.94, .18))):
+        cylinder(f"Coil{index}", (0, 0, z), radius, .07, shell, root, 14)
+    sphere("NodeOrb", (0, 0, 1.22), .16, charge, root)
+    for index in range(3):
+        angle = index * math.tau / 3
+        strut(f"Fin{index}", (.18 * math.cos(angle), .18 * math.sin(angle), .95), (.55 * math.cos(angle), .55 * math.sin(angle), .1), .04, dark, root)
+    return save_asset("zone_power_node", "", [], join=True)
+
+
+def build_zone_marker():
+    """Rim post: one tiny emissive-capped post, instanced around a zone's edge and tinted per zone type in the engine."""
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    dark = material("Post graphite", (.035, .07, .1), .7)
+    glow = material("Post cap", (1, 1, 1), .1, True)
+    root = empty("ZoneMarkerModel")
+    cylinder("PostBase", (0, 0, .03), .13, .06, dark, root, 8)
+    cylinder("Post", (0, 0, .3), .05, .5, dark, root, 8)
+    cylinder("PostCap", (0, 0, .58), .075, .07, glow, root, 8)
+    return save_asset("zone_marker", "", [], join=True)
+
+
 builders = {"ion_turret": build_turret, "spider_drone": build_drone,
             "plasma_turret": build_plasma, "scrap_shard": build_scrap, "charger_drone": lambda: build_drone(True), "player_bot": build_player,
-            "shock_turret": build_shock}
+            "shock_turret": build_shock, "zone_high_ground": build_zone_high_ground, "zone_mud": build_zone_mud,
+            "zone_no_build": build_zone_no_build, "zone_power_node": build_zone_power_node, "zone_marker": build_zone_marker}
 parser = argparse.ArgumentParser()
 parser.add_argument("--only", nargs="+", choices=list(builders))
 args = parser.parse_args(sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else [])

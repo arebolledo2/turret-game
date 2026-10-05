@@ -18,6 +18,8 @@ for source in sources:
 manifest = json.loads((ROOT / "assets/models/game/manifest.json").read_text())
 for asset in manifest["assets"]:
     for key in ("source", "model", "reference"):
+        if key == "reference" and not asset[key]:
+            continue  # props with no 2D reference art (terrain zones) leave it empty
         if not (ROOT / asset[key]).is_file():
             errors.append(f"Asset {asset['id']}: missing {key}: {asset[key]}")
 for relative in ("scenes/player.tscn", "scenes/enemy.tscn", "scripts/player.gd", "scripts/enemy.gd"):
