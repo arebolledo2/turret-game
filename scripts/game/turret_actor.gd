@@ -237,9 +237,45 @@ func _current_stats(delta: float) -> Dictionary:
 		stats_age = 0.0
 	return cached_stats
 
+var range_ring: MeshInstance3D
+var range_ring_metres: float = 0.0
+static var range_ring_material: StandardMaterial3D
+
+## Ring on the floor at the turret's current range (item, Entrench-free stats and high ground included) while the
+## world's range toggle is on; also while carried, so a placement can be judged.
+func _update_range_ring() -> void:
+	if not world.show_ranges or not FeatureFlagService.is_enabled(FeatureFlagService.RANGE_OVERLAY):
+		if range_ring:
+			range_ring.visible = false
+		return
+	var metres := float(_current_stats(0.0).get("range", 0.0)) * WorldGeometry.METRES_PER_PIXEL
+	if metres <= 0.0:
+		return
+	if not range_ring:
+		range_ring = MeshInstance3D.new()
+		range_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if not range_ring_material:
+			range_ring_material = StandardMaterial3D.new()
+			range_ring_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			range_ring_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			range_ring_material.albedo_color = Color(.4, .95, .9, .55)
+		range_ring.material_override = range_ring_material
+		add_child(range_ring)
+	if not is_equal_approx(metres, range_ring_metres):
+		range_ring_metres = metres
+		var mesh := TorusMesh.new()
+		mesh.inner_radius = maxf(.01, metres - .035)
+		mesh.outer_radius = metres + .035
+		mesh.rings = 72
+		mesh.ring_segments = 4
+		range_ring.mesh = mesh
+	range_ring.global_position = Vector3(global_position.x, .04, global_position.z)
+	range_ring.visible = true
+
 func _physics_process(delta: float) -> void:
 	if not world.is_combat():
 		return
+	_update_range_ring()
 	if carried:
 		position = world.player.position + Vector3(0, 1.15, .25)
 		return

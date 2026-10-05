@@ -31,6 +31,7 @@ const DIFFICULTY_RULES: String = "difficulty_rules"
 const TERRAIN_ZONES: String = "terrain_zones"
 const DEBUG_ZONES: String = "debug_zones"
 const ZONE_READABILITY: String = "zone_readability"
+const RANGE_OVERLAY: String = "range_overlay"
 
 const SCOPE_USER: String = "user"
 const SCOPE_DEV: String = "dev"
@@ -82,7 +83,7 @@ const FLAG_DEFINITIONS: Dictionary = {
 		"description": "Higher difficulties add elite enemies and, in core mode, core seekers, a weaker core and faster waves. Applies from the next run.",
 	},
 	TERRAIN_ZONES: {
-		"name": "Terrain Zones", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 4,
+		"name": "Terrain Zones", "default": false, "scope": SCOPE_EXPERIMENT, "phase": 4,
 		"description": "Each run gets a random terrain layout: high ground (turret range), mud (slows enemies and you), no-build ground and power nodes (faster Entrench). Applies from the next run.",
 	},
 	ZONE_READABILITY: {
@@ -93,6 +94,10 @@ const FLAG_DEFINITIONS: Dictionary = {
 		"name": "Debug Zones", "default": false, "scope": SCOPE_DEV, "live_safe": true, "phase": 4,
 		"requires": [DEV_PANEL],
 		"description": "Labels every terrain zone with its type and strength and plants a pole at its centre.",
+	},
+	RANGE_OVERLAY: {
+		"name": "Range Toggle", "default": true, "scope": SCOPE_USER, "live_safe": true, "phase": 4,
+		"description": "Y on a controller (Tab on keyboard) toggles a ring showing every turret's range, including high-ground bonuses.",
 	},
 	PLACEMENT_PREVIEW: {
 		"name": "Placement Preview", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 1,

@@ -463,7 +463,18 @@ func request_menu() -> void:
 	else:
 		get_tree().change_scene_to_file.call_deferred("res://scenes/main.tscn")
 
+## Turret range rings, toggled with the `toggle_range` action (Y / Tab). Stays on between waves until toggled again.
+var show_ranges: bool = false
+
+func toggle_ranges() -> void:
+	if not FeatureFlagService.is_enabled(FeatureFlagService.RANGE_OVERLAY):
+		return
+	show_ranges = not show_ranges
+	message = "Turret ranges %s" % ("shown" if show_ranges else "hidden")
+
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("toggle_range") and not event.is_echo() and GameStateService.is_game_active:
+		toggle_ranges()
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
 			KEY_ESCAPE: toggle_pause()

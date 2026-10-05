@@ -244,7 +244,7 @@ func _process(_delta: float) -> void:
 	stats.text = "WAVE %02d / %02d     %02ds\n%d SCRAP     %d KILLS" % [GameStateService.current_wave,
 		world.wave_limit, ceili(world.time_left), EconomyService.total_scrap, GameStateService.total_kills]
 	status.text = "DEPLOYING WAVE %d  ·  %d" % [GameStateService.current_wave, ceili(world.announcement_left)] if phase == GameStateMachine.GameState.WAVE_ANNOUNCEMENT else ""
-	hint.text = "WASD / LEFT STICK  Move     E / A  Carry or place turret     M  Map     ESC / START  Pause\n" + world.message + _entrench_readout() + _zone_readout()
+	hint.text = "WASD / LEFT STICK  Move     E / A  Carry or place turret     M  Map     TAB / Y  Ranges     ESC / START  Pause\n" + world.message + _entrench_readout() + _zone_readout()
 	var legend_text := _zone_legend_text(phase)
 	zone_legend.text = legend_text
 	zone_legend.visible = not legend_text.is_empty() and not world.dev_menu_open
