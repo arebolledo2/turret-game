@@ -30,6 +30,7 @@ const TECH_DROPS: String = "tech_drops"
 const DIFFICULTY_RULES: String = "difficulty_rules"
 const TERRAIN_ZONES: String = "terrain_zones"
 const DEBUG_ZONES: String = "debug_zones"
+const ZONE_READABILITY: String = "zone_readability"
 
 const SCOPE_USER: String = "user"
 const SCOPE_DEV: String = "dev"
@@ -83,6 +84,10 @@ const FLAG_DEFINITIONS: Dictionary = {
 	TERRAIN_ZONES: {
 		"name": "Terrain Zones", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 4,
 		"description": "Each run gets a random terrain layout: high ground (turret range), mud (slows enemies and you), no-build ground and power nodes (faster Entrench). Applies from the next run.",
+	},
+	ZONE_READABILITY: {
+		"name": "Zone Readability", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 4, "requires": [TERRAIN_ZONES],
+		"description": "Patterned zone ground (chevrons, sludge, hazard hatching, charge pulses), distinct colours, bigger props, names that fade in as you approach, a zone line in the hint bar and a legend on pause. Off restores the flat tinted discs. Applies at once.",
 	},
 	DEBUG_ZONES: {
 		"name": "Debug Zones", "default": false, "scope": SCOPE_DEV, "live_safe": true, "phase": 4,

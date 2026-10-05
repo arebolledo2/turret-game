@@ -110,6 +110,9 @@ func _spin_bat(delta: float, stats: Dictionary, reach: float) -> void:
 var zone_range_bonus: float = 0.0
 var zone_entrench_bonus: float = 0.0
 
+var zone_badge: MeshInstance3D
+var zone_badge_type: String = ""
+
 func _refresh_zone_bonuses() -> void:
 	if world.terrain:
 		zone_range_bonus = world.terrain.range_bonus_at(position)
@@ -117,6 +120,26 @@ func _refresh_zone_bonuses() -> void:
 	else:
 		zone_range_bonus = 0.0
 		zone_entrench_bonus = 0.0
+	_update_zone_badge()
+
+## A ring in the zone's colour under a turret that is benefiting from high ground or a power node, so the bonus is
+## visible on the turret itself. Only while zones are readable.
+func _update_zone_badge() -> void:
+	var wanted := ""
+	if world.terrain and world.terrain.readable and not carried:
+		if zone_range_bonus > 0.0:
+			wanted = TerrainZone.HIGH_GROUND
+		elif zone_entrench_bonus > 0.0:
+			wanted = TerrainZone.POWER_NODE
+	if wanted == zone_badge_type:
+		return
+	zone_badge_type = wanted
+	if zone_badge:
+		zone_badge.queue_free()
+		zone_badge = null
+	if wanted != "":
+		zone_badge = WorldGeometry.ring(self, .9, TerrainZone.TYPES[wanted]["color"])
+		zone_badge.position.y = .025
 
 func _stack_seconds() -> float:
 	return float(_entrench()["seconds"]) / (1.0 + zone_entrench_bonus)

@@ -10,6 +10,7 @@ var world: ArenaWorld
 var carried: TurretActor
 var carry_origin: Vector3
 var preview: MeshInstance3D
+var preview_label: Label3D
 var preview_ok: bool = true
 
 ## First free spot on a grid around the player (the origin when no player exists yet).
@@ -81,6 +82,27 @@ func update_preview() -> void:
 	preview.material_override = _preview_material(ok)
 	preview.position = Vector3(at.x, .035, at.z)
 	preview.visible = true
+	_update_preview_label(at)
+
+## Names the ground under the marker ("High ground · turrets +25% range") while zones are readable.
+func _update_preview_label(at: Vector3) -> void:
+	var text := world.terrain.describe_at(at, true) if world.terrain and world.terrain.readable else ""
+	if text.is_empty():
+		if preview_label:
+			preview_label.visible = false
+		return
+	if not preview_label:
+		preview_label = Label3D.new()
+		preview_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		preview_label.no_depth_test = true
+		preview_label.font_size = 40
+		preview_label.pixel_size = .008
+		preview_label.outline_size = 10
+		preview_label.position.y = 1.4
+		preview.add_child(preview_label)
+	preview_label.text = text
+	preview_label.modulate = Color("ffd0d0") if not preview_ok else Color("d9fff9")
+	preview_label.visible = true
 
 func drop_position() -> Vector3:
 	var forward := -world.player.visual.global_basis.z

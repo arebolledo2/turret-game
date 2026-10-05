@@ -16,6 +16,12 @@ const MARKER_SCENE: PackedScene = preload("res://assets/models/game/zone_marker.
 const MARKER_SPACING: float = 1.7
 const DECAL_HEIGHT: float = .012
 const RING_HEIGHT: float = .022
+const GROUND_SHADER: Shader = preload("res://assets/shaders/zone_ground.gdshader")
+const PLANE_MARGIN: float = .5
+const LABEL_HEIGHT: float = 1.2 # plus 1.1 m per metre of zone radius, so the name sits just beyond the prop
+## Priority when zones overlap at a point (first match wins for text).
+const TEXT_PRIORITY: Array[String] = [TerrainZone.NO_BUILD, TerrainZone.MUD, TerrainZone.HIGH_GROUND, TerrainZone.POWER_NODE]
+const TURRET_ZONES: Array[String] = [TerrainZone.NO_BUILD, TerrainZone.HIGH_GROUND, TerrainZone.POWER_NODE]
 
 var layout: ArenaLayout
 var zones: Array[TerrainZone] = []
@@ -24,8 +30,14 @@ var rows: int = 0
 var cells: Array[PackedInt32Array] = []
 var has_mud: bool = false
 var root: Node3D
+var parent_node: Node3D
 var debug_root: Node3D
 var debug_shown: bool = false
+## True while the readable look (patterned ground, labels, hints) is built; follows the `zone_readability` flag.
+var readable: bool = false
+var motion_on: bool = true
+var labels: Array[Label3D] = []
+var ground_materials: Array[ShaderMaterial] = []
 
 static var decal_materials: Dictionary = {}
 static var marker_materials: Dictionary = {}
@@ -64,6 +76,38 @@ func strongest_at(position: Vector3, zone_type: String) -> float:
 			best = maxf(best, zone.strength)
 	return best
 
+## The strongest zone of `zone_type` at the point, or null.
+func zone_covering(position: Vector3, zone_type: String) -> TerrainZone:
+	var cell := _cell_xy(position.x, position.z)
+	var best: TerrainZone = null
+	for zone_index in cells[cell.y * columns + cell.x]:
+		var zone := zones[zone_index]
+		if zone.type == zone_type and zone.contains(position.x, position.z) and (not best or zone.strength > best.strength):
+			best = zone
+	return best
+
+## "High ground · turrets +25% range" for the ground at the point, or "" on plain floor. `turret_only` skips mud.
+func describe_at(position: Vector3, turret_only: bool = false) -> String:
+	for zone_type in (TURRET_ZONES if turret_only else TEXT_PRIORITY):
+		var zone := zone_covering(position, zone_type)
+		if zone:
+			return "%s · %s" % [zone.title(), zone.detail()]
+	return ""
+
+## One line naming every zone type in the layout and what it does (pause screen, wave announcement).
+func legend() -> String:
+	var seen: Array[String] = []
+	var parts := PackedStringArray()
+	for zone in zones:
+		if zone.type not in seen:
+			seen.append(zone.type)
+			parts.append("%s  %s" % [zone.title().to_upper(), zone.detail()])
+	return "TERRAIN  %s     %s" % [layout.layout_name.to_upper(), "   |   ".join(parts)]
+
+## Colour for the minimap and anything else that must match what is drawn in the arena.
+func tint(zone: TerrainZone) -> Color:
+	return zone.color() if readable else zone.legacy_color()
+
 func covers(position: Vector3, zone_type: String) -> bool:
 	var cell := _cell_xy(position.x, position.z)
 	for zone_index in cells[cell.y * columns + cell.x]:
@@ -90,20 +134,127 @@ func entrench_bonus_at(position: Vector3) -> float:
 
 # ---- Visuals ---------------------------------------------------------------------------------------------------
 
-## Adds the zone scenery under `parent` (freed with it) and returns the root node.
+## Adds the zone scenery under `parent` (freed with it) and returns the root node. The look follows the
+## `zone_readability` flag at build time; `update_frame` rebuilds when the flag changes mid-run.
 func build_visuals(parent: Node3D) -> Node3D:
+	parent_node = parent
+	readable = FeatureFlagService.is_enabled(FeatureFlagService.ZONE_READABILITY)
+	labels.clear()
+	ground_materials.clear()
+	debug_root = null
+	debug_shown = false
+	motion_on = _motion_wanted()
 	root = Node3D.new()
 	root.name = "Terrain"
 	parent.add_child(root)
 	for zone in zones:
-		_build_zone(zone)
+		if readable:
+			_build_readable_zone(zone)
+		else:
+			_build_legacy_zone(zone)
 	return root
 
-func _build_zone(zone: TerrainZone) -> void:
-	var colour := zone.color()
+## Per-frame upkeep: follows the readability flag, fades names with hero distance, honours reduced motion, debug draw.
+func update_frame(hero_position: Vector3, show_debug: bool) -> void:
+	if not root:
+		return
+	if FeatureFlagService.is_enabled(FeatureFlagService.ZONE_READABILITY) != readable:
+		parent_node.remove_child(root)
+		root.queue_free()
+		build_visuals(parent_node)
+	if readable:
+		_update_labels(hero_position)
+		var motion := _motion_wanted()
+		if motion != motion_on:
+			motion_on = motion
+			for material in ground_materials:
+				material.set_shader_parameter("motion", 1.0 if motion else 0.0)
+	update_debug(show_debug)
+
+static func _motion_wanted() -> bool:
+	return not FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION)
+
+func _update_labels(hero_position: Vector3) -> void:
+	var fade_span := maxf(GameConstants.ZONE_LABEL_FADE_RANGE - GameConstants.ZONE_LABEL_FULL_RANGE, .1)
+	for index in labels.size():
+		var distance := zones[index].distance_to(hero_position.x, hero_position.z)
+		var alpha := clampf((GameConstants.ZONE_LABEL_FADE_RANGE - distance) / fade_span, 0.0, 1.0)
+		var label := labels[index]
+		label.visible = alpha > .02
+		if label.visible:
+			label.modulate.a = alpha
+			label.outline_modulate.a = alpha
+
+func _holder(zone: TerrainZone) -> Node3D:
 	var holder := Node3D.new()
 	holder.position = Vector3(zone.centre.x, 0, zone.centre.y)
 	root.add_child(holder)
+	return holder
+
+## Patterned ground (see `zone_ground.gdshader`), a prop sized to the zone and a name that fades in on approach.
+func _build_readable_zone(zone: TerrainZone) -> void:
+	var holder := _holder(zone)
+	var ground := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = zone.half_extents * 2.0 + Vector2.ONE * PLANE_MARGIN * 2.0
+	ground.mesh = plane
+	ground.material_override = _ground_material(zone, plane.size)
+	ground.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	ground.position.y = DECAL_HEIGHT
+	holder.add_child(ground)
+	var prop := (PROP_SCENES[zone.type] as PackedScene).instantiate() as Node3D
+	prop.scale = Vector3.ONE * _prop_scale(prop, zone)
+	holder.add_child(prop)
+	var label := Label3D.new()
+	label.text = "%s\n%s" % [zone.title().to_upper(), zone.detail()]
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.font_size = 44
+	label.pixel_size = .009
+	label.outline_size = 10
+	label.modulate = Color(zone.color().lightened(.35), 0.0)
+	label.outline_modulate = Color(0, 0, 0, 0)
+	label.position.y = LABEL_HEIGHT + zone.radius * 1.1
+	label.visible = false
+	holder.add_child(label)
+	labels.append(label)
+
+func _ground_material(zone: TerrainZone, plane_size: Vector2) -> ShaderMaterial:
+	var style: Dictionary = TerrainZone.TYPES[zone.type]
+	var material := ShaderMaterial.new()
+	material.shader = GROUND_SHADER
+	material.set_shader_parameter("zone_kind", int(style["kind"]))
+	material.set_shader_parameter("is_circle", zone.is_circle)
+	material.set_shader_parameter("half_size", zone.half_extents)
+	material.set_shader_parameter("plane_size", plane_size)
+	material.set_shader_parameter("base_color", style["base"])
+	material.set_shader_parameter("accent_color", style["accent"])
+	material.set_shader_parameter("fill_alpha", float(style["fill"]))
+	material.set_shader_parameter("motion", 1.0 if motion_on else 0.0)
+	ground_materials.append(material)
+	return material
+
+## Grows a prop to fill about half the zone without spilling out of it: `ZONE_PROP_FILL` of the narrowest half-width.
+func _prop_scale(prop: Node3D, zone: TerrainZone) -> float:
+	var reach := 0.0
+	for found in prop.find_children("*", "MeshInstance3D", true, false):
+		var mesh_instance := found as MeshInstance3D
+		var transform_to_prop := Transform3D.IDENTITY
+		var node: Node = mesh_instance
+		while node != prop and node is Node3D:
+			transform_to_prop = (node as Node3D).transform * transform_to_prop
+			node = node.get_parent()
+		var box := transform_to_prop * mesh_instance.get_aabb()
+		reach = maxf(reach, maxf(maxf(absf(box.position.x), absf(box.end.x)), maxf(absf(box.position.z), absf(box.end.z))))
+	if reach < .05:
+		return 1.0
+	var limit := minf(zone.half_extents.x, zone.half_extents.y) * GameConstants.ZONE_PROP_FILL
+	return clampf(limit / reach, 1.0, GameConstants.ZONE_PROP_MAX_SCALE)
+
+## The original look: flat translucent tint, edge ring, rim posts and a small prop. Kept behind `zone_readability`.
+func _build_legacy_zone(zone: TerrainZone) -> void:
+	var colour := zone.legacy_color()
+	var holder := _holder(zone)
 	var decal := MeshInstance3D.new()
 	if zone.is_circle:
 		var disc := CylinderMesh.new()

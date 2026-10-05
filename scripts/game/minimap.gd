@@ -52,7 +52,7 @@ func _draw() -> void:
 	if world.terrain:
 		var scale_x := MAP_SIZE.x / (WorldGeometry.HALF_ARENA.x * 2.0)
 		for zone in world.terrain.zones:
-			var tint := zone.color()
+			var tint := world.terrain.tint(zone)
 			tint.a = .42
 			var zone_at := world_to_map(Vector3(zone.centre.x, 0, zone.centre.y))
 			if zone.is_circle:

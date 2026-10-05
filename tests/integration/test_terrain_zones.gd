@@ -9,8 +9,9 @@ func after_each() -> void:
 	Input.action_release("move_right")
 	TestHelpers.reset_flags()
 
-func _world(layout_id: String = "crossroads", mode: String = RunConfig.MODE_SURVIVE) -> ArenaWorld:
+func _world(layout_id: String = "crossroads", mode: String = RunConfig.MODE_SURVIVE, readable: bool = true) -> ArenaWorld:
 	FeatureFlagService.set_enabled(FeatureFlagService.TERRAIN_ZONES, true)
+	FeatureFlagService.set_enabled(FeatureFlagService.ZONE_READABILITY, readable)
 	var config := RunConfig.new()
 	config.layout_id = layout_id
 	config.mode = mode
@@ -186,3 +187,102 @@ func test_core_mode_layouts_leave_the_core_clear() -> void:
 	assert_not_null(world.core)
 	assert_false(world.terrain.blocks_build(world.core.position))
 	assert_eq(world.terrain.mud_factor_at(world.core.position), 1.0)
+
+# ---- Zone readability (flag `zone_readability`) ------------------------------------------------------------------
+
+func _plain_world(readable: bool) -> ArenaWorld:
+	return await _world("crossroads", RunConfig.MODE_SURVIVE, readable)
+
+func test_zone_palette_has_four_distinct_hues() -> void:
+	var hues: Array[float] = []
+	for zone_type in TerrainZone.TYPES:
+		hues.append(TerrainZone.TYPES[zone_type]["color"].h)
+	for first in hues.size():
+		for second in range(first + 1, hues.size()):
+			var gap := absf(hues[first] - hues[second])
+			assert_gt(minf(gap, 1.0 - gap), .05, "zone hues %d and %d are far enough apart" % [first, second])
+
+func test_readable_zones_use_patterned_ground_and_labels() -> void:
+	world = await _plain_world(true)
+	assert_true(world.terrain.readable)
+	assert_eq(world.terrain.ground_materials.size(), world.terrain.zones.size())
+	assert_eq(world.terrain.labels.size(), world.terrain.zones.size())
+	assert_true(world.terrain.labels[0].text.contains("\n"), "name over effect")
+
+func test_flag_off_keeps_the_original_look() -> void:
+	world = await _plain_world(false)
+	assert_false(world.terrain.readable)
+	assert_eq(world.terrain.ground_materials.size(), 0)
+	assert_eq(world.terrain.labels.size(), 0)
+	assert_gt(world.terrain.root.get_child_count(), 0, "scenery is still built")
+	assert_eq(world.terrain.describe_at(Vector3(-14, 0, -8)), "High ground · turrets +25% range", "queries do not depend on the look")
+
+func test_flag_switches_the_look_live() -> void:
+	world = await _plain_world(true)
+	var layout_id := world.terrain.layout.id
+	FeatureFlagService.set_enabled(FeatureFlagService.ZONE_READABILITY, false)
+	await wait_physics_frames(2)
+	assert_false(world.terrain.readable)
+	assert_eq(world.terrain.labels.size(), 0)
+	FeatureFlagService.set_enabled(FeatureFlagService.ZONE_READABILITY, true)
+	await wait_physics_frames(2)
+	assert_true(world.terrain.readable)
+	assert_eq(world.terrain.layout.id, layout_id, "same layout, new look")
+	assert_eq(world.terrain.root.get_parent(), world.actor_root)
+	assert_eq(world.actor_root.find_children("Terrain", "Node3D", false, false).size(), 1, "the old scenery was removed")
+
+func test_names_fade_in_as_the_hero_approaches() -> void:
+	world = await _plain_world(true)
+	var first := world.terrain.zones[0]
+	var far := Vector3(first.centre.x + first.radius + 40.0, 0, first.centre.y)
+	world.terrain.update_frame(far, false)
+	assert_false(world.terrain.labels[0].visible)
+	world.terrain.update_frame(Vector3(first.centre.x, 0, first.centre.y), false)
+	assert_true(world.terrain.labels[0].visible)
+	assert_almost_eq(world.terrain.labels[0].modulate.a, 1.0, .01)
+
+func test_describe_and_legend() -> void:
+	world = await _world()
+	assert_eq(world.terrain.describe_at(Vector3(-9, 0, 6.5)), "No-build · turrets cannot be placed")
+	assert_eq(world.terrain.describe_at(Vector3(-9, 0, 6.5), true), "No-build · turrets cannot be placed")
+	assert_string_contains(world.terrain.describe_at(Vector3(0, 0, -11.5)), "Mud")
+	assert_eq(world.terrain.describe_at(Vector3(0, 0, -11.5), true), "", "mud means nothing to a turret")
+	assert_eq(world.terrain.describe_at(Vector3(5, 0, 0)), "")
+	var legend := world.terrain.legend()
+	for word in ["HIGH GROUND", "MUD", "NO-BUILD", "POWER NODE", "CROSSROADS"]:
+		assert_string_contains(legend, word)
+
+func test_props_fit_inside_their_zones() -> void:
+	world = await _world()
+	for holder in world.terrain.root.get_children():
+		var prop := holder.get_child(1) as Node3D
+		assert_between(prop.scale.x, 1.0, GameConstants.ZONE_PROP_MAX_SCALE)
+
+func test_reduced_motion_freezes_the_ground() -> void:
+	world = await _world()
+	assert_eq(float(world.terrain.ground_materials[0].get_shader_parameter("motion")), 1.0)
+	FeatureFlagService.set_enabled(FeatureFlagService.REDUCED_MOTION, true)
+	await wait_physics_frames(2)
+	assert_eq(float(world.terrain.ground_materials[0].get_shader_parameter("motion")), 0.0)
+
+func test_turret_on_high_ground_shows_a_badge() -> void:
+	world = await _world()
+	var raised := world.add_turret(Vector3(-14, 0, -8), "normal")
+	var flat := world.add_turret(Vector3(5, 0, 0), "normal")
+	await wait_physics_frames(20)
+	assert_not_null(raised.zone_badge)
+	assert_null(flat.zone_badge)
+	FeatureFlagService.set_enabled(FeatureFlagService.ZONE_READABILITY, false)
+	await wait_physics_frames(20)
+	assert_null(raised.zone_badge, "the flag turns the badge off too")
+
+func test_placement_preview_names_the_ground() -> void:
+	world = await _world()
+	world.player.position = Vector3(-14, 0, -8)
+	world.placement.carried = world.turrets[0]
+	world.placement.update_preview()
+	assert_true(world.placement.preview_label.visible)
+	assert_string_contains(world.placement.preview_label.text, "High ground")
+	world.placement.carried = null
+	world.placement.update_preview()
+	assert_false(world.placement.preview.visible)

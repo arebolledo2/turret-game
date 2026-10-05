@@ -449,10 +449,10 @@ def build_zone_high_ground():
 def build_zone_mud():
     """Sludge seep: a glossy puddle with leaking barrels and glowing spores."""
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    sludge = material("Sludge", (.09, .16, .05), .0, textured=False)
+    sludge = material("Sludge", (.15, .115, .035), .0, textured=False)
     hazard = material("Barrel hazard", (.85, .55, .06), .5)
     metal = material("Barrel steel", (.1, .13, .16), .7)
-    spore = material("Sludge spores", (.45, 1, .2), .1, True, glow_strength=1.4)
+    spore = material("Sludge spores", (1, .75, .2), .1, True, glow_strength=1.4)
     root = empty("MudModel")
     for index, (x, y, radius, squash) in enumerate(((0, 0, .72, 1), (.55, .2, .42, .9), (-.5, -.25, .5, 1.1),
                                                      (.1, -.55, .36, 1), (-.3, .55, .32, 1))):
@@ -468,11 +468,11 @@ def build_zone_mud():
 
 
 def build_zone_no_build():
-    """Exclusion beacon: striped bollards around a red warning pylon."""
+    """Exclusion beacon: striped bollards around an amber warning pylon."""
     bpy.ops.wm.read_factory_settings(use_empty=True)
     dark = material("Beacon graphite", (.035, .07, .1), .7)
     stripe = material("Hazard stripe", (.9, .75, .08), .4)
-    red = material("Exclusion red", (1, .06, .06), .1, True)
+    red = material("Exclusion amber", (1, .42, .04), .1, True)
     root = empty("NoBuildModel")
     cylinder("PylonBase", (0, 0, .08), .3, .16, dark, root)
     box("Pylon", (0, 0, .55), (.2, .2, .8), dark, root)
@@ -493,7 +493,7 @@ def build_zone_power_node():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     shell = material("Node silver", (.65, .76, .8), .65)
     dark = material("Node graphite", (.035, .07, .1), .7)
-    charge = material("Node charge", (.8, 1, .15), .2, True, glow_strength=2.4)
+    charge = material("Node charge", (.62, .4, 1), .2, True, glow_strength=2.4)
     root = empty("PowerNodeModel")
     cylinder("NodePlate", (0, 0, .04), .85, .08, dark, root, 16)
     cylinder("NodeRim", (0, 0, .1), .7, .05, shell, root, 16)

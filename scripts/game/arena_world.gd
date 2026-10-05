@@ -188,7 +188,8 @@ func _physics_process(delta: float) -> void:
 	waves.tick(delta)
 	placement.update_preview()
 	if terrain:
-		terrain.update_debug(FeatureFlagService.dev_panel_available() and FeatureFlagService.is_enabled(FeatureFlagService.DEBUG_ZONES))
+		terrain.update_frame(player.position if is_instance_valid(player) else Vector3.ZERO,
+			FeatureFlagService.dev_panel_available() and FeatureFlagService.is_enabled(FeatureFlagService.DEBUG_ZONES))
 
 func begin_next_wave() -> bool:
 	return waves.begin_next_wave()

@@ -9,14 +9,22 @@ const POWER_NODE: String = "power_node"
 
 ## `strength` meaning per type: high ground = range bonus, mud = enemy and hero slow, power node = Entrench speed bonus.
 ## No-build has no strength.
+## `color` is the readable palette (blue, murky olive, hazard orange, violet: four distinct hues, none of them damage red).
+## `legacy_color` is the original flat tint, kept for the `zone_readability` flag when it is off.
+## `kind` selects the ground pattern in `zone_ground.gdshader`; `base`/`accent`/`fill` feed it.
 const TYPES: Dictionary = {
-	HIGH_GROUND: {"name": "High ground", "color": Color("6fd6ff"), "strength": GameConstants.ZONE_HIGH_GROUND_RANGE_BONUS,
-		"summary": "turrets +%d%% range"},
-	MUD: {"name": "Mud", "color": Color("8aa63a"), "strength": GameConstants.ZONE_MUD_SLOW,
-		"summary": "movement -%d%%"},
-	NO_BUILD: {"name": "No-build", "color": Color("ff5a5a"), "strength": 0.0, "summary": "turrets cannot be placed"},
-	POWER_NODE: {"name": "Power node", "color": Color("d6ff4a"), "strength": GameConstants.ZONE_POWER_NODE_ENTRENCH_BONUS,
-		"summary": "Entrench stacks %d%% faster"},
+	HIGH_GROUND: {"name": "High ground", "color": Color("5ab0ff"), "legacy_color": Color("6fd6ff"), "kind": 0,
+		"base": Color("1f5d96"), "accent": Color("9bd4ff"), "fill": .26,
+		"strength": GameConstants.ZONE_HIGH_GROUND_RANGE_BONUS, "summary": "turrets +%d%% range"},
+	MUD: {"name": "Mud", "color": Color("8f8a3c"), "legacy_color": Color("8aa63a"), "kind": 1,
+		"base": Color("2a2a12"), "accent": Color("6e6a2c"), "fill": .5,
+		"strength": GameConstants.ZONE_MUD_SLOW, "summary": "slows you and enemies %d%%"},
+	NO_BUILD: {"name": "No-build", "color": Color("ff9a2e"), "legacy_color": Color("ff5a5a"), "kind": 2,
+		"base": Color("e0801c"), "accent": Color("ffd08a"), "fill": .26,
+		"strength": 0.0, "summary": "turrets cannot be placed"},
+	POWER_NODE: {"name": "Power node", "color": Color("b98aff"), "legacy_color": Color("d6ff4a"), "kind": 3,
+		"base": Color("3a2670"), "accent": Color("e6d4ff"), "fill": .3,
+		"strength": GameConstants.ZONE_POWER_NODE_ENTRENCH_BONUS, "summary": "Entrench stacks %d%% faster"},
 }
 
 var type: String = MUD
@@ -51,11 +59,29 @@ func contains(x: float, z: float) -> bool:
 func color() -> Color:
 	return TYPES[type]["color"]
 
-func label() -> String:
+func legacy_color() -> Color:
+	return TYPES[type]["legacy_color"]
+
+func title() -> String:
+	return str(TYPES[type]["name"])
+
+## What the zone does, in a few words ("turrets +25% range").
+func detail() -> String:
 	var summary := str(TYPES[type]["summary"])
 	if "%d" in summary:
 		summary = summary % roundi(strength * 100.0)
-	return "%s: %s" % [TYPES[type]["name"], summary]
+	return summary
+
+func label() -> String:
+	return "%s: %s" % [title(), detail()]
+
+## Gap in metres between a point and the zone's edge (0 inside).
+func distance_to(x: float, z: float) -> float:
+	var dx := x - centre.x
+	var dz := z - centre.y
+	if is_circle:
+		return maxf(0.0, sqrt(dx * dx + dz * dz) - radius)
+	return Vector2(maxf(absf(dx) - half_extents.x, 0.0), maxf(absf(dz) - half_extents.y, 0.0)).length()
 
 ## Distance from the arena origin to the nearest point of this zone (negative when it covers the origin).
 func clearance_from_origin() -> float:

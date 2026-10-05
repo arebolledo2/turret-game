@@ -9,6 +9,7 @@ var stress: bool = false
 var shop: bool = false
 var combat_demo: bool = false
 var new_turrets: bool = false
+var zones_demo: bool = false
 var last_tick: int = 0
 var physics_samples: Array[float] = []
 var process_samples: Array[float] = []
@@ -21,6 +22,16 @@ func _ready() -> void:
 
 func setup() -> void:
 	world = load("res://scenes/game/arena.tscn").instantiate() as ArenaWorld
+	var arguments := OS.get_cmdline_user_args()
+	for argument in arguments:
+		if argument.begins_with("--zones"):
+			# --zones[=layout_id] frames a layout with no enemies (--focus=<zone type> picks the zone); --legacy-zones turns `zone_readability` off.
+			zones_demo = true
+			var config := RunConfig.new()
+			config.layout_id = argument.trim_prefix("--zones=") if "=" in argument else "crossroads"
+			world.run_config = config
+	if "--legacy-zones" in arguments:
+		FeatureFlagService.set_enabled(FeatureFlagService.ZONE_READABILITY, false)
 	add_child(world)
 	world.remaining_spawns = 0
 	world.announcement_left = 0
@@ -32,7 +43,7 @@ func setup() -> void:
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	GameRandom.gameplay.seed = 42
-	for index in range(150 if stress else 18):
+	for index in range(150 if stress else (0 if zones_demo else 18)):
 		var angle := float(index) * 2.39996
 		var radius := 2.5 + float(index % 6) * .5
 		var enemy := world.spawn_enemy(Vector3(cos(angle) * radius * 1.4, 0, sin(angle) * radius * .7), "charger" if index % 4 == 0 else "basic")
@@ -66,6 +77,17 @@ func _process(_delta: float) -> void:
 				active_voices += 1
 		peak_voices = maxi(peak_voices, active_voices)
 	last_tick = tick
+	if zones_demo and frames == 180:
+		var spot := world.terrain.zones[0].centre
+		for argument in OS.get_cmdline_user_args():
+			if argument.begins_with("--focus="):
+				for zone in world.terrain.zones:
+					if zone.type == argument.trim_prefix("--focus="):
+						spot = zone.centre
+						break
+		world.player.position = Vector3(spot.x + 5.0, 0, spot.y + 3.0)
+		world.camera_rig.set_zoom(.75)
+		world.camera_rig.snap()
 	if frames == 180 and shop:
 		world.finish_wave()
 	if frames == 180 and combat_demo:
@@ -75,7 +97,7 @@ func _process(_delta: float) -> void:
 
 func capture() -> void:
 	await RenderingServer.frame_post_draw
-	var suffix := "-stress" if stress else ("-turrets" if new_turrets else "-shop" if shop else ("-combat" if combat_demo else ""))
+	var suffix := "-stress" if stress else ("-turrets" if new_turrets else "-shop" if shop else ("-combat" if combat_demo else ("-zones" if zones_demo else "")))
 	var output := ProjectSettings.globalize_path("res://.test-results/game%s.png" % suffix)
 	get_viewport().get_texture().get_image().save_png(output)
 	samples.sort()

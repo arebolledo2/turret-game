@@ -117,6 +117,17 @@ Flag `terrain_zones` (experiment). Each run gets one random layout (`ArenaLayout
 | No-build | Turrets cannot be placed there (the preview ring goes red) | `TurretPlacement.valid_placement` |
 | Power node | Entrench stacks arrive 50% faster (`ZONE_POWER_NODE_ENTRENCH_BONUS`) | `TurretActor._stack_seconds` |
 
-`TerrainZones` is the runtime view: a 2 m cell grid storing the zones that overlap each cell, so a lookup is one cell read plus a shape test, and mud returns at once on a layout with none. Tech drops avoid no-build and mud ground. Zones read through a tinted ground decal, an edge ring, rim posts (one MultiMesh per zone) and a Blender prop at the centre (`zone_high_ground`, `zone_mud`, `zone_no_build`, `zone_power_node`, `zone_marker`, built by `tools/blender/build_assets.py`, merged to one mesh per material). The minimap tints zones. Flag `debug_zones` (dev, needs the dev panel) labels every zone with its type and strength.
+`TerrainZones` is the runtime view: a 2 m cell grid storing the zones that overlap each cell, so a lookup is one cell read plus a shape test, and mud returns at once on a layout with none. Tech drops avoid no-build and mud ground. The props (`zone_high_ground`, `zone_mud`, `zone_no_build`, `zone_power_node`, `zone_marker`) are built by `tools/blender/build_assets.py` and merged to one mesh per material. Flag `debug_zones` (dev, needs the dev panel) labels every zone with its type and strength.
 
-Not yet: no zone art for reduced-motion variants, no pause-screen legend, zones do not move between waves, and the hero is not affected by high ground, no-build or power nodes. High ground plus Entrench may reward never moving; compare against Entrench telemetry.
+### Zone readability
+
+Flag `zone_readability` (experiment, `live_safe`, requires `terrain_zones`; toggling it rebuilds the scenery at once, same layout). On, a zone is communicated four ways:
+
+- **Ground:** `assets/shaders/zone_ground.gdshader` draws a pattern on a plane the size of the zone, with the true boundary as a thin edge line. High ground = chevrons climbing the screen, mud = slow sludge with bubbles, no-build = hazard hatching and a barred circle, power node = pulses and spokes running out from the pylon. Four hues (`TerrainZone.TYPES`: blue, olive, hazard orange, violet), none of them damage red. Animation freezes under `reduced_motion`.
+- **Names:** each zone has a label ("HIGH GROUND / turrets +25% range") that fades in between `ZONE_LABEL_FADE_RANGE` and `ZONE_LABEL_FULL_RANGE` metres of the hero.
+- **Where it matters:** the hint bar shows a `GROUND` line for the zone the hero stands in; the carry preview names the ground it would deploy on; a turret that benefits from high ground or a power node has a ring in that zone's colour; the terrain legend shows during the wave announcement and on the pause screen.
+- **Props:** scaled up to fill half the zone (`ZONE_PROP_FILL`, capped at `ZONE_PROP_MAX_SCALE`).
+
+Off restores the original flat tinted disc, edge ring, rim posts and small prop (`TerrainZone.legacy_color`). The readable look is also cheaper: about 70 draw calls against 160 for the rim posts and rings in the Crossroads capture with no enemies. Check either look with `capture_game.tscn -- --zones[=layout] [--focus=<zone type>] [--legacy-zones]` (windowed; writes `.test-results/game-zones.png`).
+
+Not yet: zones do not move between waves, and the hero is not affected by high ground, no-build or power nodes. High ground plus Entrench may reward never moving; compare against Entrench telemetry.

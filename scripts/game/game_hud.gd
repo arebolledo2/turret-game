@@ -17,6 +17,7 @@ var core_repair_button: Button
 var core_panel: VBoxContainer
 var core_health: ProgressBar
 var core_text: Label
+var zone_legend: Label
 var actions: HBoxContainer
 var build_text: Label
 var continue_button: Button
@@ -79,10 +80,23 @@ func _ready() -> void:
 	status.add_theme_font_size_override("font_size", 24)
 	status.add_theme_color_override("font_color", Color("a9ece4"))
 	root.add_child(status)
+	zone_legend = Label.new()
+	zone_legend.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	zone_legend.offset_left = -640
+	zone_legend.offset_right = 640
+	zone_legend.offset_top = 158
+	zone_legend.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	zone_legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	zone_legend.add_theme_font_size_override("font_size", 15)
+	zone_legend.add_theme_color_override("font_color", Color("e2c98f"))
+	zone_legend.add_theme_color_override("font_outline_color", Color(0, 0, 0, .85))
+	zone_legend.add_theme_constant_override("outline_size", 6)
+	zone_legend.visible = false
+	root.add_child(zone_legend)
 	hint = Label.new()
 	hint.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	hint.offset_left = 28
-	hint.offset_top = -65
+	hint.offset_top = -92
 	hint.offset_bottom = -20
 	hint.add_theme_font_size_override("font_size", 17)
 	hint.add_theme_color_override("font_color", Color("b3cdd3"))
@@ -197,6 +211,22 @@ func _entrench_readout() -> String:
 ENTRENCH %d / %d  +%d%% damage  +%d%% fire rate" % [stacks, best.entrench_max(),
 		roundi(best.entrench_damage_bonus() * 100.0), roundi(best.entrench_fire_rate_bonus() * 100.0)]
 
+## One line about the ground under the hero while zones are readable ("MUD  Mud · slows you and enemies 45%").
+func _zone_readout() -> String:
+	if not world.terrain or not world.terrain.readable or not is_instance_valid(world.player):
+		return ""
+	var text := world.terrain.describe_at(world.player.position)
+	return "
+GROUND  %s" % text if not text.is_empty() else ""
+
+## Terrain legend: shown while a wave is being announced and on the pause screen.
+func _zone_legend_text(phase: int) -> String:
+	if not world.terrain or not world.terrain.readable:
+		return ""
+	if phase == GameStateMachine.GameState.WAVE_ANNOUNCEMENT or world.paused:
+		return world.terrain.legend()
+	return ""
+
 func _process(_delta: float) -> void:
 	if not is_instance_valid(world.player):
 		return
@@ -214,7 +244,10 @@ func _process(_delta: float) -> void:
 	stats.text = "WAVE %02d / %02d     %02ds\n%d SCRAP     %d KILLS" % [GameStateService.current_wave,
 		world.wave_limit, ceili(world.time_left), EconomyService.total_scrap, GameStateService.total_kills]
 	status.text = "DEPLOYING WAVE %d  ·  %d" % [GameStateService.current_wave, ceili(world.announcement_left)] if phase == GameStateMachine.GameState.WAVE_ANNOUNCEMENT else ""
-	hint.text = "WASD / LEFT STICK  Move     E / A  Carry or place turret     M  Map     ESC / START  Pause\n" + world.message + _entrench_readout()
+	hint.text = "WASD / LEFT STICK  Move     E / A  Carry or place turret     M  Map     ESC / START  Pause\n" + world.message + _entrench_readout() + _zone_readout()
+	var legend_text := _zone_legend_text(phase)
+	zone_legend.text = legend_text
+	zone_legend.visible = not legend_text.is_empty() and not world.dev_menu_open
 	panel.visible = (in_shop or ended or world.paused) and not world.dev_menu_open
 	minimap.suppressed = panel.visible
 	for index in range(offer_buttons.size()):
