@@ -7,17 +7,19 @@
 | Owner | Responsibilities |
 |---|---|
 | `GameApp` | Start screen, settings, Play, Quit, menu focus and arena lifetime |
-| `ArenaWorld` | Composition root: actor lists, firing, scrap, death handling, pause and input; delegates to the three helpers below |
+| `ArenaWorld` | Composition root: actor lists, firing, scrap, death handling, pause and input; delegates to the helpers below |
 | `ArenaStage` | Floor, rim, lighting and the follow camera, built once |
 | `WaveDirector` | Announcement, spawn schedule, wave timer and wave-end resolution |
 | `TurretPlacement` | Placement rules and the carry/place interaction |
+| `BlastEffects` | Area blasts after a kill: Reactor Overload and boom-bot explosions |
+| `DevCommands` | Developer commands behind the dev panel (`world.dev.*`); never reachable from normal play |
 | `RunSession` | Fresh `RunSessionState` and shared service binding/teardown |
 | `Combat3D` | Authoritative damage and local hit/explosion/pulse/defeat notifications |
 | `GameAudio` | Bounded spatial SFX voices and cue throttling |
 | `ArenaShop` | Supported stock, validation, transactions and rerolls |
 | `game_hud.gd` | HUD, refit, build summary and pause/end presentation |
 
-World classes live in `scripts/game/`. `CombatActor`, `TurretActor`, `Projectile3D` and `ScrapPickup` own individual behavior. `ChargeController3D`, `StatusEffects3D`, `CrowdGrid3D` and `CombatEffects3D` isolate combat concerns.
+World classes live in `scripts/game/`. `CombatActor` (with the `TechDropActor` crate subclass), `TurretActor`, `Projectile3D` and `ScrapPickup` own individual behavior. `TurretActor` dispatches on the registry's `fire_mode` (projectile, pulse, chain, sweep) rather than on turret ids; resolved stats are read through the typed `TurretStats` and `EnemyStats` views in `scripts/data/`. `ChargeController3D`, `StatusEffects3D`, `CrowdGrid3D` and `CombatEffects3D` isolate combat concerns.
 
 ## Shared state and notifications
 
