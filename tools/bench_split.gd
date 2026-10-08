@@ -9,8 +9,8 @@ var totals: Dictionary = {}
 func _ready() -> void:
 	world = load("res://scenes/game/arena.tscn").instantiate() as ArenaWorld
 	add_child(world)
-	world.remaining_spawns = 0
-	world.announcement_left = 0
+	world.waves.remaining_spawns = 0
+	world.waves.announcement_left = 0
 	world.player.invulnerability = 999
 	GameRandom.gameplay.seed = 42
 	for index in range(150):

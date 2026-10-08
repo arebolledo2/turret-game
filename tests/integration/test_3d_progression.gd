@@ -263,8 +263,8 @@ func test_six_wave_loop_supports_distinct_builds_and_only_ends_after_wave_six() 
 			GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 			for kill in range(3):
 				enemy(Vector3.ZERO).take_damage(1000)
-			world.time_left = .01
-			world.remaining_spawns = 0
+			world.waves.time_left = .01
+			world.waves.remaining_spawns = 0
 			world._physics_process(.02)
 			if wave == 6:
 				assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.VICTORY)

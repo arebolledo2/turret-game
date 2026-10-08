@@ -33,8 +33,8 @@ func setup() -> void:
 	if "--legacy-zones" in arguments:
 		FeatureFlagService.set_enabled(FeatureFlagService.ZONE_READABILITY, false)
 	add_child(world)
-	world.remaining_spawns = 0
-	world.announcement_left = 0
+	world.waves.remaining_spawns = 0
+	world.waves.announcement_left = 0
 	world.player.invulnerability = 999
 	stress = "--stress" in OS.get_cmdline_user_args()
 	shop = "--shop" in OS.get_cmdline_user_args()

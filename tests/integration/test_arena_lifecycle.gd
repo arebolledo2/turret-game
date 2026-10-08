@@ -106,9 +106,9 @@ func test_pickup_and_enemy_death_are_idempotent() -> void:
 func test_pause_freezes_timer_and_blocks_shop_mutation() -> void:
 	combat()
 	world.toggle_pause()
-	var before := world.time_left
+	var before := world.waves.time_left
 	world._physics_process(5.0)
-	assert_eq(world.time_left, before)
+	assert_eq(world.waves.time_left, before)
 	assert_false(world.is_combat())
 	assert_false(world.finish_wave())
 	world.toggle_pause()
@@ -160,8 +160,8 @@ func test_imported_model_contracts_and_muzzle_axis() -> void:
 func test_announcement_enters_combat_then_timer_opens_shop() -> void:
 	world._physics_process(2.1)
 	assert_true(world.is_combat())
-	world.remaining_spawns = 0
-	world._physics_process(world.time_left + .1)
+	world.waves.remaining_spawns = 0
+	world._physics_process(world.waves.time_left + .1)
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.SHOP)
 
 func test_real_input_moves_player_and_pause_stops_physics() -> void:

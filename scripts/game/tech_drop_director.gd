@@ -48,7 +48,7 @@ func tick(delta: float) -> void:
 	if roll_clock < GameConstants.TECH_DROP_ROLL_INTERVAL:
 		return
 	roll_clock -= GameConstants.TECH_DROP_ROLL_INTERVAL
-	if world.time_left < GameConstants.TECH_DROP_MIN_TIME_LEFT or active_count() >= GameConstants.TECH_DROP_MAX_ACTIVE:
+	if world.waves.time_left < GameConstants.TECH_DROP_MIN_TIME_LEFT or active_count() >= GameConstants.TECH_DROP_MAX_ACTIVE:
 		return
 	if GameRandom.gameplay.randf() >= GameConstants.TECH_DROP_SPAWN_CHANCE:
 		return

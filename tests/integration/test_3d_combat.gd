@@ -221,14 +221,14 @@ func test_registry_scaling_and_charger_wave_gate_are_authoritative() -> void:
 	var expected := EnemyRegistry.get_stats_for_wave("charger", 3, world.difficulty_config)
 	assert_almost_eq(charger.health, float(expected["health"]), .001)
 	assert_almost_eq(charger.speed, float(expected["speed"]) * .01, .001)
-	world.spawned_this_wave = 0
-	world.spawn_clock = 0
-	world.remaining_spawns = 1
+	world.waves.spawned_this_wave = 0
+	world.waves.spawn_clock = 0
+	world.waves.remaining_spawns = 1
 	world._physics_process(.01)
 	assert_eq(world.enemies.back().enemy_type, "charger")
 	world.start_run()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
-	world.spawn_clock = 0
+	world.waves.spawn_clock = 0
 	world._physics_process(.01)
 	assert_eq(world.enemies.back().enemy_type, "basic")
 

@@ -48,25 +48,7 @@ var actor_root: Node3D
 var paused: bool = false
 var message: String = ""
 
-# Wave and carry state live in the helpers; these keep the long-standing ArenaWorld surface for the HUD, tools and tests.
-var time_left: float:
-	get: return waves.time_left
-	set(value): waves.time_left = value
-var announcement_left: float:
-	get: return waves.announcement_left
-	set(value): waves.announcement_left = value
-var spawn_clock: float:
-	get: return waves.spawn_clock
-	set(value): waves.spawn_clock = value
-var spawn_interval: float:
-	get: return waves.spawn_interval
-	set(value): waves.spawn_interval = value
-var remaining_spawns: int:
-	get: return waves.remaining_spawns
-	set(value): waves.remaining_spawns = value
-var spawned_this_wave: int:
-	get: return waves.spawned_this_wave
-	set(value): waves.spawned_this_wave = value
+# Wave state lives in `waves`; the carried turret is exposed here for the player and HUD.
 var carried_turret: TurretActor:
 	get: return placement.carried
 	set(value): placement.carried = value

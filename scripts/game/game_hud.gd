@@ -242,8 +242,8 @@ func _process(_delta: float) -> void:
 		core_health.value = world.core.health
 		core_text.text = "CORE  %d / %d" % [ceili(world.core.health), ceili(world.core.max_health)]
 	stats.text = "WAVE %02d / %02d     %02ds\n%d SCRAP     %d KILLS" % [GameStateService.current_wave,
-		world.wave_limit, ceili(world.time_left), EconomyService.total_scrap, GameStateService.total_kills]
-	status.text = "DEPLOYING WAVE %d  ·  %d" % [GameStateService.current_wave, ceili(world.announcement_left)] if phase == GameStateMachine.GameState.WAVE_ANNOUNCEMENT else ""
+		world.wave_limit, ceili(world.waves.time_left), EconomyService.total_scrap, GameStateService.total_kills]
+	status.text = "DEPLOYING WAVE %d  ·  %d" % [GameStateService.current_wave, ceili(world.waves.announcement_left)] if phase == GameStateMachine.GameState.WAVE_ANNOUNCEMENT else ""
 	hint.text = "WASD / LEFT STICK  Move     E / A  Carry or place turret     M  Map     TAB / Y  Ranges     ESC / START  Pause\n" + world.message + _entrench_readout() + _zone_readout()
 	var legend_text := _zone_legend_text(phase)
 	zone_legend.text = legend_text
