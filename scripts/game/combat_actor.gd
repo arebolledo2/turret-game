@@ -171,58 +171,7 @@ func _physics_process(delta: float) -> void:
 		hit_flash.update(flash_time / FLASH_DURATION, reduced_motion)
 	if stationary:
 		return
-	var direction := Vector3.ZERO
-	if is_enemy:
-		var speed_factor := 1.0
-		if not statuses.effects.is_empty():
-			statuses.advance(delta)
-			speed_factor = statuses.speed_multiplier()
-		if world.terrain:
-			speed_factor = maxf(1.0 - GameConstants.ZONE_MUD_MAX_SLOW, speed_factor * world.terrain.mud_factor_at(position))
-		var slowed := speed_factor < 1.0
-		if slow_marker.visible != slowed:
-			slow_marker.visible = slowed
-		var effective_speed := speed * speed_factor
-		var goal: Vector3 = world.player.position
-		var at_core := false
-		if world.core:
-			goal = chase_position()
-			var stop := world.core.radius + .4 * body_scale
-			at_core = not chasing_hero and WorldGeometry.planar(goal - position).length_squared() < stop * stop
-		var movement := WorldGeometry.planar(goal - position).normalized() * effective_speed
-		if charge:
-			var previous_phase := charge.phase
-			movement = charge.advance(delta, position, goal, effective_speed)
-			if charge.phase == ChargeController3D.Phase.WINDUP and previous_phase != charge.phase:
-				world.audio.play_cue("warning", position)
-			warning.visible = charge.phase in [ChargeController3D.Phase.WINDUP, ChargeController3D.Phase.DASH]
-			if warning.visible:
-				warning.global_position = charge.origin
-				warning.rotation.y = atan2(-charge.heading.x, -charge.heading.z)
-				visual.rotation.y = warning.rotation.y
-		if not charge or charge.phase in [ChargeController3D.Phase.APPROACH, ChargeController3D.Phase.RECOVER]:
-			if at_core:
-				movement = Vector3.ZERO
-			movement += world.crowd.separation(self)
-		direction = movement.normalized()
-		velocity = movement + knockback_velocity
-		knockback_velocity *= exp(-GameConstants.KNOCKBACK_DECAY_RATE * delta)
-	else:
-		var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-		var stick := Input.get_vector("gamepad_left", "gamepad_right", "gamepad_up", "gamepad_down")
-		if stick.length() > GameConstants.PLAYER_MOVEMENT_DEADZONE:
-			input = stick
-		var camera: Camera3D = world.camera
-		direction = (WorldGeometry.planar(camera.global_basis.x).normalized() * input.x +
-			WorldGeometry.planar(camera.global_basis.z).normalized() * input.y).limit_length()
-		var carrying: bool = is_instance_valid(world.carried_turret)
-		var desired_speed := PlayerStatsService.get_player_speed() * WorldGeometry.METRES_PER_PIXEL
-		if carrying:
-			desired_speed *= GameConstants.TURRET_CARRY_SPEED_PENALTY * ModifierService.apply_modifiers_to_stat(1.0, "carry_speed")
-		if world.terrain:
-			desired_speed *= world.terrain.mud_factor_at(position)
-		var acceleration := GameConstants.PLAYER_ACCELERATION if direction.length_squared() > 0 else GameConstants.PLAYER_DECELERATION
-		velocity = velocity.move_toward(direction * desired_speed, acceleration * WorldGeometry.METRES_PER_PIXEL * delta)
+	var direction := _steer_enemy(delta) if is_enemy else _steer_player(delta)
 	var previous_position := position
 	if is_enemy:
 		# Enemies only collide with the arena bounds, which clamp_position enforces, so skip the physics-server sweep.
@@ -233,6 +182,70 @@ func _physics_process(delta: float) -> void:
 	if charge and charge.phase == ChargeController3D.Phase.DASH and velocity.length_squared() > .000001 and position.distance_squared_to(previous_position) < .000001:
 		charge.interrupt()
 		warning.visible = false
+	_animate(delta, direction, reduced_motion)
+	if is_enemy:
+		_apply_contact_damage(delta, previous_position)
+	else:
+		_tick_player_weapon(delta)
+
+## Sets the enemy's velocity for this tick (chase, charge windup/dash, separation, knockback) and returns its heading.
+func _steer_enemy(delta: float) -> Vector3:
+	var speed_factor := 1.0
+	if not statuses.effects.is_empty():
+		statuses.advance(delta)
+		speed_factor = statuses.speed_multiplier()
+	if world.terrain:
+		speed_factor = maxf(1.0 - GameConstants.ZONE_MUD_MAX_SLOW, speed_factor * world.terrain.mud_factor_at(position))
+	var slowed := speed_factor < 1.0
+	if slow_marker.visible != slowed:
+		slow_marker.visible = slowed
+	var effective_speed := speed * speed_factor
+	var goal: Vector3 = world.player.position
+	var at_core := false
+	if world.core:
+		goal = chase_position()
+		var stop := world.core.radius + .4 * body_scale
+		at_core = not chasing_hero and WorldGeometry.planar(goal - position).length_squared() < stop * stop
+	var movement := WorldGeometry.planar(goal - position).normalized() * effective_speed
+	if charge:
+		var previous_phase := charge.phase
+		movement = charge.advance(delta, position, goal, effective_speed)
+		if charge.phase == ChargeController3D.Phase.WINDUP and previous_phase != charge.phase:
+			world.audio.play_cue("warning", position)
+		warning.visible = charge.phase in [ChargeController3D.Phase.WINDUP, ChargeController3D.Phase.DASH]
+		if warning.visible:
+			warning.global_position = charge.origin
+			warning.rotation.y = atan2(-charge.heading.x, -charge.heading.z)
+			visual.rotation.y = warning.rotation.y
+	if not charge or charge.phase in [ChargeController3D.Phase.APPROACH, ChargeController3D.Phase.RECOVER]:
+		if at_core:
+			movement = Vector3.ZERO
+		movement += world.crowd.separation(self)
+	velocity = movement + knockback_velocity
+	knockback_velocity *= exp(-GameConstants.KNOCKBACK_DECAY_RATE * delta)
+	return movement.normalized()
+
+## Accelerates the hero toward the stick/keys input (camera-relative) and returns the input direction.
+func _steer_player(delta: float) -> Vector3:
+	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var stick := Input.get_vector("gamepad_left", "gamepad_right", "gamepad_up", "gamepad_down")
+	if stick.length() > GameConstants.PLAYER_MOVEMENT_DEADZONE:
+		input = stick
+	var camera: Camera3D = world.camera
+	var direction := (WorldGeometry.planar(camera.global_basis.x).normalized() * input.x +
+		WorldGeometry.planar(camera.global_basis.z).normalized() * input.y).limit_length()
+	var carrying: bool = is_instance_valid(world.carried_turret)
+	var desired_speed := PlayerStatsService.get_player_speed() * WorldGeometry.METRES_PER_PIXEL
+	if carrying:
+		desired_speed *= GameConstants.TURRET_CARRY_SPEED_PENALTY * ModifierService.apply_modifiers_to_stat(1.0, "carry_speed")
+	if world.terrain:
+		desired_speed *= world.terrain.mud_factor_at(position)
+	var acceleration := GameConstants.PLAYER_ACCELERATION if direction.length_squared() > 0 else GameConstants.PLAYER_DECELERATION
+	velocity = velocity.move_toward(direction * desired_speed, acceleration * WorldGeometry.METRES_PER_PIXEL * delta)
+	return direction
+
+## Turns toward the heading and bobs/poses the legs. Purely cosmetic.
+func _animate(delta: float, direction: Vector3, reduced_motion: bool) -> void:
 	if direction.length_squared() > 0.001:
 		visual.rotation.y = lerp_angle(visual.rotation.y, atan2(-direction.x, -direction.z), minf(delta * 14.0, 1.0))
 	gait += velocity.length() * delta * 10.0
@@ -245,36 +258,41 @@ func _physics_process(delta: float) -> void:
 		if leg:
 			var phase := gait + float(index % 2) * PI
 			leg.rotation = Vector3(leg.rotation.x, 0.0, 0.0) if reduced_motion else Vector3(leg.rotation.x, sin(phase) * 0.24, cos(phase) * 0.12)
-	if is_enemy:
-		var player_position: Vector3 = world.player.position
-		var reach := .5 * body_scale
-		var near_x := absf(player_position.x - position.x)
-		var near_z := absf(player_position.z - position.z)
-		# Skip the segment test unless the player is within reach of the step's bounding box.
-		var step_x := absf(position.x - previous_position.x)
-		var step_z := absf(position.z - previous_position.z)
-		var may_touch := near_x < reach + step_x and near_z < reach + step_z
-		var closest := Geometry3D.get_closest_point_to_segment(player_position, previous_position, position) if may_touch else position
-		if may_touch and WorldGeometry.planar(player_position - closest).length_squared() < reach * reach:
-			world.combat.apply_hit(world.player, CombatHit3D.new(contact_damage, position))
-		if world.core:
-			core_clock -= delta
-			if core_clock <= 0.0:
-				var core_reach := world.core.radius + reach
-				if WorldGeometry.planar(world.core.position - position).length_squared() < core_reach * core_reach:
-					core_clock = GameConstants.CORE_HIT_INTERVAL
-					world.damage_core(contact_damage * GameConstants.CORE_DAMAGE_FRACTION)
-	else:
-		weapon_clock -= delta
-		if weapon_clock <= 0.0:
-			var target: CombatActor = world.nearest_enemy(position, GameConstants.PLAYER_TURRET_RANGE * WorldGeometry.METRES_PER_PIXEL)
-			if target:
-				var shot := CombatShot3D.from_stats({"damage": PlayerStatsService.get_player_weapon_damage(),
-					"projectile_speed": GameConstants.PLAYER_TURRET_PROJECTILE_SPEED})
-				if PlayerStatsService.roll_player_crit():
-					shot.damage = PlayerStatsService.calculate_player_crit_damage(shot.damage)
-				world.fire_shot(weapon_muzzle.global_position, target, shot)
-				weapon_clock = 1.0 / maxf(PlayerStatsService.get_player_fire_rate(), .01)
+
+## Enemy touch damage to the hero (swept along this tick's step) and, in core mode, to the core on a timer.
+func _apply_contact_damage(delta: float, previous_position: Vector3) -> void:
+	var player_position: Vector3 = world.player.position
+	var reach := .5 * body_scale
+	var near_x := absf(player_position.x - position.x)
+	var near_z := absf(player_position.z - position.z)
+	# Skip the segment test unless the player is within reach of the step's bounding box.
+	var step_x := absf(position.x - previous_position.x)
+	var step_z := absf(position.z - previous_position.z)
+	var may_touch := near_x < reach + step_x and near_z < reach + step_z
+	var closest := Geometry3D.get_closest_point_to_segment(player_position, previous_position, position) if may_touch else position
+	if may_touch and WorldGeometry.planar(player_position - closest).length_squared() < reach * reach:
+		world.combat.apply_hit(world.player, CombatHit3D.new(contact_damage, position))
+	if world.core:
+		core_clock -= delta
+		if core_clock <= 0.0:
+			var core_reach := world.core.radius + reach
+			if WorldGeometry.planar(world.core.position - position).length_squared() < core_reach * core_reach:
+				core_clock = GameConstants.CORE_HIT_INTERVAL
+				world.damage_core(contact_damage * GameConstants.CORE_DAMAGE_FRACTION)
+
+## The hero's auto-fire at the nearest enemy in range.
+func _tick_player_weapon(delta: float) -> void:
+	weapon_clock -= delta
+	if weapon_clock > 0.0:
+		return
+	var target: CombatActor = world.nearest_enemy(position, GameConstants.PLAYER_TURRET_RANGE * WorldGeometry.METRES_PER_PIXEL)
+	if target:
+		var shot := CombatShot3D.from_stats({"damage": PlayerStatsService.get_player_weapon_damage(),
+			"projectile_speed": GameConstants.PLAYER_TURRET_PROJECTILE_SPEED})
+		if PlayerStatsService.roll_player_crit():
+			shot.damage = PlayerStatsService.calculate_player_crit_damage(shot.damage)
+		world.fire_shot(weapon_muzzle.global_position, target, shot)
+		weapon_clock = 1.0 / maxf(PlayerStatsService.get_player_fire_rate(), .01)
 
 ## Where an enemy is heading when the run has an objective: the hero while within aggro range, otherwise the objective.
 ## Survive mode has no objective and never calls this (the hero is always the goal).
