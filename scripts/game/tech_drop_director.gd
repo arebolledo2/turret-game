@@ -3,7 +3,7 @@ extends RefCounted
 
 ## Tech drops: a stationary, destructible crate that appears away from the defended area during a wave.
 ## Destroying it pays a scrap burst and may grant a free item; whatever is left at wave end is lost.
-## A drop is a stationary `CombatActor` in `world.enemies`, so turrets and the hero target it like any enemy.
+## A drop is a stationary `TechDropActor` in `world.enemies`, so turrets and the hero target it like any enemy.
 var world: ArenaWorld
 var roll_clock: float = 0.0
 var pulse: float = 0.0
@@ -85,11 +85,8 @@ func queue_drop(at: Vector3) -> void:
 func spawn(at: Vector3) -> CombatActor:
 	var wave := maxi(GameStateService.current_wave, 1)
 	var tank := EnemyRegistry.get_stats_for_wave("tank", wave, world.difficulty_config)
-	var drop := CombatActor.new()
+	var drop := TechDropActor.new()
 	drop.world = world
-	drop.is_enemy = true
-	drop.enemy_type = "tech_drop"
-	drop.stationary = true
 	drop.max_health = float(tank["health"]) * GameConstants.TECH_DROP_HEALTH_FRACTION
 	drop.health = drop.max_health
 	drop.speed = 0.0

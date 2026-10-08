@@ -37,7 +37,6 @@ var core_clock: float = 0.0
 var stationary: bool = false
 ## Difficulty rules: tougher, faster, gold-tinted. A seeker (`ignores_hero`) gets a red marker.
 var elite: bool = false
-var drop_bar_fill: MeshInstance3D
 
 const FLASH_DURATION: float = .18
 const ENEMY_FLASH_COLOR := Color(1.0, .92, .8)
@@ -61,21 +60,13 @@ func _ready() -> void:
 	visual.name = "Visual"
 	add_child(visual)
 	if is_enemy:
-		var model: Node3D
-		if stationary:
-			model = _build_drop_model()
-		elif enemy_type == "charger":
-			model = preload("res://assets/models/game/charger_drone.glb").instantiate()
-			charge = ChargeController3D.new()
-			charge.configure(EnemyRegistry.TYPES["charger"]["behavior_params"])
-		else:
-			model = preload("res://assets/models/game/spider_drone.glb").instantiate()
+		var model := _build_enemy_model()
 		EnemyVariants.apply_tint(model, enemy_type)
 		if elite:
 			EnemyVariants.tint_model(model, enemy_type + "_elite", Color(1.0, .85, .45), .7)
 		visual.add_child(model)
 		visual.scale = Vector3.ONE * body_scale
-		for side in (["L", "R"] if not stationary else []):
+		for side in _leg_sides():
 			for index in range(3):
 				legs.append(model.find_child("Leg_%s_%d" % [side, index], true, false) as Node3D)
 		hurtbox = Area3D.new()
@@ -109,27 +100,24 @@ func _ready() -> void:
 		marker = WorldGeometry.ring(self, .3, Color("58ece1"))
 		marker.position.y = .025
 
-## A tech drop: dark plinth, amber crystal and a health bar that shrinks as it takes damage.
-func _build_drop_model() -> Node3D:
-	var model := Node3D.new()
-	var plinth_material := WorldGeometry.material(Color("2a3a44"))
-	plinth_material.metallic = .5
-	var amber := WorldGeometry.material(Color("f4b942"), true)
-	WorldGeometry.box(model, Vector3(.9, .3, .9), Vector3(0, .15, 0), plinth_material)
-	var crystal := WorldGeometry.box(model, Vector3(.5, .5, .5), Vector3(0, .75, 0), amber)
-	crystal.rotation = Vector3(.6, .785, 0)
-	for side: float in [-1.0, 1.0]:
-		WorldGeometry.box(model, Vector3(.1, .7, .1), Vector3(side * .38, .55, 0), plinth_material)
-	var bar_back := WorldGeometry.material(Color("14232b"))
-	var bar_front := WorldGeometry.material(Color("f4b942"), true)
-	WorldGeometry.box(model, Vector3(1.24, .12, .1), Vector3(0, 1.55, 0), bar_back)
-	drop_bar_fill = WorldGeometry.box(model, Vector3(1.2, .13, .12), Vector3(0, 1.55, 0), bar_front)
+## Builds the enemy's body model; specialised actors (the tech-drop crate) override this.
+func _build_enemy_model() -> Node3D:
+	var model: Node3D
+	if enemy_type == "charger":
+		model = preload("res://assets/models/game/charger_drone.glb").instantiate()
+		charge = ChargeController3D.new()
+		charge.configure(EnemyRegistry.TYPES["charger"]["behavior_params"])
+	else:
+		model = preload("res://assets/models/game/spider_drone.glb").instantiate()
 	return model
 
-func _refresh_drop_bar() -> void:
-	var fraction := clampf(health / maxf(max_health, .001), 0.0, 1.0)
-	drop_bar_fill.scale.x = maxf(fraction, .001)
-	drop_bar_fill.position.x = -.6 * (1.0 - fraction)
+## Which sides of the model carry animated legs (`Leg_<side>_<0..2>`).
+func _leg_sides() -> Array[String]:
+	return ["L", "R"]
+
+## Called after damage lands and health has changed; overridden by actors that show health in the world.
+func _on_health_changed() -> void:
+	pass
 
 func _build_warning() -> void:
 	warning = Node3D.new()
@@ -315,8 +303,7 @@ func receive_hit(hit: CombatHit3D) -> float:
 		invulnerability = GameConstants.PLAYER_INVINCIBILITY_TIME
 	var applied := minf(health, amount)
 	health = maxf(0.0, health - amount)
-	if drop_bar_fill:
-		_refresh_drop_bar()
+	_on_health_changed()
 	if is_enemy:
 		statuses.apply(hit)
 		slow_marker.visible = statuses.speed_multiplier() < 1.0
