@@ -3,6 +3,14 @@ extends RefCounted
 
 ## Registry of all turret types and helper functions
 
+## How a turret attacks in the 3D arena; `TurretActor` dispatches on this instead of the type id.
+const FIRE_PROJECTILE: String = "projectile" # aimed shot at one target
+const FIRE_PULSE: String = "pulse" # area pulse around the turret
+const FIRE_CHAIN: String = "chain" # lightning that jumps between enemies
+const FIRE_SWEEP: String = "sweep" # spinning melee bat
+
+const DEFAULT_MODEL: String = "res://assets/models/game/ion_turret.glb"
+
 # Color tints for turret types
 const COLORS: Dictionary = {
 	"normal": Color("66CC66"),
@@ -39,6 +47,9 @@ const TYPES: Dictionary = {
 	"normal": {
 		"name": "Normal Turret",
 		"icon": "🗼",
+		"short_name": "Ion",
+		"model": "res://assets/models/game/ion_turret.glb",
+		"fire_mode": FIRE_PROJECTILE,
 		"description": "Standard auto-targeting turret. Reliable and consistent.",
 		"attack_styles": [GameEnums.AttackStyle.PROJECTILE],
 		"damage_types": [GameEnums.DamageType.PHYSICAL],
@@ -86,6 +97,9 @@ const TYPES: Dictionary = {
 	"plasma": {
 		"name": "Plasma Turret",
 		"icon": "💠",
+		"model": "res://assets/models/game/plasma_turret.glb",
+		"fire_mode": FIRE_PROJECTILE,
+		"cluster_target": true,
 		"description": "Fires explosive plasma orbs that damage an area.",
 		"attack_styles": [GameEnums.AttackStyle.PROJECTILE, GameEnums.AttackStyle.AOE],
 		"damage_types": [GameEnums.DamageType.PLASMA],
@@ -104,6 +118,8 @@ const TYPES: Dictionary = {
 	"shock": {
 		"name": "Shock Turret",
 		"icon": "⚡",
+		"model": "res://assets/models/game/shock_turret.glb",
+		"fire_mode": FIRE_PULSE,
 		"description": "Pulses electric damage around itself.",
 		"attack_styles": [GameEnums.AttackStyle.AOE],
 		"damage_types": [GameEnums.DamageType.ELECTRIC],
@@ -119,6 +135,8 @@ const TYPES: Dictionary = {
 	"tesla": {
 		"name": "Tesla Turret",
 		"icon": "⛓️",
+		"model": "res://assets/models/game/ion_turret.glb",
+		"fire_mode": FIRE_CHAIN,
 		"description": "Fires chain lightning that jumps between enemies.",
 		"attack_styles": [GameEnums.AttackStyle.INSTANT, GameEnums.AttackStyle.CHAIN],
 		"damage_types": [GameEnums.DamageType.ELECTRIC],
@@ -135,6 +153,7 @@ const TYPES: Dictionary = {
 	"melee": {
 		"name": "Melee Turret",
 		"icon": "⚔️",
+		"fire_mode": FIRE_SWEEP,
 		"description": "Spinning bat that damages and knocks back enemies on contact.",
 		"attack_styles": [GameEnums.AttackStyle.MELEE],
 		"damage_types": [GameEnums.DamageType.PHYSICAL],
@@ -179,6 +198,31 @@ static func get_family(type_id: String) -> String:
 		if type_id in FAMILIES[family]:
 			return family
 	return ""
+
+
+## Attack behaviour of a turret type (one of the FIRE_* constants).
+static func get_fire_mode(type_id: String) -> String:
+	return get_type(type_id).get("fire_mode", FIRE_PROJECTILE)
+
+
+## Model scene for a turret type. Types without their own fall back to the ion turret; the melee bat is built in code.
+static func get_model_path(type_id: String) -> String:
+	return get_type(type_id).get("model", DEFAULT_MODEL)
+
+
+## True when the turret aims at the densest cluster of enemies instead of the nearest.
+static func targets_clusters(type_id: String) -> bool:
+	return get_type(type_id).get("cluster_target", false)
+
+
+## Damage type its shots carry (first of the type's damage types).
+static func get_damage_type(type_id: String) -> GameEnums.DamageType:
+	return get_type(type_id).get("damage_types", [GameEnums.DamageType.PHYSICAL])[0]
+
+
+## Short player-facing name for shop and summary text.
+static func get_short_name(type_id: String) -> String:
+	return get_type(type_id).get("short_name", type_id.capitalize())
 
 
 ## Get all type IDs

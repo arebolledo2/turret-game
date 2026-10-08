@@ -36,18 +36,10 @@ static var melee_materials: Dictionary = {}
 
 func _ready() -> void:
 	Events.modifiers_changed.connect(invalidate_stats)
-	var model: Node3D
-	if turret_type == "plasma":
-		model = preload("res://assets/models/game/plasma_turret.glb").instantiate()
-	elif turret_type == "shock":
-		model = preload("res://assets/models/game/shock_turret.glb").instantiate()
-	elif turret_type == "melee":
-		model = _build_melee_model()
-	elif turret_type == "tesla":
-		model = preload("res://assets/models/game/ion_turret.glb").instantiate()
+	var fire_mode := TurretRegistry.get_fire_mode(turret_type)
+	var model: Node3D = _build_melee_model() if fire_mode == TurretRegistry.FIRE_SWEEP else load(TurretRegistry.get_model_path(turret_type)).instantiate()
+	if turret_type == "tesla":
 		EnemyVariants.tint_model(model, "turret_tesla", TESLA_TINT, .5)
-	else:
-		model = preload("res://assets/models/game/ion_turret.glb").instantiate()
 	add_child(model)
 	aim = model.find_child("Aim", true, false) as Node3D
 	muzzle = model.find_child("Muzzle", true, false) as Node3D
@@ -284,44 +276,55 @@ func _physics_process(delta: float) -> void:
 	aim.position = aim.position.lerp(aim_rest, minf(delta * 16.0, 1.0))
 	var stats: Dictionary = _current_stats(delta)
 	var range_metres := float(stats.get("range", 240.0)) * WorldGeometry.METRES_PER_PIXEL
-	if turret_type == "melee":
+	var fire_mode := TurretRegistry.get_fire_mode(turret_type)
+	if fire_mode == TurretRegistry.FIRE_SWEEP:
 		_spin_bat(delta, stats, range_metres)
 		return
-	if turret_type == "shock":
+	if fire_mode == TurretRegistry.FIRE_PULSE:
 		if cooldown <= 0.0 and world.nearest_enemy(position, range_metres):
-			var pulse := CombatShot3D.from_stats(stats, GameEnums.DamageType.ELECTRIC)
-			pulse.splash_radius = range_metres
-			pulse.source_id = turret_id
-			if TurretStatsService.roll_turret_crit():
-				pulse.damage = TurretStatsService.calculate_turret_crit_damage(pulse.damage)
-			world.combat.impact(null, position, Vector3.ZERO, pulse, world.enemies)
-			cooldown = 1.0 / maxf(float(stats["fire_rate"]), .01)
+			_fire_pulse(stats, range_metres)
 		return
 	target_clock -= delta
 	# Cluster scans run five times per second, not for every turret every frame.
 	if target_clock <= 0.0:
-		var radius := float(stats.get("aoe_radius", 0.0)) * WorldGeometry.METRES_PER_PIXEL if turret_type == "plasma" else 0.0
+		var radius := float(stats.get("aoe_radius", 0.0)) * WorldGeometry.METRES_PER_PIXEL if TurretRegistry.targets_clusters(turret_type) else 0.0
 		target = world.combat.select_target(position, range_metres, world.enemies, radius, world.crowd)
 		target_clock = .2
 	if not is_instance_valid(target) or target.dead or WorldGeometry.planar(target.position - position).length() > range_metres:
 		return
 	var heading := WorldGeometry.planar(target.position - position)
 	aim.rotation.y = atan2(-heading.x, -heading.z)
-	if cooldown <= 0.0 and turret_type == "tesla":
-		var bolt := CombatShot3D.from_stats(stats, GameEnums.DamageType.ELECTRIC)
-		bolt.source_id = turret_id
-		if TurretStatsService.roll_turret_crit():
-			bolt.damage = TurretStatsService.calculate_turret_crit_damage(bolt.damage)
-		world.combat.chain(muzzle.global_position, target, bolt, int(stats.get("chain_count", 0)),
-			float(stats.get("chain_range", 0.0)) * WorldGeometry.METRES_PER_PIXEL, float(stats.get("chain_decay", 1.0)), world.enemies)
-		cooldown = 1.0 / maxf(float(stats.get("fire_rate", 1.2)), .01)
-	elif cooldown <= 0.0:
-		var type := GameEnums.DamageType.PLASMA if turret_type == "plasma" else GameEnums.DamageType.PHYSICAL
-		var shot := CombatShot3D.from_stats(stats, type)
-		shot.source_id = turret_id
-		if TurretStatsService.roll_turret_crit():
-			shot.damage = TurretStatsService.calculate_turret_crit_damage(shot.damage)
-		world.fire_shot(muzzle.global_position, target, shot)
-		cooldown = 1.0 / maxf(float(stats.get("fire_rate", 1.2)), .01)
+	if cooldown > 0.0:
+		return
+	if fire_mode == TurretRegistry.FIRE_CHAIN:
+		_fire_chain(stats)
+	else:
+		_fire_projectile(stats)
 		if not FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
 			aim.position += heading.normalized() * -.045
+
+## A shot of this turret's damage type, stamped for kill attribution, with its crit already rolled.
+func _new_shot(stats: Dictionary) -> CombatShot3D:
+	var shot := CombatShot3D.from_stats(stats, TurretRegistry.get_damage_type(turret_type))
+	shot.source_id = turret_id
+	if TurretStatsService.roll_turret_crit():
+		shot.damage = TurretStatsService.calculate_turret_crit_damage(shot.damage)
+	return shot
+
+func _reset_cooldown(stats: Dictionary) -> void:
+	cooldown = 1.0 / maxf(float(stats.get("fire_rate", 1.2)), .01)
+
+func _fire_pulse(stats: Dictionary, range_metres: float) -> void:
+	var pulse := _new_shot(stats)
+	pulse.splash_radius = range_metres
+	world.combat.impact(null, position, Vector3.ZERO, pulse, world.enemies)
+	cooldown = 1.0 / maxf(float(stats["fire_rate"]), .01)
+
+func _fire_chain(stats: Dictionary) -> void:
+	world.combat.chain(muzzle.global_position, target, _new_shot(stats), int(stats.get("chain_count", 0)),
+		float(stats.get("chain_range", 0.0)) * WorldGeometry.METRES_PER_PIXEL, float(stats.get("chain_decay", 1.0)), world.enemies)
+	_reset_cooldown(stats)
+
+func _fire_projectile(stats: Dictionary) -> void:
+	world.fire_shot(muzzle.global_position, target, _new_shot(stats))
+	_reset_cooldown(stats)
