@@ -241,20 +241,20 @@ func _build_flags() -> void:
 
 func _build_cheats() -> void:
 	_section("RUN")
-	_button(list, "+50 scrap", func() -> void: _report(world.dev_add_scrap(50), "+50 scrap"))
-	_button(list, "+500 scrap", func() -> void: _report(world.dev_add_scrap(500), "+500 scrap"))
-	_button(list, "Restore hull", func() -> void: _report(world.dev_restore_hull(), "Hull restored"))
+	_button(list, "+50 scrap", func() -> void: _report(world.dev.add_scrap(50), "+50 scrap"))
+	_button(list, "+500 scrap", func() -> void: _report(world.dev.add_scrap(500), "+500 scrap"))
+	_button(list, "Restore hull", func() -> void: _report(world.dev.restore_hull(), "Hull restored"))
 	god_check = _check(list, "God mode (player ignores damage)", func(pressed: bool) -> void: world.god_mode = pressed)
 	jump_prev_button = _button(list, "", func() -> void: jump_waves(-1))
 	jump_next_button = _button(list, "", func() -> void: jump_waves(1))
-	_button(list, "Deploy now (skip shop)", func() -> void: _close_then(world.dev_skip_shop(), "Deploying"))
+	_button(list, "Deploy now (skip shop)", func() -> void: _close_then(world.dev.skip_shop(), "Deploying"))
 	_button(list, "Restart run", func() -> void: _close_then(restart_run(), "Restarted"))
 	_section("ENEMIES")
-	spawn_button = _button(list, "", func() -> void: _report(world.dev_spawn_enemy(SPAWN_TYPES[spawn_index], 5), "Spawned 5"))
+	spawn_button = _button(list, "", func() -> void: _report(world.dev.spawn_enemy(SPAWN_TYPES[spawn_index], 5), "Spawned 5"))
 	_button(list, "Next enemy type", func() -> void:
 		spawn_index = (spawn_index + 1) % SPAWN_TYPES.size()
 		refresh())
-	_button(list, "Kill all enemies", func() -> void: _report(world.dev_kill_all_enemies(), "Killed"))
+	_button(list, "Kill all enemies", func() -> void: _report(world.dev.kill_all_enemies(), "Killed"))
 	_section("TIME")
 	time_button = _button(list, "", func() -> void:
 		time_index = (time_index + 1) % TIME_SCALES.size()
@@ -289,7 +289,7 @@ func apply_preset(preset_id: String) -> void:
 	refresh()
 
 func jump_waves(offset: int) -> void:
-	_close_then(world.dev_jump_to_wave(GameStateService.current_wave + offset), "Jumped")
+	_close_then(world.dev.jump_to_wave(GameStateService.current_wave + offset), "Jumped")
 
 func restart_run() -> bool:
 	world.start_run()

@@ -64,7 +64,7 @@ Navigation uses the standard UI focus actions (d-pad or left stick, A to activat
 - **Time**: cycle 0.25x to 4x. Time scale resets when the panel leaves the tree.
 - `debug_overlays` shows a live text block (state, wave, enemy/turret/projectile counts, scrap, kills, pending flags, enabled experiments) without opening the panel. The frame readout is display only, not a measurement.
 
-The console commands behind the buttons live on `ArenaWorld` (`dev_add_scrap`, `dev_jump_to_wave`, `dev_kill_all_enemies`, ...) and are covered by `tests/integration/test_dev_tools.gd`.
+The console commands behind the buttons live on `DevCommands` (`world.dev.add_scrap`, `world.dev.jump_to_wave`, `world.dev.kill_all_enemies`, ...) and are covered by `tests/integration/test_dev_tools.gd`.
 
 ## Telemetry
 

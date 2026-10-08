@@ -230,16 +230,16 @@ func test_god_mode_blocks_player_damage_only() -> void:
 
 func test_scrap_hull_and_spawn_commands() -> void:
 	EconomyService.total_scrap = 3
-	assert_true(world.dev_add_scrap(50))
+	assert_true(world.dev.add_scrap(50))
 	assert_eq(EconomyService.total_scrap, 53)
-	world.dev_add_scrap(-1000)
+	world.dev.add_scrap(-1000)
 	assert_eq(EconomyService.total_scrap, 0, "Scrap never goes negative")
 	world.player.health = 1.0
-	assert_true(world.dev_restore_hull())
+	assert_true(world.dev.restore_hull())
 	assert_eq(world.player.health, world.player.max_health)
-	assert_eq(world.dev_spawn_enemy("fast", 3), 3)
+	assert_eq(world.dev.spawn_enemy("fast", 3), 3)
 	assert_eq(world.enemies.size(), 3)
-	assert_eq(world.dev_spawn_enemy("not_a_type", 3), 0)
+	assert_eq(world.dev.spawn_enemy("not_a_type", 3), 0)
 
 
 func test_kill_all_enemies_works_while_the_panel_pauses_the_run() -> void:
@@ -247,7 +247,7 @@ func test_kill_all_enemies_works_while_the_panel_pauses_the_run() -> void:
 	_enemy()
 	_enemy(Vector3(2, 0, 0))
 	world.dev_panel.set_open(true)
-	assert_eq(world.dev_kill_all_enemies(), 2)
+	assert_eq(world.dev.kill_all_enemies(), 2)
 	assert_true(world.paused, "The pause is restored afterwards")
 	assert_eq(GameStateService.total_kills, 2)
 
@@ -255,21 +255,21 @@ func test_kill_all_enemies_works_while_the_panel_pauses_the_run() -> void:
 func test_jump_to_wave_opens_that_waves_shop_and_deploys_it() -> void:
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	_enemy()
-	assert_true(world.dev_jump_to_wave(4))
+	assert_true(world.dev.jump_to_wave(4))
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.SHOP)
 	assert_eq(GameStateService.current_wave, 3)
 	assert_true(world.enemies.is_empty())
 	assert_false(EconomyService.current_shop_offers.is_empty())
-	assert_true(world.dev_skip_shop())
+	assert_true(world.dev.skip_shop())
 	assert_eq(GameStateService.current_wave, 4)
-	assert_true(world.dev_jump_to_wave(999), "Targets clamp to the wave limit")
+	assert_true(world.dev.jump_to_wave(999), "Targets clamp to the wave limit")
 	assert_eq(GameStateService.current_wave, world.wave_limit - 1)
 
 
 func test_jump_is_rejected_outside_a_live_run() -> void:
 	GameStateService.is_game_active = false
-	assert_false(world.dev_jump_to_wave(2))
-	assert_false(world.dev_skip_shop())
+	assert_false(world.dev.jump_to_wave(2))
+	assert_false(world.dev.skip_shop())
 
 
 # --- Telemetry ------------------------------------------------------------------------------
