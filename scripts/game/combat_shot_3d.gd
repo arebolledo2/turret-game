@@ -14,15 +14,16 @@ var source_id: int = 0
 var pierce: int = 0
 
 static func from_stats(stats: Dictionary, type: GameEnums.DamageType = GameEnums.DamageType.PHYSICAL) -> CombatShot3D:
+	var view := TurretStats.new(stats)
 	var shot := CombatShot3D.new()
-	shot.damage = maxf(float(stats.get("damage", 0.0)), 0.0)
-	shot.speed = maxf(float(stats.get("projectile_speed", 0.0)), 0.0) * WorldGeometry.METRES_PER_PIXEL
-	shot.splash_radius = maxf(float(stats.get("aoe_radius", 0.0)), 0.0) * WorldGeometry.METRES_PER_PIXEL
-	shot.knockback = maxf(float(stats.get("knockback_force", 0.0)), 0.0) * WorldGeometry.METRES_PER_PIXEL
+	shot.damage = view.damage
+	shot.speed = view.projectile_speed_metres
+	shot.splash_radius = view.aoe_radius_metres
+	shot.knockback = view.knockback_metres
 	shot.damage_type = type
-	shot.slow_intensity = clampf(float(stats.get("slow_intensity", 0.0)), 0.0, .9)
-	shot.slow_duration = maxf(float(stats.get("slow_duration", 0.0)), 0.0)
-	shot.pierce = maxi(int(stats.get("pierce", 0)), 0)
+	shot.slow_intensity = view.slow_intensity
+	shot.slow_duration = view.slow_duration
+	shot.pierce = view.pierce
 	return shot
 
 func copy() -> CombatShot3D:

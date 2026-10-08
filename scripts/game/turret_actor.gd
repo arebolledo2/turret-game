@@ -21,6 +21,8 @@ var rehit_lockouts: Dictionary = {}
 ## Modifier math is costly and static between purchases, so stats are rebuilt on change or every STATS_REFRESH seconds.
 var cached_stats: Dictionary = {}
 var stats_age: float = 0.0
+## Typed reads of `cached_stats`; rebuilt together with it.
+var stats_view := TurretStats.new()
 ## Seconds spent deployed in combat at the current spot; drives Entrench stacks.
 var stay_time: float = 0.0
 var entrench_stacks_cached: int = 0
@@ -30,7 +32,6 @@ var entrench_config: Dictionary = {}
 
 const STATS_REFRESH: float = .25
 const MELEE_HIT_PADDING: float = .3
-const MELEE_REHIT_DELAY: float = .5
 const TESLA_TINT := Color(.35, .9, 1.0)
 static var melee_materials: Dictionary = {}
 
@@ -51,7 +52,7 @@ func _build_melee_model() -> Node3D:
 		melee_materials["base"] = WorldGeometry.material(Color("6b6f78"))
 		melee_materials["bat"] = WorldGeometry.material(Color("c9ced6"))
 		melee_materials["head"] = WorldGeometry.material(Color("ff8d3a"), true)
-	var reach := float(TurretRegistry.TYPES["melee"]["base_stats"]["range"]) * WorldGeometry.METRES_PER_PIXEL
+	var reach := TurretStats.new(TurretRegistry.get_base_stats("melee")).range_metres
 	var root := Node3D.new()
 	WorldGeometry.box(root, Vector3(.55, .28, .55), Vector3(0, .14, 0), melee_materials["base"])
 	WorldGeometry.box(root, Vector3(.14, .38, .14), Vector3(0, .47, 0), melee_materials["base"])
@@ -68,8 +69,8 @@ func _build_melee_model() -> Node3D:
 	return root
 
 ## Sweeps the bat through the arc covered this tick and hits each enemy once per rehit delay.
-func _spin_bat(delta: float, stats: Dictionary, reach: float) -> void:
-	var sweep := deg_to_rad(float(stats.get("rotation_rate", 360.0))) * delta
+func _spin_bat(delta: float, stats: TurretStats, reach: float) -> void:
+	var sweep := deg_to_rad(stats.rotation_rate) * delta
 	var previous := spin_angle
 	spin_angle = wrapf(spin_angle + sweep, -PI, PI)
 	aim.rotation.y = spin_angle
@@ -87,15 +88,15 @@ func _spin_bat(delta: float, stats: Dictionary, reach: float) -> void:
 		var bearing := atan2(-offset.x, -offset.z)
 		if wrapf(bearing - previous + padding, 0.0, TAU) > sweep + 2.0 * padding:
 			continue
-		var damage := float(stats["damage"])
+		var damage := stats.damage
 		if TurretStatsService.roll_turret_crit():
 			damage = TurretStatsService.calculate_turret_crit_damage(damage)
-		var push := offset.normalized() * float(stats.get("knockback_force", 0.0)) * WorldGeometry.METRES_PER_PIXEL
-		rehit_lockouts[enemy.get_instance_id()] = maxf(.05, float(stats.get("rehit_delay", MELEE_REHIT_DELAY)))
+		var push := offset.normalized() * stats.knockback_metres
+		rehit_lockouts[enemy.get_instance_id()] = stats.rehit_delay
 		var bat_hit := CombatHit3D.new(damage, position, push, GameEnums.DamageType.PHYSICAL)
 		bat_hit.source_id = turret_id
-		bat_hit.slow_intensity = clampf(float(stats.get("slow_intensity", 0.0)), 0.0, .9)
-		bat_hit.slow_duration = maxf(float(stats.get("slow_duration", 0.0)), 0.0)
+		bat_hit.slow_intensity = stats.slow_intensity
+		bat_hit.slow_duration = stats.slow_duration
 		world.combat.apply_hit(enemy, bat_hit)
 
 ## Terrain under this turret, refreshed with the cached stats: high ground range and power node Entrench speed.
@@ -214,6 +215,11 @@ func _has_electric_neighbour() -> bool:
 				return true
 	return false
 
+## Typed view of the current stats (refreshing them when stale).
+func _current_view(delta: float) -> TurretStats:
+	_current_stats(delta)
+	return stats_view
+
 func _current_stats(delta: float) -> Dictionary:
 	stats_age += delta
 	if cached_stats.is_empty() or stats_age >= STATS_REFRESH:
@@ -222,11 +228,12 @@ func _current_stats(delta: float) -> Dictionary:
 		_apply_item_conditions(cached_stats)
 		_refresh_zone_bonuses()
 		if zone_range_bonus > 0.0:
-			cached_stats["range"] = float(cached_stats.get("range", 240.0)) * (1.0 + zone_range_bonus)
+			cached_stats["range"] = float(cached_stats.get("range", TurretStats.DEFAULT_RANGE)) * (1.0 + zone_range_bonus)
 		if entrench_stacks_cached > 0:
 			cached_stats["damage"] = float(cached_stats.get("damage", 0.0)) * (1.0 + entrench_damage_bonus())
 			cached_stats["fire_rate"] = float(cached_stats.get("fire_rate", 1.0)) * (1.0 + entrench_fire_rate_bonus())
 		stats_age = 0.0
+		stats_view = TurretStats.new(cached_stats)
 	return cached_stats
 
 var range_ring: MeshInstance3D
@@ -240,7 +247,7 @@ func _update_range_ring() -> void:
 		if range_ring:
 			range_ring.visible = false
 		return
-	var metres := float(_current_stats(0.0).get("range", 0.0)) * WorldGeometry.METRES_PER_PIXEL
+	var metres := _current_view(0.0).range_metres
 	if metres <= 0.0:
 		return
 	if not range_ring:
@@ -274,8 +281,8 @@ func _physics_process(delta: float) -> void:
 	_tick_entrench(delta)
 	cooldown = maxf(0.0, cooldown - delta)
 	aim.position = aim.position.lerp(aim_rest, minf(delta * 16.0, 1.0))
-	var stats: Dictionary = _current_stats(delta)
-	var range_metres := float(stats.get("range", 240.0)) * WorldGeometry.METRES_PER_PIXEL
+	var stats := _current_view(delta)
+	var range_metres := stats.range_metres
 	var fire_mode := TurretRegistry.get_fire_mode(turret_type)
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
 		_spin_bat(delta, stats, range_metres)
@@ -287,7 +294,7 @@ func _physics_process(delta: float) -> void:
 	target_clock -= delta
 	# Cluster scans run five times per second, not for every turret every frame.
 	if target_clock <= 0.0:
-		var radius := float(stats.get("aoe_radius", 0.0)) * WorldGeometry.METRES_PER_PIXEL if TurretRegistry.targets_clusters(turret_type) else 0.0
+		var radius := stats.aoe_radius_metres if TurretRegistry.targets_clusters(turret_type) else 0.0
 		target = world.combat.select_target(position, range_metres, world.enemies, radius, world.crowd)
 		target_clock = .2
 	if not is_instance_valid(target) or target.dead or WorldGeometry.planar(target.position - position).length() > range_metres:
@@ -304,27 +311,27 @@ func _physics_process(delta: float) -> void:
 			aim.position += heading.normalized() * -.045
 
 ## A shot of this turret's damage type, stamped for kill attribution, with its crit already rolled.
-func _new_shot(stats: Dictionary) -> CombatShot3D:
-	var shot := CombatShot3D.from_stats(stats, TurretRegistry.get_damage_type(turret_type))
+func _new_shot(stats: TurretStats) -> CombatShot3D:
+	var shot := CombatShot3D.from_stats(stats.values, TurretRegistry.get_damage_type(turret_type))
 	shot.source_id = turret_id
 	if TurretStatsService.roll_turret_crit():
 		shot.damage = TurretStatsService.calculate_turret_crit_damage(shot.damage)
 	return shot
 
-func _reset_cooldown(stats: Dictionary) -> void:
-	cooldown = 1.0 / maxf(float(stats.get("fire_rate", 1.2)), .01)
+func _reset_cooldown(stats: TurretStats) -> void:
+	cooldown = stats.cooldown_seconds
 
-func _fire_pulse(stats: Dictionary, range_metres: float) -> void:
+func _fire_pulse(stats: TurretStats, range_metres: float) -> void:
 	var pulse := _new_shot(stats)
 	pulse.splash_radius = range_metres
 	world.combat.impact(null, position, Vector3.ZERO, pulse, world.enemies)
-	cooldown = 1.0 / maxf(float(stats["fire_rate"]), .01)
-
-func _fire_chain(stats: Dictionary) -> void:
-	world.combat.chain(muzzle.global_position, target, _new_shot(stats), int(stats.get("chain_count", 0)),
-		float(stats.get("chain_range", 0.0)) * WorldGeometry.METRES_PER_PIXEL, float(stats.get("chain_decay", 1.0)), world.enemies)
 	_reset_cooldown(stats)
 
-func _fire_projectile(stats: Dictionary) -> void:
+func _fire_chain(stats: TurretStats) -> void:
+	world.combat.chain(muzzle.global_position, target, _new_shot(stats), stats.chain_count,
+		stats.chain_range_metres, stats.chain_decay, world.enemies)
+	_reset_cooldown(stats)
+
+func _fire_projectile(stats: TurretStats) -> void:
 	world.fire_shot(muzzle.global_position, target, _new_shot(stats))
 	_reset_cooldown(stats)

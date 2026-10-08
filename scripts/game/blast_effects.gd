@@ -12,7 +12,7 @@ func reactor_overload(victim: CombatActor, hit: CombatHit3D) -> void:
 	if ModifierService.apply_modifiers_to_stat(0.0, "reactor_overload") <= 0.0:
 		return
 	var stats := TurretStatsService.get_turret_stats("plasma", float(world.difficulty_config["turret_damage_mult"]))
-	var radius := float(stats.get("aoe_radius", 0.0)) * WorldGeometry.METRES_PER_PIXEL * GameConstants.REACTOR_BLAST_RADIUS_FRACTION
+	var radius := TurretStats.new(stats).aoe_radius_metres * GameConstants.REACTOR_BLAST_RADIUS_FRACTION
 	if radius <= 0.0:
 		return
 	var at := victim.position
