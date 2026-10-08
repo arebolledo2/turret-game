@@ -84,10 +84,10 @@ func queue_drop(at: Vector3) -> void:
 
 func spawn(at: Vector3) -> CombatActor:
 	var wave := maxi(GameStateService.current_wave, 1)
-	var tank := EnemyRegistry.get_stats_for_wave("tank", wave, world.difficulty_config)
+	var tank := EnemyStats.for_wave("tank", wave, world.difficulty_config)
 	var drop := TechDropActor.new()
 	drop.world = world
-	drop.max_health = float(tank["health"]) * GameConstants.TECH_DROP_HEALTH_FRACTION
+	drop.max_health = tank.health * GameConstants.TECH_DROP_HEALTH_FRACTION
 	drop.health = drop.max_health
 	drop.speed = 0.0
 	drop.contact_damage = 0.0

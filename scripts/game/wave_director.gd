@@ -102,16 +102,16 @@ func spawn_enemy(at: Vector3, type_id: String = "basic", elite: bool = false, se
 	enemy.world = world
 	enemy.is_enemy = true
 	enemy.enemy_type = type_id
-	var base := EnemyRegistry.get_stats_for_wave(type_id, maxi(GameStateService.current_wave, 1), world.difficulty_config)
-	enemy.max_health = float(base["health"])
+	var base := EnemyStats.for_wave(type_id, maxi(GameStateService.current_wave, 1), world.difficulty_config)
+	enemy.max_health = base.health
 	enemy.health = enemy.max_health
-	enemy.speed = float(base["speed"]) * WorldGeometry.METRES_PER_PIXEL
-	enemy.contact_damage = float(base["contact_damage"])
-	enemy.mass = float(base["mass"])
-	enemy.scrap_value = int(base["scrap_value"])
+	enemy.speed = base.speed_metres
+	enemy.contact_damage = base.contact_damage
+	enemy.mass = base.mass
+	enemy.scrap_value = base.scrap_value
 	enemy.body_scale = EnemyVariants.body_scale(type_id)
-	enemy.explosion_radius = float(base.get("explosion_radius", 0.0)) * WorldGeometry.METRES_PER_PIXEL
-	enemy.explosion_damage = float(base.get("explosion_damage", 0.0))
+	enemy.explosion_radius = base.explosion_radius_metres
+	enemy.explosion_damage = base.explosion_damage
 	if elite:
 		enemy.elite = true
 		enemy.max_health *= DifficultyService.rule(world.difficulty_config, "elite_health_mult")
