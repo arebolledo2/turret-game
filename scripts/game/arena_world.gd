@@ -19,6 +19,7 @@ var _next_turret_id: int = 1
 var shop := ArenaShop.new()
 var waves := WaveDirector.new()
 var drops := TechDropDirector.new()
+var blasts := BlastEffects.new()
 ## This run's terrain (null when the `terrain_zones` flag is off). Chosen once per run and fixed for every wave.
 var terrain: TerrainZones
 var placement := TurretPlacement.new()
@@ -85,6 +86,7 @@ func _ready() -> void:
 	shop.world = self
 	waves.world = self
 	drops.world = self
+	blasts.world = self
 	placement.world = self
 	add_child(session)
 	actor_root = Node3D.new()
@@ -179,6 +181,28 @@ func _clear_actors() -> void:
 			container.remove_child(child)
 			child.queue_free()
 
+## Ends the fight on the field: removes enemies, projectiles, effects and drops, stops audio and drops any carried
+## turret. Scrap pickups are banked when `bank_pickups` is set, otherwise discarded.
+func clear_field(bank_pickups: bool) -> void:
+	for enemy in enemies:
+		enemy.dead = true
+		enemy.clear_transients()
+		enemy.queue_free()
+	enemies.clear()
+	crowd.rebuild(enemies)
+	effects.reset()
+	drops.reset()
+	player.clear_transients()
+	for projectile in projectiles:
+		projectile.release()
+	for pickup: ScrapPickup in pickup_root.get_children():
+		if bank_pickups:
+			pickup.collect()
+		else:
+			pickup.queue_free()
+	placement.drop_carried()
+	audio.reset()
+
 func is_combat() -> bool:
 	return not paused and GameStateService.is_game_active and GameStateMachine.is_in_combat()
 
@@ -254,7 +278,7 @@ func _record_hit(target: Node3D, hit: CombatHit3D, applied: float) -> void:
 	if not victim:
 		return
 	if victim.is_enemy and victim.dead:
-		_reactor_overload(victim, hit)
+		blasts.reactor_overload(victim, hit)
 	if not victim.is_enemy:
 		telemetry.record_hull_lost(applied)
 	elif victim.dead and not victim.stationary:
@@ -281,47 +305,7 @@ func _on_enemy_died(enemy: CombatActor) -> void:
 	DeathDissolve.spawn(actor_root, enemy)
 	enemy.queue_free()
 	if enemy.explosion_radius > 0.0:
-		_detonate(enemy)
-
-## Reactor Overload: plasma kills detonate for a fraction of the killing hit, and those kills can chain (depth capped).
-func _reactor_overload(victim: CombatActor, hit: CombatHit3D) -> void:
-	if hit.damage_type != GameEnums.DamageType.PLASMA or hit.blast_depth >= GameConstants.REACTOR_MAX_CHAIN_DEPTH:
-		return
-	if ModifierService.apply_modifiers_to_stat(0.0, "reactor_overload") <= 0.0:
-		return
-	var stats := TurretStatsService.get_turret_stats("plasma", float(difficulty_config["turret_damage_mult"]))
-	var radius := float(stats.get("aoe_radius", 0.0)) * WorldGeometry.METRES_PER_PIXEL * GameConstants.REACTOR_BLAST_RADIUS_FRACTION
-	if radius <= 0.0:
-		return
-	var at := victim.position
-	var victims: Array[CombatActor] = []
-	for other in enemies:
-		if other != victim and is_instance_valid(other) and not other.dead and WorldGeometry.planar(other.position - at).length_squared() <= radius * radius:
-			victims.append(other)
-	combat.explosion.emit(WorldGeometry.planar(at), radius)
-	for other in victims:
-		var blast := CombatHit3D.new(hit.damage * GameConstants.REACTOR_BLAST_DAMAGE_FRACTION, at, Vector3.ZERO, GameEnums.DamageType.PLASMA)
-		blast.source_id = hit.source_id
-		blast.blast_depth = hit.blast_depth + 1
-		combat.apply_hit(other, blast)
-
-## Boom bot blast: hurts the player and every other enemy in range (chains are allowed and finite).
-func _detonate(source: CombatActor) -> void:
-	var at := source.position
-	var radius_squared := source.explosion_radius * source.explosion_radius
-	var victims: Array[CombatActor] = []
-	for other in enemies:
-		if is_instance_valid(other) and not other.dead and WorldGeometry.planar(other.position - at).length_squared() <= radius_squared:
-			victims.append(other)
-	combat.explosion.emit(WorldGeometry.planar(at), source.explosion_radius)
-	for victim in victims:
-		combat.apply_hit(victim, CombatHit3D.new(source.explosion_damage, at))
-	if WorldGeometry.planar(player.position - at).length_squared() <= radius_squared:
-		combat.apply_hit(player, CombatHit3D.new(source.explosion_damage, at))
-	if core and not core.dead:
-		var core_reach := source.explosion_radius + core.radius
-		if WorldGeometry.planar(core.position - at).length_squared() <= core_reach * core_reach:
-			damage_core(source.explosion_damage * GameConstants.CORE_DAMAGE_FRACTION)
+		blasts.detonate(enemy)
 
 func _on_actor_defeated(actor: Node3D, _at: Vector3) -> void:
 	var victim := actor as CombatActor
@@ -426,21 +410,7 @@ func dev_jump_to_wave(target_wave: int) -> bool:
 			GameStateMachine.GameState.COMBAT, GameStateMachine.GameState.SHOP]:
 		return false
 	target_wave = clampi(target_wave, 1, wave_limit)
-	for enemy in enemies:
-		enemy.dead = true
-		enemy.clear_transients()
-		enemy.queue_free()
-	enemies.clear()
-	crowd.rebuild(enemies)
-	effects.reset()
-	drops.reset()
-	player.clear_transients()
-	for projectile in projectiles:
-		projectile.release()
-	for pickup: ScrapPickup in pickup_root.get_children():
-		pickup.queue_free()
-	placement.drop_carried()
-	audio.reset()
+	clear_field(false)
 	GameStateService.current_wave = target_wave - 1
 	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
 	shop.open()

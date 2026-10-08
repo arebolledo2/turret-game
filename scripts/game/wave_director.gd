@@ -68,23 +68,9 @@ func finish_wave() -> bool:
 	if not world.is_combat():
 		return false
 	GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_END)
-	for enemy in world.enemies:
-		enemy.dead = true
-		enemy.clear_transients()
-		enemy.queue_free()
-	world.enemies.clear()
-	world.crowd.rebuild(world.enemies)
-	world.effects.reset()
-	world.drops.reset()
-	world.player.clear_transients()
-	for projectile in world.projectiles:
-		projectile.release()
-	for pickup: ScrapPickup in world.pickup_root.get_children():
-		pickup.collect()
-	world.placement.drop_carried()
+	world.clear_field(true)
 	var reward := EconomyService.get_wave_scrap_base(GameStateService.current_wave)
 	world.collect_scrap(reward)
-	world.audio.reset()
 	world.message = "Wave secured · +%d scrap bonus" % reward
 	if GameStateService.current_wave >= world.wave_limit:
 		world.audio.play_cue("victory", world.player.position)
