@@ -57,11 +57,13 @@ func _init() -> void:
 	chips_box.add_theme_constant_override("h_separation", 8)
 	chips_box.add_theme_constant_override("v_separation", 8)
 	chips_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	chips_box.custom_minimum_size.y = 76
 	column.add_child(chips_box)
 	desc_label = _label(column, 19, Color("a9c9cf"))
 	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc_label.custom_minimum_size.y = 56
+	desc_label.max_lines_visible = 2 # a long description must not push the cost row down
 	var cost_row := HBoxContainer.new()
 	cost_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cost_row.alignment = BoxContainer.ALIGNMENT_CENTER

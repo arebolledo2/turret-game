@@ -11,6 +11,7 @@ var cells: int = 10
 var value: int = 0
 var now_index: int = -1
 var danger: bool = false
+var fail_index: int = -1 # a cell drawn in the danger colour (the wave that ended the run)
 var color: Color = UiPalette.TEAL_HI
 var pulse_clock: float = 0.0
 
@@ -30,6 +31,12 @@ func set_state(lit: int, total: int = -1, danger_state: bool = false, blink_inde
 	now_index = blink_index
 	set_process((danger or now_index >= 0) and not FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
 	queue_redraw()
+
+## Marks one cell as failed (-1 clears it).
+func set_fail(index: int) -> void:
+	if index != fail_index:
+		fail_index = index
+		queue_redraw()
 
 func _process(delta: float) -> void:
 	pulse_clock += delta
@@ -55,6 +62,8 @@ func _draw() -> void:
 			fill = lit_color
 			if danger:
 				fill.a = alpha
+		elif index == fail_index:
+			fill = UiPalette.BAD
 		elif index == now_index:
 			fill = color
 			fill.a = alpha

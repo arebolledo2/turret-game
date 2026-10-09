@@ -15,6 +15,11 @@ var minimap: Minimap
 var panel: PanelContainer
 var title: Label
 var description: Label
+var title_icon: TextureRect
+var summary: VBoxContainer
+var reason_row: HBoxContainer
+var summary_strip: SegmentedBar
+var summary_tiles: Dictionary = {}
 var offer_buttons: Array[Button] = []
 var reroll_button: IconButton
 var repair_button: IconButton
@@ -93,6 +98,8 @@ func _build_panel(root: Control) -> void:
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 20)
 	column.add_child(header)
+	title_icon = _icon("signal", "hull", 52)
+	header.add_child(title_icon)
 	title = _label(header, "", 46, UiPalette.INK)
 	description = _label(header, "", 24, UiPalette.MUTED)
 	description.size_flags_vertical = Control.SIZE_SHRINK_END
@@ -104,6 +111,7 @@ func _build_panel(root: Control) -> void:
 	header.add_child(balance_row)
 	balance_row.add_child(_icon("scrap", "scrap", 44))
 	balance_label = _numeral(balance_row, 52, UiPalette.SCRAP)
+	_build_summary(column)
 	offers_row = HBoxContainer.new()
 	offers_row.add_theme_constant_override("separation", 18)
 	column.add_child(offers_row)
@@ -154,6 +162,45 @@ func _build_panel(root: Control) -> void:
 	right.custom_minimum_size.x = 590
 	build_panel = BuildPanel.new()
 	right.add_child(build_panel)
+
+## Pause / end summary: a reason chip, the wave strip and four stat tiles (waves, kills, scrap, time).
+func _build_summary(column: VBoxContainer) -> void:
+	summary = VBoxContainer.new()
+	summary.add_theme_constant_override("separation", 18)
+	column.add_child(summary)
+	reason_row = HBoxContainer.new()
+	summary.add_child(reason_row)
+	summary_strip = SegmentedBar.new()
+	summary_strip.custom_minimum_size.y = 22
+	summary.add_child(summary_strip)
+	var tiles := HBoxContainer.new()
+	tiles.add_theme_constant_override("separation", 16)
+	summary.add_child(tiles)
+	for spec: Array in [["wave", "wave", "WAVES"], ["kills", "kills", "KILLS"], ["scrap", "scrap", "SCRAP"], ["timer", "time", "TIME"]]:
+		var tile := StatTile.new().setup(spec[0], spec[1], spec[2])
+		tile.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		tile.value_label.add_theme_font_size_override("font_size", 44)
+		tiles.add_child(tile)
+		summary_tiles[spec[1]] = tile
+
+func _refresh_summary(phase: int, ended: bool) -> void:
+	var wave := GameStateService.current_wave
+	var seconds := int(GameStateService.time_survived)
+	summary_tiles["wave"].set_value("%d/%d" % [wave, world.wave_limit])
+	summary_tiles["kills"].set_value(str(GameStateService.total_kills))
+	summary_tiles["scrap"].set_value(str(GameStateService.lifetime_scrap))
+	summary_tiles["time"].set_value("%d:%02d" % [floori(seconds / 60.0), seconds % 60])
+	var victory := phase == GameStateMachine.GameState.VICTORY
+	var in_wave := phase in [GameStateMachine.GameState.WAVE_ANNOUNCEMENT, GameStateMachine.GameState.COMBAT]
+	var cleared := world.wave_limit if victory else (maxi(wave - 1, 0) if in_wave or ended else wave)
+	summary_strip.set_state(cleared, world.wave_limit)
+	summary_strip.set_fail(wave - 1 if ended and not victory and wave >= 1 else -1)
+	for child in reason_row.get_children():
+		reason_row.remove_child(child)
+		child.queue_free()
+	reason_row.visible = ended and not victory
+	if reason_row.visible:
+		reason_row.add_child(StatChip.new().setup("hull", world.defeat_reason if world.defeat_reason != "" else "Hull breached", "hull", -1))
 
 func _padded(parent: Node, left: int, top: int, right: int, bottom: int) -> MarginContainer:
 	var margin := MarginContainer.new()
@@ -390,16 +437,22 @@ func _process(delta: float) -> void:
 			if shop_open and previewed >= 0 and not EconomyService.current_shop_offers[previewed].sold:
 				preview = ShopViewData.preview(world, EconomyService.current_shop_offers[previewed])
 			build_panel.set_data(ShopViewData.build_data(world), preview)
+	summary.visible = world.paused or ended
+	if summary.visible:
+		_refresh_summary(phase, ended)
+	title_icon.visible = world.paused or ended
+	description.text = ""
 	if world.paused:
 		title.text = "PAUSED"
-		description.text = ""
+		title_icon.texture = UiIcons.get_icon("pause")
+		title_icon.modulate = UiPalette.TEAL_HI
 	elif in_shop:
 		title.text = "REFIT"
-		description.text = ""
 	elif ended:
-		title.text = "SECTOR SECURED" if phase == GameStateMachine.GameState.VICTORY else "SIGNAL LOST"
-		description.text = "%s%d kills · %d scrap recovered · %ds survived" % ["%s · " % world.defeat_reason if world.defeat_reason != "" else "",
-			GameStateService.total_kills, GameStateService.lifetime_scrap, int(GameStateService.time_survived)]
+		var won := phase == GameStateMachine.GameState.VICTORY
+		title.text = "SECTOR SECURED" if won else "SIGNAL LOST"
+		title_icon.texture = UiIcons.get_icon("trophy" if won else "signal")
+		title_icon.modulate = UiPalette.GOOD if won else UiPalette.BAD
 	if phase != previous_phase or world.paused != previous_pause:
 		if ended:
 			restart_button.grab_focus()
