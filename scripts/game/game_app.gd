@@ -15,6 +15,7 @@ var motion_check: CheckButton
 var volume_slider: HSlider
 var volume_label: Label
 var home_summary: Label
+var summary_chips: HBoxContainer
 var difficulty_option: OptionButton
 var mode_option: OptionButton
 ## Chosen for the next Play; tools and the dev panel may replace it.
@@ -36,29 +37,25 @@ func _build_menu() -> void:
 	menu.add_child(center)
 	var panel := PanelContainer.new()
 	panel.custom_minimum_size.x = 820
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color("102832")
-	style.border_color = Color("358d95")
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(12)
-	style.content_margin_left = 48
-	style.content_margin_right = 48
-	style.content_margin_top = 36
-	style.content_margin_bottom = 36
-	panel.add_theme_stylebox_override("panel", style)
+	panel.add_theme_stylebox_override("panel", ChamferStyle.make(Color(.025, .065, .09, .97), UiPalette.LINE, 30.0, 52.0, 40.0))
 	center.add_child(panel)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 22)
 	panel.add_child(column)
-	_label(column, "TURRET / SURVIVOR", 44, Color("d7f2eb"))
-	_label(column, "Build your defenses. Survive the swarm.", 23, Color("71d3d3"))
+	var wordmark := _label(column, "TURRET / SURVIVOR", 76, UiPalette.INK)
+	wordmark.theme_type_variation = &"Header1"
+	wordmark.add_theme_font_size_override("font_size", 76)
+	_label(column, "Build your defenses. Survive the swarm.", 26, UiPalette.TEAL_HI)
 	home = VBoxContainer.new()
 	home.add_theme_constant_override("separation", 18)
 	column.add_child(home)
-	home_summary = _label(home, "", 22)
-	_label(home, "Move     WASD / arrows / left stick\nCarry or place turret     E / controller A\nPause     Esc / controller Start\nAuto-fire targets nearby enemies.", 22)
-	play_button = _button(home, "PLAY", start_game)
-	settings_button = _button(home, "SETTINGS", show_settings)
+	home_summary = _label(home, "", 22) # text mirror of the chips, kept for screen readers and tests
+	home_summary.visible = false
+	summary_chips = HBoxContainer.new()
+	summary_chips.add_theme_constant_override("separation", 10)
+	home.add_child(summary_chips)
+	play_button = _button(home, "PLAY", start_game, "play", true)
+	settings_button = _button(home, "SETTINGS", show_settings, "settings")
 	difficulty_option = _option(home, "Difficulty", func(index: int) -> void:
 		run_config.difficulty = index as GameEnums.Difficulty
 		_update_summary())
@@ -70,26 +67,40 @@ func _build_menu() -> void:
 	mode_option.add_item("Mode  Survive  -  last all the waves")
 	mode_option.add_item("Mode  Protect the core  -  keep the reactor alive")
 	mode_option.add_item("Mode  Convoy  -  escort the core door to door")
-	_button(home, "QUIT", func() -> void: get_tree().quit())
+	_button(home, "QUIT", func() -> void: get_tree().quit(), "power")
 	options = VBoxContainer.new()
 	options.add_theme_constant_override("separation", 18)
 	column.add_child(options)
-	_label(options, "SETTINGS", 28)
-	fullscreen_check = _check(options, "Fullscreen", func(value: bool) -> void: SettingsService.set_fullscreen(value))
+	var settings_title := _label(options, "SETTINGS", 40, UiPalette.INK)
+	settings_title.theme_type_variation = &"Header2"
+	fullscreen_check = _check(options, "Fullscreen", "fullscreen", func(value: bool) -> void: SettingsService.set_fullscreen(value))
 	window_size_option = OptionButton.new()
 	window_size_option.custom_minimum_size.y = 54
 	window_size_option.add_theme_font_size_override("font_size", 23)
+	window_size_option.icon = UiIcons.get_icon("monitor")
+	_style_control(window_size_option)
 	window_size_option.accessibility_name = "Window size; you can also drag the window edges"
 	for preset in SettingsService.WINDOW_SIZE_PRESETS:
 		window_size_option.add_item("Window  %d x %d" % [preset.x, preset.y])
 	window_size_option.item_selected.connect(func(index: int) -> void: SettingsService.set_window_size(SettingsService.WINDOW_SIZE_PRESETS[index]))
 	options.add_child(window_size_option)
-	vsync_check = _check(options, "VSync", func(value: bool) -> void: SettingsService.set_vsync(value))
-	motion_check = _check(options, "Reduced motion", func(value: bool) -> void: SettingsService.set_reduced_motion(value))
+	vsync_check = _check(options, "VSync", "signal", func(value: bool) -> void: SettingsService.set_vsync(value))
+	motion_check = _check(options, "Reduced motion", "motion", func(value: bool) -> void: SettingsService.set_reduced_motion(value))
 	_label(options, "Reduced motion removes bobbing, recoil and hit blinking.\nAttack warnings and effect ranges remain visible.", 20)
+	var volume_row := HBoxContainer.new()
+	volume_row.add_theme_constant_override("separation", 12)
+	options.add_child(volume_row)
+	var volume_icon := TextureRect.new()
+	volume_icon.texture = UiIcons.get_icon("volume")
+	volume_icon.modulate = UiPalette.stat_color("slow")
+	volume_icon.custom_minimum_size = Vector2(32, 32)
+	volume_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	volume_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	volume_row.add_child(volume_icon)
 	volume_label = Label.new()
-	volume_label.add_theme_font_size_override("font_size", 22)
-	options.add_child(volume_label)
+	volume_label.theme_type_variation = &"Numeral"
+	volume_label.add_theme_font_size_override("font_size", 24)
+	volume_row.add_child(volume_label)
 	volume_slider = HSlider.new()
 	volume_slider.min_value = 0
 	volume_slider.max_value = 100
@@ -100,9 +111,9 @@ func _build_menu() -> void:
 	volume_slider.value_changed.connect(func(value: float) -> void:
 		SettingsService.set_sfx_volume(value / 100.0)
 		_update_volume_label())
-	back_button = _button(options, "BACK", show_home)
+	back_button = _button(options, "BACK", show_home, "back")
 
-func _label(parent: Node, text: String, size: int, color: Color = Color("c8dddf")) -> Label:
+func _label(parent: Node, text: String, size: int, color: Color = UiPalette.INK) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.add_theme_font_size_override("font_size", size)
@@ -110,11 +121,9 @@ func _label(parent: Node, text: String, size: int, color: Color = Color("c8dddf"
 	parent.add_child(label)
 	return label
 
-func _button(parent: Node, text: String, action: Callable) -> Button:
-	var button := Button.new()
-	button.text = text
-	button.custom_minimum_size.y = 58
-	button.add_theme_font_size_override("font_size", 23)
+func _button(parent: Node, text: String, action: Callable, icon_name: String = "", primary: bool = false) -> Button:
+	var button := IconButton.new().setup(icon_name, text, primary, 30)
+	button.custom_minimum_size.y = 62
 	button.pressed.connect(action)
 	parent.add_child(button)
 	return button
@@ -125,19 +134,46 @@ func _option(parent: Node, accessibility: String, action: Callable) -> OptionBut
 	button.add_theme_font_size_override("font_size", 21)
 	button.accessibility_name = accessibility
 	button.item_selected.connect(action)
+	_style_control(button)
 	parent.add_child(button)
 	return button
+
+## Chamfered look for option buttons and checks, matching IconButton.
+func _style_control(control: Button) -> void:
+	for state in ["normal", "hover", "pressed", "focus"]:
+		var edge := UiPalette.TEAL_HI if state in ["pressed", "focus"] else (UiPalette.TEAL if state == "hover" else UiPalette.LINE)
+		var fill := Color(0, 0, 0, 0) if state == "focus" else (UiPalette.PANEL_HI if state != "normal" else UiPalette.PANEL)
+		if state == "pressed" and control is CheckButton:
+			continue # "pressed" means checked here; the switch shows that, the frame must not
+		control.add_theme_stylebox_override(state, ChamferStyle.make(fill, edge, 10.0, 20.0, 8.0))
+	if control is CheckButton:
+		control.add_theme_stylebox_override("pressed", control.get_theme_stylebox("normal"))
+		control.add_theme_stylebox_override("hover_pressed", control.get_theme_stylebox("hover"))
+
+func _rebuild_chips(mode_name: String) -> void:
+	for child in summary_chips.get_children():
+		summary_chips.remove_child(child)
+		child.queue_free()
+	summary_chips.add_child(StatChip.new().setup("wave", "%d waves" % run_config.wave_limit, "wave"))
+	summary_chips.add_child(StatChip.new().setup("hull", run_config.difficulty_name(), "hull"))
+	summary_chips.add_child(StatChip.new().setup("sector", mode_name, "core"))
 
 func _update_summary() -> void:
 	var mode_name := "Survive"
 	match run_config.mode:
 		RunConfig.MODE_CORE: mode_name = "Protect the core"
 		RunConfig.MODE_CONVOY: mode_name = "Convoy"
+	_rebuild_chips(mode_name)
 	home_summary.text = "%d waves · %s difficulty · %s" % [run_config.wave_limit, run_config.difficulty_name(), mode_name]
 
-func _check(parent: Node, text: String, action: Callable) -> CheckButton:
+func _check(parent: Node, text: String, icon_name: String, action: Callable) -> CheckButton:
 	var button := CheckButton.new()
 	button.text = text
+	button.icon = UiIcons.get_icon(icon_name)
+	button.expand_icon = true
+	button.add_theme_constant_override("icon_max_width", 30)
+	button.add_theme_constant_override("h_separation", 14)
+	_style_control(button)
 	button.custom_minimum_size.y = 54
 	button.add_theme_font_size_override("font_size", 23)
 	button.toggled.connect(action)
