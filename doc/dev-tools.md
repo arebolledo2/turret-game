@@ -15,7 +15,7 @@ Every new system ships behind a feature flag so it can be switched on and off in
 | `live_safe` | `true` applies immediately. `false` (default) means the change lands when the next wave begins |
 | `phase` | Roadmap phase that introduced the flag |
 
-Current flags: `reduced_motion` (user), `dev_panel` (dev, default on), `debug_overlays` (dev, requires `dev_panel`); experiments `entrench`, `placement_preview`, `items_v2`, `items_v2_hooks`, `mode_protect_core`, `tech_drops`, `difficulty_rules`, `terrain_zones`, `zone_readability` (live-safe, requires `terrain_zones`: off restores the flat tinted discs); dev flag `debug_zones` (requires `dev_panel`).
+Current flags: `reduced_motion` (user), `dev_panel` (dev, default on), `debug_overlays` (dev, requires `dev_panel`); experiments `entrench`, `placement_preview`, `items_v2`, `items_v2_hooks`, `mode_protect_core`, `tech_drops`, `build_zones`, `difficulty_rules`, `terrain_zones`, `zone_readability` (live-safe, requires `terrain_zones`: off restores the flat tinted discs); dev flag `debug_zones` (requires `dev_panel`).
 
 APIs:
 

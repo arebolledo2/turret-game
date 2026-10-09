@@ -28,6 +28,7 @@ const ITEMS_V2_HOOKS: String = "items_v2_hooks"
 const MODE_PROTECT_CORE: String = "mode_protect_core"
 const MODE_CONVOY: String = "mode_convoy"
 const TECH_DROPS: String = "tech_drops"
+const BUILD_ZONES: String = "build_zones"
 const DIFFICULTY_RULES: String = "difficulty_rules"
 const TERRAIN_ZONES: String = "terrain_zones"
 const DEBUG_ZONES: String = "debug_zones"
@@ -82,6 +83,10 @@ const FLAG_DEFINITIONS: Dictionary = {
 	TECH_DROPS: {
 		"name": "Tech Drops", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 5,
 		"description": "Destructible crates appear away from your turrets during a wave. Destroy one for scrap and a chance at a free item; it is lost when the wave ends.",
+	},
+	BUILD_ZONES: {
+		"name": "Build Zones", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 5,
+		"description": "Glowing build zones appear during a wave. Stand in one to build a turret or an item. Scrap left uncollected at wave end is still banked and also brings more, better zones next wave.",
 	},
 	DIFFICULTY_RULES: {
 		"name": "Difficulty Rules", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 5,

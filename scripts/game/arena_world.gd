@@ -19,6 +19,7 @@ var _next_turret_id: int = 1
 var shop := ArenaShop.new()
 var waves := WaveDirector.new()
 var drops := TechDropDirector.new()
+var build_zones := BuildZoneDirector.new()
 var blasts := BlastEffects.new()
 var dev := DevCommands.new()
 ## This run's terrain (null when the `terrain_zones` flag is off). Chosen once per run and fixed for every wave.
@@ -76,6 +77,7 @@ func _ready() -> void:
 	shop.world = self
 	waves.world = self
 	drops.world = self
+	build_zones.world = self
 	blasts.world = self
 	dev.world = self
 	placement.world = self
@@ -172,6 +174,7 @@ func _clear_actors() -> void:
 	convoy_mover = null
 	terrain = null
 	drops.reset()
+	build_zones.reset_run()
 	placement.carried = null
 	enemies.clear()
 	turrets.clear()
@@ -194,9 +197,15 @@ func clear_field(bank_pickups: bool) -> void:
 	crowd.rebuild(enemies)
 	effects.reset()
 	drops.reset()
+	build_zones.reset()
 	player.clear_transients()
 	for projectile in projectiles:
 		projectile.release()
+	if bank_pickups:
+		var leftover := 0
+		for pickup: ScrapPickup in pickup_root.get_children():
+			leftover += pickup.amount
+		build_zones.note_leftover(leftover)
 	for pickup: ScrapPickup in pickup_root.get_children():
 		if bank_pickups:
 			pickup.collect()

@@ -149,6 +149,31 @@ const TECH_DROP_SCATTER_RADIUS: float = 1.2
 const TECH_DROP_ITEM_CHANCE: float = .5 # chance a destroyed drop also grants a free item
 
 # =============================================================================
+# BUILD ZONES (stand in a zone to build a turret or an item; leftover scrap feeds the next wave's zones)
+# =============================================================================
+const BUILD_ZONE_RADIUS: float = 1.6 # metres; the hero must stand inside it to build
+const BUILD_ZONE_BUILD_TIME: float = 6.0 # seconds of standing inside for a tier 0 zone
+const BUILD_ZONE_TIER_SPEEDUP: float = .15 # each tier shortens the build by this fraction
+const BUILD_ZONE_GRACE_TIME: float = 2.0 # progress holds this long after the hero leaves...
+const BUILD_ZONE_DECAY_RATE: float = .1 # ...then drains by this fraction of the build per second
+const BUILD_ZONE_LIFETIME: float = 40.0 # an unfinished zone fades after this many seconds
+const BUILD_ZONE_WARNING_TIME: float = 1.5
+const BUILD_ZONE_ROLL_INTERVAL: float = 6.0 # seconds between spawn rolls during a wave
+const BUILD_ZONE_SPAWN_CHANCE: float = .35
+const BUILD_ZONE_BASE_ACTIVE: int = 1 # alive zones plus pending warnings, before any leftover-scrap bonus
+const BUILD_ZONE_MIN_TIME_LEFT: float = 12.0 # no new zones in the last seconds of a wave
+const BUILD_ZONE_ITEM_CHANCE: float = .35 # chance a zone builds an item instead of a turret
+const BUILD_ZONE_SCRAP_PER_BONUS: int = 10 # leftover scrap per extra concurrent zone next wave
+const BUILD_ZONE_MAX_BONUS: int = 2
+const BUILD_ZONE_SCRAP_PER_TIER: int = 25 # leftover scrap per quality tier next wave
+const BUILD_ZONE_MAX_TIER: int = 3
+const BUILD_ZONE_TIER_LUCK: float = .35 # extra item luck per tier
+const BUILD_ZONE_EDGE_MARGIN: float = 3.0
+const BUILD_ZONE_MIN_CORE_DISTANCE: float = 4.0 # metres from the core (core mode)
+const BUILD_ZONE_MIN_TURRET_DISTANCE: float = 2.5 # metres from every turret
+const BUILD_ZONE_MIN_ZONE_DISTANCE: float = 6.0 # metres between zones
+
+# =============================================================================
 # TERRAIN ZONES (Phase 4)
 # =============================================================================
 const ZONE_HIGH_GROUND_RANGE_BONUS: float = .25 # turrets on high ground: +25% range

@@ -38,6 +38,7 @@ func tick(delta: float) -> void:
 		remaining_spawns -= 1
 		spawn_clock += spawn_interval
 	world.drops.tick(delta)
+	world.build_zones.tick(delta)
 	# Convoy rounds end on arrival at the final door; the timer is only a safety net.
 	if time_left <= 0.0 or (world.convoy_mover != null and world.convoy_mover.finished):
 		finish_wave()
@@ -51,6 +52,7 @@ func begin_next_wave() -> bool:
 	# Flags requested during the previous wave land here, before this wave's systems start.
 	FeatureFlagService.apply_pending()
 	world.telemetry.begin_wave(GameStateService.current_wave)
+	world.build_zones.begin_wave()
 	world.audio.play_cue("wave", world.player.position)
 	announcement_left = ANNOUNCEMENT_TIME
 	spawned_this_wave = 0
