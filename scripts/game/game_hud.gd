@@ -1,11 +1,16 @@
 extends CanvasLayer
 
 var world: ArenaWorld
-var stats: Label
-var status: Label
+var hull_bar: VitalBar
+var core_bar: VitalBar
+var wave_value: Label
+var wave_total: Label
+var wave_pips: SegmentedBar
+var time_label: Label
+var scrap_label: Label
+var banner: PanelContainer
+var banner_label: Label
 var hint: Label
-var health: ProgressBar
-var health_text: Label
 var minimap: Minimap
 var panel: PanelContainer
 var title: Label
@@ -14,9 +19,6 @@ var offer_buttons: Array[Button] = []
 var reroll_button: Button
 var repair_button: Button
 var core_repair_button: Button
-var core_panel: VBoxContainer
-var core_health: ProgressBar
-var core_text: Label
 var zone_legend: Label
 var actions: HBoxContainer
 var build_text: Label
@@ -31,55 +33,11 @@ func _ready() -> void:
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
-	var header := PanelContainer.new()
-	header.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	header.offset_left = 28
-	header.offset_right = -28
-	header.offset_top = 22
-	header.offset_bottom = 105
-	header.add_theme_stylebox_override("panel", _panel_style())
-	root.add_child(header)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 35)
-	header.add_child(row)
-	var brand := VBoxContainer.new()
-	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(brand)
-	_label(brand, "T U R R E T   /   S U R V I V O R", 23, Color("cfecea"))
-	_label(brand, "SECTOR 01     /     %d-WAVE %s     /     %s" % [world.wave_limit, "CORE DEFENSE" if world.core_mode else "SURVIVAL",
-		world.run_config.difficulty_name().to_upper()], 13, Color("54c5c5"))
-	var vitals := VBoxContainer.new()
-	vitals.custom_minimum_size.x = 175
-	row.add_child(vitals)
-	health_text = _label(vitals, "HULL", 15, Color("cfecea"))
-	health = ProgressBar.new()
-	health.custom_minimum_size = Vector2(175, 12)
-	health.show_percentage = false
-	vitals.add_child(health)
-	stats = _label(row, "", 18, Color("f4d298"))
-	stats.custom_minimum_size.x = 290
-	core_panel = VBoxContainer.new()
-	core_panel.position = Vector2(28, 118)
-	core_panel.custom_minimum_size.x = 260
-	core_panel.visible = false
-	root.add_child(core_panel)
-	core_text = _label(core_panel, "CORE", 15, Color("58ece1"))
-	core_health = ProgressBar.new()
-	core_health.custom_minimum_size = Vector2(260, 14)
-	core_health.show_percentage = false
-	core_panel.add_child(core_health)
+	_build_corner_clusters(root)
 	var indicator := CoreIndicator.new()
 	indicator.world = world
 	root.add_child(indicator)
-	status = Label.new()
-	status.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	status.offset_left = -350
-	status.offset_right = 350
-	status.offset_top = 120
-	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	status.add_theme_font_size_override("font_size", 24)
-	status.add_theme_color_override("font_color", Color("a9ece4"))
-	root.add_child(status)
+	_build_wave_banner(root)
 	zone_legend = Label.new()
 	zone_legend.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	zone_legend.offset_left = -640
@@ -96,10 +54,13 @@ func _ready() -> void:
 	hint = Label.new()
 	hint.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	hint.offset_left = 28
-	hint.offset_top = -92
-	hint.offset_bottom = -20
-	hint.add_theme_font_size_override("font_size", 17)
-	hint.add_theme_color_override("font_color", Color("b3cdd3"))
+	hint.offset_top = -140
+	hint.offset_bottom = -40
+	hint.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	hint.add_theme_font_size_override("font_size", 24)
+	hint.add_theme_color_override("font_color", UiPalette.INK)
+	hint.add_theme_color_override("font_outline_color", Color(0, 0, 0, .85))
+	hint.add_theme_constant_override("outline_size", 6)
 	root.add_child(hint)
 	minimap = Minimap.new()
 	minimap.world = world
@@ -154,6 +115,111 @@ func _ready() -> void:
 	build_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	build_text.add_theme_constant_override("line_spacing", 8)
 	_label(build, "Max hull upgrades do not repair damage.", 13, Color("a3bbc6"))
+
+## Three corner clusters: hull (and core) top-left, wave and timer top-centre, scrap top-right.
+func _build_corner_clusters(root: Control) -> void:
+	var left := VBoxContainer.new()
+	left.position = Vector2(48, 40)
+	left.custom_minimum_size.x = 540
+	left.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	left.add_theme_constant_override("separation", 14)
+	root.add_child(left)
+	hull_bar = VitalBar.new().setup("hull", "hull")
+	left.add_child(hull_bar)
+	core_bar = VitalBar.new().setup("core", "core")
+	core_bar.visible = false
+	left.add_child(core_bar)
+
+	var centre := PanelContainer.new()
+	centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	centre.custom_minimum_size = Vector2(560, 96)
+	centre.add_theme_stylebox_override("panel", ChamferStyle.make(UiPalette.PANEL, UiPalette.LINE, 10.0, 28.0, 12.0))
+	_anchor_top(centre, Control.PRESET_CENTER_TOP, 0.0, Control.GROW_DIRECTION_BOTH)
+	root.add_child(centre)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 24)
+	centre.add_child(row)
+	var wave_column := VBoxContainer.new()
+	wave_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	wave_column.alignment = BoxContainer.ALIGNMENT_CENTER
+	wave_column.add_theme_constant_override("separation", 10)
+	row.add_child(wave_column)
+	var wave_row := HBoxContainer.new()
+	wave_row.add_theme_constant_override("separation", 12)
+	wave_column.add_child(wave_row)
+	wave_row.add_child(_icon("wave", "wave", 36))
+	wave_value = _numeral(wave_row, 40, UiPalette.INK)
+	wave_total = _numeral(wave_row, 24, UiPalette.MUTED)
+	wave_total.size_flags_vertical = Control.SIZE_SHRINK_END
+	wave_pips = SegmentedBar.new()
+	wave_pips.color = UiPalette.stat_color("wave")
+	wave_pips.custom_minimum_size = Vector2(0, 12)
+	wave_column.add_child(wave_pips)
+	var divider := ColorRect.new()
+	divider.color = UiPalette.LINE
+	divider.custom_minimum_size = Vector2(1, 56)
+	divider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(divider)
+	var timer_row := HBoxContainer.new()
+	timer_row.add_theme_constant_override("separation", 12)
+	timer_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_child(timer_row)
+	timer_row.add_child(_icon("timer", "time", 36))
+	time_label = _numeral(timer_row, 44, UiPalette.INK)
+
+	var scrap := PanelContainer.new()
+	scrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	scrap.custom_minimum_size = Vector2(0, 96)
+	scrap.add_theme_stylebox_override("panel", ChamferStyle.make(UiPalette.PANEL, UiPalette.LINE, 10.0, 24.0, 12.0))
+	_anchor_top(scrap, Control.PRESET_TOP_RIGHT, -48.0, Control.GROW_DIRECTION_BEGIN)
+	root.add_child(scrap)
+	var scrap_row := HBoxContainer.new()
+	scrap_row.add_theme_constant_override("separation", 14)
+	scrap_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	scrap.add_child(scrap_row)
+	scrap_row.add_child(_icon("scrap", "scrap", 48))
+	scrap_label = _numeral(scrap_row, 50, UiPalette.SCRAP)
+
+## Quick "WAVE 04" flash while a wave is being announced (no countdown digit).
+func _build_wave_banner(root: Control) -> void:
+	banner = PanelContainer.new()
+	banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	banner.visible = false
+	banner.add_theme_stylebox_override("panel", ChamferStyle.make(UiPalette.PANEL, UiPalette.TEAL_HI, 16.0, 56.0, 20.0))
+	_anchor_top(banner, Control.PRESET_CENTER_TOP, 0.0, Control.GROW_DIRECTION_BOTH)
+	banner.offset_top = 300
+	banner.offset_bottom = 300
+	root.add_child(banner)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 28)
+	banner.add_child(row)
+	row.add_child(_icon("deploy", "wave", 84))
+	banner_label = _numeral(row, 84, UiPalette.INK)
+
+## Pins a control to the top edge at its minimum size, growing away from the anchor.
+func _anchor_top(control: Control, preset: int, edge_offset: float, grow: int) -> void:
+	control.set_anchors_preset(preset)
+	control.offset_left = edge_offset
+	control.offset_right = edge_offset
+	control.offset_top = 40
+	control.offset_bottom = 40
+	control.grow_horizontal = grow as Control.GrowDirection
+
+func _icon(icon_name: String, stat: String, size: float) -> TextureRect:
+	var rect := TextureRect.new()
+	rect.texture = UiIcons.get_icon(icon_name)
+	rect.modulate = UiPalette.stat_color(stat)
+	rect.custom_minimum_size = Vector2(size, size)
+	rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return rect
+
+func _numeral(parent: Node, size: int, color: Color) -> Label:
+	var label := _label(parent, "", size, color)
+	label.theme_type_variation = &"Numeral"
+	return label
 
 func _purchase(index: int) -> void:
 	world.shop.purchase(index)
@@ -233,18 +299,22 @@ func _process(_delta: float) -> void:
 	var phase := GameStateMachine.current_state
 	var in_shop := phase == GameStateMachine.GameState.SHOP
 	var ended := phase in [GameStateMachine.GameState.GAME_OVER, GameStateMachine.GameState.VICTORY]
-	health.max_value = world.player.max_health
-	health.value = world.player.health
-	health_text.text = "HULL  %d / %d" % [ceili(world.player.health), ceili(world.player.max_health)]
-	core_panel.visible = world.core != null
+	hull_bar.set_values(world.player.health, world.player.max_health)
+	core_bar.visible = world.core != null
 	if world.core:
-		core_health.max_value = world.core.max_health
-		core_health.value = world.core.health
-		core_text.text = "CORE  %d / %d" % [ceili(world.core.health), ceili(world.core.max_health)]
-	stats.text = "WAVE %02d / %02d     %02ds\n%d SCRAP     %d KILLS" % [GameStateService.current_wave,
-		world.wave_limit, ceili(world.waves.time_left), EconomyService.total_scrap, GameStateService.total_kills]
-	status.text = "DEPLOYING WAVE %d  ·  %d" % [GameStateService.current_wave, ceili(world.waves.announcement_left)] if phase == GameStateMachine.GameState.WAVE_ANNOUNCEMENT else ""
-	hint.text = "WASD / LEFT STICK  Move     E / A  Carry or place turret     M  Map     TAB / Y  Ranges     ESC / START  Pause\n" + world.message + _entrench_readout() + _zone_readout()
+		core_bar.set_values(world.core.health, world.core.max_health)
+	var wave := GameStateService.current_wave
+	var in_wave := phase in [GameStateMachine.GameState.WAVE_ANNOUNCEMENT, GameStateMachine.GameState.COMBAT]
+	wave_value.text = "%02d" % wave
+	wave_total.text = "/%02d" % world.wave_limit
+	wave_pips.set_state(maxi(wave - 1, 0) if in_wave else wave, world.wave_limit, false, wave - 1 if in_wave else -1)
+	var seconds := ceili(world.waves.time_left)
+	time_label.text = "%d:%02d" % [floori(seconds / 60.0), seconds % 60]
+	scrap_label.text = str(EconomyService.total_scrap)
+	banner.visible = phase == GameStateMachine.GameState.WAVE_ANNOUNCEMENT
+	if banner.visible:
+		banner_label.text = "WAVE %02d" % wave
+	hint.text = (world.message + _entrench_readout() + _zone_readout()).strip_edges()
 	var legend_text := _zone_legend_text(phase)
 	zone_legend.text = legend_text
 	zone_legend.visible = not legend_text.is_empty() and not world.dev_menu_open

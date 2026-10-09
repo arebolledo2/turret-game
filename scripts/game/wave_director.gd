@@ -3,7 +3,7 @@ extends RefCounted
 
 ## Wave lifecycle for one run: announcement, spawn schedule, timer and wave-end resolution.
 ## `ArenaWorld` owns the actors and exposes this state through forwarding properties.
-const ANNOUNCEMENT_TIME: float = 2.0
+const ANNOUNCEMENT_TIME: float = .8
 const FIRST_SPAWN_DELAY: float = .2
 var world: ArenaWorld
 var spawned_this_wave: int = 0

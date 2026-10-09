@@ -41,5 +41,5 @@ func _draw() -> void:
 	var colour := Color("58ece1")
 	draw_colored_polygon(PackedVector2Array([arrow_at + arrow_heading * 18.0, arrow_at - arrow_heading * 10.0 + side * 12.0,
 		arrow_at - arrow_heading * 10.0 - side * 12.0]), colour)
-	var font := ThemeDB.fallback_font
-	draw_string(font, arrow_at - arrow_heading * 32.0 - Vector2(18, -5), "CORE", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, colour)
+	var font := get_theme_default_font()
+	draw_string(font, arrow_at - arrow_heading * 32.0 - Vector2(18, -5), "CORE", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, colour)
