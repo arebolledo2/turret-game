@@ -318,6 +318,16 @@ func _numeral(parent: Node, size: int, color: Color) -> Label:
 
 func _purchase(index: int) -> void:
 	world.shop.purchase(index)
+	var card := offer_buttons[index]
+	if EconomyService.current_shop_offers[index].sold and card.has_focus():
+		# The bought card vanishes: hand focus to the next card still on offer, else Deploy.
+		var next: Control = continue_button
+		for other in offer_buttons:
+			if other != card and other.visible and not other.disabled:
+				next = other
+				break
+		card.release_focus()
+		next.grab_focus()
 
 func _label(parent: Node, text: String, size: int, color: Color) -> Label:
 	var label := Label.new()

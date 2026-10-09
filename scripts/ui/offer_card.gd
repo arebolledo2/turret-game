@@ -131,5 +131,8 @@ func setup(offer: ShopOffer, damage_mult: float, affordable: bool) -> void:
 	cost_icon.modulate = tint
 	cost_label.add_theme_color_override("font_color", tint)
 	disabled = offer.sold
-	modulate = Color.WHITE if affordable or offer.sold else Color(1, 1, 1, .62)
+	# A bought offer vanishes but keeps its slot so the other cards don't shift.
+	modulate = Color.TRANSPARENT if offer.sold else (Color.WHITE if affordable else Color(1, 1, 1, .62))
+	focus_mode = Control.FOCUS_NONE if offer.sold else Control.FOCUS_ALL
+	mouse_filter = Control.MOUSE_FILTER_IGNORE if offer.sold else Control.MOUSE_FILTER_STOP
 	_refresh_description()
