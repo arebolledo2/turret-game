@@ -228,9 +228,20 @@ func _steer_player(delta: float) -> Vector3:
 		desired_speed *= GameConstants.TURRET_CARRY_SPEED_PENALTY * ModifierService.apply_modifiers_to_stat(1.0, "carry_speed")
 	if world.terrain:
 		desired_speed *= world.terrain.mud_factor_at(position)
-	var acceleration := GameConstants.PLAYER_ACCELERATION if direction.length_squared() > 0 else GameConstants.PLAYER_DECELERATION
-	velocity = velocity.move_toward(direction * desired_speed, acceleration * WorldGeometry.METRES_PER_PIXEL * delta)
+	velocity = steer_velocity(velocity, direction, desired_speed, delta)
 	return direction
+
+## One step of hero movement: accelerate toward `direction * desired_speed`, or brake when there is no input. Turning or
+## reversing accelerates harder than speeding up, so direction changes feel precise: the more the input points away
+## from the current velocity, the bigger the boost (1x when already heading that way, and none from a standstill).
+static func steer_velocity(current: Vector3, direction: Vector3, desired_speed: float, delta: float) -> Vector3:
+	var acceleration := GameConstants.PLAYER_DECELERATION
+	if direction.length_squared() > 0.0:
+		acceleration = GameConstants.PLAYER_ACCELERATION
+		if current.length_squared() > 0.0001:
+			var opposition := (1.0 - current.normalized().dot(direction.normalized())) * .5 # 0 aligned .. 1 reversing
+			acceleration *= lerpf(1.0, GameConstants.PLAYER_TURN_BOOST, opposition)
+	return current.move_toward(direction * desired_speed, acceleration * WorldGeometry.METRES_PER_PIXEL * delta)
 
 ## Turns toward the heading and bobs/poses the legs. Purely cosmetic.
 func _animate(delta: float, direction: Vector3, reduced_motion: bool) -> void:

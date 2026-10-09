@@ -24,9 +24,10 @@ const ENEMY_SPAWN_MIN_DISTANCE: float = 6.0
 # PLAYER
 # =============================================================================
 const PLAYER_BASE_MAX_HEALTH: float = 25.0
-const PLAYER_SPEED: float = 250.0
-const PLAYER_ACCELERATION: float = 1400.0
-const PLAYER_DECELERATION: float = 1800.0
+const PLAYER_SPEED: float = 375.0
+const PLAYER_ACCELERATION: float = 2800.0 # px/s^2 toward the input direction (full speed in ~0.13 s)
+const PLAYER_DECELERATION: float = 3600.0 # px/s^2 when no input is held
+const PLAYER_TURN_BOOST: float = 2.5 # acceleration multiplier when the input opposes the current velocity (scales down to 1x when aligned)
 const PLAYER_MOVEMENT_DEADZONE: float = 0.1
 const PLAYER_PICKUP_RADIUS: float = 50.0
 const PLAYER_INVINCIBILITY_TIME: float = 0.5
