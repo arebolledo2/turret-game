@@ -19,6 +19,8 @@ const DEFAULT_ENTRIES: Dictionary = {
 		"ion_doctrine": "items_v2", "plasma_doctrine": "items_v2", "voltage_doctrine": "items_v2", "bat_doctrine": "items_v2",
 		"piercing_rounds": "items_v2", "cluster_warheads": "items_v2", "superconductors": "items_v2", "spiked_bat": "items_v2",
 		"hardpoint": "items_v2",
+		# Convoy items (also restricted to Convoy runs by CONVOY_ONLY)
+		"tracked_chassis": "mode_convoy", "overdrive_engine": "mode_convoy", "heavy_hauler": "mode_convoy",
 		# Item pool v2: rare, epic, legendary
 		"arc_rod": "items_v2_hooks", "plasma_capacitor": "items_v2_hooks", "killzone_bat": "items_v2_hooks",
 		"overwatch_optics": "items_v2_hooks", "army_doctrine": "items_v2_hooks", "elite_forces": "items_v2_hooks",
@@ -27,6 +29,9 @@ const DEFAULT_ENTRIES: Dictionary = {
 		"elemental_conduit": "items_v2_hooks", "whirlwind_frame": "items_v2_hooks",
 	},
 }
+
+## Items that only make sense when the core moves; the shop leaves them out of every other mode's stock.
+const CONVOY_ONLY: Array[String] = ["tracked_chassis", "overdrive_engine", "heavy_hauler"]
 
 ## Working copy; tests may add flag-gated rows and call reset() afterwards.
 static var entries: Dictionary = DEFAULT_ENTRIES.duplicate(true)

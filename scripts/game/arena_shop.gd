@@ -14,7 +14,8 @@ const STAT_NAMES: Dictionary = {"damage": "turret damage", "fire_rate": "turret 
 	"projectile_speed": "turret projectile speed", "scrap_earn_mult": "scrap from kills", "enemy_count_mult": "enemies per wave",
 	"shop_price_mult": "shop prices", "player_luck": "luck", "turret_crit_chance": "turret crit chance",
 	"player_crit_chance": "crit chance", "player_health_regen": "hull regen", "entrench_stack_seconds": "entrench stack time",
-	"entrench_max_stacks": "entrench stacks", "entrench_bonus": "entrench bonus", "carry_speed": "carry speed"}
+	"entrench_max_stacks": "entrench stacks", "entrench_bonus": "entrench bonus", "carry_speed": "carry speed",
+		"core_move_speed": "core speed"}
 var world: ArenaWorld
 var rng: RandomNumberGenerator = GameRandom.gameplay
 
@@ -42,7 +43,7 @@ func generate() -> void:
 func unavailable_item_ids() -> Array:
 	var excluded: Array = []
 	for item_id in ItemRegistry.get_all_item_ids():
-		if not ShopCatalog.is_available("item", item_id):
+		if not ShopCatalog.is_available("item", item_id) or (item_id in ShopCatalog.CONVOY_ONLY and not world.convoy_mode):
 			excluded.append(item_id)
 	return excluded
 
@@ -177,6 +178,15 @@ static func _scoped_label(label: String, filter: Dictionary) -> String:
 		return label
 	return scope + " " + label
 
+## "Core 1.38m/s · next route: 3 doors, 58 m, ~1:21" - the planned route at the current core speed.
+func convoy_preview_line() -> String:
+	var speed := PlayerStatsService.get_core_move_speed()
+	var line := "Core %.2fm/s" % speed
+	if world.convoy_route:
+		var seconds := roundi(world.convoy_route.duration(speed))
+		line += " · next route: %d doors, %.0f m, ~%d:%02d" % [world.convoy_route.door_count() - 1, world.convoy_route.total_length(), floori(seconds / 60.0), seconds % 60]
+	return line
+
 func build_summary() -> String:
 	var lines := PackedStringArray()
 	for type_id in TURRETS:
@@ -188,6 +198,8 @@ func build_summary() -> String:
 			var stats := TurretStatsService.get_turret_stats(type_id, float(world.difficulty_config["turret_damage_mult"]))
 			lines.append("%s ×%d   %.1f dmg · %.2f/s · %.2fm" % [TurretRegistry.get_short_name(type_id), count, stats["damage"], stats["fire_rate"], float(stats["range"]) * WorldGeometry.METRES_PER_PIXEL])
 	lines.append("Hull %.0f/%.0f · Move %.2fm/s · Pickup %.2fm" % [world.player.health, world.player.max_health, PlayerStatsService.get_player_speed() * WorldGeometry.METRES_PER_PIXEL, PlayerStatsService.get_pickup_radius() * WorldGeometry.METRES_PER_PIXEL])
+	if world.convoy_mode:
+		lines.append(convoy_preview_line())
 	if ItemTrackingService.item_counts.is_empty():
 		lines.append("No upgrades installed yet.")
 	else:

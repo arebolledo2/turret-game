@@ -145,8 +145,21 @@ func test_home_screen_chooses_difficulty_and_mode_for_the_next_run() -> void:
 
 func test_mode_selector_hides_when_the_flag_is_off() -> void:
 	FeatureFlagService.set_enabled(FeatureFlagService.MODE_PROTECT_CORE, false)
+	FeatureFlagService.set_enabled(FeatureFlagService.MODE_CONVOY, false)
 	app.run_config.mode = RunConfig.MODE_CORE
 	app.show_home()
 	assert_false(app.mode_option.visible)
 	assert_eq(app.run_config.mode, RunConfig.MODE_SURVIVE)
 	TestHelpers.reset_flags()
+
+func test_each_mode_is_offered_only_while_its_flag_is_on() -> void:
+	FeatureFlagService.set_enabled(FeatureFlagService.MODE_CONVOY, false)
+	app.run_config.mode = RunConfig.MODE_CONVOY
+	app.show_home()
+	assert_true(app.mode_option.visible, "core mode keeps the selector")
+	assert_true(app.mode_option.is_item_disabled(RunConfig.MODES.find(RunConfig.MODE_CONVOY)))
+	assert_false(app.mode_option.is_item_disabled(RunConfig.MODES.find(RunConfig.MODE_CORE)))
+	assert_eq(app.run_config.mode, RunConfig.MODE_SURVIVE)
+	TestHelpers.reset_flags()
+	app.show_home()
+	assert_false(app.mode_option.is_item_disabled(RunConfig.MODES.find(RunConfig.MODE_CONVOY)))

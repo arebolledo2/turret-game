@@ -50,7 +50,7 @@ const BASE_PRICES: Dictionary = {
 	GameEnums.ItemRarity.UNIQUE: 175,
 }
 
-const TAGS: Array[String] = ["ION", "PLASMA", "ELECTRIC", "MELEE", "WIDE", "TALL", "HULL", "ECON", "ANY"]
+const TAGS: Array[String] = ["ION", "PLASMA", "ELECTRIC", "MELEE", "WIDE", "TALL", "HULL", "ECON", "CONVOY", "ANY"]
 
 ## Tags for items that predate `Item.tag`.
 const LEGACY_TAGS: Dictionary = {

@@ -52,6 +52,7 @@ Retired from the 3D shop: Ammo Surplus, Overclock Module, Shock Absorbers, Kinet
 | `entrench_max_stacks` | Stack cap |
 | `entrench_bonus` | Multiplier on the per-stack damage and fire rate bonus |
 | `carry_speed` | Multiplier on the player's speed while carrying a turret |
+| `core_move_speed` | Multiplier on the convoy core's driving speed (Convoy mode only; floored at `CORE_MIN_MOVE_SPEED`) |
 | `pierce` | Extra enemies a non-splash shot passes through |
 | `rehit_delay` | Seconds before the bat can hit the same enemy again |
 | `last_stand_fire_rate`, `storm_link_damage`, `reactor_overload` | Flat markers read by the item conditions above |

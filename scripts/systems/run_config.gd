@@ -9,7 +9,9 @@ var difficulty: GameEnums.Difficulty = GameEnums.Difficulty.EASY
 ## `survive` (classic) or `core` (protect the core). Core needs the `mode_protect_core` flag; otherwise the run is survive.
 const MODE_SURVIVE: String = "survive"
 const MODE_CORE: String = "core"
-const MODES: Array[String] = [MODE_SURVIVE, MODE_CORE]
+## `convoy` is protect-the-core with a core that drives door to door along a previewed route; needs `mode_convoy`.
+const MODE_CONVOY: String = "convoy"
+const MODES: Array[String] = [MODE_SURVIVE, MODE_CORE, MODE_CONVOY]
 var mode: String = MODE_SURVIVE
 ## A specific terrain layout id (`--layout=`); empty picks one at random for the run.
 var layout_id: String = ""

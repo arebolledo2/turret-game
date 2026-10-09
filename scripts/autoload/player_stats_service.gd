@@ -21,6 +21,12 @@ func get_player_speed() -> float:
 	return ModifierService.apply_modifiers_to_stat(GameConstants.PLAYER_SPEED, "player_speed", "player")
 
 
+## Convoy mode: the core's driving speed in metres per second, floored so it can never stall
+func get_core_move_speed() -> float:
+	var speed := ModifierService.apply_modifiers_to_stat(GameConstants.CORE_MOVE_SPEED, "core_move_speed", "core")
+	return maxf(speed, GameConstants.CORE_MIN_MOVE_SPEED)
+
+
 ## Get player max health with modifiers applied
 func get_player_max_health(difficulty_mult: float) -> float:
 	var base_health := GameConstants.PLAYER_BASE_MAX_HEALTH * difficulty_mult

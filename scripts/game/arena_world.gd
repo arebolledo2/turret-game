@@ -35,6 +35,12 @@ var difficulty_config: Dictionary
 var core: CoreObjective
 ## True when this run protects a core (mode chosen and the `mode_protect_core` flag on).
 var core_mode: bool = false
+## True in convoy mode (a core run whose core drives door to door; needs the `mode_convoy` flag).
+var convoy_mode: bool = false
+## The current round's route (the next round's while the shop is open) and the mover driving the core along it.
+var convoy_route: ConvoyRoute
+var convoy_mover: ConvoyMover
+var _convoy_seed: int = 0
 ## Why the run ended in defeat ("" while running or after a victory); shown on the end screen.
 var defeat_reason: String = ""
 var player: CombatActor
@@ -64,7 +70,8 @@ func _ready() -> void:
 	difficulty_config = run_config.difficulty_config()
 	if not FeatureFlagService.is_enabled(FeatureFlagService.DIFFICULTY_RULES):
 		difficulty_config = DifficultyService.without_rules(difficulty_config)
-	core_mode = run_config.mode == RunConfig.MODE_CORE and FeatureFlagService.is_enabled(FeatureFlagService.MODE_PROTECT_CORE)
+	convoy_mode = run_config.mode == RunConfig.MODE_CONVOY and FeatureFlagService.is_enabled(FeatureFlagService.MODE_CONVOY)
+	core_mode = convoy_mode or (run_config.mode == RunConfig.MODE_CORE and FeatureFlagService.is_enabled(FeatureFlagService.MODE_PROTECT_CORE))
 	session = RunSession.new()
 	shop.world = self
 	waves.world = self
@@ -79,6 +86,11 @@ func _ready() -> void:
 	pickup_root = Node3D.new()
 	pickup_root.name = "Scrap"
 	add_child(pickup_root)
+	if convoy_mode:
+		var overlay := RouteOverlay.new()
+		overlay.name = "RouteOverlay"
+		overlay.world = self
+		add_child(overlay)
 	effects = CombatEffects3D.new()
 	effects.world = self
 	add_child(effects)
@@ -141,6 +153,10 @@ func start_run() -> void:
 		var layout := ArenaLayouts.get_layout(run_config.layout_id) if run_config.layout_id != "" else ArenaLayouts.random_layout(GameRandom.gameplay)
 		terrain = TerrainZones.new(layout)
 		terrain.build_visuals(actor_root)
+	if convoy_mode:
+		# A dedicated seed keeps every route reproducible without disturbing the shop and spawn rolls.
+		_convoy_seed = GameRandom.gameplay.randi()
+		plan_convoy_route(1)
 	actor_root.add_child(player)
 	var listener := AudioListener3D.new()
 	player.add_child(listener)
@@ -152,6 +168,8 @@ func start_run() -> void:
 func _clear_actors() -> void:
 	audio.reset()
 	core = null
+	convoy_route = null
+	convoy_mover = null
 	terrain = null
 	drops.reset()
 	placement.carried = null
@@ -194,6 +212,8 @@ func _physics_process(delta: float) -> void:
 	if paused or not GameStateService.is_game_active:
 		return
 	waves.tick(delta)
+	if convoy_mover and core and is_combat():
+		core.position = convoy_mover.advance(delta, PlayerStatsService.get_core_move_speed())
 	placement.update_preview()
 	if terrain:
 		terrain.update_frame(player.position if is_instance_valid(player) else Vector3.ZERO,
@@ -204,6 +224,19 @@ func begin_next_wave() -> bool:
 
 func finish_wave() -> bool:
 	return waves.finish_wave()
+
+## Generates the route `wave` will drive, starting from wherever the core is now, so the shop and overlay can preview it.
+func plan_convoy_route(wave: int) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash([_convoy_seed, wave])
+	convoy_route = ConvoyRoute.generate(rng, wave, core.position if core else Vector3.ZERO)
+
+## Hands the planned route to a fresh mover at the start of a round.
+func start_convoy_round() -> void:
+	if not convoy_route or (convoy_mover and convoy_mover.route == convoy_route):
+		plan_convoy_route(GameStateService.current_wave)
+	convoy_mover = ConvoyMover.new()
+	convoy_mover.start(convoy_route)
 
 func spawn_enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
 	return waves.spawn_enemy(at, type_id)

@@ -69,6 +69,7 @@ func _build_menu() -> void:
 		_update_summary())
 	mode_option.add_item("Mode  Survive  -  last all the waves")
 	mode_option.add_item("Mode  Protect the core  -  keep the reactor alive")
+	mode_option.add_item("Mode  Convoy  -  escort the core door to door")
 	_button(home, "QUIT", func() -> void: get_tree().quit())
 	options = VBoxContainer.new()
 	options.add_theme_constant_override("separation", 18)
@@ -128,7 +129,10 @@ func _option(parent: Node, accessibility: String, action: Callable) -> OptionBut
 	return button
 
 func _update_summary() -> void:
-	var mode_name := "Protect the core" if run_config.mode == RunConfig.MODE_CORE else "Survive"
+	var mode_name := "Survive"
+	match run_config.mode:
+		RunConfig.MODE_CORE: mode_name = "Protect the core"
+		RunConfig.MODE_CONVOY: mode_name = "Convoy"
 	home_summary.text = "%d waves · %s difficulty · %s" % [run_config.wave_limit, run_config.difficulty_name(), mode_name]
 
 func _check(parent: Node, text: String, action: Callable) -> CheckButton:
@@ -144,8 +148,11 @@ func show_home() -> void:
 	menu.visible = true
 	# Core mode needs its experiment flag; without it the selector is hidden and the run is Survive.
 	var core_allowed := FeatureFlagService.is_enabled(FeatureFlagService.MODE_PROTECT_CORE)
-	mode_option.visible = core_allowed
-	if not core_allowed:
+	var convoy_allowed := FeatureFlagService.is_enabled(FeatureFlagService.MODE_CONVOY)
+	mode_option.visible = core_allowed or convoy_allowed
+	mode_option.set_item_disabled(RunConfig.MODES.find(RunConfig.MODE_CORE), not core_allowed)
+	mode_option.set_item_disabled(RunConfig.MODES.find(RunConfig.MODE_CONVOY), not convoy_allowed)
+	if (run_config.mode == RunConfig.MODE_CORE and not core_allowed) or (run_config.mode == RunConfig.MODE_CONVOY and not convoy_allowed):
 		run_config.mode = RunConfig.MODE_SURVIVE
 	difficulty_option.select(difficulty_option.get_item_index(run_config.difficulty))
 	mode_option.select(RunConfig.MODES.find(run_config.mode))

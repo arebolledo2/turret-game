@@ -59,6 +59,8 @@ func _draw() -> void:
 				draw_circle(zone_at, zone.radius * scale_x, tint)
 			else:
 				draw_rect(Rect2(zone_at - zone.half_extents * scale_x, zone.half_extents * scale_x * 2.0), tint)
+	if world.convoy_route:
+		_draw_route(world.convoy_route)
 	for pickup in world.pickup_root.get_children():
 		if pickup is Node3D:
 			draw_rect(Rect2(world_to_map((pickup as Node3D).position) - Vector2.ONE, Vector2(2, 2)), Color("f4d298"))
@@ -81,6 +83,17 @@ func _draw() -> void:
 	_draw_camera_view()
 	_draw_player()
 	draw_rect(area, Color("2b5963"), false, 1.0)
+
+## Convoy route: a line through the doors (driven legs dim), numbered dots, and a larger amber dot at the end.
+func _draw_route(route: ConvoyRoute) -> void:
+	var progress := world.convoy_mover.target_index if world.convoy_mover and world.convoy_mover.route == route else 1
+	for index in range(1, route.doors.size()):
+		var from := world_to_map(route.doors[index - 1])
+		var to := world_to_map(route.doors[index])
+		var final := index == route.doors.size() - 1
+		var colour := Color("2b5963") if index < progress else (Color("f4b942") if final else Color("58ece1"))
+		draw_line(from, to, colour, 1.5)
+		draw_circle(to, 4.0 if final else 2.5, colour)
 
 func _draw_camera_view() -> void:
 	if not world.camera_rig:

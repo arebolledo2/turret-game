@@ -136,7 +136,7 @@ func test_shot_that_ends_the_run_mid_impact_does_not_error() -> void:
 	_to_combat(world)
 	world.turrets[0].set_physics_process(false)
 	world.core.health = 1.0
-	var exploder := world.spawn_enemy(Vector3(2.0, 0, 0), "exploder")
+	var exploder := world.spawn_enemy(Vector3(1.4, 0, 0), "exploder") # inside blast radius (1.0 m) + core radius
 	exploder.set_physics_process(false)
 	exploder.health = 1.0
 	await wait_physics_frames(2)
@@ -144,7 +144,7 @@ func test_shot_that_ends_the_run_mid_impact_does_not_error() -> void:
 	spec.damage = 50.0
 	spec.speed = 20.0
 	spec.pierce = 2
-	var projectile := world.fire_shot(Vector3(2.0, 0, 3.0), exploder, spec)
+	var projectile := world.fire_shot(Vector3(1.4, 0, 3.0), exploder, spec)
 	projectile.advance(0.2)
 	assert_true(world.core.dead)
 	assert_false(projectile.active)

@@ -38,7 +38,8 @@ func tick(delta: float) -> void:
 		remaining_spawns -= 1
 		spawn_clock += spawn_interval
 	world.drops.tick(delta)
-	if time_left <= 0.0:
+	# Convoy rounds end on arrival at the final door; the timer is only a safety net.
+	if time_left <= 0.0 or (world.convoy_mover != null and world.convoy_mover.finished):
 		finish_wave()
 
 func begin_next_wave() -> bool:
@@ -57,7 +58,15 @@ func begin_next_wave() -> bool:
 	seeker_credit = 0.0
 	time_left = GameStateService.get_wave_duration(GameStateService.current_wave)
 	remaining_spawns = GameStateService.get_wave_enemy_count(GameStateService.current_wave, float(world.difficulty_config["enemy_count_mult"]), ItemTrackingService.get_enemy_count_multiplier())
-	spawn_interval = time_left / maxf(float(remaining_spawns), 1.0)
+	var spawn_window := time_left
+	if world.convoy_mode:
+		# The round lasts as long as the route takes, so a faster core gets proportionally fewer enemies.
+		world.start_convoy_round()
+		var route_time := world.convoy_route.duration(PlayerStatsService.get_core_move_speed())
+		remaining_spawns = maxi(1, roundi(remaining_spawns * clampf(route_time / time_left, .4, 2.0)))
+		spawn_window = route_time
+		time_left = route_time * GameConstants.CONVOY_SAFETY_FACTOR
+	spawn_interval = spawn_window / maxf(float(remaining_spawns), 1.0)
 	if world.core:
 		spawn_interval /= maxf(DifficultyService.rule(world.difficulty_config, "spawn_rate_mult"), .1)
 	spawn_clock = FIRST_SPAWN_DELAY
@@ -78,6 +87,8 @@ func finish_wave() -> bool:
 		GameStateService.is_game_active = false
 	else:
 		GameStateMachine.transition_to(GameStateMachine.GameState.SHOP)
+		if world.convoy_mode:
+			world.plan_convoy_route(GameStateService.current_wave + 1) # previewed during the shop
 		world.shop.open()
 		world.audio.play_cue("wave", world.player.position)
 	return true
@@ -129,6 +140,8 @@ func spawn_enemy(at: Vector3, type_id: String = "basic", elite: bool = false, se
 ## A spot too close to the hero is retried a few times.
 func _core_spawn_position() -> Vector3:
 	var half := WorldGeometry.HALF_ARENA * GameConstants.CORE_SPAWN_BOX
+	# In convoy mode the box follows the core so waves always arrive from every side of it.
+	var centre := world.core.position if world.convoy_mode else Vector3.ZERO
 	var result := Vector3.ZERO
 	for attempt in 6:
 		var along := GameRandom.gameplay.randf() * (half.x + half.y) * 4.0
@@ -140,6 +153,8 @@ func _core_spawn_position() -> Vector3:
 			result = Vector3(half.x - (along - half.x * 2.0 - half.y * 2.0), 0, half.y)
 		else:
 			result = Vector3(-half.x, 0, half.y - (along - half.x * 4.0 - half.y * 2.0))
+		if world.convoy_mode:
+			result = WorldGeometry.clamp_position(centre + result)
 		if not is_instance_valid(world.player) or WorldGeometry.planar(result - world.player.position).length() >= GameConstants.ENEMY_SPAWN_MIN_DISTANCE:
 			break
 	return result

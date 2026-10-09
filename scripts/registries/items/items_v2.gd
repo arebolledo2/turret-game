@@ -61,6 +61,16 @@ static func get_all() -> Dictionary:
 		Item.create_modifier("entrench_max_stacks", "add", 2), Item.create_modifier("entrench_bonus", "increase", .5),
 		Item.create_modifier("carry_speed", "increase", -.25)], "Entrench max stacks +2 and +50% bonus per stack, carrying a turret is 25% slower.", 2))
 
+	# ---- Convoy (only stocked in Convoy runs; see ShopCatalog.CONVOY_ONLY) ----------------------------------------------
+	items.append(_item("tracked_chassis", "Tracked Chassis", "🛞", "CONVOY", GameEnums.ItemRarity.COMMON, [
+		Item.create_modifier("core_move_speed", "increase", .15)], "Core drives 15% faster.", 3))
+	items.append(_item("overdrive_engine", "Overdrive Engine", "🏎️", "CONVOY", GameEnums.ItemRarity.UNCOMMON, [
+		Item.create_modifier("core_move_speed", "increase", .30), _all("fire_rate", -.05)],
+		"Core drives 30% faster, all turrets -5% fire rate.", 2))
+	items.append(_item("heavy_hauler", "Heavy Hauler", "🚛", "CONVOY", GameEnums.ItemRarity.UNCOMMON, [
+		Item.create_modifier("core_move_speed", "increase", -.20), Item.create_modifier("scrap_earn_mult", "increase", .15)],
+		"Core drives 20% slower (longer rounds, more enemies), +15% scrap from kills.", 2))
+
 	# ---- Rare -----------------------------------------------------------------------------------------------------
 	var rare := GameEnums.ItemRarity.RARE
 	items.append(_item("arc_rod", "Arc Rod", "🌩️", "ELECTRIC", rare, [

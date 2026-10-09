@@ -26,6 +26,7 @@ const PLACEMENT_PREVIEW: String = "placement_preview"
 const ITEMS_V2: String = "items_v2"
 const ITEMS_V2_HOOKS: String = "items_v2_hooks"
 const MODE_PROTECT_CORE: String = "mode_protect_core"
+const MODE_CONVOY: String = "mode_convoy"
 const TECH_DROPS: String = "tech_drops"
 const DIFFICULTY_RULES: String = "difficulty_rules"
 const TERRAIN_ZONES: String = "terrain_zones"
@@ -73,6 +74,10 @@ const FLAG_DEFINITIONS: Dictionary = {
 	MODE_PROTECT_CORE: {
 		"name": "Protect the Core", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 5,
 		"description": "Allows the Protect the Core mode: enemies head for a fixed core and chase the hero only within aggro range. Applies from the next run.",
+	},
+	MODE_CONVOY: {
+		"name": "Convoy", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 5,
+		"description": "Allows the Convoy mode: the core drives door to door along a route that changes every round and is previewed in the shop. Applies from the next run.",
 	},
 	TECH_DROPS: {
 		"name": "Tech Drops", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 5,

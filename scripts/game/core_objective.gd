@@ -37,7 +37,7 @@ func _ready() -> void:
 	crystal.scale = Vector3(1.0, 1.4, 1.0)
 	var light := OmniLight3D.new()
 	light.light_color = HEALTHY
-	light.omni_range = 4.5
+	light.omni_range = 2.5 + radius * 2.0
 	light.light_energy = 1.2
 	light.position.y = 1.2
 	light.shadow_enabled = false

@@ -112,7 +112,7 @@ const REPAIR_HEAL_AMOUNT: float = 10.0
 # PROTECT THE CORE (core mode)
 # =============================================================================
 const CORE_HEALTH_MULT: float = 6.0 # core hit points = base hull x this x the difficulty's core_health_mult
-const CORE_RADIUS: float = 1.1 # metres; enemies stop at its edge
+const CORE_RADIUS: float = .55 # metres; enemies stop at its edge
 const CORE_PLACEMENT_CLEARANCE: float = .7 # turrets keep this far outside the core's radius
 const CORE_HIT_INTERVAL: float = 1.0 # seconds between one enemy's hits on the core
 const CORE_DAMAGE_FRACTION: float = .25 # share of an enemy's contact damage the core takes
@@ -120,6 +120,14 @@ const CORE_AGGRO_RANGE: float = 2.5 # an enemy this close to the hero chases the
 const CORE_DEAGGRO_RANGE: float = 5.0 # ...and gives up and returns to the core beyond this (2D: 500 px)
 const CORE_SPAWN_BOX: float = .6 # enemies spawn on this fraction of the arena's half-size, so they reach the fight in time
 const CORE_START_OFFSET: float = 2.5 # hero and first turret start this far from the core
+
+# Convoy mode: the core drives door to door along a route that is regenerated (and previewed) every round.
+const CORE_MOVE_SPEED: float = 1.2 # metres per second between doors; items change it via the `core_move_speed` stat
+const CORE_MIN_MOVE_SPEED: float = .15 # floor so slowing items can never freeze the convoy
+const CONVOY_PAUSE_TIME: float = 4.0 # seconds the core waits at each intermediate door
+const CONVOY_MIN_LEG: float = 9.0 # metres; doors closer than this to the previous door are rejected
+const CONVOY_EDGE_MARGIN: float = 4.0 # metres kept between any door and the arena edge
+const CONVOY_SAFETY_FACTOR: float = 2.5 # the round timer is the route's duration times this; hitting it just ends the round
 
 # =============================================================================
 # TECH DROPS (destructible reward crates; 2D tech drop rules)
