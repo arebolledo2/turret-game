@@ -16,12 +16,17 @@ var panel: PanelContainer
 var title: Label
 var description: Label
 var offer_buttons: Array[Button] = []
-var reroll_button: Button
-var repair_button: Button
-var core_repair_button: Button
+var reroll_button: IconButton
+var repair_button: IconButton
+var core_repair_button: IconButton
 var zone_legend: Label
 var actions: HBoxContainer
-var build_text: Label
+var offers_row: HBoxContainer
+var balance_row: HBoxContainer
+var balance_label: Label
+var build_panel: BuildPanel
+var build_refresh: float = 0.0
+var continue_icon: String = "deploy"
 var continue_button: Button
 var restart_button: Button
 var menu_button: Button
@@ -65,56 +70,99 @@ func _ready() -> void:
 	minimap = Minimap.new()
 	minimap.world = world
 	root.add_child(minimap)
+	_build_panel(root)
+
+## The refit / pause / end panel: offer cards and actions on the left, the build on the right.
+func _build_panel(root: Control) -> void:
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(center)
 	panel = PanelContainer.new()
-	panel.custom_minimum_size.x = 1200
-	panel.add_theme_stylebox_override("panel", _panel_style())
+	panel.custom_minimum_size.x = 1640
+	panel.add_theme_stylebox_override("panel", ChamferStyle.make(Color(.025, .065, .09, .97), UiPalette.LINE, 30.0, 0.0, 0.0))
 	center.add_child(panel)
 	var columns := HBoxContainer.new()
-	columns.add_theme_constant_override("separation", 24)
+	columns.add_theme_constant_override("separation", 0)
 	panel.add_child(columns)
+	var left := _padded(columns, 44, 34, 36, 34)
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var column := VBoxContainer.new()
-	column.custom_minimum_size.x = 700
-	column.add_theme_constant_override("separation", 8)
-	columns.add_child(column)
-	title = _label(column, "", 32, Color("d7f2eb"))
-	description = _label(column, "", 17, Color("a3bbc6"))
+	column.add_theme_constant_override("separation", 18)
+	left.add_child(column)
+	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 20)
+	column.add_child(header)
+	title = _label(header, "", 46, UiPalette.INK)
+	description = _label(header, "", 24, UiPalette.MUTED)
+	description.size_flags_vertical = Control.SIZE_SHRINK_END
+	var header_gap := Control.new()
+	header_gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(header_gap)
+	balance_row = HBoxContainer.new()
+	balance_row.add_theme_constant_override("separation", 12)
+	header.add_child(balance_row)
+	balance_row.add_child(_icon("scrap", "scrap", 44))
+	balance_label = _numeral(balance_row, 52, UiPalette.SCRAP)
+	offers_row = HBoxContainer.new()
+	offers_row.add_theme_constant_override("separation", 18)
+	column.add_child(offers_row)
 	for index in range(4):
-		var button := _button(column, "", _purchase.bind(index))
-		button.custom_minimum_size.y = 76
-		button.add_theme_font_size_override("font_size", 20)
-		offer_buttons.append(button)
+		var card := OfferCard.new()
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.pressed.connect(_purchase.bind(index))
+		offers_row.add_child(card)
+		offer_buttons.append(card)
+	var footer := HBoxContainer.new()
+	footer.add_theme_constant_override("separation", 14)
+	column.add_child(footer)
 	actions = HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 8)
-	column.add_child(actions)
-	reroll_button = _button(actions, "", func() -> void: world.shop.reroll())
-	reroll_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	repair_button = _button(actions, "REPAIR %d HULL / %d" % [GameConstants.REPAIR_HEAL_AMOUNT, GameConstants.REPAIR_COST], func() -> void: world.repair())
-	repair_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	core_repair_button = _button(actions, "REPAIR CORE %d HP / %d" % [GameConstants.REPAIR_HEAL_AMOUNT, GameConstants.REPAIR_COST], func() -> void: world.repair_core())
-	core_repair_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	continue_button = _button(column, "DEPLOY NEXT WAVE", _continue)
-	restart_button = _button(column, "START NEW RUN", func() -> void: world.start_run())
-	menu_button = _button(column, "MAIN MENU", func() -> void: world.request_menu())
-	var build := VBoxContainer.new()
-	build.custom_minimum_size.x = 400
-	columns.add_child(build)
-	_label(build, "YOUR BUILD", 20, Color("54c5c5"))
-	_label(build, "Damage · shots/sec · range", 14, Color("a3bbc6"))
-	var scroll := ScrollContainer.new()
-	scroll.focus_mode = Control.FOCUS_ALL
-	scroll.custom_minimum_size = Vector2(400, 200)
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	build.add_child(scroll)
-	build_text = _label(scroll, "", 20, Color("cfecea"))
-	build_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	build_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	build_text.add_theme_constant_override("line_spacing", 8)
-	_label(build, "Max hull upgrades do not repair damage.", 13, Color("a3bbc6"))
+	actions.add_theme_constant_override("separation", 14)
+	footer.add_child(actions)
+	reroll_button = IconButton.new().setup("reroll", "")
+	reroll_button.custom_minimum_size.x = 150
+	reroll_button.pressed.connect(func() -> void: world.shop.reroll())
+	actions.add_child(reroll_button)
+	repair_button = IconButton.new().setup("repair", "+%d" % GameConstants.REPAIR_HEAL_AMOUNT)
+	repair_button.custom_minimum_size.x = 210
+	repair_button.pressed.connect(func() -> void: world.repair())
+	actions.add_child(repair_button)
+	core_repair_button = IconButton.new().setup("core", "+%d" % GameConstants.REPAIR_HEAL_AMOUNT)
+	core_repair_button.custom_minimum_size.x = 210
+	core_repair_button.pressed.connect(func() -> void: world.repair_core())
+	actions.add_child(core_repair_button)
+	var footer_gap := Control.new()
+	footer_gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	footer.add_child(footer_gap)
+	continue_button = IconButton.new().setup("deploy", "DEPLOY", true, 34)
+	continue_button.custom_minimum_size.x = 340
+	continue_button.pressed.connect(_continue)
+	footer.add_child(continue_button)
+	restart_button = IconButton.new().setup("reroll", "NEW RUN", true)
+	restart_button.custom_minimum_size.x = 300
+	restart_button.pressed.connect(func() -> void: world.start_run())
+	footer.add_child(restart_button)
+	menu_button = IconButton.new().setup("home", "MENU")
+	menu_button.custom_minimum_size.x = 200
+	menu_button.pressed.connect(func() -> void: world.request_menu())
+	footer.add_child(menu_button)
+	var divider := ColorRect.new()
+	divider.color = UiPalette.LINE
+	divider.custom_minimum_size.x = 1
+	columns.add_child(divider)
+	var right := _padded(columns, 36, 34, 40, 34)
+	right.custom_minimum_size.x = 590
+	build_panel = BuildPanel.new()
+	right.add_child(build_panel)
+
+func _padded(parent: Node, left: int, top: int, right: int, bottom: int) -> MarginContainer:
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", left)
+	margin.add_theme_constant_override("margin_top", top)
+	margin.add_theme_constant_override("margin_right", right)
+	margin.add_theme_constant_override("margin_bottom", bottom)
+	parent.add_child(margin)
+	return margin
 
 ## Three corner clusters: hull (and core) top-left, wave and timer top-centre, scrap top-right.
 func _build_corner_clusters(root: Control) -> void:
@@ -232,27 +280,6 @@ func _label(parent: Node, text: String, size: int, color: Color) -> Label:
 	parent.add_child(label)
 	return label
 
-func _button(parent: Node, text: String, action: Callable) -> Button:
-	var button := Button.new()
-	button.text = text
-	button.custom_minimum_size.y = 48
-	button.add_theme_font_size_override("font_size", 18)
-	button.pressed.connect(action)
-	parent.add_child(button)
-	return button
-
-func _panel_style() -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(.025, .065, .09, .97)
-	style.border_color = Color("2b5963")
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(8)
-	style.content_margin_left = 24
-	style.content_margin_right = 24
-	style.content_margin_top = 18
-	style.content_margin_bottom = 18
-	return style
-
 func _continue() -> void:
 	if world.paused:
 		world.toggle_pause()
@@ -293,7 +320,7 @@ func _zone_legend_text(phase: int) -> String:
 		return world.terrain.legend()
 	return ""
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not is_instance_valid(world.player):
 		return
 	var phase := GameStateMachine.current_state
@@ -320,33 +347,55 @@ func _process(_delta: float) -> void:
 	zone_legend.visible = not legend_text.is_empty() and not world.dev_menu_open
 	panel.visible = (in_shop or ended or world.paused) and not world.dev_menu_open
 	minimap.suppressed = panel.visible
+	var shop_open := in_shop and not world.paused
+	var damage_mult := float(world.difficulty_config["turret_damage_mult"])
+	var hovered := -1
+	var focused := -1
 	for index in range(offer_buttons.size()):
-		var button := offer_buttons[index]
-		button.visible = in_shop and not world.paused and index < EconomyService.current_shop_offers.size()
-		if button.visible:
+		var card := offer_buttons[index] as OfferCard
+		card.visible = shop_open and index < EconomyService.current_shop_offers.size()
+		if card.visible:
 			var offer := EconomyService.current_shop_offers[index]
-			var tag := "" if offer.kind == "turret" else "[%s]  " % ItemRegistry.get_tag(offer.asset_id)
-			button.text = "%s%s   /   %s\n%s" % [tag, ArenaShop.offer_name(offer),"INSTALLED" if offer.sold else "%d scrap" % offer.price, ArenaShop.offer_description(offer)]
-			button.disabled = offer.sold or EconomyService.total_scrap < offer.price
-	actions.visible = in_shop and not world.paused
+			card.setup(offer, damage_mult, EconomyService.total_scrap >= offer.price)
+			if card.is_hovered():
+				hovered = index
+			if card.has_focus():
+				focused = index
+	balance_row.visible = shop_open
+	balance_label.text = str(EconomyService.total_scrap)
+	actions.visible = shop_open
 	continue_button.visible = not ended
-	continue_button.text = "RESUME" if world.paused else "DEPLOY NEXT WAVE"
+	var continue_target := "play" if world.paused else "deploy"
+	if continue_target != continue_icon:
+		continue_icon = continue_target
+		continue_button.icon = UiIcons.get_icon(continue_target)
+		continue_button.text = "RESUME" if world.paused else "DEPLOY"
 	restart_button.visible = ended
 	menu_button.visible = ended or world.paused
-	reroll_button.text = "REROLL / %d scrap" % world.shop.reroll_cost()
-	reroll_button.disabled = EconomyService.total_scrap < world.shop.reroll_cost()
+	var reroll_cost := world.shop.reroll_cost()
+	reroll_button.set_cost(reroll_cost, EconomyService.total_scrap >= reroll_cost)
+	reroll_button.disabled = EconomyService.total_scrap < reroll_cost
+	repair_button.set_cost(GameConstants.REPAIR_COST, EconomyService.total_scrap >= GameConstants.REPAIR_COST)
 	repair_button.disabled = EconomyService.total_scrap < GameConstants.REPAIR_COST or world.player.health >= world.player.max_health
 	core_repair_button.visible = world.core != null
 	if world.core:
+		core_repair_button.set_cost(GameConstants.REPAIR_COST, EconomyService.total_scrap >= GameConstants.REPAIR_COST)
 		core_repair_button.disabled = EconomyService.total_scrap < GameConstants.REPAIR_COST or world.core.health >= world.core.max_health
 	if panel.visible:
-		build_text.text = world.shop.build_summary()
+		build_refresh -= delta
+		if build_refresh <= 0.0 or phase != previous_phase or world.paused != previous_pause:
+			build_refresh = .1
+			var previewed := hovered if hovered >= 0 else focused
+			var preview: Dictionary = {}
+			if shop_open and previewed >= 0 and not EconomyService.current_shop_offers[previewed].sold:
+				preview = ShopViewData.preview(world, EconomyService.current_shop_offers[previewed])
+			build_panel.set_data(ShopViewData.build_data(world), preview)
 	if world.paused:
-		title.text = "SYSTEM PAUSED"
-		description.text = "Take a breath. The arena can wait."
+		title.text = "PAUSED"
+		description.text = ""
 	elif in_shop:
-		title.text = "REFIT / REDEPLOY"
-		description.text = "Wave %d secured. Spend scrap before deploying." % GameStateService.current_wave
+		title.text = "REFIT"
+		description.text = ""
 	elif ended:
 		title.text = "SECTOR SECURED" if phase == GameStateMachine.GameState.VICTORY else "SIGNAL LOST"
 		description.text = "%s%d kills · %d scrap recovered · %ds survived" % ["%s · " % world.defeat_reason if world.defeat_reason != "" else "",

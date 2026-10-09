@@ -2,6 +2,10 @@ class_name IconButton
 extends Button
 
 ## Chamfered button with a leading icon and a short word. `primary` gives it the bright teal edge.
+## `set_cost` adds a right-aligned scrap icon and number (red when the player cannot pay).
+var cost_icon: TextureRect
+var cost_label: Label
+
 func setup(icon_name: String, label_text: String = "", primary: bool = false, icon_size: int = 28) -> IconButton:
 	text = label_text
 	icon = UiIcons.get_icon(icon_name)
@@ -27,3 +31,34 @@ func setup(icon_name: String, label_text: String = "", primary: bool = false, ic
 	add_theme_stylebox_override("focus", ChamferStyle.make(Color(0, 0, 0, 0), UiPalette.TEAL_HI, 10.0, margin_x, 8.0))
 	add_theme_stylebox_override("disabled", ChamferStyle.make(Color(fill, .5), Color(edge, .4), 10.0, margin_x, 8.0))
 	return self
+
+func set_cost(amount: int, affordable: bool = true) -> void:
+	if cost_label == null:
+		alignment = HORIZONTAL_ALIGNMENT_LEFT
+		var margin := MarginContainer.new()
+		margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		margin.add_theme_constant_override("margin_right", 20)
+		add_child(margin)
+		margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		var row := HBoxContainer.new()
+		row.alignment = BoxContainer.ALIGNMENT_END
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_theme_constant_override("separation", 6)
+		margin.add_child(row)
+		cost_icon = TextureRect.new()
+		cost_icon.texture = UiIcons.get_icon("scrap")
+		cost_icon.custom_minimum_size = Vector2(26, 26)
+		cost_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		cost_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		cost_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		cost_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(cost_icon)
+		cost_label = Label.new()
+		cost_label.theme_type_variation = &"Numeral"
+		cost_label.add_theme_font_size_override("font_size", 28)
+		cost_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(cost_label)
+	var tint := UiPalette.SCRAP if affordable else UiPalette.BAD
+	cost_label.text = str(amount)
+	cost_label.add_theme_color_override("font_color", tint)
+	cost_icon.modulate = tint

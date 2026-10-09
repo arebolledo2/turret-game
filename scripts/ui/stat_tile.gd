@@ -5,6 +5,7 @@ extends PanelContainer
 var icon_rect: TextureRect
 var value_label: Label
 var caption_label: Label
+var delta_rect: TextureRect
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -32,6 +33,14 @@ func _init() -> void:
 	caption_label.add_theme_color_override("font_color", UiPalette.MUTED)
 	caption_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(caption_label)
+	delta_rect = TextureRect.new()
+	delta_rect.custom_minimum_size = Vector2(22, 22)
+	delta_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	delta_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	delta_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	delta_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	delta_rect.visible = false
+	row.add_child(delta_rect)
 
 func setup(icon_name: String, stat: String, caption: String, value_text: String = "") -> StatTile:
 	icon_rect.texture = UiIcons.get_icon(icon_name)
@@ -44,3 +53,10 @@ func setup(icon_name: String, stat: String, caption: String, value_text: String 
 func set_value(text: String, color: Color = UiPalette.INK) -> void:
 	value_label.text = text
 	value_label.add_theme_color_override("font_color", color)
+
+## Shows a green up or red down arrow for a previewed change; 0 hides it.
+func set_delta(direction: int) -> void:
+	delta_rect.visible = direction != 0
+	if direction != 0:
+		delta_rect.texture = UiIcons.get_icon("up" if direction > 0 else "down")
+		delta_rect.modulate = UiPalette.GOOD if direction > 0 else UiPalette.BAD

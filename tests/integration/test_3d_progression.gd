@@ -291,7 +291,10 @@ func test_hud_shows_offers_build_and_terminal_summary() -> void:
 	hud._process(0)
 	assert_true(hud.panel.visible)
 	assert_eq(hud.offer_buttons.size(), 4)
-	assert_string_contains(hud.build_text.text, "Ion")
+	assert_true(hud.offer_buttons[0].visible, "offers show in the shop")
+	assert_eq(hud.offer_buttons[0].shown_key.split(":")[1], EconomyService.current_shop_offers[0].asset_id)
+	assert_gt(hud.build_panel.get_child_count(), 0, "build panel is populated")
+	assert_eq(ShopViewData.build_data(world)["turrets"][0]["name"], "Ion")
 	world.player.health = 1
 	world.begin_next_wave()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
@@ -299,4 +302,4 @@ func test_hud_shows_offers_build_and_terminal_summary() -> void:
 	hud._process(0)
 	assert_true(hud.restart_button.visible)
 	assert_false(hud.actions.visible)
-	assert_string_contains(hud.build_text.text, "Ion")
+	assert_gt(hud.build_panel.get_child_count(), 0, "build still shown at game over")

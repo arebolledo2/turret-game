@@ -7,6 +7,7 @@ var frames: int = 0
 var samples: Array[float] = []
 var stress: bool = false
 var shop: bool = false
+var shop_focus: int = -1
 var combat_demo: bool = false
 var new_turrets: bool = false
 var zones_demo: bool = false
@@ -38,6 +39,10 @@ func setup() -> void:
 	world.player.invulnerability = 999
 	stress = "--stress" in OS.get_cmdline_user_args()
 	shop = "--shop" in OS.get_cmdline_user_args()
+	for argument in arguments:
+		if argument.begins_with("--shop-focus="): # --shop-focus=N: focus offer card N so the build preview shows
+			shop = true
+			shop_focus = int(argument.trim_prefix("--shop-focus="))
 	combat_demo = "--combat-demo" in OS.get_cmdline_user_args()
 	new_turrets = "--new-turrets" in OS.get_cmdline_user_args()
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
@@ -90,6 +95,8 @@ func _process(_delta: float) -> void:
 		world.camera_rig.snap()
 	if frames == 180 and shop:
 		world.finish_wave()
+	if frames == 400 and shop_focus >= 0:
+		world.hud.offer_buttons[shop_focus].grab_focus()
 	if frames == 180 and combat_demo:
 		stage_combat_demo()
 	if frames == 720:
