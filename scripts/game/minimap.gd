@@ -44,11 +44,11 @@ func _draw() -> void:
 	if not is_instance_valid(world) or not is_instance_valid(world.player):
 		return
 	var area := Rect2(Vector2.ZERO, MAP_SIZE)
-	draw_rect(area, Color(.025, .065, .09, .82))
+	draw_rect(area, Color(UiPalette.PANEL, .85))
 	for step in range(1, 4):
 		var fraction := float(step) / 4.0
-		draw_line(Vector2(MAP_SIZE.x * fraction, 0), Vector2(MAP_SIZE.x * fraction, MAP_SIZE.y), Color(.17, .26, .3, .6))
-		draw_line(Vector2(0, MAP_SIZE.y * fraction), Vector2(MAP_SIZE.x, MAP_SIZE.y * fraction), Color(.17, .26, .3, .6))
+		draw_line(Vector2(MAP_SIZE.x * fraction, 0), Vector2(MAP_SIZE.x * fraction, MAP_SIZE.y), Color(UiPalette.LINE, .55))
+		draw_line(Vector2(0, MAP_SIZE.y * fraction), Vector2(MAP_SIZE.x, MAP_SIZE.y * fraction), Color(UiPalette.LINE, .55))
 	if world.terrain:
 		var scale_x := MAP_SIZE.x / (WorldGeometry.HALF_ARENA.x * 2.0)
 		for zone in world.terrain.zones:
@@ -63,15 +63,15 @@ func _draw() -> void:
 		_draw_route(world.convoy_route)
 	for pickup in world.pickup_root.get_children():
 		if pickup is Node3D:
-			draw_rect(Rect2(world_to_map((pickup as Node3D).position) - Vector2.ONE, Vector2(2, 2)), Color("f4d298"))
+			draw_rect(Rect2(world_to_map((pickup as Node3D).position) - Vector2.ONE, Vector2(2, 2)), UiPalette.SCRAP)
 	if world.core and not world.core.dead:
 		var core_at := world_to_map(world.core.position)
-		draw_rect(Rect2(core_at - Vector2(5, 5), Vector2(10, 10)), Color("58ece1"), false, 2.0)
-		draw_rect(Rect2(core_at - Vector2(2, 2), Vector2(4, 4)), Color("58ece1"))
+		draw_rect(Rect2(core_at - Vector2(5, 5), Vector2(10, 10)), UiPalette.TEAL_HI, false, 2.0)
+		draw_rect(Rect2(core_at - Vector2(2, 2), Vector2(4, 4)), UiPalette.TEAL_HI)
 	for turret in world.turrets:
 		if is_instance_valid(turret):
 			var turret_at := world_to_map(turret.position)
-			var color := Color("ffffff") if turret.carried else Color("5de6e6")
+			var color := UiPalette.INK if turret.carried else UiPalette.TEAL_HI
 			draw_rect(Rect2(turret_at - Vector2(3, 3), Vector2(6, 6)), color)
 	for enemy in world.enemies:
 		if is_instance_valid(enemy) and not enemy.dead:
@@ -82,7 +82,7 @@ func _draw() -> void:
 				draw_circle(enemy_at, 3.0 if enemy.elite else 2.0, ENEMY_COLORS.get(enemy.enemy_type, ENEMY_COLORS["basic"]))
 	_draw_camera_view()
 	_draw_player()
-	draw_rect(area, Color("2b5963"), false, 1.0)
+	draw_rect(area, UiPalette.LINE, false, 1.0)
 
 ## Convoy route: a line through the doors (driven legs dim), numbered dots, and a larger amber dot at the end.
 func _draw_route(route: ConvoyRoute) -> void:
@@ -91,7 +91,7 @@ func _draw_route(route: ConvoyRoute) -> void:
 		var from := world_to_map(route.doors[index - 1])
 		var to := world_to_map(route.doors[index])
 		var final := index == route.doors.size() - 1
-		var colour := Color("2b5963") if index < progress else (Color("f4b942") if final else Color("58ece1"))
+		var colour := Color(UiPalette.LINE, .8) if index < progress else (UiPalette.SCRAP if final else UiPalette.TEAL_HI)
 		draw_line(from, to, colour, 1.5)
 		draw_circle(to, 4.0 if final else 2.5, colour)
 
@@ -108,4 +108,4 @@ func _draw_player() -> void:
 	var forward := -world.player.visual.global_basis.z
 	var heading := Vector2(forward.x, forward.z).normalized() if forward.length_squared() > .0001 else Vector2.UP
 	var side := heading.orthogonal()
-	draw_colored_polygon(PackedVector2Array([at + heading * 6.0, at - heading * 4.0 + side * 4.0, at - heading * 4.0 - side * 4.0]), Color("a9ece4"))
+	draw_colored_polygon(PackedVector2Array([at + heading * 6.0, at - heading * 4.0 + side * 4.0, at - heading * 4.0 - side * 4.0]), UiPalette.TEAL_HI.lerp(Color.WHITE, .4))
