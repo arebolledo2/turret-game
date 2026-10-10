@@ -53,7 +53,7 @@ entry = {'id':key,'source':str((source_dir/builder.name).relative_to(game)).repl
          'sha256':hashlib.sha256(glb.read_bytes()).hexdigest(),'triangles':result['triangles'],
          'meshes':result['mesh_objects'],'materials':result['materials'],'iteration':args.iteration}
 manifest['assets']=[a for a in manifest['assets'] if a['id']!=key]+[entry]
-manifest_path.write_text(json.dumps(manifest,indent=2))
+manifest_path.write_text(json.dumps(manifest,indent=2),encoding='utf-8',newline='\n')
 preview = run/f'renders/iter{args.iteration:02}/compare.png'
 report=game/'doc/art/clockwork-pop'
 (report/'previews').mkdir(exist_ok=True)

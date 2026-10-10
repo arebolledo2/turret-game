@@ -17,7 +17,7 @@
       "key": "plasma",
       "name": "Kilnheart Lobber",
       "image_id": "6ea142dc-b0ff-49d0-99af-15ae75d371b0",
-      "status": "review",
+      "status": "integrated",
       "reference": "../../../art-source/clockwork-pop/references/plasma.png",
       "notes": "Compact heavy body and short wide muzzle. Add a clear yaw joint above the planted supports. Variant 1 is the longer-barrel alternate; variant 3 the more ornate alternate.",
       "run": "cp_plasma-v1",
@@ -37,16 +37,18 @@
       "key": "shock",
       "name": "Resonance Bell",
       "image_id": "b45251b2-295b-42c8-beb7-9e668c7774d9",
-      "status": "building",
+      "status": "integrated",
       "reference": "../../../art-source/clockwork-pop/references/shock.png",
       "notes": "Simple radial bell, brass hoop and amber crown. Keep pulse effects in the game rather than the mesh.",
-      "run": "cp_shock-v1"
+      "run": "cp_shock-v1",
+      "preview": "previews/shock.png",
+      "metrics": "9,078 triangles \u00b7 11 meshes \u00b7 8 materials"
     },
     {
       "key": "melee",
       "name": "Dugout Automaton",
       "image_id": "8c69d6dd-674e-4547-9a60-b74cd73bed71",
-      "status": "queued",
+      "status": "building",
       "reference": "../../../art-source/clockwork-pop/references/melee.png",
       "notes": "Good base and arm. Move the hand nearer the butt knob: the reference still grips near the taper. Keep most of the bat beyond the grip, with a vertical yaw pivot and hit marker at the tip.",
       "run": "cp_melee-v1"
@@ -55,10 +57,12 @@
       "key": "basic",
       "name": "Bramble Wisp",
       "image_id": "f75c5c63-ddff-4254-b4f1-ba301358b191",
-      "status": "building",
+      "status": "integrated",
       "reference": "../../../art-source/clockwork-pop/references/basic.png",
       "notes": "Broad leaf-like armour gives a distinctive bramble silhouette. Variant 3 is the more mechanical alternate. Use simple hover motion before articulating every thorn.",
-      "run": "cp_basic-v1"
+      "run": "cp_basic-v1",
+      "preview": "previews/basic.png",
+      "metrics": "9,324 triangles \u00b7 7 meshes \u00b7 7 materials"
     },
     {
       "key": "fast",
@@ -111,7 +115,7 @@
       "key": "exploder",
       "name": "Cinder Puffer",
       "image_id": "40885d15-7c25-41e9-98e8-192025dc5423",
-      "status": "queued",
+      "status": "building",
       "reference": "../../../art-source/clockwork-pop/references/exploder.png",
       "notes": "User authorized agent selection. Capped teal top variant1; coral pressure vessel, brass plugs, orange-red glass eye.",
       "run": "cp_exploder-v1"
@@ -157,12 +161,28 @@
     {
       "stage": "Plasma visual acceptance",
       "text": "Kilnheart Lobber iteration5 accepted: 10,102 triangles, 12 meshes, 8 materials, four textures. Distinct short open bore and coral face ring. Feet/base remain fixed while the head yaws. Imported successfully; gameplay review remains pending. Tesla generation started."
+    },
+    {
+      "stage": "Export: shock",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Plasma and shock in combat",
+      "text": "Gameplay capture visually confirms the Lobber aiming head above fixed supports and Resonance Bell inside its radial pulse. Both imports are clean. Melee generation started with the handle-grip correction; visible bat reach now scales with attack range and passes all 14 turret tests. Asymmetric turret contracts now validate the central Aim pivot instead of requiring symmetrical total bounds."
+    },
+    {
+      "stage": "Export: basic",
+      "text": "Reviewed harness iteration 5; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Bramble integration",
+      "text": "Bramble iteration5 accepted at 9,324 triangles, 7 meshes/materials and three textures. All geometry follows the Body hover pivot. Combat capture confirms readable emerald eye and teal leaf silhouette at gameplay scale; import clean. Full suite: 849 tests pass with no risky tests, unexpected errors or remaining orphans. Cinder Puffer generation started. Five of twelve assets now integrated; animation review and representative performance tests remain open."
     }
   ],
   "checks": {
     "Visual acceptance": "pending",
     "Movement and attack validation": "pending",
-    "Full game tests": "848 pass after Cache integration; final roster pending",
+    "Full game tests": "849 pass with five integrated assets; final roster pending",
     "Performance comparison": "pending",
     "Playtest launch": "pending"
   }

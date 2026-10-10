@@ -1,0 +1,16 @@
+{
+  "triangles": 9078,
+  "mesh_objects": 11,
+  "materials": 8,
+  "textures": 4,
+  "Aim": [
+    0,
+    0,
+    0.18
+  ],
+  "Muzzle_world": [
+    0,
+    0,
+    1.19
+  ]
+}

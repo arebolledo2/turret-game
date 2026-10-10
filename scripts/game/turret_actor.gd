@@ -17,6 +17,8 @@ var aim_rest: Vector3
 var target: CombatActor
 var target_clock: float = 0.0
 var spin_angle: float = 0.0
+var bat_authored_reach: float = 1.0
+var aim_authored_scale := Vector3.ONE
 var rehit_lockouts: Dictionary = {}
 ## Modifier math is costly and static between purchases, so stats are rebuilt on change or every STATS_REFRESH seconds.
 var cached_stats: Dictionary = {}
@@ -51,6 +53,9 @@ func _ready() -> void:
 	aim = model.find_child("Aim", true, false) as Node3D
 	muzzle = model.find_child("Muzzle", true, false) as Node3D
 	aim_rest = aim.position
+	aim_authored_scale = aim.scale
+	if fire_mode == TurretRegistry.FIRE_SWEEP:
+		bat_authored_reach = maxf(.001, WorldGeometry.planar(muzzle.global_position - aim.global_position).length())
 
 ## Placeholder procedural model: a base post with a pivoting arm; `Aim` is the spin pivot, `Muzzle` the bat tip.
 func _build_melee_model() -> Node3D:
@@ -76,6 +81,9 @@ func _build_melee_model() -> Node3D:
 
 ## Sweeps the bat through the arc covered this tick and hits each enemy once per rehit delay.
 func _spin_bat(delta: float, stats: TurretStats, reach: float) -> void:
+	# Keep the visible bat tip on the gameplay sweep radius after range upgrades.
+	var reach_scale := reach / bat_authored_reach
+	aim.scale = aim_authored_scale * Vector3(reach_scale, 1.0, reach_scale)
 	var sweep := deg_to_rad(stats.rotation_rate) * delta
 	var previous := spin_angle
 	spin_angle = wrapf(spin_angle + sweep, -PI, PI)

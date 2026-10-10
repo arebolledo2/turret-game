@@ -36,6 +36,16 @@ func tick(actor: TurretActor, delta: float = .1) -> void:
 
 # --- Melee ---
 
+func test_melee_visual_tip_tracks_modified_reach_without_changing_height() -> void:
+	var bat := turret("melee", Vector3(3, 0, 2))
+	var height := bat.muzzle.global_position.y
+	var view := TurretStats.new(stats("melee"))
+	for reach: float in [view.range_metres * 1.5, view.range_metres, view.range_metres * 2.0]:
+		bat._spin_bat(.1, view, reach)
+		var actual := WorldGeometry.planar(bat.muzzle.global_position - bat.aim.global_position).length()
+		assert_almost_eq(actual, reach, .001, "Visible tip follows the attack radius without accumulated scaling")
+		assert_almost_eq(bat.muzzle.global_position.y, height, .001)
+
 func test_melee_bat_hits_enemy_in_swept_arc_with_outward_knockback() -> void:
 	var bat := turret("melee")
 	var target := enemy(Vector3(0, 0, -1.0))

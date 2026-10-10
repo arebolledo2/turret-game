@@ -32,6 +32,28 @@
       "meshes": 12,
       "materials": 8,
       "iteration": 5
+    },
+    {
+      "id": "shock",
+      "source": "art-source/clockwork-pop/shock/build_cp_shock.py",
+      "model": "assets/models/clockwork/cp_shock.glb",
+      "reference": "art-source/clockwork-pop/references/shock.png",
+      "sha256": "7397fc91e549b88c78a6dd846204b77f0fc44c2e3a5b7471abc2bad9b98c2c3e",
+      "triangles": 9078,
+      "meshes": 11,
+      "materials": 8,
+      "iteration": 3
+    },
+    {
+      "id": "basic",
+      "source": "art-source/clockwork-pop/basic/build_cp_basic.py",
+      "model": "assets/models/clockwork/cp_basic.glb",
+      "reference": "art-source/clockwork-pop/references/basic.png",
+      "sha256": "07d686573bed829f4b527a6e4a93b515bb9a455219890f1eb0eee45b1007c995",
+      "triangles": 9324,
+      "meshes": 7,
+      "materials": 7,
+      "iteration": 5
     }
   ]
 }

@@ -1,0 +1,218 @@
+{
+  "frozen": true,
+  "final_iteration": 3,
+  "glb_bytes": 1725208,
+  "blend_bytes": 1597647,
+  "glb_sha256": "7397fc91e549b88c78a6dd846204b77f0fc44c2e3a5b7471abc2bad9b98c2c3e",
+  "build_sha256": "e8ed3835ce1552e05b9931526c199c3bf3fc53308d8f31cb9bc174bd2e740ad7",
+  "embedded_images": 4,
+  "external_image_uris": [],
+  "external_buffer_uris": [],
+  "animations": 0,
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Amber crown",
+      "translation": [
+        0,
+        -0.18000000715255737,
+        0
+      ]
+    },
+    {
+      "mesh": 1,
+      "name": "Bell interior",
+      "translation": [
+        0,
+        -0.18000000715255737,
+        0
+      ]
+    },
+    {
+      "mesh": 2,
+      "name": "Bell shell",
+      "translation": [
+        0,
+        -0.18000000715255737,
+        0
+      ]
+    },
+    {
+      "mesh": 3,
+      "name": "Brass trim",
+      "translation": [
+        0,
+        -0.18000000715255737,
+        0
+      ]
+    },
+    {
+      "mesh": 4,
+      "name": "Crown insets",
+      "translation": [
+        0,
+        -0.18000000715255737,
+        0
+      ]
+    },
+    {
+      "mesh": 5,
+      "name": "Crown socket",
+      "translation": [
+        0,
+        -0.18000000715255737,
+        0
+      ]
+    },
+    {
+      "mesh": 6,
+      "name": "Hoop studs",
+      "translation": [
+        0,
+        0.5329999923706055,
+        -0.3059999942779541
+      ]
+    },
+    {
+      "name": "Muzzle",
+      "translation": [
+        0,
+        1.0099999904632568,
+        0
+      ]
+    },
+    {
+      "mesh": 7,
+      "name": "Resonance hoop",
+      "translation": [
+        0,
+        -0.18000000715255737,
+        0
+      ]
+    },
+    {
+      "mesh": 8,
+      "name": "Shoulder dome",
+      "translation": [
+        0,
+        -0.18000000715255737,
+        0
+      ]
+    },
+    {
+      "children": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "name": "Aim",
+      "translation": [
+        0,
+        0.18000000715255737,
+        0
+      ]
+    },
+    {
+      "mesh": 9,
+      "name": "Foundation"
+    },
+    {
+      "mesh": 10,
+      "name": "Static feet",
+      "translation": [
+        0,
+        0.20499999821186066,
+        -0.3319999873638153
+      ]
+    }
+  ],
+  "validation": {
+    "triangles": 9078,
+    "mesh_objects": 11,
+    "materials": 8,
+    "loose_components": 165,
+    "size_m": [
+      1.054,
+      1.054,
+      1.204
+    ],
+    "min_z": 0.015,
+    "centre_xy": [
+      0.0,
+      0.0
+    ],
+    "missing_nodes": [],
+    "empty_leg_pivots": [],
+    "textures": [
+      [
+        "bell_amber_fire",
+        [
+          1024,
+          1024
+        ]
+      ],
+      [
+        "bell_color_atlas",
+        [
+          1024,
+          1024
+        ]
+      ],
+      [
+        "bell_micro_normal",
+        [
+          1024,
+          1024
+        ]
+      ],
+      [
+        "bell_orm_atlas",
+        [
+          1024,
+          1024
+        ]
+      ]
+    ],
+    "animations": [],
+    "checks": {
+      "required_nodes_present": true,
+      "each_required_node_has_geometry": true,
+      "height_ok": true,
+      "width_ok": true,
+      "ground_gap_ok": true,
+      "origin_xy_centred": true,
+      "has_meshes": true,
+      "Muzzle_under_Aim": true,
+      "textures_present": true
+    },
+    "passed": true,
+    "limits": {
+      "height": [
+        0.8,
+        1.25
+      ],
+      "max_width": 1.3,
+      "ground_gap": [
+        -0.02,
+        0.1
+      ]
+    },
+    "targets": {
+      "max_texture_px": 1024,
+      "max_textures": 4,
+      "max_triangles": 5000,
+      "max_mesh_objects": 16,
+      "max_materials": 8
+    },
+    "target_overruns": [
+      "max_triangles: 9078 > target 5000"
+    ]
+  }
+}
