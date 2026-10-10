@@ -77,19 +77,19 @@ The repository already has `AttackStyle` and modifier matching, but several effe
 
 Document direct-hit, splash and proc semantics together. A hybrid benefits from both families, but a single modifier must never apply twice merely because two tags matched. Separate items intentionally supporting that hybrid can both apply.
 
-## 4. Full-screen refit screen
+## 4. Full-screen shop screen
 
 Visual direction: a polished Clockwork workshop dashboard. Deep opaque navy, teal focus states, brass trim and restrained coral accents connect the shop to the new models. Maintain high-contrast labels and generous artwork; decoration must not compete with effects or cost.
 
 At normal widescreen sizes:
 
-- Header: REFIT, upcoming wave, one scrap balance. No duplicated combat HUD.
+- Header: SHOP, upcoming wave, one scrap balance. No duplicated combat HUD.
 - Main area, about 70% width: retain the current four offers initially—one turret and three items—using the extra space for richer art and clearer benefits.
 - Right area, about 30%: owned turrets and installed items, with a selected-offer section showing exact benefit text and affected owned turrets. Show plain “No matching turret owned” for future-build purchases; do not hide the offer just because it does not fit yet.
 - Footer: reroll, available repairs, and a prominent Deploy button in one predictable focus row. Preserve direct left/right navigation and skip unavailable actions.
 - Card: large illustration, name, primary effect, any genuine drawback, cost, and sold/affordability state. **No category/tag label above the art or title.** Important rules and costs remain visible without hover.
 
-Use an independent `ShopScreen` scene/controller rather than extending the shared refit/pause/end panel further. `GameHud` continues to own combat HUD; the app/arena presents the shop during SHOP. Reuse `ArenaShop` transactions and structured preview data. Pause, settings, game over and victory retain their own presentation and focus restoration.
+Use an independent `ShopScreen` scene/controller rather than extending the shared shop/pause/end panel further. `GameHud` continues to own combat HUD; the app/arena presents the shop during SHOP. Reuse `ArenaShop` transactions and structured preview data. Pause, settings, game over and victory retain their own presentation and focus restoration.
 
 The shop background is fully opaque and covers every aspect ratio; hide combat HUD, minimap, banners and hints while shopping. Suspend the 3D viewport's drawing during the shop if the viewport ownership permits it, restoring it on exit. Do not rely on an alpha overlay or merely blur the arena. Preserve the existing wave/shop simulation rules.
 

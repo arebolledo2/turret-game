@@ -77,7 +77,7 @@ func _ready() -> void:
 	root.add_child(minimap)
 	_build_panel(root)
 
-## The refit / pause / end panel: offer cards and actions on the left, the build on the right.
+## The shop / pause / end panel: offer cards and actions on the left, the build on the right.
 func _build_panel(root: Control) -> void:
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -473,7 +473,7 @@ func _process(delta: float) -> void:
 		title_icon.texture = UiIcons.get_icon("pause")
 		title_icon.modulate = UiPalette.TEAL_HI
 	elif in_shop:
-		title.text = "REFIT"
+		title.text = "SHOP"
 	elif ended:
 		var won := phase == GameStateMachine.GameState.VICTORY
 		title.text = "SECTOR SECURED" if won else "SIGNAL LOST"

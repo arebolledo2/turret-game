@@ -1,7 +1,7 @@
 class_name ShopViewData
 extends RefCounted
 
-## Structured shop data for the refit screen: stat chips per offer, the build as numbers (not text), and
+## Structured shop data for the shop screen: stat chips per offer, the build as numbers (not text), and
 ## a "what if I buy this" copy of that build. ArenaShop keeps the text forms for logs and tests.
 
 ## Game stat key -> [UI stat key, icon name, lower_is_better].
