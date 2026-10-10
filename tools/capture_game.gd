@@ -7,6 +7,9 @@ var frames: int = 0
 var samples: Array[float] = []
 var stress: bool = false
 var mixed_stress: bool = false
+var benchmark_seconds: float = 0.0
+var started_usec: int = 0
+var capture_pending: bool = false
 var shop: bool = false
 var shop_focus: int = -1
 var combat_demo: bool = false
@@ -27,6 +30,8 @@ func setup() -> void:
 	world = load("res://scenes/game/arena.tscn").instantiate() as ArenaWorld
 	var arguments := OS.get_cmdline_user_args()
 	for argument in arguments:
+		if argument.begins_with("--benchmark-seconds="):
+			benchmark_seconds = maxf(1.0, float(argument.trim_prefix("--benchmark-seconds=")))
 		if argument.begins_with("--zones"):
 			# --zones[=layout_id] frames a layout with no enemies (--focus=<zone type> picks the zone); --legacy-zones turns `zone_readability` off.
 			zones_demo = true
@@ -74,6 +79,7 @@ func setup() -> void:
 	if roster_demo:
 		stage_roster_demo()
 	last_tick = Time.get_ticks_usec()
+	started_usec = last_tick
 
 ## A frozen gameplay-scale roster, used for appearance checks rather than benchmarking.
 func stage_roster_demo() -> void:
@@ -81,6 +87,7 @@ func stage_roster_demo() -> void:
 	world.hud.hide()
 	world.player.set_physics_process(false)
 	world.player.position = Vector3(0, 0, 2)
+	world.player.visual.rotation.y = PI - .4
 	var kinds := ["basic", "fast", "tank", "charger", "exploder"]
 	for index in range(kinds.size()):
 		var actor := world.spawn_enemy(Vector3(-4 + index * 2, 0, -2), kinds[index])
@@ -102,7 +109,9 @@ func _process(_delta: float) -> void:
 		return
 	frames += 1
 	var tick := Time.get_ticks_usec()
-	if frames > 120:
+	var elapsed := float(tick - started_usec) / 1000000.0
+	var warmed_up := elapsed >= 2.0 if benchmark_seconds > 0.0 else frames > 120
+	if warmed_up:
 		samples.append(float(tick - last_tick) / 1000.0)
 		physics_samples.append(Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0)
 		process_samples.append(Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0)
@@ -132,7 +141,9 @@ func _process(_delta: float) -> void:
 		world.hud.offer_buttons[shop_focus].grab_focus()
 	if frames == 180 and combat_demo:
 		stage_combat_demo()
-	if frames == 720:
+	var finished := elapsed >= benchmark_seconds + 2.0 if benchmark_seconds > 0.0 else frames == 720
+	if finished and not capture_pending:
+		capture_pending = true
 		capture.call_deferred()
 
 func capture() -> void:
@@ -156,6 +167,7 @@ func capture() -> void:
 		if ClockworkModels.available(key):
 			custom_assets.append(key)
 	print("GAME_METRICS ", JSON.stringify({"frames": samples.size(), "median_frame_ms": samples[samples.size() / 2],
+		"sample_seconds": benchmark_seconds, "warmup_seconds": 2.0 if benchmark_seconds > 0.0 else 0.0,
 		"scenario": "mixed_stress" if mixed_stress else "stress" if stress else "visual_review",
 		"enemy_counts": enemy_counts, "clockwork_assets": custom_assets,
 		"reduced_motion": FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION),

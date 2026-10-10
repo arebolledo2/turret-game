@@ -50,6 +50,12 @@ func test_tint_is_shared_between_identical_types_and_leaves_basic_untouched() ->
 	var second := enemy(Vector3.ONE, "fast")
 	var a := first.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
 	var b := second.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
+	if ClockworkModels.available("fast"):
+		assert_null(a.get_surface_override_material(0), "Authored moth colors are preserved")
+		assert_null(b.get_surface_override_material(0))
+	# The legacy tint utility remains shared even when the current roster has authored colors.
+	EnemyVariants.apply_tint(first.visual, "fast")
+	EnemyVariants.apply_tint(second.visual, "fast")
 	assert_not_null(a.get_surface_override_material(0))
 	assert_same(a.get_surface_override_material(0), b.get_surface_override_material(0))
 	var basic := enemy(Vector3(2, 0, 0), "basic")

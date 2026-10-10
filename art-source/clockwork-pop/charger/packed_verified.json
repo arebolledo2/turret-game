@@ -1,0 +1,49 @@
+{
+  "passed": true,
+  "images": [
+    {
+      "name": "ramjet_albedo",
+      "size": [
+        1024,
+        1024
+      ],
+      "colorspace": "sRGB",
+      "packed_bytes": 949104
+    },
+    {
+      "name": "ramjet_normal",
+      "size": [
+        1024,
+        1024
+      ],
+      "colorspace": "Non-Color",
+      "packed_bytes": 690598
+    },
+    {
+      "name": "ramjet_orm",
+      "size": [
+        1024,
+        1024
+      ],
+      "colorspace": "Non-Color",
+      "packed_bytes": 787331
+    },
+    {
+      "name": "visor_emission",
+      "size": [
+        1024,
+        1024
+      ],
+      "colorspace": "sRGB",
+      "packed_bytes": 21454
+    }
+  ],
+  "mesh_uv_layer_count": {
+    "Body_rigid_geometry": 1,
+    "Leg_L_0_rigid_geometry": 1,
+    "Leg_L_1_rigid_geometry": 1,
+    "Leg_R_0_rigid_geometry": 1,
+    "Leg_R_1_rigid_geometry": 1
+  },
+  "actions": 0
+}

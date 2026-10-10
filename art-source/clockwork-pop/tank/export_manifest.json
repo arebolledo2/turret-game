@@ -1,0 +1,470 @@
+{
+  "frozen": true,
+  "final_iteration": 3,
+  "glb_bytes": 1963192,
+  "blend_bytes": 1695937,
+  "glb_sha256": "a3da992555f0bef3e72d650db732c87d9a3576967906c6393695ebcdcecbb6da",
+  "build_sha256": "89870c7f45b44c230bf423b43fd68a168d17259d94655b016429435788b91930",
+  "embedded_images": 4,
+  "external_image_uris": [],
+  "external_buffer_uris": [],
+  "animations": 0,
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Armour rivets",
+      "translation": [
+        0,
+        0.28212958574295044,
+        0.34623050689697266
+      ]
+    },
+    {
+      "mesh": 1,
+      "name": "Brass armour",
+      "translation": [
+        0,
+        -0.5199999809265137,
+        0
+      ]
+    },
+    {
+      "mesh": 2,
+      "name": "Face mask",
+      "translation": [
+        0,
+        -0.2499999701976776,
+        -0.33500000834465027
+      ]
+    },
+    {
+      "mesh": 3,
+      "name": "Helmet shell",
+      "translation": [
+        0,
+        -0.5199999809265137,
+        0
+      ]
+    },
+    {
+      "mesh": 4,
+      "name": "Jewel optics",
+      "rotation": [
+        0,
+        -0.7071068286895752,
+        0.7071068286895752,
+        5.338509012631221e-08
+      ],
+      "translation": [
+        0,
+        -0.019999980926513672,
+        -0.4490000009536743
+      ]
+    },
+    {
+      "mesh": 5,
+      "name": "Lower body",
+      "translation": [
+        0,
+        -0.18399998545646667,
+        0
+      ]
+    },
+    {
+      "mesh": 6,
+      "name": "Mandibles",
+      "rotation": [
+        -0.10452848672866821,
+        0,
+        0,
+        0.994521975517273
+      ],
+      "translation": [
+        -0.08100000023841858,
+        -0.3479999899864197,
+        -0.4169999957084656
+      ]
+    },
+    {
+      "mesh": 7,
+      "name": "Panel seams",
+      "translation": [
+        0,
+        -0.5199999809265137,
+        0
+      ]
+    },
+    {
+      "mesh": 8,
+      "name": "Undercarriage",
+      "translation": [
+        0,
+        -0.2879999876022339,
+        0.02500000037252903
+      ]
+    },
+    {
+      "children": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "name": "Body",
+      "translation": [
+        0,
+        0.5199999809265137,
+        0
+      ]
+    },
+    {
+      "mesh": 9,
+      "name": "Limb_L_0",
+      "rotation": [
+        0,
+        -0.7071068286895752,
+        0.7071068286895752,
+        5.338509012631221e-08
+      ]
+    },
+    {
+      "children": [
+        10
+      ],
+      "name": "Leg_L_0",
+      "translation": [
+        -0.33000001311302185,
+        0.3149999976158142,
+        -0.23999999463558197
+      ]
+    },
+    {
+      "mesh": 10,
+      "name": "Limb_L_1",
+      "rotation": [
+        0,
+        -0.7071068286895752,
+        0.7071068286895752,
+        5.338509012631221e-08
+      ]
+    },
+    {
+      "children": [
+        12
+      ],
+      "name": "Leg_L_1",
+      "translation": [
+        -0.33000001311302185,
+        0.3149999976158142,
+        0
+      ]
+    },
+    {
+      "mesh": 11,
+      "name": "Limb_L_2",
+      "rotation": [
+        0,
+        -0.7071068286895752,
+        0.7071068286895752,
+        5.338509012631221e-08
+      ]
+    },
+    {
+      "children": [
+        14
+      ],
+      "name": "Leg_L_2",
+      "translation": [
+        -0.33000001311302185,
+        0.3149999976158142,
+        0.23999999463558197
+      ]
+    },
+    {
+      "mesh": 12,
+      "name": "Limb_R_0",
+      "rotation": [
+        0,
+        -0.7071068286895752,
+        0.7071068286895752,
+        5.338509012631221e-08
+      ]
+    },
+    {
+      "children": [
+        16
+      ],
+      "name": "Leg_R_0",
+      "translation": [
+        0.33000001311302185,
+        0.3149999976158142,
+        -0.23999999463558197
+      ]
+    },
+    {
+      "mesh": 13,
+      "name": "Limb_R_1",
+      "rotation": [
+        0,
+        -0.7071068286895752,
+        0.7071068286895752,
+        5.338509012631221e-08
+      ]
+    },
+    {
+      "children": [
+        18
+      ],
+      "name": "Leg_R_1",
+      "translation": [
+        0.33000001311302185,
+        0.3149999976158142,
+        0
+      ]
+    },
+    {
+      "mesh": 14,
+      "name": "Limb_R_2",
+      "rotation": [
+        0,
+        -0.7071068286895752,
+        0.7071068286895752,
+        5.338509012631221e-08
+      ]
+    },
+    {
+      "children": [
+        20
+      ],
+      "name": "Leg_R_2",
+      "translation": [
+        0.33000001311302185,
+        0.3149999976158142,
+        0.23999999463558197
+      ]
+    }
+  ],
+  "validation": {
+    "triangles": 13438,
+    "mesh_objects": 15,
+    "materials": 8,
+    "loose_components": 464,
+    "size_m": [
+      1.163,
+      0.989,
+      0.978
+    ],
+    "min_z": 0.011,
+    "centre_xy": [
+      0.0,
+      0.036
+    ],
+    "origin_node": null,
+    "origin_xy": [
+      0.0,
+      0.036
+    ],
+    "missing_nodes": [],
+    "empty_leg_pivots": [],
+    "textures": [
+      [
+        "bulwark_color_atlas",
+        [
+          1024,
+          1024
+        ]
+      ],
+      [
+        "bulwark_micro_normal",
+        [
+          1024,
+          1024
+        ]
+      ],
+      [
+        "bulwark_optic_fire",
+        [
+          1024,
+          1024
+        ]
+      ],
+      [
+        "bulwark_orm_atlas",
+        [
+          1024,
+          1024
+        ]
+      ]
+    ],
+    "animations": [],
+    "checks": {
+      "required_nodes_present": true,
+      "each_required_node_has_geometry": true,
+      "height_ok": true,
+      "width_ok": true,
+      "ground_gap_ok": true,
+      "origin_xy_centred": true,
+      "has_meshes": true,
+      "textures_present": true
+    },
+    "passed": true,
+    "limits": {
+      "height": [
+        0.8,
+        1.2
+      ],
+      "max_width": 1.25,
+      "ground_gap": [
+        -0.02,
+        0.05
+      ]
+    },
+    "targets": {
+      "max_texture_px": 1024,
+      "max_textures": 4,
+      "max_triangles": 5000,
+      "max_mesh_objects": 16,
+      "max_materials": 8
+    },
+    "target_overruns": [
+      "max_triangles: 13438 > target 5000"
+    ]
+  },
+  "rig_audit": {
+    "legs": {
+      "Leg_L_0": {
+        "hip_world": [
+          -0.33000001311302185,
+          0.23999999463558197,
+          0.3149999976158142
+        ],
+        "mesh_descendants": [
+          "Limb_L_0"
+        ],
+        "rotation_identity_at_rest": true,
+        "min_z_rest": 0.010999949648976326,
+        "min_z_lift_0_16rad": 0.04356013983488083,
+        "lift_axis_blender": "Y",
+        "lift_sign_blender": 1,
+        "lift_axis_godot": "Z",
+        "lift_sign_godot": -1,
+        "stride_axis_blender": "Z",
+        "stride_axis_godot": "Y",
+        "forward_stride_sign": -1
+      },
+      "Leg_L_1": {
+        "hip_world": [
+          -0.33000001311302185,
+          0.0,
+          0.3149999976158142
+        ],
+        "mesh_descendants": [
+          "Limb_L_1"
+        ],
+        "rotation_identity_at_rest": true,
+        "min_z_rest": 0.010999961756169796,
+        "min_z_lift_0_16rad": 0.043560151010751724,
+        "lift_axis_blender": "Y",
+        "lift_sign_blender": 1,
+        "lift_axis_godot": "Z",
+        "lift_sign_godot": -1,
+        "stride_axis_blender": "Z",
+        "stride_axis_godot": "Y",
+        "forward_stride_sign": -1
+      },
+      "Leg_L_2": {
+        "hip_world": [
+          -0.33000001311302185,
+          -0.23999999463558197,
+          0.3149999976158142
+        ],
+        "mesh_descendants": [
+          "Limb_L_2"
+        ],
+        "rotation_identity_at_rest": true,
+        "min_z_rest": 0.010999973863363266,
+        "min_z_lift_0_16rad": 0.04356016218662262,
+        "lift_axis_blender": "Y",
+        "lift_sign_blender": 1,
+        "lift_axis_godot": "Z",
+        "lift_sign_godot": -1,
+        "stride_axis_blender": "Z",
+        "stride_axis_godot": "Y",
+        "forward_stride_sign": -1
+      },
+      "Leg_R_0": {
+        "hip_world": [
+          0.33000001311302185,
+          0.23999999463558197,
+          0.3149999976158142
+        ],
+        "mesh_descendants": [
+          "Limb_R_0"
+        ],
+        "rotation_identity_at_rest": true,
+        "min_z_rest": 0.010999981313943863,
+        "min_z_lift_0_16rad": 0.04356018453836441,
+        "lift_axis_blender": "Y",
+        "lift_sign_blender": -1,
+        "lift_axis_godot": "Z",
+        "lift_sign_godot": 1,
+        "stride_axis_blender": "Z",
+        "stride_axis_godot": "Y",
+        "forward_stride_sign": 1
+      },
+      "Leg_R_1": {
+        "hip_world": [
+          0.33000001311302185,
+          0.0,
+          0.3149999976158142
+        ],
+        "mesh_descendants": [
+          "Limb_R_1"
+        ],
+        "rotation_identity_at_rest": true,
+        "min_z_rest": 0.010999993421137333,
+        "min_z_lift_0_16rad": 0.043560195714235306,
+        "lift_axis_blender": "Y",
+        "lift_sign_blender": -1,
+        "lift_axis_godot": "Z",
+        "lift_sign_godot": 1,
+        "stride_axis_blender": "Z",
+        "stride_axis_godot": "Y",
+        "forward_stride_sign": 1
+      },
+      "Leg_R_2": {
+        "hip_world": [
+          0.33000001311302185,
+          -0.23999999463558197,
+          0.3149999976158142
+        ],
+        "mesh_descendants": [
+          "Limb_R_2"
+        ],
+        "rotation_identity_at_rest": true,
+        "min_z_rest": 0.011000005528330803,
+        "min_z_lift_0_16rad": 0.0435602106153965,
+        "lift_axis_blender": "Y",
+        "lift_sign_blender": -1,
+        "lift_axis_godot": "Z",
+        "lift_sign_godot": 1,
+        "stride_axis_blender": "Z",
+        "stride_axis_godot": "Y",
+        "forward_stride_sign": 1
+      }
+    },
+    "six_independent_root_level_hips": true,
+    "leg_lift_leaves_body_unchanged": true,
+    "body_bob_leaves_legs_unchanged": true,
+    "Body_identity_rotation": [
+      0.0,
+      0.0,
+      0.0
+    ]
+  }
+}

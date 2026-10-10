@@ -6,7 +6,7 @@
       "key": "ion",
       "name": "Pepperbox Watchman",
       "image_id": "94e26a7a-9af2-4529-981e-00e66c97a73f",
-      "status": "integrated",
+      "status": "verified",
       "reference": "../../../art-source/clockwork-pop/references/ion.png",
       "notes": "Clear aiming head and muzzle bores. Preserve the favourite silhouette; separate the fixed base from the yawing head.",
       "run": "cp_ion-v1",
@@ -17,7 +17,7 @@
       "key": "plasma",
       "name": "Kilnheart Lobber",
       "image_id": "6ea142dc-b0ff-49d0-99af-15ae75d371b0",
-      "status": "integrated",
+      "status": "verified",
       "reference": "../../../art-source/clockwork-pop/references/plasma.png",
       "notes": "Compact heavy body and short wide muzzle. Add a clear yaw joint above the planted supports. Variant 1 is the longer-barrel alternate; variant 3 the more ornate alternate.",
       "run": "cp_plasma-v1",
@@ -28,7 +28,7 @@
       "key": "tesla",
       "name": "Tuning-Fork Conductor",
       "image_id": "e9f5d244-a3df-4f80-b1dd-67cd56724379",
-      "status": "integrated",
+      "status": "verified",
       "reference": "../../../art-source/clockwork-pop/references/tesla.png",
       "notes": "Strong fork silhouette. Model solid electrode tips instead of the hollow-looking bores. Place the emission origin between the prongs.",
       "run": "cp_tesla-v1",
@@ -39,7 +39,7 @@
       "key": "shock",
       "name": "Resonance Bell",
       "image_id": "b45251b2-295b-42c8-beb7-9e668c7774d9",
-      "status": "integrated",
+      "status": "verified",
       "reference": "../../../art-source/clockwork-pop/references/shock.png",
       "notes": "Simple radial bell, brass hoop and amber crown. Keep pulse effects in the game rather than the mesh.",
       "run": "cp_shock-v1",
@@ -50,9 +50,9 @@
       "key": "melee",
       "name": "Dugout Automaton",
       "image_id": "8c69d6dd-674e-4547-9a60-b74cd73bed71",
-      "status": "integrated",
+      "status": "verified",
       "reference": "../../../art-source/clockwork-pop/references/melee.png",
-      "notes": "Good base and arm. Move the hand nearer the butt knob: the reference still grips near the taper. Keep most of the bat beyond the grip, with a vertical yaw pivot and hit marker at the tip.",
+      "notes": "Bat is held near its butt knob, with 84% of the length beyond the grip. Visible reach scales with actual attack range; fixed base stays planted.",
       "run": "cp_melee-v1",
       "preview": "previews/melee.png",
       "metrics": "12,644 triangles \u00b7 16 meshes \u00b7 8 materials"
@@ -61,7 +61,7 @@
       "key": "basic",
       "name": "Bramble Wisp",
       "image_id": "f75c5c63-ddff-4254-b4f1-ba301358b191",
-      "status": "integrated",
+      "status": "verified",
       "reference": "../../../art-source/clockwork-pop/references/basic.png",
       "notes": "Broad leaf-like armour gives a distinctive bramble silhouette. Variant 3 is the more mechanical alternate. Use simple hover motion before articulating every thorn.",
       "run": "cp_basic-v1",
@@ -72,9 +72,9 @@
       "key": "fast",
       "name": "Skipper Moth",
       "image_id": "07d1ec0b-0520-4533-8bf5-13356d93ead7",
-      "status": "integrated",
+      "status": "verified",
       "reference": "../../../art-source/clockwork-pop/references/fast.png",
-      "notes": "Clean wings without the obvious smoke trail of variant 3. Test wing opacity and silhouette at gameplay distance.",
+      "notes": "Clean mint wings with mirrored hinge motion and a readable hover silhouette. Texture loops and reversed surface winding corrected.",
       "run": "cp_fast-v1",
       "preview": "previews/fast.png",
       "metrics": "9,192 triangles \u00b7 9 meshes \u00b7 7 materials"
@@ -83,27 +83,31 @@
       "key": "tank",
       "name": "Bulwark Hermit",
       "image_id": "f572c765-8035-49a6-9a6c-c108acd56e06",
-      "status": "building",
+      "status": "verified",
       "reference": "../../../art-source/clockwork-pop/references/tank.png",
-      "notes": "Heavy low crab stance and clear supporting legs. Variant 3 is a friendlier alternate; variant 2 has a more helmet-like face. Resolve hidden leg layout before rigging.",
-      "run": "cp_tank-v1"
+      "notes": "Six separate root hip pivots under a heavy brass-banded dome. Mirrored lift and stride checked; rounded feet simplify the concept.",
+      "run": "cp_tank-v1",
+      "preview": "previews/tank.png",
+      "metrics": "13,438 triangles \u00b7 15 meshes \u00b7 8 materials"
     },
     {
       "key": "charger",
       "name": "Ramjet Beetle",
       "image_id": "c4e1881c-697e-4c09-b178-29b90315b3ea",
-      "status": "building",
+      "status": "verified",
       "reference": "../../../art-source/clockwork-pop/references/charger.png",
-      "notes": "Clear ram tusks, forward visor and sturdy grounded stance. Use a simple four-leg articulation contract.",
-      "run": "cp_charger-v1"
+      "notes": "Four root hip pivots, coral shell, teal visor and forward brass tusks. Imported stride and existing wind-up/dash behavior pass.",
+      "run": "cp_charger-v1",
+      "preview": "previews/charger.png",
+      "metrics": "10,202 triangles \u00b7 5 meshes \u00b7 8 materials"
     },
     {
       "key": "hero",
       "name": "Pip the Lantern Keeper",
       "image_id": "e142d444-d9d9-49cd-bd63-0fd5e1acfb27",
-      "status": "integrated",
+      "status": "verified",
       "reference": "../../../art-source/clockwork-pop/references/hero.png",
-      "notes": "Readable face, chest lantern and weapon. Needs coordinated locomotion and aiming; the biped presentation differs from the current hovering hero.",
+      "notes": "Independent torso aiming with separate hip pivots, planted-foot clearance and pistol recoil. Helmet and boots are simplified from the concept.",
       "run": "cp_hero-v1",
       "preview": "previews/hero.png",
       "metrics": "11,130 triangles \u00b7 6 meshes \u00b7 9 materials"
@@ -112,7 +116,7 @@
       "key": "dropbox",
       "name": "Keepsake Cache",
       "image_id": "d360b9ed-da17-41dc-9353-946294661f07",
-      "status": "integrated",
+      "status": "verified",
       "reference": "../../../art-source/clockwork-pop/references/dropbox.png",
       "notes": "Clean box, readable latch and lid seam. Model the cream top as a solid inset lid.",
       "run": "cp_dropbox-v1",
@@ -123,7 +127,7 @@
       "key": "exploder",
       "name": "Cinder Puffer",
       "image_id": "40885d15-7c25-41e9-98e8-192025dc5423",
-      "status": "integrated",
+      "status": "verified",
       "reference": "../../../art-source/clockwork-pop/references/exploder.png",
       "notes": "User authorized agent selection. Capped teal top variant1; coral pressure vessel, brass plugs, orange-red glass eye.",
       "run": "cp_exploder-v1",
@@ -239,16 +243,36 @@
     {
       "stage": "Skipper and surface repairs",
       "text": "Skipper iteration4 accepted and imported: 9,192 triangles, 9 meshes, 7 materials, four textures. Wing loops removed; mirrored hinge motion reviewed in Godot and at gameplay scale. Bramble iteration6 and Cinder iteration3 winding repairs accepted and re-imported with unchanged counts. Asset audit now verifies reviewed SHA-256 hashes. Added cached foot-bound clearance correction; 15 arena integration tests and five motion tests pass, including imported boot clearance."
+    },
+    {
+      "stage": "Export: tank",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: charger",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Full roster integration and measured performance",
+      "text": "Promoted Bulwark Hermit iteration3 and Ramjet Beetle iteration3. Reviewed final imported motion poses and gameplay-scale capture. Corrected mirrored forward stride direction and updated the legacy-tint test to preserve authored moth colors. All 857 tests pass with the full roster. Repeated mixed-crowd benchmarks recorded alongside the original family; animated Clockwork medians 15.3\u201315.5 ms, p95 21.5\u201322.4 ms on RTX4090. No further geometry reduction justified by this measurement."
+    },
+    {
+      "stage": "Ready for human playtest",
+      "text": "Normal main scene launches without errors. Application capture checks Play, settings, pause, defeat, victory and return to menu. Six-wave automated progression wins with 342 kills and no defeat; this verifies the game loop, not human balance or input feel. HTML report reviewed in browser, including the pose scrubber. All twelve assets verified; originals retained. Remaining playtest judgments: cache size, crowded silhouettes, and motion feel. Minimum-spec performance and larger crowds remain unmeasured."
     }
   ],
   "checks": {
-    "Visual acceptance": "pending",
-    "Movement and attack validation": "pending",
-    "Full game tests": "853 pass with nine integrated assets; final roster pending",
-    "Performance comparison": "pending",
-    "Playtest launch": "pending"
+    "Visual acceptance": "All 12 reviewed in Blender and Godot; final gameplay-scale roster and sampled poses accepted",
+    "Movement and attack validation": "Imported pivots, muzzle facing, targeting, melee reach, alternating stride and floor clearance pass",
+    "Full game tests": "857/857 tests pass; 9,724 assertions. Resource audit: 162 source files, 24 records including originals",
+    "Performance comparison": "Two runs each: original, animated Clockwork, reduced motion; full counts and raw metrics retained in benchmarks.json",
+    "Playtest launch": "Passed: normal main-scene launch, full application flow, and six-wave automated progression victory (342 kills)"
   },
   "captures": [
+    {
+      "path": "previews/full-roster-in-game.png",
+      "caption": "Final twelve-model roster at gameplay scale. Tank and charger are now the new models; the cache intentionally remains a prominent prop."
+    },
     {
       "path": "previews/ten-roster-in-game.png",
       "caption": "Ten imported Clockwork models at gameplay scale; only tank and charger still use original models in this capture."
@@ -265,5 +289,40 @@
       "path": "previews/tesla-in-game.png",
       "caption": "Six integrated assets; hero, melee and non-basic enemies still use originals in this capture. This is a visual check, not a performance measurement."
     }
-  ]
+  ],
+  "performance": {
+    "rows": [
+      [
+        "Original assets",
+        "17.4\u201318.0 ms",
+        "55\u201357",
+        "32.1\u201332.7 ms"
+      ],
+      [
+        "Clockwork animated",
+        "15.3\u201315.5 ms",
+        "~65",
+        "21.5\u201322.4 ms"
+      ],
+      [
+        "Clockwork reduced motion",
+        "11.8\u201313.6 ms",
+        "73\u201385",
+        "17.3\u201320.8 ms"
+      ]
+    ],
+    "method": "Godot 4.7.1 Forward+, RTX 4090, 1280\u00d7720, VSync off. Two runs per setting, each with a 2-second warm-up and 10-second sample. Fixed crowd: 30 of each of five enemy types, one cache, hero and 12 turrets. Rendering jobs and tests stopped for benchmarks; timings are local development measurements.",
+    "interpretation": "The animated roster is suitable for playtesting on this machine, with lower median/p95 frame times than the original set in this scene. It is not a locked 60 FPS guarantee: tail frames exceed 16.7 ms, and minimum-spec hardware is untested. Reduced motion also disables other cosmetic effects, so its difference is not an isolated animation cost. Snapshot draw calls: about 800\u2013802 vs 684 original; follow up with profiling before increasing crowd size."
+  },
+  "motion_frames": [
+    "previews/pose-015.png",
+    "previews/pose-030.png",
+    "previews/pose-045.png",
+    "previews/pose-060.png",
+    "previews/pose-075.png",
+    "previews/pose-090.png",
+    "previews/pose-105.png",
+    "previews/pose-120.png"
+  ],
+  "launch": "On branch feat/clockwork-pop-playtest, run pwsh -File .\\turret-game\\launch.ps1 from the monorepo root and choose PLAY. All twelve assets are active by default. Settings \u2192 Reduced motion disables cosmetic movement. Original models remain available with the Godot user argument --legacy-assets for comparisons. Human playtesting is the next step."
 }

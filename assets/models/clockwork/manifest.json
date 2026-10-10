@@ -109,6 +109,28 @@
       "meshes": 7,
       "materials": 7,
       "iteration": 3
+    },
+    {
+      "id": "tank",
+      "source": "art-source/clockwork-pop/tank/build_cp_tank.py",
+      "model": "assets/models/clockwork/cp_tank.glb",
+      "reference": "art-source/clockwork-pop/references/tank.png",
+      "sha256": "a3da992555f0bef3e72d650db732c87d9a3576967906c6393695ebcdcecbb6da",
+      "triangles": 13438,
+      "meshes": 15,
+      "materials": 8,
+      "iteration": 3
+    },
+    {
+      "id": "charger",
+      "source": "art-source/clockwork-pop/charger/build_cp_charger.py",
+      "model": "assets/models/clockwork/cp_charger.glb",
+      "reference": "art-source/clockwork-pop/references/charger.png",
+      "sha256": "88bac45c697b10a5cff0c76747a508bc8a7948b58bf64160b61e1ae4576006d8",
+      "triangles": 10202,
+      "meshes": 5,
+      "materials": 8,
+      "iteration": 3
     }
   ]
 }

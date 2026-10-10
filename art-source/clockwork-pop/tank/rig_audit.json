@@ -1,0 +1,132 @@
+{
+  "legs": {
+    "Leg_L_0": {
+      "hip_world": [
+        -0.33000001311302185,
+        0.23999999463558197,
+        0.3149999976158142
+      ],
+      "mesh_descendants": [
+        "Limb_L_0"
+      ],
+      "rotation_identity_at_rest": true,
+      "min_z_rest": 0.010999949648976326,
+      "min_z_lift_0_16rad": 0.04356013983488083,
+      "lift_axis_blender": "Y",
+      "lift_sign_blender": 1,
+      "lift_axis_godot": "Z",
+      "lift_sign_godot": -1,
+      "stride_axis_blender": "Z",
+      "stride_axis_godot": "Y",
+      "forward_stride_sign": -1
+    },
+    "Leg_L_1": {
+      "hip_world": [
+        -0.33000001311302185,
+        0.0,
+        0.3149999976158142
+      ],
+      "mesh_descendants": [
+        "Limb_L_1"
+      ],
+      "rotation_identity_at_rest": true,
+      "min_z_rest": 0.010999961756169796,
+      "min_z_lift_0_16rad": 0.043560151010751724,
+      "lift_axis_blender": "Y",
+      "lift_sign_blender": 1,
+      "lift_axis_godot": "Z",
+      "lift_sign_godot": -1,
+      "stride_axis_blender": "Z",
+      "stride_axis_godot": "Y",
+      "forward_stride_sign": -1
+    },
+    "Leg_L_2": {
+      "hip_world": [
+        -0.33000001311302185,
+        -0.23999999463558197,
+        0.3149999976158142
+      ],
+      "mesh_descendants": [
+        "Limb_L_2"
+      ],
+      "rotation_identity_at_rest": true,
+      "min_z_rest": 0.010999973863363266,
+      "min_z_lift_0_16rad": 0.04356016218662262,
+      "lift_axis_blender": "Y",
+      "lift_sign_blender": 1,
+      "lift_axis_godot": "Z",
+      "lift_sign_godot": -1,
+      "stride_axis_blender": "Z",
+      "stride_axis_godot": "Y",
+      "forward_stride_sign": -1
+    },
+    "Leg_R_0": {
+      "hip_world": [
+        0.33000001311302185,
+        0.23999999463558197,
+        0.3149999976158142
+      ],
+      "mesh_descendants": [
+        "Limb_R_0"
+      ],
+      "rotation_identity_at_rest": true,
+      "min_z_rest": 0.010999981313943863,
+      "min_z_lift_0_16rad": 0.04356018453836441,
+      "lift_axis_blender": "Y",
+      "lift_sign_blender": -1,
+      "lift_axis_godot": "Z",
+      "lift_sign_godot": 1,
+      "stride_axis_blender": "Z",
+      "stride_axis_godot": "Y",
+      "forward_stride_sign": 1
+    },
+    "Leg_R_1": {
+      "hip_world": [
+        0.33000001311302185,
+        0.0,
+        0.3149999976158142
+      ],
+      "mesh_descendants": [
+        "Limb_R_1"
+      ],
+      "rotation_identity_at_rest": true,
+      "min_z_rest": 0.010999993421137333,
+      "min_z_lift_0_16rad": 0.043560195714235306,
+      "lift_axis_blender": "Y",
+      "lift_sign_blender": -1,
+      "lift_axis_godot": "Z",
+      "lift_sign_godot": 1,
+      "stride_axis_blender": "Z",
+      "stride_axis_godot": "Y",
+      "forward_stride_sign": 1
+    },
+    "Leg_R_2": {
+      "hip_world": [
+        0.33000001311302185,
+        -0.23999999463558197,
+        0.3149999976158142
+      ],
+      "mesh_descendants": [
+        "Limb_R_2"
+      ],
+      "rotation_identity_at_rest": true,
+      "min_z_rest": 0.011000005528330803,
+      "min_z_lift_0_16rad": 0.0435602106153965,
+      "lift_axis_blender": "Y",
+      "lift_sign_blender": -1,
+      "lift_axis_godot": "Z",
+      "lift_sign_godot": 1,
+      "stride_axis_blender": "Z",
+      "stride_axis_godot": "Y",
+      "forward_stride_sign": 1
+    }
+  },
+  "six_independent_root_level_hips": true,
+  "leg_lift_leaves_body_unchanged": true,
+  "body_bob_leaves_legs_unchanged": true,
+  "Body_identity_rotation": [
+    0.0,
+    0.0,
+    0.0
+  ]
+}

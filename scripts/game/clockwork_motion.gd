@@ -108,7 +108,7 @@ func tick(delta: float, speed: float, reduced: bool, carrying: bool = false) -> 
 		if kind in ["tank", "charger"]:
 			var cycle := phase + limb_phases[index]
 			var initial: Transform3D = rest[limbs[index]]
-			var sweep := sin(cycle) * .16 * moving
+			var sweep := -sin(cycle) * .16 * moving * limb_sides[index]
 			var lift := maxf(0.0, cos(cycle)) * .14 * moving * limb_sides[index]
 			limbs[index].transform = Transform3D(initial.basis * Basis(Vector3.UP, sweep) * Basis(Vector3.FORWARD, lift), initial.origin)
 		else:

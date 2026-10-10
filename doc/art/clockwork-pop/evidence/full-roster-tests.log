@@ -1,0 +1,97 @@
+Using Godot: 4.7.1.stable.official.a13da4feb
+Test artifacts: C:\Users\AndresRebolledo\source\repos\turret-dev\turret-game\.test-results\101d7653eef242ef80832a3b565e8507
+Totals
+Scripts              61
+Tests               857
+Passing Tests       857
+Asserts            9724
+Time              32.419s
+WARNING: [AssetConfigService] Invalid texture path 'res://scripts/game/combat_actor.gd' for player:main. Using fallback.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://scripts/autoload/debug_service.gd:69)
+       [1] _validate_visual_config (res://scripts/systems/assets/asset_config_validator.gd:30)
+       [2] _validate_resolved_config (res://scripts/systems/assets/asset_config_validator.gd:14)
+       [3] resolve (res://scripts/systems/assets/asset_config_resolver.gd:18)
+       [4] _get_resolved_config (res://scripts/autoload/asset_config_service.gd:293)
+       [5] get_player_config (res://scripts/autoload/asset_config_service.gd:61)
+       [6] test_rejects_non_assets_texture_path (res://tests/unit/test_asset_config_validation.gd:36)
+       [7] _run_test (res://addons/gut/gut.gd:615)
+       [8] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: [AssetConfigService] Invalid collision profile 'res://resources/ui_theme.tres' for enemy:basic. Using fallback.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://scripts/autoload/debug_service.gd:69)
+       [1] _validate_collision_config (res://scripts/systems/assets/asset_config_validator.gd:62)
+       [2] _validate_resolved_config (res://scripts/systems/assets/asset_config_validator.gd:15)
+       [3] resolve (res://scripts/systems/assets/asset_config_resolver.gd:18)
+       [4] _get_resolved_config (res://scripts/autoload/asset_config_service.gd:293)
+       [5] get_enemy_config (res://scripts/autoload/asset_config_service.gd:53)
+       [6] test_rejects_invalid_collision_profile_path (res://tests/unit/test_asset_config_validation.gd:48)
+       [7] _run_test (res://addons/gut/gut.gd:615)
+       [8] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: [CollisionProfile] Physics shape is larger than hurtbox! This will cause hit detection issues.
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://scripts/autoload/debug_service.gd:69)
+       [1] validate (res://scripts/components/collision_profile.gd:36)
+       [2] upsert_collision_profile_override (res://scripts/autoload/asset_config_service.gd:197)
+       [3] test_rejects_invalid_collision_profile_patch_and_preserves_previous (res://tests/unit/test_asset_config_validation.gd:66)
+       [4] _run_test (res://addons/gut/gut.gd:615)
+       [5] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: [AssetConfigService] Rejected invalid collision profile patch for enemy:basic
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://scripts/autoload/debug_service.gd:69)
+       [1] upsert_collision_profile_override (res://scripts/autoload/asset_config_service.gd:198)
+       [2] test_rejects_invalid_collision_profile_patch_and_preserves_previous (res://tests/unit/test_asset_config_validation.gd:66)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+ERROR: ConfigFile parse error at user://storage_tests/4470472/asset_presets/broken.cfg:0: Unexpected EOF while parsing simple tag.
+   at: _parse (core/io/config_file.cpp:293)
+   GDScript backtrace (most recent call first):
+       [0] load_user_preset_file (res://scripts/systems/assets/asset_preset_store.gd:124)
+       [1] load_user_presets (res://scripts/systems/assets/asset_preset_store.gd:95)
+       [2] test_malformed_preset_is_not_loaded (res://tests/unit/test_asset_store.gd:34)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: [AssetConfigService] Failed to load user preset 'broken' (43)
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://scripts/autoload/debug_service.gd:69)
+       [1] load_user_preset_file (res://scripts/systems/assets/asset_preset_store.gd:126)
+       [2] load_user_presets (res://scripts/systems/assets/asset_preset_store.gd:95)
+       [3] test_malformed_preset_is_not_loaded (res://tests/unit/test_asset_store.gd:34)
+       [4] _run_test (res://addons/gut/gut.gd:615)
+       [5] _test_the_scripts (res://addons/gut/gut.gd:818)
+ERROR: Could not create directory: 'C:/Users/AndresRebolledo/source/repos/turret-dev/turret-game/.test-results/101d7653eef242ef80832a3b565e8507/Godot/app_userdata/Turret Survivor/storage_tests/4476849/blocked/asset_presets'.
+   at: make_dir_recursive (core/io/dir_access.cpp:179)
+   GDScript backtrace (most recent call first):
+       [0] save_user_preset (res://scripts/systems/assets/asset_preset_store.gd:146)
+       [1] test_write_failure_is_returned (res://tests/unit/test_asset_store.gd:47)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: [AssetConfigService] Failed saving user preset 'example' (7)
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://scripts/autoload/debug_service.gd:69)
+       [1] save_user_preset (res://scripts/systems/assets/asset_preset_store.gd:161)
+       [2] test_write_failure_is_returned (res://tests/unit/test_asset_store.gd:47)
+       [3] _run_test (res://addons/gut/gut.gd:615)
+       [4] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: Test warning
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://scripts/autoload/debug_service.gd:69)
+       [1] test_warn_does_not_crash (res://tests/unit/test_debug_service.gd:85)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+WARNING: Warning: detail 123
+   at: push_warning (core/variant/variant_utility.cpp:1033)
+   GDScript backtrace (most recent call first):
+       [0] warn (res://scripts/autoload/debug_service.gd:69)
+       [1] test_warn_with_multiple_args_does_not_crash (res://tests/unit/test_debug_service.gd:90)
+       [2] _run_test (res://addons/gut/gut.gd:615)
+       [3] _test_the_scripts (res://addons/gut/gut.gd:818)
+
+All 857 tests passed with no risky tests, unexpected errors, or remaining orphans.

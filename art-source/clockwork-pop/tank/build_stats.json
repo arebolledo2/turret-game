@@ -1,0 +1,97 @@
+{
+  "triangles": 13438,
+  "mesh_objects": 15,
+  "materials": 8,
+  "textures": 4,
+  "Body_position": [
+    0,
+    0,
+    0.52
+  ],
+  "leg_hinges": {
+    "Leg_L_0": {
+      "position": [
+        -0.33000001311302185,
+        0.23999999463558197,
+        0.3149999976158142
+      ],
+      "hinge_axis_blender": [
+        0,
+        1,
+        0
+      ],
+      "lift_sign_blender_y": 1,
+      "stride_sign_blender_z": -1
+    },
+    "Leg_L_1": {
+      "position": [
+        -0.33000001311302185,
+        0.0,
+        0.3149999976158142
+      ],
+      "hinge_axis_blender": [
+        0,
+        1,
+        0
+      ],
+      "lift_sign_blender_y": 1,
+      "stride_sign_blender_z": -1
+    },
+    "Leg_L_2": {
+      "position": [
+        -0.33000001311302185,
+        -0.23999999463558197,
+        0.3149999976158142
+      ],
+      "hinge_axis_blender": [
+        0,
+        1,
+        0
+      ],
+      "lift_sign_blender_y": 1,
+      "stride_sign_blender_z": -1
+    },
+    "Leg_R_0": {
+      "position": [
+        0.33000001311302185,
+        0.23999999463558197,
+        0.3149999976158142
+      ],
+      "hinge_axis_blender": [
+        0,
+        1,
+        0
+      ],
+      "lift_sign_blender_y": -1,
+      "stride_sign_blender_z": 1
+    },
+    "Leg_R_1": {
+      "position": [
+        0.33000001311302185,
+        0.0,
+        0.3149999976158142
+      ],
+      "hinge_axis_blender": [
+        0,
+        1,
+        0
+      ],
+      "lift_sign_blender_y": -1,
+      "stride_sign_blender_z": 1
+    },
+    "Leg_R_2": {
+      "position": [
+        0.33000001311302185,
+        -0.23999999463558197,
+        0.3149999976158142
+      ],
+      "hinge_axis_blender": [
+        0,
+        1,
+        0
+      ],
+      "lift_sign_blender_y": -1,
+      "stride_sign_blender_z": 1
+    }
+  }
+}

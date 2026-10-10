@@ -93,6 +93,9 @@ func test_quadruped_lift_keeps_feet_above_ground_and_stops_at_rest() -> void:
 			highest = maxf(highest, height)
 	assert_gte(lowest, -.0001, "Mirrored hips lift feet instead of pushing them below ground")
 	assert_gt(highest, .02, "The gait includes visible swing clearance")
+	var left_front: Node3D = model.get_node("Leg_L_0/Foot")
+	var right_front: Node3D = model.get_node("Leg_R_0/Foot")
+	assert_lt(left_front.global_position.z * right_front.global_position.z, 0.0, "Opposite front feet travel in opposite stride phases")
 	motion.tick(.1, 0.0, false)
 	for hip in motion.limbs:
 		assert_true(hip.transform.is_equal_approx(motion.rest[hip]))
