@@ -135,6 +135,7 @@ func spawn_enemy(at: Vector3, type_id: String = "basic", elite: bool = false, se
 	enemy.ignores_hero = seeker
 	enemy.position = at
 	world.actor_root.add_child(enemy)
+	enemy.reset_physics_interpolation()
 	world.enemies.append(enemy)
 	return enemy
 

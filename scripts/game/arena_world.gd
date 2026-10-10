@@ -82,10 +82,14 @@ func _ready() -> void:
 	dev.world = self
 	placement.world = self
 	add_child(session)
+	# Interpolate physics-driven actors; scenery/UI/idle effects keep their own clocks.
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	actor_root = Node3D.new()
+	actor_root.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_ON
 	actor_root.name = "Actors"
 	add_child(actor_root)
 	pickup_root = Node3D.new()
+	pickup_root.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_ON
 	pickup_root.name = "Scrap"
 	add_child(pickup_root)
 	if convoy_mode:
@@ -161,6 +165,7 @@ func start_run() -> void:
 		_convoy_seed = GameRandom.gameplay.randi()
 		plan_convoy_route(1)
 	actor_root.add_child(player)
+	player.reset_physics_interpolation()
 	var listener := AudioListener3D.new()
 	player.add_child(listener)
 	listener.make_current()
@@ -287,6 +292,7 @@ func add_turret(at: Vector3, type_id: String = "normal") -> TurretActor:
 	_next_turret_id += 1
 	turret.position = at
 	actor_root.add_child(turret)
+	turret.reset_physics_interpolation()
 	turrets.append(turret)
 	TurretStatsService.turret_counts[type_id] = int(TurretStatsService.turret_counts.get(type_id, 0)) + 1
 	GameStateService.turrets_spawned = turrets.size()
@@ -328,6 +334,7 @@ func _on_enemy_died(enemy: CombatActor) -> void:
 	pickup.amount = enemy.scrap_value
 	pickup.position = enemy.position
 	pickup_root.add_child(pickup)
+	pickup.reset_physics_interpolation()
 	enemies.erase(enemy)
 	DeathDissolve.spawn(actor_root, enemy)
 	enemy.queue_free()

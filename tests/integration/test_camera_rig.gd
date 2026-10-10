@@ -87,3 +87,9 @@ func test_turret_placement_search_starts_from_the_player() -> void:
 	world.player.position = Vector3(20, 0, 10)
 	var at := world.find_placement()
 	assert_lt(WorldGeometry.planar(at - world.player.position).length(), 8.0)
+
+func test_snap_clears_old_camera_interpolation_history() -> void:
+	world.camera.get_global_transform_interpolated()
+	world.player.position = Vector3(8, 0, 4)
+	rig.snap()
+	assert_almost_eq(world.camera.get_global_transform_interpolated().origin, world.camera.global_position, Vector3.ONE * .001, "Snapping must not sweep from the old view")

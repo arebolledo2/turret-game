@@ -147,3 +147,7 @@ Settings offers **Off / Contextual / All**, defaulting to Contextual. Contextual
 ### Remembered run choices
 
 Difficulty and mode selections on the title screen are saved immediately and restored on the next launch. Returning to the menu or restarting a run retains the selections. If a saved mode is disabled by a feature flag, the menu uses Survive without overwriting the saved mode.
+
+### Movement smoothing
+
+Moving actors, pickups and the follow camera use physics interpolation to blend rendered poses between simulation ticks. Camera follow runs after actor physics. Idle-animated build zones and effects keep their own render timing. Spawns, reused projectiles, camera snaps and turret carry/place transitions reset interpolation history to avoid trails from old positions. `tools/check_camera_follow.tscn` checks hero stability and enemy movement between rendered frames; run with `--fixed-fps 144`, optionally adding `-- --slow-physics` for a 10 Hz stress check. Normal gameplay retains its existing physics rate.

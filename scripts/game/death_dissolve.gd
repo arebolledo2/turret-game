@@ -20,6 +20,7 @@ static func spawn(parent: Node3D, actor: CombatActor) -> DeathDissolve:
 	corpse.global_transform = actor.global_transform
 	actor.visual.reparent(corpse) # keeps the global transform, so the model stays exactly where it died
 	corpse._convert(actor.visual, maxf(actor.body_scale, .1))
+	corpse.reset_physics_interpolation()
 	return corpse
 
 func _enter_tree() -> void:

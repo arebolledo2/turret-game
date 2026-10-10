@@ -192,6 +192,10 @@ zoom_out={
 2d_physics/layer_6="enemy_hurtbox"
 2d_physics/layer_8="melee_attack"
 
+[physics]
+
+common/physics_interpolation=true
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0

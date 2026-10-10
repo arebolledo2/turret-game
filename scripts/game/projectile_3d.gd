@@ -77,6 +77,7 @@ func acquire_shot(origin: Vector3, heading: Vector3, spec: CombatShot3D) -> void
 	remaining = 3.0
 	active = true
 	visible = true
+	reset_physics_interpolation() # Pooled shots must start at the new muzzle, not their previous hit.
 	set_physics_process(true)
 
 func release() -> void:

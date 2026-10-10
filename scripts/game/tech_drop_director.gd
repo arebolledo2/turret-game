@@ -96,6 +96,7 @@ func spawn(at: Vector3) -> CombatActor:
 	drop.body_scale = GameConstants.TECH_DROP_BODY_SCALE
 	drop.position = at
 	world.actor_root.add_child(drop)
+	drop.reset_physics_interpolation()
 	world.enemies.append(drop)
 	spawned += 1
 	return drop
@@ -111,6 +112,7 @@ func reward(drop: CombatActor) -> void:
 		var distance := GameRandom.gameplay.randf() * GameConstants.TECH_DROP_SCATTER_RADIUS
 		pickup.position = drop.position + Vector3(cos(angle), 0, sin(angle)) * distance
 		world.pickup_root.add_child(pickup)
+		pickup.reset_physics_interpolation()
 	world.combat.explosion.emit(WorldGeometry.planar(drop.position), 1.4)
 	var item_id := ""
 	if GameRandom.gameplay.randf() < GameConstants.TECH_DROP_ITEM_CHANCE:

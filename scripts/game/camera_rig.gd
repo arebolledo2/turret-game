@@ -24,6 +24,7 @@ func setup(new_camera: Camera3D, new_world: Node3D) -> void:
 	# Run after the player: both transforms must be presented from the same physics tick.
 	process_physics_priority = 100
 	camera = new_camera
+	camera.physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_ON
 	world = new_world
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 	camera.position = OFFSET
@@ -65,6 +66,7 @@ func snap() -> void:
 	zoom = target_zoom
 	focus = clamp_focus(_follow_point(), zoom)
 	_apply()
+	camera.reset_physics_interpolation()
 
 func advance(delta: float) -> void:
 	var held := Input.get_action_strength("zoom_in") - Input.get_action_strength("zoom_out")

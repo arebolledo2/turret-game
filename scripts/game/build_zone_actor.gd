@@ -21,6 +21,10 @@ var _fill: MeshInstance3D
 var _label: Label3D
 var _pulse: float = 0.0
 
+func _init() -> void:
+	# The zone wobble is intentionally animated every rendered frame.
+	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
+
 func setup(zone_kind: String, zone_asset_id: String, zone_tier: int) -> void:
 	kind = zone_kind
 	asset_id = zone_asset_id

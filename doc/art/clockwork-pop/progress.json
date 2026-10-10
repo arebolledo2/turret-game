@@ -267,12 +267,16 @@
     {
       "stage": "Camera follow jitter fix",
       "text": "Camera was smoothing in render frames while the hero moved on physics ticks. Moved camera advance to physics processing at priority100, after player movement. A rendered constant-motion probe at 120 FPS reproduced 120 backward screen steps and a 4.89px oscillation before the change; afterward, 120 and 144 FPS checks show zero backward steps and zero ground-anchor oscillation. All nine camera tests (326 assertions) pass, including zoom and arena bounds. Intentional walking animation remains."
+    },
+    {
+      "stage": "Interpolate the moving scene",
+      "text": "Follow-up to enemy vibration: enabled scoped physics interpolation for actors, pickups and camera, keeping idle effects/build-zone animation separate. Reset histories for spawns, pooled projectiles, dissolves, camera snaps and carried turret placement. At 144 render FPS, an enemy held its rendered position on 167/288 sampled frames before interpolation and zero afterward. Hero rendered-anchor oscillation stays below 0.001px. The 10Hz physics stress check also passes. Full suite: 863 tests pass."
     }
   ],
   "checks": {
     "Visual acceptance": "All 12 reviewed in Blender and Godot; final gameplay-scale roster and sampled poses accepted",
     "Movement and attack validation": "Imported pivots, muzzle facing, targeting, melee reach, alternating stride and floor clearance pass",
-    "Full game tests": "860/860 tests pass after contextual markers; saved-preference checks also pass",
+    "Full game tests": "863/863 tests pass after movement interpolation",
     "Performance comparison": "Two runs each: original, animated Clockwork, reduced motion; full counts and raw metrics retained in benchmarks.json",
     "Playtest launch": "Passed: normal main-scene launch, full application flow, and six-wave automated progression victory (342 kills)"
   },

@@ -47,6 +47,7 @@ func interact() -> bool:
 		if at.distance_to(carry_origin) > .01:
 			world.telemetry.record_turret_move()
 		carried.position = at
+		carried.reset_physics_interpolation()
 		carried.carried = false
 		carried = null
 		world.message = "Turret deployed."
@@ -62,6 +63,8 @@ func interact() -> bool:
 		carried = nearest
 		carry_origin = nearest.position
 		nearest.carried = true
+		nearest.position = world.player.position + Vector3(0, 1.15, .25)
+		nearest.reset_physics_interpolation()
 		world.message = "Carrying turret · press E / A to place"
 		return true
 	return false
@@ -120,4 +123,5 @@ func drop_carried() -> void:
 	if is_instance_valid(carried):
 		carried.carried = false
 		carried.position = carry_origin
+		carried.reset_physics_interpolation()
 	carried = null
