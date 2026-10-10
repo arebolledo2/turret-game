@@ -263,6 +263,10 @@
     {
       "stage": "Contextual ground markers",
       "text": "Merged the roster into master. Added saved Off / Contextual / All ground-marker preference, default Contextual. Routine enemy and player rings are hidden; special threats retain their cue. Entrench shows during nearby inspection and for 0.65 seconds on stack gain, without changing bonuses. Core clearance shows while carrying a turret. Build zones, attack warnings, slow status and combat effects stay visible. Full suite: 860 tests pass; saved-preference round-trip and invalid values checked separately. Settings and gameplay captures reviewed."
+    },
+    {
+      "stage": "Camera follow jitter fix",
+      "text": "Camera was smoothing in render frames while the hero moved on physics ticks. Moved camera advance to physics processing at priority100, after player movement. A rendered constant-motion probe at 120 FPS reproduced 120 backward screen steps and a 4.89px oscillation before the change; afterward, 120 and 144 FPS checks show zero backward steps and zero ground-anchor oscillation. All nine camera tests (326 assertions) pass, including zoom and arena bounds. Intentional walking animation remains."
     }
   ],
   "checks": {

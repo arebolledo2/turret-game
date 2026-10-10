@@ -21,6 +21,8 @@ static func aspect_for(viewport_size: Vector2) -> float:
 	return viewport_size.x / maxf(viewport_size.y, 1.0)
 
 func setup(new_camera: Camera3D, new_world: Node3D) -> void:
+	# Run after the player: both transforms must be presented from the same physics tick.
+	process_physics_priority = 100
 	camera = new_camera
 	world = new_world
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
@@ -73,7 +75,9 @@ func advance(delta: float) -> void:
 	focus = clamp_focus(focus.lerp(wanted, 1.0 - exp(-GameConstants.CAMERA_FOLLOW_SPEED * delta)), zoom)
 	_apply()
 
-func _process(delta: float) -> void:
+## Advancing in render frames against a physics-driven player makes the hero slide
+## backwards between ticks, then jump forward on the next movement update.
+func _physics_process(delta: float) -> void:
 	if camera:
 		advance(delta)
 
