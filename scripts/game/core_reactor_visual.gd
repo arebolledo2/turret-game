@@ -28,7 +28,7 @@ func _ready() -> void:
 func tick(delta: float, health_fraction: float, destroyed: bool, flash: float, reduced: bool) -> void:
 	if not reduced and not destroyed:
 		phase = fmod(phase + delta * .8, TAU * 10.0)
-		angles += Vector3(.24, -.38, .53) * delta
+		angles += Vector3(.48, -.76, 1.06) * delta
 		for i in range(3):
 			angles[i] = fposmod(angles[i], TAU)
 		# Apply absolute rotations to avoid incremental basis drift during long convoy runs.
