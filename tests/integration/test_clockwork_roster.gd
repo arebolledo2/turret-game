@@ -23,6 +23,8 @@ func test_imported_roster_has_the_required_articulation() -> void:
 		var required: Array[String] = ["Body"]
 		if key in ["ion", "plasma", "tesla", "shock", "melee"]:
 			required = ["Aim", "Muzzle"]
+		elif key == "core":
+			required = ["Body", "Orb", "Ring_Outer", "Ring_Middle", "Ring_Inner"]
 		elif key == "hero":
 			required = ["Body", "Head", "Arm_L", "Arm_R", "Leg_L", "Leg_R", "Muzzle"]
 		elif key == "fast":

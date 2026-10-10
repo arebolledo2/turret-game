@@ -133,6 +133,17 @@
       "run": "cp_exploder-v1",
       "preview": "previews/exploder.png",
       "metrics": "9,912 triangles \u00b7 7 meshes \u00b7 7 materials"
+    },
+    {
+      "key": "core",
+      "name": "Clockwork Gyroscope Core",
+      "image_id": "",
+      "reference": "previews/core-close.png",
+      "status": "verified",
+      "notes": "Created directly in 3D: teal/brass gyroscope with three independently rotating rings around a procedural plasma orb. Collision remains 1.1 m; health tint, destruction and reduced motion handled by the runtime.",
+      "run": "cp_core-v1",
+      "preview": "previews/core-close.png",
+      "metrics": "21,176 triangles \u00b7 5 meshes \u00b7 7 materials \u00b7 procedural orb shader"
     }
   ],
   "events": [
@@ -275,16 +286,32 @@
     {
       "stage": "Polished build and entrench indicators",
       "text": "Replaced tubular rings with antialiased flat floor dials. Build zones have dashed pending outlines, fixed-radius tier-colored boundaries, cardinal alignment marks and an inner progress arc. Entrenchment uses compact amber stack segments with partial next-stack progress. Removed radius wobble; occupied zones get only a restrained brightness pulse, disabled with Reduced motion. Existing Off/Contextual/All behavior and gameplay radii/bonuses are preserved. In-game state preview reviewed; all 863 tests pass."
+    },
+    {
+      "stage": "Gyroscope core",
+      "text": "Created directly in 3D at user request; one reviewed generation iteration. 21,176 triangles, 5 meshes, 7 materials; no bitmap textures. Three independently rotating rings and a procedural plasma orb replace the core in core/convoy modes. Health tint, destruction, reduced motion and physics interpolation are supported; original collision/repair rules remain. Reviewed close, rotated, gameplay, critical and destroyed Godot captures. All 865 tests pass; resource audit passes 170 sources/25 model records. No performance benchmark was run for this singleton."
     }
   ],
   "checks": {
-    "Visual acceptance": "All 12 reviewed in Blender and Godot; final gameplay-scale roster and sampled poses accepted",
+    "Visual acceptance": "All 12 converted assets plus the new core reviewed in Blender and Godot; core gameplay, motion, critical and destroyed states checked",
     "Movement and attack validation": "Imported pivots, muzzle facing, targeting, melee reach, alternating stride and floor clearance pass",
-    "Full game tests": "863/863 tests pass after movement interpolation",
+    "Full game tests": "865/865 tests pass; 9,789 assertions, including core/convoy and reduced motion",
     "Performance comparison": "Two runs each: original, animated Clockwork, reduced motion; full counts and raw metrics retained in benchmarks.json",
     "Playtest launch": "Passed: normal main-scene launch, full application flow, and six-wave automated progression victory (342 kills)"
   },
   "captures": [
+    {
+      "path": "previews/core-motion.gif",
+      "caption": "Core motion preview, sampled in the actual arena (10 frames/s GIF; not a performance measurement)."
+    },
+    {
+      "path": "previews/core-gameplay.png",
+      "caption": "Core at the default gameplay camera alongside Pip and Pepperbox."
+    },
+    {
+      "path": "previews/core-critical.png",
+      "caption": "Core at 20% health: warm coral plasma warns of damage."
+    },
     {
       "path": "previews/ground-dials.png",
       "caption": "New floor indicators: pending build zone, 36% and 78% construction progress above; three entrenchment stack levels below. Preview uses All markers to show each state."
@@ -348,5 +375,5 @@
     "previews/pose-105.png",
     "previews/pose-120.png"
   ],
-  "launch": "On branch master, run pwsh -File .\\turret-game\\launch.ps1 from the monorepo root and choose PLAY. All twelve assets are active by default. Settings \u2192 Reduced motion disables cosmetic movement. Original models remain available with the Godot user argument --legacy-assets for comparisons. Human playtesting is the next step."
+  "launch": "On branch master, run pwsh -File .\\turret-game\\launch.ps1 from the monorepo root and choose PLAY. The twelve converted assets and the new gyroscope core are active by default; choose Protect Core or Convoy to see the core. Settings \u2192 Reduced motion disables cosmetic movement. Original models remain available with the Godot user argument --legacy-assets for comparisons. Human playtesting is the next step."
 }

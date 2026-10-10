@@ -2,7 +2,7 @@ class_name ClockworkModels
 extends RefCounted
 
 ## Separate from the generated legacy manifest. --legacy-assets supports visual/performance A/B runs.
-const KEYS: Array[String] = ["ion", "plasma", "tesla", "shock", "melee", "basic", "fast", "tank", "charger", "exploder", "hero", "dropbox"]
+const KEYS: Array[String] = ["ion", "plasma", "tesla", "shock", "melee", "basic", "fast", "tank", "charger", "exploder", "hero", "dropbox", "core"]
 static var scenes: Dictionary = {}
 
 static func available(key: String) -> bool:

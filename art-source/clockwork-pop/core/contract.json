@@ -1,0 +1,21 @@
+{
+  "id": "cp_core",
+  "title": "Clockwork Reactor Core",
+  "build": "build_cp_core.py",
+  "glb": "cp_core.glb",
+  "required_nodes": ["Body", "Ring_Outer", "Ring_Middle", "Ring_Inner", "Orb"],
+  "marker_nodes": ["Orb"],
+  "origin_node": "Body",
+  "render_background": "#172938",
+  "limits": {
+    "height": [1.4, 1.8],
+    "max_width": 1.65,
+    "ground_gap": [-0.005, 0.01],
+    "max_triangles": 25000,
+    "max_mesh_objects": 16,
+    "max_materials": 10
+  },
+  "targets": {"max_triangles": 20000, "max_mesh_objects": 16, "max_materials": 10},
+  "reference_waived": true,
+  "notes": "Direct 3D hero asset, no reference image. Orb is a root mesh, all three ring pivots and Body are root empties. Ring children have baked tilts."
+}

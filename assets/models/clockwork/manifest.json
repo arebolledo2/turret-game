@@ -131,6 +131,17 @@
       "meshes": 5,
       "materials": 8,
       "iteration": 3
+    },
+    {
+      "id": "core",
+      "source": "art-source/clockwork-pop/core/build_cp_core.py",
+      "model": "assets/models/clockwork/cp_core.glb",
+      "reference": "",
+      "sha256": "c8839ab7870abbe2761a1f3a1ed8dbc126539275c9a3268caf30cf1ab681758b",
+      "triangles": 21176,
+      "meshes": 5,
+      "materials": 7,
+      "iteration": 1
     }
   ]
 }

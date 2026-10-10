@@ -1,0 +1,16 @@
+{
+  "asset": "cp_core",
+  "iteration": 1,
+  "glb_sha256": "c8839ab7870abbe2761a1f3a1ed8dbc126539275c9a3268caf30cf1ab681758b",
+  "triangles": 21176,
+  "mesh_nodes": 5,
+  "materials": 7,
+  "material_surfaces": 22,
+  "textures": 0,
+  "animations": 0,
+  "validation_passed": true,
+  "node_audit_passed": true,
+  "source": "cp_core.blend",
+  "builder": "build_cp_core.py",
+  "hero": "hero.png"
+}

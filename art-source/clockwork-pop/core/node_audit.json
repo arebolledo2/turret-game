@@ -1,0 +1,153 @@
+{
+  "passed": true,
+  "checks": {
+    "Body_root": true,
+    "Body_identity_rotation": true,
+    "Orb_root": true,
+    "Ring_Outer_root": true,
+    "Ring_Outer_identity_rotation": true,
+    "Ring_Middle_root": true,
+    "Ring_Middle_identity_rotation": true,
+    "Ring_Inner_root": true,
+    "Ring_Inner_identity_rotation": true,
+    "all_rotation_envelopes_disjoint": true,
+    "orb_uv_present": true
+  },
+  "nodes": {
+    "Body": {
+      "gltf_translation": [
+        0,
+        0,
+        0
+      ],
+      "rotation_xyzw": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "root": true,
+      "children": [
+        "Pedestal"
+      ]
+    },
+    "Orb": {
+      "gltf_translation": [
+        0,
+        0.8999999761581421,
+        0
+      ],
+      "rotation_xyzw": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "root": true,
+      "children": []
+    },
+    "Ring_Outer": {
+      "gltf_translation": [
+        0,
+        0.8999999761581421,
+        0
+      ],
+      "rotation_xyzw": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "root": true,
+      "children": [
+        "Ring_Outer_Hoop"
+      ]
+    },
+    "Ring_Middle": {
+      "gltf_translation": [
+        0,
+        0.8999999761581421,
+        0
+      ],
+      "rotation_xyzw": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "root": true,
+      "children": [
+        "Ring_Middle_Hoop"
+      ]
+    },
+    "Ring_Inner": {
+      "gltf_translation": [
+        0,
+        0.8999999761581421,
+        0
+      ],
+      "rotation_xyzw": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "root": true,
+      "children": [
+        "Ring_Inner_Hoop"
+      ]
+    }
+  },
+  "ring_radius_envelopes_m": {
+    "Ring_Outer": [
+      0.6663309668526924,
+      0.740067567232929
+    ],
+    "Ring_Middle": [
+      0.5563964254568909,
+      0.6300793838218387
+    ],
+    "Ring_Inner": [
+      0.44649408821007686,
+      0.5200961844563485
+    ]
+  },
+  "minimum_clearances_m": {
+    "outer_middle": 0.03625158303085374,
+    "middle_inner": 0.03630024100054241,
+    "inner_orb": 0.12149408821007684,
+    "outer_base_full_rotation": 0.012232435938038133
+  },
+  "base_top_m": 0.1476999968290329,
+  "orb_radius_m": 0.325,
+  "runtime_godot_axes": {
+    "Ring_Outer": "local Y",
+    "Ring_Middle": "local X",
+    "Ring_Inner": "local Z"
+  }
+}
