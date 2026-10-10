@@ -87,6 +87,17 @@
       "meshes": 7,
       "materials": 7,
       "iteration": 2
+    },
+    {
+      "id": "hero",
+      "source": "art-source/clockwork-pop/hero/build_cp_hero.py",
+      "model": "assets/models/clockwork/cp_hero.glb",
+      "reference": "art-source/clockwork-pop/references/hero.png",
+      "sha256": "319ff7d510920f454547cfdcfddf991b82255e9e2b2734c8683033b60501331f",
+      "triangles": 11130,
+      "meshes": 6,
+      "materials": 9,
+      "iteration": 3
     }
   ]
 }

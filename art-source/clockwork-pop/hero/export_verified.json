@@ -1,0 +1,114 @@
+{
+  "sha256": "319ff7d510920f454547cfdcfddf991b82255e9e2b2734c8683033b60501331f",
+  "bytes": 2793868,
+  "embedded_images": 4,
+  "meshes": 6,
+  "materials": 9,
+  "animations": 0,
+  "skins": 0,
+  "all_rest_rotations_identity": true,
+  "all_meshes_uv_mapped": true,
+  "lantern_alpha_mode": "BLEND",
+  "forward": "Blender +Y / glTF -Z",
+  "anatomical_right": "Blender X negative",
+  "rig": {
+    "Body": {
+      "parent": "Pip_Lantern_Keeper",
+      "blender_world": [
+        0,
+        0,
+        0.328
+      ],
+      "gltf_local_translation": [
+        0,
+        0.328000009059906,
+        0
+      ],
+      "identity_rest_rotation": true
+    },
+    "Head": {
+      "parent": "Body",
+      "blender_world": [
+        0,
+        0,
+        0.668
+      ],
+      "gltf_local_translation": [
+        0,
+        0.3399999737739563,
+        0
+      ],
+      "identity_rest_rotation": true
+    },
+    "Arm_L": {
+      "parent": "Body",
+      "blender_world": [
+        0.179,
+        0,
+        0.594
+      ],
+      "gltf_local_translation": [
+        0.17900000512599945,
+        0.265999972820282,
+        0
+      ],
+      "identity_rest_rotation": true
+    },
+    "Arm_R": {
+      "parent": "Body",
+      "blender_world": [
+        -0.179,
+        0,
+        0.594
+      ],
+      "gltf_local_translation": [
+        -0.17900000512599945,
+        0.265999972820282,
+        0
+      ],
+      "identity_rest_rotation": true
+    },
+    "Leg_L": {
+      "parent": "Pip_Lantern_Keeper",
+      "blender_world": [
+        0.082,
+        0,
+        0.323
+      ],
+      "gltf_local_translation": [
+        0.0820000022649765,
+        0.3230000138282776,
+        0
+      ],
+      "identity_rest_rotation": true
+    },
+    "Leg_R": {
+      "parent": "Pip_Lantern_Keeper",
+      "blender_world": [
+        -0.082,
+        0,
+        0.323
+      ],
+      "gltf_local_translation": [
+        -0.0820000022649765,
+        0.3230000138282776,
+        0
+      ],
+      "identity_rest_rotation": true
+    },
+    "Muzzle": {
+      "parent": "Arm_R",
+      "blender_world": [
+        -0.267,
+        0.452,
+        0.609
+      ],
+      "gltf_local_translation": [
+        -0.08799998462200165,
+        0.01500004529953003,
+        -0.4519999921321869
+      ],
+      "identity_rest_rotation": true
+    }
+  }
+}

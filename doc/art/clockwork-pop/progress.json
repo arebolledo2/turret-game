@@ -90,7 +90,7 @@
       "key": "charger",
       "name": "Ramjet Beetle",
       "image_id": "c4e1881c-697e-4c09-b178-29b90315b3ea",
-      "status": "queued",
+      "status": "building",
       "reference": "../../../art-source/clockwork-pop/references/charger.png",
       "notes": "Clear ram tusks, forward visor and sturdy grounded stance. Use a simple four-leg articulation contract.",
       "run": "cp_charger-v1"
@@ -99,10 +99,12 @@
       "key": "hero",
       "name": "Pip the Lantern Keeper",
       "image_id": "e142d444-d9d9-49cd-bd63-0fd5e1acfb27",
-      "status": "building",
+      "status": "integrated",
       "reference": "../../../art-source/clockwork-pop/references/hero.png",
       "notes": "Readable face, chest lantern and weapon. Needs coordinated locomotion and aiming; the biped presentation differs from the current hovering hero.",
-      "run": "cp_hero-v1"
+      "run": "cp_hero-v1",
+      "preview": "previews/hero.png",
+      "metrics": "11,130 triangles \u00b7 6 meshes \u00b7 9 materials"
     },
     {
       "key": "dropbox",
@@ -207,16 +209,28 @@
     {
       "stage": "Bat and Puffer integration",
       "text": "Dugout Automaton iteration2 and Cinder Puffer iteration2 imported and reviewed at gameplay scale. All 14 turret tests pass against the actual bat model, including modified-reach geometry checks. Eight of twelve assets are integrated. Pip, Bulwark Hermit and Skipper Moth are building; Ramjet Beetle remains queued. Leg controller now supports mirrored lift and fore-aft sweep for the forthcoming crab/beetle rigs; final model animation review pending."
+    },
+    {
+      "stage": "Export: hero",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Pip in game and motion review",
+      "text": "Pip iteration3 accepted and integrated at 11,130 triangles, six rigid meshes, nine materials and four textures. Imported-rig integration test confirms the pistol points at a real target without twisting hip pivots; combat screenshot and sampled controller poses reviewed. Full suite: 853 tests pass. Ramjet Beetle started, so all remaining assets are in production. Skipper wing texture loops were rejected for correction before promotion."
     }
   ],
   "checks": {
     "Visual acceptance": "pending",
     "Movement and attack validation": "pending",
-    "Full game tests": "851 pass with six integrated assets; final roster pending",
+    "Full game tests": "853 pass with nine integrated assets; final roster pending",
     "Performance comparison": "pending",
     "Playtest launch": "pending"
   },
   "captures": [
+    {
+      "path": "previews/hero-in-game.png",
+      "caption": "Pip in combat: independent upper-body aiming, separate hip pivots, and a pistol muzzle attached to the weapon arm."
+    },
     {
       "path": "previews/eight-roster-in-game.png",
       "caption": "Eight new assets in the gameplay-scale roster. Fast, tank, charger and hero still show original models; final scale and motion review remain pending."

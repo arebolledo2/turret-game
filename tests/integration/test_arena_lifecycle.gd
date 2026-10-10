@@ -162,6 +162,26 @@ func test_imported_model_contracts_and_muzzle_axis() -> void:
 		for leg in enemy.legs:
 			assert_not_null(leg)
 
+func test_imported_hero_aims_pistol_at_target_without_twisting_hip_pivots() -> void:
+	if not ClockworkModels.available("hero"):
+		return
+	combat()
+	var hero := world.player
+	var motion := hero.clockwork_motion
+	assert_not_null(motion)
+	var hip := motion.limbs[0]
+	var hip_rest := hip.transform
+	var target := spawn_enemy(hero.position + Vector3(2, 0, 0))
+	hero.weapon_clock = 0.0
+	hero._tick_player_weapon(.01)
+	var forward := WorldGeometry.planar(-hero.weapon_muzzle.global_basis.z).normalized()
+	assert_gt(forward.dot(Vector3.RIGHT), .999, "Imported pistol points at the enemy when firing")
+	assert_true(hip.transform.is_equal_approx(hip_rest), "Upper-body aim leaves hips attached in their authored pose")
+	assert_gt(hero.weapon_clock, 0.0, "A real shot was fired")
+	target.dead = true
+	hero._tick_player_weapon(.01)
+	assert_null(hero.weapon_target, "Dead target does not hold the aiming pose")
+
 func test_announcement_enters_combat_then_timer_opens_shop() -> void:
 	world._physics_process(2.1)
 	assert_true(world.is_combat())
