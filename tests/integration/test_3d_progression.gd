@@ -245,7 +245,7 @@ func test_pause_carry_death_and_wave_end_clear_or_freeze_status_correctly() -> v
 	shock.set_physics_process(false)
 	shock.carried = true
 	shock._physics_process(1)
-	assert_eq(actor.health, 99.0)
+	assert_eq(actor.health, 95.0)
 	actor.take_damage(1000)
 	assert_true(actor.statuses.effects.is_empty())
 	var second := enemy(Vector3.ZERO)

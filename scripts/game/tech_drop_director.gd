@@ -38,7 +38,9 @@ func tick(delta: float) -> void:
 		entry["left"] = float(entry["left"]) - delta
 		var marker: MeshInstance3D = entry["marker"]
 		if is_instance_valid(marker):
-			marker.scale = Vector3.ONE * (1.0 + .12 * sin(pulse))
+			GroundDial.update(marker, 1.0 - float(entry["left"]) / GameConstants.TECH_DROP_WARNING_TIME)
+			var brightness := 1.0 if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else 1.0 + .12 * sin(pulse)
+			(marker.material_override as ShaderMaterial).set_shader_parameter("brightness", brightness)
 		if float(entry["left"]) <= 0.0:
 			if is_instance_valid(marker):
 				marker.queue_free()
@@ -78,7 +80,7 @@ func find_position() -> Vector3:
 	return Vector3.INF
 
 func queue_drop(at: Vector3) -> void:
-	var marker := WorldGeometry.ring(world.actor_root, 1.0, WARNING_COLOR)
+	var marker := GroundDial.create(world.actor_root, 1.0, WARNING_COLOR)
 	marker.position = Vector3(at.x, .05, at.z)
 	queued.append({"at": at, "left": GameConstants.TECH_DROP_WARNING_TIME, "marker": marker})
 

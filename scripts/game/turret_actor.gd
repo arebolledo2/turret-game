@@ -8,6 +8,8 @@ var turret_id: int = 0
 var carried: bool = false:
 	set(value):
 		carried = value
+		cached_stats = {}
+		target_clock = 0.0
 		if value:
 			reset_entrench()
 var cooldown: float = 0.0
@@ -123,7 +125,7 @@ var zone_badge: MeshInstance3D
 var zone_badge_type: String = ""
 
 func _refresh_zone_bonuses() -> void:
-	if world.terrain:
+	if world.terrain and not carried:
 		zone_range_bonus = world.terrain.range_bonus_at(position)
 		zone_entrench_bonus = world.terrain.entrench_bonus_at(position)
 	else:
@@ -261,7 +263,6 @@ func _current_stats(delta: float) -> Dictionary:
 
 var range_ring: MeshInstance3D
 var range_ring_metres: float = 0.0
-static var range_ring_material: StandardMaterial3D
 
 ## Ring on the floor at the turret's current range (item, Entrench-free stats and high ground included) while the
 ## world's range toggle is on; also while carried, so a placement can be judged.
@@ -275,34 +276,21 @@ func _update_range_ring() -> void:
 	if metres <= 0.0:
 		return
 	if not range_ring:
-		range_ring = MeshInstance3D.new()
-		range_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		if not range_ring_material:
-			range_ring_material = StandardMaterial3D.new()
-			range_ring_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			range_ring_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			range_ring_material.albedo_color = Color(.4, .95, .9, .55)
-		range_ring.material_override = range_ring_material
-		add_child(range_ring)
+		range_ring = GroundDial.create(self, metres, Color(.4, .95, .9, .65))
 	if not is_equal_approx(metres, range_ring_metres):
 		range_ring_metres = metres
-		var mesh := TorusMesh.new()
-		mesh.inner_radius = maxf(.01, metres - .035)
-		mesh.outer_radius = metres + .035
-		mesh.rings = 72
-		mesh.ring_segments = 4
-		range_ring.mesh = mesh
+		GroundDial.resize(range_ring, metres)
 	range_ring.global_position = Vector3(global_position.x, .04, global_position.z)
 	range_ring.visible = true
 
 func _physics_process(delta: float) -> void:
 	if not world.is_combat():
 		return
-	_update_range_ring()
 	if carried:
 		position = world.player.position + Vector3(0, 1.15, .25)
-		return
-	_tick_entrench(delta)
+	else:
+		_tick_entrench(delta)
+	_update_range_ring()
 	cooldown = maxf(0.0, cooldown - delta)
 	aim.position = aim.position.lerp(aim_rest, minf(delta * 16.0, 1.0))
 	var stats := _current_view(delta)

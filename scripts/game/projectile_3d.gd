@@ -101,6 +101,9 @@ func advance(delta: float) -> void:
 	if not active:
 		return
 	var motion := direction * speed * minf(delta, remaining)
+	# Combat is planar. An elevated carried muzzle must still hit short enemies.
+	# Only the visual flight height descends from the muzzle toward the normal firing plane.
+	sweep.global_position = Vector3(position.x, .35, position.z)
 	sweep.target_position = motion
 	sweep.force_shapecast_update()
 	var hit: CombatActor = null
@@ -112,7 +115,7 @@ func advance(delta: float) -> void:
 		var actor := area.get_parent() as CombatActor
 		if not actor or actor.dead or actor in pierced:
 			continue
-		var distance := position.distance_squared_to(sweep.get_collision_point(index))
+		var distance := WorldGeometry.planar(position - sweep.get_collision_point(index)).length_squared()
 		if distance < closest:
 			closest = distance
 			hit = actor
@@ -128,6 +131,7 @@ func advance(delta: float) -> void:
 			release()
 			return
 	position += motion
+	position.y = move_toward(position.y, .45, motion.length() * .8)
 	remaining -= delta
 	if remaining <= 0.0:
 		release()

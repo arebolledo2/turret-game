@@ -10,8 +10,8 @@ Settings persist fullscreen, VSync, reduced motion and SFX volume (70% by defaul
 - Enemies spawn on a ring just outside the default-zoom view around the player (`ArenaWorld._spawn_position`).
 - The window is resizable with a title bar (1280 x 720 by default); settings offers size presets and fullscreen. Stretch mode is `canvas_items` with `expand` aspect.
 - WASD/arrow keys or left stick to move; auto-fire targets nearby enemies.
-- E / controller A to pick up and place a nearby turret; carrying slows movement and disables that turret's fire.
-- Escape / controller Start to pause; refit buttons support keyboard/controller focus.
+- E / controller A to pick up and place a nearby turret; carrying slows movement and lets that turret attack instead of the hero's gun. Entrenchment resets on pickup and only builds while deployed; terrain bonuses apply only to deployed turrets.
+- Escape / controller Start to pause; shop buttons support keyboard/controller focus.
 - Twenty survival waves by default (`RunConfig`, 30 s rising to a 60 s cap from wave 7), using the existing wave-duration, enemy-count, and enemy-stat calculations with the Easy preset. The original six-wave slice is `RunConfig.slice()`.
 - Chasing spider drones, soft crowd separation, contact damage and player invulnerability, swept 3D projectile hits, reusable projectile instances, and collectible scrap.
 - Plasma turrets prioritize clusters, deal splash damage, and push enemies back. Knockback interrupts charger warnings and dashes.
@@ -37,7 +37,7 @@ Purchase validation runs before spending or deploying: sold/unsupported/max-stac
 
 `CombatShot3D` snapshots weapon damage, projectile speed, splash radius, knockback, slow intensity/duration, and damage type at firing. `CombatHit3D` carries a single hit. The run-owned `Combat3D` applies hits and emits hit, explosion, shock-pulse, and defeat notifications; world rewards and bounded cosmetic effects consume those notifications. Splash snapshots its targets before deaths mutate the live enemy list. Projectile reuse resets its complete shot state.
 
-`StatusEffects3D` reuses the shared `StatusEffect` lifetime and refresh implementation through local world ownership. A refresh retains the strongest slow of that damage type and replaces its remaining duration; different types use the strongest active slow, not multiplicative stacking. Slow intensity is capped at 90%. Slow affects pursuit and dash movement, not knockback or timers. Pause freezes lifetimes; death, wave end, and restart clear effects. Shock pulses use registry range, fire rate, damage, and slow values, hit each in-range enemy once, and stop firing while carried. DoT and temporary turret buffs remain unsupported.
+`StatusEffects3D` reuses the shared `StatusEffect` lifetime and refresh implementation through local world ownership. A refresh retains the strongest slow of that damage type and replaces its remaining duration; different types use the strongest active slow, not multiplicative stacking. Slow intensity is capped at 90%. Slow affects pursuit and dash movement, not knockback or timers. Pause freezes lifetimes; death, wave end, and restart clear effects. Shock pulses use registry range, fire rate, damage, and slow values, hit each in-range enemy once, and continue firing while carried. DoT and temporary turret buffs remain unsupported.
 
 One conversion constant maps existing pixel-based values to metres: `WorldGeometry.METRES_PER_PIXEL = 0.01`. Movement, weapon range/speed, splash radius, knockback, and pickup radius cross this boundary. Damage and time retain their existing units. Enemy stats come from `EnemyRegistry.get_stats_for_wave`; turret and item prices use shared `EconomyService` policies, used by the supported shop. The fixed repair offer remains arena-specific.
 
@@ -86,7 +86,7 @@ Playtest the audio mix and warning readability across six waves. Crowded-scene p
 
 A deployed turret earns one **Entrench** stack for every `ENTRENCH_STACK_SECONDS` (4 s) it spends in combat without being moved, up to `ENTRENCH_MAX_STACKS` (5). Each stack adds +6% damage and +4% fire rate (`GameConstants.ENTRENCH_*`). Picking a turret up resets it, including when the turret is returned to its old spot at wave end. Shop time does not count. A gold ring at the base grows with stacks, and the HUD hint shows the stacks of the nearest turret in reach.
 
-While carrying, a **placement preview** ring shows where the turret will land (cyan clear, red blocked).
+While carrying, a **placement preview** dial shows where the turret will land (teal solid arcs when clear, dashed red when blocked). Placement, range, core, route, terrain and optional actor markers share the flat, antialiased GroundDial style with build zones and entrenchment. Tech-drop warnings fill toward arrival without changing their footprint; combat pulses keep their existing radius and duration.
 
 Both are experiment flags (`entrench`, `placement_preview`), on by default and off in the `release` preset. Stacks are applied on top of the cached modifier stats in `TurretActor._current_stats`, so shop modifiers still multiply as before.
 

@@ -89,3 +89,16 @@ func test_turret_shoots_a_drop_in_range() -> void:
 	drop.health = 1e9 # survive the whole test so damage can be measured
 	await wait_physics_frames(120)
 	assert_lt(drop.health, 1e9)
+
+func test_reduced_motion_warning_fills_without_changing_its_boundary() -> void:
+	world.set_physics_process(false)
+	FeatureFlagService.set_enabled(FeatureFlagService.REDUCED_MOTION, true)
+	world.drops.queue_drop(Vector3(10, 0, 5))
+	var marker: MeshInstance3D = world.drops.queued[0]["marker"]
+	var initial_scale := marker.scale
+	world.drops.tick(GameConstants.TECH_DROP_WARNING_TIME * .5)
+	assert_eq(marker.scale, initial_scale)
+	var material := marker.material_override as ShaderMaterial
+	assert_almost_eq(float(material.get_shader_parameter("progress")), .5, .001)
+	assert_eq(material.get_shader_parameter("brightness"), 1.0)
+	assert_eq(world.enemies.size(), 0)

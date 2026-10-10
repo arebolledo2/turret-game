@@ -188,28 +188,28 @@ func show_arc(from: Vector3, to: Vector3) -> void:
 	arc_lifetimes[index] = ARC_LIFETIME
 
 func show_explosion(at: Vector3, radius: float) -> void:
-	_show_pulse(at, radius, plasma_material)
+	_show_pulse(at, radius, Color("b56cff"))
 
 func show_shock(at: Vector3, radius: float) -> void:
-	_show_pulse(at, radius, shock_material)
+	_show_pulse(at, radius, Color("55dcff"))
 
-func _show_pulse(at: Vector3, radius: float, material: Material) -> void:
+func _show_pulse(at: Vector3, radius: float, color: Color) -> void:
 	var index := ages.find(-1.0)
 	if index < 0:
 		if pulses.size() >= MAX_PULSES:
 			return
 		index = pulses.size()
-		pulses.append(WorldGeometry.ring(self, 1.0, Color("b56cff")))
+		pulses.append(GroundDial.create(self, 1.0, color))
 		ages.append(-1.0)
 		radii.append(0.0)
 	ages[index] = 0.0
-	pulses[index].material_override = material
+	GroundDial.recolor(pulses[index], color)
 	radii[index] = radius
 	pulses[index].position = WorldGeometry.planar(at) + Vector3(0, .045, 0)
-	pulses[index].scale = Vector3(.12, .12, .12)
+	GroundDial.resize(pulses[index], .12)
 	pulses[index].visible = true
 	if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
-		pulses[index].scale = Vector3(radius, .1, radius)
+		GroundDial.resize(pulses[index], radius)
 
 func _physics_process(delta: float) -> void:
 	if not world.is_combat():
@@ -231,7 +231,7 @@ func _physics_process(delta: float) -> void:
 			var radius := lerpf(.12, radii[index], ages[index] / .3)
 			if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
 				radius = radii[index]
-			pulses[index].scale = Vector3(radius, .1, radius)
+			GroundDial.resize(pulses[index], radius)
 
 func reset() -> void:
 	for burst in bursts:

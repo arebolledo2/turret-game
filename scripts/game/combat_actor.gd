@@ -304,6 +304,11 @@ func _apply_contact_damage(delta: float, previous_position: Vector3) -> void:
 ## The hero's auto-fire at the nearest enemy in range.
 func _tick_player_weapon(delta: float) -> void:
 	weapon_clock -= delta
+	if is_instance_valid(world.carried_turret):
+		weapon_target = null
+		if clockwork_motion:
+			clockwork_motion.aim_hero(Vector3.ZERO)
+		return
 	var weapon_range := GameConstants.PLAYER_TURRET_RANGE * WorldGeometry.METRES_PER_PIXEL
 	if weapon_clock <= 0.0:
 		weapon_target = world.nearest_enemy(position, weapon_range)

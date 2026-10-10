@@ -11,7 +11,7 @@ The playable actors are native 3D. Their runtime implementations are in `scripts
 | Projectile | `Projectile3D` | Swept collision; reusable shot state |
 | Scrap | `ScrapPickup` | Collection radius, visual bob/rotation |
 
-Actors use CharacterBody3D with ground-plane movement and Area3D hurtboxes. The visual child animates independently of collision. Turret carrying slows the player, suspends turret attacks and uses validated placement.
+Actors use CharacterBody3D with ground-plane movement and Area3D hurtboxes. The visual child animates independently of collision. Turret carrying slows the player and replaces the hero's auto-fire with the carried turret's attacks. Pickup resets entrenchment; terrain bonuses and entrenchment only apply while deployed. Placement remains validated.
 
 `EnemyRegistry` supplies scaled stats for the two active enemy types. `TurretRegistry` and shared stat services supply the three active weapons. `ArenaShop.TURRETS` and `ArenaShop.ITEMS` define the supported purchase catalogs; unsupported registry entries must not become offers until their effects have a native 3D implementation and validation.
 

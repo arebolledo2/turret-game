@@ -79,10 +79,11 @@ func update_preview() -> void:
 	var at := drop_position()
 	var ok := valid_placement(at, carried)
 	if not preview:
-		preview = WorldGeometry.ring(world.actor_root, .55, Color("58ece1"))
+		preview = GroundDial.create(world.actor_root, .55, Color("58ece1"))
 		preview.position.y = .035
 	preview_ok = ok
-	preview.material_override = _preview_material(ok)
+	GroundDial.recolor(preview, Color("58ece1") if ok else Color("ff5a5a"))
+	GroundDial.update(preview, 1.0 if ok else 0.0, not ok)
 	preview.position = Vector3(at.x, .035, at.z)
 	preview.visible = true
 	_update_preview_label(at)
@@ -101,7 +102,8 @@ func _update_preview_label(at: Vector3) -> void:
 		preview_label.font_size = 40
 		preview_label.pixel_size = .008
 		preview_label.outline_size = 10
-		preview_label.position.y = 1.4
+		preview_label.scale = Vector3.ONE / preview.scale
+		preview_label.position.y = 1.4 / preview.scale.y
 		preview.add_child(preview_label)
 	preview_label.text = text
 	preview_label.modulate = Color("ffd0d0") if not preview_ok else Color("d9fff9")
@@ -110,13 +112,6 @@ func _update_preview_label(at: Vector3) -> void:
 func drop_position() -> Vector3:
 	var forward := -world.player.visual.global_basis.z
 	return WorldGeometry.planar(world.player.position + forward * DROP_DISTANCE)
-
-static var _preview_materials: Dictionary = {}
-
-static func _preview_material(ok: bool) -> StandardMaterial3D:
-	if not _preview_materials.has(ok):
-		_preview_materials[ok] = WorldGeometry.material(Color("58ece1") if ok else Color("ff5a5a"), true)
-	return _preview_materials[ok]
 
 ## Returns a carried turret to where it was picked up (wave end).
 func drop_carried() -> void:
