@@ -1,0 +1,30 @@
+{
+  "name": "cp_dropbox",
+  "ref": "ref/cp_dropbox.png",
+  "build": "build_cp_dropbox.py",
+  "glb": "cp_dropbox.glb",
+  "required_nodes": [
+    "Body"
+  ],
+  "limits": {
+    "height": [
+      0.8,
+      1.25
+    ],
+    "max_width": 1.4,
+    "ground_gap": [
+      -0.02,
+      0.1
+    ]
+  },
+  "targets": {
+    "max_texture_px": 1024,
+    "max_textures": 4,
+    "max_triangles": 5000,
+    "max_mesh_objects": 16,
+    "max_materials": 8
+  },
+  "render_background": "#152536",
+  "require_textures": true,
+  "required_animations": []
+}

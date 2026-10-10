@@ -28,5 +28,5 @@ page = '''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewp
 <footer class="muted">Source of record: progress.json. Automated checks support, but do not replace, visual and gameplay review.</footer></main>
 <script>document.querySelectorAll('button[data-filter]').forEach(b=>b.onclick=()=>{document.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('article').forEach(a=>a.hidden=b.dataset.filter!=='all'&&a.dataset.status!==b.dataset.filter)});</script></html>'''
 page = page.replace('BRANCH',esc(data['branch'])).replace('CHECKS',checks).replace('CARDS',''.join(cards)).replace('EVENTS',events)
-(REPORT/'index.html').write_text(page,encoding='utf-8')
+(REPORT/'index.html').write_text(page,encoding='utf-8',newline='\n')
 print(REPORT/'index.html')

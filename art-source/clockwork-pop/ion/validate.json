@@ -1,0 +1,83 @@
+{
+ "triangles": 9702,
+ "mesh_objects": 12,
+ "materials": 8,
+ "loose_components": 352,
+ "size_m": [
+  0.622,
+  0.916,
+  1.203
+ ],
+ "min_z": -0.0,
+ "centre_xy": [
+  -0.0,
+  0.082
+ ],
+ "missing_nodes": [],
+ "empty_leg_pivots": [],
+ "textures": [
+  [
+   "finish_albedo",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "finish_normal",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "finish_orm",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "optic_emission",
+   [
+    1024,
+    1024
+   ]
+  ]
+ ],
+ "animations": [],
+ "checks": {
+  "required_nodes_present": true,
+  "each_required_node_has_geometry": true,
+  "height_ok": true,
+  "width_ok": true,
+  "ground_gap_ok": true,
+  "origin_xy_centred": true,
+  "has_meshes": true,
+  "Muzzle_under_Aim": true,
+  "muzzle_in_front_and_raised": true,
+  "textures_present": true
+ },
+ "passed": true,
+ "limits": {
+  "height": [
+   0.8,
+   1.25
+  ],
+  "max_width": 1.4,
+  "ground_gap": [
+   -0.02,
+   0.1
+  ]
+ },
+ "targets": {
+  "max_texture_px": 1024,
+  "max_textures": 4,
+  "max_triangles": 5000,
+  "max_mesh_objects": 16,
+  "max_materials": 8
+ },
+ "target_overruns": [
+  "max_triangles: 9702 > target 5000"
+ ]
+}

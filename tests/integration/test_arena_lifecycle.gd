@@ -153,9 +153,14 @@ func test_imported_model_contracts_and_muzzle_axis() -> void:
 	assert_lt(turret.muzzle.global_position.z, turret.global_position.z, "Model faces Godot -Z")
 	assert_gt(turret.muzzle.global_position.y, .3)
 	var enemy := spawn_enemy(Vector3.ZERO)
-	assert_eq(enemy.legs.size(), 6)
-	for leg in enemy.legs:
-		assert_not_null(leg)
+	if ClockworkModels.available("basic"):
+		assert_eq(enemy.legs.size(), 0, "Bramble is a hoverer")
+		assert_not_null(enemy.clockwork_motion)
+		assert_not_null(enemy.clockwork_motion.body, "Hover motion has an authored Body pivot")
+	else:
+		assert_eq(enemy.legs.size(), 6)
+		for leg in enemy.legs:
+			assert_not_null(leg)
 
 func test_announcement_enters_combat_then_timer_opens_shop() -> void:
 	world._physics_process(2.1)

@@ -6,25 +6,29 @@
       "key": "ion",
       "name": "Pepperbox Watchman",
       "image_id": "94e26a7a-9af2-4529-981e-00e66c97a73f",
-      "status": "building",
+      "status": "integrated",
       "reference": "../../../art-source/clockwork-pop/references/ion.png",
       "notes": "Clear aiming head and muzzle bores. Preserve the favourite silhouette; separate the fixed base from the yawing head.",
-      "run": "cp_ion-v1"
+      "run": "cp_ion-v1",
+      "preview": "previews/ion.png",
+      "metrics": "9,702 triangles \u00b7 12 meshes \u00b7 8 materials"
     },
     {
       "key": "plasma",
       "name": "Kilnheart Lobber",
       "image_id": "6ea142dc-b0ff-49d0-99af-15ae75d371b0",
-      "status": "queued",
+      "status": "review",
       "reference": "../../../art-source/clockwork-pop/references/plasma.png",
       "notes": "Compact heavy body and short wide muzzle. Add a clear yaw joint above the planted supports. Variant 1 is the longer-barrel alternate; variant 3 the more ornate alternate.",
-      "run": "cp_plasma-v1"
+      "run": "cp_plasma-v1",
+      "preview": "previews/plasma.png",
+      "metrics": "10,102 triangles \u00b7 12 meshes \u00b7 8 materials"
     },
     {
       "key": "tesla",
       "name": "Tuning-Fork Conductor",
       "image_id": "e9f5d244-a3df-4f80-b1dd-67cd56724379",
-      "status": "queued",
+      "status": "building",
       "reference": "../../../art-source/clockwork-pop/references/tesla.png",
       "notes": "Strong fork silhouette. Model solid electrode tips instead of the hollow-looking bores. Place the emission origin between the prongs.",
       "run": "cp_tesla-v1"
@@ -33,7 +37,7 @@
       "key": "shock",
       "name": "Resonance Bell",
       "image_id": "b45251b2-295b-42c8-beb7-9e668c7774d9",
-      "status": "queued",
+      "status": "building",
       "reference": "../../../art-source/clockwork-pop/references/shock.png",
       "notes": "Simple radial bell, brass hoop and amber crown. Keep pulse effects in the game rather than the mesh.",
       "run": "cp_shock-v1"
@@ -96,10 +100,12 @@
       "key": "dropbox",
       "name": "Keepsake Cache",
       "image_id": "d360b9ed-da17-41dc-9353-946294661f07",
-      "status": "building",
+      "status": "integrated",
       "reference": "../../../art-source/clockwork-pop/references/dropbox.png",
       "notes": "Clean box, readable latch and lid seam. Model the cream top as a solid inset lid.",
-      "run": "cp_dropbox-v1"
+      "run": "cp_dropbox-v1",
+      "preview": "previews/dropbox.png",
+      "metrics": "12,524 triangles \u00b7 11 meshes \u00b7 8 materials"
     },
     {
       "key": "exploder",
@@ -127,12 +133,36 @@
     {
       "stage": "First visual review",
       "text": "Bramble iteration2 passes geometry contract (11,772 triangles, 7 meshes/materials), but face texture and iris proportions do not match the reference. Returned to generator for correction; not accepted or promoted. Pepperbox iteration1 exposed a texture-buffer issue; generator is repairing it and reducing accessory tessellation."
+    },
+    {
+      "stage": "Export: ion",
+      "text": "Reviewed harness iteration 4; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "First asset in game",
+      "text": "Pepperbox iteration4 accepted and imported: 9,702 triangles, 12 meshes, 8 materials, four 1024px textures. Combat screenshot confirms it appears at game scale with directional head and barrels. Runtime import has no errors; all 846 existing tests pass after loader/motion integration. Full roster behavior and performance remain pending. Plasma generation started."
+    },
+    {
+      "stage": "Export: dropbox",
+      "text": "Reviewed harness iteration 4; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Cache integration and rig checks",
+      "text": "Keepsake Cache iteration4 visually accepted and imported: 12,524 triangles, 11 meshes, 8 materials, four embedded 1024px textures. Gameplay-scale roster capture confirms colours, closed lid and health bar. All 848 tests pass, including new motion rest-pose/reduced-motion checks. Hoverers no longer require legacy legs. Shock generation started with a central radial emission marker. Resource audit passes 14 model records. Performance pending until GPU is uncontended."
+    },
+    {
+      "stage": "Export: plasma",
+      "text": "Reviewed harness iteration 5; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Plasma visual acceptance",
+      "text": "Kilnheart Lobber iteration5 accepted: 10,102 triangles, 12 meshes, 8 materials, four textures. Distinct short open bore and coral face ring. Feet/base remain fixed while the head yaws. Imported successfully; gameplay review remains pending. Tesla generation started."
     }
   ],
   "checks": {
     "Visual acceptance": "pending",
     "Movement and attack validation": "pending",
-    "Full game tests": "baseline 846 passed; new roster pending",
+    "Full game tests": "848 pass after Cache integration; final roster pending",
     "Performance comparison": "pending",
     "Playtest launch": "pending"
   }

@@ -11,6 +11,7 @@ var shop_focus: int = -1
 var combat_demo: bool = false
 var new_turrets: bool = false
 var zones_demo: bool = false
+var roster_demo: bool = false
 var last_tick: int = 0
 var physics_samples: Array[float] = []
 var process_samples: Array[float] = []
@@ -44,11 +45,12 @@ func setup() -> void:
 			shop = true
 			shop_focus = int(argument.trim_prefix("--shop-focus="))
 	combat_demo = "--combat-demo" in OS.get_cmdline_user_args()
+	roster_demo = "--roster-demo" in arguments
 	new_turrets = "--new-turrets" in OS.get_cmdline_user_args()
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	GameRandom.gameplay.seed = 42
-	for index in range(150 if stress else (0 if zones_demo else 18)):
+	for index in range(150 if stress else (0 if zones_demo or roster_demo else 18)):
 		var angle := float(index) * 2.39996
 		var radius := 2.5 + float(index % 6) * .5
 		var enemy := world.spawn_enemy(Vector3(cos(angle) * radius * 1.4, 0, sin(angle) * radius * .7), "charger" if index % 4 == 0 else "basic")
@@ -62,7 +64,29 @@ func setup() -> void:
 	if stress:
 		for index in range(7):
 			world.add_turret(Vector3(-6 + index * 2, 0, -2), ArenaShop.TURRETS[index % 3])
+	if roster_demo:
+		stage_roster_demo()
 	last_tick = Time.get_ticks_usec()
+
+## A frozen gameplay-scale roster, used for appearance checks rather than benchmarking.
+func stage_roster_demo() -> void:
+	world.set_physics_process(false)
+	world.hud.hide()
+	world.player.set_physics_process(false)
+	world.player.position = Vector3(0, 0, 2)
+	var kinds := ["basic", "fast", "tank", "charger", "exploder"]
+	for index in range(kinds.size()):
+		var actor := world.spawn_enemy(Vector3(-4 + index * 2, 0, -2), kinds[index])
+		actor.set_physics_process(false)
+	world.drops.spawn(Vector3(2, 0, 2)).set_physics_process(false)
+	if not new_turrets:
+		world.add_turret(Vector3(-2, 0, 0), "tesla")
+		world.add_turret(Vector3(2, 0, 0), "melee")
+	for index in range(world.turrets.size()):
+		world.turrets[index].position = Vector3(-4 + index * 2, 0, 0)
+		world.turrets[index].set_physics_process(false)
+	world.camera_rig.set_zoom(.75)
+	world.camera_rig.snap()
 
 func _process(_delta: float) -> void:
 	if not is_instance_valid(world):
@@ -105,6 +129,8 @@ func _process(_delta: float) -> void:
 func capture() -> void:
 	await RenderingServer.frame_post_draw
 	var suffix := "-stress" if stress else ("-turrets" if new_turrets else "-shop" if shop else ("-combat" if combat_demo else ("-zones" if zones_demo else "")))
+	if roster_demo:
+		suffix = "-roster"
 	var output := ProjectSettings.globalize_path("res://.test-results/game%s.png" % suffix)
 	get_viewport().get_texture().get_image().save_png(output)
 	samples.sort()

@@ -1,0 +1,37 @@
+{
+  "assets": [
+    {
+      "id": "ion",
+      "source": "art-source/clockwork-pop/ion/build_cp_ion.py",
+      "model": "assets/models/clockwork/cp_ion.glb",
+      "reference": "art-source/clockwork-pop/references/ion.png",
+      "sha256": "9acaf5e82618cc6e93ee607268f5da78f9e3e74fdf7c247b88ac349773dcccbe",
+      "triangles": 9702,
+      "meshes": 12,
+      "materials": 8,
+      "iteration": 4
+    },
+    {
+      "id": "dropbox",
+      "source": "art-source/clockwork-pop/dropbox/build_cp_dropbox.py",
+      "model": "assets/models/clockwork/cp_dropbox.glb",
+      "reference": "art-source/clockwork-pop/references/dropbox.png",
+      "sha256": "b10c8eca6842b4e300ecd5eaffc85cc316e8235d54a0c8b85a1c09a78bcb8605",
+      "triangles": 12524,
+      "meshes": 11,
+      "materials": 8,
+      "iteration": 4
+    },
+    {
+      "id": "plasma",
+      "source": "art-source/clockwork-pop/plasma/build_cp_plasma.py",
+      "model": "assets/models/clockwork/cp_plasma.glb",
+      "reference": "art-source/clockwork-pop/references/plasma.png",
+      "sha256": "2eaac751d4cb59a088dc1a4268762ed8e981c6c32ec995a5d9d79e495e3e6ecc",
+      "triangles": 10102,
+      "meshes": 12,
+      "materials": 8,
+      "iteration": 5
+    }
+  ]
+}

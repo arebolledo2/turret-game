@@ -38,8 +38,14 @@ static var melee_materials: Dictionary = {}
 func _ready() -> void:
 	Events.modifiers_changed.connect(invalidate_stats)
 	var fire_mode := TurretRegistry.get_fire_mode(turret_type)
-	var model: Node3D = _build_melee_model() if fire_mode == TurretRegistry.FIRE_SWEEP else load(TurretRegistry.get_model_path(turret_type)).instantiate()
-	if turret_type == "tesla":
+	var asset_key := "ion" if turret_type == "normal" else turret_type
+	var use_clockwork := ClockworkModels.available(asset_key)
+	var model: Node3D
+	if use_clockwork:
+		model = ClockworkModels.instantiate(asset_key)
+	else:
+		model = _build_melee_model() if fire_mode == TurretRegistry.FIRE_SWEEP else load(TurretRegistry.get_model_path(turret_type)).instantiate()
+	if turret_type == "tesla" and not use_clockwork:
 		EnemyVariants.tint_model(model, "turret_tesla", TESLA_TINT, .5)
 	add_child(model)
 	aim = model.find_child("Aim", true, false) as Node3D

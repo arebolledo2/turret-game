@@ -42,6 +42,7 @@ const FLASH_DURATION: float = .18
 const ENEMY_FLASH_COLOR := Color(1.0, .92, .8)
 const PLAYER_FLASH_COLOR := Color(1.0, .28, .22)
 var weapon_clock: float = 0.0
+var clockwork_motion: ClockworkMotion
 
 func _ready() -> void:
 	collision_layer = 0 if is_enemy else WorldGeometry.PLAYER_LAYER
@@ -61,14 +62,20 @@ func _ready() -> void:
 	add_child(visual)
 	if is_enemy:
 		var model := _build_enemy_model()
-		EnemyVariants.apply_tint(model, enemy_type)
+		if ClockworkModels.available(enemy_type) and not stationary:
+			clockwork_motion = ClockworkMotion.new(model, enemy_type)
+		else:
+			EnemyVariants.apply_tint(model, enemy_type)
 		if elite:
 			EnemyVariants.tint_model(model, enemy_type + "_elite", Color(1.0, .85, .45), .7)
 		visual.add_child(model)
 		visual.scale = Vector3.ONE * body_scale
-		for side in _leg_sides():
-			for index in range(3):
-				legs.append(model.find_child("Leg_%s_%d" % [side, index], true, false) as Node3D)
+		if clockwork_motion:
+			legs.assign(clockwork_motion.limbs)
+		else:
+			for side in _leg_sides():
+				for index in range(3):
+					legs.append(model.find_child("Leg_%s_%d" % [side, index], true, false) as Node3D)
 		hurtbox = Area3D.new()
 		hurtbox.collision_layer = WorldGeometry.ENEMY_HURTBOX_LAYER
 		hurtbox.collision_mask = 0
@@ -94,8 +101,10 @@ func _ready() -> void:
 		if charge:
 			_build_warning()
 	else:
-		var model := preload("res://assets/models/game/player_bot.glb").instantiate()
+		var model := ClockworkModels.instantiate("hero") if ClockworkModels.available("hero") else preload("res://assets/models/game/player_bot.glb").instantiate()
 		visual.add_child(model)
+		if ClockworkModels.available("hero"):
+			clockwork_motion = ClockworkMotion.new(model, "hero")
 		weapon_muzzle = model.find_child("Muzzle", true, false) as Node3D
 		marker = WorldGeometry.ring(self, .3, Color("58ece1"))
 		marker.position.y = .025
@@ -104,11 +113,11 @@ func _ready() -> void:
 func _build_enemy_model() -> Node3D:
 	var model: Node3D
 	if enemy_type == "charger":
-		model = preload("res://assets/models/game/charger_drone.glb").instantiate()
+		model = ClockworkModels.instantiate(enemy_type) if ClockworkModels.available(enemy_type) else preload("res://assets/models/game/charger_drone.glb").instantiate()
 		charge = ChargeController3D.new()
 		charge.configure(EnemyRegistry.TYPES["charger"]["behavior_params"])
 	else:
-		model = preload("res://assets/models/game/spider_drone.glb").instantiate()
+		model = ClockworkModels.instantiate(enemy_type) if ClockworkModels.available(enemy_type) else preload("res://assets/models/game/spider_drone.glb").instantiate()
 	return model
 
 ## Which sides of the model carry animated legs (`Leg_<side>_<0..2>`).
@@ -247,6 +256,10 @@ static func steer_velocity(current: Vector3, direction: Vector3, desired_speed: 
 func _animate(delta: float, direction: Vector3, reduced_motion: bool) -> void:
 	if direction.length_squared() > 0.001:
 		visual.rotation.y = lerp_angle(visual.rotation.y, atan2(-direction.x, -direction.z), minf(delta * 14.0, 1.0))
+	if clockwork_motion:
+		visual.position.y = 0.0
+		clockwork_motion.tick(delta, velocity.length(), reduced_motion, not is_enemy and is_instance_valid(world.carried_turret))
+		return
 	gait += velocity.length() * delta * 10.0
 	if not reduced_motion or visual.position.y != 0.0:
 		visual.position.y = 0.0 if reduced_motion else sin(gait * 2.0) * 0.025

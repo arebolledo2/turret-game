@@ -1,0 +1,94 @@
+{
+  "final_iteration": 4,
+  "frozen": true,
+  "glb_bytes": 2393548,
+  "blend_bytes": 2210601,
+  "glb_sha256": "b10c8eca6842b4e300ecd5eaffc85cc316e8235d54a0c8b85a1c09a78bcb8605",
+  "build_sha256": "005b241e39a711480a2a349b1665b69311f93633a0ddfd8375b0b45fa1723675",
+  "embedded_images": 4,
+  "external_image_uris": [],
+  "external_buffer_uris": [],
+  "nodes": 12,
+  "animations": 0,
+  "validation": {
+    "triangles": 12524,
+    "mesh_objects": 11,
+    "materials": 8,
+    "loose_components": 385,
+    "size_m": [
+      1.215,
+      1.111,
+      1.035
+    ],
+    "min_z": 0.025,
+    "centre_xy": [
+      -0.03,
+      0.031
+    ],
+    "missing_nodes": [],
+    "empty_leg_pivots": [],
+    "textures": [
+      [
+        "cache_color_atlas",
+        [
+          1024,
+          1024
+        ]
+      ],
+      [
+        "cache_jewel_fire",
+        [
+          1024,
+          1024
+        ]
+      ],
+      [
+        "cache_micro_normal",
+        [
+          1024,
+          1024
+        ]
+      ],
+      [
+        "cache_orm_atlas",
+        [
+          1024,
+          1024
+        ]
+      ]
+    ],
+    "animations": [],
+    "checks": {
+      "required_nodes_present": true,
+      "each_required_node_has_geometry": true,
+      "height_ok": true,
+      "width_ok": true,
+      "ground_gap_ok": true,
+      "origin_xy_centred": true,
+      "has_meshes": true,
+      "textures_present": true
+    },
+    "passed": true,
+    "limits": {
+      "height": [
+        0.8,
+        1.25
+      ],
+      "max_width": 1.4,
+      "ground_gap": [
+        -0.02,
+        0.1
+      ]
+    },
+    "targets": {
+      "max_texture_px": 1024,
+      "max_textures": 4,
+      "max_triangles": 5000,
+      "max_mesh_objects": 16,
+      "max_materials": 8
+    },
+    "target_overruns": [
+      "max_triangles: 12524 > target 5000"
+    ]
+  }
+}

@@ -21,9 +21,13 @@ func _on_health_changed() -> void:
 	drop_bar_fill.scale.x = maxf(fraction, .001)
 	drop_bar_fill.position.x = -.6 * (1.0 - fraction)
 
-## A tech drop: dark plinth, amber crystal and a health bar that shrinks as it takes damage.
+## A destructible cache with a health bar; retain the original plinth for comparison.
 func _build_drop_model() -> Node3D:
 	var model := Node3D.new()
+	if ClockworkModels.available("dropbox"):
+		model.add_child(ClockworkModels.instantiate("dropbox"))
+		_add_health_bar(model)
+		return model
 	var plinth_material := WorldGeometry.material(Color("2a3a44"))
 	plinth_material.metallic = .5
 	var amber := WorldGeometry.material(Color("f4b942"), true)
@@ -32,8 +36,11 @@ func _build_drop_model() -> Node3D:
 	crystal.rotation = Vector3(.6, .785, 0)
 	for side: float in [-1.0, 1.0]:
 		WorldGeometry.box(model, Vector3(.1, .7, .1), Vector3(side * .38, .55, 0), plinth_material)
+	_add_health_bar(model)
+	return model
+
+func _add_health_bar(model: Node3D) -> void:
 	var bar_back := WorldGeometry.material(Color("14232b"))
 	var bar_front := WorldGeometry.material(Color("f4b942"), true)
 	WorldGeometry.box(model, Vector3(1.24, .12, .1), Vector3(0, 1.55, 0), bar_back)
 	drop_bar_fill = WorldGeometry.box(model, Vector3(1.2, .13, .12), Vector3(0, 1.55, 0), bar_front)
-	return model

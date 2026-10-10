@@ -1,0 +1,18 @@
+{
+  "sha256": "9acaf5e82618cc6e93ee607268f5da78f9e3e74fdf7c247b88ac349773dcccbe",
+  "bytes": 2844944,
+  "embedded_images": 4,
+  "meshes": 12,
+  "materials": 8,
+  "animations": 0,
+  "Aim_identity": true,
+  "bare_Muzzle_under_Aim": true,
+  "base_static": true,
+  "all_meshes_uv_mapped": true,
+  "Muzzle_blender_world": [
+    -0.112,
+    0.54,
+    0.706
+  ],
+  "forward": "Blender +Y / glTF -Z"
+}
