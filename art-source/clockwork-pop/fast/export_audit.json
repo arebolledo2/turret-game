@@ -1,0 +1,73 @@
+{
+  "hinges": {
+    "Wing_L": {
+      "parent": "Body",
+      "local_position_m": [
+        0.102,
+        -0.07,
+        0.0
+      ],
+      "rest_rotation_rad": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mesh_children": 2,
+      "axis": "Blender local Y; glTF/Godot local Z, forward is Godot -Z",
+      "swept_min_m": [
+        0.094426,
+        -0.125464,
+        0.320786
+      ],
+      "swept_max_m": [
+        0.826846,
+        -0.047775,
+        1.357634
+      ]
+    },
+    "Wing_R": {
+      "parent": "Body",
+      "local_position_m": [
+        -0.102,
+        -0.07,
+        0.0
+      ],
+      "rest_rotation_rad": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rest_scale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "mesh_children": 2,
+      "axis": "Blender local Y; glTF/Godot local Z, forward is Godot -Z",
+      "swept_min_m": [
+        -0.826846,
+        -0.125464,
+        0.320786
+      ],
+      "swept_max_m": [
+        -0.094426,
+        -0.047775,
+        1.357634
+      ]
+    }
+  },
+  "sweep_degrees": [
+    -25,
+    25
+  ],
+  "embedded_images": true,
+  "image_count": 4,
+  "animation_count": 0,
+  "bytes": 3268532,
+  "sha256": "c2a03c39e7d109d6f1faa252e6c2697b576cf8e8938024706d574d5635d88107"
+}

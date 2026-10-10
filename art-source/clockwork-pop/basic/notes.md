@@ -1,11 +1,11 @@
 # Bramble Wisp — frozen candidate
 
 Final export: `cp_basic.glb`; packed source: `cp_basic.blend`; deterministic standalone builder: `build_cp_basic.py`.
-Final inspected comparison: `renders/iter05/compare.png`.
+Final inspected comparison: `renders/iter06/compare.png`.
 
 ## Validation and complexity
 
-- Five harness attempts used, including one failed build. Final iteration 5 passes every contract check.
+- Six harness attempts used, including one failed build. Final iteration 6 passes every contract check.
 - 9,324 triangles, seven mesh objects, seven materials, three embedded 1024×1024 generated images, zero animation clips/tracks.
 - Imported dimensions: 1.137 × 0.810 × 1.195 m; lowest point z = 0.185 m; horizontally centred within the required tolerance.
 - Root `BrambleWisp` stays at ground origin. The `Body` empty at z = 0.77 m carries all seven rigid mesh objects. Parent integration can animate that single pivot for hover/tilt.
@@ -24,6 +24,9 @@ All images are generated in the builder from seeded numpy operations, saved alon
 3. Cleared primitive UV maps before assigning the consistent atlas projections; enlarged the eye and reduced bevel tessellation on small fittings. Corrected colour regions and reached 9,324 triangles.
 4. Corrected the convex eye face winding, matched the concept eye offset/crown bend, and reduced iris glare.
 5. Thickened leaf roots and made the eye finish more diffuse so the emerald texture and dark pupil remain legible under the harness lighting. Inspected all five rendered views and accepted this version.
+6. Parent-authorized winding-only repair after the Skipper Moth investigation identified polar ring quads wound opposite to center fan triangles. Corrected the eye surface winding; its unwanted center ring shading is gone. Geometry positions, material setup, texture images, triangle counts and dimensions are unchanged. Inspected every view and passed the contract again.
+
+The previous accepted GLB is preserved as `cp_basic_pre_winding_fix.glb`. Current GLB SHA-256: `6047f074f8012b6c60e736b6c0ad9147d0689de2cede6d967ec089f08d0ebee6`. Previous SHA-256: `07d686573bed829f4b527a6e4a93b515bb9a455219890f1eb0eee45b1007c995`. `winding_fix_audit.json` confirms three embedded images, seven meshes and zero animations. Parent owns review/re-promotion of the repaired export.
 
 ## Remaining limitations
 

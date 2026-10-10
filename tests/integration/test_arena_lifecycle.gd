@@ -182,6 +182,20 @@ func test_imported_hero_aims_pistol_at_target_without_twisting_hip_pivots() -> v
 	hero._tick_player_weapon(.01)
 	assert_null(hero.weapon_target, "Dead target does not hold the aiming pose")
 
+func test_imported_hero_boots_stay_above_the_ground_during_a_stride() -> void:
+	if not ClockworkModels.available("hero"):
+		return
+	var motion := world.player.clockwork_motion
+	var lowest := INF
+	for step in range(40):
+		motion.tick(.05, 2.0, false)
+		for leg in motion.limbs:
+			for mesh: MeshInstance3D in leg.find_children("*", "MeshInstance3D", true, false):
+				var bounds := mesh.get_aabb()
+				for corner in range(8):
+					lowest = minf(lowest, (mesh.global_transform * bounds.get_endpoint(corner)).y)
+	assert_gte(lowest, -.002, "Imported boots must not dip beneath the arena floor")
+
 func test_announcement_enters_combat_then_timer_opens_shop() -> void:
 	world._physics_process(2.1)
 	assert_true(world.is_combat())

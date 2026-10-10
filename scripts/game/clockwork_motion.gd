@@ -8,6 +8,8 @@ var rest: Dictionary = {}
 var limbs: Array[Node3D] = []
 var limb_phases: Array[float] = []
 var limb_sides: Array[float] = []
+var foot_bounds: Dictionary = {}
+var foot_floors: Dictionary = {}
 var wings: Array[Node3D] = []
 var left_arm: Node3D
 var right_arm: Node3D
@@ -42,6 +44,35 @@ func _init(model: Node3D, asset_kind: String) -> void:
 			var wing := _part(model, part)
 			if wing:
 				wings.append(wing)
+	for limb in limbs:
+		_cache_foot_bounds(limb)
+
+func _cache_foot_bounds(limb: Node3D) -> void:
+	var points := PackedVector3Array()
+	for mesh: MeshInstance3D in limb.find_children("*", "MeshInstance3D", true, false):
+		var relative := mesh.transform
+		var parent := mesh.get_parent_node_3d()
+		while parent != limb:
+			relative = parent.transform * relative
+			parent = parent.get_parent_node_3d()
+		var bounds := mesh.get_aabb()
+		for corner in range(8):
+			points.append(relative * bounds.get_endpoint(corner))
+	if points.is_empty():
+		return
+	foot_bounds[limb] = points
+	var floor_height := INF
+	for point in points:
+		floor_height = minf(floor_height, (limb.transform * point).y)
+	foot_floors[limb] = floor_height
+
+func _keep_foot_above_floor(limb: Node3D) -> void:
+	if not foot_bounds.has(limb):
+		return
+	var lowest := INF
+	for point: Vector3 in foot_bounds[limb]:
+		lowest = minf(lowest, (limb.transform * point).y)
+	limb.position.y += maxf(0.0, float(foot_floors[limb]) - lowest)
 
 func _part(model: Node3D, part_name: String) -> Node3D:
 	var node := model.find_child(part_name, true, false) as Node3D
@@ -83,6 +114,7 @@ func tick(delta: float, speed: float, reduced: bool, carrying: bool = false) -> 
 		else:
 			var angle := sin(phase + float(index % 2) * PI) * .24 * moving
 			_pose(limbs[index], Vector3.RIGHT, angle)
+		_keep_foot_above_floor(limbs[index])
 	for index in range(wings.size()):
 		_pose(wings[index], Vector3.FORWARD, sin(hover_phase * 3.0) * .16 * (-1.0 if index == 0 else 1.0))
 	if left_arm:

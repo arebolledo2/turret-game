@@ -72,10 +72,12 @@
       "key": "fast",
       "name": "Skipper Moth",
       "image_id": "07d1ec0b-0520-4533-8bf5-13356d93ead7",
-      "status": "building",
+      "status": "integrated",
       "reference": "../../../art-source/clockwork-pop/references/fast.png",
       "notes": "Clean wings without the obvious smoke trail of variant 3. Test wing opacity and silhouette at gameplay distance.",
-      "run": "cp_fast-v1"
+      "run": "cp_fast-v1",
+      "preview": "previews/fast.png",
+      "metrics": "9,192 triangles \u00b7 9 meshes \u00b7 7 materials"
     },
     {
       "key": "tank",
@@ -221,6 +223,22 @@
     {
       "stage": "Surface winding correction",
       "text": "Skipper review exposed opposite winding between polar mesh fans and outer quads, producing unwanted ring highlights. Generator traced the same defect to Bramble and Cinder eye surfaces. Authorized narrowly scoped corrected exports and fresh validation/render review for both previously integrated assets after Skipper; game copies remain unchanged until accepted replacements arrive."
+    },
+    {
+      "stage": "Export: fast",
+      "text": "Reviewed harness iteration 4; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: basic",
+      "text": "Reviewed harness iteration 6; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: exploder",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Skipper and surface repairs",
+      "text": "Skipper iteration4 accepted and imported: 9,192 triangles, 9 meshes, 7 materials, four textures. Wing loops removed; mirrored hinge motion reviewed in Godot and at gameplay scale. Bramble iteration6 and Cinder iteration3 winding repairs accepted and re-imported with unchanged counts. Asset audit now verifies reviewed SHA-256 hashes. Added cached foot-bound clearance correction; 15 arena integration tests and five motion tests pass, including imported boot clearance."
     }
   ],
   "checks": {
@@ -231,6 +249,10 @@
     "Playtest launch": "pending"
   },
   "captures": [
+    {
+      "path": "previews/ten-roster-in-game.png",
+      "caption": "Ten imported Clockwork models at gameplay scale; only tank and charger still use original models in this capture."
+    },
     {
       "path": "previews/hero-in-game.png",
       "caption": "Pip in combat: independent upper-body aiming, separate hip pivots, and a pistol muzzle attached to the weapon arm."

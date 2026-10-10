@@ -1,0 +1,11 @@
+{
+  "asset": "cp_basic",
+  "iteration": 6,
+  "bytes": 2416552,
+  "sha256": "6047f074f8012b6c60e736b6c0ad9147d0689de2cede6d967ec089f08d0ebee6",
+  "previous_sha256": "07d686573bed829f4b527a6e4a93b515bb9a455219890f1eb0eee45b1007c995",
+  "embedded_images": true,
+  "image_count": 3,
+  "animation_count": 0,
+  "mesh_count": 7
+}

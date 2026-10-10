@@ -45,17 +45,6 @@
       "iteration": 3
     },
     {
-      "id": "basic",
-      "source": "art-source/clockwork-pop/basic/build_cp_basic.py",
-      "model": "assets/models/clockwork/cp_basic.glb",
-      "reference": "art-source/clockwork-pop/references/basic.png",
-      "sha256": "07d686573bed829f4b527a6e4a93b515bb9a455219890f1eb0eee45b1007c995",
-      "triangles": 9324,
-      "meshes": 7,
-      "materials": 7,
-      "iteration": 5
-    },
-    {
       "id": "tesla",
       "source": "art-source/clockwork-pop/tesla/build_cp_tesla.py",
       "model": "assets/models/clockwork/cp_tesla.glb",
@@ -78,17 +67,6 @@
       "iteration": 2
     },
     {
-      "id": "exploder",
-      "source": "art-source/clockwork-pop/exploder/build_cp_exploder.py",
-      "model": "assets/models/clockwork/cp_exploder.glb",
-      "reference": "art-source/clockwork-pop/references/exploder.png",
-      "sha256": "148391bfb16016cf55b6916fb45eb36b5b070ddb1962c7b66a8ea2354ef5d5b9",
-      "triangles": 9912,
-      "meshes": 7,
-      "materials": 7,
-      "iteration": 2
-    },
-    {
       "id": "hero",
       "source": "art-source/clockwork-pop/hero/build_cp_hero.py",
       "model": "assets/models/clockwork/cp_hero.glb",
@@ -97,6 +75,39 @@
       "triangles": 11130,
       "meshes": 6,
       "materials": 9,
+      "iteration": 3
+    },
+    {
+      "id": "fast",
+      "source": "art-source/clockwork-pop/fast/build_cp_fast.py",
+      "model": "assets/models/clockwork/cp_fast.glb",
+      "reference": "art-source/clockwork-pop/references/fast.png",
+      "sha256": "c2a03c39e7d109d6f1faa252e6c2697b576cf8e8938024706d574d5635d88107",
+      "triangles": 9192,
+      "meshes": 9,
+      "materials": 7,
+      "iteration": 4
+    },
+    {
+      "id": "basic",
+      "source": "art-source/clockwork-pop/basic/build_cp_basic.py",
+      "model": "assets/models/clockwork/cp_basic.glb",
+      "reference": "art-source/clockwork-pop/references/basic.png",
+      "sha256": "6047f074f8012b6c60e736b6c0ad9147d0689de2cede6d967ec089f08d0ebee6",
+      "triangles": 9324,
+      "meshes": 7,
+      "materials": 7,
+      "iteration": 6
+    },
+    {
+      "id": "exploder",
+      "source": "art-source/clockwork-pop/exploder/build_cp_exploder.py",
+      "model": "assets/models/clockwork/cp_exploder.glb",
+      "reference": "art-source/clockwork-pop/references/exploder.png",
+      "sha256": "cf167cf74ffb108429ab68fee7a8116acb1bc67308ca338854c63cee3bf70df8",
+      "triangles": 9912,
+      "meshes": 7,
+      "materials": 7,
       "iteration": 3
     }
   ]

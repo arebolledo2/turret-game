@@ -13,6 +13,11 @@
   -0.01,
   0.056
  ],
+ "origin_node": null,
+ "origin_xy": [
+  -0.01,
+  0.056
+ ],
  "missing_nodes": [],
  "empty_leg_pivots": [],
  "textures": [

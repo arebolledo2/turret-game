@@ -1,5 +1,6 @@
 """Check resource links after the 3D cutover. Run from any directory."""
 import json
+import hashlib
 import re
 from pathlib import Path
 
@@ -30,6 +31,9 @@ for manifest_path in [ROOT / "assets/models/game/manifest.json", ROOT / "assets/
             target = (ROOT / asset[key]).resolve()
             if not target.is_relative_to(ROOT) or not target.is_file():
                 errors.append(f"Asset {asset['id']}: missing {key}: {asset[key]}")
+            elif key == "model" and asset.get("sha256"):
+                if hashlib.sha256(target.read_bytes()).hexdigest() != asset["sha256"]:
+                    errors.append(f"Asset {asset['id']}: model differs from reviewed manifest hash")
 for relative in ("scenes/player.tscn", "scenes/enemy.tscn", "scripts/player.gd", "scripts/enemy.gd"):
     if (ROOT / relative).exists():
         errors.append(f"Retired 2D runtime restored: {relative}")

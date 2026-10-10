@@ -181,7 +181,7 @@ for k in range(n):faces.append((0,1+(k+1)%n,1+k))
 for j in range(rings-1):
     for k in range(n):
         a=1+j*n+k;b=1+j*n+(k+1)%n;c=1+(j+1)*n+(k+1)%n;d=1+(j+1)*n+k
-        faces.append((d,c,b,a))
+        faces.append((a,b,c,d))
 o=mesh('Orange_red_glass_optic',verts,faces,optic,True)
 layer=o.data.uv_layers.new(name='UVMap')
 for p in o.data.polygons:

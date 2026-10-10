@@ -199,12 +199,12 @@ for j in range(1,rings+1):
     for k in range(seg):
         a=math.tau*k/seg
         verts.append(tuple(center+Vector((r*math.cos(a),.030*math.sqrt(max(0,1-(r/radius)**2)),r*math.sin(a)))))
-for k in range(seg):faces.append((0,1+k,1+(k+1)%seg))
+for k in range(seg):faces.append((0,1+(k+1)%seg,1+k))
 for j in range(rings-1):
     for k in range(seg):
         a=1+j*seg+k;b=1+j*seg+(k+1)%seg;c=1+(j+1)*seg+(k+1)%seg;d=1+(j+1)*seg+k
         faces.append((a,b,c,d))
-me=bpy.data.meshes.new('EyeSurface');me.from_pydata(verts,[],[tuple(reversed(f)) for f in faces]);me.update()
+me=bpy.data.meshes.new('EyeSurface');me.from_pydata(verts,[],faces);me.update()
 o=bpy.data.objects.new('Eye',me);bpy.context.collection.objects.link(o)
 uv=me.uv_layers.new(name='UVMap')
 for p in me.polygons:
