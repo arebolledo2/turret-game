@@ -1,0 +1,53 @@
+{
+  "rest": {
+    "tip": [
+      0.0,
+      1.2000000476837158,
+      1.0800000429153442
+    ],
+    "tip_horizontal_reach": 1.2000000476837158,
+    "maximum_physical_horizontal_reach": 1.2000004643503333,
+    "moving_min_z": 0.6029999852180481,
+    "moving_max_z": 1.1610000133514404
+  },
+  "upgrade_1_5": {
+    "tip": [
+      0.0,
+      1.8000000715255737,
+      1.0800000429153442
+    ],
+    "tip_horizontal_reach": 1.8000000715255737,
+    "maximum_physical_horizontal_reach": 1.8000006965254514,
+    "moving_min_z": 0.6029999852180481,
+    "moving_max_z": 1.1610000133514404
+  },
+  "fixed_geometry_unchanged": true,
+  "height_unchanged": true,
+  "Muzzle_bare": true,
+  "Muzzle_directly_under_Aim": true,
+  "Aim_identity_rotation": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "moving_meshes": [
+    "Arm brass plates",
+    "Arm frame",
+    "Bat handle",
+    "Elbow",
+    "Grip fingers",
+    "Hand backing",
+    "Shoulder",
+    "Shoulder optics",
+    "Wooden bat"
+  ],
+  "fixed_meshes": [
+    "Base coral trims",
+    "Base jewels",
+    "Base sockets",
+    "Enamel pedestal",
+    "Fixed mast",
+    "Foundation feet",
+    "Ivory base ribbons"
+  ]
+}

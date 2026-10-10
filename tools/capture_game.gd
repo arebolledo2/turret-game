@@ -6,6 +6,7 @@ var world: ArenaWorld
 var frames: int = 0
 var samples: Array[float] = []
 var stress: bool = false
+var mixed_stress: bool = false
 var shop: bool = false
 var shop_focus: int = -1
 var combat_demo: bool = false
@@ -38,7 +39,10 @@ func setup() -> void:
 	world.waves.remaining_spawns = 0
 	world.waves.announcement_left = 0
 	world.player.invulnerability = 999
-	stress = "--stress" in OS.get_cmdline_user_args()
+	mixed_stress = "--mixed-stress" in arguments
+	stress = "--stress" in arguments or mixed_stress
+	if "--reduced-motion" in arguments:
+		FeatureFlagService.set_enabled(FeatureFlagService.REDUCED_MOTION, true)
 	shop = "--shop" in OS.get_cmdline_user_args()
 	for argument in arguments:
 		if argument.begins_with("--shop-focus="): # --shop-focus=N: focus offer card N so the build preview shows
@@ -46,14 +50,15 @@ func setup() -> void:
 			shop_focus = int(argument.trim_prefix("--shop-focus="))
 	combat_demo = "--combat-demo" in OS.get_cmdline_user_args()
 	roster_demo = "--roster-demo" in arguments
-	new_turrets = "--new-turrets" in OS.get_cmdline_user_args()
+	new_turrets = "--new-turrets" in arguments or mixed_stress
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	GameRandom.gameplay.seed = 42
 	for index in range(150 if stress else (0 if zones_demo or roster_demo else 18)):
 		var angle := float(index) * 2.39996
 		var radius := 2.5 + float(index % 6) * .5
-		var enemy := world.spawn_enemy(Vector3(cos(angle) * radius * 1.4, 0, sin(angle) * radius * .7), "charger" if index % 4 == 0 else "basic")
+		var kind: String = ["basic", "fast", "tank", "charger", "exploder"][index % 5] if mixed_stress else ("charger" if index % 4 == 0 else "basic")
+		var enemy := world.spawn_enemy(Vector3(cos(angle) * radius * 1.4, 0, sin(angle) * radius * .7), kind)
 		if stress:
 			enemy.health = 10000
 	world.add_turret(Vector3(-3, 0, 0), "plasma")
@@ -64,6 +69,8 @@ func setup() -> void:
 	if stress:
 		for index in range(7):
 			world.add_turret(Vector3(-6 + index * 2, 0, -2), ArenaShop.TURRETS[index % 3])
+	if mixed_stress:
+		world.drops.spawn(Vector3(2, 0, 2)).health = 10000
 	if roster_demo:
 		stage_roster_demo()
 	last_tick = Time.get_ticks_usec()
@@ -78,6 +85,7 @@ func stage_roster_demo() -> void:
 	for index in range(kinds.size()):
 		var actor := world.spawn_enemy(Vector3(-4 + index * 2, 0, -2), kinds[index])
 		actor.set_physics_process(false)
+		actor.visual.rotation.y = PI - .4
 	world.drops.spawn(Vector3(2, 0, 2)).set_physics_process(false)
 	if not new_turrets:
 		world.add_turret(Vector3(-2, 0, 0), "tesla")
@@ -85,6 +93,7 @@ func stage_roster_demo() -> void:
 	for index in range(world.turrets.size()):
 		world.turrets[index].position = Vector3(-4 + index * 2, 0, 0)
 		world.turrets[index].set_physics_process(false)
+		world.turrets[index].aim.rotation.y = PI - .4
 	world.camera_rig.set_zoom(.75)
 	world.camera_rig.snap()
 
@@ -139,7 +148,17 @@ func capture() -> void:
 	gpu_samples.sort()
 	render_cpu_samples.sort()
 	print("GAME_CAPTURE ", output)
+	var enemy_counts: Dictionary = {}
+	for enemy in world.enemies:
+		enemy_counts[enemy.enemy_type] = int(enemy_counts.get(enemy.enemy_type, 0)) + 1
+	var custom_assets: Array[String] = []
+	for key in ClockworkModels.KEYS:
+		if ClockworkModels.available(key):
+			custom_assets.append(key)
 	print("GAME_METRICS ", JSON.stringify({"frames": samples.size(), "median_frame_ms": samples[samples.size() / 2],
+		"scenario": "mixed_stress" if mixed_stress else "stress" if stress else "visual_review",
+		"enemy_counts": enemy_counts, "clockwork_assets": custom_assets,
+		"reduced_motion": FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION),
 		"p95_frame_ms": samples[int(samples.size() * .95)], "enemies": world.enemies.size(),
 		"projectiles": world.projectiles.size(), "peak_audio_voices": peak_voices,
 		"spark_instances": world.effects.sparks.size(), "turrets": world.turrets.size(),

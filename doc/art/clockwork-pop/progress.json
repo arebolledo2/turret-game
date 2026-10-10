@@ -28,10 +28,12 @@
       "key": "tesla",
       "name": "Tuning-Fork Conductor",
       "image_id": "e9f5d244-a3df-4f80-b1dd-67cd56724379",
-      "status": "building",
+      "status": "integrated",
       "reference": "../../../art-source/clockwork-pop/references/tesla.png",
       "notes": "Strong fork silhouette. Model solid electrode tips instead of the hollow-looking bores. Place the emission origin between the prongs.",
-      "run": "cp_tesla-v1"
+      "run": "cp_tesla-v1",
+      "preview": "previews/tesla.png",
+      "metrics": "7,080 triangles \u00b7 13 meshes \u00b7 8 materials"
     },
     {
       "key": "shock",
@@ -48,10 +50,12 @@
       "key": "melee",
       "name": "Dugout Automaton",
       "image_id": "8c69d6dd-674e-4547-9a60-b74cd73bed71",
-      "status": "building",
+      "status": "integrated",
       "reference": "../../../art-source/clockwork-pop/references/melee.png",
       "notes": "Good base and arm. Move the hand nearer the butt knob: the reference still grips near the taper. Keep most of the bat beyond the grip, with a vertical yaw pivot and hit marker at the tip.",
-      "run": "cp_melee-v1"
+      "run": "cp_melee-v1",
+      "preview": "previews/melee.png",
+      "metrics": "12,644 triangles \u00b7 16 meshes \u00b7 8 materials"
     },
     {
       "key": "basic",
@@ -68,7 +72,7 @@
       "key": "fast",
       "name": "Skipper Moth",
       "image_id": "07d1ec0b-0520-4533-8bf5-13356d93ead7",
-      "status": "queued",
+      "status": "building",
       "reference": "../../../art-source/clockwork-pop/references/fast.png",
       "notes": "Clean wings without the obvious smoke trail of variant 3. Test wing opacity and silhouette at gameplay distance.",
       "run": "cp_fast-v1"
@@ -77,7 +81,7 @@
       "key": "tank",
       "name": "Bulwark Hermit",
       "image_id": "f572c765-8035-49a6-9a6c-c108acd56e06",
-      "status": "queued",
+      "status": "building",
       "reference": "../../../art-source/clockwork-pop/references/tank.png",
       "notes": "Heavy low crab stance and clear supporting legs. Variant 3 is a friendlier alternate; variant 2 has a more helmet-like face. Resolve hidden leg layout before rigging.",
       "run": "cp_tank-v1"
@@ -95,7 +99,7 @@
       "key": "hero",
       "name": "Pip the Lantern Keeper",
       "image_id": "e142d444-d9d9-49cd-bd63-0fd5e1acfb27",
-      "status": "queued",
+      "status": "building",
       "reference": "../../../art-source/clockwork-pop/references/hero.png",
       "notes": "Readable face, chest lantern and weapon. Needs coordinated locomotion and aiming; the biped presentation differs from the current hovering hero.",
       "run": "cp_hero-v1"
@@ -115,10 +119,12 @@
       "key": "exploder",
       "name": "Cinder Puffer",
       "image_id": "40885d15-7c25-41e9-98e8-192025dc5423",
-      "status": "building",
+      "status": "integrated",
       "reference": "../../../art-source/clockwork-pop/references/exploder.png",
       "notes": "User authorized agent selection. Capped teal top variant1; coral pressure vessel, brass plugs, orange-red glass eye.",
-      "run": "cp_exploder-v1"
+      "run": "cp_exploder-v1",
+      "preview": "previews/exploder.png",
+      "metrics": "9,912 triangles \u00b7 7 meshes \u00b7 7 materials"
     }
   ],
   "events": [
@@ -177,13 +183,47 @@
     {
       "stage": "Bramble integration",
       "text": "Bramble iteration5 accepted at 9,324 triangles, 7 meshes/materials and three textures. All geometry follows the Body hover pivot. Combat capture confirms readable emerald eye and teal leaf silhouette at gameplay scale; import clean. Full suite: 849 tests pass with no risky tests, unexpected errors or remaining orphans. Cinder Puffer generation started. Five of twelve assets now integrated; animation review and representative performance tests remain open."
+    },
+    {
+      "stage": "Export: tesla",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Tesla accepted; hero started",
+      "text": "Tuning-Fork Conductor iteration3 accepted for import: 7,080 triangles, 13 meshes, 8 materials, four textures. Solid contacts and central muzzle preserve electrical identity. Pip generation started with separate leg pivots and a torso/weapon hierarchy for independent aiming."
+    },
+    {
+      "stage": "Tesla and hero motion support",
+      "text": "Tuning-Fork Conductor imports cleanly and reads in combat. Added hero torso aiming with bounded twist, weapon recoil and four motion tests (17 assertions). Full suite: 851 tests pass. Added representative mixed-roster stress tooling that records exact enemy counts, loaded models and reduced-motion state; measurements await all assets and an idle GPU."
+    },
+    {
+      "stage": "Export: melee",
+      "text": "Reviewed harness iteration 2; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: exploder",
+      "text": "Reviewed harness iteration 2; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Bat and Puffer integration",
+      "text": "Dugout Automaton iteration2 and Cinder Puffer iteration2 imported and reviewed at gameplay scale. All 14 turret tests pass against the actual bat model, including modified-reach geometry checks. Eight of twelve assets are integrated. Pip, Bulwark Hermit and Skipper Moth are building; Ramjet Beetle remains queued. Leg controller now supports mirrored lift and fore-aft sweep for the forthcoming crab/beetle rigs; final model animation review pending."
     }
   ],
   "checks": {
     "Visual acceptance": "pending",
     "Movement and attack validation": "pending",
-    "Full game tests": "849 pass with five integrated assets; final roster pending",
+    "Full game tests": "851 pass with six integrated assets; final roster pending",
     "Performance comparison": "pending",
     "Playtest launch": "pending"
-  }
+  },
+  "captures": [
+    {
+      "path": "previews/eight-roster-in-game.png",
+      "caption": "Eight new assets in the gameplay-scale roster. Fast, tank, charger and hero still show original models; final scale and motion review remain pending."
+    },
+    {
+      "path": "previews/tesla-in-game.png",
+      "caption": "Six integrated assets; hero, melee and non-basic enemies still use originals in this capture. This is a visual check, not a performance measurement."
+    }
+  ]
 }

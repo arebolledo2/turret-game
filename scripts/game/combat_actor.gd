@@ -42,6 +42,7 @@ const FLASH_DURATION: float = .18
 const ENEMY_FLASH_COLOR := Color(1.0, .92, .8)
 const PLAYER_FLASH_COLOR := Color(1.0, .28, .22)
 var weapon_clock: float = 0.0
+var weapon_target: CombatActor
 var clockwork_motion: ClockworkMotion
 
 func _ready() -> void:
@@ -295,15 +296,27 @@ func _apply_contact_damage(delta: float, previous_position: Vector3) -> void:
 ## The hero's auto-fire at the nearest enemy in range.
 func _tick_player_weapon(delta: float) -> void:
 	weapon_clock -= delta
-	if weapon_clock > 0.0:
-		return
-	var target: CombatActor = world.nearest_enemy(position, GameConstants.PLAYER_TURRET_RANGE * WorldGeometry.METRES_PER_PIXEL)
-	if target:
+	var weapon_range := GameConstants.PLAYER_TURRET_RANGE * WorldGeometry.METRES_PER_PIXEL
+	if weapon_clock <= 0.0:
+		weapon_target = world.nearest_enemy(position, weapon_range)
+	if is_instance_valid(weapon_target) and (weapon_target.dead or WorldGeometry.planar(weapon_target.position - position).length() > weapon_range):
+		weapon_target = null
+	if clockwork_motion:
+		var heading := WorldGeometry.planar(weapon_target.position - position) if is_instance_valid(weapon_target) else Vector3.ZERO
+		if heading.length_squared() > .0001:
+			var yaw := atan2(-heading.x, -heading.z)
+			var twist := wrapf(yaw - visual.global_rotation.y, -PI, PI)
+			if absf(twist) > PI / 3.0:
+				visual.global_rotation.y = yaw - clampf(twist, -PI / 3.0, PI / 3.0)
+		clockwork_motion.aim_hero(heading)
+	if weapon_clock <= 0.0 and is_instance_valid(weapon_target):
 		var shot := CombatShot3D.from_stats({"damage": PlayerStatsService.get_player_weapon_damage(),
 			"projectile_speed": GameConstants.PLAYER_TURRET_PROJECTILE_SPEED})
 		if PlayerStatsService.roll_player_crit():
 			shot.damage = PlayerStatsService.calculate_player_crit_damage(shot.damage)
-		world.fire_shot(weapon_muzzle.global_position, target, shot)
+		world.fire_shot(weapon_muzzle.global_position, weapon_target, shot)
+		if clockwork_motion:
+			clockwork_motion.fire(FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
 		weapon_clock = 1.0 / maxf(PlayerStatsService.get_player_fire_rate(), .01)
 
 ## Where an enemy is heading when the run has an objective: the hero while within aggro range, otherwise the objective.

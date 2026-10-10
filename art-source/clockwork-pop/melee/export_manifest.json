@@ -1,0 +1,354 @@
+{
+  "frozen": true,
+  "final_iteration": 2,
+  "glb_bytes": 1974184,
+  "blend_bytes": 1775458,
+  "glb_sha256": "5a68105d50a5ba61a4944ebf5c72b4e4d7214c98dff05449de18b280b8b9862e",
+  "build_sha256": "03d73f394eb424dc41d12809c0a17b8ab31b9d0d1ffbc4b708083f57abd9e946",
+  "embedded_images": 4,
+  "external_image_uris": [],
+  "external_buffer_uris": [],
+  "animations": 0,
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Arm brass plates",
+      "rotation": [
+        0,
+        -0.9533829689025879,
+        0.30176302790641785,
+        7.95681032172979e-08
+      ],
+      "translation": [
+        -0.06800000369548798,
+        0.13849997520446777,
+        -0.08500000089406967
+      ]
+    },
+    {
+      "mesh": 1,
+      "name": "Arm frame",
+      "rotation": [
+        0,
+        -0.9533829689025879,
+        0.30176302790641785,
+        7.95681032172979e-08
+      ],
+      "translation": [
+        0,
+        0.13849997520446777,
+        -0.08500000089406967
+      ]
+    },
+    {
+      "mesh": 2,
+      "name": "Bat handle",
+      "translation": [
+        0,
+        -0.6600000262260437,
+        0
+      ]
+    },
+    {
+      "mesh": 3,
+      "name": "Elbow",
+      "rotation": [
+        0.5,
+        0.5,
+        -0.5,
+        0.5
+      ],
+      "translation": [
+        0,
+        0.2459999918937683,
+        -0.1550000011920929
+      ]
+    },
+    {
+      "mesh": 4,
+      "name": "Grip fingers",
+      "translation": [
+        0,
+        -0.6600000262260437,
+        0
+      ]
+    },
+    {
+      "mesh": 5,
+      "name": "Hand backing",
+      "rotation": [
+        0.1283072680234909,
+        0,
+        0,
+        0.9917345643043518
+      ],
+      "translation": [
+        0,
+        0.3074999451637268,
+        -0.14249999821186066
+      ]
+    },
+    {
+      "name": "Muzzle",
+      "translation": [
+        0,
+        0.42000001668930054,
+        -1.2000000476837158
+      ]
+    },
+    {
+      "mesh": 6,
+      "name": "Shoulder",
+      "rotation": [
+        0.5,
+        0.5,
+        -0.5,
+        0.5
+      ],
+      "translation": [
+        0,
+        0.0209999680519104,
+        0
+      ]
+    },
+    {
+      "mesh": 7,
+      "name": "Shoulder optics",
+      "translation": [
+        -0.12700000405311584,
+        0.02899998426437378,
+        0
+      ]
+    },
+    {
+      "mesh": 8,
+      "name": "Wooden bat",
+      "translation": [
+        0,
+        -0.6600000262260437,
+        0
+      ]
+    },
+    {
+      "children": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "name": "Aim",
+      "translation": [
+        0,
+        0.6600000262260437,
+        0
+      ]
+    },
+    {
+      "mesh": 9,
+      "name": "Base coral trims"
+    },
+    {
+      "mesh": 10,
+      "name": "Base jewels",
+      "translation": [
+        0,
+        0.1940000057220459,
+        -0.3149999976158142
+      ]
+    },
+    {
+      "mesh": 11,
+      "name": "Base sockets",
+      "rotation": [
+        0,
+        -0.7071068286895752,
+        0.7071068286895752,
+        5.338509012631221e-08
+      ],
+      "translation": [
+        0,
+        0.1940000057220459,
+        -0.27399998903274536
+      ]
+    },
+    {
+      "mesh": 12,
+      "name": "Enamel pedestal"
+    },
+    {
+      "mesh": 13,
+      "name": "Fixed mast",
+      "rotation": [
+        0,
+        -1,
+        0,
+        7.549790126404332e-08
+      ],
+      "translation": [
+        0,
+        0.39500001072883606,
+        0
+      ]
+    },
+    {
+      "mesh": 14,
+      "name": "Foundation feet",
+      "translation": [
+        0,
+        0.050999999046325684,
+        -0.2849999964237213
+      ]
+    },
+    {
+      "mesh": 15,
+      "name": "Ivory base ribbons"
+    }
+  ],
+  "validation": {
+    "triangles": 12644,
+    "mesh_objects": 16,
+    "materials": 8,
+    "loose_components": 309,
+    "size_m": [
+      0.66,
+      1.53,
+      1.149
+    ],
+    "min_z": 0.012,
+    "centre_xy": [
+      0.0,
+      0.435
+    ],
+    "origin_node": "Aim",
+    "origin_xy": [
+      0.0,
+      0.0
+    ],
+    "missing_nodes": [],
+    "empty_leg_pivots": [],
+    "textures": [
+      [
+        "dugout_color_atlas",
+        [
+          1024,
+          1024
+        ]
+      ],
+      [
+        "dugout_micro_normal",
+        [
+          1024,
+          1024
+        ]
+      ],
+      [
+        "dugout_optic_glow",
+        [
+          1024,
+          1024
+        ]
+      ],
+      [
+        "dugout_orm_atlas",
+        [
+          1024,
+          1024
+        ]
+      ]
+    ],
+    "animations": [],
+    "checks": {
+      "required_nodes_present": true,
+      "each_required_node_has_geometry": true,
+      "height_ok": true,
+      "width_ok": true,
+      "ground_gap_ok": true,
+      "origin_xy_centred": true,
+      "has_meshes": true,
+      "Muzzle_under_Aim": true,
+      "muzzle_in_front_and_raised": true,
+      "textures_present": true
+    },
+    "passed": true,
+    "limits": {
+      "height": [
+        0.8,
+        1.3
+      ],
+      "max_width": 2.0,
+      "ground_gap": [
+        -0.02,
+        0.1
+      ]
+    },
+    "targets": {
+      "max_texture_px": 1024,
+      "max_textures": 4,
+      "max_triangles": 5000,
+      "max_mesh_objects": 16,
+      "max_materials": 8
+    },
+    "target_overruns": [
+      "max_triangles: 12644 > target 5000"
+    ]
+  },
+  "rig_audit": {
+    "rest": {
+      "tip": [
+        0.0,
+        1.2000000476837158,
+        1.0800000429153442
+      ],
+      "tip_horizontal_reach": 1.2000000476837158,
+      "maximum_physical_horizontal_reach": 1.2000004643503333,
+      "moving_min_z": 0.6029999852180481,
+      "moving_max_z": 1.1610000133514404
+    },
+    "upgrade_1_5": {
+      "tip": [
+        0.0,
+        1.8000000715255737,
+        1.0800000429153442
+      ],
+      "tip_horizontal_reach": 1.8000000715255737,
+      "maximum_physical_horizontal_reach": 1.8000006965254514,
+      "moving_min_z": 0.6029999852180481,
+      "moving_max_z": 1.1610000133514404
+    },
+    "fixed_geometry_unchanged": true,
+    "height_unchanged": true,
+    "Muzzle_bare": true,
+    "Muzzle_directly_under_Aim": true,
+    "Aim_identity_rotation": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "moving_meshes": [
+      "Arm brass plates",
+      "Arm frame",
+      "Bat handle",
+      "Elbow",
+      "Grip fingers",
+      "Hand backing",
+      "Shoulder",
+      "Shoulder optics",
+      "Wooden bat"
+    ],
+    "fixed_meshes": [
+      "Base coral trims",
+      "Base jewels",
+      "Base sockets",
+      "Enamel pedestal",
+      "Fixed mast",
+      "Foundation feet",
+      "Ivory base ribbons"
+    ]
+  }
+}

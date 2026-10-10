@@ -54,6 +54,39 @@
       "meshes": 7,
       "materials": 7,
       "iteration": 5
+    },
+    {
+      "id": "tesla",
+      "source": "art-source/clockwork-pop/tesla/build_cp_tesla.py",
+      "model": "assets/models/clockwork/cp_tesla.glb",
+      "reference": "art-source/clockwork-pop/references/tesla.png",
+      "sha256": "c7e31e5ad6915e0f0c88d6ebaebaf489ea0075fd94632fb077a4d616d7afcacd",
+      "triangles": 7080,
+      "meshes": 13,
+      "materials": 8,
+      "iteration": 3
+    },
+    {
+      "id": "melee",
+      "source": "art-source/clockwork-pop/melee/build_cp_melee.py",
+      "model": "assets/models/clockwork/cp_melee.glb",
+      "reference": "art-source/clockwork-pop/references/melee.png",
+      "sha256": "5a68105d50a5ba61a4944ebf5c72b4e4d7214c98dff05449de18b280b8b9862e",
+      "triangles": 12644,
+      "meshes": 16,
+      "materials": 8,
+      "iteration": 2
+    },
+    {
+      "id": "exploder",
+      "source": "art-source/clockwork-pop/exploder/build_cp_exploder.py",
+      "model": "assets/models/clockwork/cp_exploder.glb",
+      "reference": "art-source/clockwork-pop/references/exploder.png",
+      "sha256": "148391bfb16016cf55b6916fb45eb36b5b070ddb1962c7b66a8ea2354ef5d5b9",
+      "triangles": 9912,
+      "meshes": 7,
+      "materials": 7,
+      "iteration": 2
     }
   ]
 }

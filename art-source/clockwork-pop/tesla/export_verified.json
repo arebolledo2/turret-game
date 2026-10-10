@@ -1,0 +1,24 @@
+{
+  "sha256": "c7e31e5ad6915e0f0c88d6ebaebaf489ea0075fd94632fb077a4d616d7afcacd",
+  "bytes": 2911704,
+  "embedded_images": 4,
+  "meshes": 13,
+  "materials": 8,
+  "animations": 0,
+  "Aim_identity": true,
+  "bare_Muzzle_under_Aim": true,
+  "base_static": true,
+  "all_meshes_uv_mapped": true,
+  "Aim_blender_world": [
+    0,
+    0,
+    0.338
+  ],
+  "Muzzle_blender_world": [
+    0,
+    0.585,
+    0.603
+  ],
+  "glass_alpha_mode": "BLEND",
+  "forward": "Blender +Y / glTF -Z"
+}

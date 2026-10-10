@@ -1,0 +1,29 @@
+{
+  "triangles": 12644,
+  "mesh_objects": 16,
+  "materials": 8,
+  "textures": 4,
+  "Aim_world": [
+    0,
+    0,
+    0.66
+  ],
+  "Muzzle_world": [
+    0,
+    1.2,
+    1.08
+  ],
+  "horizontal_reach": 1.2,
+  "grip_y_range": [
+    0.037,
+    0.207
+  ],
+  "butt_knob_y": [
+    -0.08,
+    -0.029
+  ],
+  "wood_bat_y": [
+    0.287,
+    1.2
+  ]
+}

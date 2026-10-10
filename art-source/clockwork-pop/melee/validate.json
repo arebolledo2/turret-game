@@ -1,0 +1,88 @@
+{
+ "triangles": 12644,
+ "mesh_objects": 16,
+ "materials": 8,
+ "loose_components": 309,
+ "size_m": [
+  0.66,
+  1.53,
+  1.149
+ ],
+ "min_z": 0.012,
+ "centre_xy": [
+  0.0,
+  0.435
+ ],
+ "origin_node": "Aim",
+ "origin_xy": [
+  0.0,
+  0.0
+ ],
+ "missing_nodes": [],
+ "empty_leg_pivots": [],
+ "textures": [
+  [
+   "dugout_color_atlas",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "dugout_micro_normal",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "dugout_optic_glow",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "dugout_orm_atlas",
+   [
+    1024,
+    1024
+   ]
+  ]
+ ],
+ "animations": [],
+ "checks": {
+  "required_nodes_present": true,
+  "each_required_node_has_geometry": true,
+  "height_ok": true,
+  "width_ok": true,
+  "ground_gap_ok": true,
+  "origin_xy_centred": true,
+  "has_meshes": true,
+  "Muzzle_under_Aim": true,
+  "muzzle_in_front_and_raised": true,
+  "textures_present": true
+ },
+ "passed": true,
+ "limits": {
+  "height": [
+   0.8,
+   1.3
+  ],
+  "max_width": 2.0,
+  "ground_gap": [
+   -0.02,
+   0.1
+  ]
+ },
+ "targets": {
+  "max_texture_px": 1024,
+  "max_textures": 4,
+  "max_triangles": 5000,
+  "max_mesh_objects": 16,
+  "max_materials": 8
+ },
+ "target_overruns": [
+  "max_triangles: 12644 > target 5000"
+ ]
+}

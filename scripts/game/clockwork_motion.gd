@@ -6,8 +6,12 @@ var kind: String
 var body: Node3D
 var rest: Dictionary = {}
 var limbs: Array[Node3D] = []
+var limb_phases: Array[float] = []
+var limb_sides: Array[float] = []
 var wings: Array[Node3D] = []
 var left_arm: Node3D
+var right_arm: Node3D
+var recoil: float = 0.0
 var phase: float = 0.0
 var hover_phase: float = 0.0
 var stagger: int = 0
@@ -24,12 +28,15 @@ func _init(model: Node3D, asset_kind: String) -> void:
 				var limb := _part(model, "Leg_%s_%d" % [side, index])
 				if limb:
 					limbs.append(limb)
+					limb_phases.append(float((index + (1 if side == "R" else 0)) % 2) * PI)
+					limb_sides.append(1.0 if side == "L" else -1.0)
 	elif kind == "hero":
 		for part: String in ["Leg_L", "Leg_R"]:
 			var limb := _part(model, part)
 			if limb:
 				limbs.append(limb)
 		left_arm = _part(model, "Arm_L")
+		right_arm = _part(model, "Arm_R")
 	elif kind == "fast":
 		for part: String in ["Wing_L", "Wing_R"]:
 			var wing := _part(model, part)
@@ -49,6 +56,7 @@ func reset() -> void:
 func tick(delta: float, speed: float, reduced: bool, carrying: bool = false) -> void:
 	phase += speed * delta * 6.0
 	hover_phase += delta * 2.5
+	recoil = maxf(0.0, recoil - delta * .3)
 	if reduced:
 		if not was_reduced:
 			reset()
@@ -66,12 +74,38 @@ func tick(delta: float, speed: float, reduced: bool, carrying: bool = false) -> 
 		elif moving > .01:
 			body.position.y += absf(sin(phase)) * .018 * moving
 	for index in range(limbs.size()):
-		var angle := sin(phase + float(index % 2) * PI) * .24 * moving
-		_pose(limbs[index], Vector3.RIGHT, angle)
+		if kind in ["tank", "charger"]:
+			var cycle := phase + limb_phases[index]
+			var initial: Transform3D = rest[limbs[index]]
+			var sweep := sin(cycle) * .16 * moving
+			var lift := maxf(0.0, cos(cycle)) * .14 * moving * limb_sides[index]
+			limbs[index].transform = Transform3D(initial.basis * Basis(Vector3.UP, sweep) * Basis(Vector3.FORWARD, lift), initial.origin)
+		else:
+			var angle := sin(phase + float(index % 2) * PI) * .24 * moving
+			_pose(limbs[index], Vector3.RIGHT, angle)
 	for index in range(wings.size()):
 		_pose(wings[index], Vector3.FORWARD, sin(hover_phase * 3.0) * .16 * (-1.0 if index == 0 else 1.0))
 	if left_arm:
 		_pose(left_arm, Vector3.RIGHT, -.65 if carrying else -sin(phase) * .18 * moving)
+	if right_arm:
+		right_arm.transform = rest[right_arm]
+		right_arm.position.z += recoil
+
+## Aim the torso independently of the hip pivots; heading is in world space.
+func aim_hero(heading: Vector3) -> void:
+	if kind != "hero" or not body:
+		return
+	var initial: Transform3D = rest[body]
+	if heading.length_squared() < .0001:
+		body.basis = initial.basis
+		return
+	var local_heading := body.get_parent_node_3d().global_basis.inverse() * heading
+	var yaw := atan2(-local_heading.x, -local_heading.z)
+	body.basis = Basis(Vector3.UP, yaw) * initial.basis
+
+func fire(reduced: bool) -> void:
+	if right_arm and not reduced:
+		recoil = .025
 
 func _pose(node: Node3D, axis: Vector3, angle: float) -> void:
 	var initial: Transform3D = rest[node]
