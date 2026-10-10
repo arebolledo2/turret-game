@@ -6,17 +6,17 @@ extends Node
 func apply_static_effects(turret_type: String, stats: Dictionary) -> void:
 	"""Apply effects that depend on global game state (e.g., owned items, total turrets)."""
 
-	# Elemental Conduit: +15% damage per turret family owned (max +60% with all four)
+	# Combined Arms: +12% damage per distinct assigned attack family (max +48%)
 	if ItemRegistry.has_special_effect("elemental_conduit") and ItemTrackingService.item_counts.get("elemental_conduit", 0) > 0:
 		var diversity: int = TurretStatsService.get_family_diversity()
-		var damage_bonus: float = diversity * 0.15
+		var damage_bonus: float = diversity * 0.12
 		stats["damage"] = stats.get("damage", 0.0) * (1.0 + damage_bonus)
 
-	# Army Doctrine: +3% fire rate per turret beyond the 3rd (max +30%)
+	# Army Doctrine: +3% attack speed per turret beyond the 3rd (max +30%)
 	if ItemRegistry.has_special_effect("army_doctrine") and ItemTrackingService.item_counts.get("army_doctrine", 0) > 0:
 		var total_turrets: int = TurretStatsService.get_total_turret_count()
 		var bonus: float = min(max(0, total_turrets - 3) * 0.03, 0.30)
-		stats["fire_rate"] = stats.get("fire_rate", 1.0) * (1.0 + bonus)
+		stats["attack_speed"] = stats.get("attack_speed", 1.0) * (1.0 + bonus)
 
 	# Elite Forces: +40% damage, +25% range if ≤5 turrets
 	if ItemRegistry.has_special_effect("elite_forces") and ItemTrackingService.item_counts.get("elite_forces", 0) > 0:
@@ -55,11 +55,11 @@ func apply_static_effects(turret_type: String, stats: Dictionary) -> void:
 		var rotation_bonus: float = floor(diversity / 2.0) * 0.15
 		stats["rotation_speed"] = stats.get("rotation_speed", 180.0) * (1.0 + rotation_bonus)
 
-	# Mono-Type Mastery: +100% damage, +50% fire rate if only one turret type
+	# Focused Arsenal: +50% damage, +25% attack speed if all turrets share an attack family
 	if ItemRegistry.has_special_effect("mono_type_mastery") and ItemTrackingService.item_counts.get("mono_type_mastery", 0) > 0:
-		if TurretStatsService.get_turret_type_diversity() == 1:
-			stats["damage"] = stats.get("damage", 0.0) * 2.0
-			stats["fire_rate"] = stats.get("fire_rate", 1.0) * 1.50
+		if not TurretStatsService.shared_attack_families().is_empty():
+			stats["damage"] = stats.get("damage", 0.0) * 1.5
+			stats["attack_speed"] = stats.get("attack_speed", 1.0) * 1.25
 
 	# Synergy Core: +12% damage per turret type, +25% if all 6
 	if ItemRegistry.has_special_effect("synergy_core") and ItemTrackingService.item_counts.get("synergy_core", 0) > 0:

@@ -5,22 +5,23 @@ extends RefCounted
 ## `ArenaWorld` owns the actors; this helper only decides who is hit and applies the hits through `Combat3D`.
 var world: ArenaWorld
 
-## Reactor Overload: plasma kills detonate for a fraction of the killing hit, and those kills can chain (depth capped).
+## Reactor Overload: AoE kills detonate for a fraction of the killing hit, and those kills can chain (depth capped).
 func reactor_overload(victim: CombatActor, hit: CombatHit3D) -> void:
-	if hit.damage_type != GameEnums.DamageType.PLASMA or hit.blast_depth >= GameConstants.REACTOR_MAX_CHAIN_DEPTH:
+	if not "aoe" in hit.attack_families or hit.blast_depth >= GameConstants.REACTOR_MAX_CHAIN_DEPTH:
 		return
 	if ModifierService.apply_modifiers_to_stat(0.0, "reactor_overload") <= 0.0:
 		return
-	var stats := TurretStatsService.get_turret_stats("plasma", float(world.difficulty_config["turret_damage_mult"]))
-	var radius := TurretStats.new(stats).aoe_radius_metres * GameConstants.REACTOR_BLAST_RADIUS_FRACTION
+	var radius := hit.source_area_radius * GameConstants.REACTOR_BLAST_RADIUS_FRACTION
 	if radius <= 0.0:
 		return
 	var at := victim.position
 	var victims := _enemies_within(at, radius, victim)
 	world.combat.explosion.emit(WorldGeometry.planar(at), radius)
 	for other in victims:
-		var blast := CombatHit3D.new(hit.damage * GameConstants.REACTOR_BLAST_DAMAGE_FRACTION, at, Vector3.ZERO, GameEnums.DamageType.PLASMA)
+		var blast := CombatHit3D.new(hit.damage * GameConstants.REACTOR_BLAST_DAMAGE_FRACTION, at, Vector3.ZERO, hit.damage_type)
 		blast.source_id = hit.source_id
+		blast.attack_families = hit.attack_families.duplicate()
+		blast.source_area_radius = hit.source_area_radius
 		blast.blast_depth = hit.blast_depth + 1
 		world.combat.apply_hit(other, blast)
 

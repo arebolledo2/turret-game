@@ -121,7 +121,7 @@ const TYPES: Dictionary = {
 		"model": "res://assets/models/game/shock_turret.glb",
 		"fire_mode": FIRE_PULSE,
 		"description": "Pulses electric damage around itself.",
-		"attack_styles": [GameEnums.AttackStyle.AOE],
+		"attack_styles": [GameEnums.AttackStyle.INSTANT, GameEnums.AttackStyle.AOE],
 		"damage_types": [GameEnums.DamageType.ELECTRIC],
 		"base_stats": {
 			"damage": 4.0,
@@ -282,3 +282,23 @@ static func get_targeting(type_id: String) -> String:
 	if not TYPES.has(type_id):
 		return "closest"
 	return TYPES[type_id].get("targeting", "closest")
+
+## Item eligibility is independent of turret identity and elemental damage.
+static func get_attack_families(type_id: String) -> Array[String]:
+	var result: Array[String] = []
+	var styles: Array = get_type(type_id).get("attack_styles", [])
+	for pair: Array in [[GameEnums.AttackStyle.PROJECTILE, "projectile"], [GameEnums.AttackStyle.AOE, "aoe"],
+			[GameEnums.AttackStyle.INSTANT, "instant"], [GameEnums.AttackStyle.MELEE, "kinetic"]]:
+		if pair[0] in styles:
+			result.append(pair[1])
+	return result
+
+static func has_capability(type_id: String, capability: String) -> bool:
+	var families := get_attack_families(type_id)
+	var stats := get_base_stats(type_id)
+	match capability:
+		"direct_projectile": return "projectile" in families and not "aoe" in families
+		"chain": return has_attack_style(type_id, GameEnums.AttackStyle.CHAIN)
+		"slow": return float(stats.get("slow_intensity", 0.0)) > 0.0
+		"knockback": return float(stats.get("knockback_force", 0.0)) > 0.0
+	return false

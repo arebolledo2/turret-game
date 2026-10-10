@@ -1,0 +1,345 @@
+class_name ShopScreen
+extends Control
+
+## Opaque shop presentation; transactions and simulation remain owned by ArenaShop/ArenaWorld.
+var world: ArenaWorld
+var offer_buttons: Array[Button] = []
+var reroll_button: IconButton
+var repair_button: IconButton
+var core_repair_button: IconButton
+var continue_button: IconButton
+var offers_grid: GridContainer
+var balance: Label
+var subtitle: Label
+var vital_text: Label
+var turret_text: RichTextLabel
+var detail_title: Label
+var detail_text: Label
+var impact_text: Label
+var installed: VBoxContainer
+var status: Label
+var selected: int = -1
+var details_key: int = 0
+var installed_key: int = 0
+var owned_buttons: Array[Button] = []
+var prior_disable_3d: bool = false
+var suppressing_world: bool = false
+
+func _ready() -> void:
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var backdrop := ColorRect.new()
+	backdrop.color = Color("07171f")
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(backdrop)
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	for side: String in ["left", "right"]:
+		margin.add_theme_constant_override("margin_" + side, 56)
+	for side: String in ["top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, 36)
+	add_child(margin)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 24)
+	margin.add_child(column)
+	var header := HBoxContainer.new()
+	column.add_child(header)
+	var heading := VBoxContainer.new()
+	heading.size_flags_horizontal = SIZE_EXPAND_FILL
+	header.add_child(heading)
+	_label(heading, "SHOP", 48)
+	subtitle = _label(heading, "", 23, UiPalette.MUTED)
+	balance = _label(header, "", 42, UiPalette.SCRAP)
+	balance.autowrap_mode = TextServer.AUTOWRAP_OFF
+	balance.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	column.add_child(HSeparator.new())
+	var content := HBoxContainer.new()
+	content.size_flags_vertical = SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 32)
+	column.add_child(content)
+	var offers_scroll := ScrollContainer.new()
+	offers_scroll.follow_focus = true
+	offers_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	offers_scroll.size_flags_horizontal = SIZE_EXPAND_FILL
+	content.add_child(offers_scroll)
+	offers_grid = GridContainer.new()
+	offers_grid.columns = 4
+	offers_grid.size_flags_horizontal = SIZE_EXPAND_FILL
+	offers_grid.size_flags_vertical = SIZE_EXPAND_FILL
+	offers_grid.add_theme_constant_override("h_separation", 18)
+	offers_grid.add_theme_constant_override("v_separation", 18)
+	offers_scroll.add_child(offers_grid)
+	for i in range(4):
+		var card := OfferCard.new()
+		card.pressed.connect(_purchase.bind(i))
+		card.previewed.connect(_select.bind(i))
+		offers_grid.add_child(card)
+		offer_buttons.append(card)
+	var side_scroll := ScrollContainer.new()
+	side_scroll.follow_focus = true
+	side_scroll.custom_minimum_size.x = 410
+	side_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	content.add_child(side_scroll)
+	var sidebar := VBoxContainer.new()
+	sidebar.size_flags_horizontal = SIZE_EXPAND_FILL
+	sidebar.add_theme_constant_override("separation", 16)
+	side_scroll.add_child(sidebar)
+	_label(sidebar, "Your build", 30)
+	vital_text = _label(sidebar, "", 23, UiPalette.MUTED)
+	turret_text = RichTextLabel.new()
+	turret_text.bbcode_enabled = true
+	turret_text.fit_content = true
+	turret_text.scroll_active = false
+	turret_text.add_theme_font_size_override("normal_font_size", 23)
+	sidebar.add_child(turret_text)
+	sidebar.add_child(HSeparator.new())
+	detail_title = _label(sidebar, "Choose an offer", 30)
+	detail_text = _label(sidebar, "See what it adds to your build.", 23, Color("b9cdd0"))
+	impact_text = _label(sidebar, "", 23, UiPalette.GOOD)
+	sidebar.add_child(HSeparator.new())
+	_label(sidebar, "Installed upgrades", 26)
+	installed = VBoxContainer.new()
+	sidebar.add_child(installed)
+	var footer := HBoxContainer.new()
+	footer.add_theme_constant_override("separation", 18)
+	column.add_child(footer)
+	reroll_button = IconButton.new().setup("reroll", "REROLL")
+	reroll_button.custom_minimum_size.x = 265
+	reroll_button.pressed.connect(_reroll)
+	footer.add_child(reroll_button)
+	repair_button = IconButton.new().setup("repair", "+10 HULL")
+	repair_button.custom_minimum_size.x = 285
+	repair_button.pressed.connect(func() -> void: world.repair(); refresh())
+	footer.add_child(repair_button)
+	core_repair_button = IconButton.new().setup("core", "+10 CORE")
+	core_repair_button.custom_minimum_size.x = 285
+	core_repair_button.pressed.connect(func() -> void: world.repair_core(); refresh())
+	footer.add_child(core_repair_button)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = SIZE_EXPAND_FILL
+	footer.add_child(spacer)
+	continue_button = IconButton.new().setup("deploy", "DEPLOY", true)
+	continue_button.custom_minimum_size.x = 310
+	continue_button.pressed.connect(func() -> void: world.begin_next_wave(); refresh())
+	footer.add_child(continue_button)
+	status = _label(column, "", 20, UiPalette.MUTED)
+	visible = false
+
+func _label(parent: Node, text: String, font_size: int, color: Color = UiPalette.INK) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color)
+	parent.add_child(label)
+	return label
+
+func refresh() -> void:
+	var active := world.shop.is_open() and not world.dev_menu_open
+	var opening := active and not visible
+	if opening:
+		selected = -1
+	visible = active
+	if active and not suppressing_world:
+		prior_disable_3d = get_viewport().disable_3d
+		get_viewport().disable_3d = true
+		suppressing_world = true
+	elif not active:
+		_restore_world()
+		return
+	subtitle.text = "Wave %d secured · Prepare for wave %d" % [GameStateService.current_wave, GameStateService.current_wave + 1]
+	balance.text = "%d SCRAP" % EconomyService.total_scrap
+	var compact := size.x < 1650
+	offers_grid.columns = 2 if compact else 4
+	continue_button.custom_minimum_size.x = 250 if compact else 310
+	for i in range(offer_buttons.size()):
+		var card := offer_buttons[i] as OfferCard
+		card.visible = i < EconomyService.current_shop_offers.size()
+		card.set_compact(compact)
+		if card.visible:
+			var offer := EconomyService.current_shop_offers[i]
+			card.setup(offer, float(world.difficulty_config["turret_damage_mult"]), EconomyService.total_scrap >= offer.price)
+	var cost := world.shop.reroll_cost()
+	reroll_button.set_cost(cost, EconomyService.total_scrap >= cost)
+	reroll_button.disabled = EconomyService.total_scrap < cost
+	for button: IconButton in [repair_button, core_repair_button]:
+		button.set_cost(GameConstants.REPAIR_COST, EconomyService.total_scrap >= GameConstants.REPAIR_COST)
+	repair_button.disabled = EconomyService.total_scrap < GameConstants.REPAIR_COST or world.player.health >= world.player.max_health
+	core_repair_button.visible = world.core != null
+	core_repair_button.disabled = not world.core or EconomyService.total_scrap < GameConstants.REPAIR_COST or world.core.health >= world.core.max_health
+	status.text = world.message
+	_refresh_details()
+	_refresh_focus()
+	if opening:
+		selected = -1
+		continue_button.grab_focus()
+
+func _restore_world() -> void:
+	if suppressing_world:
+		get_viewport().disable_3d = prior_disable_3d
+		suppressing_world = false
+
+func _exit_tree() -> void:
+	_restore_world()
+
+func _select(index: int) -> void:
+	selected = index
+	details_key = 0
+	_refresh_details()
+
+func _purchase(index: int) -> void:
+	var had_focus := offer_buttons[index].has_focus()
+	if world.shop.purchase(index):
+		refresh()
+		if had_focus:
+			continue_button.grab_focus()
+			for card in offer_buttons:
+				if card.visible and not card.disabled:
+					card.grab_focus()
+					break
+	else:
+		status.text = world.message
+
+func _reroll() -> void:
+	if world.shop.reroll():
+		selected = -1
+		details_key = 0
+	refresh()
+
+func _refresh_details() -> void:
+	if not is_instance_valid(world.player):
+		return
+	var data := ShopViewData.build_data(world)
+	var key := [data, EconomyService.current_shop_offers.map(func(o: ShopOffer) -> Array: return [o.asset_id, o.price, o.sold]), selected,
+		world.core.health if world.core else -1].hash()
+	if key == details_key:
+		return
+	details_key = key
+	vital_text.text = "Hull %d / %d" % [ceili(data["hull"]), ceili(data["max_hull"])]
+	if world.core:
+		vital_text.text += "   Core %d / %d" % [ceili(world.core.health), ceili(world.core.max_health)]
+	var after := data
+	if selected >= 0 and selected < EconomyService.current_shop_offers.size():
+		var offer := EconomyService.current_shop_offers[selected]
+		detail_title.text = ArenaShop.offer_name(offer)
+		detail_text.text = ArenaShop.offer_description(offer)
+		if not offer.sold:
+			after = ShopViewData.preview(world, offer)
+			var affected := ShopViewData.affected_turrets(world, offer)
+			if not affected.is_empty():
+				impact_text.text = "Affects: " + ", ".join(affected)
+			elif offer.asset_id in ["mono_type_mastery", "army_doctrine", "elite_forces", "elemental_conduit"]:
+				impact_text.text = "No active bonus for this build."
+			else:
+				impact_text.text = "No matching turret owned" if _needs_turret(offer) else "Upgrades your support systems."
+		else:
+			impact_text.text = "Installed."
+	else:
+		detail_title.text = "Choose an offer"
+		detail_text.text = "Inspect its benefits and the changes to your build."
+		impact_text.text = ""
+	if after["max_hull"] != data["max_hull"]:
+		vital_text.text += "\nMax hull %.0f → %.0f" % [data["max_hull"], after["max_hull"]]
+	vital_text.text += "\nMove %.2f m/s · Pickup %.2f m" % [after["speed"], after["pickup"]]
+	if world.convoy_mode:
+		vital_text.text += "\n" + world.shop.convoy_preview_line()
+	var lines := PackedStringArray()
+	for turret: Dictionary in after["turrets"]:
+		var was: Dictionary = {}
+		for old: Dictionary in data["turrets"]:
+			if old["id"] == turret["id"]:
+				was = old
+		var cadence_key := "rotation_rate" if turret["rotation_rate"] > 0 else "fire_rate"
+		var cadence_unit := "°/s sweep" if cadence_key == "rotation_rate" else " shots/s"
+		var numbers := _number(was, turret, "damage", " damage") + " · " + _number(was, turret, cadence_key, cadence_unit)
+		numbers += "\n" + _number(was, turret, "range", " m reach")
+		if turret["area"] > 0:
+			numbers += " · " + _number(was, turret, "area", " m area")
+		for spec: Array in [["pierce", " pierce"], ["projectile_speed", " m/s projectile"], ["chain_count", " chain jumps"],
+			["chain_decay", "% chain damage retained"], ["slow", "% slow strength"], ["slow_duration", " s slow"],
+			["rehit_delay", " s rehit"], ["knockback", " m knockback"]]:
+			if not was.is_empty() and not is_equal_approx(float(was["stats"][spec[0]]), float(turret["stats"][spec[0]])):
+				numbers += "\n" + _number(was["stats"], turret["stats"], spec[0], spec[1], spec[0] == "rehit_delay")
+		lines.append("[b]%s ×%d[/b]\n%s" % [turret["name"], turret["count"], numbers])
+	turret_text.text = "\n\n".join(lines)
+	_refresh_installed(data["items"])
+
+## Explicit before/after numbers; colour reinforces the direction without carrying meaning alone.
+func _number(before: Dictionary, after: Dictionary, key: String, unit: String, lower_is_better: bool = false) -> String:
+	var value := float(after.get(key, 0))
+	var old := float(before.get(key, value))
+	if is_equal_approx(old, value):
+		return "%.2f%s" % [value, unit]
+	var better := value < old if lower_is_better else value > old
+	return "[color=#%s]%.2f → %.2f%s[/color]" % ["8be0c9" if better else "ff9b8c", old, value, unit]
+
+func _needs_turret(offer: ShopOffer) -> bool:
+	if offer.kind == "turret":
+		return true
+	for modifier: Dictionary in ItemRegistry.get_modifiers(offer.asset_id):
+		if modifier.get("filter", {}).has("attack_family"):
+			return true
+	return offer.asset_id in ["reactor_overload", "storm_conductor", "mono_type_mastery", "elemental_conduit"]
+
+func _refresh_installed(items: Array) -> void:
+	if items.hash() == installed_key:
+		return
+	installed_key = items.hash()
+	for child in installed.get_children():
+		installed.remove_child(child)
+		child.queue_free()
+	owned_buttons.clear()
+	for item: Dictionary in items:
+		var button := Button.new()
+		button.text = "%s ×%d" % [item["name"], item["count"]]
+		button.icon = ShopArt.item(item["id"])
+		button.expand_icon = true
+		button.add_theme_constant_override("icon_max_width", 44)
+		button.add_theme_font_size_override("font_size", 22)
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		button.tooltip_text = ItemRegistry.get_item(item["id"]).description
+		button.focus_entered.connect(_inspect_owned.bind(item["id"]))
+		button.pressed.connect(_inspect_owned.bind(item["id"]))
+		installed.add_child(button)
+		owned_buttons.append(button)
+	if items.is_empty():
+		_label(installed, "No upgrades installed yet.", 22, UiPalette.MUTED)
+
+func _inspect_owned(id: String) -> void:
+	selected = -1
+	_refresh_details()
+	detail_title.text = ItemRegistry.get_item(id).name
+	detail_text.text = ItemRegistry.get_item(id).description
+	impact_text.text = "Installed ×%d" % ItemTrackingService.item_counts.get(id, 0)
+
+func _refresh_focus() -> void:
+	var row: Array[Button] = [reroll_button, repair_button, core_repair_button, continue_button]
+	for i in range(row.size()):
+		for direction: int in [-1, 1]:
+			var target := row[i]
+			var j := i + direction
+			while j >= 0 and j < row.size():
+				if row[j].visible and not row[j].disabled:
+					target = row[j]
+					break
+				j += direction
+			row[i].set_focus_neighbor(SIDE_LEFT if direction < 0 else SIDE_RIGHT, row[i].get_path_to(target))
+	var available: Array[Button] = []
+	for card in offer_buttons:
+		if card.visible and not card.disabled:
+			available.append(card)
+	for button in row:
+		button.focus_neighbor_top = button.get_path_to(available[-1] if not available.is_empty() else owned_buttons[0] if not owned_buttons.is_empty() else button)
+	for i in range(available.size()):
+		var card := available[i]
+		card.focus_neighbor_left = card.get_path_to(available[maxi(0, i - 1)])
+		card.focus_neighbor_right = card.get_path_to(available[i + 1] if i + 1 < available.size() else owned_buttons[0] if not owned_buttons.is_empty() else card)
+		var position := offer_buttons.find(card)
+		var below := position + offers_grid.columns
+		var above := position - offers_grid.columns
+		card.focus_neighbor_bottom = card.get_path_to(offer_buttons[below] if below < offer_buttons.size() and offer_buttons[below] in available else continue_button)
+		card.focus_neighbor_top = card.get_path_to(offer_buttons[above] if above >= 0 and offer_buttons[above] in available else card)
+	for i in range(owned_buttons.size()):
+		var button := owned_buttons[i]
+		button.focus_neighbor_left = button.get_path_to(available[-1] if not available.is_empty() else continue_button)
+		button.focus_neighbor_top = button.get_path_to(owned_buttons[maxi(0, i - 1)])
+		button.focus_neighbor_bottom = button.get_path_to(owned_buttons[i + 1] if i + 1 < owned_buttons.size() else continue_button)

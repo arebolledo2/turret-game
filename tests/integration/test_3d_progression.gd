@@ -58,7 +58,7 @@ func test_catalog_generates_unique_supported_offers_at_registry_prices() -> void
 				assert_true(offer.asset_id in ArenaShop.ITEMS)
 				assert_eq(offer.price, world.shop.item_price(offer.asset_id))
 				assert_lte(ItemRegistry.get_rarity(offer.asset_id), GameEnums.ItemRarity.UNCOMMON)
-	assert_eq(world.shop.item_price("dense_rounds"), 12)
+	assert_eq(world.shop.item_price("dense_rounds"), 21)
 
 func test_purchase_is_atomic_and_rejects_sold_unsupported_maxed_and_unaffordable() -> void:
 	world.finish_wave()
@@ -127,9 +127,9 @@ func test_item_modifiers_affect_all_weapons_and_respect_filters() -> void:
 	for type_id in ArenaShop.TURRETS:
 		var base: Dictionary = TurretRegistry.TYPES[type_id]["base_stats"]
 		var stats := TurretStatsService.get_turret_stats(type_id, 1.0)
-		assert_almost_eq(float(stats["range"]), float(base["range"]) * 1.05, .001)
-		assert_almost_eq(float(stats["damage"]), float(base["damage"]) * (1.07 + (.10 if type_id == "normal" else 0.0)), .001)
-		assert_almost_eq(float(stats["fire_rate"]), float(base["fire_rate"]) * 1.02, .001)
+		assert_almost_eq(float(stats["range"]), float(base["range"]) * 1.15, .001)
+		assert_almost_eq(float(stats["damage"]), float(base["damage"]) * (1.2 if type_id in ["normal", "plasma"] else 1.0), .001)
+		assert_almost_eq(float(stats["fire_rate"]), float(base["fire_rate"]) * 1.15, .001)
 
 func test_hull_speed_and_pickup_upgrades_apply_and_restart_clears_build() -> void:
 	world.finish_wave()
@@ -138,11 +138,11 @@ func test_hull_speed_and_pickup_upgrades_apply_and_restart_clears_build() -> voi
 	assert_true(world.shop.purchase(stock("item", "reinforced_hull")))
 	assert_eq(world.player.max_health, 29.0)
 	assert_eq(world.player.health, 20.0, "Capacity upgrades are not repairs")
-	assert_almost_eq(PlayerStatsService.get_player_speed(), GameConstants.PLAYER_SPEED * .97, .001)
+	assert_almost_eq(PlayerStatsService.get_player_speed(), GameConstants.PLAYER_SPEED, .001)
 	assert_true(world.shop.purchase(stock("item", "scrap_magnet")))
 	assert_almost_eq(PlayerStatsService.get_pickup_radius(), GameConstants.PLAYER_PICKUP_RADIUS * 1.2, .001)
 	assert_string_contains(world.shop.build_summary(), "Reinforced Hull")
-	assert_string_contains(ArenaShop.item_description("reinforced_hull"), "+4 max hull")
+	assert_string_contains(ArenaShop.item_description("reinforced_hull"), "Max hull +4")
 	assert_true(world.repair())
 	assert_eq(world.player.health, 29.0)
 	world.start_run()
@@ -187,7 +187,7 @@ func test_pickup_and_movement_use_purchased_stats_in_the_world() -> void:
 	Input.action_press("move_right")
 	world.player._physics_process(1)
 	Input.action_release("move_right")
-	assert_almost_eq(world.player.velocity.length(), GameConstants.PLAYER_SPEED * .97 * .01, .001)
+	assert_almost_eq(world.player.velocity.length(), GameConstants.PLAYER_SPEED * .01, .001)
 
 func test_full_arena_rejects_purchase_without_spending_or_selling_offer() -> void:
 	world.finish_wave()
@@ -289,11 +289,11 @@ func test_hud_shows_offers_build_and_terminal_summary() -> void:
 	world.add_child(hud)
 	world.finish_wave()
 	hud._process(0)
-	assert_true(hud.panel.visible)
-	assert_eq(hud.offer_buttons.size(), 4)
-	assert_true(hud.offer_buttons[0].visible, "offers show in the shop")
-	assert_eq(hud.offer_buttons[0].shown_key.split(":")[1], EconomyService.current_shop_offers[0].asset_id)
-	assert_gt(hud.build_panel.get_child_count(), 0, "build panel is populated")
+	assert_true(hud.shop_screen.visible)
+	assert_eq(hud.shop_screen.offer_buttons.size(), 4)
+	assert_true(hud.shop_screen.offer_buttons[0].visible, "offers show in the shop")
+	assert_eq(hud.shop_screen.offer_buttons[0].shown_key.split(":")[1], EconomyService.current_shop_offers[0].asset_id)
+	assert_false(hud.shop_screen.turret_text.text.is_empty(), "build is populated")
 	assert_eq(ShopViewData.build_data(world)["turrets"][0]["name"], "Ion")
 	world.player.health = 1
 	world.begin_next_wave()
@@ -301,5 +301,5 @@ func test_hud_shows_offers_build_and_terminal_summary() -> void:
 	world.player.take_damage(100)
 	hud._process(0)
 	assert_true(hud.restart_button.visible)
-	assert_false(hud.actions.visible)
+	assert_false(hud.shop_screen.visible)
 	assert_gt(hud.build_panel.get_child_count(), 0, "build still shown at game over")

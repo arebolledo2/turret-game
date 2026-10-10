@@ -4,7 +4,7 @@ extends RefCounted
 ## Rasterises the SVG fragments in UiIconData once per name and hands out white textures; tint with
 ## `modulate` or a Button's icon colour overrides.
 const GRID: float = 24.0
-const RASTER_SIZE: int = 64
+const RASTER_SIZE: int = 128
 const WRAPPER: String = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='#fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'>%s</svg>"
 
 static var cache: Dictionary = {}

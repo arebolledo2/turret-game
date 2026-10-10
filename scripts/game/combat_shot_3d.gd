@@ -10,6 +10,7 @@ var slow_intensity: float = 0.0
 var slow_duration: float = 0.0
 var damage_type: GameEnums.DamageType = GameEnums.DamageType.PHYSICAL
 var source_id: int = 0
+var attack_families: Array[String] = []
 ## Extra enemies a non-splash projectile passes through after its first hit.
 var pierce: int = 0
 
@@ -36,5 +37,6 @@ func copy() -> CombatShot3D:
 	shot.slow_intensity = slow_intensity
 	shot.slow_duration = slow_duration
 	shot.source_id = source_id
+	shot.attack_families = attack_families.duplicate()
 	shot.pierce = pierce
 	return shot

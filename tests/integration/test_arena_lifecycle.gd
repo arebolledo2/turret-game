@@ -54,7 +54,7 @@ func test_upgrade_uses_existing_modifier_calculation_and_rejects_invalid_purchas
 	var before: float = TurretStatsService.get_turret_stats("normal", 1.0)["damage"]
 	assert_true(buy("item", "dense_rounds"))
 	var after: float = TurretStatsService.get_turret_stats("normal", 1.0)["damage"]
-	assert_almost_eq(after, before * 1.07, .001)
+	assert_almost_eq(after, before * 1.1, .001)
 	var balance := EconomyService.total_scrap
 	assert_false(world.repair(), "Full health must not charge for a repair")
 	assert_false(world.shop.purchase(-1))

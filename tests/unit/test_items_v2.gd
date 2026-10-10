@@ -32,30 +32,29 @@ func test_every_v2_item_exists_with_tag_and_modifiers() -> void:
 		assert_false(ItemRegistry.get_modifiers(item_id).is_empty() and ItemRegistry.get_item_dict(item_id).get("special_effect", "").is_empty(), item_id)
 		assert_false(ArenaShop.item_description(item_id).is_empty(), item_id)
 
-func test_pool_rarity_split_is_14_15_8_4_2() -> void: # includes the 3 convoy items (1 common, 2 uncommon)
+func test_pool_rarity_split_is_13_16_8_4_2() -> void: # includes the 3 convoy items (1 common, 2 uncommon)
 	var counts := {}
 	for item_id in ShopCatalog.ids("item"):
 		var rarity := ItemRegistry.get_rarity(item_id)
 		counts[rarity] = int(counts.get(rarity, 0)) + 1
-	assert_eq(counts[GameEnums.ItemRarity.COMMON], 14)
-	assert_eq(counts[GameEnums.ItemRarity.UNCOMMON], 15)
+	assert_eq(counts[GameEnums.ItemRarity.COMMON], 13)
+	assert_eq(counts[GameEnums.ItemRarity.UNCOMMON], 16)
 	assert_eq(counts[GameEnums.ItemRarity.RARE], 8)
 	assert_eq(counts[GameEnums.ItemRarity.EPIC], 4)
 	assert_eq(counts[GameEnums.ItemRarity.LEGENDARY], 2)
 
-func test_doctrine_boosts_its_family_and_taxes_the_rest() -> void:
+func test_projectile_doctrine_also_benefits_explosive_projectiles_without_other_penalties() -> void:
 	_own("ion_doctrine")
-	assert_almost_eq(_stat("normal", "damage"), _base("normal", "damage") * 1.25, .001)
-	for other in ["plasma", "shock", "tesla", "melee"]:
-		assert_almost_eq(_stat(other, "damage"), _base(other, "damage") * .92, .001, other)
+	for type_id in ["normal", "plasma", "shock", "tesla", "melee"]:
+		assert_almost_eq(_stat(type_id, "damage"), _base(type_id, "damage") * (1.2 if type_id in ["normal", "plasma"] else 1.0), .001)
 
 func test_each_family_doctrine_targets_only_that_family() -> void:
-	var targets := {"plasma_doctrine": ["plasma"], "voltage_doctrine": ["shock", "tesla"], "bat_doctrine": ["melee"]}
+	var targets := {"plasma_doctrine": ["plasma", "shock"], "voltage_doctrine": ["shock", "tesla"], "bat_doctrine": ["melee"]}
 	for item_id: String in targets:
 		ModifierService.clear_modifiers()
 		_own(item_id)
 		for type_id in ["normal", "plasma", "shock", "tesla", "melee"]:
-			var expected := 1.25 if type_id in targets[item_id] else .92
+			var expected := 1.2 if type_id in targets[item_id] else 1.0
 			assert_almost_eq(_stat(type_id, "damage"), _base(type_id, "damage") * expected, .001, "%s %s" % [item_id, type_id])
 
 func test_specialists_change_the_right_stats() -> void:
@@ -63,7 +62,7 @@ func test_specialists_change_the_right_stats() -> void:
 	assert_eq(_stat("tesla", "chain_count"), _base("tesla", "chain_count") + 1.0)
 	assert_eq(_stat("normal", "chain_count"), 0.0)
 	assert_almost_eq(_stat("shock", "slow_intensity"), _base("shock", "slow_intensity") * 1.25, .001)
-	assert_almost_eq(_stat("shock", "fire_rate"), _base("shock", "fire_rate") * .88, .001)
+	assert_almost_eq(_stat("shock", "fire_rate"), _base("shock", "fire_rate"), .001)
 	ModifierService.clear_modifiers()
 	_own("static_grounding")
 	assert_almost_eq(_stat("shock", "slow_intensity"), _base("shock", "slow_intensity") + .10, .001)
@@ -89,33 +88,33 @@ func test_pool_flag_gates_the_new_items() -> void:
 func test_tall_items_use_entrench_and_carry_stats() -> void:
 	_own("hardpoint")
 	assert_eq(ModifierService.apply_modifiers_to_stat(5.0, "entrench_max_stacks"), 7.0)
-	assert_almost_eq(ModifierService.apply_modifiers_to_stat(1.0, "carry_speed"), .75, .001)
+	assert_almost_eq(ModifierService.apply_modifiers_to_stat(1.0, "carry_speed"), .9, .001)
 
 func test_rare_stat_items() -> void:
 	_own("arc_rod")
 	assert_eq(_stat("tesla", "chain_count"), _base("tesla", "chain_count") + 2.0)
 	assert_almost_eq(_stat("tesla", "chain_decay"), .85, .001)
-	assert_almost_eq(_stat("tesla", "damage"), _base("tesla", "damage") * .85, .001)
+	assert_almost_eq(_stat("tesla", "damage"), _base("tesla", "damage"), .001)
 	assert_almost_eq(_stat("shock", "damage"), _base("shock", "damage"), .001)
 	ModifierService.clear_modifiers()
 	_own("overwatch_optics")
-	assert_almost_eq(_stat("normal", "range"), _base("normal", "range") * 1.3, .001)
-	assert_almost_eq(_stat("normal", "fire_rate"), _base("normal", "fire_rate") * .9, .001)
+	assert_almost_eq(_stat("tesla", "range"), _base("tesla", "range") * 1.3, .001)
+	assert_almost_eq(_stat("normal", "fire_rate"), _base("normal", "fire_rate"), .001)
 	assert_almost_eq(_stat("plasma", "range"), _base("plasma", "range"), .001)
 	ModifierService.clear_modifiers()
 	_own("killzone_bat")
 	assert_almost_eq(_stat("melee", "rehit_delay"), .25, .001)
-	assert_almost_eq(_stat("melee", "knockback_force"), _base("melee", "knockback_force") * .75, .001)
+	assert_almost_eq(_stat("melee", "knockback_force"), _base("melee", "knockback_force"), .001)
 
-func test_whirlwind_frame_buffs_bat_and_taxes_the_rest() -> void:
+func test_whirlwind_frame_buffs_kinetic_without_other_penalties() -> void:
 	_own("whirlwind_frame")
 	assert_almost_eq(_stat("melee", "rotation_rate"), _base("melee", "rotation_rate") * 2.0, .001)
 	assert_almost_eq(_stat("melee", "slow_intensity"), .25, .001)
 	assert_almost_eq(_stat("melee", "damage"), _base("melee", "damage"), .001)
 	for other in ["normal", "plasma", "shock", "tesla"]:
-		assert_almost_eq(_stat(other, "damage"), _base(other, "damage") * .7, .001, other)
+		assert_almost_eq(_stat(other, "damage"), _base(other, "damage"), .001, other)
 
 func test_family_diversity_counts_families_not_damage_types() -> void:
 	TurretStatsService.turret_counts = {"normal": 1, "melee": 2, "shock": 1, "tesla": 1}
-	assert_eq(TurretStatsService.get_family_diversity(), 3)
+	assert_eq(TurretStatsService.get_family_diversity(), 4)
 	TurretStatsService.reset_state()

@@ -118,7 +118,6 @@ func _build_stats(data: Dictionary, after: Dictionary) -> void:
 	box.add_child(grid)
 	var tiles: Array = [
 		["hull", "hull", "Hull", "%d/%d" % [ceili(after["hull"]), ceili(after["max_hull"])], float(data["max_hull"]), float(after["max_hull"])],
-		["damage", "dps", "Total DPS", "%.1f" % after["dps"], float(data["dps"]), float(after["dps"])],
 		["speed", "speed", "Move m/s", "%.2f" % after["speed"], float(data["speed"]), float(after["speed"])],
 		["pickup", "pickup", "Pickup m", "%.2f" % after["pickup"], float(data["pickup"]), float(after["pickup"])],
 	]
@@ -165,7 +164,8 @@ func _slot(item_id: String, count: int, had: int) -> PanelContainer:
 		var overlay := Control.new()
 		slot.add_child(overlay)
 		var icon := _icon("module", UiPalette.stat_color("slow"), 36.0)
-		icon.texture = UiIcons.item(item_id)
+		icon.texture = ShopArt.item(item_id)
+		icon.modulate = Color.WHITE
 		overlay.add_child(icon)
 		icon.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 		var label := Label.new()

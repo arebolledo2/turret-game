@@ -64,6 +64,15 @@ func _modifier_matches_turret(modifier: StatModifier, turret_type: String) -> bo
 	var turret_def := TurretRegistry.get_type(turret_type)
 	var filter: Dictionary = modifier.filter
 
+	for capability: String in filter.get("requires", []):
+		if not TurretRegistry.has_capability(turret_type, capability):
+			return false
+	if filter.has("attack_family"):
+		for family: String in filter["attack_family"]:
+			if family in TurretRegistry.get_attack_families(turret_type):
+				return true
+		return false
+
 	# Empty filter matches all turrets
 	if filter.is_empty():
 		return true
@@ -102,6 +111,8 @@ func _modifier_matches_turret(modifier: StatModifier, turret_type: String) -> bo
 ## Uses PoE formula: (base + flat) × (1 + increases) × more1 × more2 × ...
 func get_turret_stats(turret_type: String, difficulty_config: Dictionary, static_effects: Callable = Callable()) -> Dictionary:
 	var base_stats := TurretRegistry.get_base_stats(turret_type)
+	base_stats["area_size"] = 1.0
+	base_stats["attack_speed"] = 1.0
 
 	# Apply difficulty modifier to damage
 	base_stats["damage"] = base_stats["damage"] * difficulty_config["turret_damage_mult"]
@@ -160,6 +171,10 @@ func get_turret_stats(turret_type: String, difficulty_config: Dictionary, static
 
 		base_stats[stat] = base_value
 
+	var cadence := maxf(.05, float(base_stats["attack_speed"]))
+	for key: String in ["fire_rate", "rotation_rate"]:
+		if base_stats.has(key):
+			base_stats[key] *= cadence
 	return base_stats
 
 

@@ -1,66 +1,49 @@
-# Items and build tags
+# Items and attack families
 
-Proposed next iteration: [itemization and full-screen shop revamp](plans/itemization-shop-revamp.md). This page continues to describe the current implementation until that plan is built.
+The full-screen Shop stocks one turret and three items. The 43-item catalog is defined in `scripts/registries/items/items_v3.gd`, overriding the legacy definitions by stable ID. See the [complete migration and balance table](plans/item-migration.md). There are 13 Common, 16 Uncommon, 8 Rare, 4 Epic and 2 Legendary entries, including the three Convoy-only items.
 
-Phase 2 item pool. The proposal with the full rationale is the "Item Pool v2" artifact; this page records what is built.
+## Eligibility
 
-## Shop layout
+Combat modifiers use `filter.attack_family`, distinct from elemental `DamageType`:
 
-One turret slot and three item slots per shop (`GameConstants.SHOP_TURRET_SLOTS`, `SHOP_ITEM_SLOTS`). Item cards show a build tag prefix such as `[ION]`, and the build summary ends with a tag count line (`Tags: ION 2 · TALL 1`).
-
-## Turret families and tags
-
-`TurretRegistry.FAMILIES` maps player-facing families to turret types. Modifier filters can target them with `Item.filter_family([...])`.
-
-| Family | Turret types |
+| Turret | Attack families |
 |---|---|
-| ion | normal |
-| plasma | plasma |
-| electric | shock, tesla |
-| melee | melee |
+| Ion | Projectile |
+| Plasma | Projectile, AoE |
+| Shock | Instant, AoE |
+| Tesla | Instant |
+| Melee | Kinetic |
+| Sniper (registry only, not stocked) | Instant |
 
-Item tags (`ItemRegistry.TAGS`): ION, PLASMA, ELECTRIC, MELEE, WIDE, TALL, HULL, ECON, ANY. Set `Item.tag`; items without one use `ItemRegistry.LEGACY_TAGS`, then ANY. Do not filter on `damage_type: PHYSICAL` for new items: it spans Ion, Melee, Sniper and Mine.
+One modifier matches any listed family and applies once. Separate percentage increases add: +10% Projectile and +20% AoE damage give Plasma +30%, before separate multiplicative effects. Kinetic means contact/melee, not every PHYSICAL attack.
 
-## Built (40 of 40)
+`filter.requires` adds capability checks with AND semantics. Direct-projectile piercing excludes splash shots; chain upgrades require chaining, and existing-slow upgrades require a base slow. Legacy filters retain their old matching semantics for non-stocked content. Every stocked combat item uses the new families rather than turret identities.
 
-`scripts/registries/items/items_v2.gd` defines the pool and overrides same-id tier entries. `ShopCatalog` gates the 26 commons and uncommons behind `items_v2`, and the 14 rares, epics and legendaries behind `items_v2_hooks` (which requires `items_v2`). With both off the ten original items they build on remain.
+## Mechanics
 
-| Rarity | Count | Examples |
-|---|---|---|
-| Common | 13 | Polished Barrels, Blast Charges, Concrete Footings; Faulty Wiring and Budget Capacitor are the weak ones |
-| Uncommon | 13 | Four Doctrines (family +25% damage, every other turret -8%), Piercing Rounds, Superconductors, Hardpoint |
-| Rare | 8 | Arc Rod, Plasma Capacitor, Killzone Bat, Overwatch Optics, Army Doctrine, Elite Forces, Last Stand, Quality Over Quantity |
-| Epic | 4 | Glass Cannon Core, Mono-Type Mastery, Reactor Overload, Storm Conductor |
-| Legendary | 2 | Elemental Conduit, Whirlwind Frame |
+- `attack_speed` scales both shot frequency and melee sweep speed; melee does not gain an unused firing bonus.
+- `area_size` scales Plasma splash and Shock pulse radius. Shock's actual hit boundary and range display use the expanded radius; Plasma targeting range stays separate.
+- Reactor Overload triggers from AoE kills, including Shock, for 40% of resolved killing damage at 60% of the source area radius. Source identity/families/radius propagate; each derived damage is scaled once. Chains stop at depth 3.
+- Resonance Link (stable ID `storm_conductor`) grants +35% damage to Instant turrets within 4 m of another Instant turret.
+- Last Stand grants +40% firing/sweep speed below 30% hull.
+- Focused Arsenal (`mono_type_mastery`) requires all owned turrets to share at least one attack family; it grants +50% damage and +25% attack speed.
+- Combined Arms (`elemental_conduit`) grants +12% damage per distinct family represented by a separate owned turret, maximum +48%. One hybrid cannot occupy two slots; two owned hybrids can represent different families.
+- Army Doctrine grants +3% attack speed per turret beyond the third, capped at +30%.
+- Return Spring (`killzone_bat`) reduces contact rehit delay. Whirlwind Frame grants a Kinetic slow and increases sweep/reach.
+- Entrench, hull, economy and Convoy items remain support upgrades. Combined purchase-penalty reductions stop at zero.
 
-Mechanics beyond stat modifiers:
+36/43 items have no explicit downside. The minority of trade-offs are stated in the always-visible effect text. Prices, rarity and stack caps carry most of the balance burden. Exact values are a first playable pass, not a claim of completed balance testing.
 
-- **Piercing Rounds**: `pierce` stat, handled by `Projectile3D` (non-splash shots only).
-- **Reactor Overload**: plasma kills detonate for 40% of the killing damage in 60% of the plasma radius; chains up to 3 deep (`ArenaWorld._reactor_overload`, `CombatHit3D.blast_depth`).
-- **Storm Conductor**: electric turrets within 4 m of another electric turret get +35% damage (`TurretActor._apply_item_conditions`).
-- **Last Stand**: below 30% hull, turrets fire 40% faster (same place).
-- **Killzone Bat**: `rehit_delay` is now a melee base stat. **Whirlwind Frame**: bat hits apply `slow_intensity` and `slow_duration` when the stats have them.
-- **Army Doctrine** now counts turrets beyond the 3rd. **Elemental Conduit** counts turret families (`TurretStatsService.get_family_diversity`), not damage types.
-- **Quality Over Quantity** was inert in 3D; wave enemy count and kill scrap now apply `enemy_count_mult` and `scrap_earn_mult`.
-- Situational bonuses refresh with the cached turret stats (every 0.25 s or when modifiers change).
+## Shop and previews
 
-Retired from the 3D shop: Ammo Surplus, Overclock Module, Shock Absorbers, Kinetic Enhancer.
+The opaque `ShopScreen` hides the arena and combat HUD, suspends 3D drawing while active, and restores it on exit. It shows full-colour SVG item illustrations and portraits of the actual Clockwork models. Category tags are absent from cards, details and installed-item summaries. Rarity uses a restrained border accent.
 
-## Stats added for items
+`ShopViewData.preview()` synchronously evaluates the shared stat resolver, including static ownership conditions, then restores counts/modifiers. It does not purchase, emit changes or consume RNG. Changed turret values show before/after numbers with units, plus affected owned turrets. Situational effects show their rule without pretending to be permanently active. There is no aggregate “Total DPS” claim.
 
-| Stat | Effect |
-|---|---|
-| `entrench_stack_seconds` | Seconds per Entrench stack (min 0.5) |
-| `entrench_max_stacks` | Stack cap |
-| `entrench_bonus` | Multiplier on the per-stack damage and fire rate bonus |
-| `carry_speed` | Multiplier on the player's speed while carrying a turret |
-| `core_move_speed` | Multiplier on the convoy core's driving speed (Convoy mode only; floored at `CORE_MIN_MOVE_SPEED`) |
-| `pierce` | Extra enemies a non-splash shot passes through |
-| `rehit_delay` | Seconds before the bat can hit the same enemy again |
-| `last_stand_fire_rate`, `storm_link_damage`, `reactor_overload` | Flat markers read by the item conditions above |
+## Gates and authoring
 
-Stats with no 3D consumer (`rotation_speed`, `dot_*`) should not be used by new items.
+`ShopCatalog` remains the stock/reward authority. The existing `items_v2` and `items_v2_hooks` flags still gate their original IDs; turning them off removes those items rather than restoring old balance. `mode_convoy` items additionally require Convoy mode. Sniper, Fire and Mine remain outside supported shop content.
 
-## Adding an item
+To add an item, add a reviewed row to ItemsV3, a catalog entry and supported family/capability filters. Provide a separate `assets/ui/items/<id>.svg`, a clear description and appropriate rarity/stack cap. Add tests for actual stat or combat behaviour and preview equivalence. New stats require a runtime consumer.
 
-Add it to `items_v2.gd` (or a tier file), give it a tag, add a `ShopCatalog.DEFAULT_ENTRIES` row with a flag, and cover it in `tests/unit/test_items_v2.gd`.
+Art tooling: `python tools/build_shop_art.py` rebuilds the full-colour SVG set from curated shapes and the layout-study motifs; `res://tools/render_shop_portraits.tscn` renders the five model portraits with a graphics driver. Run an editor import after regenerating. `res://tools/export_shop_catalog.tscn` writes an audit JSON under `.test-results/`.

@@ -6,6 +6,7 @@ extends RefCounted
 
 ## Game stat key -> [UI stat key, icon name, lower_is_better].
 const STAT_UI: Dictionary = {
+	"area_size": ["range", "range", false], "attack_speed": ["rate", "rate", false],
 	"damage": ["dmg", "damage", false], "fire_rate": ["rate", "rate", false], "range": ["range", "range", false],
 	"rotation_rate": ["rate", "rate", false], "projectile_speed": ["speed", "speed", false],
 	"aoe_radius": ["range", "range", false], "knockback_force": ["dmg", "damage", false],
@@ -14,7 +15,7 @@ const STAT_UI: Dictionary = {
 	"carry_speed": ["speed", "speed", false], "core_move_speed": ["speed", "speed", false],
 	"player_max_health": ["hull", "hull", false], "player_health_regen": ["hull", "repair", false],
 	"pickup_radius": ["pickup", "pickup", false], "reroll_cost": ["scrap", "reroll", true],
-	"turret_penalty_reduction": ["penalty", "penalty", false], "shop_price_mult": ["scrap", "penalty", true],
+	"turret_penalty_reduction": ["penalty", "penalty", true], "shop_price_mult": ["scrap", "penalty", true],
 	"scrap_earn_mult": ["scrap", "scrap", false], "enemy_count_mult": ["kills", "kills", true],
 	"player_luck": ["scrap", "star", false], "turret_crit_chance": ["dmg", "kills", false],
 	"player_crit_chance": ["dmg", "kills", false], "entrench_stack_seconds": ["rate", "timer", true],
@@ -70,10 +71,17 @@ static func build_data(world: ArenaWorld, extra_turret: String = "") -> Dictiona
 		if count <= 0:
 			continue
 		var stats := TurretStatsService.get_turret_stats(type_id, damage_mult)
+		var view := TurretStats.new(stats)
+		var pulse := TurretRegistry.get_fire_mode(type_id) == TurretRegistry.FIRE_PULSE
+		var reach := view.range_metres * (view.area_size if pulse else 1.0)
 		var rate := float(stats.get("fire_rate", 0.0))
 		turrets.append({"id": type_id, "name": TurretRegistry.get_short_name(type_id), "count": count,
 			"damage": float(stats["damage"]), "fire_rate": rate, "rotation_rate": float(stats.get("rotation_rate", 0.0)),
-			"range": float(stats["range"]) * WorldGeometry.METRES_PER_PIXEL})
+			"range": reach, "stats": {"pierce": view.pierce, "projectile_speed": view.projectile_speed_metres,
+			"knockback": view.knockback_metres, "chain_count": view.chain_count,
+			"chain_decay": float(stats.get("chain_decay", 0)) * 100.0, "slow": view.slow_intensity * 100.0,
+			"slow_duration": view.slow_duration, "rehit_delay": view.rehit_delay if stats.has("rehit_delay") else 0.0},
+			"area": reach if pulse else view.aoe_radius_metres})
 		dps += count * float(stats["damage"]) * rate
 	var max_hull := PlayerStatsService.get_player_max_health(float(world.difficulty_config["player_health_mult"]))
 	var items: Array[Dictionary] = []
@@ -85,25 +93,47 @@ static func build_data(world: ArenaWorld, extra_turret: String = "") -> Dictiona
 
 ## build_data after buying `offer`. Items are measured by adding their modifiers to the real modifier
 ## system for the duration of this call and removing them again, so the numbers come from the same
-## code that applies the purchase. Special-effect items change nothing here (their rules are not static).
+## code that applies the purchase, including static ownership conditions. Situational rules remain text.
 static func preview(world: ArenaWorld, offer: ShopOffer) -> Dictionary:
-	if offer.kind == "turret":
-		return build_data(world, offer.asset_id)
+	# Local simulation uses the same stat resolver, including owned-item and family conditions.
+	# Restore dictionaries synchronously; no signals, purchases, RNG or cached actor stats are touched.
+	var owned_items := ItemTrackingService.item_counts.duplicate()
+	var owned_turrets := TurretStatsService.turret_counts.duplicate()
 	var system := ModifierService.state.modifiers
 	var ids: Array[String] = []
-	for modifier: Dictionary in ItemRegistry.get_modifiers(offer.asset_id):
-		var entry := modifier.duplicate(true)
-		entry["id"] = "preview_%s_%d" % [offer.asset_id, ids.size()]
-		ids.append(entry["id"])
-		system.add_modifier(entry)
+	if offer.kind == "turret":
+		TurretStatsService.turret_counts[offer.asset_id] = int(owned_turrets.get(offer.asset_id, 0)) + 1
+	else:
+		ItemTrackingService.item_counts[offer.asset_id] = int(owned_items.get(offer.asset_id, 0)) + 1
+		for modifier: Dictionary in ItemRegistry.get_modifiers(offer.asset_id):
+			var entry := modifier.duplicate(true)
+			entry["id"] = "preview_%s_%d" % [offer.asset_id, ids.size()]
+			ids.append(entry["id"])
+			system.add_modifier(entry)
 	var data := build_data(world)
 	for modifier_id in ids:
 		system.remove_modifier(modifier_id)
-	var found := false
-	for item: Dictionary in data["items"]:
-		if item["id"] == offer.asset_id:
-			item["count"] += 1
-			found = true
-	if not found:
-		data["items"].append({"id": offer.asset_id, "name": str(ItemRegistry.get_item_dict(offer.asset_id)["name"]), "count": 1})
+	ItemTrackingService.item_counts.assign(owned_items)
+	TurretStatsService.turret_counts.assign(owned_turrets)
 	return data
+
+static func affected_turrets(world: ArenaWorld, offer: ShopOffer) -> Array[String]:
+	var result: Array[String] = []
+	var before := build_data(world)
+	var after := preview(world, offer)
+	for turret: Dictionary in after["turrets"]:
+		var old: Dictionary = {}
+		for candidate: Dictionary in before["turrets"]:
+			if candidate["id"] == turret["id"]:
+				old = candidate
+		var affected: bool = old.is_empty() or old != turret
+		# Conditional effects do not pretend to have a permanently active numeric bonus.
+		if offer.asset_id == "reactor_overload":
+			affected = "aoe" in TurretRegistry.get_attack_families(turret["id"])
+		elif offer.asset_id == "storm_conductor":
+			affected = "instant" in TurretRegistry.get_attack_families(turret["id"])
+		elif offer.asset_id == "last_stand":
+			affected = true
+		if affected:
+			result.append("%s x%d" % [turret["name"], int(turret["count"])])
+	return result

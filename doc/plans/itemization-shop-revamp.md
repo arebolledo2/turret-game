@@ -1,6 +1,8 @@
 # Itemization and full-screen shop revamp
 
-Status: proposed, 2026-10-10. Planning only; runtime and item balance are unchanged.
+Status: implemented first playable pass, 2026-10-10. The original design rationale follows; current behaviour and the complete catalog are documented in [items](../items.md) and [migration table](item-migration.md).
+
+Implemented: overlapping delivery families, all 43 stocked item definitions, capability checks, source-aware AoE procs, firing/melee cadence, full-screen Shop, 43 full-colour illustrations, five model portraits, truthful purchase previews and controller navigation. Human balance and physical-controller playtesting remain follow-up validation. See [verification results](itemization-shop-validation.md).
 
 [Interactive layout study](shop-layout-study.html): illustrative SVG art and purchase previews; no live transactions.
 
@@ -13,7 +15,7 @@ Status: proposed, 2026-10-10. Planning only; runtime and item balance are unchan
 - Upgrade the SVG artwork substantially while retaining recognisable concepts.
 - Remove visible category tags: TURRET, TALL, WIDE, ION, ELECTRIC, and equivalent family/category badges. Internal classification remains available to logic. Ordinary effect text can still name what an upgrade affects.
 
-The numerical examples and migration choices below are recommendations for the first playable pass, not approved final balance.
+The numerical examples below informed the shipped first pass; the migration table is authoritative for current values.
 
 ## 1. Shared attack families
 

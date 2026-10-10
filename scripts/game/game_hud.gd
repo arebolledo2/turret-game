@@ -20,15 +20,9 @@ var summary: VBoxContainer
 var reason_row: HBoxContainer
 var summary_strip: SegmentedBar
 var summary_tiles: Dictionary = {}
-var offer_buttons: Array[Button] = []
-var reroll_button: IconButton
-var repair_button: IconButton
-var core_repair_button: IconButton
+var shop_screen: ShopScreen
+var combat_root: Control
 var zone_legend: Label
-var actions: HBoxContainer
-var offers_row: HBoxContainer
-var balance_row: HBoxContainer
-var balance_label: Label
 var build_panel: BuildPanel
 var build_refresh: float = 0.0
 var continue_icon: String = "deploy"
@@ -40,6 +34,7 @@ var previous_pause: bool = false
 
 func _ready() -> void:
 	var root := Control.new()
+	combat_root = root
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
@@ -76,8 +71,11 @@ func _ready() -> void:
 	minimap.world = world
 	root.add_child(minimap)
 	_build_panel(root)
+	shop_screen = preload("res://scenes/ui/shop_screen.tscn").instantiate()
+	shop_screen.world = world
+	add_child(shop_screen)
 
-## The shop / pause / end panel: offer cards and actions on the left, the build on the right.
+## Pause and end-of-run summary; ShopScreen owns the separate shop presentation.
 func _build_panel(root: Control) -> void:
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -106,39 +104,10 @@ func _build_panel(root: Control) -> void:
 	var header_gap := Control.new()
 	header_gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(header_gap)
-	balance_row = HBoxContainer.new()
-	balance_row.add_theme_constant_override("separation", 12)
-	header.add_child(balance_row)
-	balance_row.add_child(_icon("scrap", "scrap", 44))
-	balance_label = _numeral(balance_row, 52, UiPalette.SCRAP)
 	_build_summary(column)
-	offers_row = HBoxContainer.new()
-	offers_row.add_theme_constant_override("separation", 18)
-	column.add_child(offers_row)
-	for index in range(4):
-		var card := OfferCard.new()
-		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		card.pressed.connect(_purchase.bind(index))
-		offers_row.add_child(card)
-		offer_buttons.append(card)
 	var footer := HBoxContainer.new()
 	footer.add_theme_constant_override("separation", 14)
 	column.add_child(footer)
-	actions = HBoxContainer.new()
-	actions.add_theme_constant_override("separation", 14)
-	footer.add_child(actions)
-	reroll_button = IconButton.new().setup("reroll", "")
-	reroll_button.custom_minimum_size.x = 150
-	reroll_button.pressed.connect(func() -> void: world.shop.reroll())
-	actions.add_child(reroll_button)
-	repair_button = IconButton.new().setup("repair", "+%d" % GameConstants.REPAIR_HEAL_AMOUNT)
-	repair_button.custom_minimum_size.x = 210
-	repair_button.pressed.connect(func() -> void: world.repair())
-	actions.add_child(repair_button)
-	core_repair_button = IconButton.new().setup("core", "+%d" % GameConstants.REPAIR_HEAL_AMOUNT)
-	core_repair_button.custom_minimum_size.x = 210
-	core_repair_button.pressed.connect(func() -> void: world.repair_core())
-	actions.add_child(core_repair_button)
 	var footer_gap := Control.new()
 	footer_gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	footer.add_child(footer_gap)
@@ -316,19 +285,6 @@ func _numeral(parent: Node, size: int, color: Color) -> Label:
 	label.theme_type_variation = &"Numeral"
 	return label
 
-func _purchase(index: int) -> void:
-	world.shop.purchase(index)
-	var card := offer_buttons[index]
-	if EconomyService.current_shop_offers[index].sold and card.has_focus():
-		# The bought card vanishes: hand focus to the next card still on offer, else Deploy.
-		var next: Control = continue_button
-		for other in offer_buttons:
-			if other != card and other.visible and not other.disabled:
-				next = other
-				break
-		card.release_focus()
-		next.grab_focus()
-
 func _label(parent: Node, text: String, size: int, color: Color) -> Label:
 	var label := Label.new()
 	label.text = text
@@ -339,7 +295,7 @@ func _label(parent: Node, text: String, size: int, color: Color) -> Label:
 
 ## Cross the nested action container and spacer explicitly instead of relying on spatial focus search.
 func _refresh_footer_focus() -> void:
-	var buttons: Array[Button] = [reroll_button, repair_button, core_repair_button, continue_button, restart_button, menu_button]
+	var buttons: Array[Button] = [continue_button, restart_button, menu_button]
 	for index in range(buttons.size()):
 		var button := buttons[index]
 		for direction: int in [-1, 1]:
@@ -396,7 +352,14 @@ func _process(delta: float) -> void:
 	if not is_instance_valid(world.player):
 		return
 	var phase := GameStateMachine.current_state
-	var in_shop := phase == GameStateMachine.GameState.SHOP
+	shop_screen.refresh()
+	combat_root.visible = not shop_screen.visible
+	if shop_screen.visible:
+		panel.visible = false
+		minimap.suppressed = true
+		previous_phase = phase
+		previous_pause = world.paused
+		return
 	var ended := phase in [GameStateMachine.GameState.GAME_OVER, GameStateMachine.GameState.VICTORY]
 	hull_bar.set_values(world.player.health, world.player.max_health)
 	core_bar.visible = world.core != null
@@ -417,25 +380,8 @@ func _process(delta: float) -> void:
 	var legend_text := _zone_legend_text(phase)
 	zone_legend.text = legend_text
 	zone_legend.visible = not legend_text.is_empty() and not world.dev_menu_open
-	panel.visible = (in_shop or ended or world.paused) and not world.dev_menu_open
+	panel.visible = (ended or world.paused) and not world.dev_menu_open
 	minimap.suppressed = panel.visible
-	var shop_open := in_shop and not world.paused
-	var damage_mult := float(world.difficulty_config["turret_damage_mult"])
-	var hovered := -1
-	var focused := -1
-	for index in range(offer_buttons.size()):
-		var card := offer_buttons[index] as OfferCard
-		card.visible = shop_open and index < EconomyService.current_shop_offers.size()
-		if card.visible:
-			var offer := EconomyService.current_shop_offers[index]
-			card.setup(offer, damage_mult, EconomyService.total_scrap >= offer.price)
-			if card.is_hovered():
-				hovered = index
-			if card.has_focus():
-				focused = index
-	balance_row.visible = shop_open
-	balance_label.text = str(EconomyService.total_scrap)
-	actions.visible = shop_open
 	continue_button.visible = not ended
 	var continue_target := "play" if world.paused else "deploy"
 	if continue_target != continue_icon:
@@ -444,25 +390,12 @@ func _process(delta: float) -> void:
 		continue_button.text = "RESUME" if world.paused else "DEPLOY"
 	restart_button.visible = ended
 	menu_button.visible = ended or world.paused
-	var reroll_cost := world.shop.reroll_cost()
-	reroll_button.set_cost(reroll_cost, EconomyService.total_scrap >= reroll_cost)
-	reroll_button.disabled = EconomyService.total_scrap < reroll_cost
-	repair_button.set_cost(GameConstants.REPAIR_COST, EconomyService.total_scrap >= GameConstants.REPAIR_COST)
-	repair_button.disabled = EconomyService.total_scrap < GameConstants.REPAIR_COST or world.player.health >= world.player.max_health
-	core_repair_button.visible = world.core != null
-	if world.core:
-		core_repair_button.set_cost(GameConstants.REPAIR_COST, EconomyService.total_scrap >= GameConstants.REPAIR_COST)
-		core_repair_button.disabled = EconomyService.total_scrap < GameConstants.REPAIR_COST or world.core.health >= world.core.max_health
 	if panel.visible:
 		_refresh_footer_focus()
 		build_refresh -= delta
 		if build_refresh <= 0.0 or phase != previous_phase or world.paused != previous_pause:
 			build_refresh = .1
-			var previewed := hovered if hovered >= 0 else focused
-			var preview: Dictionary = {}
-			if shop_open and previewed >= 0 and not EconomyService.current_shop_offers[previewed].sold:
-				preview = ShopViewData.preview(world, EconomyService.current_shop_offers[previewed])
-			build_panel.set_data(ShopViewData.build_data(world), preview)
+			build_panel.set_data(ShopViewData.build_data(world))
 	summary.visible = world.paused or ended
 	if summary.visible:
 		_refresh_summary(phase, ended)
@@ -472,8 +405,6 @@ func _process(delta: float) -> void:
 		title.text = "PAUSED"
 		title_icon.texture = UiIcons.get_icon("pause")
 		title_icon.modulate = UiPalette.TEAL_HI
-	elif in_shop:
-		title.text = "SHOP"
 	elif ended:
 		var won := phase == GameStateMachine.GameState.VICTORY
 		title.text = "SECTOR SECURED" if won else "SIGNAL LOST"

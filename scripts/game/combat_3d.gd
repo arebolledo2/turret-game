@@ -38,6 +38,8 @@ func impact(primary: CombatActor, at: Vector3, heading: Vector3, shot: CombatSho
 		hit.slow_intensity = shot.slow_intensity
 		hit.slow_duration = shot.slow_duration
 		hit.source_id = shot.source_id
+		hit.attack_families = shot.attack_families.duplicate()
+		hit.source_area_radius = shot.splash_radius
 		if apply_hit(target, hit) > 0.0:
 			hits += 1
 	if shot.splash_radius > 0.0:
@@ -64,6 +66,9 @@ func chain(origin: Vector3, primary: CombatActor, shot: CombatShot3D, jumps: int
 		struck.append(current)
 		var jump_hit := CombatHit3D.new(damage, from, Vector3.ZERO, shot.damage_type)
 		jump_hit.source_id = shot.source_id
+		jump_hit.attack_families = shot.attack_families.duplicate()
+		jump_hit.slow_intensity = shot.slow_intensity
+		jump_hit.slow_duration = shot.slow_duration
 		if apply_hit(current, jump_hit) > 0.0:
 			hits += 1
 		from = to

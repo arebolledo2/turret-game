@@ -92,14 +92,41 @@ func get_damage_type_diversity() -> int:
 	return damage_types_seen.size()
 
 
-## Number of build families (ion, plasma, electric, melee) represented among owned turrets.
+## Maximum matching of owned turret instances to distinct attack families (at most four).
+## One hybrid cannot occupy two slots; two owned hybrids can represent separate families.
 func get_family_diversity() -> int:
-	var seen: Array = []
-	for turret_type in turret_counts.keys():
-		var family := TurretRegistry.get_family(turret_type)
-		if turret_counts[turret_type] > 0 and not family.is_empty() and family not in seen:
-			seen.append(family)
-	return seen.size()
+	var reachable: Dictionary = {0: true}
+	var families: Array[String] = ["projectile", "aoe", "instant", "kinetic"]
+	for type_id: String in turret_counts:
+		for instance in range(mini(4, int(turret_counts[type_id]))):
+			var next := reachable.duplicate()
+			for mask: int in reachable:
+				for family in TurretRegistry.get_attack_families(type_id):
+					var bit: int = 1 << families.find(family)
+					if mask & bit == 0:
+						next[mask | bit] = true
+			reachable = next
+	var best := 0
+	for mask: int in reachable:
+		var count := 0
+		for bit in range(4):
+			if mask & (1 << bit):
+				count += 1
+		best = maxi(best, count)
+	return best
+
+func shared_attack_families() -> Array[String]:
+	var shared: Array[String] = ["projectile", "aoe", "instant", "kinetic"]
+	var any_owned := false
+	for type_id: String in turret_counts:
+		if int(turret_counts[type_id]) <= 0:
+			continue
+		any_owned = true
+		var present := TurretRegistry.get_attack_families(type_id)
+		for i in range(shared.size() - 1, -1, -1):
+			if not shared[i] in present:
+				shared.remove_at(i)
+	return shared if any_owned else []
 
 
 ## Get the most common turret type (returns empty string if no turrets)
@@ -125,4 +152,4 @@ func get_turret_purchase_penalty() -> float:
 	penalty = ModifierService.apply_modifiers_to_stat(penalty, "turret_penalty_reduction")
 	# Apply increases (e.g., Elite Forces, Diversity Matrix)
 	penalty = ModifierService.apply_modifiers_to_stat(penalty, "turret_penalty_increase")
-	return penalty
+	return maxf(0.0, penalty)

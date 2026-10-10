@@ -10,6 +10,8 @@ var slow_intensity: float = 0.0
 var slow_duration: float = 0.0
 ## Turret that produced the hit (`TurretActor.turret_id`); 0 for the player, blasts and contact damage.
 var source_id: int = 0
+var attack_families: Array[String] = []
+var source_area_radius: float = 0.0
 ## How many Reactor Overload detonations led to this hit (caps chain reactions).
 var blast_depth: int = 0
 

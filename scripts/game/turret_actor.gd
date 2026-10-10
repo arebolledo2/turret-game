@@ -109,6 +109,7 @@ func _spin_bat(delta: float, stats: TurretStats, reach: float) -> void:
 		var push := offset.normalized() * stats.knockback_metres
 		rehit_lockouts[enemy.get_instance_id()] = stats.rehit_delay
 		var bat_hit := CombatHit3D.new(damage, position, push, GameEnums.DamageType.PHYSICAL)
+		bat_hit.attack_families = TurretRegistry.get_attack_families(turret_type)
 		bat_hit.source_id = turret_id
 		bat_hit.slow_intensity = stats.slow_intensity
 		bat_hit.slow_duration = stats.slow_duration
@@ -223,14 +224,16 @@ func _update_entrench_ring() -> void:
 func _apply_item_conditions(stats: Dictionary) -> void:
 	var last_stand := ModifierService.apply_modifiers_to_stat(0.0, "last_stand_fire_rate")
 	if last_stand > 0.0 and is_instance_valid(world.player) and world.player.health < world.player.max_health * GameConstants.LAST_STAND_HULL_FRACTION:
-		stats["fire_rate"] = float(stats.get("fire_rate", 1.0)) * (1.0 + last_stand)
+		for key: String in ["fire_rate", "rotation_rate"]:
+			if stats.has(key):
+				stats[key] = float(stats[key]) * (1.0 + last_stand)
 	var link := ModifierService.apply_modifiers_to_stat(0.0, "storm_link_damage")
-	if link > 0.0 and TurretRegistry.get_family(turret_type) == "electric" and _has_electric_neighbour():
+	if link > 0.0 and "instant" in TurretRegistry.get_attack_families(turret_type) and _has_instant_neighbour():
 		stats["damage"] = float(stats.get("damage", 0.0)) * (1.0 + link)
 
-func _has_electric_neighbour() -> bool:
+func _has_instant_neighbour() -> bool:
 	for other in world.turrets:
-		if other != self and not other.carried and TurretRegistry.get_family(other.turret_type) == "electric":
+		if other != self and not other.carried and "instant" in TurretRegistry.get_attack_families(other.turret_type):
 			if WorldGeometry.planar(other.position - position).length() <= GameConstants.STORM_LINK_RANGE:
 				return true
 	return false
@@ -267,7 +270,8 @@ func _update_range_ring() -> void:
 		if range_ring:
 			range_ring.visible = false
 		return
-	var metres := _current_view(0.0).range_metres
+	var view := _current_view(0.0)
+	var metres := view.range_metres * (view.area_size if TurretRegistry.get_fire_mode(turret_type) == TurretRegistry.FIRE_PULSE else 1.0)
 	if metres <= 0.0:
 		return
 	if not range_ring:
@@ -302,7 +306,7 @@ func _physics_process(delta: float) -> void:
 	cooldown = maxf(0.0, cooldown - delta)
 	aim.position = aim.position.lerp(aim_rest, minf(delta * 16.0, 1.0))
 	var stats := _current_view(delta)
-	var range_metres := stats.range_metres
+	var range_metres := stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret_type) == TurretRegistry.FIRE_PULSE else 1.0)
 	var fire_mode := TurretRegistry.get_fire_mode(turret_type)
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
 		_spin_bat(delta, stats, range_metres)
@@ -334,6 +338,7 @@ func _physics_process(delta: float) -> void:
 func _new_shot(stats: TurretStats) -> CombatShot3D:
 	var shot := CombatShot3D.from_stats(stats.values, TurretRegistry.get_damage_type(turret_type))
 	shot.source_id = turret_id
+	shot.attack_families = TurretRegistry.get_attack_families(turret_type)
 	if TurretStatsService.roll_turret_crit():
 		shot.damage = TurretStatsService.calculate_turret_crit_damage(shot.damage)
 	return shot

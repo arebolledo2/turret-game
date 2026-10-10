@@ -26,7 +26,9 @@ var cooldown_seconds: float:
 var range_metres: float:
 	get: return _metres("range", DEFAULT_RANGE)
 var aoe_radius_metres: float:
-	get: return maxf(_metres("aoe_radius", 0.0), 0.0)
+	get: return maxf(_metres("aoe_radius", 0.0), 0.0) * area_size
+var area_size: float:
+	get: return maxf(.1, float(values.get("area_size", 1.0)))
 var projectile_speed_metres: float:
 	get: return maxf(_metres("projectile_speed", 0.0), 0.0)
 var knockback_metres: float:

@@ -28,7 +28,10 @@ func enemy(at: Vector3, health: float = 100.0) -> CombatActor:
 	return actor
 
 func plasma_kill_hit(damage: float) -> CombatHit3D:
-	return CombatHit3D.new(damage, Vector3.ZERO, Vector3.ZERO, GameEnums.DamageType.PLASMA)
+	var hit := CombatHit3D.new(damage, Vector3.ZERO, Vector3.ZERO, GameEnums.DamageType.PLASMA)
+	hit.attack_families = ["projectile", "aoe"]
+	hit.source_area_radius = TurretStats.new(TurretStatsService.get_turret_stats("plasma", 1.0)).aoe_radius_metres
+	return hit
 
 func test_reactor_overload_detonates_and_chains() -> void:
 	own("reactor_overload")
@@ -50,7 +53,7 @@ func test_reactor_overload_ignores_other_damage_and_missing_item() -> void:
 	var c := enemy(Vector3(3, 0, 0), 5.0)
 	var d := enemy(Vector3(3.5, 0, 0), 100.0)
 	world.combat.apply_hit(c, CombatHit3D.new(50.0, Vector3.ZERO))
-	assert_eq(d.health, 100.0, "only plasma kills detonate")
+	assert_eq(d.health, 100.0, "only eligible AoE kills detonate")
 
 func test_last_stand_needs_low_hull() -> void:
 	own("last_stand")

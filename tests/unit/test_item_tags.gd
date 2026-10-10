@@ -26,8 +26,9 @@ func test_every_catalogued_item_has_a_known_tag() -> void:
 func test_shop_slots_add_up_to_the_offer_count() -> void:
 	assert_eq(GameConstants.SHOP_TURRET_SLOTS + GameConstants.SHOP_ITEM_SLOTS, GameConstants.SHOP_OFFER_COUNT)
 
-func test_item_text_names_the_audience() -> void:
-	var text := ArenaShop._scoped_label("turret damage", Item.filter_family(["ion"]))
-	assert_eq(text, "Ion turret damage")
-	assert_eq(ArenaShop._scoped_label("turret range", Item.filter_turret_type(["all"])), "turret range")
-	assert_eq(ArenaShop._scoped_label("move speed", Item.filter_family(["ion"])), "move speed")
+func test_shop_text_names_effect_audience_without_category_prefixes() -> void:
+	assert_eq(ArenaShop.item_description("polished_barrels"), "Projectile damage +10%.")
+	for id: String in ShopCatalog.ids("item"):
+		var offer := ShopOffer.new("item", id, 10)
+		assert_false(ArenaShop.offer_name(offer).begins_with("["))
+		assert_false("Tags:" in ArenaShop.offer_description(offer))

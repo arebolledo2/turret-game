@@ -239,7 +239,7 @@ func test_plasma_purchase_counts_and_damage_upgrade_use_shared_services() -> voi
 	assert_eq(TurretStatsService.turret_counts["normal"], 1)
 	assert_eq(TurretStatsService.turret_counts["plasma"], 1)
 	assert_true(buy("item", "dense_rounds"))
-	assert_almost_eq(float(TurretStatsService.get_turret_stats("plasma", 1.0)["damage"]), 10.7, .001)
+	assert_almost_eq(float(TurretStatsService.get_turret_stats("plasma", 1.0)["damage"]), 11.0, .001)
 	assert_eq(world.turret_price("plasma"), EconomyService.calculate_turret_price(16, 1))
 	world.start_run()
 	assert_false(TurretStatsService.turret_counts.has("plasma"))

@@ -138,7 +138,7 @@ func _process(_delta: float) -> void:
 	if frames == 180 and shop:
 		world.finish_wave()
 	if frames == 400 and shop_focus >= 0:
-		world.hud.offer_buttons[shop_focus].grab_focus()
+		world.hud.shop_screen.offer_buttons[shop_focus].grab_focus()
 	if frames == 180 and combat_demo:
 		stage_combat_demo()
 	var finished := elapsed >= benchmark_seconds + 2.0 if benchmark_seconds > 0.0 else frames == 720
