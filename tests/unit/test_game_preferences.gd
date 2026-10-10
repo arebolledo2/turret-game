@@ -76,3 +76,24 @@ func test_shop_price_policies_remain_independent_of_retired_scene_manager() -> v
 	ModifierService.add_modifier({"id": "discount", "stat": "shop_price_mult", "operation": "increase", "value": -.25})
 	assert_eq(EconomyService.calculate_item_price(20, 5), 30)
 	assert_eq(EconomyService.calculate_turret_price(10, 5), 30)
+
+func test_run_choices_persist_and_invalid_saved_choices_are_ignored() -> void:
+	var service := preload("res://scripts/autoload/settings_service.gd").new()
+	service.preferences_path = "user://run_preferences_%d.cfg" % Time.get_ticks_usec()
+	add_child_autofree(service)
+	service.set_run_difficulty(GameEnums.Difficulty.BRUTAL, false)
+	service.set_run_mode(RunConfig.MODE_CONVOY, false)
+	assert_eq(service.save_preferences(), OK)
+	service.run_difficulty = GameEnums.Difficulty.EASY
+	service.run_mode = RunConfig.MODE_SURVIVE
+	service.load_preferences()
+	assert_eq(service.run_difficulty, GameEnums.Difficulty.BRUTAL)
+	assert_eq(service.run_mode, RunConfig.MODE_CONVOY)
+	var config := ConfigFile.new()
+	config.set_value("run", "difficulty", 999)
+	config.set_value("run", "mode", "missing")
+	config.save(service.preferences_path)
+	service.load_preferences()
+	assert_eq(service.run_difficulty, GameEnums.Difficulty.BRUTAL)
+	assert_eq(service.run_mode, RunConfig.MODE_CONVOY)
+	DirAccess.remove_absolute(service.preferences_path)

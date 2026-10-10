@@ -163,3 +163,19 @@ func test_each_mode_is_offered_only_while_its_flag_is_on() -> void:
 	TestHelpers.reset_flags()
 	app.show_home()
 	assert_false(app.mode_option.is_item_disabled(RunConfig.MODES.find(RunConfig.MODE_CONVOY)))
+
+func test_run_choices_survive_return_to_menu_and_new_app() -> void:
+	app.difficulty_option.item_selected.emit(app.difficulty_option.get_item_index(GameEnums.Difficulty.HARD))
+	app.mode_option.item_selected.emit(RunConfig.MODES.find(RunConfig.MODE_CORE))
+	app.start_game()
+	app.return_to_menu()
+	assert_eq(app.run_config.difficulty, GameEnums.Difficulty.HARD)
+	assert_eq(app.run_config.mode, RunConfig.MODE_CORE)
+	var reopened := preload("res://scenes/main.tscn").instantiate() as GameApp
+	add_child_autofree(reopened)
+	assert_eq(reopened.difficulty_option.get_selected_id(), GameEnums.Difficulty.HARD)
+	assert_eq(reopened.mode_option.selected, RunConfig.MODES.find(RunConfig.MODE_CORE))
+	FeatureFlagService.set_enabled(FeatureFlagService.MODE_PROTECT_CORE, false)
+	reopened.show_home()
+	assert_eq(reopened.run_config.mode, RunConfig.MODE_SURVIVE)
+	assert_eq(SettingsService.run_mode, RunConfig.MODE_CORE, "Unavailable mode does not erase preference")

@@ -22,6 +22,11 @@ var mode_option: OptionButton
 ## Chosen for the next Play; tools and the dev panel may replace it.
 var run_config: RunConfig = RunConfig.new()
 
+func _init() -> void:
+	# Apply defaults at construction so tools can still supply a config before _ready.
+	run_config.difficulty = SettingsService.run_difficulty
+	run_config.mode = SettingsService.run_mode
+
 func _ready() -> void:
 	_build_menu()
 	show_home()
@@ -56,12 +61,14 @@ func _build_menu() -> void:
 	summary_chips.add_theme_constant_override("separation", 10)
 	home.add_child(summary_chips)
 	difficulty_option = _option(home, "Difficulty", func(index: int) -> void:
-		run_config.difficulty = index as GameEnums.Difficulty
+		run_config.difficulty = difficulty_option.get_item_id(index) as GameEnums.Difficulty
+		SettingsService.set_run_difficulty(run_config.difficulty)
 		_update_summary())
 	for difficulty: int in DifficultyService.DIFFICULTY_CONFIG:
 		difficulty_option.add_item("Difficulty  %s  -  %s" % [DifficultyService.DIFFICULTY_CONFIG[difficulty]["name"], DifficultyService.DIFFICULTY_CONFIG[difficulty]["description"]], difficulty)
 	mode_option = _option(home, "Mode", func(index: int) -> void:
 		run_config.mode = RunConfig.MODES[index]
+		SettingsService.set_run_mode(run_config.mode)
 		_update_summary())
 	mode_option.add_item("Mode  Survive  -  last all the waves")
 	mode_option.add_item("Mode  Protect the core  -  keep the reactor alive")

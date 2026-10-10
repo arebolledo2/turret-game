@@ -13,6 +13,8 @@ var fullscreen: bool = false
 var window_size: Vector2i = Vector2i.ZERO
 var vsync: bool = true
 var sfx_volume: float = .7
+var run_difficulty: GameEnums.Difficulty = GameEnums.Difficulty.EASY
+var run_mode: String = RunConfig.MODE_SURVIVE
 
 func _ready() -> void:
 	load_preferences()
@@ -20,6 +22,12 @@ func _ready() -> void:
 func load_preferences() -> void:
 	var config := ConfigFile.new()
 	if config.load(preferences_path) == OK:
+		var saved_difficulty: Variant = config.get_value("run", "difficulty", GameEnums.Difficulty.EASY)
+		if saved_difficulty is int and saved_difficulty in GameEnums.Difficulty.values():
+			run_difficulty = saved_difficulty as GameEnums.Difficulty
+		var saved_mode: Variant = config.get_value("run", "mode", RunConfig.MODE_SURVIVE)
+		if saved_mode is String and saved_mode in RunConfig.MODES:
+			run_mode = saved_mode
 		var saved_fullscreen: Variant = config.get_value("display", "fullscreen", false)
 		var saved_vsync: Variant = config.get_value("display", "vsync", true)
 		var saved_markers: Variant = config.get_value("accessibility", "ground_markers", GroundMarkers.CONTEXTUAL)
@@ -46,6 +54,8 @@ func load_preferences() -> void:
 
 func save_preferences() -> Error:
 	var config := ConfigFile.new()
+	config.set_value("run", "difficulty", run_difficulty)
+	config.set_value("run", "mode", run_mode)
 	config.set_value("display", "fullscreen", fullscreen)
 	config.set_value("display", "vsync", vsync)
 	config.set_value("display", "window_width", window_size.x)
@@ -139,7 +149,23 @@ func set_ground_markers(value: int, persist: bool = true) -> void:
 	if persist:
 		save_preferences()
 
+func set_run_difficulty(value: int, persist: bool = true) -> void:
+	if value not in GameEnums.Difficulty.values():
+		return
+	run_difficulty = value as GameEnums.Difficulty
+	if persist:
+		save_preferences()
+
+func set_run_mode(value: String, persist: bool = true) -> void:
+	if value not in RunConfig.MODES:
+		return
+	run_mode = value
+	if persist:
+		save_preferences()
+
 func reset_state() -> void:
 	# Explicit test/debug reset. RunSession keeps app preferences across runs.
+	run_difficulty = GameEnums.Difficulty.EASY
+	run_mode = RunConfig.MODE_SURVIVE
 	FeatureFlagService.reset_state()
 	set_ground_markers(GroundMarkers.CONTEXTUAL, false)

@@ -143,3 +143,7 @@ Not yet: zones do not move between waves, and the hero is not affected by high g
 ### Ground markers
 
 Settings offers **Off / Contextual / All**, defaulting to Contextual. Contextual hides ordinary enemy/player rings, keeps special-threat markers, and shows turret Entrench rings briefly on stack gain or while within pickup/inspection distance. Core clearance appears while carrying a turret. Off hides these optional markers; build zones, attack warnings, slow-status indicators and combat effects remain visible. Entrench bonuses and collision geometry are unchanged.
+
+### Remembered run choices
+
+Difficulty and mode selections on the title screen are saved immediately and restored on the next launch. Returning to the menu or restarting a run retains the selections. If a saved mode is disabled by a feature flag, the menu uses Survive without overwriting the saved mode.
