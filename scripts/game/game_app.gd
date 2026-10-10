@@ -55,8 +55,6 @@ func _build_menu() -> void:
 	summary_chips = HBoxContainer.new()
 	summary_chips.add_theme_constant_override("separation", 10)
 	home.add_child(summary_chips)
-	play_button = _button(home, "PLAY", start_game, "play", true)
-	settings_button = _button(home, "SETTINGS", show_settings, "settings")
 	difficulty_option = _option(home, "Difficulty", func(index: int) -> void:
 		run_config.difficulty = index as GameEnums.Difficulty
 		_update_summary())
@@ -68,6 +66,8 @@ func _build_menu() -> void:
 	mode_option.add_item("Mode  Survive  -  last all the waves")
 	mode_option.add_item("Mode  Protect the core  -  keep the reactor alive")
 	mode_option.add_item("Mode  Convoy  -  escort the core door to door")
+	play_button = _button(home, "PLAY", start_game, "play", true)
+	settings_button = _button(home, "SETTINGS", show_settings, "settings")
 	_button(home, "QUIT", func() -> void: get_tree().quit(), "power")
 	options = VBoxContainer.new()
 	options.add_theme_constant_override("separation", 18)
