@@ -1,0 +1,131 @@
+{
+  "title": "Clockwork Pop - Playtest Conversion",
+  "branch": "feat/clockwork-pop-playtest",
+  "assets": [
+    {
+      "key": "ion",
+      "name": "Pepperbox Watchman",
+      "image_id": "94e26a7a-9af2-4529-981e-00e66c97a73f",
+      "status": "building",
+      "reference": "../../../art-source/clockwork-pop/references/ion.png",
+      "notes": "Clear aiming head and muzzle bores. Preserve the favourite silhouette; separate the fixed base from the yawing head.",
+      "run": "cp_ion-v1"
+    },
+    {
+      "key": "plasma",
+      "name": "Kilnheart Lobber",
+      "image_id": "6ea142dc-b0ff-49d0-99af-15ae75d371b0",
+      "status": "queued",
+      "reference": "../../../art-source/clockwork-pop/references/plasma.png",
+      "notes": "Compact heavy body and short wide muzzle. Add a clear yaw joint above the planted supports. Variant 1 is the longer-barrel alternate; variant 3 the more ornate alternate.",
+      "run": "cp_plasma-v1"
+    },
+    {
+      "key": "tesla",
+      "name": "Tuning-Fork Conductor",
+      "image_id": "e9f5d244-a3df-4f80-b1dd-67cd56724379",
+      "status": "queued",
+      "reference": "../../../art-source/clockwork-pop/references/tesla.png",
+      "notes": "Strong fork silhouette. Model solid electrode tips instead of the hollow-looking bores. Place the emission origin between the prongs.",
+      "run": "cp_tesla-v1"
+    },
+    {
+      "key": "shock",
+      "name": "Resonance Bell",
+      "image_id": "b45251b2-295b-42c8-beb7-9e668c7774d9",
+      "status": "queued",
+      "reference": "../../../art-source/clockwork-pop/references/shock.png",
+      "notes": "Simple radial bell, brass hoop and amber crown. Keep pulse effects in the game rather than the mesh.",
+      "run": "cp_shock-v1"
+    },
+    {
+      "key": "melee",
+      "name": "Dugout Automaton",
+      "image_id": "8c69d6dd-674e-4547-9a60-b74cd73bed71",
+      "status": "queued",
+      "reference": "../../../art-source/clockwork-pop/references/melee.png",
+      "notes": "Good base and arm. Move the hand nearer the butt knob: the reference still grips near the taper. Keep most of the bat beyond the grip, with a vertical yaw pivot and hit marker at the tip.",
+      "run": "cp_melee-v1"
+    },
+    {
+      "key": "basic",
+      "name": "Bramble Wisp",
+      "image_id": "f75c5c63-ddff-4254-b4f1-ba301358b191",
+      "status": "building",
+      "reference": "../../../art-source/clockwork-pop/references/basic.png",
+      "notes": "Broad leaf-like armour gives a distinctive bramble silhouette. Variant 3 is the more mechanical alternate. Use simple hover motion before articulating every thorn.",
+      "run": "cp_basic-v1"
+    },
+    {
+      "key": "fast",
+      "name": "Skipper Moth",
+      "image_id": "07d1ec0b-0520-4533-8bf5-13356d93ead7",
+      "status": "queued",
+      "reference": "../../../art-source/clockwork-pop/references/fast.png",
+      "notes": "Clean wings without the obvious smoke trail of variant 3. Test wing opacity and silhouette at gameplay distance.",
+      "run": "cp_fast-v1"
+    },
+    {
+      "key": "tank",
+      "name": "Bulwark Hermit",
+      "image_id": "f572c765-8035-49a6-9a6c-c108acd56e06",
+      "status": "queued",
+      "reference": "../../../art-source/clockwork-pop/references/tank.png",
+      "notes": "Heavy low crab stance and clear supporting legs. Variant 3 is a friendlier alternate; variant 2 has a more helmet-like face. Resolve hidden leg layout before rigging.",
+      "run": "cp_tank-v1"
+    },
+    {
+      "key": "charger",
+      "name": "Ramjet Beetle",
+      "image_id": "c4e1881c-697e-4c09-b178-29b90315b3ea",
+      "status": "queued",
+      "reference": "../../../art-source/clockwork-pop/references/charger.png",
+      "notes": "Clear ram tusks, forward visor and sturdy grounded stance. Use a simple four-leg articulation contract.",
+      "run": "cp_charger-v1"
+    },
+    {
+      "key": "hero",
+      "name": "Pip the Lantern Keeper",
+      "image_id": "e142d444-d9d9-49cd-bd63-0fd5e1acfb27",
+      "status": "queued",
+      "reference": "../../../art-source/clockwork-pop/references/hero.png",
+      "notes": "Readable face, chest lantern and weapon. Needs coordinated locomotion and aiming; the biped presentation differs from the current hovering hero.",
+      "run": "cp_hero-v1"
+    },
+    {
+      "key": "dropbox",
+      "name": "Keepsake Cache",
+      "image_id": "d360b9ed-da17-41dc-9353-946294661f07",
+      "status": "building",
+      "reference": "../../../art-source/clockwork-pop/references/dropbox.png",
+      "notes": "Clean box, readable latch and lid seam. Model the cream top as a solid inset lid.",
+      "run": "cp_dropbox-v1"
+    },
+    {
+      "key": "exploder",
+      "name": "Cinder Puffer",
+      "image_id": "40885d15-7c25-41e9-98e8-192025dc5423",
+      "status": "queued",
+      "reference": "../../../art-source/clockwork-pop/references/exploder.png",
+      "notes": "User authorized agent selection. Capped teal top variant1; coral pressure vessel, brass plugs, orange-red glass eye.",
+      "run": "cp_exploder-v1"
+    }
+  ],
+  "events": [
+    {
+      "stage": "Scope",
+      "text": "12 selected concepts. User approved Cinder Puffer variant1. Original assets preserved. Completion requires visual review, correct attack/movement behavior, gameplay integration, tests and uncontended performance comparison."
+    },
+    {
+      "stage": "Generation",
+      "text": "Sol high asset agents started Keepsake Cache, Pepperbox Watchman and Bramble Wisp. All remaining reference files and pivot briefs prepared."
+    }
+  ],
+  "checks": {
+    "Visual acceptance": "pending",
+    "Movement and attack validation": "pending",
+    "Full game tests": "pending",
+    "Performance comparison": "pending",
+    "Playtest launch": "pending"
+  }
+}
