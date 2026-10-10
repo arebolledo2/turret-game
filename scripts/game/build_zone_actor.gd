@@ -1,7 +1,7 @@
 class_name BuildZoneActor
 extends Node3D
 
-## One build zone: a ground ring with an inner progress ring and a label naming what it will build.
+## One build zone: a floor dial with a progress arc and a label naming what it will build.
 ## `BuildZoneDirector` owns the rules; this node holds the zone's state and draws it.
 const TIER_COLORS: Array[Color] = [Color("58ece1"), Color("6ec6ff"), Color("c88bff"), Color("f4b942")]
 const DIM_COLOR := Color("8a98a6")
@@ -17,12 +17,11 @@ var life_left: float = 0.0
 var away_time: float = 0.0
 var occupied: bool = false
 var _outer: MeshInstance3D
-var _fill: MeshInstance3D
 var _label: Label3D
 var _pulse: float = 0.0
 
 func _init() -> void:
-	# The zone wobble is intentionally animated every rendered frame.
+	# The subtle occupied glow is animated every rendered frame.
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 
 func setup(zone_kind: String, zone_asset_id: String, zone_tier: int) -> void:
@@ -30,11 +29,7 @@ func setup(zone_kind: String, zone_asset_id: String, zone_tier: int) -> void:
 	asset_id = zone_asset_id
 	tier = clampi(zone_tier, 0, GameConstants.BUILD_ZONE_MAX_TIER)
 	var color := TIER_COLORS[mini(tier, TIER_COLORS.size() - 1)]
-	_outer = WorldGeometry.ring(self, GameConstants.BUILD_ZONE_RADIUS, color)
-	_outer.position.y = .04
-	_fill = WorldGeometry.ring(self, GameConstants.BUILD_ZONE_RADIUS, color.lightened(.35))
-	_fill.position.y = .05
-	_fill.scale = Vector3(.001, 1.0, .001)
+	_outer = GroundDial.create(self, GameConstants.BUILD_ZONE_RADIUS, color)
 	_label = Label3D.new()
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_label.no_depth_test = true
@@ -58,15 +53,14 @@ func refresh() -> void:
 	if not _outer:
 		return
 	var active := is_active()
-	_fill.visible = active and progress > 0.0
-	var fill_scale := maxf(progress, .001)
-	_fill.scale = Vector3(fill_scale, 1.0, fill_scale)
+	GroundDial.update(_outer, progress, not active)
 	_label.modulate = Color.WHITE if active else DIM_COLOR
 	_label.text = preview_text() if active else "Incoming…"
 
 func _process(delta: float) -> void:
-	if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) or not _outer:
+	if not _outer:
 		return
-	_pulse += delta * (6.0 if occupied else 2.5)
-	var wobble := 1.0 + (.06 if occupied else .03) * sin(_pulse)
-	_outer.scale = Vector3(wobble, 1.0, wobble)
+	_pulse += delta * 3.0
+	var reduced := FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION)
+	var brightness := 1.0 if reduced or not occupied else 1.0 + .08 * sin(_pulse)
+	(_outer.material_override as ShaderMaterial).set_shader_parameter("brightness", brightness)

@@ -271,6 +271,10 @@
     {
       "stage": "Interpolate the moving scene",
       "text": "Follow-up to enemy vibration: enabled scoped physics interpolation for actors, pickups and camera, keeping idle effects/build-zone animation separate. Reset histories for spawns, pooled projectiles, dissolves, camera snaps and carried turret placement. At 144 render FPS, an enemy held its rendered position on 167/288 sampled frames before interpolation and zero afterward. Hero rendered-anchor oscillation stays below 0.001px. The 10Hz physics stress check also passes. Full suite: 863 tests pass."
+    },
+    {
+      "stage": "Polished build and entrench indicators",
+      "text": "Replaced tubular rings with antialiased flat floor dials. Build zones have dashed pending outlines, fixed-radius tier-colored boundaries, cardinal alignment marks and an inner progress arc. Entrenchment uses compact amber stack segments with partial next-stack progress. Removed radius wobble; occupied zones get only a restrained brightness pulse, disabled with Reduced motion. Existing Off/Contextual/All behavior and gameplay radii/bonuses are preserved. In-game state preview reviewed; all 863 tests pass."
     }
   ],
   "checks": {
@@ -281,6 +285,10 @@
     "Playtest launch": "Passed: normal main-scene launch, full application flow, and six-wave automated progression victory (342 kills)"
   },
   "captures": [
+    {
+      "path": "previews/ground-dials.png",
+      "caption": "New floor indicators: pending build zone, 36% and 78% construction progress above; three entrenchment stack levels below. Preview uses All markers to show each state."
+    },
     {
       "path": "previews/contextual-markers.png",
       "caption": "Contextual ground markers: ordinary enemy and player circles hidden; charger retains its special-threat marker."

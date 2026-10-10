@@ -210,15 +210,14 @@ func _tick_entrench(delta: float) -> void:
 
 func _update_entrench_ring() -> void:
 	if not entrench_ring:
-		entrench_ring = WorldGeometry.ring(self, .62, Color("ffd05a"))
+		entrench_ring = GroundDial.create(self, .72, Color("e9b969"), true)
 		entrench_ring.position.y = .03
 	var mode := SettingsService.ground_markers
 	var inspecting := is_instance_valid(world) and is_instance_valid(world.player) and position.distance_to(world.player.position) < TurretPlacement.PICKUP_RANGE
 	var contextual := inspecting or entrench_notice > 0.0
 	entrench_ring.visible = entrench_stacks_cached > 0 and not carried and (mode == SettingsService.GroundMarkers.ALL or (mode == SettingsService.GroundMarkers.CONTEXTUAL and contextual))
-	var fill := float(entrench_stacks_cached) / float(maxi(entrench_max(), 1))
-	var size := .8 + .25 * fill + .1 * entrench_progress()
-	entrench_ring.scale = Vector3(size, 1.0, size)
+	var fill := (float(entrench_stacks_cached) + (entrench_progress() if entrench_stacks_cached < entrench_max() else 0.0)) / float(maxi(entrench_max(), 1))
+	GroundDial.update(entrench_ring, fill, false, entrench_max())
 
 ## Situational item bonuses, resolved with the cached stats: Last Stand (low hull) and Storm Conductor (linked electric turrets).
 func _apply_item_conditions(stats: Dictionary) -> void:
