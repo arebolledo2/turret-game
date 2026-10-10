@@ -337,6 +337,21 @@ func _label(parent: Node, text: String, size: int, color: Color) -> Label:
 	parent.add_child(label)
 	return label
 
+## Cross the nested action container and spacer explicitly instead of relying on spatial focus search.
+func _refresh_footer_focus() -> void:
+	var buttons: Array[Button] = [reroll_button, repair_button, core_repair_button, continue_button, restart_button, menu_button]
+	for index in range(buttons.size()):
+		var button := buttons[index]
+		for direction: int in [-1, 1]:
+			var target := button
+			var candidate := index + direction
+			while candidate >= 0 and candidate < buttons.size():
+				if buttons[candidate].is_visible_in_tree() and not buttons[candidate].disabled:
+					target = buttons[candidate]
+					break
+				candidate += direction
+			button.set_focus_neighbor(SIDE_LEFT if direction < 0 else SIDE_RIGHT, button.get_path_to(target))
+
 func _continue() -> void:
 	if world.paused:
 		world.toggle_pause()
@@ -439,6 +454,7 @@ func _process(delta: float) -> void:
 		core_repair_button.set_cost(GameConstants.REPAIR_COST, EconomyService.total_scrap >= GameConstants.REPAIR_COST)
 		core_repair_button.disabled = EconomyService.total_scrap < GameConstants.REPAIR_COST or world.core.health >= world.core.max_health
 	if panel.visible:
+		_refresh_footer_focus()
 		build_refresh -= delta
 		if build_refresh <= 0.0 or phase != previous_phase or world.paused != previous_pause:
 			build_refresh = .1
