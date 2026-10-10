@@ -4,6 +4,10 @@ var preferences_path: String = "user://game_preferences.cfg"
 const WINDOW_SIZE_PRESETS: Array[Vector2i] = [Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080), Vector2i(2560, 1440)]
 const MIN_WINDOW_SIZE: Vector2i = Vector2i(640, 360)
 
+enum GroundMarkers { OFF, CONTEXTUAL, ALL }
+signal ground_markers_changed
+var ground_markers: GroundMarkers = GroundMarkers.CONTEXTUAL
+
 var fullscreen: bool = false
 ## Zero means "keep the project default"; otherwise the preset chosen in settings.
 var window_size: Vector2i = Vector2i.ZERO
@@ -18,6 +22,9 @@ func load_preferences() -> void:
 	if config.load(preferences_path) == OK:
 		var saved_fullscreen: Variant = config.get_value("display", "fullscreen", false)
 		var saved_vsync: Variant = config.get_value("display", "vsync", true)
+		var saved_markers: Variant = config.get_value("accessibility", "ground_markers", GroundMarkers.CONTEXTUAL)
+		if saved_markers is int and saved_markers >= GroundMarkers.OFF and saved_markers <= GroundMarkers.ALL:
+			set_ground_markers(saved_markers, false)
 		var saved_motion: Variant = config.get_value("accessibility", "reduced_motion", false)
 		if saved_fullscreen is bool:
 			fullscreen = saved_fullscreen
@@ -44,6 +51,7 @@ func save_preferences() -> Error:
 	config.set_value("display", "window_width", window_size.x)
 	config.set_value("display", "window_height", window_size.y)
 	config.set_value("accessibility", "reduced_motion", FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
+	config.set_value("accessibility", "ground_markers", ground_markers)
 	config.set_value("audio", "sfx_volume", sfx_volume)
 	save_dev_flags(config)
 	return config.save(preferences_path)
@@ -123,6 +131,15 @@ func set_reduced_motion(enabled: bool, persist: bool = true) -> void:
 	if persist:
 		save_preferences()
 
+func set_ground_markers(value: int, persist: bool = true) -> void:
+	if value < GroundMarkers.OFF or value > GroundMarkers.ALL:
+		return
+	ground_markers = value as GroundMarkers
+	ground_markers_changed.emit()
+	if persist:
+		save_preferences()
+
 func reset_state() -> void:
 	# Explicit test/debug reset. RunSession keeps app preferences across runs.
 	FeatureFlagService.reset_state()
+	set_ground_markers(GroundMarkers.CONTEXTUAL, false)

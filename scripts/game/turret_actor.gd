@@ -29,6 +29,7 @@ var stats_view := TurretStats.new()
 var stay_time: float = 0.0
 var entrench_stacks_cached: int = 0
 var entrench_ring: MeshInstance3D
+var entrench_notice: float = 0.0
 ## Shop items retune Entrench through modifier stats; resolved lazily and dropped whenever modifiers change.
 var entrench_config: Dictionary = {}
 
@@ -194,12 +195,15 @@ func entrench_progress() -> float:
 	return fmod(stay_time, seconds) / seconds
 
 func _tick_entrench(delta: float) -> void:
+	entrench_notice = maxf(0.0, entrench_notice - delta)
 	if FeatureFlagService.is_enabled(FeatureFlagService.ENTRENCH):
 		stay_time += delta
 	elif stay_time > 0.0:
 		stay_time = 0.0
 	var stacks := entrench_stacks()
 	if stacks != entrench_stacks_cached:
+		if stacks > entrench_stacks_cached:
+			entrench_notice = .65
 		entrench_stacks_cached = stacks
 		cached_stats = {}
 	_update_entrench_ring()
@@ -208,7 +212,10 @@ func _update_entrench_ring() -> void:
 	if not entrench_ring:
 		entrench_ring = WorldGeometry.ring(self, .62, Color("ffd05a"))
 		entrench_ring.position.y = .03
-	entrench_ring.visible = entrench_stacks_cached > 0 and not carried
+	var mode := SettingsService.ground_markers
+	var inspecting := is_instance_valid(world) and is_instance_valid(world.player) and position.distance_to(world.player.position) < TurretPlacement.PICKUP_RANGE
+	var contextual := inspecting or entrench_notice > 0.0
+	entrench_ring.visible = entrench_stacks_cached > 0 and not carried and (mode == SettingsService.GroundMarkers.ALL or (mode == SettingsService.GroundMarkers.CONTEXTUAL and contextual))
 	var fill := float(entrench_stacks_cached) / float(maxi(entrench_max(), 1))
 	var size := .8 + .25 * fill + .1 * entrench_progress()
 	entrench_ring.scale = Vector3(size, 1.0, size)

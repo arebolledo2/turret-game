@@ -139,3 +139,7 @@ Flag `zone_readability` (experiment, `live_safe`, requires `terrain_zones`; togg
 Off restores the original flat tinted disc, edge ring, rim posts and small prop (`TerrainZone.legacy_color`). The readable look is also cheaper: about 70 draw calls against 160 for the rim posts and rings in the Crossroads capture with no enemies. Check either look with `capture_game.tscn -- --zones[=layout] [--focus=<zone type>] [--legacy-zones]` (windowed; writes `.test-results/game-zones.png`).
 
 Not yet: zones do not move between waves, and the hero is not affected by high ground, no-build or power nodes. High ground plus Entrench may reward never moving; compare against Entrench telemetry.
+
+### Ground markers
+
+Settings offers **Off / Contextual / All**, defaulting to Contextual. Contextual hides ordinary enemy/player rings, keeps special-threat markers, and shows turret Entrench rings briefly on stack gain or while within pickup/inspection distance. Core clearance appears while carrying a turret. Off hides these optional markers; build zones, attack warnings, slow-status indicators and combat effects remain visible. Entrench bonuses and collision geometry are unchanged.

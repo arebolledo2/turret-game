@@ -146,6 +146,7 @@ func start_run() -> void:
 	defeat_reason = ""
 	if core_mode:
 		core = CoreObjective.new()
+		core.world = self
 		core.name = "Core"
 		actor_root.add_child(core)
 		core.reset(core_max_health())

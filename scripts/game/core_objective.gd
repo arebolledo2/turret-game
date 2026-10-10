@@ -3,6 +3,10 @@ extends Node3D
 
 ## The reactor core that enemies try to destroy in core mode. A fixed, static target: it takes hits from enemy
 ## contact and blasts, is repaired in the shop, and ends the run when it reaches zero.
+var world: ArenaWorld
+var footprint: MeshInstance3D
+var clearance: MeshInstance3D
+
 var max_health: float = 75.0
 var health: float = 75.0
 var radius: float = GameConstants.CORE_RADIUS
@@ -29,8 +33,11 @@ func _ready() -> void:
 	plinth.material_override = base_material
 	plinth.position.y = .175
 	add_child(plinth)
-	WorldGeometry.ring(self, radius, HEALTHY).position.y = .04
-	WorldGeometry.ring(self, radius + GameConstants.CORE_PLACEMENT_CLEARANCE, Color("2b5963")).position.y = .03
+	footprint = WorldGeometry.ring(self, radius, HEALTHY)
+	footprint.position.y = .04
+	clearance = WorldGeometry.ring(self, radius + GameConstants.CORE_PLACEMENT_CLEARANCE, Color("2b5963"))
+	clearance.position.y = .03
+	_refresh_markers()
 	crystal_material = WorldGeometry.material(HEALTHY, true)
 	crystal_material.emission_energy_multiplier = 2.5
 	crystal = WorldGeometry.sphere(self, radius * .5, Vector3(0, .35 + radius * .6, 0), crystal_material)
@@ -80,7 +87,13 @@ func _refresh_colour() -> void:
 	crystal_material.albedo_color = colour
 	crystal_material.emission = colour
 
+func _refresh_markers() -> void:
+	var mode := SettingsService.ground_markers
+	footprint.visible = mode == SettingsService.GroundMarkers.ALL
+	clearance.visible = mode == SettingsService.GroundMarkers.ALL or (mode == SettingsService.GroundMarkers.CONTEXTUAL and is_instance_valid(world) and is_instance_valid(world.carried_turret))
+
 func _process(delta: float) -> void:
+	_refresh_markers()
 	if not crystal_material:
 		return
 	flash_time = maxf(0.0, flash_time - delta)

@@ -1,6 +1,6 @@
 {
   "title": "Clockwork Pop - Playtest Conversion",
-  "branch": "feat/clockwork-pop-playtest",
+  "branch": "master",
   "assets": [
     {
       "key": "ion",
@@ -259,16 +259,24 @@
     {
       "stage": "Ready for human playtest",
       "text": "Normal main scene launches without errors. Application capture checks Play, settings, pause, defeat, victory and return to menu. Six-wave automated progression wins with 342 kills and no defeat; this verifies the game loop, not human balance or input feel. HTML report reviewed in browser, including the pose scrubber. All twelve assets verified; originals retained. Remaining playtest judgments: cache size, crowded silhouettes, and motion feel. Minimum-spec performance and larger crowds remain unmeasured."
+    },
+    {
+      "stage": "Contextual ground markers",
+      "text": "Merged the roster into master. Added saved Off / Contextual / All ground-marker preference, default Contextual. Routine enemy and player rings are hidden; special threats retain their cue. Entrench shows during nearby inspection and for 0.65 seconds on stack gain, without changing bonuses. Core clearance shows while carrying a turret. Build zones, attack warnings, slow status and combat effects stay visible. Full suite: 860 tests pass; saved-preference round-trip and invalid values checked separately. Settings and gameplay captures reviewed."
     }
   ],
   "checks": {
     "Visual acceptance": "All 12 reviewed in Blender and Godot; final gameplay-scale roster and sampled poses accepted",
     "Movement and attack validation": "Imported pivots, muzzle facing, targeting, melee reach, alternating stride and floor clearance pass",
-    "Full game tests": "857/857 tests pass; 9,724 assertions. Resource audit: 162 source files, 24 records including originals",
+    "Full game tests": "860/860 tests pass after contextual markers; saved-preference checks also pass",
     "Performance comparison": "Two runs each: original, animated Clockwork, reduced motion; full counts and raw metrics retained in benchmarks.json",
     "Playtest launch": "Passed: normal main-scene launch, full application flow, and six-wave automated progression victory (342 kills)"
   },
   "captures": [
+    {
+      "path": "previews/contextual-markers.png",
+      "caption": "Contextual ground markers: ordinary enemy and player circles hidden; charger retains its special-threat marker."
+    },
     {
       "path": "previews/full-roster-in-game.png",
       "caption": "Final twelve-model roster at gameplay scale. Tank and charger are now the new models; the cache intentionally remains a prominent prop."
@@ -324,5 +332,5 @@
     "previews/pose-105.png",
     "previews/pose-120.png"
   ],
-  "launch": "On branch feat/clockwork-pop-playtest, run pwsh -File .\\turret-game\\launch.ps1 from the monorepo root and choose PLAY. All twelve assets are active by default. Settings \u2192 Reduced motion disables cosmetic movement. Original models remain available with the Godot user argument --legacy-assets for comparisons. Human playtesting is the next step."
+  "launch": "On branch master, run pwsh -File .\\turret-game\\launch.ps1 from the monorepo root and choose PLAY. All twelve assets are active by default. Settings \u2192 Reduced motion disables cosmetic movement. Original models remain available with the Godot user argument --legacy-assets for comparisons. Human playtesting is the next step."
 }

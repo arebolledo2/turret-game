@@ -95,6 +95,7 @@ func test_audio_and_feedback_do_not_consume_gameplay_rng() -> void:
 	assert_eq(GameRandom.gameplay.state, state)
 
 func test_matching_markers_share_resources_but_keep_independent_transforms() -> void:
+	SettingsService.set_ground_markers(SettingsService.GroundMarkers.ALL, false)
 	var first := world.spawn_enemy(Vector3.LEFT)
 	var second := world.spawn_enemy(Vector3.RIGHT)
 	assert_same(first.marker.mesh, second.marker.mesh)
@@ -102,3 +103,48 @@ func test_matching_markers_share_resources_but_keep_independent_transforms() -> 
 	first.marker.visible = false
 	assert_true(second.marker.visible)
 	assert_ne(first.position, second.position)
+
+func test_ground_marker_modes_preserve_special_threats_and_status_feedback() -> void:
+	var ordinary := world.spawn_enemy(Vector3.LEFT)
+	var charger := world.spawn_enemy(Vector3.RIGHT, "charger")
+	assert_false(ordinary.marker.visible)
+	assert_false(world.player.marker.visible)
+	assert_true(charger.marker.visible)
+	ordinary.slow_marker.visible = true
+	SettingsService.set_ground_markers(SettingsService.GroundMarkers.OFF, false)
+	assert_false(charger.marker.visible)
+	assert_true(ordinary.slow_marker.visible, "Status feedback survives cosmetic marker settings")
+	SettingsService.set_ground_markers(SettingsService.GroundMarkers.ALL, false)
+	assert_true(ordinary.marker.visible)
+	assert_true(world.player.marker.visible)
+
+func test_entrench_marker_is_contextual_without_changing_bonuses() -> void:
+	var turret := world.turrets[0]
+	world.player.position = Vector3(10, 0, 10)
+	turret._tick_entrench(turret._stack_seconds() + .01)
+	assert_true(turret.entrench_ring.visible, "New stack briefly announces itself")
+	var bonus := turret.entrench_damage_bonus()
+	turret._tick_entrench(.7)
+	assert_false(turret.entrench_ring.visible, "Distant persistent ring is hidden")
+	world.player.position = turret.position
+	turret._update_entrench_ring()
+	assert_true(turret.entrench_ring.visible, "Nearby inspection shows entrench")
+	SettingsService.set_ground_markers(SettingsService.GroundMarkers.OFF, false)
+	turret._update_entrench_ring()
+	assert_false(turret.entrench_ring.visible)
+	assert_eq(turret.entrench_damage_bonus(), bonus)
+
+func test_core_clearance_is_only_contextual_during_placement() -> void:
+	var core := CoreObjective.new()
+	core.world = world
+	add_child_autofree(core)
+	core._refresh_markers()
+	assert_false(core.footprint.visible)
+	assert_false(core.clearance.visible)
+	world.carried_turret = world.turrets[0]
+	core._refresh_markers()
+	assert_true(core.clearance.visible)
+	SettingsService.set_ground_markers(SettingsService.GroundMarkers.OFF, false)
+	core._refresh_markers()
+	assert_false(core.clearance.visible)
+	world.carried_turret = null

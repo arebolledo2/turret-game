@@ -11,6 +11,7 @@ var options: VBoxContainer
 var fullscreen_check: CheckButton
 var window_size_option: OptionButton
 var vsync_check: CheckButton
+var marker_option: OptionButton
 var motion_check: CheckButton
 var volume_slider: HSlider
 var volume_label: Label
@@ -85,6 +86,10 @@ func _build_menu() -> void:
 	window_size_option.item_selected.connect(func(index: int) -> void: SettingsService.set_window_size(SettingsService.WINDOW_SIZE_PRESETS[index]))
 	options.add_child(window_size_option)
 	vsync_check = _check(options, "VSync", "signal", func(value: bool) -> void: SettingsService.set_vsync(value))
+	marker_option = _option(options, "Ground markers", func(index: int) -> void: SettingsService.set_ground_markers(index))
+	for label in ["Off", "Contextual", "All"]:
+		marker_option.add_item("Ground markers  -  " + label)
+	marker_option.tooltip_text = "Optional ground markers. Build zones and attack warnings stay visible."
 	motion_check = _check(options, "Reduced motion", "motion", func(value: bool) -> void: SettingsService.set_reduced_motion(value))
 	_label(options, "Reduced motion removes bobbing, recoil and hit blinking.\nAttack warnings and effect ranges remain visible.", 20)
 	var volume_row := HBoxContainer.new()
@@ -203,6 +208,7 @@ func show_settings() -> void:
 	fullscreen_check.set_pressed_no_signal(SettingsService.fullscreen)
 	vsync_check.set_pressed_no_signal(SettingsService.vsync)
 	window_size_option.select(SettingsService.WINDOW_SIZE_PRESETS.find(SettingsService.window_size))
+	marker_option.select(SettingsService.ground_markers)
 	motion_check.set_pressed_no_signal(FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
 	volume_slider.set_value_no_signal(SettingsService.sfx_volume * 100.0)
 	_update_volume_label()

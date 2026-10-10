@@ -110,6 +110,14 @@ func _ready() -> void:
 		marker = WorldGeometry.ring(self, .3, Color("58ece1"))
 		marker.position.y = .025
 
+	SettingsService.ground_markers_changed.connect(_refresh_ground_marker)
+	_refresh_ground_marker()
+
+func _refresh_ground_marker() -> void:
+	if marker:
+		var mode := SettingsService.ground_markers
+		marker.visible = mode == SettingsService.GroundMarkers.ALL or (mode == SettingsService.GroundMarkers.CONTEXTUAL and is_enemy and (elite or ignores_hero or charge != null))
+
 ## Builds the enemy's body model; specialised actors (the tech-drop crate) override this.
 func _build_enemy_model() -> Node3D:
 	var model: Node3D
