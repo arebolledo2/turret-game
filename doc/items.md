@@ -1,5 +1,7 @@
 # Items and build tags
 
+Proposed next iteration: [itemization and full-screen shop revamp](plans/itemization-shop-revamp.md). This page continues to describe the current implementation until that plan is built.
+
 Phase 2 item pool. The proposal with the full rationale is the "Item Pool v2" artifact; this page records what is built.
 
 ## Shop layout
