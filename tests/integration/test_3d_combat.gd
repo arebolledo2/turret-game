@@ -200,6 +200,36 @@ func test_crowd_separates_coincident_spawns_and_queries_neighbor_cells() -> void
 	world.crowd.rebuild(world.enemies)
 	assert_eq(world.crowd.separation(first), Vector3.ZERO)
 
+func test_resolve_overlaps_separates_pair_and_heavier_moves_less() -> void:
+	var basic := enemy(Vector3(10, 0, 10))
+	var tank := enemy(Vector3(10.2, 0, 10), "tank")
+	var start_gap := basic.position.distance_to(tank.position)
+	var basic_start := basic.position
+	var tank_start := tank.position
+	for i in range(8):
+		world.crowd.rebuild(world.enemies)
+		world.crowd.resolve_overlaps()
+	var min_distance := (basic.body_scale + tank.body_scale) * GameConstants.ENEMY_BODY_RADIUS
+	assert_gt(basic.position.distance_to(tank.position), start_gap)
+	assert_gt(basic.position.distance_to(tank.position), min_distance - .01)
+	assert_gt(basic.position.distance_to(basic_start), tank.position.distance_to(tank_start))
+
+func test_resolve_overlaps_pushes_enemies_out_of_obstacles_but_not_dashing_chargers() -> void:
+	var blocked := enemy(Vector3(10.1, 0, 10))
+	var obstacle := {"position": Vector3(10, 0, 10), "radius": GameConstants.TURRET_BODY_RADIUS}
+	for i in range(8):
+		world.crowd.rebuild(world.enemies)
+		world.crowd.resolve_overlaps([obstacle])
+	assert_gt(blocked.position.distance_to(Vector3(10, 0, 10)), GameConstants.TURRET_BODY_RADIUS + GameConstants.ENEMY_BODY_RADIUS - .01)
+	var charger := enemy(Vector3(20, 0, 10), "charger")
+	var other := enemy(Vector3(20.1, 0, 10))
+	charger.charge.phase = ChargeController3D.Phase.DASH
+	var charger_start := charger.position
+	world.crowd.rebuild(world.enemies)
+	world.crowd.resolve_overlaps()
+	assert_eq(charger.position, charger_start)
+	assert_gt(other.position.x, 20.1)
+
 func test_plasma_purchase_counts_and_damage_upgrade_use_shared_services() -> void:
 	world.finish_wave()
 	EconomyService.total_scrap = 100

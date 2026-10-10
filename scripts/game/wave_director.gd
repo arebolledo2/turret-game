@@ -27,6 +27,7 @@ func tick(delta: float) -> void:
 	if not world.is_combat():
 		return
 	world.crowd.rebuild(world.enemies)
+	world.crowd.resolve_overlaps(_fixed_obstacles())
 	time_left = maxf(0.0, time_left - delta)
 	spawn_clock -= delta
 	if remaining_spawns > 0 and spawn_clock <= 0.0:
@@ -42,6 +43,16 @@ func tick(delta: float) -> void:
 	# Convoy rounds end on arrival at the final door; the timer is only a safety net.
 	if time_left <= 0.0 or (world.convoy_mover != null and world.convoy_mover.finished):
 		finish_wave()
+
+## Circles enemies may not occupy. The hero is excluded: enemies must reach it for contact damage.
+func _fixed_obstacles() -> Array:
+	var obstacles: Array = []
+	for turret in world.turrets:
+		if is_instance_valid(turret):
+			obstacles.append({"position": turret.position, "radius": GameConstants.TURRET_BODY_RADIUS})
+	if world.core:
+		obstacles.append({"position": world.core.position, "radius": world.core.radius})
+	return obstacles
 
 func begin_next_wave() -> bool:
 	if GameStateMachine.current_state not in [GameStateMachine.GameState.IDLE, GameStateMachine.GameState.SHOP]:

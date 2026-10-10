@@ -46,6 +46,10 @@ const PLAYER_BASE_HEAL_INTERVAL: float = 10.0 # Seconds at regen=1
 # KNOCKBACK
 # =============================================================================
 const KNOCKBACK_DECAY_RATE: float = 8.0 # Per second
+# Hard body separation (metres). Radii stay below CrowdGrid3D.SPACING / 2 so the soft push leads and this is the backstop.
+const ENEMY_BODY_RADIUS: float = 0.3 # Multiplied by the enemy's body_scale
+const TURRET_BODY_RADIUS: float = 0.35
+const SEPARATION_MAX_CORRECTION: float = 0.5 # Fraction of an overlap resolved per tick
 const KNOCKBACK_MAX_VELOCITY: float = 900.0 # Prevent stacked hits from launching enemies
 
 # =============================================================================
