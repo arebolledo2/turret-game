@@ -119,12 +119,20 @@
     {
       "stage": "Generation",
       "text": "Sol high asset agents started Keepsake Cache, Pepperbox Watchman and Bramble Wisp. All remaining reference files and pivot briefs prepared."
+    },
+    {
+      "stage": "Baseline verification",
+      "text": "Original game: all 846 tests passed with no risky tests, unexpected errors or remaining orphans. No new models integrated yet. Baseline performance will be captured when no Blender rendering competes for GPU."
+    },
+    {
+      "stage": "First visual review",
+      "text": "Bramble iteration2 passes geometry contract (11,772 triangles, 7 meshes/materials), but face texture and iris proportions do not match the reference. Returned to generator for correction; not accepted or promoted. Pepperbox iteration1 exposed a texture-buffer issue; generator is repairing it and reducing accessory tessellation."
     }
   ],
   "checks": {
     "Visual acceptance": "pending",
     "Movement and attack validation": "pending",
-    "Full game tests": "pending",
+    "Full game tests": "baseline 846 passed; new roster pending",
     "Performance comparison": "pending",
     "Playtest launch": "pending"
   }

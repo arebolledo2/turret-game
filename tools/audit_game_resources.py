@@ -15,16 +15,24 @@ for source in sources:
         target = (ROOT / relative).resolve()
         if not target.is_relative_to(ROOT) or not target.exists():
             errors.append(f"{source.relative_to(ROOT)}: missing resource {relative}")
-manifest = json.loads((ROOT / "assets/models/game/manifest.json").read_text())
-for asset in manifest["assets"]:
-    for key in ("source", "model", "reference"):
-        if key == "reference" and not asset[key]:
-            continue  # props with no 2D reference art (terrain zones) leave it empty
-        if not (ROOT / asset[key]).is_file():
-            errors.append(f"Asset {asset['id']}: missing {key}: {asset[key]}")
+model_records = 0
+for manifest_path in [ROOT / "assets/models/game/manifest.json", ROOT / "assets/models/clockwork/manifest.json"]:
+    if not manifest_path.exists():
+        if manifest_path.parent.name == "game":
+            errors.append("Missing original game asset manifest")
+        continue
+    manifest = json.loads(manifest_path.read_text())
+    model_records += len(manifest["assets"])
+    for asset in manifest["assets"]:
+        for key in ("source", "model", "reference"):
+            if key == "reference" and not asset[key]:
+                continue  # props with no 2D reference art (terrain zones) leave it empty
+            target = (ROOT / asset[key]).resolve()
+            if not target.is_relative_to(ROOT) or not target.is_file():
+                errors.append(f"Asset {asset['id']}: missing {key}: {asset[key]}")
 for relative in ("scenes/player.tscn", "scenes/enemy.tscn", "scripts/player.gd", "scripts/enemy.gd"):
     if (ROOT / relative).exists():
         errors.append(f"Retired 2D runtime restored: {relative}")
 if errors:
     raise SystemExit("\n".join(errors))
-print(f"Resource audit passed: {len(sources)} source files and {len(manifest['assets'])} model records.")
+print(f"Resource audit passed: {len(sources)} source files and {model_records} model records.")
