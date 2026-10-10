@@ -217,6 +217,10 @@
     {
       "stage": "Pip in game and motion review",
       "text": "Pip iteration3 accepted and integrated at 11,130 triangles, six rigid meshes, nine materials and four textures. Imported-rig integration test confirms the pistol points at a real target without twisting hip pivots; combat screenshot and sampled controller poses reviewed. Full suite: 853 tests pass. Ramjet Beetle started, so all remaining assets are in production. Skipper wing texture loops were rejected for correction before promotion."
+    },
+    {
+      "stage": "Surface winding correction",
+      "text": "Skipper review exposed opposite winding between polar mesh fans and outer quads, producing unwanted ring highlights. Generator traced the same defect to Bramble and Cinder eye surfaces. Authorized narrowly scoped corrected exports and fresh validation/render review for both previously integrated assets after Skipper; game copies remain unchanged until accepted replacements arrive."
     }
   ],
   "checks": {
