@@ -111,13 +111,13 @@ func test_flag_off_means_no_terrain() -> void:
 
 func test_no_build_ground_rejects_turrets() -> void:
 	world = await _world()
-	assert_false(world.valid_placement(Vector3(-9, 0, 6.5)))
-	assert_true(world.valid_placement(Vector3(-9, 0, 2.0)))
+	assert_false(world.valid_placement(Vector3(-9, 0, 6.5) * WorldGeometry.ARENA_LINEAR_SCALE))
+	assert_true(world.valid_placement(Vector3(-9, 0, 2.0) * WorldGeometry.ARENA_LINEAR_SCALE))
 
 func test_high_ground_extends_turret_range() -> void:
 	world = await _world()
 	var flat := world.add_turret(Vector3(5, 0, 0), "normal")
-	var raised := world.add_turret(Vector3(-14, 0, -8), "normal")
+	var raised := world.add_turret(Vector3(-14, 0, -8) * WorldGeometry.ARENA_LINEAR_SCALE, "normal")
 	await wait_physics_frames(2)
 	var flat_range := float(flat._current_stats(.0)["range"])
 	var raised_range := float(raised._current_stats(.0)["range"])
@@ -127,7 +127,7 @@ func test_power_node_speeds_up_entrench() -> void:
 	world = await _world()
 	var seconds := GameConstants.ENTRENCH_STACK_SECONDS
 	var plain := world.add_turret(Vector3(5, 0, 0), "normal")
-	var node := world.add_turret(Vector3(18, 0, -10), "normal")
+	var node := world.add_turret(Vector3(18, 0, -10) * WorldGeometry.ARENA_LINEAR_SCALE, "normal")
 	await wait_physics_frames(2)
 	node._current_stats(.0)
 	var stay := seconds / (1.0 + GameConstants.ZONE_POWER_NODE_ENTRENCH_BONUS) + .01
@@ -139,8 +139,8 @@ func test_power_node_speeds_up_entrench() -> void:
 func test_mud_slows_enemies() -> void:
 	world = await _world()
 	world.player.position = Vector3(0, 0, 1)
-	var muddy := world.spawn_enemy(Vector3(0, 0, -11.5), "basic")
-	var clear := world.spawn_enemy(Vector3(10, 0, -11.5), "basic")
+	var muddy := world.spawn_enemy(Vector3(0, 0, -11.5) * WorldGeometry.ARENA_LINEAR_SCALE, "basic")
+	var clear := world.spawn_enemy(Vector3(10, 0, -11.5) * WorldGeometry.ARENA_LINEAR_SCALE, "basic")
 	for enemy in [muddy, clear]:
 		enemy.max_health = 1e9
 		enemy.health = 1e9
@@ -156,7 +156,7 @@ func test_mud_slows_the_hero_too() -> void:
 	world = await _world()
 	world.turrets[0].set_physics_process(false)
 	var speeds: Array[float] = []
-	for start in [Vector3(-25, 0, 0), Vector3(-3.5, 0, -11.5)]:
+	for start in [Vector3(-25, 0, 0) * WorldGeometry.ARENA_LINEAR_SCALE, Vector3(-3.5, 0, -11.5) * WorldGeometry.ARENA_LINEAR_SCALE]:
 		world.player.position = start
 		world.player.velocity = Vector3.ZERO
 		Input.action_press("move_right", 1.0)
@@ -215,7 +215,7 @@ func test_flag_off_keeps_the_original_look() -> void:
 	assert_eq(world.terrain.ground_materials.size(), 0)
 	assert_eq(world.terrain.labels.size(), 0)
 	assert_gt(world.terrain.root.get_child_count(), 0, "scenery is still built")
-	assert_eq(world.terrain.describe_at(Vector3(-14, 0, -8)), "High ground · turrets +25% range", "queries do not depend on the look")
+	assert_eq(world.terrain.describe_at(Vector3(-14, 0, -8) * WorldGeometry.ARENA_LINEAR_SCALE), "High ground · turrets +25% range", "queries do not depend on the look")
 
 func test_flag_switches_the_look_live() -> void:
 	world = await _plain_world(true)
@@ -243,10 +243,10 @@ func test_names_fade_in_as_the_hero_approaches() -> void:
 
 func test_describe_and_legend() -> void:
 	world = await _world()
-	assert_eq(world.terrain.describe_at(Vector3(-9, 0, 6.5)), "No-build · turrets cannot be placed")
-	assert_eq(world.terrain.describe_at(Vector3(-9, 0, 6.5), true), "No-build · turrets cannot be placed")
-	assert_string_contains(world.terrain.describe_at(Vector3(0, 0, -11.5)), "Mud")
-	assert_eq(world.terrain.describe_at(Vector3(0, 0, -11.5), true), "", "mud means nothing to a turret")
+	assert_eq(world.terrain.describe_at(Vector3(-9, 0, 6.5) * WorldGeometry.ARENA_LINEAR_SCALE), "No-build · turrets cannot be placed")
+	assert_eq(world.terrain.describe_at(Vector3(-9, 0, 6.5) * WorldGeometry.ARENA_LINEAR_SCALE, true), "No-build · turrets cannot be placed")
+	assert_string_contains(world.terrain.describe_at(Vector3(0, 0, -11.5) * WorldGeometry.ARENA_LINEAR_SCALE), "Mud")
+	assert_eq(world.terrain.describe_at(Vector3(0, 0, -11.5) * WorldGeometry.ARENA_LINEAR_SCALE, true), "", "mud means nothing to a turret")
 	assert_eq(world.terrain.describe_at(Vector3(5, 0, 0)), "")
 	var legend := world.terrain.legend()
 	for word in ["HIGH GROUND", "MUD", "NO-BUILD", "POWER NODE", "CROSSROADS"]:
@@ -267,7 +267,7 @@ func test_reduced_motion_freezes_the_ground() -> void:
 
 func test_turret_on_high_ground_shows_a_badge() -> void:
 	world = await _world()
-	var raised := world.add_turret(Vector3(-14, 0, -8), "normal")
+	var raised := world.add_turret(Vector3(-14, 0, -8) * WorldGeometry.ARENA_LINEAR_SCALE, "normal")
 	var flat := world.add_turret(Vector3(5, 0, 0), "normal")
 	await wait_physics_frames(20)
 	assert_not_null(raised.zone_badge)
@@ -278,7 +278,7 @@ func test_turret_on_high_ground_shows_a_badge() -> void:
 
 func test_placement_preview_names_the_ground() -> void:
 	world = await _world()
-	world.player.position = Vector3(-14, 0, -8)
+	world.player.position = Vector3(-14, 0, -8) * WorldGeometry.ARENA_LINEAR_SCALE
 	world.placement.carried = world.turrets[0]
 	world.placement.update_preview()
 	assert_true(world.placement.preview_label.visible)

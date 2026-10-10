@@ -23,8 +23,10 @@ func visible_ground_inside_arena(zoom_value: float) -> bool:
 	var margin := GameConstants.CAMERA_EDGE_MARGIN + .001
 	return abs(rig.focus.x) + half.x <= WorldGeometry.HALF_ARENA.x + margin or rig.focus.x == 0.0
 
-func test_arena_is_three_times_the_original_size() -> void:
-	assert_eq(WorldGeometry.HALF_ARENA, Vector2(28.8, 16.2))
+func test_arena_has_half_the_previous_surface_area_and_same_aspect() -> void:
+	var size := WorldGeometry.HALF_ARENA * 2.0
+	assert_almost_eq(size.x * size.y, 57.6 * 32.4 * .5, .001)
+	assert_almost_eq(size.x / size.y, 16.0 / 9.0, .0001)
 
 func test_camera_keeps_rotation_and_follows_the_player() -> void:
 	var basis_before := world.camera.global_basis
@@ -77,11 +79,11 @@ func test_player_at_the_edge_keeps_view_inside_the_floor() -> void:
 
 func test_enemy_spawns_stay_inside_the_arena_and_away_from_the_player() -> void:
 	for player_at in [Vector3.ZERO, Vector3(27, 0, 15), Vector3(-27, 0, -15)]:
-		world.player.position = player_at
+		world.player.position = WorldGeometry.clamp_position(player_at)
 		for i in 40:
 			var at := world._spawn_position()
 			assert_eq(at, WorldGeometry.clamp_position(at), "spawn must be within the arena")
-			assert_gt(WorldGeometry.planar(at - player_at).length(), 2.0, "never spawn on top of the player")
+			assert_gt(WorldGeometry.planar(at - world.player.position).length(), 2.0, "never spawn on top of the player")
 
 func test_turret_placement_search_starts_from_the_player() -> void:
 	world.player.position = Vector3(20, 0, 10)

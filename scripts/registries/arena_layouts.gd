@@ -1,7 +1,7 @@
 class_name ArenaLayouts
 extends RefCounted
 
-## Hand-authored terrain layouts, as data. The arena is 57.6 x 32.4 m (x in +-28.8, z in +-16.2). Every zone keeps
+## Hand-authored terrain layouts in the original 57.6 x 32.4 m reference space, scaled to the current arena. Every zone keeps
 ## ZONE_CENTRE_CLEARANCE metres clear of the origin, where the hero, the first turret and (in core mode) the core stand.
 
 ## id -> {name, zones}. `random_layout` picks one per run; it stays fixed for every wave of that run.
@@ -10,7 +10,7 @@ static func all() -> Array[Dictionary]:
 	var M := TerrainZone.MUD
 	var N := TerrainZone.NO_BUILD
 	var P := TerrainZone.POWER_NODE
-	return [
+	var layouts: Array[Dictionary] = [
 		{"id": "crossroads", "name": "Crossroads", "zones": [
 			TerrainZone.circle(H, -14, -8, 3.0), TerrainZone.circle(H, 14, 8, 3.0),
 			TerrainZone.circle(M, 0, -11.5, 3.5), TerrainZone.circle(M, 0, 11.5, 3.5), TerrainZone.circle(M, -21, 4, 3.0),
@@ -31,6 +31,13 @@ static func all() -> Array[Dictionary]:
 			TerrainZone.circle(P, -22, -7, 2.2), TerrainZone.circle(P, 10, 0, 2.2),
 		]},
 	]
+
+	for entry in layouts:
+		for zone: TerrainZone in entry["zones"]:
+			zone.centre *= WorldGeometry.ARENA_LINEAR_SCALE
+			zone.radius *= WorldGeometry.ARENA_LINEAR_SCALE
+			zone.half_extents *= WorldGeometry.ARENA_LINEAR_SCALE
+	return layouts
 
 static func ids() -> Array[String]:
 	var result: Array[String] = []
