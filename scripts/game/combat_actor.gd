@@ -183,6 +183,11 @@ func _physics_process(delta: float) -> void:
 	var reduced_motion := FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION)
 	if hit_flash:
 		hit_flash.update(flash_time / FLASH_DURATION, reduced_motion)
+	if is_enemy:
+		for burn_hit in statuses.advance_burn(delta):
+			world.combat.apply_hit(self, burn_hit)
+			if dead:
+				return
 	if stationary:
 		return
 	var direction := _steer_enemy(delta) if is_enemy else _steer_player(delta)

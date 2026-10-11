@@ -1,13 +1,15 @@
 class_name TurretProgression
 extends RefCounted
 
-## Persistent identity-owned growth. Forms will consume pending milestones in Phase 2.
+## Persistent identity-owned growth with ordered, free evolution milestones.
 const EVOLUTION_LEVELS: Array[int] = [5, 10, 15]
 
 var level: int = 1
 var total_xp: int = 0
 var xp: int = 0
 var pending_evolutions: Array[int] = []
+var evolution_branch: String = ""
+var evolution_stage: int = 0
 
 static func cost_to_next(current_level: int) -> int:
 	var step := maxi(0, current_level - 1)
@@ -44,7 +46,30 @@ func award(amount: int) -> Dictionary:
 			pending_evolutions.append(level)
 	return {"xp_awarded": amount, "before": before, "after": snapshot()}
 
+## The first milestone chooses a branch; later milestones retain that choice.
+func evolution_options(base_type: String) -> Array[String]:
+	if pending_evolutions.is_empty() or evolution_stage >= EVOLUTION_LEVELS.size():
+		return []
+	if pending_evolutions[0] != EVOLUTION_LEVELS[evolution_stage] or level < pending_evolutions[0]:
+		return []
+	var available := TurretEvolution.branches(base_type)
+	if evolution_stage == 0:
+		return available
+	var result: Array[String] = []
+	if evolution_branch in available:
+		result.append(evolution_branch)
+	return result
+
+func evolve(base_type: String, branch: String) -> bool:
+	if branch not in evolution_options(base_type):
+		return false
+	evolution_branch = branch
+	evolution_stage += 1
+	pending_evolutions.pop_front()
+	return true
+
 func snapshot() -> Dictionary:
 	return {"level": level, "total_xp": total_xp, "xp": xp,
 		"multipliers": stat_multipliers(), "next_cost": cost_to_next(level), "damage_multiplier": damage_multiplier(),
-		"pending_evolutions": pending_evolutions.duplicate()}
+		"pending_evolutions": pending_evolutions.duplicate(),
+		"evolution_branch": evolution_branch, "evolution_stage": evolution_stage}
