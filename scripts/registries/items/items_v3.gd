@@ -36,7 +36,7 @@ const ROWS: Array = [
 		"special_effect": ""
 	},
 	{
-		"description": "Attack speed +7% for firing and sweeping turrets.",
+		"description": "Attack speed +7% for all weapons.",
 		"id": "quick_loader",
 		"max_stacks": 0,
 		"modifiers": [
@@ -130,7 +130,7 @@ const ROWS: Array = [
 		"special_effect": ""
 	},
 	{
-		"description": "Attack speed +15% for firing and sweeping turrets.",
+		"description": "Attack speed +15% for all weapons.",
 		"id": "rapid_coolant",
 		"max_stacks": 0,
 		"modifiers": [
@@ -814,7 +814,7 @@ const ROWS: Array = [
 		"special_effect": ""
 	},
 	{
-		"description": "All turret damage +40%. Max hull -25%.",
+		"description": "All weapon damage +40%. Max hull -25%.",
 		"id": "glass_cannon_core",
 		"max_stacks": 1,
 		"modifiers": [

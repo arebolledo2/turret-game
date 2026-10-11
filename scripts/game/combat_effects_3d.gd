@@ -5,7 +5,7 @@ extends Node3D
 const MAX_PULSES: int = 32
 const MAX_SPARKS: int = 24
 const MAX_ARCS: int = 16
-const ARC_LIFETIME: float = .12
+const ARC_LIFETIME: float = .22
 const MAX_BURSTS: int = 16
 const BURST_PARTICLES: int = 14
 const BURST_LIFETIME: float = .5
@@ -24,7 +24,6 @@ var burst_mesh: QuadMesh
 var burst_materials: Dictionary = {}
 var arcs: Array[MeshInstance3D] = []
 var arc_lifetimes: Array[float] = []
-var arc_mesh: BoxMesh
 var sparks: Array[MeshInstance3D] = []
 var spark_lifetimes: Array[float] = []
 var spark_mesh: SphereMesh
@@ -34,15 +33,21 @@ var pulses: Array[MeshInstance3D] = []
 var ages: Array[float] = []
 var radii: Array[float] = []
 var flame_material := WorldGeometry.material(Color(2.5, .65, .08), true)
+var damage_numbers := DamageNumbers3D.new()
+var visual_time := 0.0
 var world: ArenaWorld
 var plasma_material := WorldGeometry.material(Color("b56cff"), true)
 var shock_material := WorldGeometry.material(Color("55dcff"), true)
 
+func _ready() -> void:
+	add_child(damage_numbers)
+
 func show_hit(actor: Node3D, hit: CombatHit3D, _amount: float) -> void:
 	var enemy := (actor as CombatActor).is_enemy
+	damage_numbers.show_damage(actor, _amount, not enemy, hit.critical, hit.damage_type == GameEnums.DamageType.FIRE)
 	show_burst(actor.position + Vector3(0, .5, 0), _burst_kind(hit.damage_type) if enemy else "hurt")
 	_show_spark(actor.position + Vector3(0, .45, 0), hit_material if enemy else hull_material,
-		.13 if enemy else .36, .12 if enemy else .25)
+		.10 if enemy else .18, .10 if enemy else .16)
 
 func _burst_kind(damage_type: int) -> String:
 	match damage_type:
@@ -163,30 +168,53 @@ func _show_spark(at: Vector3, material: Material, radius: float, lifetime: float
 	spark_lifetimes[index] = lifetime
 
 func show_arc(from: Vector3, to: Vector3) -> void:
+	if from.distance_squared_to(to) < .0001:
+		return
 	var index := arc_lifetimes.find(0.0)
 	if index < 0:
 		if arcs.size() >= MAX_ARCS:
 			return
-		if not arc_mesh:
-			arc_mesh = BoxMesh.new()
-			arc_mesh.size = Vector3(.07, .07, 1.0)
 		var arc := MeshInstance3D.new()
-		arc.mesh = arc_mesh
 		arc.material_override = shock_material
 		arc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(arc)
 		arcs.append(arc)
 		arc_lifetimes.append(0.0)
 		index = arcs.size() - 1
-	var length := from.distance_to(to)
-	if length < .01:
-		return
-	var arc := arcs[index]
-	arc.position = (from + to) * .5
-	arc.scale = Vector3(1, 1, length)
-	arc.basis = Basis.looking_at(to - from, Vector3.UP if absf((to - from).normalized().y) < .99 else Vector3.RIGHT).scaled(Vector3(1, 1, length))
-	arc.visible = true
+	# Stable decorative noise; never consumes the combat random stream.
+	var mesh := ImmediateMesh.new()
+	mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
+	var heading := (to - from).normalized()
+	var side := heading.cross(Vector3.UP).normalized()
+	if side.is_zero_approx():
+		side = Vector3.RIGHT
+	var previous := from
+	for step in range(1, 10):
+		var t := float(step) / 9.0
+		var next := from.lerp(to, t)
+		if step < 9:
+			next += side * sin(step * 13.7 + from.x * 2.0) * .22 + Vector3.UP * cos(step * 7.9) * .12
+		_arc_segment(mesh, previous, next, .065, Color(.12, .55, 1.0))
+		_arc_segment(mesh, previous, next, .022, Color(.8, 1.0, 1.0))
+		if step in [3, 6]:
+			_arc_segment(mesh, next, next + side * .35 + heading * .25, .018, Color(.2, .7, 1.0))
+		previous = next
+	mesh.surface_end()
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.vertex_color_use_as_albedo = true
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	arcs[index].material_override = material
+	arcs[index].mesh = mesh
+	arcs[index].visible = true
 	arc_lifetimes[index] = ARC_LIFETIME
+	show_burst(to, "shock")
+
+func _arc_segment(mesh: ImmediateMesh, from: Vector3, to: Vector3, width: float, color: Color) -> void:
+	var side := (to - from).cross(Vector3(0, 1, 1)).normalized() * width
+	mesh.surface_set_color(color)
+	for vertex in [from - side, from + side, to + side, from - side, to + side, to - side]:
+		mesh.surface_add_vertex(vertex)
 
 func show_explosion(at: Vector3, radius: float) -> void:
 	_show_pulse(at, radius, Color("b56cff"))
@@ -200,24 +228,40 @@ func _show_pulse(at: Vector3, radius: float, color: Color) -> void:
 		if pulses.size() >= MAX_PULSES:
 			return
 		index = pulses.size()
-		pulses.append(GroundDial.create(self, 1.0, color))
+		var pulse := MeshInstance3D.new()
+		var plane := PlaneMesh.new()
+		plane.size = Vector2(2, 2)
+		pulse.mesh = plane
+		var material := ShaderMaterial.new()
+		material.shader = preload("res://assets/shaders/combat_pulse.gdshader")
+		pulse.material_override = material
+		pulse.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(pulse)
+		pulses.append(pulse)
 		ages.append(-1.0)
 		radii.append(0.0)
 	ages[index] = 0.0
-	GroundDial.recolor(pulses[index], color)
+	(pulses[index].material_override as ShaderMaterial).set_shader_parameter("reduced_motion", false)
+	(pulses[index].material_override as ShaderMaterial).set_shader_parameter("tint", color)
 	radii[index] = radius
 	pulses[index].position = WorldGeometry.planar(at) + Vector3(0, .045, 0)
-	GroundDial.resize(pulses[index], .12)
+	pulses[index].scale = Vector3(radius, 1, radius)
+	(pulses[index].material_override as ShaderMaterial).set_shader_parameter("age", 0.0)
 	pulses[index].visible = true
 	if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
-		GroundDial.resize(pulses[index], radius)
+		(pulses[index].material_override as ShaderMaterial).set_shader_parameter("reduced_motion", true)
 
 func _physics_process(delta: float) -> void:
+	if GameStateMachine.current_state == GameStateMachine.GameState.GAME_OVER:
+		damage_numbers.advance(delta, FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
 	if not world.is_combat():
 		return
+	visual_time += delta
+	damage_numbers.advance(delta, FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
 	for index in range(flame_ribbons.size()):
 		flame_ages[index] = maxf(0.0, flame_ages[index] - delta)
 		flame_ribbons[index].visible = flame_ages[index] > 0.0
+		(flame_ribbons[index].material_override as ShaderMaterial).set_shader_parameter("visual_time", visual_time)
 	for index in range(sparks.size()):
 		spark_lifetimes[index] = maxf(0.0, spark_lifetimes[index] - delta)
 		sparks[index].visible = spark_lifetimes[index] > 0.0
@@ -232,12 +276,43 @@ func _physics_process(delta: float) -> void:
 			ages[index] = -1.0
 			pulses[index].visible = false
 		else:
-			var radius := lerpf(.12, radii[index], ages[index] / .3)
-			if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
-				radius = radii[index]
-			GroundDial.resize(pulses[index], radius)
+			var progress := ages[index] / .3
+			(pulses[index].material_override as ShaderMaterial).set_shader_parameter("age", progress)
+	_update_burns()
 
-func reset() -> void:
+var burn_visuals: Dictionary = {}
+func _update_burns() -> void:
+	for actor in burn_visuals.keys():
+		if not is_instance_valid(actor) or actor.dead or actor.statuses.burn_remaining <= 0.0:
+			burn_visuals[actor].queue_free()
+			burn_visuals.erase(actor)
+	for actor in world.enemies:
+		if not is_instance_valid(actor) or actor.dead or actor.statuses.burn_remaining <= 0.0:
+			continue
+		if not burn_visuals.has(actor) and burn_visuals.size() < 32:
+			var flame := MeshInstance3D.new()
+			var quad := QuadMesh.new()
+			quad.size = Vector2(1.7, 1.9) * actor.body_scale
+			flame.mesh = quad
+			var material := ShaderMaterial.new()
+			material.shader = preload("res://assets/shaders/burning_actor.gdshader")
+			material.set_shader_parameter("motion_speed", 0.0 if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else 1.0)
+			flame.material_override = material
+			flame.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			add_child(flame)
+			burn_visuals[actor] = flame
+		if burn_visuals.has(actor):
+			var flame: MeshInstance3D = burn_visuals[actor]
+			flame.position = actor.position + Vector3.UP * .7 * actor.body_scale
+			(flame.material_override as ShaderMaterial).set_shader_parameter("visual_time", visual_time)
+			flame.rotation.y = world.camera.global_rotation.y
+
+func reset(preserve_damage: bool = false) -> void:
+	for flame in burn_visuals.values():
+		flame.queue_free()
+	burn_visuals.clear()
+	if not preserve_damage:
+		damage_numbers.reset()
 	for index in range(flame_ribbons.size()):
 		flame_ages[index] = 0.0
 		flame_ribbons[index].visible = false
@@ -259,6 +334,7 @@ var flame_ages: Array[float] = []
 var flame_shader := preload("res://assets/shaders/flame_stream.gdshader")
 
 func show_flame(origin: Vector3, heading: Vector3, reach: float, half_angle: float, attack_origin: Vector3) -> void:
+	show_burst(origin + heading * minf(.8, reach * .3), "fire")
 	var rays := 5 if half_angle > deg_to_rad(20) else 3
 	for ray in range(rays):
 		var angle := lerpf(-half_angle, half_angle, float(ray) / float(rays - 1))
@@ -286,6 +362,6 @@ func show_flame(origin: Vector3, heading: Vector3, reach: float, half_angle: flo
 		(ribbon.material_override as ShaderMaterial).set_shader_parameter("motion_speed", 0.0 if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else 1.0)
 		ribbon.position = (origin + end) * .5
 		ribbon.rotation.y = atan2(-flat.x, -flat.z)
-		ribbon.scale = Vector3(clampf(reach * .20, .25, 1.2), 1.0, flat.length())
+		ribbon.scale = Vector3(clampf(reach * .35, .4, 1.8), 1.0, flat.length())
 		ribbon.visible = true
 		flame_ages[index] = .24

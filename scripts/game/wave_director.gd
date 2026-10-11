@@ -83,7 +83,7 @@ func begin_next_wave() -> bool:
 		time_left = route_time * GameConstants.CONVOY_SAFETY_FACTOR
 	spawn_interval = spawn_window / maxf(float(remaining_spawns), 1.0)
 	if world.core:
-		spawn_interval /= maxf(DifficultyService.rule(world.difficulty_config, "spawn_rate_mult"), .1)
+		spawn_interval /= maxf(DifficultyService.wave_rule(world.difficulty_config, "spawn_rate_mult", GameStateService.current_wave), .1)
 	spawn_clock = FIRST_SPAWN_DELAY
 	world.message = EnemyVariants.notice_for_wave(GameStateService.current_wave)
 	return true
@@ -124,7 +124,7 @@ func complete_wave() -> void:
 func _take_credit(rule_key: String) -> bool:
 	if rule_key == "elite_chance" and GameStateService.current_wave < int(DifficultyService.rule(world.difficulty_config, "elite_start_wave")):
 		return false
-	var share := DifficultyService.rule(world.difficulty_config, rule_key)
+	var share := DifficultyService.wave_rule(world.difficulty_config, rule_key, GameStateService.current_wave)
 	if share <= 0.0:
 		return false
 	var credit := (elite_credit if rule_key == "elite_chance" else seeker_credit) + share

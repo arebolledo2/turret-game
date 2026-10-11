@@ -88,3 +88,6 @@ func add_modifiers(modifiers: Array) -> void:
 		_system.add_modifier(modifier)
 	if not modifiers.is_empty():
 		Events.modifiers_changed.emit()
+
+func get_hero_weapon_stats(base: Dictionary, families: Array[String], capabilities: Array[String]) -> Dictionary:
+	return _system.get_hero_weapon_stats(base, families, capabilities)

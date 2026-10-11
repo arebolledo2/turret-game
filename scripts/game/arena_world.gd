@@ -180,7 +180,7 @@ func start_run() -> void:
 	var listener := AudioListener3D.new()
 	player.add_child(listener)
 	listener.make_current()
-	add_turret(turret_start, "normal", true)
+	add_turret(turret_start, str(run_config.hero.starting_turret), true)
 	camera_rig.snap()
 	begin_next_wave()
 
@@ -380,7 +380,9 @@ func core_max_health() -> float:
 func damage_core(amount: float) -> void:
 	if not core or core.dead or god_mode or not is_combat():
 		return
-	if core.take_hit(amount) > 0.0:
+	var applied := core.take_hit(amount)
+	if applied > 0.0:
+		effects.damage_numbers.show_damage(core, applied, true)
 		audio.play_cue("hull", core.position)
 		if core.dead:
 			_end_run_in_defeat("CORE DESTROYED")
@@ -400,7 +402,7 @@ func _end_run_in_defeat(reason: String) -> void:
 	audio.play_cue("defeat", player.position)
 	GameStateService.is_game_active = false
 	GameStateMachine.transition_to(GameStateMachine.GameState.GAME_OVER)
-	effects.reset()
+	effects.reset(true)
 	for enemy in enemies:
 		enemy.clear_transients()
 	for projectile in projectiles:

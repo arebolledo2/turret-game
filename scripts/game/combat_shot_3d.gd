@@ -2,6 +2,7 @@ class_name CombatShot3D
 extends RefCounted
 
 ## Snapshot of a shot at firing time; all distances/speeds are already in metres.
+var critical: bool = false
 var damage: float = 0.0
 var speed: float = 0.0
 var radius: float = .075
@@ -36,6 +37,7 @@ static func from_stats(stats: Dictionary, type: GameEnums.DamageType = GameEnums
 func copy() -> CombatShot3D:
 	var shot := CombatShot3D.new()
 	shot.damage = damage
+	shot.critical = critical
 	shot.speed = speed
 	shot.radius = radius
 	shot.visual_key = visual_key

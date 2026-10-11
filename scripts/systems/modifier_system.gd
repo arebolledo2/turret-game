@@ -245,3 +245,31 @@ func get_player_luck(base_luck: float) -> float:
 ## Get reroll cost multiplier (1.0 = normal)
 func get_reroll_cost_multiplier() -> float:
 	return apply_to_stat(1.0, "reroll_cost", "player")
+
+## Hero weapons use the same additive/multiplicative math as turrets, with an explicit
+## attack context. No turret progression, entrenchment, count or static item effects.
+func get_hero_weapon_stats(base: Dictionary, families: Array[String], capabilities: Array[String]) -> Dictionary:
+	var weapon := ModifierSystem.new()
+	for modifier in _modifiers:
+		if modifier.stat not in ["damage", "fire_rate", "attack_speed", "range", "projectile_speed", "pierce", "knockback_force", "slow_intensity", "slow_duration", "aoe_radius", "area_size"]:
+			continue
+		var filter := modifier.filter
+		if filter.has("entity_type") and not filter.entity_type.is_empty() and "player" not in filter.entity_type:
+			continue
+		if filter.has("turret_type") or filter.has("family") or filter.has("damage_type") or filter.has("attack_style"):
+			continue
+		var matches := true
+		for capability in filter.get("requires", []):
+			if capability not in capabilities:
+				matches = false
+		if filter.has("attack_family"):
+			var family_match := false
+			for family in filter.attack_family:
+				family_match = family_match or family in families
+			matches = matches and family_match
+		if not matches:
+			continue
+		var data := modifier.to_dictionary()
+		data.filter = {}
+		weapon.add_modifier(data)
+	return weapon.get_turret_stats("normal", {"turret_damage_mult": 1.0}, Callable(), base)

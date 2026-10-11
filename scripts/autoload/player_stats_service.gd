@@ -3,6 +3,11 @@ extends Node
 var state: RunSessionState = RunSessionState.new()
 
 var rng: RandomNumberGenerator = GameRandom.gameplay
+var _weapon_cache: Dictionary = {}
+
+func _ready() -> void:
+	Events.modifiers_changed.connect(func() -> void: _weapon_cache.clear())
+
 
 ## Player Stats Service
 ## Manages player health, speed, luck, and stat modifiers
@@ -13,6 +18,7 @@ var player_luck: float:
 	set(value): state.player_luck = value
 
 func reset_state() -> void:
+	_weapon_cache.clear()
 	player_luck = GameConstants.PLAYER_BASE_LUCK
 
 
@@ -35,12 +41,12 @@ func get_player_max_health(difficulty_mult: float) -> float:
 
 ## Get player weapon damage with modifiers applied
 func get_player_weapon_damage() -> float:
-	return ModifierService.apply_modifiers_to_stat(GameConstants.PLAYER_TURRET_DAMAGE, "player_weapon_damage", "player")
+	return float(get_weapon_stats().damage)
 
 
 ## Get player fire rate with modifiers applied
 func get_player_fire_rate() -> float:
-	return ModifierService.apply_modifiers_to_stat(GameConstants.PLAYER_FIRE_RATE, "player_fire_rate", "player")
+	return float(get_weapon_stats().fire_rate)
 
 
 ## Get player luck with modifiers applied, clamped to valid range
@@ -104,3 +110,21 @@ func get_damage_reduction() -> float:
 ## Get evasion chance (0.10 -> 10% chance to dodge)
 func get_evasion_chance() -> float:
 	return ModifierService.apply_modifiers_to_stat(0.0, "player_evasion", "player")
+
+## Current hero is Pip: an Ion sidearm. The run profile owns this weapon and starting turret.
+func get_weapon_stats(profile: Dictionary = {}, cached: bool = true) -> Dictionary:
+	var definition := HeroLoadouts.pip() if profile.is_empty() else profile
+	var key := hash(definition)
+	if cached and _weapon_cache.has(key):
+		return _weapon_cache[key]
+	var base: Dictionary = definition.weapon.duplicate(true)
+	base.damage = ModifierService.apply_modifiers_to_stat(base.damage, "player_weapon_damage", "player")
+	base.fire_rate = ModifierService.apply_modifiers_to_stat(base.fire_rate, "player_fire_rate", "player")
+	var families: Array[String] = []
+	families.assign(definition.families)
+	var capabilities: Array[String] = []
+	capabilities.assign(definition.capabilities)
+	var resolved := ModifierService.get_hero_weapon_stats(base, families, capabilities)
+	if cached:
+		_weapon_cache[key] = resolved
+	return resolved

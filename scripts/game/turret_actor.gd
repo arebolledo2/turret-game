@@ -167,11 +167,13 @@ func _spin_bat(delta: float, stats: TurretStats, reach: float) -> void:
 		if not touched:
 			continue
 		var damage := stats.damage
-		if TurretStatsService.roll_turret_crit():
+		var critical := TurretStatsService.roll_turret_crit()
+		if critical:
 			damage = TurretStatsService.calculate_turret_crit_damage(damage)
 		var push := offset.normalized() * stats.knockback_metres
 		rehit_lockouts[enemy.get_instance_id()] = stats.rehit_delay
 		var bat_hit := CombatHit3D.new(damage, position, push, GameEnums.DamageType.PHYSICAL)
+		bat_hit.critical = critical
 		bat_hit.attack_families = TurretRegistry.get_attack_families(turret_type)
 		bat_hit.source_id = turret_id
 		bat_hit.slow_intensity = stats.slow_intensity
@@ -455,6 +457,7 @@ func _new_shot(stats: TurretStats) -> CombatShot3D:
 	shot.source_id = turret_id
 	shot.attack_families = TurretRegistry.get_attack_families(turret_type)
 	if TurretStatsService.roll_turret_crit():
+		shot.critical = true
 		shot.damage = TurretStatsService.calculate_turret_crit_damage(shot.damage)
 	return shot
 
@@ -575,6 +578,7 @@ func _fire_gunblade() -> void:
 		shot.attack_families.assign(["projectile"])
 		shot.source_id = turret_id
 		if TurretStatsService.roll_turret_crit():
+			shot.critical = true
 			shot.damage = TurretStatsService.calculate_turret_crit_damage(shot.damage)
 		world.fire_direction(muzzle.global_position, heading, shot)
 		gun_burst_shot = shot

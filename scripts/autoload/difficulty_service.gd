@@ -9,7 +9,7 @@ extends Node
 ##   core_health_mult / seeker_share / spawn_rate_mult    core mode only: core hit points, share of enemies that
 ##                                                        ignore the hero, and how fast a wave's enemies arrive
 const RULE_DEFAULTS: Dictionary = {
-	"elite_start_wave": 1, "elite_chance": 0.0, "elite_health_mult": 1.0, "elite_speed_mult": 1.0,
+	"late_pressure": 0.0, "elite_start_wave": 1, "elite_chance": 0.0, "elite_health_mult": 1.0, "elite_speed_mult": 1.0,
 	"core_health_mult": 1.0, "seeker_share": 0.0, "spawn_rate_mult": 1.0,
 }
 
@@ -28,6 +28,7 @@ const DIFFICULTY_CONFIG: Dictionary = {
 	},
 	GameEnums.Difficulty.MEDIUM: {
 		"name": "Medium",
+		"late_pressure": 1.0, "elite_start_wave": 6, "elite_health_mult": 1.65, "elite_speed_mult": 1.10,
 		"description": "Balanced challenge",
 		"enemy_health_mult": 1.25,
 		"enemy_speed_mult": 1.0,
@@ -40,6 +41,7 @@ const DIFFICULTY_CONFIG: Dictionary = {
 	},
 	GameEnums.Difficulty.HARD: {
 		"name": "Hard",
+		"late_pressure": 1.0,
 		"description": "For experienced survivors",
 		"enemy_health_mult": 1.5,
 		"enemy_speed_mult": 1.0,
@@ -54,6 +56,7 @@ const DIFFICULTY_CONFIG: Dictionary = {
 	},
 	GameEnums.Difficulty.BRUTAL: {
 		"name": "Brutal",
+		"late_pressure": 1.0,
 		"description": "Elites, core seekers and no mercy",
 		"enemy_health_mult": 1.6,
 		"enemy_speed_mult": 1.0,
@@ -99,3 +102,13 @@ static func without_rules(config: Dictionary) -> Dictionary:
 
 func set_difficulty(difficulty: GameEnums.Difficulty) -> void:
 	current_difficulty = difficulty
+
+## Smooth escalation after the opening, capped at wave 20 for endless/custom runs.
+static func wave_rule(config: Dictionary, key: String, wave: int) -> float:
+	var base := rule(config, key)
+	var ramp := clampf(float(wave - 4) / 16.0, 0.0, 1.0) * rule(config, "late_pressure")
+	match key:
+		"elite_chance": return minf(.30, base + ramp * .12)
+		"seeker_share": return minf(.50, base + ramp * .30)
+		"spawn_rate_mult": return base * (1.0 + ramp * .15)
+	return base

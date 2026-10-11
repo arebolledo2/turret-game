@@ -22,9 +22,9 @@ Native 3D combat is implemented in `scripts/game/`. Turrets and player auto-fire
 
 `CrowdGrid3D` snapshots enemies once per physics tick, supports local separation, and shares plasma cluster counts across turrets. Target acquisition runs at 5 Hz. Enemies have no physics bodies. Instead `CrowdGrid3D.resolve_overlaps` (run each tick from `WaveDirector.tick`, right after `rebuild`) hard-separates overlapping enemies in position space (mass-weighted: tanks shove basics aside; tech drops and charging chargers are immovable) and pushes enemies out of turrets and the core (`GameConstants.ENEMY_BODY_RADIUS`, `TURRET_BODY_RADIUS`). The hero is deliberately not an obstacle, since enemies must reach it for contact damage. There is no obstacle navigation, so enemies can still bunch behind a turret.
 
-Pause freezes combat and effect lifetimes. Death, wave end and restart clear temporary effects, impulses and warnings. Carried turrets do not attack. Reduced motion disables bobbing, recoil and hit blinking while preserving warnings, range indicators and effect lifetimes.
+Pause freezes combat and effect lifetimes. Death, wave end and restart clear temporary effects, impulses and warnings. Carried turrets attack while the hero sidearm is suppressed. Reduced motion disables bobbing, recoil and hit blinking while preserving warnings, range indicators and effect lifetimes.
 
-The retained buff/modifier services have additional calculations tested independently. Damage-over-time attacks, temporary turret buffs, chain reactions and other unsupported effects are not exposed by the current shop. See [gameplay](gameplay.md) for the item allowlist and pricing.
+The retained buff/modifier services have additional calculations tested independently. Fire attacks apply one strongest burn per target with attributed quarter-second ticks. Area-kill chain reactions and conditional turret bonuses are resolved by their dedicated runtime systems. See [gameplay](gameplay.md) for the item allowlist and pricing.
 
 ## Combat feedback
 
@@ -33,3 +33,8 @@ The retained buff/modifier services have additional calculations tested independ
 `CombatEffects3D` adds up to 24 reusable muzzle/hit sparks alongside its existing 32 pulse limit. Sparks are static timed markers, including with reduced motion enabled; they do not shake the camera or move collision. Markers share immutable mesh/material resources across enemies. Crowd separation rejects out-of-range neighbors using squared distance before taking a square root.
 
 Turret attack-range checks include the enemy hurtbox footprint (the projectile capsule radius, scaled per enemy). Acquisition, retained-target checks, pulse/splash damage and melee sweeps accept body overlap rather than requiring the center inside range. Melee measures distance to the swept sector, including its endpoints; crowd queries expand for the largest hurtbox before filtering individual bodies. Range indicators continue to show weapon reach, not reach plus enemy size.
+
+
+`DamageNumbers3D` pools at most 64 labels, combines same-target/type hits over 0.16 s, and expires them after 0.85 s. Critical metadata follows projectile copies, splash, chains and melee. Fatal hero/core hits retain their number through defeat and then fade. No numbers are emitted for invulnerability or other blocked damage.
+
+Hero weapon modifiers use `ModifierSystem.get_hero_weapon_stats` with explicit attack families and capabilities. Its shared numeric modifier calculation excludes turret filters and turret-only static/conditional effects. Live hero snapshots are cached until modifiers change; Shop previews bypass that cache without changing live values. New hero definitions can specify weapon bases and starting turret; this release still exposes only Pip.

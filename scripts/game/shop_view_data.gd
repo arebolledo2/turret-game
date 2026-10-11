@@ -103,7 +103,7 @@ static func build_data(world: ArenaWorld, extra_turret: String = "") -> Dictiona
 	var items: Array[Dictionary] = []
 	for item_id: String in ItemTrackingService.item_counts:
 		items.append({"id": item_id, "name": str(ItemRegistry.get_item_dict(item_id)["name"]), "count": int(ItemTrackingService.item_counts[item_id])})
-	return {"turrets": turrets, "dps": dps, "max_hull": max_hull, "hull": minf(world.player.health, max_hull),
+	return {"hero_weapon": PlayerStatsService.get_weapon_stats(world.run_config.hero, false), "turrets": turrets, "dps": dps, "max_hull": max_hull, "hull": minf(world.player.health, max_hull),
 		"speed": PlayerStatsService.get_player_speed() * WorldGeometry.METRES_PER_PIXEL,
 		"pickup": PlayerStatsService.get_pickup_radius() * WorldGeometry.METRES_PER_PIXEL, "items": items}
 

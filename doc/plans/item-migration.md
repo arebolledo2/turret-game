@@ -8,12 +8,12 @@ All 43 stocked IDs remain stable. Existing feature, wave, stack and Convoy gates
 |---|---|---|---:|---:|---|
 | `scrap_magnet` | Scrap Magnet | Common | 10 | Unlimited | Pickup radius +20%. |
 | `reinforced_hull` | Reinforced Hull | Common | 10 | Unlimited | Max hull +4. |
-| `quick_loader` | Quick Loader | Common | 10 | Unlimited | Attack speed +7% for firing and sweeping turrets. |
+| `quick_loader` | Quick Loader | Common | 10 | Unlimited | Attack speed +7% for all weapons. |
 | `dense_rounds` | Dense Rounds | Uncommon | 18 | Unlimited | Projectile damage +10% and projectile speed +15%. |
 | `budget_capacitor` | Budget Capacitor | Common | 10 | Unlimited | Reroll costs -10%. |
 | `compact_design` | Compact Design | Common | 10 | 3 | Turret purchase scaling -4 percentage points. |
 | `extended_barrel` | Extended Barrel | Uncommon | 18 | Unlimited | All turret reach +15%. |
-| `rapid_coolant` | Rapid Coolant | Uncommon | 18 | Unlimited | Attack speed +15% for firing and sweeping turrets. |
+| `rapid_coolant` | Rapid Coolant | Uncommon | 18 | Unlimited | Attack speed +15% for all weapons. |
 | `heavy_plating` | Heavy Plating | Uncommon | 18 | Unlimited | Max hull +5. Move speed -3%. |
 | `mass_production` | Mass Production | Uncommon | 18 | 2 | Turret purchase scaling -10 percentage points. |
 | `polished_barrels` | Polished Barrels | Common | 10 | Unlimited | Projectile damage +10%. |
@@ -43,7 +43,7 @@ All 43 stocked IDs remain stable. Existing feature, wave, stack and Convoy gates
 | `elite_forces` | Elite Forces | Rare | 28 | 1 | With 5 or fewer turrets: damage +40%, reach +25%. Turret purchase scaling +8 percentage points. |
 | `last_stand` | Last Stand | Rare | 28 | 1 | Below 30% hull: attack speed +40%. Max hull -10%. |
 | `quality_over_quantity` | Quality Over Quantity | Rare | 28 | 1 | Enemies per wave -30%, kill scrap +100%. Shop prices +10%. |
-| `glass_cannon_core` | Glass Cannon Core | Epic | 40 | 1 | All turret damage +40%. Max hull -25%. |
+| `glass_cannon_core` | Glass Cannon Core | Epic | 40 | 1 | All weapon damage +40%. Max hull -25%. |
 | `mono_type_mastery` | Focused Arsenal (was Mono-Type Mastery) | Epic | 40 | 1 | When every owned turret shares an attack family: damage +50%, attack speed +25%. |
 | `reactor_overload` | Reactor Overload | Epic | 40 | 1 | Area kills detonate for 40% of the killing damage at 60% of its area radius. Chains up to 3 deep. |
 | `storm_conductor` | Resonance Link (was Storm Conductor) | Epic | 40 | 1 | Instant turrets within 4 m of another Instant turret deal +35% damage. |

@@ -308,6 +308,8 @@ func _refresh_details() -> void:
 		if not offer.sold:
 			after = ShopViewData.preview(world, offer)
 			var affected := ShopViewData.affected_turrets(world, offer)
+			if after.hero_weapon != data.hero_weapon:
+				affected.push_front("Hero weapon")
 			if not affected.is_empty():
 				impact_text.text = "Affects: " + ", ".join(affected)
 			elif offer.asset_id in ["mono_type_mastery", "army_doctrine", "elite_forces", "elemental_conduit"]:
@@ -326,6 +328,11 @@ func _refresh_details() -> void:
 	if world.convoy_mode:
 		vital_text.text += "\n" + world.shop.convoy_preview_line()
 	var lines := PackedStringArray()
+	lines.append("[b]Hero weapon · %s[/b]\n%s damage · %s shots/s\n%s m reach" % [
+		", ".join(world.run_config.hero.families).capitalize(),
+		_number(data.hero_weapon, after.hero_weapon, "damage", ""),
+		_number(data.hero_weapon, after.hero_weapon, "fire_rate", ""),
+		"%.2f" % (float(after.hero_weapon.range) * WorldGeometry.METRES_PER_PIXEL)])
 	for turret: Dictionary in after["turrets"]:
 		var was: Dictionary = {}
 		for old: Dictionary in data["turrets"]:

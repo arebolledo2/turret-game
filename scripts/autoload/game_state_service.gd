@@ -53,7 +53,9 @@ func get_wave_duration(wave: int) -> float:
 ## Get total enemy count for a wave (includes difficulty and item modifiers)
 func get_wave_enemy_count(wave: int, difficulty_mult: float, item_mult: float) -> int:
 	var base_count := GameConstants.WAVE_BASE_ENEMY_COUNT + (wave - 1) * GameConstants.WAVE_ENEMY_INCREMENT
-	return int(base_count * difficulty_mult * item_mult)
+	var late_wave := maxf(0.0, float(wave - 7))
+	var pressure := 1.0 + .025 * late_wave + .0015 * late_wave * late_wave
+	return int(base_count * pressure * difficulty_mult * item_mult)
 
 
 ## Get spawn interval (time between enemy spawns)

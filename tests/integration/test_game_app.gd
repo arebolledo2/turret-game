@@ -124,7 +124,7 @@ func test_reduced_motion_survives_runs_and_preserves_warning_and_pulse_informati
 		assert_eq(leg.rotation.y, 0.0)
 		assert_eq(leg.rotation.z, 0.0)
 	arena.effects.show_shock(Vector3.ZERO, 2.4)
-	assert_almost_eq(arena.effects.pulses[0].scale.x * .88, 2.4, .001, "The shader boundary stays at the full effect radius")
+	assert_almost_eq(arena.effects.pulses[0].scale.x, 2.4, .001, "The shader boundary stays at the full effect radius")
 	arena.toggle_pause()
 	arena.request_menu()
 	app.start_game()

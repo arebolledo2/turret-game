@@ -18,6 +18,14 @@ const NOTICES: Dictionary = {
 static var tinted_materials: Dictionary = {}
 
 static func pick_type(wave: int, index: int) -> String:
+	if wave >= 8:
+		# Alternating assault patterns replace the fixed early-wave mix.
+		var roster: Array[String] = ["basic", "fast", "charger", "basic", "tank", "fast", "exploder", "basic", "charger", "basic"]
+		if wave >= 12:
+			roster = ["tank", "fast", "charger", "exploder", "basic", "tank", "fast", "charger", "exploder", "basic"]
+		if wave >= 16:
+			roster = ["tank", "charger", "fast", "exploder", "tank", "charger", "fast", "exploder", "tank", "basic"]
+		return roster[(index + wave * 3) % roster.size()]
 	if wave >= int(EnemyRegistry.TYPES["charger"]["min_wave"]) and index % 4 == 0:
 		return "charger"
 	if wave >= int(EnemyRegistry.TYPES["exploder"]["min_wave"]) and index % 5 == 2:
@@ -29,6 +37,9 @@ static func pick_type(wave: int, index: int) -> String:
 	return "basic"
 
 static func notice_for_wave(wave: int) -> String:
+	if wave == 8: return "Assault waves · scouts and chargers probe your defenses"
+	if wave == 12: return "Heavy assault · armored groups and explosive escorts"
+	if wave == 16: return "Final onslaught · heavy bots lead the attack"
 	return NOTICES.get(wave, "")
 
 static func body_scale(type_id: String) -> float:

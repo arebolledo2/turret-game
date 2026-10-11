@@ -35,6 +35,7 @@ func impact(primary: CombatActor, at: Vector3, heading: Vector3, shot: CombatSho
 		if away.is_zero_approx():
 			away = WorldGeometry.planar(heading).normalized()
 		var hit := CombatHit3D.new(shot.damage, at, away * shot.knockback, shot.damage_type)
+		hit.critical = shot.critical
 		hit.slow_intensity = shot.slow_intensity
 		hit.slow_duration = shot.slow_duration
 		hit.source_id = shot.source_id
@@ -65,6 +66,7 @@ func chain(origin: Vector3, primary: CombatActor, shot: CombatShot3D, jumps: int
 		chain_arc.emit(from, to)
 		struck.append(current)
 		var jump_hit := CombatHit3D.new(damage, from, Vector3.ZERO, shot.damage_type)
+		jump_hit.critical = shot.critical
 		jump_hit.source_id = shot.source_id
 		jump_hit.attack_families = shot.attack_families.duplicate()
 		jump_hit.slow_intensity = shot.slow_intensity

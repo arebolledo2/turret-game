@@ -322,7 +322,8 @@ func _tick_player_weapon(delta: float) -> void:
 		if clockwork_motion:
 			clockwork_motion.aim_hero(Vector3.ZERO)
 		return
-	var weapon_range := GameConstants.PLAYER_TURRET_RANGE * WorldGeometry.METRES_PER_PIXEL
+	var weapon_stats := PlayerStatsService.get_weapon_stats(world.run_config.hero)
+	var weapon_range := float(weapon_stats.range) * WorldGeometry.METRES_PER_PIXEL
 	if weapon_clock <= 0.0:
 		weapon_target = world.nearest_enemy(position, weapon_range)
 	if is_instance_valid(weapon_target) and (weapon_target.dead or not weapon_target.overlaps_attack_range(position, weapon_range)):
@@ -336,14 +337,15 @@ func _tick_player_weapon(delta: float) -> void:
 				visual.global_rotation.y = yaw - clampf(twist, -PI / 3.0, PI / 3.0)
 		clockwork_motion.aim_hero(heading)
 	if weapon_clock <= 0.0 and is_instance_valid(weapon_target):
-		var shot := CombatShot3D.from_stats({"damage": PlayerStatsService.get_player_weapon_damage(),
-			"projectile_speed": GameConstants.PLAYER_TURRET_PROJECTILE_SPEED})
+		var shot := CombatShot3D.from_stats(weapon_stats, world.run_config.hero.damage_type)
+		shot.attack_families.assign(world.run_config.hero.families)
 		if PlayerStatsService.roll_player_crit():
+			shot.critical = true
 			shot.damage = PlayerStatsService.calculate_player_crit_damage(shot.damage)
 		world.fire_shot(weapon_muzzle.global_position, weapon_target, shot)
 		if clockwork_motion:
 			clockwork_motion.fire(FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
-		weapon_clock = 1.0 / maxf(PlayerStatsService.get_player_fire_rate(), .01)
+		weapon_clock = 1.0 / maxf(float(weapon_stats.fire_rate), .01)
 
 ## Where an enemy is heading when the run has an objective: the hero while within aggro range, otherwise the objective.
 ## Survive mode has no objective and never calls this (the hero is always the goal).

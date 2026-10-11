@@ -2,6 +2,7 @@ class_name CombatHit3D
 extends RefCounted
 
 ## Damage is unitless; impulse is metres/second on the ground plane.
+var critical: bool = false
 var damage: float = 0.0
 var damage_type: GameEnums.DamageType = GameEnums.DamageType.PHYSICAL
 var origin: Vector3 = Vector3.ZERO
