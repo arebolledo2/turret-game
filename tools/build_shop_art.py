@@ -37,6 +37,16 @@ groups = {
  'orb':['reactor_overload','glass_cannon_core','elemental_conduit'],
  'blueprint':['compact_design','mass_production','ion_doctrine','plasma_doctrine','voltage_doctrine','bat_doctrine','army_doctrine','mono_type_mastery','quality_over_quantity'],
 }
+groups['barrel'] += ['opening_salvo']
+groups['gear'] += ['return_address', 'follow_through']
+groups['lens'] += ['slipstream_fletching']
+groups['charge'] += ['cinder_reserve']
+groups['coil'] += ['arc_insurance']
+groups['weight'] += ['counterweight']
+groups['engine'] += ['victory_lap']
+groups['shield'] += ['rescue_beacon']
+groups['capacitor'] += ['reserve_battery']
+groups['orb'] += ['close_partnership']
 lookup = {id: (motif, i) for motif, ids in groups.items() for i,id in enumerate(ids)}
 assert set(lookup) == {r['id'] for r in rows}
 out = ROOT / 'assets/ui/items'; out.mkdir(parents=True, exist_ok=True)

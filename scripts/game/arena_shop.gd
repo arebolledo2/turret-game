@@ -62,7 +62,7 @@ func can_reroll() -> bool:
 func unavailable_item_ids() -> Array:
 	var excluded: Array = []
 	for item_id in ItemRegistry.get_all_item_ids():
-		if not ShopCatalog.is_available("item", item_id) or (item_id in ShopCatalog.CONVOY_ONLY and not world.convoy_mode):
+		if not ShopCatalog.is_available("item", item_id) or (item_id in ShopCatalog.CONVOY_ONLY and not world.convoy_mode) or (item_id == "reserve_battery" and not world.core):
 			excluded.append(item_id)
 	return excluded
 

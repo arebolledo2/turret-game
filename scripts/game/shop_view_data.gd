@@ -103,7 +103,9 @@ static func build_data(world: ArenaWorld, extra_turret: String = "") -> Dictiona
 	var items: Array[Dictionary] = []
 	for item_id: String in ItemTrackingService.item_counts:
 		items.append({"id": item_id, "name": str(ItemRegistry.get_item_dict(item_id)["name"]), "count": int(ItemTrackingService.item_counts[item_id])})
-	return {"hero_weapon": PlayerStatsService.get_weapon_stats(world.run_config.hero, false), "turrets": turrets, "dps": dps, "max_hull": max_hull, "hull": minf(world.player.health, max_hull),
+	var hero_stats := PlayerStatsService.get_weapon_stats(world.run_config.hero, false).duplicate(true)
+	world.item_effects.modify_stats(hero_stats, 0, "kinetic" in world.run_config.hero.families)
+	return {"hero_weapon": hero_stats, "turrets": turrets, "dps": dps, "max_hull": max_hull, "hull": minf(world.player.health, max_hull),
 		"speed": PlayerStatsService.get_player_speed() * WorldGeometry.METRES_PER_PIXEL,
 		"pickup": PlayerStatsService.get_pickup_radius() * WorldGeometry.METRES_PER_PIXEL, "items": items}
 
@@ -186,6 +188,22 @@ static func affected_turrets(world: ArenaWorld, offer: ShopOffer) -> Array[Strin
 			affected = "instant" in TurretRegistry.get_attack_families(turret["id"])
 		elif offer.asset_id == "last_stand":
 			affected = true
+		elif offer.asset_id in ["opening_salvo", "return_address", "slipstream_fletching"]:
+			affected = "projectile" in TurretRegistry.get_attack_families(turret["id"]) or turret["id"] == "melee" and _has_gunblade(world)
+		elif offer.asset_id in ["follow_through", "counterweight", "victory_lap"]:
+			affected = "kinetic" in TurretRegistry.get_attack_families(turret["id"])
+		elif offer.asset_id == "cinder_reserve":
+			affected = TurretRegistry.get_fire_mode(turret["id"]) == TurretRegistry.FIRE_FLAME
+		elif offer.asset_id == "arc_insurance":
+			affected = TurretRegistry.get_fire_mode(turret["id"]) == TurretRegistry.FIRE_CHAIN
+		elif offer.asset_id in ["rescue_beacon", "close_partnership"]:
+			affected = true
 		if affected:
 			result.append("%s x%d" % [turret["name"], int(turret["count"])])
 	return result
+
+static func _has_gunblade(world: ArenaWorld) -> bool:
+	for turret in world.turrets:
+		if turret.progression.evolution_branch == "gunblade":
+			return true
+	return false

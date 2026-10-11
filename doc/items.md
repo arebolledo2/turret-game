@@ -1,6 +1,6 @@
 # Items and attack families
 
-The full-screen Shop stocks one turret and three items. The 43-item catalog is defined in `scripts/registries/items/items_v3.gd`, overriding the legacy definitions by stable ID. See the [complete migration and balance table](plans/item-migration.md). There are 13 Common, 16 Uncommon, 8 Rare, 4 Epic and 2 Legendary entries, including the three Convoy-only items.
+The full-screen Shop stocks one turret and three items. The 54-item catalog is defined in `scripts/registries/items/items_v3.gd`, overriding the legacy definitions by stable ID. See the [original migration and balance table](plans/item-migration.md) and [eleven implemented expansion items](plans/new-item-concepts.md). There are 13 Common, 19 Uncommon, 12 Rare, 8 Epic and 2 Legendary entries, including the three Convoy-only items.
 
 ## Eligibility
 
@@ -32,7 +32,7 @@ One modifier matches any listed family and applies once. Separate percentage inc
 - Return Spring (`killzone_bat`) reduces contact rehit delay. Whirlwind Frame grants a Kinetic slow and increases sweep/reach.
 - Entrench, hull, economy and Convoy items remain support upgrades. Combined purchase-penalty reductions stop at zero.
 
-36/43 items have no explicit downside. The minority of trade-offs are stated in the always-visible effect text. Prices, rarity and stack caps carry most of the balance burden. Exact values are a first playable pass, not a claim of completed balance testing.
+47/54 items have no explicit downside. The minority of trade-offs are stated in the always-visible effect text. Prices, rarity and stack caps carry most of the balance burden. Exact values are a first playable pass, not a claim of completed balance testing.
 
 ## Shop and previews
 
@@ -42,8 +42,12 @@ The opaque `ShopScreen` hides the arena and combat HUD, suspends 3D drawing whil
 
 ## Gates and authoring
 
-`ShopCatalog` remains the stock/reward authority. The existing `items_v2` and `items_v2_hooks` flags still gate their original IDs; turning them off removes those items rather than restoring old balance. `mode_convoy` items additionally require Convoy mode. Sniper, Fire and Mine remain outside supported shop content.
+`ShopCatalog` remains the stock/reward authority. The existing `items_v2` and `items_v2_hooks` flags still gate their original IDs; turning them off removes those items rather than restoring old balance. `mode_convoy` items additionally require Convoy mode. Sniper and Mine remain outside supported shop content; Flamethrower, Bow and Bowling are stocked. Reserve Battery additionally requires a core mode.
 
 To add an item, add a reviewed row to ItemsV3, a catalog entry and supported family/capability filters. Provide a separate `assets/ui/items/<id>.svg`, a clear description and appropriate rarity/stack cap. Add tests for actual stat or combat behaviour and preview equivalence. New stats require a runtime consumer.
 
 Art tooling: `python tools/build_shop_art.py` rebuilds the full-colour SVG set from curated shapes and the layout-study motifs; `res://tools/render_shop_portraits.tscn` renders the five model portraits with a graphics driver. Run an editor import after regenerating. `res://tools/export_shop_catalog.tscn` writes an audit JSON under `.test-results/`.
+
+## Situational buff display
+
+Nearby turret inspection and the range toggle show active item icons with stack counts and duration strips. Hero buffs appear above the hero. This includes Follow-Through, Victory Lap, Rescue Beacon, Close Partnership, Last Stand, Resonance Link and Entrenchment. See the [expansion rules](plans/new-item-concepts.md) for trigger and reset behaviour.

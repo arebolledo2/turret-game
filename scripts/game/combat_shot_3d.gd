@@ -2,6 +2,8 @@ class_name CombatShot3D
 extends RefCounted
 
 ## Snapshot of a shot at firing time; all distances/speeds are already in metres.
+var travel_distance: float = 0.0
+var attack_targets: Dictionary = {}
 var critical: bool = false
 var damage: float = 0.0
 var speed: float = 0.0

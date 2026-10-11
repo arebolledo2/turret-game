@@ -4,6 +4,7 @@ extends RefCounted
 ## Uses the shared status lifetime/refresh rules without the Node2D event bus.
 var effects: Dictionary = {}
 const BURN_TICK: float = .25
+var burn_transferred: bool = false
 var burn_dps: float = 0.0
 var burn_remaining: float = 0.0
 var burn_elapsed: float = 0.0
@@ -19,6 +20,7 @@ func apply(hit: CombatHit3D) -> void:
 		if burn_elapsed > 0.0 and (hit.source_id != burn_source_id or hit.burn_dps != burn_dps):
 			_pending_burn_hits.append(_burn_hit(burn_elapsed))
 			burn_elapsed = 0.0
+		burn_transferred = hit.burn_transferred
 		burn_dps = hit.burn_dps
 		burn_remaining = maxf(burn_remaining, hit.burn_duration) if hit.source_id == burn_source_id else hit.burn_duration
 		burn_source_id = hit.source_id
@@ -68,11 +70,14 @@ func advance_burn(delta: float) -> Array[CombatHit3D]:
 
 func _burn_hit(seconds: float) -> CombatHit3D:
 	var hit := CombatHit3D.new(burn_dps * seconds, burn_origin, Vector3.ZERO, GameEnums.DamageType.FIRE)
+	hit.is_dot = true
+	hit.burn_transferred = burn_transferred
 	hit.source_id = burn_source_id
 	hit.attack_families = burn_families.duplicate()
 	return hit
 
 func clear_burn() -> void:
+	burn_transferred = false
 	burn_dps = 0.0
 	burn_remaining = 0.0
 	burn_elapsed = 0.0

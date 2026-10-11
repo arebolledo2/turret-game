@@ -45,6 +45,8 @@ var aim_rest: Vector3
 var target: CombatActor
 var target_clock: float = 0.0
 var spin_angle: float = 0.0
+var swing_distance: float = 0.0
+var swing_targets: Dictionary = {}
 var bat_authored_reach: float = 1.0
 var aim_authored_scale := Vector3.ONE
 var rehit_lockouts: Dictionary = {}
@@ -148,6 +150,10 @@ func _spin_bat(delta: float, stats: TurretStats, reach: float) -> void:
 	var reach_scale := reach / bat_authored_reach
 	aim.scale = aim_authored_scale * Vector3(reach_scale, 1.0, reach_scale)
 	var sweep := deg_to_rad(stats.rotation_rate) * delta
+	swing_distance += sweep
+	if swing_distance >= TAU:
+		swing_distance = fmod(swing_distance, TAU)
+		swing_targets = {}
 	var previous := spin_angle
 	spin_angle = wrapf(spin_angle + sweep, -PI, PI)
 	aim.rotation.y = spin_angle
@@ -173,6 +179,7 @@ func _spin_bat(delta: float, stats: TurretStats, reach: float) -> void:
 		var push := offset.normalized() * stats.knockback_metres
 		rehit_lockouts[enemy.get_instance_id()] = stats.rehit_delay
 		var bat_hit := CombatHit3D.new(damage, position, push, GameEnums.DamageType.PHYSICAL)
+		bat_hit.attack_targets = swing_targets
 		bat_hit.critical = critical
 		bat_hit.attack_families = TurretRegistry.get_attack_families(turret_type)
 		bat_hit.source_id = turret_id
@@ -348,6 +355,7 @@ func resolve_attack_stats(secondary: bool = false, branch: String = "", stage: i
 	if world.session.state.turret_progression_enabled:
 		progression.apply_stats(stats)
 	_apply_item_conditions(stats)
+	world.item_effects.modify_stats(stats, turret_id, not secondary and "kinetic" in TurretRegistry.get_attack_families(turret_type))
 	var terrain_range := world.terrain.range_bonus_at(position) if world.terrain and not carried else 0.0
 	stats["range"] = float(stats.get("range", TurretStats.DEFAULT_RANGE)) * (1.0 + terrain_range)
 	var bonus := maxf(0.0, ModifierService.apply_modifiers_to_stat(1.0, "entrench_bonus")) * float(entrench_stacks_cached)

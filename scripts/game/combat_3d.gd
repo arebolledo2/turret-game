@@ -12,11 +12,15 @@ signal actor_defeated(actor: Node3D, position: Vector3)
 func apply_hit(target: CombatActor, hit: CombatHit3D) -> float:
 	if not is_instance_valid(target) or target.dead:
 		return 0.0
+	var original_damage := hit.damage
+	var burn := target.world.item_effects.before_hit(target, hit)
 	var applied := target.receive_hit(hit)
+	target.world.item_effects.after_hit(target, hit, applied, burn)
 	if applied > 0.0:
 		hit_applied.emit(target, hit, applied)
 		if target.dead:
 			actor_defeated.emit(target, target.position)
+	hit.damage = original_damage
 	return applied
 
 func impact(primary: CombatActor, at: Vector3, heading: Vector3, shot: CombatShot3D, candidates: Array[CombatActor]) -> int:
@@ -35,6 +39,8 @@ func impact(primary: CombatActor, at: Vector3, heading: Vector3, shot: CombatSho
 		if away.is_zero_approx():
 			away = WorldGeometry.planar(heading).normalized()
 		var hit := CombatHit3D.new(shot.damage, at, away * shot.knockback, shot.damage_type)
+		hit.travel_distance = shot.travel_distance
+		hit.attack_targets = shot.attack_targets
 		hit.critical = shot.critical
 		hit.slow_intensity = shot.slow_intensity
 		hit.slow_duration = shot.slow_duration
@@ -65,7 +71,11 @@ func chain(origin: Vector3, primary: CombatActor, shot: CombatShot3D, jumps: int
 		var to := current.position + Vector3(0, .45, 0)
 		chain_arc.emit(from, to, step)
 		struck.append(current)
-		var jump_hit := CombatHit3D.new(damage, from, Vector3.ZERO, shot.damage_type)
+		var next := _nearest_unstruck(current.position, jump_range, struck, candidates)
+		var insurance := 1.0
+		if not next and current.world.item_effects.owns("arc_insurance"):
+			insurance += minf(.24, .08 * float(jumps - step))
+		var jump_hit := CombatHit3D.new(damage * insurance, from, Vector3.ZERO, shot.damage_type)
 		jump_hit.critical = shot.critical
 		jump_hit.source_id = shot.source_id
 		jump_hit.attack_families = shot.attack_families.duplicate()
@@ -75,7 +85,7 @@ func chain(origin: Vector3, primary: CombatActor, shot: CombatShot3D, jumps: int
 			hits += 1
 		from = to
 		damage *= decay
-		current = _nearest_unstruck(current.position, jump_range, struck, candidates)
+		current = next
 	return hits
 
 func _nearest_unstruck(at: Vector3, jump_range: float, struck: Array[CombatActor], candidates: Array[CombatActor]) -> CombatActor:

@@ -11,6 +11,7 @@ const DEFAULT_ENTRIES: Dictionary = {
 		"bow": "", "flamethrower": "", "bowling": "",
 	},
 	"item": {
+		"opening_salvo": "", "return_address": "", "slipstream_fletching": "", "cinder_reserve": "", "arc_insurance": "", "follow_through": "", "counterweight": "", "victory_lap": "", "rescue_beacon": "", "reserve_battery": "", "close_partnership": "",
 		# Kept from the original pool
 		"scrap_magnet": "", "reinforced_hull": "", "quick_loader": "", "dense_rounds": "", "budget_capacitor": "",
 		"compact_design": "", "extended_barrel": "", "rapid_coolant": "", "heavy_plating": "", "mass_production": "",

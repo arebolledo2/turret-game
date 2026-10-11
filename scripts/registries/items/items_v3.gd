@@ -934,6 +934,105 @@ const ROWS: Array = [
 		"name": "Whirlwind Frame",
 		"rarity": 4,
 		"special_effect": ""
+	},
+	{
+	  "id": "opening_salvo",
+	  "name": "Opening Salvo",
+	  "rarity": 1,
+	  "description": "Projectile hits against full-health enemies deal +25% damage.",
+	  "max_stacks": 1,
+	  "modifiers": [],
+	  "special_effect": "opening_salvo"
+	},
+	{
+	  "id": "return_address",
+	  "name": "Return Address",
+	  "rarity": 2,
+	  "description": "Projectile shots that miss every enemy return once to their firing position for 50% damage.",
+	  "max_stacks": 1,
+	  "modifiers": [],
+	  "special_effect": "return_address"
+	},
+	{
+	  "id": "slipstream_fletching",
+	  "name": "Slipstream Fletching",
+	  "rarity": 1,
+	  "description": "Projectile hits gain +20% damage after travelling 2 m.",
+	  "max_stacks": 1,
+	  "modifiers": [],
+	  "special_effect": "slipstream_fletching"
+	},
+	{
+	  "id": "cinder_reserve",
+	  "name": "Cinder Reserve",
+	  "rarity": 2,
+	  "description": "Kills transfer up to 1 second of remaining burn to the nearest unburned enemy within 1.5 m. Transferred burns cannot transfer again.",
+	  "max_stacks": 1,
+	  "modifiers": [],
+	  "special_effect": "cinder_reserve"
+	},
+	{
+	  "id": "arc_insurance",
+	  "name": "Arc Insurance",
+	  "rarity": 2,
+	  "description": "Unused chain jumps add +8% damage each to the final hit, up to +24%. Requires a chain attack.",
+	  "max_stacks": 1,
+	  "modifiers": [],
+	  "special_effect": "arc_insurance"
+	},
+	{
+	  "id": "follow_through",
+	  "name": "Follow-Through",
+	  "rarity": 3,
+	  "description": "Hit 3 distinct enemies in one kinetic swing or rolling shot: +10% weapon attack speed for 2 seconds. Up to 5 active stacks; triggering refreshes duration.",
+	  "max_stacks": 1,
+	  "modifiers": [],
+	  "special_effect": "follow_through"
+	},
+	{
+	  "id": "counterweight",
+	  "name": "Counterweight",
+	  "rarity": 2,
+	  "description": "Kinetic hits deal +20% damage against enemies with knockback resistance (mass above 1).",
+	  "max_stacks": 1,
+	  "modifiers": [],
+	  "special_effect": "counterweight"
+	},
+	{
+	  "id": "victory_lap",
+	  "name": "Victory Lap",
+	  "rarity": 3,
+	  "description": "Kinetic kills grant that weapon +10% reach for 2 seconds. Up to 5 active stacks; kills refresh duration.",
+	  "max_stacks": 1,
+	  "modifiers": [],
+	  "special_effect": "victory_lap"
+	},
+	{
+	  "id": "rescue_beacon",
+	  "name": "Rescue Beacon",
+	  "rarity": 2,
+	  "description": "Taking hull damage grants you and turrets within 3 m +15% attack speed for 2 seconds. Cooldown: 8 seconds.",
+	  "max_stacks": 1,
+	  "modifiers": [],
+	  "special_effect": "rescue_beacon"
+	},
+	{
+	  "id": "reserve_battery",
+	  "name": "Reserve Battery",
+	  "rarity": 3,
+	  "description": "Once per wave, fully heal the core when a surviving hit leaves it below 30% health. Core modes only.",
+	  "max_stacks": 1,
+	  "modifiers": [],
+	  "special_effect": "reserve_battery"
+	},
+	{
+	  "id": "close_partnership",
+	  "name": "Close Partnership",
+	  "rarity": 1,
+	  "description": "You and every deployed turret within 1.5 m gain +8% damage. Multiple nearby turrets do not multiply the hero bonus.",
+	  "max_stacks": 1,
+	  "modifiers": [],
+	  "special_effect": "close_partnership"
 	}
 ]
 

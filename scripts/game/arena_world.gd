@@ -32,6 +32,8 @@ var terrain: TerrainZones
 var placement := TurretPlacement.new()
 var stage: ArenaStage
 var session: RunSession
+var item_effects := ItemCombatEffects.new()
+var buff_overlay: BuffOverlay
 var combat: Combat3D = Combat3D.new()
 var crowd: CrowdGrid3D = CrowdGrid3D.new()
 var effects: CombatEffects3D
@@ -67,6 +69,10 @@ var carried_turret: TurretActor:
 	set(value): placement.carried = value
 
 func _ready() -> void:
+	item_effects.world = self
+	buff_overlay = BuffOverlay.new()
+	buff_overlay.world = self
+	add_child(buff_overlay)
 	if not run_config:
 		run_config = RunConfig.new()
 	run_config.sanitize()
@@ -189,6 +195,7 @@ func start_run() -> void:
 	begin_next_wave()
 
 func _clear_actors() -> void:
+	item_effects.reset()
 	reward_presentation.cancel()
 	chest_rewards.cancel()
 	drops.pending_items.clear()
@@ -213,6 +220,7 @@ func _clear_actors() -> void:
 ## Ends the fight on the field: removes enemies, projectiles, effects and drops, stops audio and drops any carried
 ## turret. Scrap pickups are banked when `bank_pickups` is set, otherwise discarded.
 func clear_field(bank_pickups: bool, return_carried: bool = true) -> void:
+	item_effects.clear_wave()
 	# Progression awards are committed explicitly by WaveDirector, never by cleanup.
 	bank_pickups = bank_pickups and not session.state.turret_progression_enabled
 	for enemy in enemies:
@@ -248,6 +256,7 @@ func is_combat() -> bool:
 func _physics_process(delta: float) -> void:
 	if paused or not GameStateService.is_game_active:
 		return
+	item_effects.tick(delta)
 	waves.tick(delta)
 	if convoy_mover and core and is_combat():
 		core.position = convoy_mover.advance(delta, PlayerStatsService.get_core_move_speed())

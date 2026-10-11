@@ -4,6 +4,10 @@ extends Node3D
 ## Reusable projectiles sweep their whole movement segment, including spawn overlaps.
 const TRAIL_LENGTH: float = 1.0
 var world: ArenaWorld
+var firing_position := Vector3.ZERO
+var returning: bool = false
+var has_hit: bool = false
+var travelled: float = 0.0
 var active: bool = false
 var direction: Vector3 = Vector3.FORWARD
 var damage: float = 0.0
@@ -60,6 +64,10 @@ func acquire(origin: Vector3, heading: Vector3, hit_damage: float, shot_speed: f
 	acquire_shot(origin, heading, spec)
 
 func acquire_shot(origin: Vector3, heading: Vector3, spec: CombatShot3D) -> void:
+	firing_position = origin
+	returning = false
+	has_hit = false
+	travelled = 0.0
 	position = origin
 	direction = WorldGeometry.planar(heading).normalized()
 	shot = spec.copy()
@@ -151,6 +159,8 @@ func advance(delta: float) -> void:
 		if not is_instance_valid(hit) or hit.dead:
 			continue
 		var contact_distance := clampf(_contact_distance(hit), 0.0, motion.length())
+		shot.travel_distance = travelled + contact_distance
+		has_hit = true
 		world.combat.impact(hit, hit.position, direction, shot, world.enemies)
 		# The impact can end the run (an exploder's blast killing the hero or core), which releases every projectile.
 		if not active:
@@ -177,9 +187,22 @@ func advance(delta: float) -> void:
 	_move_along_heading(motion.length())
 	remaining -= delta
 	if remaining <= 0.0:
+		if not returning and not has_hit and "projectile" in shot.attack_families and world.item_effects.owns("return_address"):
+			var home := WorldGeometry.planar(firing_position - position)
+			if home.length() > .01 and speed > .01:
+				returning = true
+				direction = home.normalized()
+				remaining = home.length() / speed
+				shot.damage *= .5
+				damage = shot.damage
+				trail_pivot.rotation.y = atan2(-direction.x, -direction.z)
+				if custom_visual and shot.visual_key != "bowling_ball":
+					custom_visual.rotation.y = trail_pivot.rotation.y
+				return
 		release()
 
 func _move_along_heading(distance: float) -> void:
+	travelled += distance
 	position += direction * distance
 	position.y = move_toward(position.y, shot.radius if shot.visual_key == "bowling_ball" else .45, distance * .8)
 	if custom_visual and custom_visual.visible and shot.visual_key == "bowling_ball":

@@ -322,7 +322,8 @@ func _tick_player_weapon(delta: float) -> void:
 		if clockwork_motion:
 			clockwork_motion.aim_hero(Vector3.ZERO)
 		return
-	var weapon_stats := PlayerStatsService.get_weapon_stats(world.run_config.hero)
+	var weapon_stats := PlayerStatsService.get_weapon_stats(world.run_config.hero).duplicate(true)
+	world.item_effects.modify_stats(weapon_stats, 0, "kinetic" in world.run_config.hero.families)
 	var weapon_range := float(weapon_stats.range) * WorldGeometry.METRES_PER_PIXEL
 	if weapon_clock <= 0.0:
 		weapon_target = world.nearest_enemy(position, weapon_range)

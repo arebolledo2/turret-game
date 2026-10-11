@@ -76,6 +76,8 @@ func take_hit(amount: float) -> float:
 	var applied := minf(health, amount)
 	health -= applied
 	flash_time = FLASH_DURATION
+	if world:
+		world.item_effects.rescue_core()
 	if health <= 0.0:
 		dead = true
 	_refresh_colour()
