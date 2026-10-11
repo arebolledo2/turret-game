@@ -133,7 +133,7 @@ static func description(branch: String, stage: int) -> String:
 		"focused_jet": return "A longer, narrower jet delivers a stronger, longer-lasting burn."
 		"repeater_bow": return "Fires a quick burst of %d piercing arrows." % [2, 3, 5][stage - 1]
 		"greatbow": return "Heavy arrows pierce %d enemies and knock them back." % [4, 6, 9][stage - 1]
-		"gunblade": return "Sweeps a blade and fires whenever its rotating barrel lines up with an enemy."
+		"gunblade": return ["Sweeps a blade and fires when its barrel aligns with an enemy.", "Sweeps a stronger blade and fires two-shot bursts along its rotation.", "Three-shot piercing bursts accompany a longer, faster blade sweep."][stage - 1]
 		"saber": return "A longer, faster energy-blade sweep."
 		"siege": return "Slow, heavy shells explode over a large area and push enemies back."
 	return ""

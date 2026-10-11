@@ -35,7 +35,7 @@ Branch: `feature/turret-evolution-roster`.
 ## Current state
 
 - All ten subject models are imported, with builders, frozen audits and native close previews. Original Gunblade is authored independently; arrow and bowling-ball projectile models are imported and used in combat.
-- Machine Gun, Scattershot, Saber, Gunblade and Siege are available level-5 choices. Gatling and Crossfire are available at level 10. Other milestones on those branches remain pending.
+- Machine Gun, Scattershot, Saber, Gunblade and Siege are available level-5 choices. Gatling and Crossfire are available at level 10. Gunblade progresses through Repeater Blade and Stormblade at levels 10/15 with two-/three-shot bursts and final-stage piercing. Other milestones on those branches remain pending.
 - Bow, Flamethrower and Bowling are purchasable base turrets. Both branches on each resolve through levels 5/10/15 with distinct attacks: timed arrow bursts / heavy arrows, wide flame / focused burn, heavy rollers / enemy-to-enemy ricochets.
 - Burn attribution, projectile collision size and pool reset, multi-contact sweeps, ricochet residual movement and one-hit-per-enemy behavior have regression coverage.
 - Shop build summaries and purchase previews resolve fresh evolved instance stats without mutating combat caches. Gunblade has separate gun numbers and family badges in detailed inspection.
@@ -51,7 +51,7 @@ Branch: `feature/turret-evolution-roster`.
 
 ## Latest verification
 
-- Full suite: 967 passing tests. Latest additions verify evolved shop summaries and purchase-preview cache isolation.
+- Full suite: 968 passing tests. Latest additions verify evolved shop summaries and purchase-preview cache isolation.
 - Native close previews: `.test-results/evolution-preview.png`, `.test-results/expansion-preview.png`, `.test-results/flame-preview.png` from `tools/preview_evolution.tscn`.
 - Last resource audit: 189 source files and 37 model records. Re-run on final state before completion.
 - This remains an interim implementation. The goal is active and incomplete.

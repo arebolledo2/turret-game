@@ -165,7 +165,8 @@ func _show_selected() -> void:
 	if growth.evolution_branch == "gunblade":
 		var gun := turret.gun_stats
 		lines.append("\n[b]GUN · PROJECTILE[/b]")
-		lines.append("Damage %.1f · Reach %.2f m · %.2f shots/s" % [gun.damage, gun.range_metres, gun.fire_rate])
+		var shots := maxi(1, growth.evolution_stage)
+		lines.append("Damage %.1f · Reach %.2f m · %.2f bursts/s · %d shots/burst" % [gun.damage, gun.range_metres, gun.fire_rate, shots])
 		lines.append("Fires along the rotating barrel. Kinetic bonuses affect the blade only.")
 	lines.append("\n[b]PROGRESSION & POSITION[/b]")
 	lines.append("XP  %d / %d to next level  ·  %d total earned" % [growth.xp, TurretProgression.cost_to_next(growth.level), growth.total_xp])

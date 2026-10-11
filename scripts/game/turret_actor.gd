@@ -13,6 +13,9 @@ var carried: bool = false:
 		target_clock = 0.0
 		if value:
 			reset_entrench()
+var gun_burst_left := 0
+var gun_burst_clock := 0.0
+var gun_burst_shot: CombatShot3D
 var bow_burst_left := 0
 var bow_burst_clock := 0.0
 var bow_burst_heading := Vector3.FORWARD
@@ -82,6 +85,7 @@ func _rebuild_model() -> void:
 	muzzle_rest = muzzle.position
 	spool = 0.0
 	bow_burst_left = 0
+	gun_burst_left = 0
 	loaded_ball = model.find_child("LoadedBall", true, false) as Node3D
 	loaded_arrow = model.find_child("LoadedArrow", true, false) as Node3D
 	aim_rest = aim.position
@@ -299,9 +303,10 @@ func resolve_attack_stats(secondary: bool = false) -> Dictionary:
 	var base := TurretEvolution.base_stats(turret_type, progression.evolution_branch, progression.evolution_stage)
 	if secondary:
 		base = TurretRegistry.get_base_stats("normal")
-		base.damage = 7.0
-		base.fire_rate = 2.0
+		base.damage = [7.0, 8.0, 9.0][clampi(progression.evolution_stage - 1, 0, 2)]
+		base.fire_rate = [2.0, 2.2, 2.4][clampi(progression.evolution_stage - 1, 0, 2)]
 		base.range = 300.0
+		base.pierce = 1 if progression.evolution_stage >= 3 else 0
 	var stats := ModifierService.get_turret_stats(turret_type, world.difficulty_config, base, "normal" if secondary else "")
 	if world.session.state.turret_progression_enabled:
 		progression.apply_stats(stats)
@@ -340,6 +345,7 @@ func _update_range_ring() -> void:
 func _physics_process(delta: float) -> void:
 	if not world.is_combat():
 		bow_burst_left = 0
+		gun_burst_left = 0
 		return
 	if carried:
 		position = world.player.position + Vector3(0, 1.15, .25)
@@ -361,6 +367,7 @@ func _physics_process(delta: float) -> void:
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
 		_spin_bat(delta, stats, range_metres)
 		if progression.evolution_branch == "gunblade":
+			_tick_gunblade_burst(delta)
 			_fire_gunblade()
 		return
 	if fire_mode == TurretRegistry.FIRE_PULSE:
@@ -464,7 +471,7 @@ func available_evolutions() -> Array[String]:
 		return result
 	for branch in progression.evolution_options(turret_type):
 		var next_stage := progression.evolution_stage + 1
-		var implemented := branch in ["repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot"] or (branch in ["machine_gun", "scatter"] and next_stage <= 2) or (branch in ["saber", "siege", "gunblade"] and next_stage == 1)
+		var implemented := branch in ["repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "gunblade"] or (branch in ["machine_gun", "scatter"] and next_stage <= 2) or (branch in ["saber", "siege"] and next_stage == 1)
 		if implemented and ClockworkModels.available(TurretEvolution.model_key(turret_type, branch, next_stage)):
 			result.append(branch)
 	return result
@@ -512,7 +519,7 @@ static func cone_overlaps_body(offset: Vector3, heading: Vector3, reach: float, 
 
 ## The rotating barrel only shoots along its visible bore; blade and bullet bonuses stay separate.
 func _fire_gunblade() -> void:
-	if cooldown > 0.0:
+	if cooldown > 0.0 or gun_burst_left > 0:
 		return
 	var heading := WorldGeometry.planar(-muzzle.global_basis.z).normalized()
 	for enemy in world.crowd.query_radius(position, gun_stats.range_metres, true):
@@ -527,6 +534,9 @@ func _fire_gunblade() -> void:
 		if TurretStatsService.roll_turret_crit():
 			shot.damage = TurretStatsService.calculate_turret_crit_damage(shot.damage)
 		world.fire_direction(muzzle.global_position, heading, shot)
+		gun_burst_shot = shot
+		gun_burst_left = maxi(0, progression.evolution_stage - 1)
+		gun_burst_clock = .065
 		cooldown = gun_stats.cooldown_seconds
 		return
 
@@ -540,3 +550,15 @@ func _tick_bow_burst(delta: float, stats: TurretStats) -> void:
 		cooldown = stats.cooldown_seconds
 	if loaded_arrow:
 		loaded_arrow.visible = false
+
+## Follow-up shots leave the moving barrel instead of aiming invisibly away from the blade.
+func _tick_gunblade_burst(delta: float) -> void:
+	if gun_burst_left <= 0:
+		return
+	gun_burst_clock -= delta
+	while gun_burst_left > 0 and gun_burst_clock <= 0.0:
+		var heading := WorldGeometry.planar(-muzzle.global_basis.z).normalized()
+		world.fire_direction(muzzle.global_position, heading, gun_burst_shot)
+		gun_burst_left -= 1
+		gun_burst_clock += .065
+		cooldown = gun_stats.cooldown_seconds

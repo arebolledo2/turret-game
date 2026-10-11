@@ -366,6 +366,8 @@ func _growth_summary() -> String:
 func _turret_numbers(was: Dictionary, turret: Dictionary) -> String:
 	var cadence_key := "rotation_rate" if turret["rotation_rate"] > 0 else "fire_rate"
 	var cadence_unit := "°/s sweep" if cadence_key == "rotation_rate" else " shots/s"
+	if cadence_key == "fire_rate" and int(turret.get("burst_size", 1)) > 1:
+		cadence_unit = " bursts/s (%d shots)" % int(turret["burst_size"])
 	var numbers := _number(was, turret, "damage", " damage") + " · " + _number(was, turret, cadence_key, cadence_unit)
 	numbers += "\n" + _number(was, turret, "range", " m reach")
 	if turret["area"] > 0:

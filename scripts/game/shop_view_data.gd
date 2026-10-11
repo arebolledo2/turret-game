@@ -113,6 +113,7 @@ static func _actor_numbers(actor: TurretActor, secondary: bool = false) -> Dicti
 	var pulse := TurretRegistry.get_fire_mode(actor.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] and not secondary
 	var reach := stats.range_metres * (stats.area_size if pulse else 1.0)
 	return {"damage": stats.damage, "range": reach, "fire_rate": stats.fire_rate,
+		"burst_size": maxi(1, actor.progression.evolution_stage) if secondary else ([2, 3, 5][actor.progression.evolution_stage - 1] if actor.progression.evolution_branch == "repeater_bow" else 1),
 		"rotation_rate": float(values.get("rotation_rate", 0.0)), "area": reach if pulse else stats.aoe_radius_metres,
 		"stats": {"pierce": stats.pierce, "projectile_speed": stats.projectile_speed_metres,
 		"knockback": stats.knockback_metres, "chain_count": stats.chain_count,
@@ -137,7 +138,8 @@ static func _actor_dps(actor: TurretActor) -> float:
 		result += stats.damage * float(stats.values.get("burn_ratio", 1.6)) * minf(1.0, rate * float(stats.values.get("burn_duration", 2.0)))
 	if branch == "gunblade":
 		var gun := TurretStats.new(actor.resolve_attack_stats(true))
-		result += gun.damage * gun.fire_rate
+		var shots := maxi(1, stage)
+		result += gun.damage * float(shots) / (gun.cooldown_seconds + .065 * (shots - 1))
 	return result
 
 ## build_data after buying `offer`. Items are measured by adding their modifiers to the real modifier

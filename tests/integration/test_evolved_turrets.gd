@@ -305,3 +305,42 @@ func test_fresh_resolution_matches_cached_evolved_stats_with_entrenchment() -> v
 	var data := ShopViewData.build_data(world)
 	assert_eq(data.turrets[0].instances[0].name, "Machine Gun")
 	assert_almost_eq(float(data.turrets[0].instances[0].combat.fire_rate), turret.stats_view.fire_rate, .001)
+
+func test_gunblade_later_forms_fire_attributed_bursts_from_moving_barrel() -> void:
+	var turret := world.add_turret(Vector3.ZERO, "melee")
+	turret.set_physics_process(false)
+	var xp := 0
+	for level in range(1, 15):
+		xp += TurretProgression.cost_to_next(level)
+	turret.progression.award(xp)
+	for stage in range(3):
+		assert_true(turret.evolve("gunblade"))
+	assert_eq(turret.display_name(), "Stormblade")
+	assert_eq(turret.progression.total_xp, xp)
+	assert_true(turret.available_evolutions().is_empty())
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	var enemy := world.spawn_enemy(Vector3(0, 0, -2.8))
+	enemy.set_physics_process(false)
+	world.crowd.rebuild(world.enemies)
+	turret._current_view(0)
+	turret._fire_gunblade()
+	assert_eq(world.projectiles.size(), 1)
+	assert_eq(turret.gun_burst_left, 2)
+	turret.aim.rotation.y = .3
+	turret._tick_gunblade_burst(.07)
+	assert_eq(world.projectiles.size(), 2)
+	assert_false(world.projectiles[0].direction.is_equal_approx(world.projectiles[1].direction))
+	turret._tick_gunblade_burst(.07)
+	assert_eq(world.projectiles.size(), 3)
+	for projectile in world.projectiles:
+		assert_eq(projectile.shot.source_id, turret.turret_id)
+		assert_eq(projectile.shot.attack_families, ["projectile"])
+		assert_eq(projectile.shot.pierce, 1)
+	assert_eq(turret.gun_burst_left, 0)
+	turret.cooldown = 0.0
+	turret.aim.rotation.y = 0.0
+	turret._fire_gunblade()
+	assert_eq(turret.gun_burst_left, 2)
+	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
+	turret._physics_process(.1)
+	assert_eq(turret.gun_burst_left, 0, "Wave end cancels delayed shots")

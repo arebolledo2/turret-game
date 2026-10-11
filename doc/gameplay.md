@@ -170,3 +170,5 @@ Bow now supports both branches through levels 5/10/15: Repeater Bow / Volley Bal
 Flamethrower supports Wide Flame / Furnace Fan / Inferno Crown (60/85/110-degree coverage) and Focused Jet / Dragon Nozzle / Dragonheart (longer reach, narrower aim, stronger burn) through all three milestones. Turret inspection shows cone angle and burn DPS/duration. Evolution chassis polish remains pending.
 
 Bowling supports Heavy Roller / Demolition Roller / Juggernaut (larger balls, more piercing and knockback) and Bank Shot / Pinball Engine / Ricochet King (2/4/6 redirects toward fresh nearby enemies). Redirects sweep their remaining movement time on the new path; an enemy is never selected twice by the same shot. Purchased piercing can extend a shot when no fresh recipient is nearby. The loaded ball disappears during reload.
+
+Gunblade now advances to Repeater Blade (two-shot bursts) and Stormblade (three-shot piercing bursts) at levels 10/15. Follow-up rounds leave the rotating barrel along its current heading; they share the original burst snapshot and turret attribution. Pending rounds cancel when combat ends.
