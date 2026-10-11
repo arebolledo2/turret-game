@@ -18,6 +18,8 @@ var elite_credit: float = 0.0
 var seeker_credit: float = 0.0
 
 func tick(delta: float) -> void:
+	if GameStateMachine.current_state == GameStateMachine.GameState.WAVE_END:
+		return
 	GameStateService.time_survived += delta
 	if GameStateMachine.current_state == GameStateMachine.GameState.WAVE_ANNOUNCEMENT:
 		announcement_left -= delta
@@ -92,11 +94,22 @@ func finish_wave() -> bool:
 	if not GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_END):
 		return false
 	# Snapshot carried positions and uncollected pickups before cleanup moves/removes them.
-	world.salvage.settle(GameStateService.current_wave)
-	world.clear_field(true)
+	var settled := world.salvage.settle(GameStateService.current_wave)
+	var show_rewards := settled and world.present_wave_rewards and world.show_hud and int(world.salvage.last_settlement.get("xp_awarded", 0)) > 0
+	world.clear_field(true, not show_rewards)
 	var reward := EconomyService.get_wave_scrap_base(GameStateService.current_wave)
 	world.collect_scrap(reward)
 	world.message = "Wave secured · +%d scrap bonus" % reward
+	if show_rewards:
+		world.reward_presentation.begin(world.salvage.last_settlement)
+	else:
+		complete_wave()
+	return true
+
+func complete_wave() -> void:
+	if GameStateMachine.current_state != GameStateMachine.GameState.WAVE_END or not GameStateService.is_game_active:
+		return
+	world.placement.drop_carried()
 	if GameStateService.current_wave >= world.wave_limit:
 		world.audio.play_cue("victory", world.player.position)
 		GameStateMachine.transition_to(GameStateMachine.GameState.VICTORY)
@@ -107,7 +120,6 @@ func finish_wave() -> bool:
 			world.plan_convoy_route(GameStateService.current_wave + 1) # previewed during the shop
 		world.shop.open()
 		world.audio.play_cue("wave", world.player.position)
-	return true
 
 func _take_credit(rule_key: String) -> bool:
 	var share := DifficultyService.rule(world.difficulty_config, rule_key)

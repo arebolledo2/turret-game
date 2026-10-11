@@ -1,0 +1,164 @@
+class_name TurretInspector
+extends HBoxContainer
+
+## Individual turret inspection. Reads the actor's resolved stats, including its own growth.
+var world: ArenaWorld
+var selected_id: int = 0
+var roster: VBoxContainer
+var buttons: Array[Button] = []
+var shown_ids: Array[int] = []
+var art: TextureRect
+var title: Label
+var xp_label: Label
+var xp_bar: ProgressBar
+var detail: RichTextLabel
+var detail_key: int = 0
+var details_scroll: ScrollContainer
+
+func _ready() -> void:
+	add_theme_constant_override("separation", 40)
+	var roster_scroll := ScrollContainer.new()
+	roster_scroll.custom_minimum_size.x = 360
+	roster_scroll.follow_focus = true
+	add_child(roster_scroll)
+	roster = VBoxContainer.new()
+	roster.size_flags_horizontal = SIZE_EXPAND_FILL
+	roster.add_theme_constant_override("separation", 12)
+	roster_scroll.add_child(roster)
+	var scroll := ScrollContainer.new()
+	details_scroll = scroll
+	scroll.size_flags_horizontal = SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	add_child(scroll)
+	var column := VBoxContainer.new()
+	column.size_flags_horizontal = SIZE_EXPAND_FILL
+	column.add_theme_constant_override("separation", 18)
+	scroll.add_child(column)
+	var header := HBoxContainer.new()
+	column.add_child(header)
+	art = TextureRect.new()
+	art.custom_minimum_size = Vector2(260, 180)
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	header.add_child(art)
+	title = Label.new()
+	title.add_theme_font_size_override("font_size", 38)
+	title.size_flags_horizontal = SIZE_EXPAND_FILL
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	header.add_child(title)
+	xp_label = Label.new()
+	xp_label.add_theme_font_size_override("font_size", 25)
+	column.add_child(xp_label)
+	xp_bar = ProgressBar.new()
+	xp_bar.custom_minimum_size.y = 20
+	xp_bar.show_percentage = false
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = UiPalette.TEAL_HI
+	fill.set_corner_radius_all(4)
+	xp_bar.add_theme_stylebox_override("fill", fill)
+	column.add_child(xp_bar)
+	detail = RichTextLabel.new()
+	detail.bbcode_enabled = true
+	detail.fit_content = true
+	detail.scroll_active = false
+	detail.add_theme_font_size_override("normal_font_size", 24)
+	column.add_child(detail)
+
+func refresh() -> void:
+	var ids: Array[int] = []
+	for turret in world.turrets:
+		ids.append(turret.turret_id)
+	if ids != shown_ids:
+		for button in buttons:
+			roster.remove_child(button)
+			button.queue_free()
+		buttons.clear()
+		shown_ids = ids
+		for turret in world.turrets:
+			var button := Button.new()
+			button.custom_minimum_size = Vector2(340, 90)
+			button.add_theme_font_size_override("font_size", 24)
+			button.toggle_mode = true
+			var id := turret.turret_id
+			button.pressed.connect(select.bind(id))
+			button.focus_entered.connect(select.bind(id))
+			roster.add_child(button)
+			buttons.append(button)
+	if selected_id not in ids:
+		selected_id = ids[0] if not ids.is_empty() else 0
+	for i in world.turrets.size():
+		var turret := world.turrets[i]
+		buttons[i].text = "%s #%d   ·   Lv %d\n%d total XP" % [TurretRegistry.get_short_name(turret.turret_type),
+			turret.turret_id, turret.progression.level, turret.progression.total_xp]
+		buttons[i].set_pressed_no_signal(turret.turret_id == selected_id)
+	_show_selected()
+
+func select(id: int) -> void:
+	if id != selected_id:
+		details_scroll.scroll_vertical = 0
+	selected_id = id
+	detail_key = 0
+	refresh()
+
+func _show_selected() -> void:
+	var turret: TurretActor
+	for candidate in world.turrets:
+		if candidate.turret_id == selected_id:
+			turret = candidate
+			break
+	if not turret:
+		title.text = "No turrets deployed"
+		art.texture = null
+		xp_label.text = "Buy a turret in Offers to start your squad."
+		detail.text = ""
+		xp_bar.value = 0
+		return
+	var growth := turret.progression
+	var stats := turret._current_view(0.0)
+	var ledger := world.salvage.last_settlement
+	var key := [selected_id, growth.snapshot(), stats.values, ledger.get("wave", -1)].hash()
+	if key == detail_key:
+		return
+	detail_key = key
+	art.texture = ShopArt.turret(turret.turret_type)
+	title.text = "%s #%d\nLEVEL %d" % [ArenaShop.offer_name(ShopOffer.new("turret", turret.turret_type, 0)), selected_id, growth.level]
+	xp_label.text = "%d / %d XP toward level %d  ·  %d lifetime XP" % [growth.xp, TurretProgression.cost_to_next(growth.level), growth.level + 1, growth.total_xp]
+	xp_bar.max_value = TurretProgression.cost_to_next(growth.level)
+	xp_bar.value = growth.xp
+	var lines := PackedStringArray()
+	lines.append("[color=#8be0c9][b]CURRENT COMBAT STATS[/b][/color]")
+	lines.append("Damage  [b]%.2f[/b]     Reach  [b]%.2f m[/b]" % [stats.damage, stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret.turret_type) == TurretRegistry.FIRE_PULSE else 1.0)])
+	if turret.turret_type == "melee":
+		lines.append("Sweep  %.0f°/s     Rehit interval  %.2f s" % [stats.rotation_rate, stats.rehit_delay])
+	else:
+		lines.append("Rate  %.2f shots/s     Cooldown  %.2f s" % [stats.fire_rate, stats.cooldown_seconds])
+	if stats.projectile_speed_metres > 0:
+		lines.append("Projectile speed  %.2f m/s     Pierce  %d" % [stats.projectile_speed_metres, stats.pierce])
+	if stats.aoe_radius_metres > 0:
+		lines.append("Blast radius  %.2f m" % stats.aoe_radius_metres)
+	if stats.chain_count > 0:
+		lines.append("Chain jumps  %d     Chain reach  %.2f m" % [stats.chain_count, stats.chain_range_metres])
+	if stats.slow_intensity > 0:
+		lines.append("Slow  %.0f%% for %.2f s" % [stats.slow_intensity * 100, stats.slow_duration])
+	lines.append("Knockback  %.2f m" % stats.knockback_metres)
+	lines.append("\n[b]PROGRESSION & POSITION[/b]")
+	lines.append("Level damage bonus  +%.0f%%     Entrenchment  %d stacks" % [(growth.damage_multiplier() - 1.0) * 100, turret.entrench_stacks_cached])
+	lines.append("Stats include current items, difficulty and this turret’s active bonuses.")
+	if not world.session.state.turret_progression_enabled:
+		lines.append("Turret progression is off for this run.")
+	var change: Dictionary = ledger.get("changes", {}).get(selected_id, {})
+	if not change.is_empty():
+		lines.append("\n[b]LAST SALVAGE · WAVE %d[/b]\n+%d XP  ·  Level %d → %d" % [ledger["wave"], change["xp_awarded"], change["before"]["level"], change["after"]["level"]])
+	lines.append("\n[b]EVOLUTION MILESTONES[/b]")
+	for milestone in TurretProgression.EVOLUTION_LEVELS:
+		lines.append("Level %d  ·  %s" % [milestone, "Reached — form upgrade pending" if growth.level >= milestone else "Not reached"])
+	lines.append("Evolution forms are not available yet. Ordinary stat levels continue beyond level 15.")
+	detail.text = "\n".join(lines)
+
+func _process(delta: float) -> void:
+	if not is_visible_in_tree() or not world.shop.is_open():
+		return
+	for device in Input.get_connected_joypads():
+		var axis := Input.get_joy_axis(device, JOY_AXIS_RIGHT_Y)
+		if absf(axis) > .25:
+			details_scroll.scroll_vertical += roundi(axis * 650.0 * delta)

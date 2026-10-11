@@ -17,3 +17,9 @@ The project uses the shared theme and a 1920×1080 reference canvas with canvas-
 Native screenshots can be generated with `res://tools/capture_app.tscn`, which captures start, settings, pause, defeat, victory and return-to-menu screens. `res://tools/capture_game.tscn` provides shop, staged combat and stress captures. Both write under ignored `.test-results/`.
 
 `res://tools/preview_shop.tscn` creates a deterministic Shop review at any window resolution and saves `.test-results/shop-WIDTHxHEIGHT.png`. The 1920×1080 reference canvas scales down to 1280×720; narrower logical canvases use two offer columns. Both offer/build scroll containers follow controller focus. Category tags and the misleading aggregate DPS tile are removed.
+
+## Turret inspection and salvage recap
+
+The full-screen Shop has **Offers** and **Turrets** tabs. Q/E or controller LB/RB switches tabs. Turrets lists each owned instance by stable ID; select one for its illustration, level, XP bar, resolved combat stats, entrenchment, most recent salvage award and evolution milestones. The mouse wheel or right stick scrolls detailed information. Footer repair and Deploy controls remain accessible on either tab. Form evolutions are still pending.
+
+Before Shop, a short wave-end sequence shows collected salvage flying toward assigned turrets, filling XP bars and celebrating level gains with damage comparisons. A/Space/Continue skips without forfeiting rewards; Reduced Motion keeps the count-up but removes flights and pulses.

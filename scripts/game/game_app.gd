@@ -98,7 +98,7 @@ func _build_menu() -> void:
 		marker_option.add_item("Ground markers  -  " + label)
 	marker_option.tooltip_text = "Optional ground markers. Build zones and attack warnings stay visible."
 	motion_check = _check(options, "Reduced motion", "motion", func(value: bool) -> void: SettingsService.set_reduced_motion(value))
-	_label(options, "Reduced motion removes bobbing, recoil and hit blinking.\nAttack warnings and effect ranges remain visible.", 20)
+	_label(options, "Reduced motion removes bobbing, recoil and hit blinking, and simplifies salvage animations.\nAttack warnings and effect ranges remain visible.", 20)
 	var volume_row := HBoxContainer.new()
 	volume_row.add_theme_constant_override("separation", 12)
 	options.add_child(volume_row)

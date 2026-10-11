@@ -3,6 +3,10 @@ extends Control
 
 ## Opaque shop presentation; transactions and simulation remain owned by ArenaShop/ArenaWorld.
 var world: ArenaWorld
+var active_tab: int = 0
+var tabs: Array[Button] = []
+var offers_content: HBoxContainer
+var turret_inspector: TurretInspector
 var offer_buttons: Array[Button] = []
 var reroll_button: IconButton
 var repair_button: IconButton
@@ -54,7 +58,24 @@ func _ready() -> void:
 	balance.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	growth_summary = _label(column, "", 24, UiPalette.GOOD)
 	column.add_child(HSeparator.new())
+	var tab_row := HBoxContainer.new()
+	tab_row.add_theme_constant_override("separation", 16)
+	column.add_child(tab_row)
+	for tab_name in ["OFFERS", "TURRETS"]:
+		var tab := Button.new()
+		tab.text = tab_name
+		tab.toggle_mode = true
+		tab.custom_minimum_size = Vector2(220, 52)
+		tab.add_theme_font_size_override("font_size", 25)
+		tab.pressed.connect(switch_tab.bind(tabs.size()))
+		tab_row.add_child(tab)
+		tabs.append(tab)
+	var tab_hint := _label(tab_row, "Tabs: Q / E or LB / RB  ·  Details: right stick / mouse wheel", 21, UiPalette.MUTED)
+	tab_hint.autowrap_mode = TextServer.AUTOWRAP_OFF
+	tab_hint.size_flags_horizontal = SIZE_EXPAND_FILL
+	tab_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	var content := HBoxContainer.new()
+	offers_content = content
 	content.size_flags_vertical = SIZE_EXPAND_FILL
 	content.add_theme_constant_override("separation", 32)
 	column.add_child(content)
@@ -101,6 +122,10 @@ func _ready() -> void:
 	_label(sidebar, "Installed upgrades", 26)
 	installed = VBoxContainer.new()
 	sidebar.add_child(installed)
+	turret_inspector = TurretInspector.new()
+	turret_inspector.world = world
+	turret_inspector.size_flags_vertical = SIZE_EXPAND_FILL
+	column.add_child(turret_inspector)
 	var footer := HBoxContainer.new()
 	footer.add_theme_constant_override("separation", 18)
 	column.add_child(footer)
@@ -170,11 +195,41 @@ func refresh() -> void:
 	core_repair_button.visible = world.core != null
 	core_repair_button.disabled = not world.core or EconomyService.total_scrap < GameConstants.REPAIR_COST or world.core.health >= world.core.max_health
 	status.text = world.message
+	offers_content.visible = active_tab == 0
+	turret_inspector.visible = active_tab == 1
+	reroll_button.visible = active_tab == 0
+	for i in tabs.size():
+		tabs[i].set_pressed_no_signal(i == active_tab)
+	if active_tab == 1:
+		turret_inspector.refresh()
 	_refresh_details()
 	_refresh_focus()
 	if opening:
 		selected = -1
 		continue_button.grab_focus()
+
+func switch_tab(index: int) -> void:
+	active_tab = clampi(index, 0, 1)
+	refresh()
+	tabs[active_tab].grab_focus()
+
+func _input(event: InputEvent) -> void:
+	if not visible or not world.shop.is_open():
+		return
+	var direction := 0
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.physical_keycode == KEY_Q:
+			direction = -1
+		elif event.physical_keycode == KEY_E:
+			direction = 1
+	elif event is InputEventJoypadButton and event.pressed:
+		if event.button_index == JOY_BUTTON_LEFT_SHOULDER:
+			direction = -1
+		elif event.button_index == JOY_BUTTON_RIGHT_SHOULDER:
+			direction = 1
+	if direction != 0:
+		switch_tab(posmod(active_tab + direction, 2))
+		get_viewport().set_input_as_handled()
 
 func _restore_world() -> void:
 	if suppressing_world:
@@ -365,10 +420,25 @@ func _refresh_focus() -> void:
 					break
 				j += direction
 			row[i].set_focus_neighbor(SIDE_LEFT if direction < 0 else SIDE_RIGHT, row[i].get_path_to(target))
+	tabs[0].focus_neighbor_right = tabs[0].get_path_to(tabs[1])
+	tabs[1].focus_neighbor_left = tabs[1].get_path_to(tabs[0])
+	if active_tab == 1:
+		var roster := turret_inspector.buttons
+		for tab in tabs:
+			tab.focus_neighbor_bottom = tab.get_path_to(roster[0] if not roster.is_empty() else continue_button)
+		for i in roster.size():
+			roster[i].focus_neighbor_top = roster[i].get_path_to(roster[i - 1] if i > 0 else tabs[1])
+			roster[i].focus_neighbor_bottom = roster[i].get_path_to(roster[i + 1] if i + 1 < roster.size() else continue_button)
+			roster[i].focus_neighbor_right = roster[i].get_path_to(continue_button)
+		for button in row:
+			button.focus_neighbor_top = button.get_path_to(roster[-1] if not roster.is_empty() else tabs[1])
+		return
 	var available: Array[Button] = []
 	for card in offer_buttons:
 		if card.visible and not card.disabled:
 			available.append(card)
+	for tab in tabs:
+		tab.focus_neighbor_bottom = tab.get_path_to(available[0] if not available.is_empty() else continue_button)
 	for button in row:
 		button.focus_neighbor_top = button.get_path_to(available[-1] if not available.is_empty() else owned_buttons[0] if not owned_buttons.is_empty() else button)
 	for i in range(available.size()):
@@ -379,7 +449,7 @@ func _refresh_focus() -> void:
 		var below := position + offers_grid.columns
 		var above := position - offers_grid.columns
 		card.focus_neighbor_bottom = card.get_path_to(offer_buttons[below] if below < offer_buttons.size() and offer_buttons[below] in available else continue_button)
-		card.focus_neighbor_top = card.get_path_to(offer_buttons[above] if above >= 0 and offer_buttons[above] in available else card)
+		card.focus_neighbor_top = card.get_path_to(offer_buttons[above] if above >= 0 and offer_buttons[above] in available else tabs[0])
 	for i in range(owned_buttons.size()):
 		var button := owned_buttons[i]
 		button.focus_neighbor_left = button.get_path_to(available[-1] if not available.is_empty() else continue_button)

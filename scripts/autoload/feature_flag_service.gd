@@ -63,7 +63,7 @@ const FLAG_DEFINITIONS: Dictionary = {
 	},
 	TURRET_PROGRESSION: {
 		"name": "Turret Progression", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 1,
-		"description": "Leftover scrap becomes turret XP, unlimited stat levels and scarcer turret pricing. Changes apply when you start or restart a run. Evolution forms and animations are not implemented yet.",
+		"description": "Leftover scrap becomes turret XP, unlimited stat levels and scarcer turret pricing. Changes apply when you start or restart a run. Evolution forms are not implemented yet.",
 	},
 	ENTRENCH: {
 		"name": "Entrench", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 1,

@@ -19,6 +19,9 @@ var _next_turret_id: int = 1
 var shop := ArenaShop.new()
 var waves := WaveDirector.new()
 var salvage := WaveSalvage.new()
+## Headless tools skip presentation; tests can explicitly enable and advance it.
+var present_wave_rewards: bool = DisplayServer.get_name() != "headless"
+var reward_presentation: SalvagePresentation
 var drops := TechDropDirector.new()
 var build_zones := BuildZoneDirector.new()
 var blasts := BlastEffects.new()
@@ -115,6 +118,10 @@ func _ready() -> void:
 	combat.chain_arc.connect(effects.show_arc)
 	combat.actor_defeated.connect(_on_actor_defeated)
 	combat.hit_applied.connect(_record_hit)
+	reward_presentation = SalvagePresentation.new()
+	reward_presentation.world = self
+	reward_presentation.finished.connect(waves.complete_wave)
+	add_child(reward_presentation)
 	stage = ArenaStage.new()
 	stage.name = "Stage"
 	add_child(stage)
@@ -178,6 +185,7 @@ func start_run() -> void:
 	begin_next_wave()
 
 func _clear_actors() -> void:
+	reward_presentation.cancel()
 	audio.reset()
 	core = null
 	convoy_route = null
@@ -198,7 +206,7 @@ func _clear_actors() -> void:
 
 ## Ends the fight on the field: removes enemies, projectiles, effects and drops, stops audio and drops any carried
 ## turret. Scrap pickups are banked when `bank_pickups` is set, otherwise discarded.
-func clear_field(bank_pickups: bool) -> void:
+func clear_field(bank_pickups: bool, return_carried: bool = true) -> void:
 	# Progression awards are committed explicitly by WaveDirector, never by cleanup.
 	bank_pickups = bank_pickups and not session.state.turret_progression_enabled
 	for enemy in enemies:
@@ -224,7 +232,8 @@ func clear_field(bank_pickups: bool) -> void:
 			pickup.collect()
 		else:
 			pickup.queue_free()
-	placement.drop_carried()
+	if return_carried:
+		placement.drop_carried()
 	audio.reset()
 
 func is_combat() -> bool:

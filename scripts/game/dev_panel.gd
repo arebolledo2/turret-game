@@ -83,7 +83,7 @@ func progression_text() -> String:
 	var active := world.session.state.turret_progression_enabled
 	var lines := PackedStringArray(["This run: %s | additional frames acquired: %d" % [
 		"ON" if active else "OFF", world.session.state.additional_turrets_acquired]])
-	lines.append("Forms/choices and award animations are pending Phase 2.")
+	lines.append("Evolution forms and choices are pending Phase 2.")
 	for turret in world.turrets:
 		var growth := turret.progression
 		var stats := turret._current_view(0.0)
