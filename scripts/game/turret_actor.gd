@@ -13,6 +13,7 @@ var carried: bool = false:
 		target_clock = 0.0
 		if value:
 			reset_entrench()
+var gun_muzzles: Array[Node3D] = []
 var gun_burst_left := 0
 var gun_burst_clock := 0.0
 var gun_burst_shot: CombatShot3D
@@ -84,6 +85,7 @@ func _rebuild_model() -> void:
 	BowEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
 	flame_emitters = FlameEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
 	bowling_hardware = BowlingEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
+	gun_muzzles = GunbladeEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
 	aim = model.find_child("Aim", true, false) as Node3D
 	blade_tip = model.find_child("BladeTip", true, false) as Node3D
 	muzzle = model.find_child("Muzzle", true, false) as Node3D
@@ -601,8 +603,9 @@ func _tick_gunblade_burst(delta: float) -> void:
 		return
 	gun_burst_clock -= delta
 	while gun_burst_left > 0 and gun_burst_clock <= 0.0:
-		var heading := WorldGeometry.planar(-muzzle.global_basis.z).normalized()
-		world.fire_direction(muzzle.global_position, heading, gun_burst_shot)
+		var exit := gun_muzzles[clampi(gun_muzzles.size() - gun_burst_left, 0, gun_muzzles.size() - 1)]
+		var heading := WorldGeometry.planar(-exit.global_basis.z).normalized()
+		world.fire_direction(exit.global_position, heading, gun_burst_shot)
 		gun_burst_left -= 1
 		gun_burst_clock += .065
 		cooldown = gun_stats.cooldown_seconds

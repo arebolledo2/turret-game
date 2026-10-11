@@ -315,6 +315,7 @@ func test_gunblade_later_forms_fire_attributed_bursts_from_moving_barrel() -> vo
 	turret.progression.award(xp)
 	for stage in range(3):
 		assert_true(turret.evolve("gunblade"))
+		assert_eq(turret.gun_muzzles.size(), stage + 1, "Each burst round has a visible barrel")
 	assert_eq(turret.display_name(), "Stormblade")
 	assert_eq(turret.progression.total_xp, xp)
 	assert_true(turret.available_evolutions().is_empty())
@@ -329,9 +330,13 @@ func test_gunblade_later_forms_fire_attributed_bursts_from_moving_barrel() -> vo
 	turret.aim.rotation.y = .3
 	turret._tick_gunblade_burst(.07)
 	assert_eq(world.projectiles.size(), 2)
+	assert_lt(world.projectiles[1].global_position.distance_to(turret.gun_muzzles[1].global_position), .001)
+	assert_lt(world.projectiles[1].direction.distance_to(WorldGeometry.planar(-turret.gun_muzzles[1].global_basis.z).normalized()), .001)
 	assert_false(world.projectiles[0].direction.is_equal_approx(world.projectiles[1].direction))
 	turret._tick_gunblade_burst(.07)
 	assert_eq(world.projectiles.size(), 3)
+	assert_lt(world.projectiles[2].global_position.distance_to(turret.gun_muzzles[2].global_position), .001)
+	assert_false(turret.gun_muzzles[1].global_position.is_equal_approx(turret.gun_muzzles[2].global_position))
 	for projectile in world.projectiles:
 		assert_eq(projectile.shot.source_id, turret.turret_id)
 		assert_eq(projectile.shot.attack_families, ["projectile"])

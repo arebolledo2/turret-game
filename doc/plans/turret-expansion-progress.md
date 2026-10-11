@@ -91,3 +91,7 @@ Updated all six portraits. Native close and default-zoom reviews show distinct f
 Heavy Roller / Demolition Roller / Juggernaut widen and reinforce the authored return housing with one / two / three paired hydraulic braces. The loaded ball stays spherical as it grows; the muzzle height scales exactly with its projectile collision radius. Ramp and plinth widen to support the larger payload. Bank Shot / Pinball Engine / Ricochet King gain one / two / three bumper pairs on the ramp and a pair of brass launch paddles. The paddles kick on firing and settle after 0.22 seconds; Reduced Motion keeps them still. Collision and ricochet mechanics remain unchanged.
 
 All six portraits regenerated; dark-background comparison reviewed. Regression coverage checks spherical loaded balls, radius-to-launch-height agreement at all stages, staged hardware counts, mirrored paddle movement, settling and Reduced Motion.
+
+### Gunblade visual evolution
+
+Repeater Blade adds a second open brass barrel above the authored gun; Stormblade adds two upper barrels for a triangular three-barrel assembly. Teal receivers connect the new hardware while leaving the curved ivory blade exposed. Every burst round launches from its corresponding visible muzzle and follows the rotating assembly. The authored base, arm, grip and blade remain intact. Updated both later-form shop portraits and reviewed their silhouettes. Regression assertions cover barrel counts at each stage, distinct shot origins, rotating headings and original source attribution.
