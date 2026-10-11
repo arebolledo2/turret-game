@@ -6,7 +6,7 @@ extends RefCounted
 signal hit_applied(target: Node3D, hit: CombatHit3D, actual_damage: float)
 signal explosion(position: Vector3, radius: float)
 signal shock_pulse(position: Vector3, radius: float)
-signal chain_arc(from: Vector3, to: Vector3)
+signal chain_arc(from: Vector3, to: Vector3, hop: int)
 signal actor_defeated(actor: Node3D, position: Vector3)
 
 func apply_hit(target: CombatActor, hit: CombatHit3D) -> float:
@@ -63,7 +63,7 @@ func chain(origin: Vector3, primary: CombatActor, shot: CombatShot3D, jumps: int
 		if not is_instance_valid(current) or current.dead:
 			break
 		var to := current.position + Vector3(0, .45, 0)
-		chain_arc.emit(from, to)
+		chain_arc.emit(from, to, step)
 		struck.append(current)
 		var jump_hit := CombatHit3D.new(damage, from, Vector3.ZERO, shot.damage_type)
 		jump_hit.critical = shot.critical
