@@ -4,7 +4,6 @@ extends CanvasLayer
 ## Replays a committed settlement. Visual progress never writes XP or currency.
 signal finished
 const FLIGHT_END: float = 1.9
-const DURATION: float = 3.8
 const MAX_FLIGHTS: int = 48
 var world: ArenaWorld
 var active: bool = false
@@ -73,15 +72,9 @@ func begin(record: Dictionary) -> void:
 		grid.add_child(card)
 		var name_label := _label(card, "%s #%d" % [TurretRegistry.get_short_name(turret.turret_type), id], 23)
 		name_label.modulate = UiPalette.TEAL_HI
-		var progress := ProgressBar.new()
-		progress.custom_minimum_size.y = 12
-		progress.show_percentage = false
-		var fill := StyleBoxFlat.new()
-		fill.bg_color = UiPalette.TEAL_HI
-		fill.set_corner_radius_all(3)
-		progress.add_theme_stylebox_override("fill", fill)
-		card.add_child(progress)
 		var detail := _label(card, "", 21)
+		var progress := TurretXpBar.new()
+		card.add_child(progress)
 		var stats := _label(card, "", 20)
 		var floating := Label3D.new()
 		floating.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -109,7 +102,7 @@ func begin(record: Dictionary) -> void:
 			"floating": floating, "glow": glow, "level": int(change["before"]["level"]),
 			"damage": turret._current_view(1.0).damage, "pulse_until": 0.0}
 	_build_packets()
-	_label(column, "Continue skips the animation and keeps all rewards." + ("  Reduced Motion is on." if reduced else ""), 18).modulate = UiPalette.MUTED
+	_label(column, "Review your turret growth, then press Continue. All rewards are already secured." + ("  Reduced Motion is on." if reduced else ""), 18).modulate = UiPalette.MUTED
 	advance(0.0)
 	skip_button.grab_focus()
 
@@ -205,10 +198,9 @@ func advance(delta: float) -> void:
 			card["level"] = shown.level
 			card["pulse_until"] = elapsed + .5
 			world.audio.play_cue("purchase", (card["floating"] as Label3D).position)
-		var bar: ProgressBar = card["bar"]
-		bar.max_value = TurretProgression.cost_to_next(shown.level)
-		bar.value = shown.xp
-		(card["detail"] as Label).text = "Lv %d  ·  XP %d / %d  ·  +%d XP" % [shown.level, shown.xp, int(bar.max_value), awarded]
+		var bar: TurretXpBar = card["bar"]
+		bar.show_progress(shown.level, shown.xp)
+		(card["detail"] as Label).text = "Lv %d → %d  ·  +%d XP" % [shown.level, shown.level + 1, awarded]
 		var before_damage := float(card["damage"]) / float(change["after"]["damage_multiplier"]) * float(change["before"]["damage_multiplier"])
 		var current_damage := float(card["damage"]) / float(change["after"]["damage_multiplier"]) * shown.damage_multiplier()
 		(card["stats"] as Label).text = "Damage %.2f → %.2f%s" % [before_damage, current_damage, "  ·  +%d levels!" % levels if levels > 0 else ""]
@@ -218,8 +210,6 @@ func advance(delta: float) -> void:
 			glow.visible = elapsed < float(card["pulse_until"])
 			glow.scale = Vector3.ONE * (1.0 + .5 * (1.0 - maxf(0, float(card["pulse_until"]) - elapsed) / .5))
 	heading.text = "SALVAGE SECURED · +%d XP · %d LEVELS" % [ledger.get("xp_awarded", 0), gained] if elapsed >= FLIGHT_END else "WAVE SECURED · COLLECTING SALVAGE"
-	if elapsed >= DURATION:
-		complete()
 
 func complete() -> void:
 	if not active or world.paused:

@@ -22,7 +22,7 @@ func _finish(amount: int = 42) -> void:
 	world.pickup_root.add_child(pickup)
 	assert_true(world.finish_wave())
 
-func test_collection_replays_awards_then_opens_shop_once() -> void:
+func test_collection_waits_for_continue_then_opens_shop_once() -> void:
 	_finish()
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_END)
 	assert_eq(world.turrets[0].progression.level, 5, "Committed before animation")
@@ -31,7 +31,10 @@ func test_collection_replays_awards_then_opens_shop_once() -> void:
 	world.reward_presentation.advance(2.0)
 	assert_eq(world.reward_presentation.cards[1].level, 5)
 	assert_true(world.reward_presentation.cards[1].floating.text.contains("LEVEL UP"))
-	world.reward_presentation.advance(2.0)
+	world.reward_presentation.advance(60.0)
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_END, "Never auto-advance")
+	assert_true(world.reward_presentation.active)
+	world.reward_presentation.skip_button.pressed.emit()
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.SHOP)
 	assert_false(world.reward_presentation.active)
 	var money := EconomyService.total_scrap
@@ -84,6 +87,22 @@ func test_reduced_motion_has_no_flights_or_pulses_but_shows_levels() -> void:
 	assert_null(world.reward_presentation.cards[1].glow)
 	world.reward_presentation.advance(2.0)
 	assert_eq(world.reward_presentation.cards[1].level, 5)
+	world.reward_presentation.advance(60.0)
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_END)
+
+func test_xp_bars_show_partial_progress_in_recap_and_turret_roster() -> void:
+	_finish(45)
+	world.reward_presentation.advance(2.0)
+	var bar: ProgressBar = world.reward_presentation.cards[1].bar
+	assert_eq(bar.value, 3.0, "Overflow after reaching level 5 is shown")
+	assert_eq(bar.max_value, float(TurretProgression.cost_to_next(5)))
+	world.reward_presentation.complete()
+	var shop: ShopScreen = world.hud.shop_screen
+	shop.refresh()
+	shop.switch_tab(1)
+	assert_eq(shop.turret_inspector.xp_bar.value, bar.value)
+	assert_eq(shop.turret_inspector.roster_bars[0].value, bar.value)
+	assert_eq(shop.turret_inspector.roster_bars[0].max_value, bar.max_value)
 
 func test_no_leftovers_does_not_delay_shop() -> void:
 	world.finish_wave()

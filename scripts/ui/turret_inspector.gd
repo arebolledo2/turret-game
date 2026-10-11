@@ -6,11 +6,12 @@ var world: ArenaWorld
 var selected_id: int = 0
 var roster: VBoxContainer
 var buttons: Array[Button] = []
+var roster_bars: Array[TurretXpBar] = []
 var shown_ids: Array[int] = []
 var art: TextureRect
 var title: Label
 var xp_label: Label
-var xp_bar: ProgressBar
+var xp_bar: TurretXpBar
 var detail: RichTextLabel
 var detail_key: int = 0
 var details_scroll: ScrollContainer
@@ -49,13 +50,8 @@ func _ready() -> void:
 	xp_label = Label.new()
 	xp_label.add_theme_font_size_override("font_size", 25)
 	column.add_child(xp_label)
-	xp_bar = ProgressBar.new()
-	xp_bar.custom_minimum_size.y = 20
-	xp_bar.show_percentage = false
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = UiPalette.TEAL_HI
-	fill.set_corner_radius_all(4)
-	xp_bar.add_theme_stylebox_override("fill", fill)
+	xp_bar = TurretXpBar.new()
+	xp_bar.custom_minimum_size.y = 34
 	column.add_child(xp_bar)
 	detail = RichTextLabel.new()
 	detail.bbcode_enabled = true
@@ -73,6 +69,7 @@ func refresh() -> void:
 			roster.remove_child(button)
 			button.queue_free()
 		buttons.clear()
+		roster_bars.clear()
 		shown_ids = ids
 		for turret in world.turrets:
 			var button := Button.new()
@@ -84,12 +81,22 @@ func refresh() -> void:
 			button.focus_entered.connect(select.bind(id))
 			roster.add_child(button)
 			buttons.append(button)
+			var bar := TurretXpBar.new()
+			bar.custom_minimum_size.y = 18
+			button.add_child(bar)
+			bar.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+			bar.offset_left = 16
+			bar.offset_right = -16
+			bar.offset_top = -28
+			bar.offset_bottom = -10
+			roster_bars.append(bar)
 	if selected_id not in ids:
 		selected_id = ids[0] if not ids.is_empty() else 0
 	for i in world.turrets.size():
 		var turret := world.turrets[i]
-		buttons[i].text = "%s #%d   ·   Lv %d\n%d total XP" % [TurretRegistry.get_short_name(turret.turret_type),
-			turret.turret_id, turret.progression.level, turret.progression.total_xp]
+		buttons[i].text = "%s #%d   ·   Lv %d\n" % [TurretRegistry.get_short_name(turret.turret_type),
+			turret.turret_id, turret.progression.level]
+		roster_bars[i].show_progress(turret.progression.level, turret.progression.xp)
 		buttons[i].set_pressed_no_signal(turret.turret_id == selected_id)
 	_show_selected()
 
@@ -122,9 +129,8 @@ func _show_selected() -> void:
 	detail_key = key
 	art.texture = ShopArt.turret(turret.turret_type)
 	title.text = "%s #%d\nLEVEL %d" % [ArenaShop.offer_name(ShopOffer.new("turret", turret.turret_type, 0)), selected_id, growth.level]
-	xp_label.text = "%d / %d XP toward level %d  ·  %d lifetime XP" % [growth.xp, TurretProgression.cost_to_next(growth.level), growth.level + 1, growth.total_xp]
-	xp_bar.max_value = TurretProgression.cost_to_next(growth.level)
-	xp_bar.value = growth.xp
+	xp_label.text = "LEVEL %d  →  LEVEL %d" % [growth.level, growth.level + 1]
+	xp_bar.show_progress(growth.level, growth.xp)
 	var lines := PackedStringArray()
 	lines.append("[color=#8be0c9][b]CURRENT COMBAT STATS[/b][/color]")
 	lines.append("Damage  [b]%.2f[/b]     Reach  [b]%.2f m[/b]" % [stats.damage, stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret.turret_type) == TurretRegistry.FIRE_PULSE else 1.0)])
@@ -142,6 +148,7 @@ func _show_selected() -> void:
 		lines.append("Slow  %.0f%% for %.2f s" % [stats.slow_intensity * 100, stats.slow_duration])
 	lines.append("Knockback  %.2f m" % stats.knockback_metres)
 	lines.append("\n[b]PROGRESSION & POSITION[/b]")
+	lines.append("XP  %d / %d to next level  ·  %d total earned" % [growth.xp, TurretProgression.cost_to_next(growth.level), growth.total_xp])
 	lines.append("Level damage bonus  +%.0f%%     Entrenchment  %d stacks" % [(growth.damage_multiplier() - 1.0) * 100, turret.entrench_stacks_cached])
 	lines.append("Stats include current items, difficulty and this turret’s active bonuses.")
 	if not world.session.state.turret_progression_enabled:

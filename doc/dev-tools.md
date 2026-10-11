@@ -56,7 +56,7 @@ Run `./run_tests.ps1 -filter turret_progression` for foundation checks. Telemetr
 
 ## Wave-end salvage presentation
 
-Rendered games hold `WAVE_END` for a 3.8-second presentation when there is turret XP to award. `WaveSalvage` commits the rewards once first; `SalvagePresentation` replays its immutable allocation ledger. Actual scrap models arc toward their assigned turret, XP bars count up, and each level crossing triggers a brief glow and sound. Cards show before/after damage and multi-level gains. Continue (controller A / Space / click) skips the presentation while retaining all rewards. Pause freezes it; restart or scene exit cancels it without a later Shop transition. Carried turrets remain at their settlement position until the sequence finishes, then return to the ground. Final-wave awards play before Victory.
+Rendered games hold `WAVE_END` for a salvage presentation when there is turret XP to award. After collection finishes, the recap stays open until the player presses Continue; there is no auto-advance timer. `WaveSalvage` commits the rewards once first; `SalvagePresentation` replays its immutable allocation ledger. Actual scrap models arc toward their assigned turret, XP bars count up, and each level crossing triggers a brief glow and sound. Cards show before/after damage and multi-level gains. Continue (controller A / Space / click) is required to leave the recap, and can also skip the animation while retaining all rewards. Pause freezes it; restart or scene exit cancels it without a later Shop transition. Carried turrets remain at their settlement position until the sequence finishes, then return to the ground. Final-wave awards play before Victory.
 
 Reduced Motion preserves the XP count-up and recap but omits flying scrap and spatial pulses. The visual budget is 48 flights with two trail motes each; every allocation still contributes to the displayed XP. The presentation never consumes gameplay RNG or awards currency/XP itself. Empty salvage goes straight to Shop. `ArenaWorld.present_wave_rewards` defaults false under the headless renderer so automated simulation stays synchronous; lifecycle tests explicitly enable and advance the presentation.
 
@@ -118,3 +118,5 @@ The `PROGRESSION_SMOKE` line includes the flag snapshot so results from differen
 | `res://tools/bench_split.tscn` | Headless per-subsystem script timing per physics tick (engine-side physics cost is the remainder) |
 
 Run the headless tools with `godot --headless --path . <scene>`. They measure CPU only, so a busy GPU does not affect them.
+
+XP presentation uses a shared high-contrast `TurretXpBar`: large meters in the salvage recap and selected turret details, plus compact meters on every Turrets roster button. Current/next level labels lead; exact XP totals remain available in detailed inspection.

@@ -22,4 +22,6 @@ Native screenshots can be generated with `res://tools/capture_app.tscn`, which c
 
 The full-screen Shop has **Offers** and **Turrets** tabs. Q/E or controller LB/RB switches tabs. Turrets lists each owned instance by stable ID; select one for its illustration, level, XP bar, resolved combat stats, entrenchment, most recent salvage award and evolution milestones. The mouse wheel or right stick scrolls detailed information. Footer repair and Deploy controls remain accessible on either tab. Form evolutions are still pending.
 
-Before Shop, a short wave-end sequence shows collected salvage flying toward assigned turrets, filling XP bars and celebrating level gains with damage comparisons. A/Space/Continue skips without forfeiting rewards; Reduced Motion keeps the count-up but removes flights and pulses.
+Before Shop, a short wave-end sequence shows collected salvage flying toward assigned turrets, filling XP bars and celebrating level gains with damage comparisons. The recap waits for A/Space/Continue, which can also skip the animation without forfeiting rewards; Reduced Motion keeps the count-up but removes flights and pulses.
+
+XP presentation uses a shared high-contrast `TurretXpBar`: large meters in the salvage recap and selected turret details, plus compact meters on every Turrets roster button. Current/next level labels lead; exact XP totals remain available in detailed inspection.
