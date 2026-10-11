@@ -421,3 +421,39 @@ func test_orbit_saber_has_three_visible_arms_and_three_sweep_directions() -> voi
 	var health := overlapping.health
 	turret._spin_bat(.01, stats, stats.range_metres)
 	assert_eq(overlapping.health, health)
+
+func test_siege_evolutions_expand_shell_blast_and_knockback() -> void:
+	ModifierService.add_modifier({"id": "no_crit_siege_test", "stat": "turret_crit_chance", "operation": "more", "value": 0.0})
+	var turret := world.add_turret(Vector3.ZERO, "plasma")
+	turret.set_physics_process(false)
+	var xp := 0
+	for level in range(1, 15):
+		xp += TurretProgression.cost_to_next(level)
+	turret.progression.award(xp)
+	var previous: CombatShot3D
+	for stage in range(3):
+		assert_true(turret.evolve("siege"))
+		var current := turret._new_shot(turret._current_view(0))
+		if previous:
+			assert_gt(current.damage, previous.damage)
+			assert_gt(current.radius, previous.radius)
+			assert_gt(current.splash_radius, previous.splash_radius)
+			assert_gt(current.knockback, previous.knockback)
+		previous = current
+	assert_eq(turret.display_name(), "Worldbreaker")
+	assert_true(turret.available_evolutions().is_empty())
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	var inside := world.spawn_enemy(Vector3(previous.splash_radius + .1, 0, 0))
+	var outside := world.spawn_enemy(Vector3(previous.splash_radius + 1.0, 0, 0))
+	for enemy in [inside, outside]:
+		enemy.set_physics_process(false)
+		enemy.health = 1000.0
+	world.combat.impact(null, Vector3.ZERO, Vector3.FORWARD, previous, world.enemies)
+	assert_almost_eq(inside.health, 1000.0 - previous.damage, .001, "Blast includes hurtbox overlap")
+	assert_gt(inside.knockback_velocity.x, 0.0)
+	assert_eq(outside.health, 1000.0)
+	var ball := world.fire_direction(Vector3.ZERO, Vector3.FORWARD, previous)
+	assert_almost_eq((ball.sweep.shape as SphereShape3D).radius, .34, .001)
+	ball.release()
+	world.fire_direction(Vector3.ZERO, Vector3.FORWARD, CombatShot3D.new())
+	assert_almost_eq((ball.sweep.shape as SphereShape3D).radius, .075, .001)

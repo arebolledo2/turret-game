@@ -176,3 +176,5 @@ Gunblade now advances to Repeater Blade (two-shot bursts) and Stormblade (three-
 Ion branches now reach Cyclone Gatling and Omnifire at level 15. Cyclone ramps to 2.5x resting rate and pierces an additional enemy. Omnifire emits twelve evenly spaced radial directions from its four outward muzzles. These attacks still use the Gatling/Crossfire chassis pending final-stage visual upgrades.
 
 Saber now advances to Twin Saber and Orbit Saber: two opposing or three evenly spaced held blades share an enemy rehit lockout. The additional authored arm/hand/hilt/blade assemblies rotate with Aim and scale with gameplay reach. Native three-stage close preview: tools/preview_evolution.tscn -- --saber-preview.
+
+Siege Cannon now reaches Moonshot and Worldbreaker at levels 10/15. Shell radii grow from .22 to .28 to .34 m, with rising damage, blast radius and knockback. Splash still includes hurtbox overlap at its boundary. The larger final-stage chassis treatment remains outstanding.

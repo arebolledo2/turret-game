@@ -81,7 +81,7 @@ static func base_stats(base_type: String, branch: String, stage: int) -> Diction
 			stats.range = 330.0
 			stats.projectile_speed = 350.0
 			stats.aoe_radius = [135.0, 160.0, 185.0][stage - 1]
-			stats.knockback_force = 220.0
+			stats.knockback_force = [220.0, 280.0, 360.0][stage - 1]
 		"heavy_roller":
 			stats.damage = [30.0, 43.0, 60.0][stage - 1]
 			stats.pierce = [7, 10, 14][stage - 1]

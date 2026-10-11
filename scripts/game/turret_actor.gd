@@ -422,7 +422,7 @@ func _new_shot(stats: TurretStats) -> CombatShot3D:
 			shot.ricochets = [2, 4, 6][progression.evolution_stage - 1]
 			shot.lifetime = 6.0
 	if progression.evolution_branch == "siege":
-		shot.radius = .22
+		shot.radius = [.22, .28, .34][progression.evolution_stage - 1]
 	shot.source_id = turret_id
 	shot.attack_families = TurretRegistry.get_attack_families(turret_type)
 	if TurretStatsService.roll_turret_crit():
@@ -480,7 +480,7 @@ func available_evolutions() -> Array[String]:
 		return result
 	for branch in progression.evolution_options(turret_type):
 		var next_stage := progression.evolution_stage + 1
-		var implemented := branch in ["repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "gunblade", "machine_gun", "scatter", "saber"] or (branch in ["siege"] and next_stage == 1)
+		var implemented := branch in ["repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "gunblade", "machine_gun", "scatter", "saber", "siege"]
 		if implemented and ClockworkModels.available(TurretEvolution.model_key(turret_type, branch, next_stage)):
 			result.append(branch)
 	return result
