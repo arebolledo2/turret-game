@@ -103,6 +103,10 @@ func test_roll_result_is_a_sellable_turret_or_a_real_item() -> void:
 			assert_true(ItemRegistry.get_all_item_ids().has(result["asset_id"]))
 
 func test_leftover_scrap_is_banked_and_raises_the_next_waves_zones() -> void:
+	# Banking/zone bonuses remain supported when the progression economy is disabled.
+	FeatureFlagService.set_enabled(FeatureFlagService.TURRET_PROGRESSION, false)
+	world.start_run()
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 	for index in 3:
 		var pickup := ScrapPickup.new()
 		pickup.world = world

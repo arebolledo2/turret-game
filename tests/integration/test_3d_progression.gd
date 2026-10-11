@@ -255,6 +255,8 @@ func test_pause_carry_death_and_wave_end_clear_or_freeze_status_correctly() -> v
 	assert_false(second.slow_marker.visible)
 
 func test_six_wave_loop_supports_distinct_builds_and_only_ends_after_wave_six() -> void:
+	# This regression scenario uses the original six-wave economy and purchase budget.
+	FeatureFlagService.set_enabled(FeatureFlagService.TURRET_PROGRESSION, false)
 	for route in ["normal", "plasma"]:
 		world.start_run()
 		world.set_physics_process(false)

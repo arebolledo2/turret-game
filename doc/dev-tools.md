@@ -40,7 +40,7 @@ Developer and experiment flag values persist with the preferences file (`[dev_fl
 
 ## Turret progression foundation (Phase 1)
 
-`turret_progression` is an experiment, **off by default**. In the F1 panel, enable **Turret Progression (next run)**, then **Restart run**. Its configured value updates immediately but `RunSessionState.turret_progression_enabled` is latched at run start; toggling it during combat or a shop never switches the current economy. The panel's top section distinguishes the current run from the next-run setting and lists individual turret IDs, levels, XP, actual damage, level bonuses, pending milestones and the last settlement. Controller access is Back + right-stick click.
+`turret_progression` is an experiment, **on by default**. In the F1 panel, **Experiment Flags → Turret Progression (next run)** controls it; restart the run after changing it. Saved developer preferences can override the default. Its configured value updates immediately but `RunSessionState.turret_progression_enabled` is latched at run start; toggling it during combat or a shop never switches the current economy. The panel's top section distinguishes the current run from the next-run setting and lists individual turret IDs, levels, XP, actual damage, level bonuses, pending milestones and the last settlement. Controller access is Back + right-stick click.
 
 When enabled:
 
@@ -50,7 +50,7 @@ When enabled:
 - Prices use `floor(base * 2 * (1 + .20*wave) * (1 + linear*N + .10*N*N) * discounts)`, with a minimum of 1. `linear` starts at .65 and cannot drop below .40. N counts all additional acquired frames, including free build rewards, excluding the starter. Paid purchases remain separate for Quantity Discount. Item prices and the normal wave cash bonus are unchanged.
 - Leftovers no longer bank or improve next-wave build zones. Other build-zone behavior remains unchanged pending the encounter phase.
 
-**Not yet playable evolution:** milestones are queued, with no forms, branch choices, scrap-flight animations or level-up celebration yet. Normal shop type summaries do not display per-instance level bonuses; use the development view. Positive/negative pickup-range items and harder build encounters are later phases. The default economy remains available with the flag off.
+**Not yet playable evolution:** milestones are queued, with no forms, branch choices, scrap-flight animations or level-up celebration yet. Normal shop type summaries do not display per-instance level bonuses; use the development view. Positive/negative pickup-range items and harder build encounters are later phases. The legacy economy remains available with the flag off.
 
 Run `./run_tests.ps1 -filter turret_progression` for foundation checks. Telemetry includes a per-wave `salvage` ledger, `turret_xp` and `salvage_fallback_cash`, plus XP/fallback totals; `scrap_earned` continues to count currency only. The original [evolution plan](plans/turret-evolution.html) contains the remaining phases and unvalidated balance targets.
 

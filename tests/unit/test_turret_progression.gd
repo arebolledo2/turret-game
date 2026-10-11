@@ -72,7 +72,7 @@ func test_older_preferences_keep_new_flag_at_its_default() -> void:
 	var config := ConfigFile.new()
 	config.set_value("dev_flags", "entrench", false)
 	SettingsService.load_dev_flags(config)
-	assert_false(FeatureFlagService.is_enabled(FeatureFlagService.TURRET_PROGRESSION))
+	assert_true(FeatureFlagService.is_enabled(FeatureFlagService.TURRET_PROGRESSION))
 	assert_false(FeatureFlagService.is_enabled(FeatureFlagService.ENTRENCH))
 
 func test_purchase_penalty_items_have_linear_floor_and_keep_quadratic_growth() -> void:

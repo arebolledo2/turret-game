@@ -4,7 +4,6 @@ var world: ArenaWorld
 
 func before_each() -> void:
 	TestHelpers.reset_all_services()
-	FeatureFlagService.request_enabled(FeatureFlagService.TURRET_PROGRESSION, true)
 	world = ArenaWorld.new()
 	world.auto_start = false
 	world.show_hud = false
