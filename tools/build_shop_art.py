@@ -43,10 +43,9 @@ out = ROOT / 'assets/ui/items'; out.mkdir(parents=True, exist_ok=True)
 for row in rows:
     motif, variant = lookup[row['id']]
     body = motifs[motif]
-    # Variations retain the object silhouette while changing material and visible fittings.
+    # Variations retain the object silhouette while changing material colors.
     if variant % 3 == 1: body = body.replace('url(#teal)', 'url(#coral)')
     if variant % 3 == 2: body = body.replace('url(#coral)', 'url(#teal)').replace('url(#teal)', 'url(#steel)')
-    fittings = ''.join(f'<circle cx="{94+i*13}" cy="223" r="3" fill="#dcb773"/>' for i in range(variant+1))
-    svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="384" height="384" viewBox="0 0 240 240"><defs>{defs}</defs><ellipse cx="120" cy="212" rx="77" ry="12" fill="#020d15" opacity=".3"/>{body}{fittings}</svg>'
+    svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="384" height="384" viewBox="0 0 240 240"><defs>{defs}</defs><ellipse cx="120" cy="212" rx="77" ry="12" fill="#020d15" opacity=".3"/>{body}</svg>'
     (out/(row['id']+'.svg')).write_text(svg,encoding='utf-8')
 print(f'Wrote {len(rows)} full-colour item illustrations.')

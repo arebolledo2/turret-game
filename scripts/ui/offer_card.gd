@@ -7,6 +7,7 @@ signal lock_requested
 var lock_button: Button
 var icon_rect: TextureRect
 var name_label: Label
+var rarity_label: Label
 var desc_label: Label
 var cost_label: Label
 var family_badges: AttackFamilyBadges
@@ -47,6 +48,8 @@ func _init() -> void:
 	column.add_child(icon_rect)
 	name_label = _label(column, 30, UiPalette.INK)
 	name_label.custom_minimum_size.y = 48
+	rarity_label = _label(column, 18, UiPalette.MUTED)
+	rarity_label.visible = false
 	family_badges = AttackFamilyBadges.new()
 	family_badges.visible = false
 	column.add_child(family_badges)
@@ -99,14 +102,19 @@ func setup(offer: ShopOffer, damage_mult: float, affordable: bool) -> void:
 	lock_button.focus_mode = Control.FOCUS_NONE if offer.sold else Control.FOCUS_ALL
 	lock_button.modulate = UiPalette.SCRAP if offer.locked else UiPalette.INK
 	lock_button.tooltip_text = "Keep this offer and price across rerolls and waves. Unlocking restores its current price."
-	var rarity := int(ItemRegistry.get_rarity(offer.asset_id)) if offer.kind == "item" else 0
-	var accents: Array[Color] = [Color("36505b"), Color("657c5a"), Color("587992"), Color("84618c"), Color("ac8950")]
-	(get_theme_stylebox("normal") as StyleBoxFlat).border_color = accents[clampi(rarity, 0, 4)]
+	var is_item := offer.kind == "item"
+	var rarity := ItemRegistry.get_rarity(offer.asset_id) if is_item else GameEnums.ItemRarity.COMMON
+	var accent := ItemRegistry.get_rarity_color(rarity).lightened(.25) if is_item else UiPalette.INK
+	(get_theme_stylebox("normal") as StyleBoxFlat).border_color = Color(accent, .65) if is_item else Color("36505b")
+	name_label.add_theme_color_override("font_color", accent)
+	rarity_label.visible = is_item
+	rarity_label.text = ItemRegistry.get_rarity_name(rarity).to_upper() if is_item else ""
+	rarity_label.add_theme_color_override("font_color", accent)
 	icon_rect.texture = ShopArt.turret(offer.asset_id) if offer.kind == "turret" else ShopArt.item(offer.asset_id)
 	name_label.text = ArenaShop.offer_name(offer)
 	family_badges.show_turret(offer.asset_id if offer.kind == "turret" else "")
 	desc_label.text = ArenaShop.offer_description(offer)
-	tooltip_text = name_label.text + "\n" + desc_label.text
+	tooltip_text = name_label.text + (" · " + ItemRegistry.get_rarity_name(rarity) if is_item else "") + "\n" + desc_label.text
 	cost_label.text = "INSTALLED" if offer.sold else "%d scrap" % offer.price
 	cost_label.add_theme_color_override("font_color", UiPalette.GOOD if offer.sold else UiPalette.SCRAP if affordable else UiPalette.BAD)
 	disabled = offer.sold
