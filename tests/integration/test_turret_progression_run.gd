@@ -36,7 +36,7 @@ func test_wave_end_awards_raw_xp_and_cash_bonus_once() -> void:
 	collected.collect()
 	var deleted := _scrap(99)
 	deleted.queue_free()
-	var leftover := _scrap(637)
+	var leftover := _scrap(819)
 	var before := EconomyService.total_scrap
 	assert_true(world.finish_wave())
 	assert_eq(EconomyService.total_scrap, before + 5)
@@ -44,11 +44,11 @@ func test_wave_end_awards_raw_xp_and_cash_bonus_once() -> void:
 	assert_eq(world.turrets[0].progression.level, 15)
 	assert_eq(world.turrets[0].progression.xp, 7)
 	assert_eq(world.turrets[0].progression.pending_evolutions, [5, 10, 15])
-	assert_eq(world.salvage.last_settlement.raw_scrap, 637)
-	assert_eq(world.telemetry.total("turret_xp"), 637)
+	assert_eq(world.salvage.last_settlement.raw_scrap, 819)
+	assert_eq(world.telemetry.total("turret_xp"), 819)
 	assert_false(world.finish_wave())
 	assert_false(_settle_only(), "Even direct re-entry cannot settle this wave twice")
-	assert_eq(world.turrets[0].progression.total_xp, 637)
+	assert_eq(world.turrets[0].progression.total_xp, 819)
 	assert_eq(EconomyService.total_scrap, before + 5)
 	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
 	assert_true(world.begin_next_wave())
@@ -145,7 +145,7 @@ func test_dev_jump_discards_scrap_without_growth() -> void:
 
 func test_victory_settles_without_waiting_for_evolution_choices() -> void:
 	world.wave_limit = 1
-	_scrap(630)
+	_scrap(812)
 	assert_true(world.finish_wave())
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.VICTORY)
 	assert_eq(world.turrets[0].progression.level, 15)
@@ -189,14 +189,14 @@ func test_level_damage_is_individual_and_combines_with_items_once() -> void:
 	world.shop.apply_item("dense_rounds")
 	var base_damage: float = veteran._current_stats(1.0).damage
 	_scrap(0)
-	veteran.progression.award(74)
+	veteran.progression.award(116)
 	assert_almost_eq(float(veteran._current_stats(1.0).damage), base_damage * 1.09, .0001)
 	assert_almost_eq(float(rookie._current_stats(1.0).damage), base_damage, .0001)
 	assert_true(world.dev_panel.progression_text().contains("Lv 5"))
 	assert_true(world.dev_panel.progression_text().contains("pending [5]"))
 
 func test_shop_exposes_wave_award_individual_levels_and_damage_previews() -> void:
-	_scrap(74)
+	_scrap(116)
 	world.finish_wave()
 	var rookie := world.add_turret(Vector3(8, 0, 0))
 	rookie.set_physics_process(false)
@@ -204,11 +204,11 @@ func test_shop_exposes_wave_award_individual_levels_and_damage_previews() -> voi
 	screen.world = world
 	add_child_autofree(screen)
 	screen.refresh()
-	assert_true(screen.growth_summary.text.contains("+74 XP"))
+	assert_true(screen.growth_summary.text.contains("+116 XP"))
 	assert_true(screen.growth_summary.text.contains("4 levels gained"))
 	assert_true(screen.turret_text.text.contains("#1 · Lv 5"))
 	assert_true(screen.turret_text.text.contains("#2 · Lv 1"))
-	assert_true(screen.turret_text.text.contains("XP 0 / 27"))
+	assert_true(screen.turret_text.text.contains("XP 0 / 41"))
 	assert_true(screen.turret_text.text.contains("Lv 1 → 5"))
 	var veteran_damage := world.turrets[0]._current_view(1.0).damage
 	assert_true(screen.turret_text.text.contains("%.0f damage" % veteran_damage))
