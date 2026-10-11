@@ -3,6 +3,8 @@ extends Button
 
 ## Shop illustration, name, readable effect and price. Categories are intentionally not displayed.
 signal previewed
+signal lock_requested
+var lock_button: Button
 var icon_rect: TextureRect
 var name_label: Label
 var desc_label: Label
@@ -36,6 +38,13 @@ func _init() -> void:
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_theme_constant_override("separation", 16)
 	margin.add_child(column)
+	lock_button = Button.new()
+	lock_button.focus_mode = Control.FOCUS_NONE
+	lock_button.mouse_filter = Control.MOUSE_FILTER_STOP
+	lock_button.custom_minimum_size.y = 36
+	lock_button.add_theme_font_size_override("font_size", 20)
+	lock_button.pressed.connect(func() -> void: lock_requested.emit())
+	column.add_child(lock_button)
 	icon_rect = TextureRect.new()
 	icon_rect.custom_minimum_size.y = 220
 	icon_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -80,10 +89,14 @@ func set_compact(value: bool) -> void:
 	_refresh_minimum()
 
 func setup(offer: ShopOffer, damage_mult: float, affordable: bool) -> void:
-	var key := "%s:%s:%d:%s:%s:%s" % [offer.kind, offer.asset_id, offer.price, offer.sold, affordable, damage_mult]
+	var key := "%s:%s:%d:%s:%s:%s:%s" % [offer.kind, offer.asset_id, offer.price, offer.sold, affordable, damage_mult, offer.locked]
 	if key == shown_key:
 		return
 	shown_key = key
+	lock_button.text = "LOCKED · X / L to unlock" if offer.locked else "LOCK · X / L · Free"
+	lock_button.disabled = offer.sold
+	lock_button.modulate = UiPalette.SCRAP if offer.locked else UiPalette.INK
+	lock_button.tooltip_text = "Keep this offer and price across rerolls and waves. Unlocking restores its current price."
 	var rarity := int(ItemRegistry.get_rarity(offer.asset_id)) if offer.kind == "item" else 0
 	var accents: Array[Color] = [Color("36505b"), Color("657c5a"), Color("587992"), Color("84618c"), Color("ac8950")]
 	(get_theme_stylebox("normal") as StyleBoxFlat).border_color = accents[clampi(rarity, 0, 4)]

@@ -14,21 +14,50 @@ func open() -> void:
 	generate()
 
 func generate() -> void:
+	var previous := EconomyService.current_shop_offers.duplicate()
 	EconomyService.current_shop_offers.clear()
 	var turrets := ShopCatalog.available_ids("turret")
-	# One weapon choice and three weighted upgrades: the build is steered by items, the turret is a supplement.
-	for slot in range(mini(GameConstants.SHOP_TURRET_SLOTS, turrets.size())):
-		var selected := rng.randi_range(0, turrets.size() - 1)
-		var type_id: String = turrets.pop_at(selected)
-		EconomyService.current_shop_offers.append(ShopOffer.new("turret", type_id, world.turret_price(type_id)))
 	var excluded := unavailable_item_ids()
-	for slot in range(GameConstants.SHOP_ITEM_SLOTS):
-		var item_id := ItemRegistry.get_weighted_random_item(GameStateService.current_wave,
-			PlayerStatsService.get_player_luck(), ItemTrackingService.item_counts, excluded, rng)
-		if item_id.is_empty():
-			break
-		excluded.append(item_id)
-		EconomyService.current_shop_offers.append(ShopOffer.new("item", item_id, item_price(item_id)))
+	for offer: ShopOffer in previous:
+		if offer.locked and not offer.sold:
+			if offer.kind == "turret":
+				turrets.erase(offer.asset_id)
+			else:
+				excluded.append(offer.asset_id)
+	for slot in range(GameConstants.SHOP_TURRET_SLOTS + GameConstants.SHOP_ITEM_SLOTS):
+		if slot < previous.size() and previous[slot].locked and not previous[slot].sold:
+			EconomyService.current_shop_offers.append(previous[slot])
+			continue
+		if slot < GameConstants.SHOP_TURRET_SLOTS:
+			if turrets.is_empty():
+				continue
+			var selected := rng.randi_range(0, turrets.size() - 1)
+			var type_id: String = turrets.pop_at(selected)
+			EconomyService.current_shop_offers.append(ShopOffer.new("turret", type_id, world.turret_price(type_id)))
+		else:
+			var item_id := ItemRegistry.get_weighted_random_item(GameStateService.current_wave,
+				PlayerStatsService.get_player_luck(), ItemTrackingService.item_counts, excluded, rng)
+			if item_id.is_empty():
+				break
+			excluded.append(item_id)
+			EconomyService.current_shop_offers.append(ShopOffer.new("item", item_id, item_price(item_id)))
+
+func toggle_lock(index: int) -> bool:
+	if not is_open() or index < 0 or index >= EconomyService.current_shop_offers.size():
+		return false
+	var offer := EconomyService.current_shop_offers[index]
+	if offer.sold:
+		return false
+	offer.locked = not offer.locked
+	if not offer.locked:
+		offer.price = world.turret_price(offer.asset_id) if offer.kind == "turret" else item_price(offer.asset_id)
+	return true
+
+func can_reroll() -> bool:
+	for offer in EconomyService.current_shop_offers:
+		if not offer.locked or offer.sold:
+			return true
+	return EconomyService.current_shop_offers.is_empty()
 
 func unavailable_item_ids() -> Array:
 	var excluded: Array = []
@@ -57,7 +86,7 @@ func reroll_cost() -> int:
 
 func reroll() -> bool:
 	var cost := reroll_cost()
-	if not is_open() or not EconomyService.deduct_scrap(cost):
+	if not is_open() or not can_reroll() or not EconomyService.deduct_scrap(cost):
 		return false
 	world.telemetry.record_spend("reroll", cost)
 	EconomyService.shop_reroll_count += 1
@@ -87,13 +116,14 @@ func purchase(index: int) -> bool:
 	world.audio.play_cue("purchase", world.player.position)
 	world.telemetry.record_spend(offer.kind, offer.price)
 	offer.sold = true
+	offer.locked = false
 	if offer.kind == "turret":
 		world.add_turret(placement, offer.asset_id)
 		EconomyService.turrets_purchased += 1
 	else:
 		apply_item(offer.asset_id)
 	for remaining in EconomyService.current_shop_offers:
-		if not remaining.sold:
+		if not remaining.sold and not remaining.locked:
 			remaining.price = world.turret_price(remaining.asset_id) if remaining.kind == "turret" else item_price(remaining.asset_id)
 	world.message = "Installed: " + offer_name(offer)
 	return true

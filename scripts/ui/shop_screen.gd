@@ -95,6 +95,7 @@ func _ready() -> void:
 		var card := OfferCard.new()
 		card.pressed.connect(_purchase.bind(i))
 		card.previewed.connect(_select.bind(i))
+		card.lock_requested.connect(_toggle_lock.bind(i))
 		offers_grid.add_child(card)
 		offer_buttons.append(card)
 	var side_scroll := ScrollContainer.new()
@@ -188,7 +189,7 @@ func refresh() -> void:
 			card.setup(offer, float(world.difficulty_config["turret_damage_mult"]), EconomyService.total_scrap >= offer.price)
 	var cost := world.shop.reroll_cost()
 	reroll_button.set_cost(cost, EconomyService.total_scrap >= cost)
-	reroll_button.disabled = EconomyService.total_scrap < cost
+	reroll_button.disabled = not world.shop.can_reroll() or EconomyService.total_scrap < cost
 	for button: IconButton in [repair_button, core_repair_button]:
 		button.set_cost(GameConstants.REPAIR_COST, EconomyService.total_scrap >= GameConstants.REPAIR_COST)
 	repair_button.disabled = EconomyService.total_scrap < GameConstants.REPAIR_COST or world.player.health >= world.player.max_health
@@ -215,6 +216,14 @@ func switch_tab(index: int) -> void:
 
 func _input(event: InputEvent) -> void:
 	if not visible or not world.shop.is_open():
+		return
+	var lock_pressed: bool = (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_L) or (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_X)
+	if lock_pressed and active_tab == 0:
+		var focused := offer_buttons.find(get_viewport().gui_get_focus_owner())
+		var index := focused if focused >= 0 else selected
+		if index >= 0:
+			_toggle_lock(index)
+			get_viewport().set_input_as_handled()
 		return
 	var direction := 0
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -243,6 +252,10 @@ func _select(index: int) -> void:
 	selected = index
 	details_key = 0
 	_refresh_details()
+
+func _toggle_lock(index: int) -> void:
+	if world.shop.toggle_lock(index):
+		refresh()
 
 func _purchase(index: int) -> void:
 	var had_focus := offer_buttons[index].has_focus()

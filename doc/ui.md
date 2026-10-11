@@ -27,3 +27,5 @@ Before Shop, a short wave-end sequence shows collected salvage flying toward ass
 XP presentation uses a shared high-contrast `TurretXpBar`: large meters in the salvage recap and selected turret details, plus compact meters on every Turrets roster button. Current/next level labels lead; exact XP totals remain available in detailed inspection.
 
 Turret offer cards and the Turrets inspector show icon-and-text attack-family badges (Projectile, AoE, Instant, Kinetic). `AttackFamilyBadges` reads `TurretRegistry.get_attack_families`, the same overlapping families used for item eligibility. Item cards keep their effect descriptions without legacy category tags.
+
+Shop offers can be locked for free using the card lock button, controller X or keyboard L. Locks preserve the offer, slot and quoted price through rerolls and wave transitions, including turret offers. Unlocking restores current pricing. Buying consumes the lock; restarting clears stock. Reroll is disabled when every offer is locked. Unlocked stock retains normal reroll costs and pricing.
