@@ -29,6 +29,9 @@ func test_arena_has_half_the_previous_surface_area_and_same_aspect() -> void:
 	assert_almost_eq(size.x / size.y, 16.0 / 9.0, .0001)
 
 func test_camera_keeps_rotation_and_follows_the_player() -> void:
+	# Test unrestricted follow at a close zoom; wider views clamp at arena edges.
+	rig.set_zoom(1.5)
+	rig.snap()
 	var basis_before := world.camera.global_basis
 	world.player.position = Vector3(8, 0, 4)
 	settle()
@@ -36,6 +39,12 @@ func test_camera_keeps_rotation_and_follows_the_player() -> void:
 	assert_almost_eq(rig.focus.z, 4.0, .05)
 	assert_eq(world.camera.global_basis, basis_before, "Only translation may change; movement is camera-relative")
 	assert_almost_eq(world.camera.position.x, rig.focus.x, .001)
+
+func test_default_view_covers_four_times_previous_ground_area() -> void:
+	var previous := rig.visible_half_extents(1.5)
+	var current := rig.visible_half_extents(GameConstants.CAMERA_DEFAULT_ZOOM)
+	assert_almost_eq(current.x * current.y / (previous.x * previous.y), 4.0, .001)
+	assert_eq(rig.target_zoom, GameConstants.CAMERA_DEFAULT_ZOOM)
 
 func test_zoom_is_clamped_and_changes_orthographic_size() -> void:
 	rig.set_zoom(100.0)

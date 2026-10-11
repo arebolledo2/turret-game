@@ -122,6 +122,8 @@ func complete_wave() -> void:
 		world.audio.play_cue("wave", world.player.position)
 
 func _take_credit(rule_key: String) -> bool:
+	if rule_key == "elite_chance" and GameStateService.current_wave < int(DifficultyService.rule(world.difficulty_config, "elite_start_wave")):
+		return false
 	var share := DifficultyService.rule(world.difficulty_config, rule_key)
 	if share <= 0.0:
 		return false

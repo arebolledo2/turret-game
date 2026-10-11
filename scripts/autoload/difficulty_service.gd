@@ -9,7 +9,7 @@ extends Node
 ##   core_health_mult / seeker_share / spawn_rate_mult    core mode only: core hit points, share of enemies that
 ##                                                        ignore the hero, and how fast a wave's enemies arrive
 const RULE_DEFAULTS: Dictionary = {
-	"elite_chance": 0.0, "elite_health_mult": 1.0, "elite_speed_mult": 1.0,
+	"elite_start_wave": 1, "elite_chance": 0.0, "elite_health_mult": 1.0, "elite_speed_mult": 1.0,
 	"core_health_mult": 1.0, "seeker_share": 0.0, "spawn_rate_mult": 1.0,
 }
 
@@ -49,7 +49,7 @@ const DIFFICULTY_CONFIG: Dictionary = {
 		"enemy_speed_scale_per_wave": 1.0,
 		"player_health_mult": 0.8,
 		"turret_damage_mult": 0.9,
-		"elite_chance": 0.10, "elite_health_mult": 2.0, "elite_speed_mult": 1.15,
+		"elite_start_wave": 4, "elite_chance": 0.10, "elite_health_mult": 2.0, "elite_speed_mult": 1.15,
 		"core_health_mult": 0.85, "seeker_share": 0.10, "spawn_rate_mult": 1.15,
 	},
 	GameEnums.Difficulty.BRUTAL: {
@@ -63,7 +63,7 @@ const DIFFICULTY_CONFIG: Dictionary = {
 		"enemy_speed_scale_per_wave": 1.0,
 		"player_health_mult": 0.75,
 		"turret_damage_mult": 0.9,
-		"elite_chance": 0.15, "elite_health_mult": 2.0, "elite_speed_mult": 1.2,
+		"elite_start_wave": 4, "elite_chance": 0.15, "elite_health_mult": 2.0, "elite_speed_mult": 1.2,
 		"core_health_mult": 0.7, "seeker_share": 0.25, "spawn_rate_mult": 1.3,
 	},
 }

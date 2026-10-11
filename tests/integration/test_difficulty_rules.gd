@@ -41,11 +41,30 @@ func test_tiers_escalate_in_every_rule() -> void:
 
 func test_elites_arrive_at_the_configured_share() -> void:
 	var world := await _world(GameEnums.Difficulty.BRUTAL)
+	GameStateService.current_wave = 4
 	var elites := 0
 	for index in 100:
 		if world.waves._take_credit("elite_chance"):
 			elites += 1
 	assert_eq(elites, 15, "15% of 100 spawns, evenly spread")
+
+func test_hard_tiers_delay_elites_until_wave_four_without_banking_credit() -> void:
+	for tier in [GameEnums.Difficulty.HARD, GameEnums.Difficulty.BRUTAL]:
+		var world := await _world(tier)
+		for wave in range(1, 4):
+			GameStateService.current_wave = wave
+			for index in 100:
+				assert_false(world.waves._take_credit("elite_chance"))
+		assert_eq(world.waves.elite_credit, 0.0)
+		GameStateService.current_wave = 4
+		var elites := 0
+		for index in 100:
+			if world.waves._take_credit("elite_chance"):
+				elites += 1
+		if tier == GameEnums.Difficulty.HARD:
+			assert_between(elites, 9, 10)
+		else:
+			assert_eq(elites, 15)
 
 func test_elite_is_tougher_faster_and_worth_more() -> void:
 	var world := await _world(GameEnums.Difficulty.BRUTAL)
