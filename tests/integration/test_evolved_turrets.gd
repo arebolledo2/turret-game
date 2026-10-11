@@ -359,6 +359,9 @@ func test_cyclone_gatling_reaches_higher_spool_and_fires_piercing_rounds() -> vo
 	for stage in range(3):
 		assert_true(turret.evolve("machine_gun"))
 	assert_eq(turret.display_name(), "Cyclone Gatling")
+	assert_not_null(turret.aim.get_node("CycloneDrumLeft"))
+	assert_not_null(turret.aim.get_node("CycloneDrumRight"))
+	assert_eq(turret.rotor.get_node("CycloneRotorCage").get_child_count(), 8)
 	var stats := turret._current_view(0)
 	turret._tick_mechanisms(1.0, true)
 	assert_eq(turret.spool, 1.5)
@@ -378,10 +381,15 @@ func test_omnifire_covers_all_twelve_unique_radial_directions() -> void:
 	for stage in range(3):
 		assert_true(turret.evolve("scatter"))
 	assert_eq(turret.display_name(), "Omnifire")
+	assert_eq(turret.crossfire_muzzles.size(), 12)
 	turret.target = world.spawn_enemy(turret.position + Vector3(0, 0, -2))
 	turret.target.set_physics_process(false)
 	turret._fire_projectile(turret._current_view(0))
 	assert_eq(world.projectiles.size(), 12)
+	for index in range(12):
+		var exit: Node3D = turret.crossfire_muzzles[index]
+		assert_lt(world.projectiles[index].global_position.distance_to(exit.global_position), .001)
+		assert_lt(world.projectiles[index].direction.distance_to(-exit.global_basis.z), .001)
 	var angles: Array[float] = []
 	for projectile in world.projectiles:
 		assert_eq(projectile.shot.source_id, turret.turret_id)

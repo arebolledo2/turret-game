@@ -13,6 +13,7 @@ var carried: bool = false:
 		target_clock = 0.0
 		if value:
 			reset_entrench()
+var crossfire_muzzles: Array[Node3D] = []
 var gun_muzzles: Array[Node3D] = []
 var gun_burst_left := 0
 var gun_burst_clock := 0.0
@@ -87,6 +88,8 @@ func _rebuild_model() -> void:
 	bowling_hardware = BowlingEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
 	gun_muzzles = GunbladeEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
 	SiegeEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
+	GatlingEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
+	crossfire_muzzles = CrossfireEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
 	aim = model.find_child("Aim", true, false) as Node3D
 	blade_tip = model.find_child("BladeTip", true, false) as Node3D
 	muzzle = model.find_child("Muzzle", true, false) as Node3D
@@ -479,12 +482,8 @@ func _fire_projectile(stats: TurretStats) -> void:
 		bow_burst_clock = 0.0
 		_tick_bow_burst(0.0, stats)
 	elif progression.evolution_branch == "scatter" and progression.evolution_stage >= 2:
-		for marker: String in ["Muzzle", "Muzzle_1", "Muzzle_2", "Muzzle_3"]:
-			var exit := model.find_child(marker, true, false) as Node3D
-			if exit:
-				var angles: Array = [-30.0, 0.0, 30.0] if progression.evolution_stage >= 3 else [0.0]
-				for angle: float in angles:
-					world.fire_direction(exit.global_position, (-exit.global_basis.z).rotated(Vector3.UP, deg_to_rad(angle)), _new_shot(stats))
+		for exit: Node3D in crossfire_muzzles:
+			world.fire_direction(exit.global_position, -exit.global_basis.z, _new_shot(stats))
 	elif progression.evolution_branch == "scatter":
 		for angle: float in [-12.0, 0.0, 12.0]:
 			world.fire_direction(muzzle.global_position, heading.rotated(Vector3.UP, deg_to_rad(angle)), _new_shot(stats))

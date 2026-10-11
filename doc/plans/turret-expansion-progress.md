@@ -99,3 +99,7 @@ Repeater Blade adds a second open brass barrel above the authored gun; Stormblad
 ### Siege visual evolution
 
 Moonshot widens the authored open barrel and adds paired hydraulic recoil housings, sliding rods and reinforcement bands. Worldbreaker adds a second hydraulic pair and a larger bore. The launch point is now a child of the recoiling barrel, including the base Siege form, so shot origins follow the visible opening. Barrel length stays unchanged to preserve close-target behavior. Both later-form portraits rebuilt and reviewed. Regression checks cover the per-stage cylinder pairs and muzzle movement/settling during recoil.
+
+### Omnifire and Cyclone visual evolution
+
+Omnifire reuses the authored Crossfire barrels and collars in a twelve-spoke radial assembly. Every round now leaves its own open bore; the existing twelve evenly spaced directions remain unchanged. Cyclone Gatling gains twin ammunition drums and a brass/mint cage parented to the spinning rotor. These additions distinguish the final forms from their level-10 chassis. Both final portraits regenerated and reviewed. Regression checks match all twelve projectile origins and headings to their visible muzzles and verify the final Gatling hardware.
