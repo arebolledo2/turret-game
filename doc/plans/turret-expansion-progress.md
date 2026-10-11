@@ -85,3 +85,9 @@ Triangle counts: base 9,688; repeater forms 12,944 / 16,200 / 22,712; heavy form
 Wide Flame / Furnace Fan / Inferno Crown gain one / two / three additional burner pairs on a brass fuel manifold. Each open burner has a recessed bore and contributes a narrow flame stream; the outer streams track the 60 / 85 / 110 degree attack fan. Focused Jet / Dragon Nozzle / Dragonheart gain an increasingly long tapered pressure nozzle with cooling rings, and the flame origin moves to its actual exit. The original tank, hose, gauge and base remain the authored chassis. Added parts are runtime meshes with shared brass/teal/graphite materials. Cone damage and burn attribution remain one attack irrespective of emitter count.
 
 Updated all six portraits. Native close and default-zoom reviews show distinct fan/nozzle silhouettes and effects aligned with the new hardware. Targeted regression coverage checks burner counts, forward orientation, staged nozzle extension, single-hit damage and burn source. Other branches still need their visual evolution passes.
+
+### Bowling visual evolution
+
+Heavy Roller / Demolition Roller / Juggernaut widen and reinforce the authored return housing with one / two / three paired hydraulic braces. The loaded ball stays spherical as it grows; the muzzle height scales exactly with its projectile collision radius. Ramp and plinth widen to support the larger payload. Bank Shot / Pinball Engine / Ricochet King gain one / two / three bumper pairs on the ramp and a pair of brass launch paddles. The paddles kick on firing and settle after 0.22 seconds; Reduced Motion keeps them still. Collision and ricochet mechanics remain unchanged.
+
+All six portraits regenerated; dark-background comparison reviewed. Regression coverage checks spherical loaded balls, radius-to-launch-height agreement at all stages, staged hardware counts, mirrored paddle movement, settling and Reduced Motion.

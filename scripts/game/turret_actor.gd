@@ -22,6 +22,7 @@ var bow_burst_heading := Vector3.FORWARD
 var bow_burst_target := Vector3.ZERO
 var bow_burst_shot: CombatShot3D
 var flame_emitters: Array[Node3D] = []
+var bowling_hardware: BowlingEvolutionVisual
 var loaded_ball: Node3D
 var loaded_arrow: Node3D
 var bow_muzzles: Array[Node3D] = []
@@ -82,6 +83,7 @@ func _rebuild_model() -> void:
 	add_child(model)
 	BowEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
 	flame_emitters = FlameEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
+	bowling_hardware = BowlingEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
 	aim = model.find_child("Aim", true, false) as Node3D
 	blade_tip = model.find_child("BladeTip", true, false) as Node3D
 	muzzle = model.find_child("Muzzle", true, false) as Node3D
@@ -487,6 +489,8 @@ func _fire_projectile(stats: TurretStats) -> void:
 		world.fire_shot(muzzle.global_position, target, _new_shot(stats))
 	if loaded_ball:
 		loaded_ball.visible = false
+		if bowling_hardware:
+			bowling_hardware.kick()
 	if recoil_barrel and not FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
 		recoil_barrel.position.z += .16
 	_reset_cooldown(stats)
@@ -521,6 +525,8 @@ func evolve(branch: String) -> bool:
 	return true
 
 func _tick_mechanisms(delta: float, tracking: bool) -> void:
+	if bowling_hardware:
+		bowling_hardware.advance(delta, FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
 	if progression.evolution_branch == "machine_gun" and progression.evolution_stage >= 2:
 		var ceiling := 1.5 if progression.evolution_stage >= 3 else 1.0
 		spool = move_toward(spool, ceiling if tracking else 0.0, delta * (ceiling if tracking else 2.0))
