@@ -31,13 +31,29 @@ func _init() -> void:
 	margin.minimum_size_changed.connect(_refresh_minimum)
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	for side: String in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 22)
+		margin.add_theme_constant_override("margin_" + side, 18)
 	add_child(margin)
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var column := VBoxContainer.new()
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	column.add_theme_constant_override("separation", 16)
+	column.add_theme_constant_override("separation", 12)
 	margin.add_child(column)
+	icon_rect = TextureRect.new()
+	icon_rect.custom_minimum_size.y = 150
+	icon_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(icon_rect)
+	name_label = _label(column, 30, UiPalette.INK)
+	name_label.custom_minimum_size.y = 48
+	family_badges = AttackFamilyBadges.new()
+	family_badges.visible = false
+	column.add_child(family_badges)
+	desc_label = _label(column, 23, Color("bfd9d5"))
+	desc_label.custom_minimum_size.y = 80
+	cost_label = _label(column, 34, UiPalette.SCRAP)
+	cost_label.theme_type_variation = &"Numeral"
 	lock_button = Button.new()
 	lock_button.focus_mode = Control.FOCUS_NONE
 	lock_button.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -45,22 +61,6 @@ func _init() -> void:
 	lock_button.add_theme_font_size_override("font_size", 20)
 	lock_button.pressed.connect(func() -> void: lock_requested.emit())
 	column.add_child(lock_button)
-	icon_rect = TextureRect.new()
-	icon_rect.custom_minimum_size.y = 220
-	icon_rect.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	column.add_child(icon_rect)
-	name_label = _label(column, 30, UiPalette.INK)
-	name_label.custom_minimum_size.y = 76
-	family_badges = AttackFamilyBadges.new()
-	family_badges.visible = false
-	column.add_child(family_badges)
-	desc_label = _label(column, 23, Color("bfd9d5"))
-	desc_label.custom_minimum_size.y = 130
-	cost_label = _label(column, 34, UiPalette.SCRAP)
-	cost_label.theme_type_variation = &"Numeral"
 	for trigger: Signal in [focus_entered, mouse_entered]:
 		trigger.connect(func() -> void: previewed.emit())
 
@@ -81,10 +81,10 @@ func set_compact(value: bool) -> void:
 		return
 	compact = value
 	custom_minimum_size.y = 315 if compact else 430
-	icon_rect.custom_minimum_size.y = 95 if compact else 220
-	name_label.custom_minimum_size.y = 38 if compact else 76
+	icon_rect.custom_minimum_size.y = 95 if compact else 150
+	name_label.custom_minimum_size.y = 38 if compact else 48
 	name_label.add_theme_font_size_override("font_size", 26 if compact else 30)
-	desc_label.custom_minimum_size.y = 85 if compact else 130
+	desc_label.custom_minimum_size.y = 70 if compact else 80
 	desc_label.add_theme_font_size_override("font_size", 20 if compact else 23)
 	_refresh_minimum()
 
