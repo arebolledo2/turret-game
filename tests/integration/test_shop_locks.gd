@@ -75,3 +75,31 @@ func test_controller_x_locks_focused_offer_without_purchasing() -> void:
 	assert_eq(EconomyService.total_scrap, 1000)
 	(shop.offer_buttons[1] as OfferCard).lock_button.pressed.emit()
 	assert_false(offer.locked, "Mouse lock button also toggles")
+
+func test_controller_navigates_to_lock_and_accept_does_not_buy() -> void:
+	var shop: ShopScreen = world.hud.shop_screen
+	shop.refresh()
+	var card := shop.offer_buttons[1] as OfferCard
+	var offer := EconomyService.current_shop_offers[1]
+	card.grab_focus()
+	await _press(JOY_BUTTON_DPAD_DOWN)
+	assert_same(get_viewport().gui_get_focus_owner(), card.lock_button)
+	assert_eq(card.lock_button.text, "LOCK")
+	await _press(JOY_BUTTON_A)
+	assert_true(offer.locked)
+	assert_false(offer.sold)
+	assert_eq(EconomyService.total_scrap, 1000)
+	assert_eq(card.lock_button.text, "UNLOCK")
+	assert_same(get_viewport().gui_get_focus_owner(), card.lock_button)
+	await _press(JOY_BUTTON_DPAD_RIGHT)
+	assert_same(get_viewport().gui_get_focus_owner(), (shop.offer_buttons[2] as OfferCard).lock_button)
+	await _press(JOY_BUTTON_DPAD_DOWN)
+	assert_same(get_viewport().gui_get_focus_owner(), shop.continue_button)
+
+func _press(button: JoyButton) -> void:
+	for pressed in [true, false]:
+		var event := InputEventJoypadButton.new()
+		event.button_index = button
+		event.pressed = pressed
+		Input.parse_input_event(event)
+		await wait_process_frames(1)

@@ -454,7 +454,7 @@ func _refresh_focus() -> void:
 	for tab in tabs:
 		tab.focus_neighbor_bottom = tab.get_path_to(available[0] if not available.is_empty() else continue_button)
 	for button in row:
-		button.focus_neighbor_top = button.get_path_to(available[-1] if not available.is_empty() else owned_buttons[0] if not owned_buttons.is_empty() else button)
+		button.focus_neighbor_top = button.get_path_to((available[-1] as OfferCard).lock_button if not available.is_empty() else owned_buttons[0] if not owned_buttons.is_empty() else button)
 	for i in range(available.size()):
 		var card := available[i]
 		card.focus_neighbor_left = card.get_path_to(available[maxi(0, i - 1)])
@@ -462,8 +462,13 @@ func _refresh_focus() -> void:
 		var position := offer_buttons.find(card)
 		var below := position + offers_grid.columns
 		var above := position - offers_grid.columns
-		card.focus_neighbor_bottom = card.get_path_to(offer_buttons[below] if below < offer_buttons.size() and offer_buttons[below] in available else continue_button)
-		card.focus_neighbor_top = card.get_path_to(offer_buttons[above] if above >= 0 and offer_buttons[above] in available else tabs[0])
+		var lock := (card as OfferCard).lock_button
+		card.focus_neighbor_bottom = card.get_path_to(lock)
+		card.focus_neighbor_top = card.get_path_to((offer_buttons[above] as OfferCard).lock_button if above >= 0 and offer_buttons[above] in available else tabs[0])
+		lock.focus_neighbor_top = lock.get_path_to(card)
+		lock.focus_neighbor_bottom = lock.get_path_to(offer_buttons[below] if below < offer_buttons.size() and offer_buttons[below] in available else continue_button)
+		lock.focus_neighbor_left = lock.get_path_to((available[maxi(0, i - 1)] as OfferCard).lock_button)
+		lock.focus_neighbor_right = lock.get_path_to((available[mini(available.size() - 1, i + 1)] as OfferCard).lock_button)
 	for i in range(owned_buttons.size()):
 		var button := owned_buttons[i]
 		button.focus_neighbor_left = button.get_path_to(available[-1] if not available.is_empty() else continue_button)

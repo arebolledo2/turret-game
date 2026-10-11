@@ -55,11 +55,12 @@ func _init() -> void:
 	cost_label = _label(column, 34, UiPalette.SCRAP)
 	cost_label.theme_type_variation = &"Numeral"
 	lock_button = Button.new()
-	lock_button.focus_mode = Control.FOCUS_NONE
+	lock_button.focus_mode = Control.FOCUS_ALL
 	lock_button.mouse_filter = Control.MOUSE_FILTER_STOP
 	lock_button.custom_minimum_size.y = 36
 	lock_button.add_theme_font_size_override("font_size", 20)
 	lock_button.pressed.connect(func() -> void: lock_requested.emit())
+	lock_button.focus_entered.connect(func() -> void: previewed.emit())
 	column.add_child(lock_button)
 	for trigger: Signal in [focus_entered, mouse_entered]:
 		trigger.connect(func() -> void: previewed.emit())
@@ -93,8 +94,9 @@ func setup(offer: ShopOffer, damage_mult: float, affordable: bool) -> void:
 	if key == shown_key:
 		return
 	shown_key = key
-	lock_button.text = "LOCKED · X / L to unlock" if offer.locked else "LOCK · X / L · Free"
+	lock_button.text = "UNLOCK" if offer.locked else "LOCK"
 	lock_button.disabled = offer.sold
+	lock_button.focus_mode = Control.FOCUS_NONE if offer.sold else Control.FOCUS_ALL
 	lock_button.modulate = UiPalette.SCRAP if offer.locked else UiPalette.INK
 	lock_button.tooltip_text = "Keep this offer and price across rerolls and waves. Unlocking restores its current price."
 	var rarity := int(ItemRegistry.get_rarity(offer.asset_id)) if offer.kind == "item" else 0
