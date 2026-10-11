@@ -7,12 +7,14 @@ extends RefCounted
 const FIRE_PROJECTILE: String = "projectile" # aimed shot at one target
 const FIRE_PULSE: String = "pulse" # area pulse around the turret
 const FIRE_CHAIN: String = "chain" # lightning that jumps between enemies
+const FIRE_FLAME: String = "flame" # aimed cone with burn over time
 const FIRE_SWEEP: String = "sweep" # spinning melee bat
 
 const DEFAULT_MODEL: String = "res://assets/models/game/ion_turret.glb"
 
 # Color tints for turret types
 const COLORS: Dictionary = {
+	"bow": Color("e7d89b"), "flamethrower": Color("ff974a"), "bowling": Color("9281c9"),
 	"normal": Color("66CC66"),
 	"sniper": Color("4466AA"),
 	"fire": Color("FF6633"),
@@ -25,6 +27,7 @@ const COLORS: Dictionary = {
 
 # Base prices for turret types
 const BASE_PRICES: Dictionary = {
+	"bow": 16, "flamethrower": 18, "bowling": 18,
 	"normal": 8,
 	"sniper": 18,
 	"fire": 13,
@@ -44,6 +47,27 @@ const FAMILIES: Dictionary = {
 }
 
 const TYPES: Dictionary = {
+	"bow": {
+		"name": "Bow Turret", "short_name": "Bow", "fire_mode": FIRE_PROJECTILE,
+		"description": "Fires fast arrows that pierce through two enemies.",
+		"attack_styles": [GameEnums.AttackStyle.PROJECTILE],
+		"damage_types": [GameEnums.DamageType.PHYSICAL],
+		"base_stats": {"damage": 18.0, "fire_rate": .9, "range": 340.0, "projectile_speed": 850.0, "pierce": 1},
+	},
+	"flamethrower": {
+		"name": "Flamethrower", "short_name": "Flame", "fire_mode": FIRE_FLAME,
+		"description": "Bathes a forward cone in fire. Enemies keep burning after leaving the flame.",
+		"attack_styles": [GameEnums.AttackStyle.AOE],
+		"damage_types": [GameEnums.DamageType.FIRE],
+		"base_stats": {"damage": 2.5, "fire_rate": 4.0, "range": 200.0, "burn_ratio": 1.6, "burn_duration": 2.0, "cone_degrees": 36.0},
+	},
+	"bowling": {
+		"name": "Bowling Launcher", "short_name": "Bowling", "fire_mode": FIRE_PROJECTILE,
+		"description": "Rolls heavy bowling balls through enemies, knocking them back.",
+		"attack_styles": [GameEnums.AttackStyle.PROJECTILE, GameEnums.AttackStyle.MELEE],
+		"damage_types": [GameEnums.DamageType.PHYSICAL],
+		"base_stats": {"damage": 20.0, "fire_rate": .6, "range": 320.0, "projectile_speed": 270.0, "pierce": 5, "knockback_force": 250.0},
+	},
 	"normal": {
 		"name": "Normal Turret",
 		"icon": "🗼",

@@ -33,6 +33,7 @@ var hull_material := WorldGeometry.material(Color("ff675a"), true)
 var pulses: Array[MeshInstance3D] = []
 var ages: Array[float] = []
 var radii: Array[float] = []
+var flame_material := WorldGeometry.material(Color(2.5, .65, .08), true)
 var world: ArenaWorld
 var plasma_material := WorldGeometry.material(Color("b56cff"), true)
 var shock_material := WorldGeometry.material(Color("55dcff"), true)
@@ -245,3 +246,11 @@ func reset() -> void:
 	for index in range(pulses.size()):
 		ages[index] = -1.0
 		pulses[index].visible = false
+
+## Short expanding flame lobes show the exact forward cone, with bounded pooled sparks.
+func show_flame(origin: Vector3, heading: Vector3, reach: float, half_angle: float) -> void:
+	for step in range(1, 5):
+		var distance := reach * float(step) / 4.0
+		var at := origin + heading * distance
+		at.y = lerpf(origin.y, .45, float(step) / 4.0)
+		_show_spark(at, flame_material, maxf(.08, tan(half_angle) * distance), .23)

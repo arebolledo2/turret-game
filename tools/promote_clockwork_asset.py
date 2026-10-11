@@ -13,7 +13,7 @@ from pathlib import Path
 game = Path(__file__).resolve().parents[1]
 repo = game.parent
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('key', choices=['ion','plasma','tesla','shock','melee','basic','fast','tank','charger','hero','dropbox','exploder','machine_gun','scatter','saber','gatling','crossfire','siege','bow','flamethrower','bowling','gunblade'])
+parser.add_argument('key', choices=['ion','plasma','tesla','shock','melee','basic','fast','tank','charger','hero','dropbox','exploder','machine_gun','scatter','saber','gatling','crossfire','siege','bow','flamethrower','bowling','gunblade','arrow','bowling_ball'])
 parser.add_argument('--iteration', required=True, type=int)
 args = parser.parse_args()
 key = args.key
@@ -70,7 +70,7 @@ asset=next((a for a in progress['assets'] if a['key']==key), None)
 if asset is None:
     asset={'key':key,'name':key.replace('_',' ').title(),'status':'review'}
     progress['assets'].append(asset)
-asset.update(status='review',preview=f'previews/{key}.png',metrics=f"{entry['triangles']:,} triangles · {entry['meshes']} meshes · {entry['materials']} materials")
+asset.update(status='review',preview=f'previews/{key}.png',metrics=f"{entry['triangles']:,} triangles Â· {entry['meshes']} meshes Â· {entry['materials']} materials")
 progress['events'].append({'stage':'Export: '+key,'text':f"Reviewed harness iteration {args.iteration}; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."})
 (report/'progress.json').write_text(json.dumps(progress,indent=2),encoding='utf-8',newline='\n')
 print(json.dumps(entry,indent=2))

@@ -1,0 +1,22 @@
+{
+  "asset": "cp_bow",
+  "iteration": 3,
+  "status": "frozen",
+  "contract_passed": true,
+  "export": "cp_bow.glb",
+  "export_sha256": "84b733db60c356982090822c5be16b45ff4ea04fd81dd3f864f73eca93f53b5a",
+  "builder": "build_cp_bow.py",
+  "builder_sha256": "9634e65e854d508f5133aa7fabbcda0c6c95ff123dbf826bfc1ba621646a2d2c",
+  "blend": "cp_bow.blend",
+  "blend_sha256": "d74314af4a43bcf50086405d71b5a4555653bc369492b58daacdc4705c77298c",
+  "contract": "contract.json",
+  "contract_sha256": "79ed895786aef7e834d6bd32df433b96fa81e8e1b72219d81af74ef9f94c0e85",
+  "validation": "renders/iter03/validate.json",
+  "reviewed_preview": "renders/iter03/compare.png",
+  "triangles": 9688,
+  "mesh_objects": 14,
+  "materials": 8,
+  "textures": 0,
+  "animations": 0,
+  "self_score": 7.8
+}

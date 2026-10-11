@@ -1,0 +1,17 @@
+{
+  "triangles": 4788,
+  "mesh_objects": 1,
+  "materials": 3,
+  "diameter_m": 0.48,
+  "origin": [
+    0,
+    0,
+    0
+  ],
+  "generated_textures": 1,
+  "texture_resolution": [
+    512,
+    512
+  ],
+  "glb_sha256": "7591f1c4f9d4bc3bc80035694f893109da45ac1e3bd5ee2ff69513578c6ecb44"
+}

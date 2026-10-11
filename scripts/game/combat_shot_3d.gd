@@ -5,6 +5,8 @@ extends RefCounted
 var damage: float = 0.0
 var speed: float = 0.0
 var radius: float = .075
+var visual_key: String = ""
+var lifetime: float = 3.0
 var splash_radius: float = 0.0
 var knockback: float = 0.0
 var slow_intensity: float = 0.0
@@ -33,6 +35,8 @@ func copy() -> CombatShot3D:
 	shot.damage = damage
 	shot.speed = speed
 	shot.radius = radius
+	shot.visual_key = visual_key
+	shot.lifetime = lifetime
 	shot.splash_radius = splash_radius
 	shot.knockback = knockback
 	shot.damage_type = damage_type

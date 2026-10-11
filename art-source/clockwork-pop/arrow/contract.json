@@ -1,0 +1,26 @@
+{
+  "name": "cp_arrow",
+  "ref": "ref/cp_arrow.png",
+  "build": "build_cp_arrow.py",
+  "glb": "cp_arrow.glb",
+  "required_nodes": [],
+  "limits": {
+    "height": [
+      0.08,
+      0.2
+    ],
+    "max_width": 0.8,
+    "ground_gap": [
+      -0.1,
+      0.1
+    ]
+  },
+  "targets": {
+    "max_triangles": 5000,
+    "max_mesh_objects": 16,
+    "max_materials": 8
+  },
+  "render_background": "#172B38",
+  "require_textures": false,
+  "required_animations": []
+}

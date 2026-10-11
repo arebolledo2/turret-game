@@ -1,0 +1,26 @@
+{
+  "name": "cp_bowling_ball",
+  "ref": "ref/cp_bowling_ball.png",
+  "build": "build_cp_bowling_ball.py",
+  "glb": "cp_bowling_ball.glb",
+  "required_nodes": [],
+  "limits": {
+    "height": [
+      0.45,
+      0.5
+    ],
+    "max_width": 0.5,
+    "ground_gap": [
+      -0.25,
+      -0.2
+    ]
+  },
+  "targets": {
+    "max_triangles": 5000,
+    "max_mesh_objects": 16,
+    "max_materials": 8
+  },
+  "render_background": "#536675",
+  "require_textures": false,
+  "required_animations": []
+}

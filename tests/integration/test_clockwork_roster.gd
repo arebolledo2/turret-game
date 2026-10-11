@@ -21,8 +21,12 @@ func test_imported_roster_has_the_required_articulation() -> void:
 		var model := (load(ClockworkModels.model_path(key)) as PackedScene).instantiate() as Node3D
 		add_child_autofree(model)
 		var required: Array[String] = ["Body"]
-		if key in ["ion", "plasma", "tesla", "shock", "melee", "machine_gun", "scatter", "saber", "gatling", "crossfire", "siege"]:
+		if key in ["ion", "plasma", "tesla", "shock", "melee", "machine_gun", "scatter", "saber", "gatling", "crossfire", "siege", "bow", "flamethrower", "bowling", "gunblade"]:
 			required = ["Aim", "Muzzle"]
+		elif key == "arrow":
+			required = ["FlightRoot", "Arrow"]
+		elif key == "bowling_ball":
+			required = [] # Single centered rigid mesh, no articulated markers.
 		elif key == "core":
 			required = ["Body", "Orb", "Ring_Outer", "Ring_Middle", "Ring_Inner"]
 		elif key == "hero":

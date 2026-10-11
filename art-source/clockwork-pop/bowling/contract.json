@@ -1,0 +1,41 @@
+{
+  "name": "cp_bowling",
+  "ref": "ref/cp_bowling.png",
+  "build": "build_cp_bowling.py",
+  "glb": "cp_bowling.glb",
+  "required_nodes": [
+    "Aim",
+    "Muzzle"
+  ],
+  "limits": {
+    "height": [
+      0.9,
+      1.7
+    ],
+    "max_width": 2.4,
+    "ground_gap": [
+      -0.02,
+      0.1
+    ]
+  },
+  "targets": {
+    "max_triangles": 5000,
+    "max_mesh_objects": 16,
+    "max_materials": 10
+  },
+  "render_background": "#172B38",
+  "require_textures": false,
+  "required_animations": [],
+  "marker_nodes": [
+    "Muzzle"
+  ],
+  "nested": [
+    [
+      "Muzzle",
+      "Aim"
+    ]
+  ],
+  "muzzle_forward": false,
+  "origin_node": "Aim",
+  "bowling_muzzle_min_height": 0.15
+}

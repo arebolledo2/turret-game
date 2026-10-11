@@ -1,0 +1,46 @@
+{
+  "name": "cp_gunblade",
+  "ref": "ref/cp_gunblade.png",
+  "build": "build_cp_gunblade.py",
+  "glb": "cp_gunblade.glb",
+  "required_nodes": [
+    "Aim",
+    "Muzzle",
+    "BladeTip"
+  ],
+  "limits": {
+    "height": [
+      0.9,
+      1.6
+    ],
+    "max_width": 2.4,
+    "ground_gap": [
+      -0.02,
+      0.1
+    ]
+  },
+  "targets": {
+    "max_triangles": 5000,
+    "max_mesh_objects": 16,
+    "max_materials": 10
+  },
+  "render_background": "#172B38",
+  "require_textures": false,
+  "required_animations": [],
+  "marker_nodes": [
+    "Muzzle",
+    "BladeTip"
+  ],
+  "nested": [
+    [
+      "Muzzle",
+      "Aim"
+    ],
+    [
+      "BladeTip",
+      "Aim"
+    ]
+  ],
+  "muzzle_forward": true,
+  "origin_node": "Aim"
+}

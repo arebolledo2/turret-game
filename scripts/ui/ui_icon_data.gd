@@ -49,6 +49,9 @@ const PATHS: Dictionary = {
 	"turret_normal": "<circle cx='12' cy='14' r='7'/><path d='M12 14V3'/><circle cx='12' cy='14' r='2' fill='#fff' stroke='none'/>",
 	"turret_plasma": "<circle cx='12' cy='12' r='9'/><circle cx='12' cy='12' r='4.2' fill='#fff' stroke='none'/>",
 	"turret_shock": "<circle cx='12' cy='12' r='9.5'/><path d='M13 5.5l-4 7h4l-2 6 5-8h-4z'/>",
+	"turret_bow": "<path d='M7 3q14 9 0 18l4-9zM3 12h17m-4-4 4 4-4 4'/>",
+	"turret_flamethrower": "<path d='M12 2c2 6-4 7-1 11 2-1 3-3 3-5 8 7 5 14-2 14S2 15 7 9c-1 4 1 5 2 5-2-6 3-7 3-12z'/>",
+	"turret_bowling": "<circle cx='12' cy='12' r='9'/><circle cx='10' cy='7' r='1'/><circle cx='14' cy='8' r='1'/><circle cx='11' cy='11' r='1'/>",
 	"turret_tesla": "<path d='M12 21V10'/><path d='M6.5 5a8 8 0 000 9M17.5 5a8 8 0 010 9'/><circle cx='12' cy='7.5' r='2'/><path d='M8 21h8'/>",
 	"turret_melee": "<path d='M5 19L18 6M15 4l5 5M5 14l5 5'/>",
 	# Items

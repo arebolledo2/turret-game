@@ -1,0 +1,124 @@
+{
+  "asset": "cp_gunblade",
+  "run": "cp_gunblade-v1",
+  "reviewed_iteration": 3,
+  "validation": {
+    "triangles": 13956,
+    "mesh_objects": 15,
+    "materials": 9,
+    "loose_components": 819,
+    "size_m": [
+      0.8,
+      2.313,
+      1.482
+    ],
+    "min_z": 0.0,
+    "centre_xy": [
+      0.0,
+      0.456
+    ],
+    "origin_node": "Aim",
+    "origin_xy": [
+      0.0,
+      0.0
+    ],
+    "missing_nodes": [],
+    "empty_leg_pivots": [],
+    "textures": [],
+    "animations": [],
+    "checks": {
+      "required_nodes_present": true,
+      "each_required_node_has_geometry": true,
+      "height_ok": true,
+      "width_ok": true,
+      "ground_gap_ok": true,
+      "origin_xy_centred": true,
+      "has_meshes": true,
+      "Muzzle_under_Aim": true,
+      "BladeTip_under_Aim": true,
+      "muzzle_in_front_and_raised": true
+    },
+    "passed": true,
+    "limits": {
+      "height": [
+        0.9,
+        1.6
+      ],
+      "max_width": 2.4,
+      "ground_gap": [
+        -0.02,
+        0.1
+      ]
+    },
+    "targets": {
+      "max_triangles": 5000,
+      "max_mesh_objects": 16,
+      "max_materials": 10
+    },
+    "target_overruns": [
+      "max_triangles: 13956 > target 5000"
+    ]
+  },
+  "nodes": {
+    "BladeTip": {
+      "translation": [
+        0,
+        0.76500004529953,
+        -1.6128000020980835
+      ]
+    },
+    "Muzzle": {
+      "translation": [
+        0,
+        0.73499995470047,
+        -1.0262399911880493
+      ]
+    },
+    "Aim": {
+      "children": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "translation": [
+        0,
+        0.5649999976158142,
+        0
+      ]
+    }
+  },
+  "files": {
+    "build_cp_gunblade.py": {
+      "sha256": "d4403952170ce53b49064c9a31f7e8999c6b7532e04aa51f61a93b8180d8edf8",
+      "bytes": 12146
+    },
+    "cp_gunblade.glb": {
+      "sha256": "7cc07e9f0343e000b48c54d09a5ae2c1617dca6a8cf549449a89937a5d291540",
+      "bytes": 552412
+    },
+    "cp_gunblade.blend": {
+      "sha256": "9370f3d866ce4d2d63fa28384952811eda843af79dd5ef47494f88a064849967",
+      "bytes": 262780
+    },
+    "contract.json": {
+      "sha256": "de7ba7411a7b767eab8d402ff8f7851eae04e17d6603ec212a270912e1a62a72",
+      "bytes": 767
+    },
+    "notes.md": {
+      "sha256": "adbcf50d575966454b296032b85e1744259436cab82e796a1403951b3bb51e09",
+      "bytes": 3134
+    },
+    "renders/iter03/compare.png": {
+      "sha256": "63472fbfcd48c30ea1cd2f08a9e8991af81ff75eca26f8942935b81ba5a9783a",
+      "bytes": 1978033
+    }
+  }
+}

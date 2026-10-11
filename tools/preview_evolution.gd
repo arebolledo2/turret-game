@@ -19,6 +19,22 @@ func _ready() -> void:
 	world.camera.size = 9.0
 	world.session.state.turret_progression_enabled = true
 	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
+	if "--expansion-preview" in OS.get_cmdline_user_args():
+		world.turrets[0].visible = false
+		for i in range(3):
+			var turret := world.add_turret(Vector3((i - 1) * 3, 0, 0), ["bow", "flamethrower", "bowling"][i])
+			turret.set_physics_process(false)
+			turret.aim.rotation.y = PI - .4
+		var gunblade := ClockworkModels.instantiate("gunblade")
+		world.add_child(gunblade)
+		gunblade.position = Vector3(0, 0, -3)
+		gunblade.rotation.y = PI - .4
+		for i in range(2):
+			var projectile := ClockworkModels.instantiate(["arrow", "bowling_ball"][i])
+			world.add_child(projectile)
+			projectile.position = Vector3((i * 2 - 1) * 2, .5, -3)
+			projectile.rotation.y = PI - .4
+		return
 	var machine := world.turrets[0]
 	machine.position = Vector3(-3, 0, 0)
 	var scatter := world.add_turret(Vector3.ZERO, "normal")
@@ -52,7 +68,8 @@ func _process(_delta: float) -> void:
 
 func capture() -> void:
 	await RenderingServer.frame_post_draw
-	var output := ProjectSettings.globalize_path("res://.test-results/evolution-preview.png")
+	var filename := "expansion-preview.png" if "--expansion-preview" in OS.get_cmdline_user_args() else "evolution-preview.png"
+	var output := ProjectSettings.globalize_path("res://.test-results/" + filename)
 	get_viewport().get_texture().get_image().save_png(output)
 	print("EVOLUTION_PREVIEW ", output)
 	get_tree().quit()

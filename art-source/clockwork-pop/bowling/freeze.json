@@ -1,0 +1,15 @@
+{
+  "frozen": true,
+  "final_iteration": 5,
+  "glb": "cp_bowling.glb",
+  "builder": "build_cp_bowling.py",
+  "blend": "cp_bowling.blend",
+  "glb_sha256": "3e75eff88f31c61c81b0e18d15b4e33e450e20cf4f7759c35766880b74c6c498",
+  "builder_sha256": "9876d66c11730260e0355376e3ed4a6538ba4090545ea7e7eef51fdd13aaa884",
+  "triangles": 11588,
+  "mesh_objects": 12,
+  "materials": 8,
+  "shared_contract_passed": true,
+  "bowling_audit_passed": true,
+  "self_score": 7.7
+}

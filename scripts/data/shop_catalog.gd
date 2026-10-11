@@ -8,6 +8,7 @@ extends RefCounted
 const DEFAULT_ENTRIES: Dictionary = {
 	"turret": {
 		"normal": "", "plasma": "", "shock": "", "tesla": "", "melee": "",
+		"bow": "", "flamethrower": "", "bowling": "",
 	},
 	"item": {
 		# Kept from the original pool

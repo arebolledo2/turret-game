@@ -208,6 +208,72 @@
       "meshes": 10,
       "materials": 10,
       "iteration": 3
+    },
+    {
+      "id": "bow",
+      "source": "art-source/clockwork-pop/bow/build_cp_bow.py",
+      "model": "assets/models/clockwork/cp_bow.glb",
+      "reference": "art-source/clockwork-pop/references/bow.png",
+      "sha256": "84b733db60c356982090822c5be16b45ff4ea04fd81dd3f864f73eca93f53b5a",
+      "triangles": 9688,
+      "meshes": 14,
+      "materials": 8,
+      "iteration": 3
+    },
+    {
+      "id": "flamethrower",
+      "source": "art-source/clockwork-pop/flamethrower/build_cp_flamethrower.py",
+      "model": "assets/models/clockwork/cp_flamethrower.glb",
+      "reference": "art-source/clockwork-pop/references/flamethrower.png",
+      "sha256": "b43848301f529f1ea99c6fb00986bf6932ea632ef1634666e772b179a589c2bb",
+      "triangles": 12408,
+      "meshes": 15,
+      "materials": 11,
+      "iteration": 6
+    },
+    {
+      "id": "bowling",
+      "source": "art-source/clockwork-pop/bowling/build_cp_bowling.py",
+      "model": "assets/models/clockwork/cp_bowling.glb",
+      "reference": "art-source/clockwork-pop/references/bowling.png",
+      "sha256": "3e75eff88f31c61c81b0e18d15b4e33e450e20cf4f7759c35766880b74c6c498",
+      "triangles": 11588,
+      "meshes": 12,
+      "materials": 8,
+      "iteration": 5
+    },
+    {
+      "id": "arrow",
+      "source": "art-source/clockwork-pop/arrow/build_cp_arrow.py",
+      "model": "assets/models/clockwork/cp_arrow.glb",
+      "reference": "art-source/clockwork-pop/references/arrow.png",
+      "sha256": "8baedc19607f899d8235f4fcaaffeeadfde157af36934d4045c3604a8e827adc",
+      "triangles": 3280,
+      "meshes": 1,
+      "materials": 4,
+      "iteration": 1
+    },
+    {
+      "id": "bowling_ball",
+      "source": "art-source/clockwork-pop/bowling_ball/build_cp_bowling_ball.py",
+      "model": "assets/models/clockwork/cp_bowling_ball.glb",
+      "reference": "art-source/clockwork-pop/references/bowling_ball.png",
+      "sha256": "7591f1c4f9d4bc3bc80035694f893109da45ac1e3bd5ee2ff69513578c6ecb44",
+      "triangles": 4788,
+      "meshes": 1,
+      "materials": 3,
+      "iteration": 1
+    },
+    {
+      "id": "gunblade",
+      "source": "art-source/clockwork-pop/gunblade/build_cp_gunblade.py",
+      "model": "assets/models/clockwork/cp_gunblade.glb",
+      "reference": "art-source/clockwork-pop/references/gunblade.png",
+      "sha256": "7cc07e9f0343e000b48c54d09a5ae2c1617dca6a8cf549449a89937a5d291540",
+      "triangles": 13956,
+      "meshes": 15,
+      "materials": 9,
+      "iteration": 3
     }
   ]
 }

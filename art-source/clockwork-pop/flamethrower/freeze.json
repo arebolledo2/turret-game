@@ -1,0 +1,82 @@
+{
+  "asset": "cp_flamethrower",
+  "run": "cp_flamethrower-v1",
+  "frozen_iteration": 6,
+  "harness_calls": 6,
+  "reviewed_render": "renders/iter06/compare.png",
+  "contract_passed": true,
+  "triangles": 12408,
+  "mesh_objects": 15,
+  "materials": 11,
+  "size_m": [
+    1.128,
+    1.534,
+    1.594
+  ],
+  "target_overruns": [
+    "max_triangles: 12408 > target 5000",
+    "max_materials: 11 > target 10"
+  ],
+  "pivot_audit": {
+    "Aim": {
+      "children": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "name": "Aim"
+    },
+    "Muzzle": {
+      "name": "Muzzle",
+      "translation": [
+        0,
+        0.8899999856948853,
+        -0.847000002861023
+      ]
+    },
+    "all_upper_meshes_under_Aim": true,
+    "static_meshes": [
+      "Static_Turquoise_enamel"
+    ]
+  },
+  "textures": 0,
+  "animations": 0,
+  "files": {
+    "build_cp_flamethrower.py": {
+      "sha256": "94b71e3845952a47d3645ba038e15a3c2ebbdae6ea283e0154de5685d1eced4c",
+      "bytes": 9971
+    },
+    "cp_flamethrower.glb": {
+      "sha256": "b43848301f529f1ea99c6fb00986bf6932ea632ef1634666e772b179a589c2bb",
+      "bytes": 403260
+    },
+    "cp_flamethrower.blend": {
+      "sha256": "c6357f1425b0192830074c222f4f1868b010e6dba4b90e33279dbd569440ff01",
+      "bytes": 252301
+    },
+    "contract.json": {
+      "sha256": "445d276aa85fbe2fd9791dfc11788c61b9f78497d0943eb1fdf82b7075ea94b0",
+      "bytes": 702
+    },
+    "notes.md": {
+      "sha256": "d29dd7a619485ca43d7872aa1500bc4246f60a001c4cd0212230910d8c67581b",
+      "bytes": 2854
+    },
+    "renders/iter06/compare.png": {
+      "sha256": "3d65a6e8034fc723a39111b3d2341615d8fc9725e08784a94dced48b96e564a1",
+      "bytes": 2133678
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "source_components": 1,
+  "finger_bore_depth_m": [
+    0.065,
+    0.065,
+    0.065
+  ],
+  "origin": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "dimensions_m": [
+    0.47999998927116394,
+    0.47999998927116394,
+    0.47999998927116394
+  ],
+  "all_images_embedded": true,
+  "glb_sha256": "7591f1c4f9d4bc3bc80035694f893109da45ac1e3bd5ee2ff69513578c6ecb44",
+  "harness_iteration": 1,
+  "passed": true
+}

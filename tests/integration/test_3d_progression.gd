@@ -128,7 +128,7 @@ func test_item_modifiers_affect_all_weapons_and_respect_filters() -> void:
 		var base: Dictionary = TurretRegistry.TYPES[type_id]["base_stats"]
 		var stats := TurretStatsService.get_turret_stats(type_id, 1.0)
 		assert_almost_eq(float(stats["range"]), float(base["range"]) * 1.15, .001)
-		assert_almost_eq(float(stats["damage"]), float(base["damage"]) * (1.2 if type_id in ["normal", "plasma"] else 1.0), .001)
+		assert_almost_eq(float(stats["damage"]), float(base["damage"]) * (1.2 if type_id in ["normal", "plasma", "bow", "bowling"] else 1.0), .001)
 		assert_almost_eq(float(stats["fire_rate"]), float(base["fire_rate"]) * 1.15, .001)
 
 func test_hull_speed_and_pickup_upgrades_apply_and_restart_clears_build() -> void:

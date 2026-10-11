@@ -186,6 +186,48 @@
       "status": "review",
       "preview": "previews/siege.png",
       "metrics": "13,704 triangles \u00b7 10 meshes \u00b7 10 materials"
+    },
+    {
+      "key": "bow",
+      "name": "Bow",
+      "status": "review",
+      "preview": "previews/bow.png",
+      "metrics": "9,688 triangles \u00b7 14 meshes \u00b7 8 materials"
+    },
+    {
+      "key": "flamethrower",
+      "name": "Flamethrower",
+      "status": "review",
+      "preview": "previews/flamethrower.png",
+      "metrics": "12,408 triangles \u00b7 15 meshes \u00b7 11 materials"
+    },
+    {
+      "key": "bowling",
+      "name": "Bowling",
+      "status": "review",
+      "preview": "previews/bowling.png",
+      "metrics": "11,588 triangles \u00b7 12 meshes \u00b7 8 materials"
+    },
+    {
+      "key": "arrow",
+      "name": "Arrow",
+      "status": "review",
+      "preview": "previews/arrow.png",
+      "metrics": "3,280 triangles \u00c2\u00b7 1 meshes \u00c2\u00b7 4 materials"
+    },
+    {
+      "key": "bowling_ball",
+      "name": "Bowling Ball",
+      "status": "review",
+      "preview": "previews/bowling_ball.png",
+      "metrics": "4,788 triangles \u00c2\u00b7 1 meshes \u00c2\u00b7 3 materials"
+    },
+    {
+      "key": "gunblade",
+      "name": "Gunblade",
+      "status": "review",
+      "preview": "previews/gunblade.png",
+      "metrics": "13,956 triangles \u00c2\u00b7 15 meshes \u00c2\u00b7 9 materials"
     }
   ],
   "events": [
@@ -355,6 +397,30 @@
     },
     {
       "stage": "Export: siege",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: bow",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: flamethrower",
+      "text": "Reviewed harness iteration 6; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: bowling",
+      "text": "Reviewed harness iteration 5; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: arrow",
+      "text": "Reviewed harness iteration 1; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: bowling_ball",
+      "text": "Reviewed harness iteration 1; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: gunblade",
       "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
     }
   ],

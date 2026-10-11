@@ -14,7 +14,7 @@ func after_each() -> void:
 
 
 func test_default_catalog_matches_the_supported_content() -> void:
-	assert_eq(ShopCatalog.ids("turret").size(), 5)
+	assert_eq(ShopCatalog.ids("turret").size(), 8)
 	assert_eq(ShopCatalog.ids("item").size(), 43)
 	assert_eq(ShopCatalog.available_ids("item"), ShopCatalog.ids("item"))
 	for item_id in ShopCatalog.ids("item"):

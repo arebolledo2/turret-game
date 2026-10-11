@@ -13,6 +13,8 @@ var sweep: ShapeCast3D
 var shot: CombatShot3D
 var pierced: Array[CombatActor] = []
 var visual: MeshInstance3D
+var custom_visual: Node3D
+var custom_key: String = ""
 var orb: MeshInstance3D
 var trail: MeshInstance3D
 var trail_pivot: Node3D # only the streak turns to face the heading; the sweep cast below must stay unrotated
@@ -75,7 +77,22 @@ func acquire_shot(origin: Vector3, heading: Vector3, spec: CombatShot3D) -> void
 	trail.material_override = EnergyFx.trail_material(kind)
 	trail.scale = Vector3(size * (1.7 if plasma else 1.0), 1.0, size * (.8 if plasma else 1.0))
 	trail_pivot.rotation.y = atan2(-direction.x, -direction.z)
-	remaining = 3.0
+	if custom_visual:
+		custom_visual.visible = false
+	if not shot.visual_key.is_empty() and ClockworkModels.available(shot.visual_key):
+		if custom_key != shot.visual_key:
+			if custom_visual:
+				remove_child(custom_visual)
+				custom_visual.queue_free()
+			custom_visual = ClockworkModels.instantiate(shot.visual_key)
+			add_child(custom_visual)
+			custom_key = shot.visual_key
+		custom_visual.rotation = Vector3(0, atan2(-direction.x, -direction.z), 0)
+		custom_visual.visible = true
+	visual.visible = not (custom_visual and custom_visual.visible)
+	orb.visible = shot.visual_key.is_empty()
+	trail.visible = shot.visual_key.is_empty()
+	remaining = shot.lifetime
 	active = true
 	visible = true
 	reset_physics_interpolation() # Pooled shots must start at the new muzzle, not their previous hit.
@@ -106,21 +123,30 @@ func advance(delta: float) -> void:
 	# Only the visual flight height descends from the muzzle toward the normal firing plane.
 	sweep.global_position = Vector3(position.x, .35, position.z)
 	sweep.target_position = motion
-	sweep.force_shapecast_update()
-	var hit: CombatActor = null
-	var closest: float = INF
-	for index in range(sweep.get_collision_count()):
-		var area := sweep.get_collider(index) as Area3D
-		if not area:
+	# ShapeCast reports the earliest collision group, not the entire segment.
+	# Recast with those areas excluded so piercing cannot tunnel through later enemies.
+	sweep.clear_exceptions()
+	var contacts: Array[CombatActor] = []
+	while true:
+		sweep.force_shapecast_update()
+		var excluded_any := false
+		for index in range(sweep.get_collision_count()):
+			var area := sweep.get_collider(index) as Area3D
+			if not area:
+				continue
+			sweep.add_exception(area)
+			excluded_any = true
+			var actor := area.get_parent() as CombatActor
+			if actor and not actor.dead and actor not in pierced and not contacts.has(actor):
+				contacts.append(actor)
+		if not excluded_any:
+			break
+	sweep.clear_exceptions()
+	contacts.sort_custom(func(a: CombatActor, b: CombatActor) -> bool:
+		return WorldGeometry.planar(a.position - position).dot(direction) < WorldGeometry.planar(b.position - position).dot(direction))
+	for hit in contacts:
+		if not is_instance_valid(hit) or hit.dead:
 			continue
-		var actor := area.get_parent() as CombatActor
-		if not actor or actor.dead or actor in pierced:
-			continue
-		var distance := WorldGeometry.planar(position - sweep.get_collision_point(index)).length_squared()
-		if distance < closest:
-			closest = distance
-			hit = actor
-	if hit:
 		world.combat.impact(hit, hit.position, direction, shot, world.enemies)
 		# The impact can end the run (an exploder's blast killing the hero or core), which releases every projectile.
 		if not active:
@@ -132,7 +158,9 @@ func advance(delta: float) -> void:
 			release()
 			return
 	position += motion
-	position.y = move_toward(position.y, .45, motion.length() * .8)
+	position.y = move_toward(position.y, shot.radius if shot.visual_key == "bowling_ball" else .45, motion.length() * .8)
+	if custom_visual and custom_visual.visible and shot.visual_key == "bowling_ball":
+		custom_visual.rotate(direction.cross(Vector3.UP).normalized(), motion.length() / maxf(.01, shot.radius))
 	remaining -= delta
 	if remaining <= 0.0:
 		release()

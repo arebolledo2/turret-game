@@ -301,7 +301,7 @@ func _update_range_ring() -> void:
 			range_ring.visible = false
 		return
 	var view := _current_view(0.0)
-	var metres := view.range_metres * (view.area_size if TurretRegistry.get_fire_mode(turret_type) == TurretRegistry.FIRE_PULSE else 1.0)
+	var metres := view.range_metres * (view.area_size if TurretRegistry.get_fire_mode(turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0)
 	if metres <= 0.0:
 		return
 	if not range_ring:
@@ -323,7 +323,7 @@ func _physics_process(delta: float) -> void:
 	cooldown = maxf(0.0, cooldown - delta)
 	aim.position = aim.position.lerp(aim_rest, minf(delta * 16.0, 1.0))
 	var stats := _current_view(delta)
-	var range_metres := stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret_type) == TurretRegistry.FIRE_PULSE else 1.0)
+	var range_metres := stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0)
 	var fire_mode := TurretRegistry.get_fire_mode(turret_type)
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
 		_spin_bat(delta, stats, range_metres)
@@ -345,7 +345,9 @@ func _physics_process(delta: float) -> void:
 	aim.rotation.y = atan2(-heading.x, -heading.z)
 	if cooldown > 0.0:
 		return
-	if fire_mode == TurretRegistry.FIRE_CHAIN:
+	if fire_mode == TurretRegistry.FIRE_FLAME:
+		_fire_flame(stats, range_metres, heading.normalized())
+	elif fire_mode == TurretRegistry.FIRE_CHAIN:
 		_fire_chain(stats)
 	else:
 		_fire_projectile(stats)
@@ -355,6 +357,12 @@ func _physics_process(delta: float) -> void:
 ## A shot of this turret's damage type, stamped for kill attribution, with its crit already rolled.
 func _new_shot(stats: TurretStats) -> CombatShot3D:
 	var shot := CombatShot3D.from_stats(stats.values, TurretRegistry.get_damage_type(turret_type))
+	if turret_type == "bow":
+		shot.visual_key = "arrow"
+	elif turret_type == "bowling":
+		shot.visual_key = "bowling_ball"
+		shot.radius = .24
+		shot.lifetime = 4.0
 	if progression.evolution_branch == "siege":
 		shot.radius = .22
 	shot.source_id = turret_id
@@ -430,3 +438,22 @@ func _tick_mechanisms(delta: float, tracking: bool) -> void:
 			muzzle.position = rotor.position + rotor.basis * (muzzle_rest - rotor.position)
 	if recoil_barrel:
 		recoil_barrel.position = recoil_barrel.position.lerp(barrel_rest, minf(1.0, delta * 10.0))
+
+func _fire_flame(stats: TurretStats, reach: float, heading: Vector3) -> void:
+	var half_angle := deg_to_rad(float(stats.values.get("cone_degrees", 36.0))) * .5
+	for enemy in world.crowd.query_radius(position, reach, true):
+		var offset := WorldGeometry.planar(enemy.position - position)
+		if not cone_overlaps_body(offset, heading, reach, half_angle, enemy.hurtbox_radius()):
+			continue
+		var hit := CombatHit3D.new(stats.damage, position, Vector3.ZERO, GameEnums.DamageType.FIRE)
+		hit.source_id = turret_id
+		hit.attack_families.assign(["aoe"])
+		hit.burn_dps = stats.damage * float(stats.values.get("burn_ratio", 1.6))
+		hit.burn_duration = float(stats.values.get("burn_duration", 2.0))
+		world.combat.apply_hit(enemy, hit)
+	world.effects.show_flame(muzzle.global_position, heading, reach, half_angle)
+	_reset_cooldown(stats)
+
+static func cone_overlaps_body(offset: Vector3, heading: Vector3, reach: float, half_angle: float, radius: float) -> bool:
+	var bearing := atan2(-heading.x, -heading.z)
+	return sweep_overlaps_body(offset, reach, bearing - half_angle, 2.0 * half_angle, radius)

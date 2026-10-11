@@ -1,0 +1,25 @@
+{
+  "checks": {
+    "Aim_is_empty": true,
+    "Aim_at_base_axis": true,
+    "Aim_identity_rotation": true,
+    "Muzzle_is_bare_empty": true,
+    "Muzzle_under_Aim": true,
+    "Muzzle_forward_exit": true,
+    "Muzzle_raised_bowling_height": true,
+    "Muzzle_faces_positive_Y": true,
+    "LoadedBall_separate_mesh": true,
+    "base_static": true,
+    "all_weapon_geometry_under_Aim": true
+  },
+  "passed": true,
+  "muzzle_blender_m": [
+    0.0,
+    1.5,
+    0.23999999463558197
+  ],
+  "forward_bound_y_m": 1.5414180755615234,
+  "validator_exception": "Generic muzzle_forward is disabled in local contract because the shared validator hardcodes >0.3m. The bowling brief specifies about 0.2m; explicit approved range is 0.15..0.30m.",
+  "glb_sha256": "3e75eff88f31c61c81b0e18d15b4e33e450e20cf4f7759c35766880b74c6c498",
+  "builder_sha256": "9876d66c11730260e0355376e3ed4a6538ba4090545ea7e7eef51fdd13aaa884"
+}
