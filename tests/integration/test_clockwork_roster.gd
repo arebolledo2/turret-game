@@ -21,7 +21,7 @@ func test_imported_roster_has_the_required_articulation() -> void:
 		var model := (load(ClockworkModels.model_path(key)) as PackedScene).instantiate() as Node3D
 		add_child_autofree(model)
 		var required: Array[String] = ["Body"]
-		if key in ["ion", "plasma", "tesla", "shock", "melee", "machine_gun", "scatter", "saber"]:
+		if key in ["ion", "plasma", "tesla", "shock", "melee", "machine_gun", "scatter", "saber", "gatling", "crossfire", "siege"]:
 			required = ["Aim", "Muzzle"]
 		elif key == "core":
 			required = ["Body", "Orb", "Ring_Outer", "Ring_Middle", "Ring_Inner"]

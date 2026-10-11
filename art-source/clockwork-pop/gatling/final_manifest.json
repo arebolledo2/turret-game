@@ -1,0 +1,97 @@
+{
+  "asset": "cp_gatling",
+  "run": "cp_gatling-v1",
+  "frozen_iteration": 3,
+  "harness_runs_used": 3,
+  "contract_passed": true,
+  "contract": "contract.json",
+  "sha256": {
+    "build_cp_gatling.py": "3dd85eb4f16b462798067967bcf13b5c6ba06cfe7e98df70016764337ad34652",
+    "cp_gatling.glb": "64dec11b6b743616ce39863e3898ba6e7c1b7fb32c578d21bf0eff9ae68e1bef",
+    "contract.json": "c36033481f264180bb73b13b5a9c1353f795565361ff93163c28a4810fcb2052"
+  },
+  "metrics": {
+    "triangles": 16856,
+    "mesh_objects": 16,
+    "materials": 9,
+    "size_m": [
+      0.958,
+      1.602,
+      1.428
+    ],
+    "min_z": 0.012,
+    "textures": [],
+    "animations": [],
+    "target_overruns": [
+      "max_triangles: 16856 > target 5000"
+    ]
+  },
+  "pivots": {
+    "Aim": {
+      "parent": null,
+      "node": {
+        "children": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          12
+        ],
+        "name": "Aim",
+        "translation": [
+          0,
+          0.6800000071525574,
+          0
+        ]
+      }
+    },
+    "Rotor": {
+      "parent": "Aim",
+      "node": {
+        "children": [
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        "name": "Rotor",
+        "translation": [
+          0,
+          0.32999998331069946,
+          -0.18000000715255737
+        ]
+      }
+    },
+    "Muzzle": {
+      "parent": "Aim",
+      "node": {
+        "name": "Muzzle",
+        "translation": [
+          0,
+          0.5239999890327454,
+          -0.9800000190734863
+        ]
+      }
+    }
+  },
+  "rotor_axis_blender": [
+    0,
+    1,
+    0
+  ],
+  "rotor_axis_godot": [
+    0,
+    0,
+    -1
+  ],
+  "muzzle_location_blender": [
+    0,
+    0.98,
+    1.204
+  ],
+  "self_score": 7.5
+}

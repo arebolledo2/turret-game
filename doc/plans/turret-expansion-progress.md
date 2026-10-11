@@ -9,15 +9,15 @@ Branch: `feature/turret-evolution-roster`.
 | Subject | Concept image ID | Intended entry | Model state |
 |---|---|---|---|
 | Machine Gun | 16432b6c-d281-418b-af9d-4d4fbdce97de | Ion level-5 sustained-fire branch | Imported; native preview reviewed; level-5 attack and Shop choice wired |
-| Gatling | e5e10ad6-29b0-4173-bcbd-e0ecfe86d07d | Sustained-fire level 10; replace concept twin barrels with rotary cluster | Pending |
+| Gatling | e5e10ad6-29b0-4173-bcbd-e0ecfe86d07d | Sustained-fire level 10; replace concept twin barrels with rotary cluster | Imported; spin-up attack and native preview verified |
 | Scattergun | c914ea5d-2c1f-44ae-b38b-f57d5e632f67 | Ion level-5 spread branch | Imported; native preview reviewed; level-5 attack and Shop choice wired |
-| Crossfire | 7352de21-d29f-4285-9c5f-e2787519ad04 | Spread branch level 10 | Pending |
+| Crossfire | 7352de21-d29f-4285-9c5f-e2787519ad04 | Spread branch level 10 | Imported; four muzzle volley and native preview verified |
 | Saber | 8cb05b2f-5329-4108-ad2c-7aaa0836dfff | Melee level-5 saber branch | Imported; native preview reviewed; level-5 attack and Shop choice wired |
 | Gunblade | Original 3D design | Melee level-5 hybrid branch | Pending |
-| Siege Cannon | 81b13b6c-ac73-4069-b4c3-e1cd4b2fafff | Plasma level-5 siege branch | Pending |
-| Bow | 3a7e7234-058c-4fc4-a9c9-6a662138253e | New purchasable base | Pending |
-| Flamethrower | 851a89bb-f123-4b57-87af-52f161ed3659 | New purchasable base | Pending |
-| Bowling Launcher | 4ec16c8d-ee61-4de5-8b1e-cc88aaf53437 | New purchasable base | Pending |
+| Siege Cannon | 81b13b6c-ac73-4069-b4c3-e1cd4b2fafff | Plasma level-5 siege branch | Imported; heavy splash shot and native preview verified |
+| Bow | 3a7e7234-058c-4fc4-a9c9-6a662138253e | New purchasable base | Model agent running; mechanics pending |
+| Flamethrower | 851a89bb-f123-4b57-87af-52f161ed3659 | New purchasable base | Model agent running; mechanics pending |
+| Bowling Launcher | 4ec16c8d-ee61-4de5-8b1e-cc88aaf53437 | New purchasable base | Model agent running; mechanics pending |
 
 ## Required systems and validation
 
@@ -45,3 +45,6 @@ Branch: `feature/turret-evolution-roster`.
 - Machine Gun, Scattershot and Saber level-5 paths are available in Shop Turrets. Integration tests verify model replacement, preserved XP/identity/position/entrenchment, three distinct attributed spread shots and saber reach/contact.
 - Gatling, Crossfire and Siege frozen exports completed, awaiting parent review/import. Remaining four turret assets and projectile assets not yet generated.
 - Other branches and later milestones deliberately retain pending state until their behavior/model integration is finished. This is an interim build, not completion.
+
+- Second native group integrated: Gatling spin-up and rotating cluster, Crossfire four distinct outward muzzles, Siege heavy slow splash projectile with .22 m collision radius and recoil. All 952 tests passed (including pooled radius reset). Native six-model preview inspected.
+- Follow-up UI work: Shop build summaries still need evolved-instance profiles and evolved portrait art; detailed inspector uses actual stats. All master forms and remaining branches still require integration.

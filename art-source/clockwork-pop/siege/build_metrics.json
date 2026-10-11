@@ -1,0 +1,15 @@
+{
+  "triangles_by_object": {
+    "StaticCarriage": 1444,
+    "Wheel_L_Front": 1204,
+    "Wheel_L_Rear": 1204,
+    "Wheel_R_Front": 1204,
+    "Wheel_R_Rear": 1204,
+    "RotatingCradle": 1260,
+    "CoralBreech": 2392,
+    "RecoilBarrelMesh": 1824,
+    "ShellRack": 696,
+    "ArtilleryShell": 1272
+  },
+  "total_triangles": 13704
+}

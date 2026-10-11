@@ -175,6 +175,39 @@
       "meshes": 15,
       "materials": 10,
       "iteration": 4
+    },
+    {
+      "id": "gatling",
+      "source": "art-source/clockwork-pop/gatling/build_cp_gatling.py",
+      "model": "assets/models/clockwork/cp_gatling.glb",
+      "reference": "art-source/clockwork-pop/references/gatling.png",
+      "sha256": "64dec11b6b743616ce39863e3898ba6e7c1b7fb32c578d21bf0eff9ae68e1bef",
+      "triangles": 16856,
+      "meshes": 16,
+      "materials": 9,
+      "iteration": 3
+    },
+    {
+      "id": "crossfire",
+      "source": "art-source/clockwork-pop/crossfire/build_cp_crossfire.py",
+      "model": "assets/models/clockwork/cp_crossfire.glb",
+      "reference": "art-source/clockwork-pop/references/crossfire.png",
+      "sha256": "94bd93d9ed70889632ae353e44a97b88fe54d87b6bea16bf89461e4da1ff2eba",
+      "triangles": 11814,
+      "meshes": 15,
+      "materials": 10,
+      "iteration": 3
+    },
+    {
+      "id": "siege",
+      "source": "art-source/clockwork-pop/siege/build_cp_siege.py",
+      "model": "assets/models/clockwork/cp_siege.glb",
+      "reference": "art-source/clockwork-pop/references/siege.png",
+      "sha256": "9fe98070cc035a358d77b4d5d6ecf2c9fbc16d991485df88ef110eb6d6c40e83",
+      "triangles": 13704,
+      "meshes": 10,
+      "materials": 10,
+      "iteration": 3
     }
   ]
 }

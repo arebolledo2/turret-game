@@ -165,6 +165,27 @@
       "status": "review",
       "preview": "previews/saber.png",
       "metrics": "12,106 triangles \u00b7 15 meshes \u00b7 10 materials"
+    },
+    {
+      "key": "gatling",
+      "name": "Gatling",
+      "status": "review",
+      "preview": "previews/gatling.png",
+      "metrics": "16,856 triangles \u00b7 16 meshes \u00b7 9 materials"
+    },
+    {
+      "key": "crossfire",
+      "name": "Crossfire",
+      "status": "review",
+      "preview": "previews/crossfire.png",
+      "metrics": "11,814 triangles \u00b7 15 meshes \u00b7 10 materials"
+    },
+    {
+      "key": "siege",
+      "name": "Siege",
+      "status": "review",
+      "preview": "previews/siege.png",
+      "metrics": "13,704 triangles \u00b7 10 meshes \u00b7 10 materials"
     }
   ],
   "events": [
@@ -323,6 +344,18 @@
     {
       "stage": "Export: saber",
       "text": "Reviewed harness iteration 4; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: gatling",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: crossfire",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: siege",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
     }
   ],
   "checks": {

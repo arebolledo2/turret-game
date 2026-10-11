@@ -17,6 +17,11 @@ var cooldown: float = 0.0
 var aim: Node3D
 var model: Node3D
 var muzzle: Node3D
+var rotor: Node3D
+var recoil_barrel: Node3D
+var barrel_rest := Vector3.ZERO
+var muzzle_rest := Vector3.ZERO
+var spool: float = 0.0
 var aim_rest: Vector3
 var target: CombatActor
 var target_clock: float = 0.0
@@ -61,6 +66,12 @@ func _rebuild_model() -> void:
 	add_child(model)
 	aim = model.find_child("Aim", true, false) as Node3D
 	muzzle = model.find_child("Muzzle", true, false) as Node3D
+	rotor = model.find_child("Rotor", true, false) as Node3D
+	recoil_barrel = model.find_child("Barrel", true, false) as Node3D
+	if recoil_barrel:
+		barrel_rest = recoil_barrel.position
+	muzzle_rest = muzzle.position
+	spool = 0.0
 	aim_rest = aim.position
 	aim_authored_scale = aim.scale
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
@@ -327,6 +338,7 @@ func _physics_process(delta: float) -> void:
 		var radius := stats.aoe_radius_metres if TurretRegistry.targets_clusters(turret_type) else 0.0
 		target = world.combat.select_target(position, range_metres, world.enemies, radius, world.crowd)
 		target_clock = .2
+	_tick_mechanisms(delta, is_instance_valid(target) and not target.dead and target.overlaps_attack_range(position, range_metres))
 	if not is_instance_valid(target) or target.dead or not target.overlaps_attack_range(position, range_metres):
 		return
 	var heading := WorldGeometry.planar(target.position - position)
@@ -343,6 +355,8 @@ func _physics_process(delta: float) -> void:
 ## A shot of this turret's damage type, stamped for kill attribution, with its crit already rolled.
 func _new_shot(stats: TurretStats) -> CombatShot3D:
 	var shot := CombatShot3D.from_stats(stats.values, TurretRegistry.get_damage_type(turret_type))
+	if progression.evolution_branch == "siege":
+		shot.radius = .22
 	shot.source_id = turret_id
 	shot.attack_families = TurretRegistry.get_attack_families(turret_type)
 	if TurretStatsService.roll_turret_crit():
@@ -350,7 +364,7 @@ func _new_shot(stats: TurretStats) -> CombatShot3D:
 	return shot
 
 func _reset_cooldown(stats: TurretStats) -> void:
-	cooldown = stats.cooldown_seconds
+	cooldown = stats.cooldown_seconds / (1.0 + spool if progression.evolution_branch == "machine_gun" and progression.evolution_stage >= 2 else 1.0)
 
 func _fire_pulse(stats: TurretStats, range_metres: float) -> void:
 	var pulse := _new_shot(stats)
@@ -365,11 +379,18 @@ func _fire_chain(stats: TurretStats) -> void:
 
 func _fire_projectile(stats: TurretStats) -> void:
 	var heading := WorldGeometry.planar(target.position - muzzle.global_position).normalized()
-	if progression.evolution_branch == "scatter":
+	if progression.evolution_branch == "scatter" and progression.evolution_stage >= 2:
+		for marker: String in ["Muzzle", "Muzzle_1", "Muzzle_2", "Muzzle_3"]:
+			var exit := model.find_child(marker, true, false) as Node3D
+			if exit:
+				world.fire_direction(exit.global_position, -exit.global_basis.z, _new_shot(stats))
+	elif progression.evolution_branch == "scatter":
 		for angle: float in [-12.0, 0.0, 12.0]:
 			world.fire_direction(muzzle.global_position, heading.rotated(Vector3.UP, deg_to_rad(angle)), _new_shot(stats))
 	else:
 		world.fire_shot(muzzle.global_position, target, _new_shot(stats))
+	if recoil_barrel and not FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
+		recoil_barrel.position.z += .16
 	_reset_cooldown(stats)
 
 func display_name() -> String:
@@ -382,7 +403,9 @@ func available_evolutions() -> Array[String]:
 	if not world.session.state.turret_progression_enabled:
 		return result
 	for branch in progression.evolution_options(turret_type):
-		if progression.evolution_stage == 0 and branch in ["machine_gun", "scatter", "saber"] and ClockworkModels.available(TurretEvolution.model_key(turret_type, branch, 1)):
+		var next_stage := progression.evolution_stage + 1
+		var implemented := (branch in ["machine_gun", "scatter"] and next_stage <= 2) or (branch in ["saber", "siege"] and next_stage == 1)
+		if implemented and ClockworkModels.available(TurretEvolution.model_key(turret_type, branch, next_stage)):
 			result.append(branch)
 	return result
 
@@ -398,3 +421,12 @@ func evolve(branch: String) -> bool:
 	rehit_lockouts.clear()
 	reset_physics_interpolation()
 	return true
+
+func _tick_mechanisms(delta: float, tracking: bool) -> void:
+	if progression.evolution_branch == "machine_gun" and progression.evolution_stage >= 2:
+		spool = move_toward(spool, 1.0 if tracking else 0.0, delta * (1.0 if tracking else 2.0))
+		if rotor and not FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
+			rotor.rotate_object_local(Vector3.FORWARD, delta * spool * 18.0)
+			muzzle.position = rotor.position + rotor.basis * (muzzle_rest - rotor.position)
+	if recoil_barrel:
+		recoil_barrel.position = recoil_barrel.position.lerp(barrel_rest, minf(1.0, delta * 10.0))

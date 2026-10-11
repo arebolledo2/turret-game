@@ -4,6 +4,7 @@ extends RefCounted
 ## Snapshot of a shot at firing time; all distances/speeds are already in metres.
 var damage: float = 0.0
 var speed: float = 0.0
+var radius: float = .075
 var splash_radius: float = 0.0
 var knockback: float = 0.0
 var slow_intensity: float = 0.0
@@ -31,6 +32,7 @@ func copy() -> CombatShot3D:
 	var shot := CombatShot3D.new()
 	shot.damage = damage
 	shot.speed = speed
+	shot.radius = radius
 	shot.splash_radius = splash_radius
 	shot.knockback = knockback
 	shot.damage_type = damage_type

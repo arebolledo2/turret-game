@@ -1,0 +1,13 @@
+{
+  "asset": "cp_siege",
+  "final_iteration": 3,
+  "contract_passed": true,
+  "sha256": {
+    "cp_siege.glb": "9fe98070cc035a358d77b4d5d6ecf2c9fbc16d991485df88ef110eb6d6c40e83",
+    "build_cp_siege.py": "9c50458b6d152c215ed55ffef83377818d7091c703d06fab5887d0f03e7e80c4",
+    "brushed_brass.png": "566332bc7d155318ef9b705dde08133ae7284a33548ad399298e989f9be7933f",
+    "contract.json": "15c425e7029e7199571975535e8cdbb005d85978b8e358613b45d4d27cec335e",
+    "metrics.json": "ee4b6ee80da6912b8c82eb1a9c2533a8bf2875f944f3fc8ddd0b545fd290bb39",
+    "notes.md": "d12143f5c3ef88f2648dd6f1fabf4705f78cbc9b83e067392c870c8691829952"
+  }
+}

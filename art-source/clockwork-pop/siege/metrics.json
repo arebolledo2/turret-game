@@ -1,0 +1,123 @@
+{
+  "triangles": 13704,
+  "mesh_objects": 10,
+  "materials": 10,
+  "loose_components": 185,
+  "size_m": [
+    1.725,
+    1.955,
+    1.376
+  ],
+  "min_z": 0.0,
+  "centre_xy": [
+    0.077,
+    0.157
+  ],
+  "origin_node": "Aim",
+  "origin_xy": [
+    0.0,
+    0.0
+  ],
+  "missing_nodes": [],
+  "empty_leg_pivots": [],
+  "textures": [
+    [
+      "brushed_brass",
+      [
+        256,
+        128
+      ]
+    ]
+  ],
+  "animations": [],
+  "checks": {
+    "required_nodes_present": true,
+    "each_required_node_has_geometry": true,
+    "height_ok": true,
+    "width_ok": true,
+    "ground_gap_ok": true,
+    "origin_xy_centred": true,
+    "has_meshes": true,
+    "Muzzle_under_Aim": true,
+    "muzzle_in_front_and_raised": true
+  },
+  "passed": true,
+  "limits": {
+    "height": [
+      0.9,
+      1.6
+    ],
+    "max_width": 2.4,
+    "ground_gap": [
+      -0.02,
+      0.1
+    ]
+  },
+  "targets": {
+    "max_triangles": 5000,
+    "max_mesh_objects": 16,
+    "max_materials": 10
+  },
+  "target_overruns": [
+    "max_triangles: 13704 > target 5000"
+  ],
+  "final_iteration": 3,
+  "frozen": true,
+  "hierarchy_audit": {
+    "Aim": {
+      "parent": "SiegeRoot",
+      "translation_gltf": [
+        0,
+        0.7900000214576721,
+        0
+      ],
+      "rotation_gltf": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "has_mesh": false,
+      "children": [
+        "Barrel",
+        "CoralBreech",
+        "Muzzle",
+        "RotatingCradle"
+      ]
+    },
+    "Barrel": {
+      "parent": "Aim",
+      "translation_gltf": [
+        0,
+        0.23499995470046997,
+        -0.06499999761581421
+      ],
+      "rotation_gltf": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "has_mesh": false,
+      "children": [
+        "RecoilBarrelMesh"
+      ]
+    },
+    "Muzzle": {
+      "parent": "Aim",
+      "translation_gltf": [
+        0,
+        0.23499995470046997,
+        -1.1349999904632568
+      ],
+      "rotation_gltf": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "has_mesh": false,
+      "children": []
+    }
+  }
+}

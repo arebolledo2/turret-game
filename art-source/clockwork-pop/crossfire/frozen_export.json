@@ -1,0 +1,28 @@
+{
+  "asset": "cp_crossfire",
+  "run": "cp_crossfire-v1",
+  "final_iteration": 3,
+  "frozen": true,
+  "files": {
+    "build_cp_crossfire.py": {
+      "sha256": "b02c0bf3595ee8983e25f2991372ecf8f556ff1c7cd0d5c1a674b4c022acb118",
+      "bytes": 9572
+    },
+    "cp_crossfire.glb": {
+      "sha256": "94bd93d9ed70889632ae353e44a97b88fe54d87b6bea16bf89461e4da1ff2eba",
+      "bytes": 299432
+    },
+    "cp_crossfire.blend": {
+      "sha256": "9eee544213d4f67b781f46c1e8cdee295b9f26cac97791b08195d664f6790d31",
+      "bytes": 203728
+    },
+    "renders/iter03/validate.json": {
+      "sha256": "96a22f5f664b1887ada54a0c1f582de41b7156609e0f9b8aa725ad631aa212d2",
+      "bytes": 931
+    },
+    "renders/iter03/compare.png": {
+      "sha256": "1116b917a65b13be120acd255e5df35fd4db15c762d9fc2b1f0d9d164af2a90a",
+      "bytes": 1962063
+    }
+  }
+}

@@ -65,7 +65,8 @@ func acquire_shot(origin: Vector3, heading: Vector3, spec: CombatShot3D) -> void
 	damage = shot.damage
 	speed = shot.speed
 	var plasma := shot.damage_type == GameEnums.DamageType.PLASMA
-	var size := 2.0 if shot.splash_radius > 0.0 else 1.0
+	var size := maxf(shot.radius / .075, 2.0 if shot.splash_radius > 0.0 else 1.0)
+	(sweep.shape as SphereShape3D).radius = maxf(.01, shot.radius)
 	visual.material_override = plasma_material if plasma else normal_material
 	visual.scale = Vector3.ONE * size
 	var kind := "plasma" if plasma else "ion"

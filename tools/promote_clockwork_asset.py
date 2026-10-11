@@ -36,7 +36,9 @@ for file in run.iterdir():
     if file.is_file() and file.suffix in ('.py','.png','.blend','.md','.json'):
         shutil.copy2(file,source_dir/file.name)
 (source_dir/'validate.json').write_text(validation.read_text(),encoding='utf-8',newline='\n')
-config = repo / f'3d-eval/harness/subjects/cp_{key}_soft.json'
+config = run / 'contract.json'
+if not config.exists():
+    config = repo / f'3d-eval/harness/subjects/cp_{key}_soft.json'
 shutil.copy2(config,source_dir/'contract.json')
 reference = repo / f'3d-eval/ref/cp_{key}.png'
 if reference.is_file():

@@ -74,6 +74,13 @@ static func base_stats(base_type: String, branch: String, stage: int) -> Diction
 			stats.damage = [8.0, 9.0, 10.0][stage - 1]
 			stats.fire_rate = [1.0, 1.15, 1.25][stage - 1]
 			stats.range = 220.0
+		"siege":
+			stats.damage = [42.0, 58.0, 80.0][stage - 1]
+			stats.fire_rate = [.45, .5, .55][stage - 1]
+			stats.range = 330.0
+			stats.projectile_speed = 350.0
+			stats.aoe_radius = [135.0, 160.0, 185.0][stage - 1]
+			stats.knockback_force = 220.0
 		"saber":
 			stats.damage = [11.0, 12.0, 14.0][stage - 1]
 			stats.rotation_rate = [420.0, 450.0, 480.0][stage - 1]
@@ -85,4 +92,5 @@ static func description(branch: String, stage: int) -> String:
 		"machine_gun": return "Rapid aimed fire." if stage == 1 else "Rotary fire accelerates while a target remains in range."
 		"scatter": return "Three projectiles fan out with each shot." if stage == 1 else "Fires in four directions at once."
 		"saber": return "A longer, faster energy-blade sweep."
+		"siege": return "Slow, heavy shells explode over a large area and push enemies back."
 	return ""

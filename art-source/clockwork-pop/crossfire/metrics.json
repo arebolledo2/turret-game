@@ -1,0 +1,122 @@
+{
+  "triangles": 11814,
+  "mesh_objects": 15,
+  "materials": 10,
+  "loose_components": 245,
+  "size_m": [
+    2.024,
+    2.024,
+    1.331
+  ],
+  "min_z": 0.0,
+  "centre_xy": [
+    0.0,
+    0.0
+  ],
+  "origin_node": null,
+  "origin_xy": [
+    0.0,
+    0.0
+  ],
+  "missing_nodes": [],
+  "empty_leg_pivots": [],
+  "textures": [],
+  "animations": [],
+  "checks": {
+    "required_nodes_present": true,
+    "each_required_node_has_geometry": true,
+    "height_ok": true,
+    "width_ok": true,
+    "ground_gap_ok": true,
+    "origin_xy_centred": true,
+    "has_meshes": true,
+    "Muzzle_under_Aim": true,
+    "muzzle_in_front_and_raised": true
+  },
+  "passed": true,
+  "limits": {
+    "height": [
+      0.9,
+      1.6
+    ],
+    "max_width": 2.4,
+    "ground_gap": [
+      -0.02,
+      0.1
+    ]
+  },
+  "targets": {
+    "max_triangles": 5000,
+    "max_mesh_objects": 16,
+    "max_materials": 10
+  },
+  "target_overruns": [
+    "max_triangles: 11814 > target 5000"
+  ],
+  "final_iteration": 3,
+  "manual_inspection": "Concept and all five final views personally inspected; four radial open bores and mint window verified.",
+  "marker_audit": {
+    "Muzzle": {
+      "parent": "Aim",
+      "translation_gltf_m": [
+        0,
+        0.04399996995925903,
+        -1.0140000581741333
+      ],
+      "rotation_xyzw": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "bare_empty": true
+    },
+    "Muzzle_1": {
+      "parent": "Aim",
+      "translation_gltf_m": [
+        1.0140000581741333,
+        0.04399996995925903,
+        0
+      ],
+      "rotation_xyzw": [
+        0,
+        -0.7071068286895752,
+        0,
+        0.7071068286895752
+      ],
+      "bare_empty": true
+    },
+    "Muzzle_2": {
+      "parent": "Aim",
+      "translation_gltf_m": [
+        0,
+        0.04399996995925903,
+        1.0140000581741333
+      ],
+      "rotation_xyzw": [
+        0,
+        -1,
+        0,
+        4.371138828673793e-08
+      ],
+      "bare_empty": true
+    },
+    "Muzzle_3": {
+      "parent": "Aim",
+      "translation_gltf_m": [
+        -1.0140000581741333,
+        0.04399996995925903,
+        0
+      ],
+      "rotation_xyzw": [
+        0,
+        0.7071068286895752,
+        0,
+        0.7071068286895752
+      ],
+      "bare_empty": true
+    }
+  },
+  "glb_bytes": 299432,
+  "self_score": 8
+}
