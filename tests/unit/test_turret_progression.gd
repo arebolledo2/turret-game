@@ -110,8 +110,8 @@ func test_levels_reward_distinct_stats_and_milestone_burst() -> void:
 	assert_almost_eq(stats.rotation_rate, 381.6, .001)
 	assert_eq(stats.range, 100.0)
 	growth.level = 4
-	assert_almost_eq(float(growth.stat_multipliers().range), 1.05, .001)
+	assert_almost_eq(float(growth.stat_multipliers().range), 1.10, .001)
 	growth.level = 5
 	assert_almost_eq(growth.damage_multiplier(), 1.10, .001)
 	assert_almost_eq(float(growth.stat_multipliers().speed), 1.10, .001)
-	assert_almost_eq(float(growth.stat_multipliers().range), 1.08, .001)
+	assert_almost_eq(float(growth.stat_multipliers().range), 1.13, .001)

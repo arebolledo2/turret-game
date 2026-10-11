@@ -155,6 +155,6 @@ Moving actors, pickups and the follow camera use physics interpolation to blend 
 
 ### Turret level stat rewards
 
-XP costs are unchanged. Level 2 gives +5% damage, level 3 +6% attack speed, and level 4 +5% range. Every fifth level gives +5% damage, +4% attack speed, and +3% range together. In later five-level blocks the first two levels give damage, then speed, then range, then the combined bonus. Bonuses add within each stat rather than compounding per level; they multiply item-resolved stats. Melee uses swing speed. Levels 5/10/15 still queue future evolution forms. Recaps show each increased stat, and turret inspection lists accumulated bonuses.
+XP costs are unchanged. Level 2 gives +5% damage, level 3 +6% attack speed, and level 4 +10% range. Every fifth level gives +5% damage, +4% attack speed, and +3% range together. In later five-level blocks the first two levels give damage, then speed, then range, then the combined bonus. Bonuses add within each stat rather than compounding per level; they multiply item-resolved stats. Melee uses swing speed. Levels 5/10/15 still queue future evolution forms. Recaps show each increased stat, and turret inspection lists accumulated bonuses.
 
 Approaching a deployed turret within pickup distance reveals its resolved attack range alongside contextual entrenchment. Moving away hides the range unless the global range overlay is enabled. Ground markers Off disables this proximity reveal.

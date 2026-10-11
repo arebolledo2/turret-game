@@ -20,7 +20,7 @@ func stat_multipliers() -> Dictionary:
 	return {
 		"damage": 1.0 + .05 * (floori(float(level + 3) / 5.0) + floori(float(level - 1) / 5.0)) + .05 * bursts,
 		"speed": 1.0 + .06 * floori(float(level + 2) / 5.0) + .04 * bursts,
-		"range": 1.0 + .05 * floori(float(level + 1) / 5.0) + .03 * bursts,
+		"range": 1.0 + .10 * floori(float(level + 1) / 5.0) + .03 * bursts,
 	}
 
 func damage_multiplier() -> float:
