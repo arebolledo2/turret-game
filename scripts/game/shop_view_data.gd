@@ -83,17 +83,22 @@ static func build_data(world: ArenaWorld, extra_turret: String = "") -> Dictiona
 			"slow_duration": view.slow_duration, "rehit_delay": view.rehit_delay if stats.has("rehit_delay") else 0.0},
 			"area": reach if pulse else view.aoe_radius_metres})
 		var instances: Array[Dictionary] = []
-		var damage_units := float(count)
+		var represented := 0
 		if world.session.state.turret_progression_enabled:
 			for actor in world.turrets:
 				if actor.turret_type != type_id:
 					continue
 				var growth := actor.progression.snapshot()
 				growth["id"] = actor.turret_id
+				growth["name"] = actor.display_name()
+				growth["combat"] = _actor_numbers(actor)
+				if actor.progression.evolution_branch == "gunblade":
+					growth["gun"] = _actor_numbers(actor, true)
 				instances.append(growth)
-				damage_units += actor.progression.damage_multiplier() * float(actor.progression.stat_multipliers().speed) - 1.0
+				represented += 1
+				dps += _actor_dps(actor)
 		turrets.back()["instances"] = instances
-		dps += damage_units * float(stats["damage"]) * rate
+		dps += maxi(0, count - represented) * float(stats["damage"]) * rate
 	var max_hull := PlayerStatsService.get_player_max_health(float(world.difficulty_config["player_health_mult"]))
 	var items: Array[Dictionary] = []
 	for item_id: String in ItemTrackingService.item_counts:
@@ -101,6 +106,39 @@ static func build_data(world: ArenaWorld, extra_turret: String = "") -> Dictiona
 	return {"turrets": turrets, "dps": dps, "max_hull": max_hull, "hull": minf(world.player.health, max_hull),
 		"speed": PlayerStatsService.get_player_speed() * WorldGeometry.METRES_PER_PIXEL,
 		"pickup": PlayerStatsService.get_pickup_radius() * WorldGeometry.METRES_PER_PIXEL, "items": items}
+
+static func _actor_numbers(actor: TurretActor, secondary: bool = false) -> Dictionary:
+	var values := actor.resolve_attack_stats(secondary)
+	var stats := TurretStats.new(values)
+	var pulse := TurretRegistry.get_fire_mode(actor.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] and not secondary
+	var reach := stats.range_metres * (stats.area_size if pulse else 1.0)
+	return {"damage": stats.damage, "range": reach, "fire_rate": stats.fire_rate,
+		"rotation_rate": float(values.get("rotation_rate", 0.0)), "area": reach if pulse else stats.aoe_radius_metres,
+		"stats": {"pierce": stats.pierce, "projectile_speed": stats.projectile_speed_metres,
+		"knockback": stats.knockback_metres, "chain_count": stats.chain_count,
+		"chain_decay": stats.chain_decay * 100.0, "slow": stats.slow_intensity * 100.0,
+		"slow_duration": stats.slow_duration, "rehit_delay": stats.rehit_delay if values.has("rehit_delay") else 0.0}}
+
+## Single-target estimate; splash, chains, penetration and ricochets depend on enemy arrangement.
+static func _actor_dps(actor: TurretActor) -> float:
+	var stats := TurretStats.new(actor.resolve_attack_stats())
+	var rate := stats.fire_rate
+	var branch := actor.progression.evolution_branch
+	var stage := actor.progression.evolution_stage
+	if actor.turret_type == "melee":
+		rate = minf(stats.rotation_rate / 360.0, 1.0 / maxf(.01, stats.rehit_delay))
+	elif branch == "repeater_bow":
+		var arrows: int = [2, 3, 5][stage - 1]
+		rate = float(arrows) / (stats.cooldown_seconds + .09 * (arrows - 1))
+	elif branch == "machine_gun" and stage >= 2:
+		rate *= 1.0 + actor.spool
+	var result := stats.damage * rate
+	if actor.turret_type == "flamethrower":
+		result += stats.damage * float(stats.values.get("burn_ratio", 1.6)) * minf(1.0, rate * float(stats.values.get("burn_duration", 2.0)))
+	if branch == "gunblade":
+		var gun := TurretStats.new(actor.resolve_attack_stats(true))
+		result += gun.damage * gun.fire_rate
+	return result
 
 ## build_data after buying `offer`. Items are measured by adding their modifiers to the real modifier
 ## system for the duration of this call and removing them again, so the numbers come from the same

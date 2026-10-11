@@ -324,14 +324,14 @@ func _refresh_details() -> void:
 			lines.append("[b]%s ×%d[/b]\n%s" % [turret["name"], turret["count"], _turret_numbers(was, turret)])
 			continue
 		for growth: Dictionary in instances:
-			var current := turret.duplicate(true)
-			var previous := was.duplicate(true)
-			for stat_key: String in ["damage", "range", "fire_rate", "rotation_rate"]:
-				var multiplier := float(growth["multipliers"]["speed" if stat_key in ["fire_rate", "rotation_rate"] else stat_key])
-				current[stat_key] *= multiplier
-				if not previous.is_empty():
-					previous[stat_key] *= multiplier
-			var caption := "[b]%s #%d · Lv %d[/b]" % [turret["name"], growth["id"], growth["level"]]
+			var current: Dictionary = growth["combat"]
+			var previous: Dictionary = {}
+			var previous_gun: Dictionary = {}
+			for old_growth: Dictionary in was.get("instances", []):
+				if old_growth["id"] == growth["id"]:
+					previous = old_growth["combat"]
+					previous_gun = old_growth.get("gun", {})
+			var caption := "[b]%s #%d · Lv %d[/b]" % [growth["name"], growth["id"], growth["level"]]
 			caption += "\nXP %d / %d toward Lv %d" % [growth["xp"], growth["next_cost"], int(growth["level"]) + 1]
 			var change: Dictionary = world.salvage.last_settlement.get("changes", {}).get(growth["id"], {})
 			if not change.is_empty() and int(world.salvage.last_settlement.get("wave", -1)) == GameStateService.current_wave:
@@ -340,6 +340,8 @@ func _refresh_details() -> void:
 					caption += " · Lv %d → %d" % [change["before"]["level"], change["after"]["level"]]
 				caption += "[/color]"
 			lines.append(caption + "\n" + _turret_numbers(previous, current))
+			if growth.has("gun"):
+				lines.append("[b]Gun · Projectile[/b]\n" + _turret_numbers(previous_gun, growth["gun"]))
 		if int(turret["count"]) > instances.size():
 			lines.append("[b]%s · New Lv 1 turret[/b]\n%s" % [turret["name"], _turret_numbers({}, turret)])
 	turret_text.text = "\n\n".join(lines)

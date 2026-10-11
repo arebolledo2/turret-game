@@ -265,3 +265,43 @@ func test_bowling_branches_support_all_milestones_and_distinct_shots() -> void:
 				assert_eq(shot.ricochets, stage * 2)
 				assert_eq(shot.pierce, 0)
 		assert_true(turret.available_evolutions().is_empty())
+
+func test_shop_reports_evolved_stats_and_preview_does_not_mutate_combat_cache() -> void:
+	var turret := world.add_turret(Vector3.ZERO, "melee")
+	turret.set_physics_process(false)
+	turret.progression.award(110)
+	assert_true(turret.evolve("gunblade"))
+	turret._current_view(0)
+	var cached := turret.cached_stats.duplicate(true)
+	var cached_gun := turret.gun_stats.values.duplicate(true)
+	var before := ShopViewData.build_data(world)
+	var after := ShopViewData.preview(world, ShopOffer.new("item", "dense_rounds", 10))
+	var before_instance: Dictionary = {}
+	var after_instance: Dictionary = {}
+	for row: Dictionary in before.turrets:
+		for instance: Dictionary in row.instances:
+			if instance.id == turret.turret_id:
+				before_instance = instance
+	for row: Dictionary in after.turrets:
+		for instance: Dictionary in row.instances:
+			if instance.id == turret.turret_id:
+				after_instance = instance
+	assert_eq(before_instance.name, "Gunblade")
+	assert_almost_eq(float(before_instance.combat.damage), turret.stats_view.damage, .001)
+	assert_almost_eq(float(before_instance.gun.damage), turret.gun_stats.damage, .001)
+	assert_almost_eq(float(after_instance.combat.damage), float(before_instance.combat.damage), .001)
+	assert_gt(float(after_instance.gun.damage), float(before_instance.gun.damage))
+	assert_eq(turret.cached_stats, cached)
+	assert_eq(turret.gun_stats.values, cached_gun)
+	assert_eq(ShopViewData.build_data(world), before, "Preview restores all temporary ownership and modifiers")
+
+func test_fresh_resolution_matches_cached_evolved_stats_with_entrenchment() -> void:
+	var turret := world.turrets[0]
+	turret.progression.award(110)
+	assert_true(turret.evolve("machine_gun"))
+	turret.entrench_stacks_cached = 2
+	turret.invalidate_stats()
+	assert_eq(turret._current_stats(0), turret.resolve_attack_stats())
+	var data := ShopViewData.build_data(world)
+	assert_eq(data.turrets[0].instances[0].name, "Machine Gun")
+	assert_almost_eq(float(data.turrets[0].instances[0].combat.fire_rate), turret.stats_view.fire_rate, .001)

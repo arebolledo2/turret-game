@@ -286,33 +286,33 @@ func _current_view(delta: float) -> TurretStats:
 func _current_stats(delta: float) -> Dictionary:
 	stats_age += delta
 	if cached_stats.is_empty() or stats_age >= STATS_REFRESH:
-		cached_stats = ModifierService.get_turret_stats(turret_type, world.difficulty_config, TurretEvolution.base_stats(turret_type, progression.evolution_branch, progression.evolution_stage))
-		cached_stats = cached_stats.duplicate()
-		if world.session.state.turret_progression_enabled:
-			progression.apply_stats(cached_stats)
-		_apply_item_conditions(cached_stats)
 		_refresh_zone_bonuses()
-		if zone_range_bonus > 0.0:
-			cached_stats["range"] = float(cached_stats.get("range", TurretStats.DEFAULT_RANGE)) * (1.0 + zone_range_bonus)
-		if entrench_stacks_cached > 0:
-			cached_stats["damage"] = float(cached_stats.get("damage", 0.0)) * (1.0 + entrench_damage_bonus())
-			cached_stats["fire_rate"] = float(cached_stats.get("fire_rate", 1.0)) * (1.0 + entrench_fire_rate_bonus())
+		cached_stats = resolve_attack_stats()
 		if progression.evolution_branch == "gunblade":
-			var gun_base := TurretRegistry.get_base_stats("normal")
-			gun_base.damage = 7.0
-			gun_base.fire_rate = 2.0
-			gun_base.range = 300.0
-			var gun := ModifierService.get_turret_stats(turret_type, world.difficulty_config, gun_base, "normal")
-			if world.session.state.turret_progression_enabled:
-				progression.apply_stats(gun)
-			_apply_item_conditions(gun)
-			gun.range *= 1.0 + zone_range_bonus
-			gun.damage *= 1.0 + entrench_damage_bonus()
-			gun.fire_rate *= 1.0 + entrench_fire_rate_bonus()
-			gun_stats = TurretStats.new(gun)
+			gun_stats = TurretStats.new(resolve_attack_stats(true))
 		stats_age = 0.0
 		stats_view = TurretStats.new(cached_stats)
 	return cached_stats
+
+## Fresh, side-effect-free resolution also supports shop previews without polluting combat caches.
+func resolve_attack_stats(secondary: bool = false) -> Dictionary:
+	var base := TurretEvolution.base_stats(turret_type, progression.evolution_branch, progression.evolution_stage)
+	if secondary:
+		base = TurretRegistry.get_base_stats("normal")
+		base.damage = 7.0
+		base.fire_rate = 2.0
+		base.range = 300.0
+	var stats := ModifierService.get_turret_stats(turret_type, world.difficulty_config, base, "normal" if secondary else "")
+	if world.session.state.turret_progression_enabled:
+		progression.apply_stats(stats)
+	_apply_item_conditions(stats)
+	var terrain_range := world.terrain.range_bonus_at(position) if world.terrain and not carried else 0.0
+	stats["range"] = float(stats.get("range", TurretStats.DEFAULT_RANGE)) * (1.0 + terrain_range)
+	var bonus := maxf(0.0, ModifierService.apply_modifiers_to_stat(1.0, "entrench_bonus")) * float(entrench_stacks_cached)
+	if bonus > 0.0:
+		stats["damage"] *= 1.0 + GameConstants.ENTRENCH_DAMAGE_PER_STACK * bonus
+		stats["fire_rate"] = float(stats.get("fire_rate", 1.0)) * (1.0 + GameConstants.ENTRENCH_FIRE_RATE_PER_STACK * bonus)
+	return stats
 
 var range_ring: MeshInstance3D
 var range_ring_metres: float = 0.0
