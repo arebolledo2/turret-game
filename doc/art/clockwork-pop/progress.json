@@ -144,6 +144,27 @@
       "run": "cp_core-v1",
       "preview": "previews/core-close.png",
       "metrics": "21,176 triangles \u00b7 5 meshes \u00b7 7 materials \u00b7 procedural orb shader"
+    },
+    {
+      "key": "machine_gun",
+      "name": "Machine Gun",
+      "status": "review",
+      "preview": "previews/machine_gun.png",
+      "metrics": "27,664 triangles \u00b7 14 meshes \u00b7 7 materials"
+    },
+    {
+      "key": "scatter",
+      "name": "Scatter",
+      "status": "review",
+      "preview": "previews/scatter.png",
+      "metrics": "12,484 triangles \u00b7 14 meshes \u00b7 10 materials"
+    },
+    {
+      "key": "saber",
+      "name": "Saber",
+      "status": "review",
+      "preview": "previews/saber.png",
+      "metrics": "12,106 triangles \u00b7 15 meshes \u00b7 10 materials"
     }
   ],
   "events": [
@@ -290,6 +311,18 @@
     {
       "stage": "Gyroscope core",
       "text": "Created directly in 3D at user request; one reviewed generation iteration. 21,176 triangles, 5 meshes, 7 materials; no bitmap textures. Three independently rotating rings and a procedural plasma orb replace the core in core/convoy modes. Health tint, destruction, reduced motion and physics interpolation are supported; original collision/repair rules remain. Reviewed close, rotated, gameplay, critical and destroyed Godot captures. All 865 tests pass; resource audit passes 170 sources/25 model records. No performance benchmark was run for this singleton."
+    },
+    {
+      "stage": "Export: machine_gun",
+      "text": "Reviewed harness iteration 6; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: scatter",
+      "text": "Reviewed harness iteration 4; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: saber",
+      "text": "Reviewed harness iteration 4; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
     }
   ],
   "checks": {

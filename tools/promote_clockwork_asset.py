@@ -13,7 +13,7 @@ from pathlib import Path
 game = Path(__file__).resolve().parents[1]
 repo = game.parent
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('key', choices=['ion','plasma','tesla','shock','melee','basic','fast','tank','charger','hero','dropbox','exploder'])
+parser.add_argument('key', choices=['ion','plasma','tesla','shock','melee','basic','fast','tank','charger','hero','dropbox','exploder','machine_gun','scatter','saber','gatling','crossfire','siege','bow','flamethrower','bowling','gunblade'])
 parser.add_argument('--iteration', required=True, type=int)
 args = parser.parse_args()
 key = args.key
@@ -38,6 +38,11 @@ for file in run.iterdir():
 (source_dir/'validate.json').write_text(validation.read_text(),encoding='utf-8',newline='\n')
 config = repo / f'3d-eval/harness/subjects/cp_{key}_soft.json'
 shutil.copy2(config,source_dir/'contract.json')
+reference = repo / f'3d-eval/ref/cp_{key}.png'
+if reference.is_file():
+    refs = game / 'art-source/clockwork-pop/references'
+    refs.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(reference, refs / f'{key}.png')
 import_file = destination.with_suffix('.glb.import')
 if not import_file.exists():
     original = (game/'assets/models/game/spider_drone.glb.import').read_text()
@@ -59,7 +64,10 @@ report=game/'doc/art/clockwork-pop'
 (report/'previews').mkdir(exist_ok=True)
 shutil.copy2(preview,report/'previews'/f'{key}.png')
 progress=json.loads((report/'progress.json').read_text())
-asset=next(a for a in progress['assets'] if a['key']==key)
+asset=next((a for a in progress['assets'] if a['key']==key), None)
+if asset is None:
+    asset={'key':key,'name':key.replace('_',' ').title(),'status':'review'}
+    progress['assets'].append(asset)
 asset.update(status='review',preview=f'previews/{key}.png',metrics=f"{entry['triangles']:,} triangles · {entry['meshes']} meshes · {entry['materials']} materials")
 progress['events'].append({'stage':'Export: '+key,'text':f"Reviewed harness iteration {args.iteration}; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."})
 (report/'progress.json').write_text(json.dumps(progress,indent=2),encoding='utf-8',newline='\n')

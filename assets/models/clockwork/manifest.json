@@ -142,6 +142,39 @@
       "meshes": 5,
       "materials": 7,
       "iteration": 1
+    },
+    {
+      "id": "machine_gun",
+      "source": "art-source/clockwork-pop/machine_gun/build_cp_machine_gun.py",
+      "model": "assets/models/clockwork/cp_machine_gun.glb",
+      "reference": "art-source/clockwork-pop/references/machine_gun.png",
+      "sha256": "0e37ccabad8e00635aa1df8e999b3fd9cf49e5255458e854c0eee6ae6b6896e1",
+      "triangles": 27664,
+      "meshes": 14,
+      "materials": 7,
+      "iteration": 6
+    },
+    {
+      "id": "scatter",
+      "source": "art-source/clockwork-pop/scatter/build_cp_scatter.py",
+      "model": "assets/models/clockwork/cp_scatter.glb",
+      "reference": "art-source/clockwork-pop/references/scatter.png",
+      "sha256": "e82b90ba23b936c786be3d6c210965d9e3b40eaba82abba0bea5faf343dc533e",
+      "triangles": 12484,
+      "meshes": 14,
+      "materials": 10,
+      "iteration": 4
+    },
+    {
+      "id": "saber",
+      "source": "art-source/clockwork-pop/saber/build_cp_saber.py",
+      "model": "assets/models/clockwork/cp_saber.glb",
+      "reference": "art-source/clockwork-pop/references/saber.png",
+      "sha256": "950239f80c6b4c0ae653219392f302d42709b60c5128807d89f440bcfeff513b",
+      "triangles": 12106,
+      "meshes": 15,
+      "materials": 10,
+      "iteration": 4
     }
   ]
 }

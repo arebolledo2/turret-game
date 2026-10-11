@@ -15,6 +15,7 @@ var xp_label: Label
 var xp_bar: TurretXpBar
 var detail: RichTextLabel
 var detail_key: int = 0
+var evolution_choices: VBoxContainer
 var details_scroll: ScrollContainer
 
 func _ready() -> void:
@@ -62,6 +63,9 @@ func _ready() -> void:
 	detail.scroll_active = false
 	detail.add_theme_font_size_override("normal_font_size", 24)
 	column.add_child(detail)
+	evolution_choices = VBoxContainer.new()
+	evolution_choices.add_theme_constant_override("separation", 12)
+	column.add_child(evolution_choices)
 
 func refresh() -> void:
 	var ids: Array[int] = []
@@ -97,7 +101,7 @@ func refresh() -> void:
 		selected_id = ids[0] if not ids.is_empty() else 0
 	for i in world.turrets.size():
 		var turret := world.turrets[i]
-		buttons[i].text = "%s #%d   ·   Lv %d\n" % [TurretRegistry.get_short_name(turret.turret_type),
+		buttons[i].text = "%s #%d   ·   Lv %d\n" % [turret.display_name(),
 			turret.turret_id, turret.progression.level]
 		roster_bars[i].show_progress(turret.progression.level, turret.progression.xp)
 		buttons[i].set_pressed_no_signal(turret.turret_id == selected_id)
@@ -133,7 +137,7 @@ func _show_selected() -> void:
 	detail_key = key
 	art.texture = ShopArt.turret(turret.turret_type)
 	family_badges.show_turret(turret.turret_type)
-	title.text = "%s #%d\nLEVEL %d" % [ArenaShop.offer_name(ShopOffer.new("turret", turret.turret_type, 0)), selected_id, growth.level]
+	title.text = "%s #%d\nLEVEL %d" % [turret.display_name(), selected_id, growth.level]
 	xp_label.text = "LEVEL %d  →  LEVEL %d" % [growth.level, growth.level + 1]
 	xp_bar.show_progress(growth.level, growth.xp)
 	var lines := PackedStringArray()
@@ -164,9 +168,28 @@ func _show_selected() -> void:
 	if not change.is_empty():
 		lines.append("\n[b]LAST SALVAGE · WAVE %d[/b]\n+%d XP  ·  Level %d → %d" % [ledger["wave"], change["xp_awarded"], change["before"]["level"], change["after"]["level"]])
 	lines.append("\n[b]EVOLUTION MILESTONES[/b]")
-	for milestone in TurretProgression.EVOLUTION_LEVELS:
-		lines.append("Level %d  ·  %s" % [milestone, "Reached — form upgrade pending" if growth.level >= milestone else "Not reached"])
-	lines.append("Evolution forms are not available yet. Ordinary stat levels continue beyond level 15.")
+	for i in TurretProgression.EVOLUTION_LEVELS.size():
+		var milestone: int = TurretProgression.EVOLUTION_LEVELS[i]
+		var state := "Not reached"
+		if growth.evolution_stage > i:
+			state = TurretEvolution.form_name(turret.turret_type, growth.evolution_branch, i + 1)
+		elif growth.level >= milestone:
+			state = "Evolution ready" if not turret.available_evolutions().is_empty() else "Form in development — milestone retained"
+		lines.append("Level %d  ·  %s" % [milestone, state])
+	lines.append("Ordinary stat levels continue beyond level 15.")
+	for child in evolution_choices.get_children():
+		evolution_choices.remove_child(child)
+		child.queue_free()
+	for branch in turret.available_evolutions():
+		var button := Button.new()
+		button.custom_minimum_size.y = 80
+		button.text = "EVOLVE · %s\n%s" % [TurretEvolution.form_name(turret.turret_type, branch, growth.evolution_stage + 1), TurretEvolution.description(branch, growth.evolution_stage + 1)]
+		button.pressed.connect(_evolve_selected.bind(turret, branch))
+		evolution_choices.add_child(button)
+		for roster_button in buttons:
+			if roster_button.button_pressed:
+				roster_button.focus_neighbor_right = roster_button.get_path_to(evolution_choices.get_child(0))
+				button.focus_neighbor_left = button.get_path_to(roster_button)
 	detail.text = "\n".join(lines)
 
 func _process(delta: float) -> void:
@@ -176,3 +199,12 @@ func _process(delta: float) -> void:
 		var axis := Input.get_joy_axis(device, JOY_AXIS_RIGHT_Y)
 		if absf(axis) > .25:
 			details_scroll.scroll_vertical += roundi(axis * 650.0 * delta)
+
+func _evolve_selected(turret: TurretActor, branch: String) -> void:
+	if turret.evolve(branch):
+		detail_key = 0
+		refresh()
+		for button in buttons:
+			if button.button_pressed:
+				button.grab_focus()
+				break

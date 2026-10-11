@@ -59,3 +59,30 @@ static func model_key(base_type: String, branch: String, stage: int) -> String:
 		"wide_flame", "focused_jet": return "flamethrower"
 		"heavy_roller", "bank_shot": return "bowling"
 	return "ion" if base_type == "normal" else base_type
+
+## Shape the attack before item modifiers so flat bonuses remain meaningful.
+static func base_stats(base_type: String, branch: String, stage: int) -> Dictionary:
+	var stats := TurretRegistry.get_base_stats(base_type)
+	if stage <= 0:
+		return stats
+	match branch:
+		"machine_gun":
+			stats.damage = [6.5, 5.5, 6.5][stage - 1]
+			stats.fire_rate = [3.2, 4.0, 4.8][stage - 1]
+			stats.projectile_speed = 1000.0
+		"scatter":
+			stats.damage = [8.0, 9.0, 10.0][stage - 1]
+			stats.fire_rate = [1.0, 1.15, 1.25][stage - 1]
+			stats.range = 220.0
+		"saber":
+			stats.damage = [11.0, 12.0, 14.0][stage - 1]
+			stats.rotation_rate = [420.0, 450.0, 480.0][stage - 1]
+			stats.range = [145.0, 155.0, 170.0][stage - 1]
+	return stats
+
+static func description(branch: String, stage: int) -> String:
+	match branch:
+		"machine_gun": return "Rapid aimed fire." if stage == 1 else "Rotary fire accelerates while a target remains in range."
+		"scatter": return "Three projectiles fan out with each shot." if stage == 1 else "Fires in four directions at once."
+		"saber": return "A longer, faster energy-blade sweep."
+	return ""

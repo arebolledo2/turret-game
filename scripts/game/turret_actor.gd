@@ -15,6 +15,7 @@ var carried: bool = false:
 			reset_entrench()
 var cooldown: float = 0.0
 var aim: Node3D
+var model: Node3D
 var muzzle: Node3D
 var aim_rest: Vector3
 var target: CombatActor
@@ -42,10 +43,15 @@ static var melee_materials: Dictionary = {}
 
 func _ready() -> void:
 	Events.modifiers_changed.connect(invalidate_stats)
+	_rebuild_model()
+
+func _rebuild_model() -> void:
+	if is_instance_valid(model):
+		remove_child(model)
+		model.queue_free()
 	var fire_mode := TurretRegistry.get_fire_mode(turret_type)
-	var asset_key := "ion" if turret_type == "normal" else turret_type
+	var asset_key := TurretEvolution.model_key(turret_type, progression.evolution_branch, progression.evolution_stage)
 	var use_clockwork := ClockworkModels.available(asset_key)
-	var model: Node3D
 	if use_clockwork:
 		model = ClockworkModels.instantiate(asset_key)
 	else:
@@ -257,7 +263,7 @@ func _current_view(delta: float) -> TurretStats:
 func _current_stats(delta: float) -> Dictionary:
 	stats_age += delta
 	if cached_stats.is_empty() or stats_age >= STATS_REFRESH:
-		cached_stats = TurretStatsService.get_turret_stats(turret_type, float(world.difficulty_config["turret_damage_mult"]))
+		cached_stats = ModifierService.get_turret_stats(turret_type, world.difficulty_config, TurretEvolution.base_stats(turret_type, progression.evolution_branch, progression.evolution_stage))
 		cached_stats = cached_stats.duplicate()
 		if world.session.state.turret_progression_enabled:
 			progression.apply_stats(cached_stats)
@@ -358,5 +364,37 @@ func _fire_chain(stats: TurretStats) -> void:
 	_reset_cooldown(stats)
 
 func _fire_projectile(stats: TurretStats) -> void:
-	world.fire_shot(muzzle.global_position, target, _new_shot(stats))
+	var heading := WorldGeometry.planar(target.position - muzzle.global_position).normalized()
+	if progression.evolution_branch == "scatter":
+		for angle: float in [-12.0, 0.0, 12.0]:
+			world.fire_direction(muzzle.global_position, heading.rotated(Vector3.UP, deg_to_rad(angle)), _new_shot(stats))
+	else:
+		world.fire_shot(muzzle.global_position, target, _new_shot(stats))
 	_reset_cooldown(stats)
+
+func display_name() -> String:
+	var evolved := TurretEvolution.form_name(turret_type, progression.evolution_branch, progression.evolution_stage)
+	return evolved if not evolved.is_empty() else TurretRegistry.get_short_name(turret_type)
+
+## Partial roster builds expose only forms with both an authored model and a working attack.
+func available_evolutions() -> Array[String]:
+	var result: Array[String] = []
+	if not world.session.state.turret_progression_enabled:
+		return result
+	for branch in progression.evolution_options(turret_type):
+		if progression.evolution_stage == 0 and branch in ["machine_gun", "scatter", "saber"] and ClockworkModels.available(TurretEvolution.model_key(turret_type, branch, 1)):
+			result.append(branch)
+	return result
+
+func evolve(branch: String) -> bool:
+	if not branch in available_evolutions() or not world.shop.is_open():
+		return false
+	if not progression.evolve(turret_type, branch):
+		return false
+	invalidate_stats()
+	_rebuild_model()
+	target = null
+	target_clock = 0.0
+	rehit_lockouts.clear()
+	reset_physics_interpolation()
+	return true

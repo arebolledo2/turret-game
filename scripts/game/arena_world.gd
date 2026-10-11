@@ -285,6 +285,9 @@ func fire(origin: Vector3, target: CombatActor, damage: float, speed: float) -> 
 	return fire_shot(origin, target, spec)
 
 func fire_shot(origin: Vector3, target: CombatActor, spec: CombatShot3D) -> Projectile3D:
+	return fire_direction(origin, target.position - origin, spec)
+
+func fire_direction(origin: Vector3, heading: Vector3, spec: CombatShot3D) -> Projectile3D:
 	var shot: Projectile3D = null
 	for projectile in projectiles:
 		if not projectile.active:
@@ -295,7 +298,7 @@ func fire_shot(origin: Vector3, target: CombatActor, spec: CombatShot3D) -> Proj
 		shot.world = self
 		actor_root.add_child(shot)
 		projectiles.append(shot)
-	shot.acquire_shot(origin, target.position - origin, spec)
+	shot.acquire_shot(origin, heading, spec)
 	audio.play_cue("plasma" if spec.damage_type == GameEnums.DamageType.PLASMA else "ion", origin)
 	effects.show_muzzle(origin, spec.damage_type)
 	return shot
