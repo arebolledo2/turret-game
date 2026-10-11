@@ -97,3 +97,11 @@ func test_run_choices_persist_and_invalid_saved_choices_are_ignored() -> void:
 	assert_eq(service.run_difficulty, GameEnums.Difficulty.BRUTAL)
 	assert_eq(service.run_mode, RunConfig.MODE_CONVOY)
 	DirAccess.remove_absolute(service.preferences_path)
+
+func test_old_saved_build_zone_flag_stays_disabled_for_balance_pass() -> void:
+	var config := ConfigFile.new()
+	config.set_value("dev_flags", FeatureFlagService.BUILD_ZONES, true)
+	FeatureFlagService.set_enabled(FeatureFlagService.BUILD_ZONES, true)
+	SettingsService.load_dev_flags(config)
+	assert_false(FeatureFlagService.is_enabled(FeatureFlagService.BUILD_ZONES))
+	assert_false(FeatureFlagService.get_definition(FeatureFlagService.BUILD_ZONES)["default"])

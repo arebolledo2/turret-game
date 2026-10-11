@@ -90,7 +90,7 @@ const FLAG_DEFINITIONS: Dictionary = {
 		"description": "Destructible crates appear away from your turrets during a wave. Destroy one for scrap and a chance at a free item; it is lost when the wave ends.",
 	},
 	BUILD_ZONES: {
-		"name": "Build Zones", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 5,
+		"name": "Build Zones", "default": false, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 5,
 		"description": "Glowing build zones appear during a wave. Stand in one to build a turret or an item. Without Turret Progression, leftover scrap is banked and improves next-wave zones; with progression, it becomes turret XP instead.",
 	},
 	DIFFICULTY_RULES: {

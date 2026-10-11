@@ -150,7 +150,7 @@ const TECH_DROP_EDGE_MARGIN: float = 3.0
 const TECH_DROP_SCRAP_PICKUPS: int = 5
 const TECH_DROP_SCRAP_EACH: int = 2
 const TECH_DROP_SCATTER_RADIUS: float = 1.2
-const TECH_DROP_ITEM_CHANCE: float = .5 # chance a destroyed drop also grants a free item
+const TECH_DROP_ITEM_CHANCE: float = .25 # chance a destroyed drop also grants a free item
 
 # =============================================================================
 # BUILD ZONES (stand in a zone to build a turret or an item; leftover scrap feeds the next wave's zones)

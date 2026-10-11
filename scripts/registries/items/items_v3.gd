@@ -786,20 +786,20 @@ const ROWS: Array = [
 		"special_effect": ""
 	},
 	{
-		"description": "Enemies per wave -30%, kill scrap +100%. Shop prices +10%.",
+		"description": "Enemies per wave -15%, kill scrap +25%. Shop prices +10%.",
 		"id": "quality_over_quantity",
 		"max_stacks": 1,
 		"modifiers": [
 			{
 				"stat": "enemy_count_mult",
 				"operation": "increase",
-				"value": -0.3,
+				"value": -0.15,
 				"filter": {}
 			},
 			{
 				"stat": "scrap_earn_mult",
 				"operation": "increase",
-				"value": 1,
+				"value": 0.25,
 				"filter": {}
 			},
 			{
@@ -810,7 +810,7 @@ const ROWS: Array = [
 			}
 		],
 		"name": "Quality Over Quantity",
-		"rarity": 2,
+		"rarity": 3,
 		"special_effect": ""
 	},
 	{

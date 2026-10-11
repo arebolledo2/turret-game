@@ -5,6 +5,7 @@ var world: ArenaWorld
 func before_each() -> void:
 	TestHelpers.reset_flags()
 	TestHelpers.reset_all_services()
+	FeatureFlagService.set_enabled(FeatureFlagService.BUILD_ZONES, true)
 	world = load("res://scenes/game/arena.tscn").instantiate() as ArenaWorld
 	add_child_autofree(world)
 	await wait_process_frames(2)

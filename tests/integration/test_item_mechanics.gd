@@ -80,11 +80,11 @@ func test_storm_conductor_links_nearby_electric_turrets() -> void:
 
 func test_economy_multipliers_reach_the_world() -> void:
 	own("quality_over_quantity")
-	assert_almost_eq(ItemTrackingService.get_enemy_count_multiplier(), .7, .001)
+	assert_almost_eq(ItemTrackingService.get_enemy_count_multiplier(), .85, .001)
 	var before := EconomyService.total_scrap
 	for index in range(20):
-		world.collect_scrap(1)
-	assert_eq(EconomyService.total_scrap - before, 40, "+100% scrap")
+		world.collect_scrap(4)
+	assert_eq(EconomyService.total_scrap - before, 100, "+25% scrap on 80 base scrap")
 
 func test_killzone_bat_hits_sooner_and_whirlwind_slows() -> void:
 	own("whirlwind_frame")

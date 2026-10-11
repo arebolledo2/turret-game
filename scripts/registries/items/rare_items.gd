@@ -142,13 +142,13 @@ static func _create_quality_over_quantity() -> Item:
 	item.item_id = "quality_over_quantity"
 	item.name = "Quality Over Quantity"
 	item.icon = "👑"
-	item.description = "Waves spawn -30% fewer enemies. Scrap per enemy +100%. Turret prices +15%"
-	item.rarity = GameEnums.ItemRarity.RARE
+	item.description = "Enemies per wave -15%, kill scrap +25%. Shop prices +10%."
+	item.rarity = GameEnums.ItemRarity.EPIC
 	item.max_stacks = 1
 	item.modifiers = [
-		Item.create_modifier("enemy_count_mult", "increase", -0.30),
-		Item.create_modifier("scrap_earn_mult", "increase", 1.0),
-		Item.create_modifier("shop_price_mult", "increase", 0.15)
+		Item.create_modifier("enemy_count_mult", "increase", -0.15),
+		Item.create_modifier("scrap_earn_mult", "increase", 0.25),
+		Item.create_modifier("shop_price_mult", "increase", 0.10)
 	]
 	return item
 

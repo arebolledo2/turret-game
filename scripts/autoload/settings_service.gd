@@ -75,9 +75,13 @@ func save_dev_flags(config: ConfigFile) -> void:
 			config.set_value("dev_flags", flag_id, FeatureFlagService.is_enabled(flag_id))
 
 func load_dev_flags(config: ConfigFile) -> void:
+	# Build-zone rewards are suspended for the current balance pass, including old saves.
+	FeatureFlagService.set_enabled(FeatureFlagService.BUILD_ZONES, false)
 	if not FeatureFlagService.is_dev_build() or not config.has_section("dev_flags"):
 		return
 	for flag_id in FeatureFlagService.get_flag_ids():
+		if flag_id == FeatureFlagService.BUILD_ZONES:
+			continue
 		if FeatureFlagService.get_definition(flag_id)["scope"] == FeatureFlagService.SCOPE_USER:
 			continue
 		if not config.has_section_key("dev_flags", flag_id):
