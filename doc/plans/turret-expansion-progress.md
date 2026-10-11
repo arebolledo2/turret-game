@@ -67,3 +67,9 @@ Fixed ShopScreen overwriting the selected turret’s rightward link to evolution
 ### Evolution preview and confirmation
 
 Selecting a branch opens a modal portrait, attack description, and before/after damage, firing/sweep rate, reach and applicable blast radius. Gunblade includes its separate gun stats. Values resolve with current items, level and position bonuses without changing progression, model or combat caches; a regression test compares the prediction against the committed evolution. A confirms and B returns to the roster without changes. Native 1280×720 layout reviewed with `tools/preview_shop.tscn -- --evolution`. Roster ready labels now reserve height above their XP bars. Resource audit: 190 source files / 37 models.
+
+### Native roster combat showcase
+
+`tools/showcase_turret_roster.tscn` runs all ten subject entries with normal turret physics and projectile collision at the default game zoom. It records attributed hits for initial and final forms, then isolates each carried turret after clearing existing shots and burns. It also checks pause prevents damage/projectile movement and cleanup removes enemies, shots and flame ribbons. `--alternate` exercises the Greatbow, Focused Jet and Heavy Roller branches instead of Repeater Bow, Wide Flame and Bank Shot. Reports and initial/final PNGs are saved under `.test-results/roster-*`.
+
+This is a durable stationary-target showcase, not evidence of encounter balance or moving-crowd behavior. Native captures show readable weapon silhouettes, rotating multi-blade forms and multi-angle fire; the largely unchanged chassis on several later forms still require their planned visual evolution pass. Full suite remains 976 passing tests; resource audit covers 192 source files and 37 models.
