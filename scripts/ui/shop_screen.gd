@@ -11,6 +11,7 @@ var offer_buttons: Array[Button] = []
 var reroll_button: IconButton
 var repair_button: IconButton
 var core_repair_button: IconButton
+var evolution_reminder: EvolutionReminder
 var continue_button: IconButton
 var offers_grid: GridContainer
 var balance: Label
@@ -147,9 +148,14 @@ func _ready() -> void:
 	footer.add_child(spacer)
 	continue_button = IconButton.new().setup("deploy", "DEPLOY", true)
 	continue_button.custom_minimum_size.x = 310
-	continue_button.pressed.connect(func() -> void: world.begin_next_wave(); refresh())
+	continue_button.pressed.connect(_request_deploy)
 	footer.add_child(continue_button)
 	turret_inspector.navigation_exit = continue_button
+	evolution_reminder = EvolutionReminder.new()
+	add_child(evolution_reminder)
+	evolution_reminder.review_requested.connect(_review_ready_turret)
+	evolution_reminder.deploy_requested.connect(_deploy)
+	evolution_reminder.canceled.connect(func() -> void: continue_button.grab_focus.call_deferred())
 	status = _label(column, "", 20, UiPalette.MUTED)
 	visible = false
 
@@ -221,7 +227,7 @@ func switch_tab(index: int) -> void:
 	tabs[active_tab].grab_focus()
 
 func _input(event: InputEvent) -> void:
-	if not visible or not world.shop.is_open() or turret_inspector.evolution_preview.visible:
+	if not visible or not world.shop.is_open() or turret_inspector.evolution_preview.visible or evolution_reminder.visible:
 		return
 	var lock_pressed: bool = (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_L) or (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_X)
 	if lock_pressed and active_tab == 0:
@@ -486,3 +492,26 @@ func _refresh_focus() -> void:
 		button.focus_neighbor_left = button.get_path_to(available[-1] if not available.is_empty() else continue_button)
 		button.focus_neighbor_top = button.get_path_to(owned_buttons[maxi(0, i - 1)])
 		button.focus_neighbor_bottom = button.get_path_to(owned_buttons[i + 1] if i + 1 < owned_buttons.size() else continue_button)
+
+func _request_deploy() -> void:
+	var count := 0
+	for turret in world.turrets:
+		if not turret.available_evolutions().is_empty():
+			count += 1
+	if count > 0:
+		evolution_reminder.show_ready(count)
+	else:
+		_deploy()
+
+func _deploy() -> void:
+	world.begin_next_wave()
+	refresh()
+
+func _review_ready_turret() -> void:
+	switch_tab(1)
+	for i in range(world.turrets.size()):
+		var turret: TurretActor = world.turrets[i]
+		if not turret.available_evolutions().is_empty():
+			turret_inspector.select(turret.turret_id)
+			turret_inspector.buttons[i].grab_focus.call_deferred()
+			return

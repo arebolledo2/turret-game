@@ -103,3 +103,7 @@ Moonshot widens the authored open barrel and adds paired hydraulic recoil housin
 ### Omnifire and Cyclone visual evolution
 
 Omnifire reuses the authored Crossfire barrels and collars in a twelve-spoke radial assembly. Every round now leaves its own open bore; the existing twelve evenly spaced directions remain unchanged. Cyclone Gatling gains twin ammunition drums and a brass/mint cage parented to the spinning rotor. These additions distinguish the final forms from their level-10 chassis. Both final portraits regenerated and reviewed. Regression checks match all twelve projectile origins and headings to their visible muzzles and verify the final Gatling hardware.
+
+### Pending evolution deployment reminder
+
+Deploy checks available free evolutions. If any are ready, a modal defaults to Review Turrets, which selects and focuses the first ready turret. Deploy Anyway starts the wave with XP and unspent evolution milestones intact; Back or controller B returns to the Shop. Normal deployment is unchanged when no upgrade is available. Controller tests cover review targeting, cancel focus, deliberate deployment with preserved growth, and uninterrupted deployment without ready forms. Native 1280x720 layout reviewed with `tools/preview_shop.tscn -- --reminder`.

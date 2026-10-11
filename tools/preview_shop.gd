@@ -29,6 +29,10 @@ func _ready() -> void:
 		world.turrets[0].progression.award(1500)
 		world.hud.shop_screen.switch_tab(1)
 		world.hud.shop_screen.turret_inspector.evolution_preview.show_form(world.turrets[0], "machine_gun")
+	if "--reminder" in OS.get_cmdline_user_args():
+		world.session.state.turret_progression_enabled = true
+		world.turrets[0].progression.award(1500)
+		world.hud.shop_screen._request_deploy()
 	for i in range(30):
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw

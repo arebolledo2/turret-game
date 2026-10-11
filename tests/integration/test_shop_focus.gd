@@ -189,3 +189,44 @@ func test_cancel_evolution_preview_keeps_growth_and_returns_to_roster() -> void:
 	assert_eq(turret.progression.snapshot(), snapshot)
 	assert_same(turret.model, model)
 	assert_same(get_viewport().gui_get_focus_owner(), inspector.buttons[0])
+
+func test_deploy_reminder_reviews_first_ready_turret_with_controller() -> void:
+	world.session.state.turret_progression_enabled = true
+	var turret := world.add_turret(Vector3(2, 0, 2), "melee")
+	turret.progression.award(1500)
+	hud.refresh()
+	hud.continue_button.grab_focus()
+	await press_direction(JOY_BUTTON_A)
+	assert_true(hud.evolution_reminder.visible)
+	assert_true(world.shop.is_open())
+	await press_direction(JOY_BUTTON_A)
+	assert_false(hud.evolution_reminder.visible)
+	assert_eq(hud.active_tab, 1)
+	assert_eq(hud.turret_inspector.selected_id, turret.turret_id)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.turret_inspector.buttons[1])
+
+func test_deploy_reminder_back_and_skip_preserve_pending_evolution() -> void:
+	world.session.state.turret_progression_enabled = true
+	var turret := world.turrets[0]
+	turret.progression.award(1500)
+	var snapshot := turret.progression.snapshot()
+	hud.continue_button.grab_focus()
+	await press_direction(JOY_BUTTON_A)
+	await press_direction(JOY_BUTTON_B)
+	assert_false(hud.evolution_reminder.visible)
+	assert_true(world.shop.is_open())
+	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
+	await press_direction(JOY_BUTTON_A)
+	await press_direction(JOY_BUTTON_DPAD_LEFT)
+	assert_same(hud.evolution_reminder.gui_get_focus_owner(), hud.evolution_reminder.deploy_button)
+	await press_direction(JOY_BUTTON_A)
+	assert_false(hud.evolution_reminder.visible)
+	assert_false(world.shop.is_open())
+	assert_eq(turret.progression.snapshot(), snapshot)
+	assert_false(turret.available_evolutions().is_empty())
+
+func test_deploy_without_ready_evolutions_does_not_interrupt() -> void:
+	hud.continue_button.grab_focus()
+	await press_direction(JOY_BUTTON_A)
+	assert_false(hud.evolution_reminder.visible)
+	assert_false(world.shop.is_open())
