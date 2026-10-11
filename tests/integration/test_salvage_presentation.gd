@@ -14,7 +14,7 @@ func before_each() -> void:
 	world.reward_presentation.set_process(false)
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 
-func _finish(amount: int = 116) -> void:
+func _finish(amount: int = 110) -> void:
 	var pickup := ScrapPickup.new()
 	pickup.world = world
 	pickup.amount = amount
@@ -40,7 +40,7 @@ func test_collection_waits_for_continue_then_opens_shop_once() -> void:
 	var money := EconomyService.total_scrap
 	world.reward_presentation.complete()
 	assert_eq(EconomyService.total_scrap, money)
-	assert_eq(world.turrets[0].progression.total_xp, 116)
+	assert_eq(world.turrets[0].progression.total_xp, 110)
 
 func test_pause_freezes_sequence_and_skip_keeps_rewards() -> void:
 	_finish()
@@ -54,7 +54,7 @@ func test_pause_freezes_sequence_and_skip_keeps_rewards() -> void:
 	world.reward_presentation.advance(.1)
 	world.reward_presentation.skip_button.pressed.emit()
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.SHOP)
-	assert_eq(world.turrets[0].progression.total_xp, 116)
+	assert_eq(world.turrets[0].progression.total_xp, 110)
 
 func test_restart_cancels_old_presentation_without_late_shop_transition() -> void:
 	_finish()
@@ -91,7 +91,7 @@ func test_reduced_motion_has_no_flights_or_pulses_but_shows_levels() -> void:
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_END)
 
 func test_xp_bars_show_partial_progress_in_recap_and_turret_roster() -> void:
-	_finish(119)
+	_finish(113)
 	world.reward_presentation.advance(2.0)
 	var bar: ProgressBar = world.reward_presentation.cards[1].bar
 	assert_eq(bar.value, 3.0, "Overflow after reaching level 5 is shown")
@@ -122,7 +122,7 @@ func test_turrets_tab_uses_individual_stats_and_controller_can_reach_deploy() ->
 	assert_false(shop.reroll_button.visible)
 	assert_eq(shop.turret_inspector.buttons.size(), 2)
 	assert_true(shop.turret_inspector.title.text.contains("LEVEL 5"))
-	assert_true(shop.turret_inspector.detail.text.contains("+116 XP"))
+	assert_true(shop.turret_inspector.detail.text.contains("+110 XP"))
 	assert_true(shop.turret_inspector.detail.text.contains("%.0f" % world.turrets[0]._current_view(0).damage))
 	shop.turret_inspector.select(second.turret_id)
 	assert_true(shop.turret_inspector.title.text.contains("LEVEL 1"))

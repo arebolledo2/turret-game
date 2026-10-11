@@ -36,7 +36,7 @@ func test_wave_end_awards_raw_xp_and_cash_bonus_once() -> void:
 	collected.collect()
 	var deleted := _scrap(99)
 	deleted.queue_free()
-	var leftover := _scrap(819)
+	var leftover := _scrap(903)
 	var before := EconomyService.total_scrap
 	assert_true(world.finish_wave())
 	assert_eq(EconomyService.total_scrap, before + 5)
@@ -44,11 +44,11 @@ func test_wave_end_awards_raw_xp_and_cash_bonus_once() -> void:
 	assert_eq(world.turrets[0].progression.level, 15)
 	assert_eq(world.turrets[0].progression.xp, 7)
 	assert_eq(world.turrets[0].progression.pending_evolutions, [5, 10, 15])
-	assert_eq(world.salvage.last_settlement.raw_scrap, 819)
-	assert_eq(world.telemetry.total("turret_xp"), 819)
+	assert_eq(world.salvage.last_settlement.raw_scrap, 903)
+	assert_eq(world.telemetry.total("turret_xp"), 903)
 	assert_false(world.finish_wave())
 	assert_false(_settle_only(), "Even direct re-entry cannot settle this wave twice")
-	assert_eq(world.turrets[0].progression.total_xp, 819)
+	assert_eq(world.turrets[0].progression.total_xp, 903)
 	assert_eq(EconomyService.total_scrap, before + 5)
 	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
 	assert_true(world.begin_next_wave())
@@ -60,7 +60,7 @@ func test_carried_position_is_snapshotted_before_automatic_drop() -> void:
 	world.placement.carried = turret
 	turret.carried = true
 	turret.position = Vector3(9, 2, 6)
-	_scrap(14, turret.position)
+	_scrap(20, turret.position)
 	assert_true(world.finish_wave())
 	var target: Dictionary = world.salvage.last_settlement.targets[0]
 	assert_eq(target.position, Vector3(9, 2, 6))
@@ -145,7 +145,7 @@ func test_dev_jump_discards_scrap_without_growth() -> void:
 
 func test_victory_settles_without_waiting_for_evolution_choices() -> void:
 	world.wave_limit = 1
-	_scrap(812)
+	_scrap(896)
 	assert_true(world.finish_wave())
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.VICTORY)
 	assert_eq(world.turrets[0].progression.level, 15)
@@ -153,7 +153,7 @@ func test_victory_settles_without_waiting_for_evolution_choices() -> void:
 
 func test_run_latches_flag_and_off_preserves_legacy_banking() -> void:
 	FeatureFlagService.request_enabled(FeatureFlagService.TURRET_PROGRESSION, false)
-	_scrap(14)
+	_scrap(20)
 	world.finish_wave()
 	assert_eq(world.turrets[0].progression.level, 2)
 	assert_true(world.session.state.turret_progression_enabled)
@@ -189,14 +189,14 @@ func test_level_damage_is_individual_and_combines_with_items_once() -> void:
 	world.shop.apply_item("dense_rounds")
 	var base_damage: float = veteran._current_stats(1.0).damage
 	_scrap(0)
-	veteran.progression.award(116)
+	veteran.progression.award(110)
 	assert_almost_eq(float(veteran._current_stats(1.0).damage), base_damage * 1.09, .0001)
 	assert_almost_eq(float(rookie._current_stats(1.0).damage), base_damage, .0001)
 	assert_true(world.dev_panel.progression_text().contains("Lv 5"))
 	assert_true(world.dev_panel.progression_text().contains("pending [5]"))
 
 func test_shop_exposes_wave_award_individual_levels_and_damage_previews() -> void:
-	_scrap(116)
+	_scrap(110)
 	world.finish_wave()
 	var rookie := world.add_turret(Vector3(8, 0, 0))
 	rookie.set_physics_process(false)
@@ -204,7 +204,7 @@ func test_shop_exposes_wave_award_individual_levels_and_damage_previews() -> voi
 	screen.world = world
 	add_child_autofree(screen)
 	screen.refresh()
-	assert_true(screen.growth_summary.text.contains("+116 XP"))
+	assert_true(screen.growth_summary.text.contains("+110 XP"))
 	assert_true(screen.growth_summary.text.contains("4 levels gained"))
 	assert_true(screen.turret_text.text.contains("#1 · Lv 5"))
 	assert_true(screen.turret_text.text.contains("#2 · Lv 1"))

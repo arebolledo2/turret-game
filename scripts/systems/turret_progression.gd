@@ -13,8 +13,7 @@ var pending_evolutions: Array[int] = []
 static func cost_to_next(current_level: int) -> int:
 	var step := maxi(0, current_level - 1)
 	# Integer tenths avoid floating-point ceil errors at exact thresholds.
-	# Keep the first reward accessible; subsequent levels need a larger investment.
-	return (14 if step == 0 else 28) + 2 * step + ceili(3.0 * step * step / 10.0)
+	return 20 + 4 * step + ceili(3.0 * step * step / 10.0)
 
 func damage_multiplier() -> float:
 	var ordinary := level - 1
