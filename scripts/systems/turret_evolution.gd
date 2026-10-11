@@ -81,6 +81,16 @@ static func base_stats(base_type: String, branch: String, stage: int) -> Diction
 			stats.projectile_speed = 350.0
 			stats.aoe_radius = [135.0, 160.0, 185.0][stage - 1]
 			stats.knockback_force = 220.0
+		"wide_flame":
+			stats.damage = [3.2, 4.0, 5.0][stage - 1]
+			stats.cone_degrees = [60.0, 85.0, 110.0][stage - 1]
+			stats.burn_duration = [2.2, 2.5, 3.0][stage - 1]
+		"focused_jet":
+			stats.damage = [3.2, 4.0, 5.0][stage - 1]
+			stats.range = [280.0, 330.0, 380.0][stage - 1]
+			stats.cone_degrees = [24.0, 20.0, 16.0][stage - 1]
+			stats.burn_ratio = [2.2, 2.6, 3.0][stage - 1]
+			stats.burn_duration = [2.5, 3.0, 3.5][stage - 1]
 		"repeater_bow":
 			stats.damage = [12.0, 13.0, 14.0][stage - 1]
 			stats.fire_rate = [.9, 1.0, 1.1][stage - 1]
@@ -107,6 +117,8 @@ static func description(branch: String, stage: int) -> String:
 	match branch:
 		"machine_gun": return "Rapid aimed fire." if stage == 1 else "Rotary fire accelerates while a target remains in range."
 		"scatter": return "Three projectiles fan out with each shot." if stage == 1 else "Fires in four directions at once."
+		"wide_flame": return "A %d-degree fan blankets a crowd and leaves enemies burning." % [60, 85, 110][stage - 1]
+		"focused_jet": return "A longer, narrower jet delivers a stronger, longer-lasting burn."
 		"repeater_bow": return "Fires a quick burst of %d piercing arrows." % [2, 3, 5][stage - 1]
 		"greatbow": return "Heavy arrows pierce %d enemies and knock them back." % [4, 6, 9][stage - 1]
 		"gunblade": return "Sweeps a blade and fires whenever its rotating barrel lines up with an enemy."

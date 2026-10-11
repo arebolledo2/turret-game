@@ -452,7 +452,7 @@ func available_evolutions() -> Array[String]:
 		return result
 	for branch in progression.evolution_options(turret_type):
 		var next_stage := progression.evolution_stage + 1
-		var implemented := branch in ["repeater_bow", "greatbow"] or (branch in ["machine_gun", "scatter"] and next_stage <= 2) or (branch in ["saber", "siege", "gunblade"] and next_stage == 1)
+		var implemented := branch in ["repeater_bow", "greatbow", "wide_flame", "focused_jet"] or (branch in ["machine_gun", "scatter"] and next_stage <= 2) or (branch in ["saber", "siege", "gunblade"] and next_stage == 1)
 		if implemented and ClockworkModels.available(TurretEvolution.model_key(turret_type, branch, next_stage)):
 			result.append(branch)
 	return result
@@ -491,7 +491,7 @@ func _fire_flame(stats: TurretStats, reach: float, heading: Vector3) -> void:
 		hit.burn_dps = stats.damage * float(stats.values.get("burn_ratio", 1.6))
 		hit.burn_duration = float(stats.values.get("burn_duration", 2.0))
 		world.combat.apply_hit(enemy, hit)
-	world.effects.show_flame(muzzle.global_position, heading, reach, half_angle)
+	world.effects.show_flame(muzzle.global_position, heading, reach, half_angle, position)
 	_reset_cooldown(stats)
 
 static func cone_overlaps_body(offset: Vector3, heading: Vector3, reach: float, half_angle: float, radius: float) -> bool:

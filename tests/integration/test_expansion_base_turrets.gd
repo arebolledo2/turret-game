@@ -113,3 +113,16 @@ func test_projectile_models_reset_between_arrow_ball_and_energy_shots() -> void:
 	assert_true(projectile.visual.visible)
 	assert_true(projectile.orb.visible)
 	projectile.release()
+
+func test_flame_ribbons_are_bounded_and_reset_between_waves() -> void:
+	for pulse in range(20):
+		world.effects.show_flame(Vector3(0, 1, -.8), Vector3.FORWARD, 3.0, deg_to_rad(40), Vector3.ZERO)
+	assert_eq(world.effects.flame_ribbons.size(), 48)
+	world.effects.reset()
+	for ribbon in world.effects.flame_ribbons:
+		assert_false(ribbon.visible)
+	world.effects.show_flame(Vector3(0, 1, -.8), Vector3.FORWARD, 3.0, deg_to_rad(10), Vector3.ZERO)
+	assert_eq(world.effects.flame_ribbons.size(), 48, "Reuses pooled ribbons")
+	world.effects._physics_process(.3)
+	for ribbon in world.effects.flame_ribbons:
+		assert_false(ribbon.visible, "Flame expires")

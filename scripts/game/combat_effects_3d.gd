@@ -215,6 +215,9 @@ func _show_pulse(at: Vector3, radius: float, color: Color) -> void:
 func _physics_process(delta: float) -> void:
 	if not world.is_combat():
 		return
+	for index in range(flame_ribbons.size()):
+		flame_ages[index] = maxf(0.0, flame_ages[index] - delta)
+		flame_ribbons[index].visible = flame_ages[index] > 0.0
 	for index in range(sparks.size()):
 		spark_lifetimes[index] = maxf(0.0, spark_lifetimes[index] - delta)
 		sparks[index].visible = spark_lifetimes[index] > 0.0
@@ -235,6 +238,9 @@ func _physics_process(delta: float) -> void:
 			GroundDial.resize(pulses[index], radius)
 
 func reset() -> void:
+	for index in range(flame_ribbons.size()):
+		flame_ages[index] = 0.0
+		flame_ribbons[index].visible = false
 	for burst in bursts:
 		burst.emitting = false
 	for index in range(sparks.size()):
@@ -247,10 +253,39 @@ func reset() -> void:
 		ages[index] = -1.0
 		pulses[index].visible = false
 
-## Short expanding flame lobes show the exact forward cone, with bounded pooled sparks.
-func show_flame(origin: Vector3, heading: Vector3, reach: float, half_angle: float) -> void:
-	for step in range(1, 5):
-		var distance := reach * float(step) / 4.0
-		var at := origin + heading * distance
-		at.y = lerpf(origin.y, .45, float(step) / 4.0)
-		_show_spark(at, flame_material, maxf(.08, tan(half_angle) * distance), .23)
+## Sample within the actual turret-centered sector, rather than extending range from the muzzle.
+var flame_ribbons: Array[MeshInstance3D] = []
+var flame_ages: Array[float] = []
+var flame_shader := preload("res://assets/shaders/flame_stream.gdshader")
+
+func show_flame(origin: Vector3, heading: Vector3, reach: float, half_angle: float, attack_origin: Vector3) -> void:
+	var rays := 5 if half_angle > deg_to_rad(20) else 3
+	for ray in range(rays):
+		var angle := lerpf(-half_angle, half_angle, float(ray) / float(rays - 1))
+		var direction := heading.rotated(Vector3.UP, angle)
+		var end := attack_origin + direction * reach
+		end.y = .45
+		var flat := WorldGeometry.planar(end - origin)
+		var index := flame_ages.find(0.0)
+		if index < 0:
+			if flame_ribbons.size() >= 48:
+				return
+			index = flame_ribbons.size()
+			var ribbon := MeshInstance3D.new()
+			var mesh := PlaneMesh.new()
+			mesh.size = Vector2.ONE
+			ribbon.mesh = mesh
+			ribbon.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			var material := ShaderMaterial.new()
+			material.shader = flame_shader
+			ribbon.material_override = material
+			add_child(ribbon)
+			flame_ribbons.append(ribbon)
+			flame_ages.append(0.0)
+		var ribbon := flame_ribbons[index]
+		(ribbon.material_override as ShaderMaterial).set_shader_parameter("motion_speed", 0.0 if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else 1.0)
+		ribbon.position = (origin + end) * .5
+		ribbon.rotation.y = atan2(-flat.x, -flat.z)
+		ribbon.scale = Vector3(clampf(reach * .20, .25, 1.2), 1.0, flat.length())
+		ribbon.visible = true
+		flame_ages[index] = .24

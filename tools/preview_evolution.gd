@@ -19,6 +19,18 @@ func _ready() -> void:
 	world.camera.size = 9.0
 	world.session.state.turret_progression_enabled = true
 	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
+	if "--flame-preview" in OS.get_cmdline_user_args():
+		world.turrets[0].visible = false
+		world.effects.set_physics_process(false)
+		for i in range(2):
+			var turret := world.add_turret(Vector3(i * 5 - 2.5, 0, 1), "flamethrower")
+			turret.set_physics_process(false)
+			turret.progression.award(1500)
+			for stage in range(3):
+				turret.evolve(["wide_flame", "focused_jet"][i])
+			var stats := turret._current_view(0)
+			turret._fire_flame(stats, stats.range_metres, Vector3.FORWARD)
+		return
 	if "--expansion-preview" in OS.get_cmdline_user_args():
 		world.turrets[0].visible = false
 		for i in range(3):
@@ -68,7 +80,7 @@ func _process(_delta: float) -> void:
 
 func capture() -> void:
 	await RenderingServer.frame_post_draw
-	var filename := "expansion-preview.png" if "--expansion-preview" in OS.get_cmdline_user_args() else "evolution-preview.png"
+	var filename := "flame-preview.png" if "--flame-preview" in OS.get_cmdline_user_args() else "expansion-preview.png" if "--expansion-preview" in OS.get_cmdline_user_args() else "evolution-preview.png"
 	var output := ProjectSettings.globalize_path("res://.test-results/" + filename)
 	get_viewport().get_texture().get_image().save_png(output)
 	print("EVOLUTION_PREVIEW ", output)

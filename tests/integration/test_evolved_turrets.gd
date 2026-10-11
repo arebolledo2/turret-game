@@ -208,3 +208,36 @@ func test_repeater_burst_is_timed_attributed_and_cancelled_at_wave_end() -> void
 	assert_eq(turret.bow_burst_left, 1)
 	turret._physics_process(.1) # Shop state cancels a pending burst.
 	assert_eq(turret.bow_burst_left, 0)
+
+func test_flame_evolutions_trade_coverage_for_reach_and_burn() -> void:
+	var wide := world.add_turret(Vector3.ZERO, "flamethrower")
+	var jet := world.add_turret(Vector3(8, 0, 0), "flamethrower")
+	for turret in [wide, jet]:
+		turret.set_physics_process(false)
+		var xp := 0
+		for level in range(1, 15):
+			xp += TurretProgression.cost_to_next(level)
+		turret.progression.award(xp)
+	for stage in range(1, 4):
+		assert_true(wide.evolve("wide_flame"))
+		assert_true(jet.evolve("focused_jet"))
+		var wide_stats := wide._current_view(0)
+		var jet_stats := jet._current_view(0)
+		assert_gt(float(wide_stats.values.cone_degrees), float(jet_stats.values.cone_degrees))
+		assert_gt(jet_stats.range_metres, wide_stats.range_metres)
+		assert_gt(float(jet_stats.values.burn_ratio), float(wide_stats.values.burn_ratio))
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	var wide_enemy := world.spawn_enemy(Vector3(1.1, 0, -1.5))
+	var jet_side := world.spawn_enemy(jet.position + Vector3(1.1, 0, -1.5))
+	var jet_far := world.spawn_enemy(jet.position + Vector3(0, 0, -4.0))
+	for enemy in [wide_enemy, jet_side, jet_far]:
+		enemy.set_physics_process(false)
+		enemy.health = 1000.0
+	world.crowd.rebuild(world.enemies)
+	wide._fire_flame(wide._current_view(0), wide._current_view(0).range_metres, Vector3.FORWARD)
+	jet._fire_flame(jet._current_view(0), jet._current_view(0).range_metres, Vector3.FORWARD)
+	assert_lt(wide_enemy.health, 1000.0, "Wide fan reaches the flank")
+	assert_eq(jet_side.health, 1000.0, "Narrow jet excludes the flank")
+	assert_lt(jet_far.health, 1000.0, "Jet reaches distant targets")
+	assert_eq(jet_far.statuses.burn_source_id, jet.turret_id)
+	assert_gt(jet_far.statuses.burn_dps, wide_enemy.statuses.burn_dps)

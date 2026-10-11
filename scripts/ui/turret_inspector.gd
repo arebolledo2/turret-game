@@ -145,7 +145,7 @@ func _show_selected() -> void:
 	xp_bar.show_progress(growth.level, growth.xp)
 	var lines := PackedStringArray()
 	lines.append("[color=#8be0c9][b]CURRENT COMBAT STATS[/b][/color]")
-	lines.append("Damage  [b]%.1f[/b]     Reach  [b]%.2f m[/b]" % [stats.damage, stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret.turret_type) == TurretRegistry.FIRE_PULSE else 1.0)])
+	lines.append("Damage  [b]%.1f[/b]     Reach  [b]%.2f m[/b]" % [stats.damage, stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0)])
 	if turret.turret_type == "melee":
 		lines.append("Sweep  %.0f°/s     Rehit interval  %.2f s" % [stats.rotation_rate, stats.rehit_delay])
 	else:
@@ -158,6 +158,9 @@ func _show_selected() -> void:
 		lines.append("Chain jumps  %d     Chain reach  %.2f m" % [stats.chain_count, stats.chain_range_metres])
 	if stats.slow_intensity > 0:
 		lines.append("Slow  %.0f%% for %.2f s" % [stats.slow_intensity * 100, stats.slow_duration])
+	if turret.turret_type == "flamethrower":
+		lines.append("Flame cone %.0f degrees" % float(stats.values.get("cone_degrees", 36.0)))
+		lines.append("Burn %.1f damage/s for %.1f s" % [stats.damage * float(stats.values.get("burn_ratio", 1.6)), float(stats.values.get("burn_duration", 2.0))])
 	lines.append("Knockback  %.2f m" % stats.knockback_metres)
 	if growth.evolution_branch == "gunblade":
 		var gun := turret.gun_stats
