@@ -2,7 +2,7 @@ class_name TechDropDirector
 extends RefCounted
 
 ## Tech drops: a stationary, destructible crate that appears away from the defended area during a wave.
-## Destroying it pays a scrap burst and may grant a free item; whatever is left at wave end is lost.
+## Destroying it pays a scrap burst and may secure an item for end-of-wave review. Undestroyed crates expire.
 ## A drop is a stationary `TechDropActor` in `world.enemies`, so turrets and the hero target it like any enemy.
 var world: ArenaWorld
 var roll_clock: float = 0.0
@@ -11,6 +11,8 @@ var pulse: float = 0.0
 var queued: Array[Dictionary] = []
 var spawned: int = 0
 var destroyed: int = 0
+## Earned items survive field cleanup until the player explicitly keeps or sells them.
+var pending_items: Array[Dictionary] = []
 
 const WARNING_COLOR := Color("f4b942")
 
@@ -103,7 +105,7 @@ func spawn(at: Vector3) -> CombatActor:
 	spawned += 1
 	return drop
 
-## Pays out a destroyed drop: a scrap burst and, by chance, a free item from the shop's own weighted pool.
+## Pays out scrap and queues a possible item from the Shop weighted pool for keep/sell review.
 func reward(drop: CombatActor) -> void:
 	destroyed += 1
 	for index in GameConstants.TECH_DROP_SCRAP_PICKUPS:
@@ -118,10 +120,36 @@ func reward(drop: CombatActor) -> void:
 	world.combat.explosion.emit(WorldGeometry.planar(drop.position), 1.4)
 	var item_id := ""
 	if GameRandom.gameplay.randf() < GameConstants.TECH_DROP_ITEM_CHANCE:
-		item_id = world.shop.roll_item_reward()
+		var counts := ItemTrackingService.item_counts.duplicate()
+		for pending in pending_items:
+			counts[pending.id] = int(counts.get(pending.id, 0)) + 1
+		item_id = ItemRegistry.get_weighted_random_item(GameStateService.current_wave, PlayerStatsService.get_player_luck(), counts, world.shop.unavailable_item_ids(), GameRandom.gameplay)
 	if item_id.is_empty():
 		world.message = "Tech drop destroyed · scrap recovered"
 	else:
-		world.shop.apply_item(item_id)
-		world.message = "Tech drop salvaged: %s" % str(ItemRegistry.get_item_dict(item_id)["name"])
+		queue_item(item_id)
+		world.message = "Chest item secured: %s · choose at wave end" % str(ItemRegistry.get_item_dict(item_id)["name"])
 	world.audio.play_cue("purchase", world.player.position)
+
+func queue_item(item_id: String) -> void:
+	var value := world.shop.item_price(item_id)
+	pending_items.append({"id": item_id, "value": value, "sale": floori(value * .25)})
+
+func can_keep_next() -> bool:
+	return not pending_items.is_empty() and not ItemRegistry.is_at_max_stacks(pending_items[0].id, ItemTrackingService.item_counts)
+
+func resolve_item(keep: bool) -> bool:
+	if pending_items.is_empty() or world.paused or GameStateMachine.current_state != GameStateMachine.GameState.WAVE_END or not GameStateService.is_game_active:
+		return false
+	if keep and not can_keep_next():
+		return false
+	var reward: Dictionary = pending_items.pop_front()
+	if keep:
+		world.shop.apply_item(reward.id)
+	else:
+		# A quoted sale is exact; pickup-income modifiers must not change the offer.
+		EconomyService.total_scrap += int(reward.sale)
+		GameStateService.lifetime_scrap += int(reward.sale)
+		world.telemetry.record_scrap_earned(int(reward.sale))
+	world.audio.play_cue("purchase", world.player.position)
+	return true

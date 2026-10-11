@@ -21,6 +21,7 @@ var waves := WaveDirector.new()
 var salvage := WaveSalvage.new()
 ## Headless tools skip presentation; tests can explicitly enable and advance it.
 var present_wave_rewards: bool = DisplayServer.get_name() != "headless"
+var chest_rewards: ChestRewardScreen
 var reward_presentation: SalvagePresentation
 var drops := TechDropDirector.new()
 var build_zones := BuildZoneDirector.new()
@@ -122,6 +123,9 @@ func _ready() -> void:
 	reward_presentation.world = self
 	reward_presentation.finished.connect(waves.complete_wave)
 	add_child(reward_presentation)
+	chest_rewards = ChestRewardScreen.new()
+	chest_rewards.world = self
+	add_child(chest_rewards)
 	stage = ArenaStage.new()
 	stage.name = "Stage"
 	add_child(stage)
@@ -186,6 +190,8 @@ func start_run() -> void:
 
 func _clear_actors() -> void:
 	reward_presentation.cancel()
+	chest_rewards.cancel()
+	drops.pending_items.clear()
 	audio.reset()
 	core = null
 	convoy_route = null

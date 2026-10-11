@@ -111,6 +111,10 @@ func finish_wave() -> bool:
 func complete_wave() -> void:
 	if GameStateMachine.current_state != GameStateMachine.GameState.WAVE_END or not GameStateService.is_game_active:
 		return
+	if not world.drops.pending_items.is_empty():
+		if world.show_hud:
+			world.chest_rewards.show_next()
+		return
 	world.placement.drop_carried()
 	if GameStateService.current_wave >= world.wave_limit:
 		world.audio.play_cue("victory", world.player.position)

@@ -39,7 +39,7 @@ func test_destroying_a_drop_pays_scrap_and_does_not_count_as_a_kill() -> void:
 	assert_false(world.enemies.has(drop))
 	assert_eq(world.drops.destroyed, 1)
 
-func test_item_chance_grants_a_free_item() -> void:
+func test_item_chance_queues_an_item_for_review() -> void:
 	var drop := world.drops.spawn(Vector3(12, 0, 8))
 	GameRandom.gameplay.seed = 1
 	var before := ItemTrackingService.collected_items.size()
@@ -47,10 +47,11 @@ func test_item_chance_grants_a_free_item() -> void:
 	for attempt in 30:
 		var extra := world.drops.spawn(Vector3(12, 0, 8))
 		world.combat.apply_hit(extra, CombatHit3D.new(extra.health + 1.0, extra.position))
-		if ItemTrackingService.collected_items.size() > before:
+		if not world.drops.pending_items.is_empty():
 			granted = true
 			break
-	assert_true(granted, "at least one of thirty destroyed drops grants an item at a 50% chance")
+	assert_true(granted, "at least one of thirty destroyed drops queues an item at a 25% chance")
+	assert_eq(ItemTrackingService.collected_items.size(), before, "item is not installed during combat")
 	assert_not_null(drop)
 
 func test_drops_spawn_clear_of_turrets_and_the_core() -> void:
@@ -102,3 +103,73 @@ func test_reduced_motion_warning_fills_without_changing_its_boundary() -> void:
 	assert_almost_eq(float(material.get_shader_parameter("progress")), .5, .001)
 	assert_eq(material.get_shader_parameter("brightness"), 1.0)
 	assert_eq(world.enemies.size(), 0)
+
+func test_chest_reward_blocks_shop_without_xp_and_keep_applies_once() -> void:
+	world.present_wave_rewards = false
+	world.drops.queue_item("dense_rounds")
+	assert_false(world.drops.resolve_item(true), "cannot accept during combat")
+	world.finish_wave()
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_END)
+	assert_true(world.chest_rewards.active)
+	assert_eq(ItemTrackingService.item_counts.get("dense_rounds", 0), 0)
+	world.chest_rewards.ready_at = 0
+	var accept := InputEventJoypadButton.new()
+	accept.button_index = JOY_BUTTON_A
+	accept.pressed = true
+	world.chest_rewards.focus_choice()
+	world.chest_rewards._input(accept)
+	assert_eq(ItemTrackingService.item_counts.get("dense_rounds", 0), 1)
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.SHOP)
+	assert_false(world.drops.resolve_item(true))
+
+func test_sell_is_frozen_and_exact_and_multiple_rewards_need_separate_choices() -> void:
+	world.present_wave_rewards = false
+	world.drops.queue_item("dense_rounds")
+	world.drops.queue_item("scrap_magnet")
+	var price := int(world.drops.pending_items[0].value)
+	var payout := floori(price * .25)
+	ModifierService.add_modifier({"stat": "scrap_earn_mult", "operation": "increase", "value": 10.0})
+	world.finish_wave()
+	var balance := EconomyService.total_scrap
+	world.chest_rewards.ready_at = 0
+	world.chest_rewards.sell_button.grab_focus()
+	var accept := InputEventJoypadButton.new()
+	accept.button_index = JOY_BUTTON_A
+	accept.pressed = true
+	world.chest_rewards._input(accept)
+	assert_eq(EconomyService.total_scrap, balance + payout)
+	assert_eq(ItemTrackingService.item_counts.get("dense_rounds", 0), 0)
+	assert_eq(world.drops.pending_items.size(), 1)
+	assert_true(world.chest_rewards.active)
+	world.chest_rewards._input(accept)
+	assert_eq(world.drops.pending_items.size(), 1, "same input cannot claim the next item")
+	world.chest_rewards.ready_at = 0
+	world.chest_rewards._choose(true)
+	assert_eq(ItemTrackingService.item_counts.get("scrap_magnet", 0), 1)
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.SHOP)
+
+func test_chest_reward_is_reviewed_after_xp_and_before_final_victory() -> void:
+	world.drops.queue_item("dense_rounds")
+	world.wave_limit = GameStateService.current_wave
+	GameStateMachine.force_transition(GameStateMachine.GameState.WAVE_END)
+	world.reward_presentation.begin({})
+	world.reward_presentation.complete()
+	assert_true(world.chest_rewards.active)
+	assert_false(world.reward_presentation.active)
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_END)
+	world.chest_rewards.ready_at = 0
+	world.chest_rewards._choose(true)
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.VICTORY)
+
+func test_stack_limit_can_sell_and_restart_discards_pending_rewards() -> void:
+	world.drops.queue_item("glass_cannon_core")
+	world.shop.apply_item("glass_cannon_core")
+	world.present_wave_rewards = false
+	world.finish_wave()
+	assert_true(world.chest_rewards.keep_button.disabled)
+	assert_false(world.drops.resolve_item(true))
+	assert_true(world.drops.resolve_item(false))
+	world.drops.queue_item("dense_rounds")
+	world.start_run()
+	assert_true(world.drops.pending_items.is_empty())
+	assert_false(world.chest_rewards.active)
