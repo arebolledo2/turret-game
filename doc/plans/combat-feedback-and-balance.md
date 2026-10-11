@@ -25,7 +25,7 @@ Actual damage rather than requested damage; overkill and DoT aggregation; no num
 
 ## Medium Protect the Core comparison
 
-Baseline enemy counts (no count-modifying items). Elite share is additional to the ordinary type composition. Core seekers ignore hero aggro. Spawn rate includes the late-wave acceleration; it compresses the scheduled arrivals, then leaves a cleanup tail within the unchanged wave duration.
+Baseline enemy counts (no count-modifying items). Elite share is additional to the ordinary type composition. Core seekers ignore hero aggro. Spawn rate includes the late-wave acceleration. Core modes now apply that multiplier to the spawn budget and distribute arrivals across the entire round; there is no planned cleanup tail. The New enemies column below is the base count before this core-mode multiplier.
 
 | Wave | Previous enemies | New enemies | Duration | Elite share | Core seekers | Arrival rate |
 |---|---:|---:|---:|---:|---:|---:|

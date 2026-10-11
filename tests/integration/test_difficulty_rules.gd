@@ -100,7 +100,7 @@ func test_seekers_ignore_the_hero_in_core_mode() -> void:
 	assert_eq(seeker.chase_position(), world.core.position)
 	assert_false(seeker.chasing_hero)
 
-func test_brutal_core_waves_arrive_faster() -> void:
+func test_brutal_core_pressure_covers_the_full_wave() -> void:
 	var easy := await _world(GameEnums.Difficulty.EASY, RunConfig.MODE_CORE)
 	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
 	easy.begin_next_wave()
@@ -109,7 +109,8 @@ func test_brutal_core_waves_arrive_faster() -> void:
 	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
 	brutal.begin_next_wave()
 	var brutal_span := brutal.waves.spawn_interval * brutal.waves.remaining_spawns / brutal.waves.time_left
-	assert_lt(brutal_span, easy_span, "the same wave is spawned over a shorter share of its time")
+	assert_almost_eq(brutal_span, easy_span, .001, "higher difficulty fills the same full wave window")
+	assert_almost_eq(brutal_span, 1.0, .001)
 
 func test_survive_mode_never_makes_seekers() -> void:
 	var world := await _world(GameEnums.Difficulty.BRUTAL)
@@ -118,3 +119,31 @@ func test_survive_mode_never_makes_seekers() -> void:
 	world.waves.tick(.01)
 	for enemy in world.enemies:
 		assert_false(enemy.ignores_hero)
+
+func test_hard_core_waves_keep_spawning_in_the_final_seconds() -> void:
+	var world := await _world(GameEnums.Difficulty.HARD, RunConfig.MODE_CORE)
+	world.set_physics_process(false)
+	world.player.set_physics_process(false)
+	for turret in world.turrets:
+		turret.set_physics_process(false)
+	for wave in [6, 7, 8]:
+		GameStateService.current_wave = wave - 1
+		GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
+		assert_true(world.begin_next_wave())
+		GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+		var duration := world.waves.time_left
+		var budget := world.waves.remaining_spawns
+		var elapsed := 0.0
+		var last_spawn := 0.0
+		while elapsed < duration - .05:
+			var before := world.waves.spawned_this_wave
+			world.waves.tick(.05)
+			elapsed += .05
+			if world.waves.spawned_this_wave > before:
+				last_spawn = elapsed
+			# Keep the test about scheduling, without accumulating hundreds of actors.
+			for enemy in world.enemies:
+				enemy.free()
+			world.enemies.clear()
+		assert_gt(last_spawn, duration - 1.0, "wave %d still spawns in its final second" % wave)
+		assert_gte(world.waves.spawned_this_wave, budget - 1)

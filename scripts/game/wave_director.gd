@@ -81,9 +81,11 @@ func begin_next_wave() -> bool:
 		remaining_spawns = maxi(1, roundi(remaining_spawns * clampf(route_time / time_left, .4, 2.0)))
 		spawn_window = route_time
 		time_left = route_time * GameConstants.CONVOY_SAFETY_FACTOR
-	spawn_interval = spawn_window / maxf(float(remaining_spawns), 1.0)
 	if world.core:
-		spawn_interval /= maxf(DifficultyService.wave_rule(world.difficulty_config, "spawn_rate_mult", GameStateService.current_wave), .1)
+		# Higher pressure means more arrivals across the whole round, not an early cutoff.
+		var rate := maxf(DifficultyService.wave_rule(world.difficulty_config, "spawn_rate_mult", GameStateService.current_wave), .1)
+		remaining_spawns = maxi(1, roundi(remaining_spawns * rate))
+	spawn_interval = spawn_window / maxf(float(remaining_spawns), 1.0)
 	spawn_clock = FIRST_SPAWN_DELAY
 	world.message = EnemyVariants.notice_for_wave(GameStateService.current_wave)
 	return true
