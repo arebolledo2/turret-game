@@ -95,3 +95,7 @@ All six portraits regenerated; dark-background comparison reviewed. Regression c
 ### Gunblade visual evolution
 
 Repeater Blade adds a second open brass barrel above the authored gun; Stormblade adds two upper barrels for a triangular three-barrel assembly. Teal receivers connect the new hardware while leaving the curved ivory blade exposed. Every burst round launches from its corresponding visible muzzle and follows the rotating assembly. The authored base, arm, grip and blade remain intact. Updated both later-form shop portraits and reviewed their silhouettes. Regression assertions cover barrel counts at each stage, distinct shot origins, rotating headings and original source attribution.
+
+### Siege visual evolution
+
+Moonshot widens the authored open barrel and adds paired hydraulic recoil housings, sliding rods and reinforcement bands. Worldbreaker adds a second hydraulic pair and a larger bore. The launch point is now a child of the recoiling barrel, including the base Siege form, so shot origins follow the visible opening. Barrel length stays unchanged to preserve close-target behavior. Both later-form portraits rebuilt and reviewed. Regression checks cover the per-stage cylinder pairs and muzzle movement/settling during recoil.

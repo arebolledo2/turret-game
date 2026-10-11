@@ -438,6 +438,13 @@ func test_siege_evolutions_expand_shell_blast_and_knockback() -> void:
 	var previous: CombatShot3D
 	for stage in range(3):
 		assert_true(turret.evolve("siege"))
+		assert_eq(turret.muzzle.get_parent(), turret.recoil_barrel)
+		assert_eq(turret.recoil_barrel.find_children("RecoilRod*", "MeshInstance3D", true, false).size(), stage * 2)
+		var exit_before := turret.muzzle.global_position
+		turret.recoil_barrel.position.z += .16
+		assert_almost_eq(turret.muzzle.global_position.z - exit_before.z, .16, .001)
+		turret._tick_mechanisms(.1, false)
+		assert_lt(turret.muzzle.global_position.distance_to(exit_before), .001)
 		var current := turret._new_shot(turret._current_view(0))
 		if previous:
 			assert_gt(current.damage, previous.damage)
