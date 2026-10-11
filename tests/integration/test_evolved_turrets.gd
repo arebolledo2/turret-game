@@ -472,3 +472,41 @@ func test_evolution_preview_matches_committed_stats_without_mutating_actor() -> 
 	assert_same(turret.model, model)
 	assert_true(turret.evolve("machine_gun"))
 	assert_eq(turret.resolve_attack_stats(), preview)
+
+func test_repeater_visual_channels_match_projectile_origins_and_reload() -> void:
+	var turret := world.add_turret(Vector3.ZERO, "bow")
+	turret.set_physics_process(false)
+	turret.progression.award(1500)
+	for stage in range(1, 4):
+		assert_true(turret.evolve("repeater_bow"))
+		assert_eq(turret.bow_muzzles.size(), [2, 3, 5][stage - 1])
+		assert_eq(turret.bow_loaded_arrows.size(), turret.bow_muzzles.size())
+	var enemy := world.spawn_enemy(Vector3(0, 0, -4))
+	enemy.set_physics_process(false)
+	turret.target = enemy
+	var stats := turret._current_view(0)
+	turret._fire_projectile(stats)
+	turret._tick_bow_burst(.5, stats)
+	assert_eq(world.projectiles.size(), 5)
+	for i in range(5):
+		assert_true(world.projectiles[i].position.is_equal_approx(turret.bow_muzzles[i].global_position))
+		assert_true(world.projectiles[i].direction.is_equal_approx(WorldGeometry.planar(enemy.position - world.projectiles[i].position).normalized()))
+		assert_false(turret.bow_loaded_arrows[i].visible)
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	turret.cooldown = .01
+	turret._physics_process(0)
+	for arrow in turret.bow_loaded_arrows:
+		assert_true(arrow.visible)
+
+func test_greatbow_adds_horizontal_limb_layers_without_extending_muzzle() -> void:
+	var turret := world.add_turret(Vector3.ZERO, "bow")
+	turret.set_physics_process(false)
+	var exit := turret.muzzle.position
+	turret.progression.award(1500)
+	for stage in range(1, 4):
+		assert_true(turret.evolve("greatbow"))
+		var limbs := turret.model.find_child("HeavyBowLimbs", true, false) as Node3D
+		assert_not_null(limbs)
+		assert_eq(limbs.get_child_count(), 4 * stage)
+		assert_almost_eq(limbs.rotation.z, PI * .5, .001)
+		assert_true(turret.muzzle.position.is_equal_approx(exit))

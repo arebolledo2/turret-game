@@ -19,9 +19,12 @@ var gun_burst_shot: CombatShot3D
 var bow_burst_left := 0
 var bow_burst_clock := 0.0
 var bow_burst_heading := Vector3.FORWARD
+var bow_burst_target := Vector3.ZERO
 var bow_burst_shot: CombatShot3D
 var loaded_ball: Node3D
 var loaded_arrow: Node3D
+var bow_muzzles: Array[Node3D] = []
+var bow_loaded_arrows: Array[Node3D] = []
 var cooldown: float = 0.0
 var aim: Node3D
 var model: Node3D
@@ -76,6 +79,7 @@ func _rebuild_model() -> void:
 	if turret_type == "tesla" and not use_clockwork:
 		EnemyVariants.tint_model(model, "turret_tesla", TESLA_TINT, .5)
 	add_child(model)
+	BowEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
 	aim = model.find_child("Aim", true, false) as Node3D
 	blade_tip = model.find_child("BladeTip", true, false) as Node3D
 	muzzle = model.find_child("Muzzle", true, false) as Node3D
@@ -89,6 +93,17 @@ func _rebuild_model() -> void:
 	gun_burst_left = 0
 	loaded_ball = model.find_child("LoadedBall", true, false) as Node3D
 	loaded_arrow = model.find_child("LoadedArrow", true, false) as Node3D
+	bow_muzzles.clear()
+	bow_loaded_arrows.clear()
+	if turret_type == "bow":
+		bow_muzzles.append(muzzle)
+		bow_loaded_arrows.append(loaded_arrow)
+		for i in range(1, 5):
+			var extra_muzzle := model.find_child("Muzzle%d" % i, true, false) as Node3D
+			if extra_muzzle:
+				bow_muzzles.append(extra_muzzle)
+				bow_loaded_arrows.append(model.find_child("LoadedArrow%d" % i, true, false) as Node3D)
+
 	aim_rest = aim.position
 	aim_authored_scale = aim.scale
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
@@ -368,7 +383,8 @@ func _physics_process(delta: float) -> void:
 	if loaded_ball:
 		loaded_ball.visible = cooldown <= stats.cooldown_seconds * .3
 	if loaded_arrow:
-		loaded_arrow.visible = cooldown <= stats.cooldown_seconds * .35 and bow_burst_left == 0
+		for arrow in bow_loaded_arrows:
+			arrow.visible = cooldown <= stats.cooldown_seconds * .35 and bow_burst_left == 0
 	if bow_burst_left > 0:
 		_tick_bow_burst(delta, stats)
 		return
@@ -450,7 +466,8 @@ func _fire_projectile(stats: TurretStats) -> void:
 	var heading := WorldGeometry.planar(target.position - muzzle.global_position).normalized()
 	if progression.evolution_branch == "repeater_bow":
 		bow_burst_left = [2, 3, 5][progression.evolution_stage - 1]
-		bow_burst_heading = heading
+		bow_burst_heading = WorldGeometry.planar(target.position - position).normalized()
+		bow_burst_target = target.position
 		bow_burst_shot = _new_shot(stats)
 		bow_burst_clock = 0.0
 		_tick_bow_burst(0.0, stats)
@@ -557,12 +574,15 @@ func _tick_bow_burst(delta: float, stats: TurretStats) -> void:
 	aim.rotation.y = atan2(-bow_burst_heading.x, -bow_burst_heading.z)
 	bow_burst_clock -= delta
 	while bow_burst_left > 0 and bow_burst_clock <= 0.0:
-		world.fire_direction(muzzle.global_position, bow_burst_heading, bow_burst_shot)
+		var rail_index := bow_muzzles.size() - bow_burst_left
+		var rail := bow_muzzles[clampi(rail_index, 0, bow_muzzles.size() - 1)]
+		var flight_heading := WorldGeometry.planar(bow_burst_target - rail.global_position).normalized()
+		world.fire_direction(rail.global_position, flight_heading, bow_burst_shot)
 		bow_burst_left -= 1
 		bow_burst_clock += .09
 		cooldown = stats.cooldown_seconds
-	if loaded_arrow:
-		loaded_arrow.visible = false
+	for arrow in bow_loaded_arrows:
+		arrow.visible = false
 
 ## Follow-up shots leave the moving barrel instead of aiming invisibly away from the blade.
 func _tick_gunblade_burst(delta: float) -> void:
