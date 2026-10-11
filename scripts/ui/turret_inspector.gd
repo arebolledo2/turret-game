@@ -135,7 +135,7 @@ func _show_selected() -> void:
 	if key == detail_key:
 		return
 	detail_key = key
-	art.texture = ShopArt.turret(turret.turret_type)
+	art.texture = ShopArt.turret(turret.turret_type, growth.evolution_branch, growth.evolution_stage)
 	if growth.evolution_branch == "gunblade":
 		family_badges.show_families(["kinetic", "projectile"])
 	else:

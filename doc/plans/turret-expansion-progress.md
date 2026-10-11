@@ -55,3 +55,7 @@ Branch: `feature/turret-evolution-roster`.
 - Native close previews: `.test-results/evolution-preview.png`, `.test-results/expansion-preview.png`, `.test-results/flame-preview.png` from `tools/preview_evolution.tscn`.
 - Last resource audit: 189 source files and 37 model records. Re-run on final state before completion.
 - This remains an interim implementation. The goal is active and incomplete.
+
+### Shop portrait pass
+
+Rendered 41 transparent portraits from the actual native actor assemblies: eight base turrets and 33 implemented evolution forms. The individual turret inspector selects its current branch and stage; Bow, Flamethrower and Bowling offers now have authored-model portraits. The renderer uses a front three-quarter camera so the muzzle, blade and bowling ramp remain visible. Reviewed a 12-form contact sheet in `.test-results/shop-portraits-review.png`; remaining forms sharing the same assemblies use the same framing. Full suite: 972 passing tests. This does not replace the outstanding crowded-combat and controller validation.
