@@ -21,6 +21,7 @@ var bow_burst_clock := 0.0
 var bow_burst_heading := Vector3.FORWARD
 var bow_burst_target := Vector3.ZERO
 var bow_burst_shot: CombatShot3D
+var flame_emitters: Array[Node3D] = []
 var loaded_ball: Node3D
 var loaded_arrow: Node3D
 var bow_muzzles: Array[Node3D] = []
@@ -80,6 +81,7 @@ func _rebuild_model() -> void:
 		EnemyVariants.tint_model(model, "turret_tesla", TESLA_TINT, .5)
 	add_child(model)
 	BowEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
+	flame_emitters = FlameEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
 	aim = model.find_child("Aim", true, false) as Node3D
 	blade_tip = model.find_child("BladeTip", true, false) as Node3D
 	muzzle = model.find_child("Muzzle", true, false) as Node3D
@@ -540,7 +542,10 @@ func _fire_flame(stats: TurretStats, reach: float, heading: Vector3) -> void:
 		hit.burn_dps = stats.damage * float(stats.values.get("burn_ratio", 1.6))
 		hit.burn_duration = float(stats.values.get("burn_duration", 2.0))
 		world.combat.apply_hit(enemy, hit)
-	world.effects.show_flame(muzzle.global_position, heading, reach, half_angle, position)
+	world.effects.show_flame(muzzle.global_position, heading, reach, half_angle / (2.0 if not flame_emitters.is_empty() else 1.0), position)
+	for emitter in flame_emitters:
+		var direction := WorldGeometry.planar(-emitter.global_basis.z).normalized()
+		world.effects.show_flame(emitter.global_position, direction, reach, deg_to_rad(8.0), position)
 	_reset_cooldown(stats)
 
 static func cone_overlaps_body(offset: Vector3, heading: Vector3, reach: float, half_angle: float, radius: float) -> bool:

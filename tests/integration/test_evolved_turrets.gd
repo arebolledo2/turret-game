@@ -510,3 +510,32 @@ func test_greatbow_adds_horizontal_limb_layers_without_extending_muzzle() -> voi
 		assert_eq(limbs.get_child_count(), 4 * stage)
 		assert_almost_eq(limbs.rotation.z, PI * .5, .001)
 		assert_true(turret.muzzle.position.is_equal_approx(exit))
+
+func test_flame_hardware_evolves_without_multiplying_cone_damage() -> void:
+	for branch: String in ["wide_flame", "focused_jet"]:
+		var turret := world.add_turret(Vector3.ZERO, "flamethrower")
+		turret.set_physics_process(false)
+		turret.progression.award(1500)
+		var last_exit := turret.muzzle.position.z
+		for stage in range(1, 4):
+			assert_true(turret.evolve(branch))
+			assert_not_null(turret.model.find_child("EvolutionBurners", true, false))
+			if branch == "wide_flame":
+				assert_eq(turret.flame_emitters.size(), stage * 2)
+				for emitter in turret.flame_emitters:
+					var direction := -emitter.global_basis.z
+					assert_gt(direction.dot(Vector3.FORWARD), 0.0)
+			else:
+				assert_true(turret.flame_emitters.is_empty())
+				assert_lt(turret.muzzle.position.z, last_exit)
+				last_exit = turret.muzzle.position.z
+		var enemy := world.spawn_enemy(Vector3(0, 0, -1.5))
+		enemy.set_physics_process(false)
+		enemy.health = 1000.0
+		world.crowd.rebuild(world.enemies)
+		var stats := turret._current_view(0)
+		GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+		turret._fire_flame(stats, stats.range_metres, Vector3.FORWARD)
+		assert_almost_eq(enemy.health, 1000.0 - stats.damage, .001, "Added burners are one attack, not extra damage")
+		assert_eq(enemy.statuses.burn_source_id, turret.turret_id)
+		GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
