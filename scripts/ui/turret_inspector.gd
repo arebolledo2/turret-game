@@ -18,8 +18,13 @@ var detail_key: int = 0
 var evolution_choices: VBoxContainer
 var details_scroll: ScrollContainer
 var navigation_exit: Control
+var evolution_preview: EvolutionPreview
 
 func _ready() -> void:
+	evolution_preview = EvolutionPreview.new()
+	add_child(evolution_preview)
+	evolution_preview.accepted.connect(_evolve_selected)
+	evolution_preview.canceled.connect(_restore_roster_focus)
 	add_theme_constant_override("separation", 40)
 	var roster_scroll := ScrollContainer.new()
 	roster_scroll.custom_minimum_size.x = 360
@@ -107,6 +112,7 @@ func refresh() -> void:
 			turret.turret_id, turret.progression.level]
 		if not turret.available_evolutions().is_empty():
 			buttons[i].text += "EVOLUTION READY"
+		buttons[i].custom_minimum_size.y = 120 if not turret.available_evolutions().is_empty() else 90
 		roster_bars[i].show_progress(turret.progression.level, turret.progression.xp)
 		buttons[i].set_pressed_no_signal(turret.turret_id == selected_id)
 	_show_selected()
@@ -201,7 +207,7 @@ func _show_selected() -> void:
 		var button := Button.new()
 		button.custom_minimum_size.y = 80
 		button.text = "EVOLVE · %s\n%s" % [TurretEvolution.form_name(turret.turret_type, branch, growth.evolution_stage + 1), TurretEvolution.description(branch, growth.evolution_stage + 1)]
-		button.pressed.connect(_evolve_selected.bind(turret, branch))
+		button.pressed.connect(evolution_preview.show_form.bind(turret, branch))
 		evolution_choices.add_child(button)
 	detail.text = "\n".join(lines)
 
@@ -229,7 +235,7 @@ func refresh_navigation() -> void:
 		button.focus_neighbor_bottom = button.get_path_to(choices[i + 1] if i + 1 < choices.size() else navigation_exit)
 
 func _process(delta: float) -> void:
-	if not is_visible_in_tree() or not world.shop.is_open():
+	if not is_visible_in_tree() or not world.shop.is_open() or evolution_preview.visible:
 		return
 	for device in Input.get_connected_joypads():
 		var axis := Input.get_joy_axis(device, JOY_AXIS_RIGHT_Y)
@@ -244,3 +250,9 @@ func _evolve_selected(turret: TurretActor, branch: String) -> void:
 			if button.button_pressed:
 				button.grab_focus()
 				break
+
+func _restore_roster_focus() -> void:
+	for button in buttons:
+		if button.button_pressed:
+			button.grab_focus()
+			return

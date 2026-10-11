@@ -147,6 +147,9 @@ func test_controller_reaches_evolutions_and_resolves_all_earned_stages() -> void
 	for stage in range(1, 4):
 		await press_direction(JOY_BUTTON_DPAD_RIGHT)
 		await press_direction(JOY_BUTTON_A)
+		assert_true(inspector.evolution_preview.visible)
+		assert_eq(turret.progression.evolution_stage, stage - 1)
+		await press_direction(JOY_BUTTON_A)
 		assert_eq(turret.progression.evolution_stage, stage)
 		assert_same(get_viewport().gui_get_focus_owner(), inspector.buttons[0])
 		assert_same(inspector.art.texture, ShopArt.turret("normal", "machine_gun", stage))
@@ -168,3 +171,21 @@ func test_selecting_another_turret_rebuilds_evolution_focus_links() -> void:
 	inspector.buttons[0].grab_focus()
 	await press_direction(JOY_BUTTON_DPAD_RIGHT)
 	assert_same(get_viewport().gui_get_focus_owner(), inspector.evolution_choices.get_child(0))
+
+func test_cancel_evolution_preview_keeps_growth_and_returns_to_roster() -> void:
+	world.session.state.turret_progression_enabled = true
+	var turret := world.turrets[0]
+	turret.progression.award(1500)
+	var snapshot := turret.progression.snapshot()
+	var model := turret.model
+	hud.switch_tab(1)
+	var inspector := hud.turret_inspector
+	inspector.buttons[0].grab_focus()
+	await press_direction(JOY_BUTTON_DPAD_RIGHT)
+	await press_direction(JOY_BUTTON_A)
+	assert_true(inspector.evolution_preview.visible)
+	await press_direction(JOY_BUTTON_B)
+	assert_false(inspector.evolution_preview.visible)
+	assert_eq(turret.progression.snapshot(), snapshot)
+	assert_same(turret.model, model)
+	assert_same(get_viewport().gui_get_focus_owner(), inspector.buttons[0])

@@ -221,7 +221,7 @@ func switch_tab(index: int) -> void:
 	tabs[active_tab].grab_focus()
 
 func _input(event: InputEvent) -> void:
-	if not visible or not world.shop.is_open():
+	if not visible or not world.shop.is_open() or turret_inspector.evolution_preview.visible:
 		return
 	var lock_pressed: bool = (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_L) or (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_X)
 	if lock_pressed and active_tab == 0:

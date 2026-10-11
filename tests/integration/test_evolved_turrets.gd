@@ -457,3 +457,18 @@ func test_siege_evolutions_expand_shell_blast_and_knockback() -> void:
 	ball.release()
 	world.fire_direction(Vector3.ZERO, Vector3.FORWARD, CombatShot3D.new())
 	assert_almost_eq((ball.sweep.shape as SphereShape3D).radius, .075, .001)
+
+func test_evolution_preview_matches_committed_stats_without_mutating_actor() -> void:
+	var turret := world.turrets[0]
+	turret.progression.award(1500)
+	turret.entrench_stacks_cached = 2
+	world.shop.apply_item("polished_barrels")
+	var snapshot := turret.progression.snapshot()
+	var cached := turret.cached_stats.duplicate(true)
+	var model := turret.model
+	var preview := turret.resolve_attack_stats(false, "machine_gun", 1)
+	assert_eq(turret.progression.snapshot(), snapshot)
+	assert_eq(turret.cached_stats, cached)
+	assert_same(turret.model, model)
+	assert_true(turret.evolve("machine_gun"))
+	assert_eq(turret.resolve_attack_stats(), preview)

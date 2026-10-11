@@ -306,14 +306,17 @@ func _current_stats(delta: float) -> Dictionary:
 	return cached_stats
 
 ## Fresh, side-effect-free resolution also supports shop previews without polluting combat caches.
-func resolve_attack_stats(secondary: bool = false) -> Dictionary:
-	var base := TurretEvolution.base_stats(turret_type, progression.evolution_branch, progression.evolution_stage)
+func resolve_attack_stats(secondary: bool = false, branch: String = "", stage: int = -1) -> Dictionary:
+	if stage < 0:
+		branch = progression.evolution_branch
+		stage = progression.evolution_stage
+	var base := TurretEvolution.base_stats(turret_type, branch, stage)
 	if secondary:
 		base = TurretRegistry.get_base_stats("normal")
-		base.damage = [7.0, 8.0, 9.0][clampi(progression.evolution_stage - 1, 0, 2)]
-		base.fire_rate = [2.0, 2.2, 2.4][clampi(progression.evolution_stage - 1, 0, 2)]
+		base.damage = [7.0, 8.0, 9.0][clampi(stage - 1, 0, 2)]
+		base.fire_rate = [2.0, 2.2, 2.4][clampi(stage - 1, 0, 2)]
 		base.range = 300.0
-		base.pierce = 1 if progression.evolution_stage >= 3 else 0
+		base.pierce = 1 if stage >= 3 else 0
 	var stats := ModifierService.get_turret_stats(turret_type, world.difficulty_config, base, "normal" if secondary else "")
 	if world.session.state.turret_progression_enabled:
 		progression.apply_stats(stats)

@@ -63,3 +63,7 @@ Rendered 41 transparent portraits from the actual native actor assemblies: eight
 ### Controller evolution navigation
 
 Fixed ShopScreen overwriting the selected turret’s rightward link to evolution choices. Controller D-pad navigation now enters and traverses the current branch buttons, returns left to the selected turret, and exits right/down to Deploy. Selecting a different turret rebuilds links; focused choices scroll into view. The roster marks evolution-ready turrets and the Turrets tab shows a ready count even from Offers. Integration tests inject D-pad and A events to exercise both choices, all three earned stages in one visit, evolved portraits, and selection changes. Full branch comparison/confirmation and native gameplay review remain outstanding.
+
+### Evolution preview and confirmation
+
+Selecting a branch opens a modal portrait, attack description, and before/after damage, firing/sweep rate, reach and applicable blast radius. Gunblade includes its separate gun stats. Values resolve with current items, level and position bonuses without changing progression, model or combat caches; a regression test compares the prediction against the committed evolution. A confirms and B returns to the roster without changes. Native 1280×720 layout reviewed with `tools/preview_shop.tscn -- --evolution`. Roster ready labels now reserve height above their XP bars. Resource audit: 190 source files / 37 models.
