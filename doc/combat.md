@@ -38,3 +38,5 @@ Turret attack-range checks include the enemy hurtbox footprint (the projectile c
 `DamageNumbers3D` pools at most 64 labels, combines same-target/type hits over 0.16 s, and expires them after 0.85 s. Critical metadata follows projectile copies, splash, chains and melee. Fatal hero/core hits retain their number through defeat and then fade. No numbers are emitted for invulnerability or other blocked damage.
 
 Hero weapon modifiers use `ModifierSystem.get_hero_weapon_stats` with explicit attack families and capabilities. Its shared numeric modifier calculation excludes turret filters and turret-only static/conditional effects. Live hero snapshots are cached until modifiers change; Shop previews bypass that cache without changing live values. New hero definitions can specify weapon bases and starting turret; this release still exposes only Pip.
+
+The core apparatus retains gentle, steady ring rotation at 20% speed with Reduced Motion enabled. Orb animation, hit flashing and light pulsing remain suppressed; destroyed cores stop rotating.

@@ -9,7 +9,7 @@ func before_each() -> void:
 	core.set_physics_process(false)
 	core.set_process(false)
 
-func test_rotors_freeze_for_reduced_motion_and_destroyed_core() -> void:
+func test_rotors_slow_for_reduced_motion_and_freeze_when_destroyed_core() -> void:
 	assert_not_null(core.reactor)
 	if not core.reactor:
 		return
@@ -20,11 +20,14 @@ func test_rotors_freeze_for_reduced_motion_and_destroyed_core() -> void:
 		poses.append(ring.transform)
 		assert_false(ring.basis.is_equal_approx(Basis.IDENTITY))
 	var phase := visual.phase
+	var angles := visual.angles
 	visual.tick(1.0, .25, false, 1.0, true)
 	assert_eq(visual.phase, phase)
 	assert_eq(visual.orb_material.get_shader_parameter("hit"), 0.0)
+	assert_true(visual.angles.is_equal_approx(angles + Vector3(.48, -.76, 1.06) * .2))
 	for i in range(3):
-		assert_eq(visual.rings[i].transform, poses[i])
+		assert_ne(visual.rings[i].transform, poses[i])
+		poses[i] = visual.rings[i].transform
 	visual.tick(1.0, 0.0, true, 1.0, false)
 	assert_eq(visual.phase, phase)
 	assert_eq(visual.light.light_energy, 0.0)

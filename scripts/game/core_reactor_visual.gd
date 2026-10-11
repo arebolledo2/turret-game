@@ -26,9 +26,12 @@ func _ready() -> void:
 	add_child(light)
 
 func tick(delta: float, health_fraction: float, destroyed: bool, flash: float, reduced: bool) -> void:
-	if not reduced and not destroyed:
-		phase = fmod(phase + delta * .8, TAU * 10.0)
-		angles += Vector3(.48, -.76, 1.06) * delta
+	if not destroyed:
+		if not reduced:
+			phase = fmod(phase + delta * .8, TAU * 10.0)
+		# Keep the apparatus visibly alive without flashing or fast motion.
+		var rotation_speed := .2 if reduced else 1.0
+		angles += Vector3(.48, -.76, 1.06) * delta * rotation_speed
 		for i in range(3):
 			angles[i] = fposmod(angles[i], TAU)
 		# Apply absolute rotations to avoid incremental basis drift during long convoy runs.
