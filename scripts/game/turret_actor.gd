@@ -17,6 +17,7 @@ var bow_burst_left := 0
 var bow_burst_clock := 0.0
 var bow_burst_heading := Vector3.FORWARD
 var bow_burst_shot: CombatShot3D
+var loaded_ball: Node3D
 var loaded_arrow: Node3D
 var cooldown: float = 0.0
 var aim: Node3D
@@ -81,6 +82,7 @@ func _rebuild_model() -> void:
 	muzzle_rest = muzzle.position
 	spool = 0.0
 	bow_burst_left = 0
+	loaded_ball = model.find_child("LoadedBall", true, false) as Node3D
 	loaded_arrow = model.find_child("LoadedArrow", true, false) as Node3D
 	aim_rest = aim.position
 	aim_authored_scale = aim.scale
@@ -347,6 +349,8 @@ func _physics_process(delta: float) -> void:
 	cooldown = maxf(0.0, cooldown - delta)
 	aim.position = aim.position.lerp(aim_rest, minf(delta * 16.0, 1.0))
 	var stats := _current_view(delta)
+	if loaded_ball:
+		loaded_ball.visible = cooldown <= stats.cooldown_seconds * .3
 	if loaded_arrow:
 		loaded_arrow.visible = cooldown <= stats.cooldown_seconds * .35 and bow_burst_left == 0
 	if bow_burst_left > 0:
@@ -397,6 +401,12 @@ func _new_shot(stats: TurretStats) -> CombatShot3D:
 		shot.visual_key = "bowling_ball"
 		shot.radius = .24
 		shot.lifetime = 4.0
+		if progression.evolution_branch == "heavy_roller":
+			shot.visual_scale = 1.0 + .25 * progression.evolution_stage
+			shot.radius *= shot.visual_scale
+		elif progression.evolution_branch == "bank_shot":
+			shot.ricochets = [2, 4, 6][progression.evolution_stage - 1]
+			shot.lifetime = 6.0
 	if progression.evolution_branch == "siege":
 		shot.radius = .22
 	shot.source_id = turret_id
@@ -437,6 +447,8 @@ func _fire_projectile(stats: TurretStats) -> void:
 			world.fire_direction(muzzle.global_position, heading.rotated(Vector3.UP, deg_to_rad(angle)), _new_shot(stats))
 	else:
 		world.fire_shot(muzzle.global_position, target, _new_shot(stats))
+	if loaded_ball:
+		loaded_ball.visible = false
 	if recoil_barrel and not FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
 		recoil_barrel.position.z += .16
 	_reset_cooldown(stats)
@@ -452,7 +464,7 @@ func available_evolutions() -> Array[String]:
 		return result
 	for branch in progression.evolution_options(turret_type):
 		var next_stage := progression.evolution_stage + 1
-		var implemented := branch in ["repeater_bow", "greatbow", "wide_flame", "focused_jet"] or (branch in ["machine_gun", "scatter"] and next_stage <= 2) or (branch in ["saber", "siege", "gunblade"] and next_stage == 1)
+		var implemented := branch in ["repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot"] or (branch in ["machine_gun", "scatter"] and next_stage <= 2) or (branch in ["saber", "siege", "gunblade"] and next_stage == 1)
 		if implemented and ClockworkModels.available(TurretEvolution.model_key(turret_type, branch, next_stage)):
 			result.append(branch)
 	return result

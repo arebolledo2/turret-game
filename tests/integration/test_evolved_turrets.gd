@@ -241,3 +241,27 @@ func test_flame_evolutions_trade_coverage_for_reach_and_burn() -> void:
 	assert_lt(jet_far.health, 1000.0, "Jet reaches distant targets")
 	assert_eq(jet_far.statuses.burn_source_id, jet.turret_id)
 	assert_gt(jet_far.statuses.burn_dps, wide_enemy.statuses.burn_dps)
+
+func test_bowling_branches_support_all_milestones_and_distinct_shots() -> void:
+	for branch: String in ["heavy_roller", "bank_shot"]:
+		var turret := world.add_turret(Vector3.ZERO, "bowling")
+		turret.set_physics_process(false)
+		var xp := 0
+		for level in range(1, 15):
+			xp += TurretProgression.cost_to_next(level)
+		turret.progression.award(xp)
+		var previous_damage := 0.0
+		for stage in range(1, 4):
+			assert_true(turret.evolve(branch))
+			var shot := turret._new_shot(turret._current_view(0))
+			assert_gt(shot.damage, previous_damage)
+			previous_damage = shot.damage
+			assert_eq(shot.attack_families, ["projectile", "kinetic"])
+			if branch == "heavy_roller":
+				assert_gt(shot.radius, .24)
+				assert_gte(shot.pierce, 7)
+				assert_eq(shot.ricochets, 0)
+			else:
+				assert_eq(shot.ricochets, stage * 2)
+				assert_eq(shot.pierce, 0)
+		assert_true(turret.available_evolutions().is_empty())

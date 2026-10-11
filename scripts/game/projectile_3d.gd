@@ -63,6 +63,8 @@ func acquire_shot(origin: Vector3, heading: Vector3, spec: CombatShot3D) -> void
 	position = origin
 	direction = WorldGeometry.planar(heading).normalized()
 	shot = spec.copy()
+	if shot.visual_key == "bowling_ball":
+		position.y = maxf(position.y, shot.radius)
 	pierced.clear()
 	damage = shot.damage
 	speed = shot.speed
@@ -144,24 +146,60 @@ func advance(delta: float) -> void:
 			break
 	sweep.clear_exceptions()
 	contacts.sort_custom(func(a: CombatActor, b: CombatActor) -> bool:
-		return WorldGeometry.planar(a.position - position).dot(direction) < WorldGeometry.planar(b.position - position).dot(direction))
+		return _contact_distance(a) < _contact_distance(b))
 	for hit in contacts:
 		if not is_instance_valid(hit) or hit.dead:
 			continue
+		var contact_distance := clampf(_contact_distance(hit), 0.0, motion.length())
 		world.combat.impact(hit, hit.position, direction, shot, world.enemies)
 		# The impact can end the run (an exploder's blast killing the hero or core), which releases every projectile.
 		if not active:
 			return
+		if shot.ricochets > 0 and shot.splash_radius <= 0.0:
+			pierced.append(hit)
+			var recipient := _ricochet_target(position + direction * contact_distance)
+			if recipient:
+				_move_along_heading(contact_distance)
+				shot.ricochets -= 1
+				var elapsed := contact_distance / maxf(speed, .001)
+				remaining -= elapsed
+				direction = WorldGeometry.planar(recipient.position - position).normalized()
+				trail_pivot.rotation.y = atan2(-direction.x, -direction.z)
+				# Re-sweep the remainder along the new heading, discarding old-path contacts.
+				advance(maxf(0.0, delta - elapsed))
+				return
 		if shot.pierce > 0 and shot.splash_radius <= 0.0:
 			shot.pierce -= 1
 			pierced.append(hit)
 		else:
 			release()
 			return
-	position += motion
-	position.y = move_toward(position.y, shot.radius if shot.visual_key == "bowling_ball" else .45, motion.length() * .8)
-	if custom_visual and custom_visual.visible and shot.visual_key == "bowling_ball":
-		custom_visual.rotate(direction.cross(Vector3.UP).normalized(), motion.length() / maxf(.01, shot.radius))
+	_move_along_heading(motion.length())
 	remaining -= delta
 	if remaining <= 0.0:
 		release()
+
+func _move_along_heading(distance: float) -> void:
+	position += direction * distance
+	position.y = move_toward(position.y, shot.radius if shot.visual_key == "bowling_ball" else .45, distance * .8)
+	if custom_visual and custom_visual.visible and shot.visual_key == "bowling_ball":
+		custom_visual.rotate(direction.cross(Vector3.UP).normalized(), distance / maxf(.01, shot.radius))
+
+func _contact_distance(actor: CombatActor) -> float:
+	var offset := WorldGeometry.planar(actor.position - position)
+	var along := offset.dot(direction)
+	var lateral_sq := maxf(0.0, offset.length_squared() - along * along)
+	var radius := actor.hurtbox_radius() + shot.radius
+	return maxf(0.0, along - sqrt(maxf(0.0, radius * radius - lateral_sq)))
+
+func _ricochet_target(origin: Vector3) -> CombatActor:
+	var result: CombatActor
+	var best := shot.ricochet_range * shot.ricochet_range
+	for enemy in world.enemies:
+		if not is_instance_valid(enemy) or enemy.dead or enemy in pierced:
+			continue
+		var distance := WorldGeometry.planar(enemy.position - origin).length_squared()
+		if distance < best:
+			best = distance
+			result = enemy
+	return result

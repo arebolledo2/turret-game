@@ -81,6 +81,16 @@ static func base_stats(base_type: String, branch: String, stage: int) -> Diction
 			stats.projectile_speed = 350.0
 			stats.aoe_radius = [135.0, 160.0, 185.0][stage - 1]
 			stats.knockback_force = 220.0
+		"heavy_roller":
+			stats.damage = [30.0, 43.0, 60.0][stage - 1]
+			stats.pierce = [7, 10, 14][stage - 1]
+			stats.knockback_force = [330.0, 420.0, 520.0][stage - 1]
+			stats.fire_rate = [.6, .65, .7][stage - 1]
+		"bank_shot":
+			stats.damage = [22.0, 28.0, 36.0][stage - 1]
+			stats.fire_rate = [.7, .8, .9][stage - 1]
+			stats.projectile_speed = 400.0
+			stats.pierce = 0
 		"wide_flame":
 			stats.damage = [3.2, 4.0, 5.0][stage - 1]
 			stats.cone_degrees = [60.0, 85.0, 110.0][stage - 1]
@@ -117,6 +127,8 @@ static func description(branch: String, stage: int) -> String:
 	match branch:
 		"machine_gun": return "Rapid aimed fire." if stage == 1 else "Rotary fire accelerates while a target remains in range."
 		"scatter": return "Three projectiles fan out with each shot." if stage == 1 else "Fires in four directions at once."
+		"heavy_roller": return "Larger balls drive through crowds with stronger knockback."
+		"bank_shot": return "Redirects toward a fresh nearby enemy up to %d times." % [2, 4, 6][stage - 1]
 		"wide_flame": return "A %d-degree fan blankets a crowd and leaves enemies burning." % [60, 85, 110][stage - 1]
 		"focused_jet": return "A longer, narrower jet delivers a stronger, longer-lasting burn."
 		"repeater_bow": return "Fires a quick burst of %d piercing arrows." % [2, 3, 5][stage - 1]

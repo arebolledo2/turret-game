@@ -17,6 +17,8 @@ var source_id: int = 0
 var attack_families: Array[String] = []
 ## Extra enemies a non-splash projectile passes through after its first hit.
 var pierce: int = 0
+var ricochets: int = 0
+var ricochet_range: float = 2.5
 
 static func from_stats(stats: Dictionary, type: GameEnums.DamageType = GameEnums.DamageType.PHYSICAL) -> CombatShot3D:
 	var view := TurretStats.new(stats)
@@ -46,5 +48,7 @@ func copy() -> CombatShot3D:
 	shot.slow_duration = slow_duration
 	shot.source_id = source_id
 	shot.attack_families = attack_families.duplicate()
+	shot.ricochets = ricochets
+	shot.ricochet_range = ricochet_range
 	shot.pierce = pierce
 	return shot

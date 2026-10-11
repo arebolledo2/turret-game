@@ -126,3 +126,39 @@ func test_flame_ribbons_are_bounded_and_reset_between_waves() -> void:
 	world.effects._physics_process(.3)
 	for ribbon in world.effects.flame_ribbons:
 		assert_false(ribbon.visible, "Flame expires")
+
+func test_bank_shot_redirects_without_hitting_the_old_path_twice() -> void:
+	var first := enemy(Vector3(0, 0, -1))
+	var side := enemy(Vector3(.9, 0, -.7))
+	var old_path := enemy(Vector3(0, 0, -2.0))
+	await get_tree().physics_frame
+	var spec := CombatShot3D.new()
+	spec.damage = 10.0
+	spec.speed = 10.0
+	spec.radius = .24
+	spec.visual_key = "bowling_ball"
+	spec.ricochets = 1
+	var ball := world.fire_direction(Vector3(0, .24, 0), Vector3.FORWARD, spec)
+	ball.set_physics_process(false)
+	ball.advance(.25)
+	assert_eq(first.health, 90.0)
+	assert_eq(side.health, 90.0, "Redirected path hits the side target in the same step")
+	assert_eq(old_path.health, 100.0, "Old-path contacts are discarded")
+	assert_false(ball.active, "Finite ricochet count terminates the shot")
+
+func test_bank_shot_without_recipient_can_use_item_pierce_without_extra_movement() -> void:
+	var first := enemy(Vector3(0, 0, -1))
+	await get_tree().physics_frame
+	var spec := CombatShot3D.new()
+	spec.damage = 10.0
+	spec.speed = 10.0
+	spec.radius = .24
+	spec.ricochets = 2
+	spec.pierce = 1
+	var ball := world.fire_direction(Vector3(0, .24, 0), Vector3.FORWARD, spec)
+	ball.set_physics_process(false)
+	ball.advance(.2)
+	assert_eq(first.health, 90.0)
+	assert_true(ball.active)
+	assert_almost_eq(ball.position.z, -2.0, .001)
+	assert_almost_eq(ball.remaining, spec.lifetime - .2, .001)
