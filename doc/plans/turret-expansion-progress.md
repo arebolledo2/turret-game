@@ -41,18 +41,18 @@ Branch: `feature/turret-evolution-roster`.
 - Shop build summaries and purchase previews resolve fresh evolved instance stats without mutating combat caches. Gunblade has separate gun numbers and family badges in detailed inspection.
 - Flame streams have a bounded pool, reduced-motion support and native visual review, including default-zoom moving-enemy combat.
 
-## Outstanding work toward the full objective
+## Completion audit
 
-- Final requirement-by-requirement audit of the ten selected subjects, source assets, evolution availability, portraits, projectile behavior and ordinary-play access.
-- Reconcile the larger design proposal with this selected roster and document remaining future content explicitly; availability gates alone are not evidence of completion.
-- Balance remains provisional; native showcases verify functioning attacks, not a complete difficulty balance pass.
+The ten selected subjects and their projectile assets are delivered. See [the requirement audit](turret-expansion-audit.md) for access paths, source/model evidence, evolution mechanics, visual review, tests and scope distinctions from the broader design proposal.
 
 ## Latest verification
 
-- Full suite: 983 passing tests, including controller evolution review, confirmation and deferred deployment.
-- Resource audit: 200 source files and 37 model records.
-- Native stationary and moving-enemy showcases cover all ten subjects and both new-base branch sets, deployed and carried attacks, pause, player defeat and cleanup. Evidence is saved under `doc/art/clockwork-pop/validation/roster-*`.
-- The goal remains active pending the final audit.
+- Full suite: 984 passing tests, including actual Shop purchases and evolution of all three new bases.
+- Resource audit: 200 source files and 37 model records, with reviewed GLB hashes intact.
+- Native stationary and moving-enemy showcases cover every selected subject and both new-base branch sets, deployed/carried attacks, pause, player defeat and cleanup. Evidence is under `doc/art/clockwork-pop/validation/roster-*`.
+- Balance and performance tuning remain follow-up playtesting work. The requested selected-roster implementation is complete.
+
+The entries below are chronological implementation notes; their earlier outstanding-work statements are superseded by this audit.
 
 ### Shop portrait pass
 
