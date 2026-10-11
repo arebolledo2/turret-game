@@ -45,6 +45,14 @@ var weapon_clock: float = 0.0
 var weapon_target: CombatActor
 var clockwork_motion: ClockworkMotion
 
+## Planar footprint of the same capsule used by projectile collisions.
+func hurtbox_radius() -> float:
+	return .36 * body_scale
+
+func overlaps_attack_range(origin: Vector3, reach: float) -> bool:
+	var radius := maxf(0.0, reach) + hurtbox_radius()
+	return WorldGeometry.planar(position - origin).length_squared() <= radius * radius + .000001
+
 func _ready() -> void:
 	collision_layer = 0 if is_enemy else WorldGeometry.PLAYER_LAYER
 	collision_mask = 0 if is_enemy else WorldGeometry.WORLD_LAYER
@@ -83,7 +91,7 @@ func _ready() -> void:
 		hurtbox.monitoring = false
 		var hit_shape := CollisionShape3D.new()
 		var hit_capsule := CapsuleShape3D.new()
-		hit_capsule.radius = 0.36 * body_scale
+		hit_capsule.radius = hurtbox_radius()
 		hit_capsule.height = 1.3 * body_scale
 		hit_shape.shape = hit_capsule
 		hit_shape.position.y = 0.6 * body_scale
@@ -312,7 +320,7 @@ func _tick_player_weapon(delta: float) -> void:
 	var weapon_range := GameConstants.PLAYER_TURRET_RANGE * WorldGeometry.METRES_PER_PIXEL
 	if weapon_clock <= 0.0:
 		weapon_target = world.nearest_enemy(position, weapon_range)
-	if is_instance_valid(weapon_target) and (weapon_target.dead or WorldGeometry.planar(weapon_target.position - position).length() > weapon_range):
+	if is_instance_valid(weapon_target) and (weapon_target.dead or not weapon_target.overlaps_attack_range(position, weapon_range)):
 		weapon_target = null
 	if clockwork_motion:
 		var heading := WorldGeometry.planar(weapon_target.position - position) if is_instance_valid(weapon_target) else Vector3.ZERO

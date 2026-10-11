@@ -25,7 +25,7 @@ func impact(primary: CombatActor, at: Vector3, heading: Vector3, shot: CombatSho
 	if shot.splash_radius > 0.0:
 		for candidate in candidates:
 			if is_instance_valid(candidate) and not candidate.dead and not targets.has(candidate):
-				if WorldGeometry.planar(candidate.position - at).length_squared() <= shot.splash_radius * shot.splash_radius + .000001:
+				if candidate.overlaps_attack_range(at, shot.splash_radius):
 					targets.append(candidate)
 	if is_instance_valid(primary) and not primary.dead and not targets.has(primary):
 		targets.append(primary)
@@ -96,7 +96,7 @@ func select_target(origin: Vector3, range_metres: float, candidates: Array[Comba
 		if not is_instance_valid(candidate) or candidate.dead:
 			continue
 		var distance := WorldGeometry.planar(candidate.position - origin).length_squared()
-		if distance > range_metres * range_metres + .000001:
+		if not candidate.overlaps_attack_range(origin, range_metres):
 			continue
 		var count: int = 0
 		if cluster_radius > 0.0 and grid and grid.positions.has(candidate.get_instance_id()):

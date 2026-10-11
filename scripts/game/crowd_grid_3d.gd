@@ -11,6 +11,7 @@ var cell_xz: Dictionary = {}
 ## Per-cell packed (body radius, inverse mass) pairs, parallel to `cell_xz`, so overlap resolution never touches actors.
 var cell_body: Dictionary = {}
 var neighbor_counts: Dictionary = {}
+var max_hurtbox_radius: float = 0.0
 
 func rebuild(actors: Array[CombatActor]) -> void:
 	cells.clear()
@@ -18,9 +19,11 @@ func rebuild(actors: Array[CombatActor]) -> void:
 	cell_xz.clear()
 	cell_body.clear()
 	neighbor_counts.clear()
+	max_hurtbox_radius = 0.0
 	for actor in actors:
 		if not is_instance_valid(actor) or actor.dead:
 			continue
+		max_hurtbox_radius = maxf(max_hurtbox_radius, actor.hurtbox_radius())
 		var cell := _cell(actor.position)
 		if not cells.has(cell):
 			cells[cell] = []
@@ -163,15 +166,15 @@ func _inverse_mass(actor: CombatActor) -> float:
 func _add_shift(shifts: Dictionary, actor: CombatActor, x: float, z: float) -> void:
 	shifts[actor] = Vector2(x, z) + shifts.get(actor, Vector2.ZERO)
 
-## Actors whose snapshot position is within `radius` of `origin` (planar), via the grid cells.
-func query_radius(origin: Vector3, radius: float) -> Array[CombatActor]:
+## Planar snapshot query; optionally include bodies overlapping the radius, expanding the cell search too.
+func query_radius(origin: Vector3, radius: float, include_hurtboxes: bool = false) -> Array[CombatActor]:
 	var found: Array[CombatActor] = []
 	var cell := _cell(origin)
-	var extent := ceili(radius / CELL_SIZE)
+	var extent := ceili((radius + (max_hurtbox_radius if include_hurtboxes else 0.0)) / CELL_SIZE)
 	for x in range(-extent, extent + 1):
 		for z in range(-extent, extent + 1):
 			for other: CombatActor in cells.get(cell + Vector2i(x, z), []):
-				if is_instance_valid(other) and not other.dead and WorldGeometry.planar(Vector3(positions[other.get_instance_id()]) - origin).length_squared() <= radius * radius:
+				if is_instance_valid(other) and not other.dead and WorldGeometry.planar(Vector3(positions[other.get_instance_id()]) - origin).length_squared() <= pow(radius + (other.hurtbox_radius() if include_hurtboxes else 0.0), 2):
 					found.append(other)
 	return found
 

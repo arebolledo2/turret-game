@@ -27,8 +27,8 @@ func plasma() -> CombatShot3D:
 
 func test_splash_damages_primary_once_and_respects_planar_boundary() -> void:
 	var center := enemy(Vector3.ZERO)
-	var edge := enemy(Vector3(1, 3, 0))
-	var outside := enemy(Vector3(1.01, 0, 0))
+	var edge := enemy(Vector3(1.36, 3, 0))
+	var outside := enemy(Vector3(1.37, 0, 0))
 	watch_signals(world.combat)
 	var hits := world.combat.impact(center, Vector3.ZERO, Vector3.RIGHT, plasma(), world.enemies)
 	assert_eq(hits, 2)
@@ -283,3 +283,34 @@ func buy(kind: String, id: String) -> bool:
 	var price := world.turret_price(id) if kind == "turret" else world.shop.item_price(id)
 	EconomyService.current_shop_offers.append(ShopOffer.new(kind, id, price))
 	return world.shop.purchase(EconomyService.current_shop_offers.size() - 1)
+
+func test_targeting_includes_scaled_hurtbox_edge() -> void:
+	var large := enemy(Vector3(3.7, 0, 0))
+	large.body_scale = 2.0
+	assert_same(world.combat.select_target(Vector3.ZERO, 3.0, world.enemies), large)
+	large.position.x = 3.73
+	assert_null(world.combat.select_target(Vector3.ZERO, 3.0, world.enemies))
+
+func test_grid_includes_large_bodies_across_cell_boundaries() -> void:
+	var large := enemy(Vector3(3.5, 0, 0))
+	large.body_scale = 4.0
+	world.crowd.rebuild(world.enemies)
+	assert_true(world.crowd.query_radius(Vector3.ZERO, 2.1, true).has(large))
+	assert_false(world.crowd.query_radius(Vector3.ZERO, 2.1).has(large))
+	assert_false(world.crowd.query_radius(Vector3.ZERO, 2.0, true).has(large))
+
+func test_melee_sweep_hits_body_edge_but_not_empty_corner() -> void:
+	assert_true(TurretActor.sweep_overlaps_body(Vector3(0, 0, -2.7), 2.0, 0.0, .1, .72))
+	assert_false(TurretActor.sweep_overlaps_body(Vector3(0, 0, -2.73), 2.0, 0.0, .1, .72))
+	assert_true(TurretActor.sweep_overlaps_body(Vector3(.3, 0, -1.5), 2.0, 0.0, .1, .36))
+	assert_false(TurretActor.sweep_overlaps_body(Vector3(.35, 0, -2.3), 2.0, 0.0, .1, .36))
+
+func test_turret_fires_when_only_enemy_edge_is_in_range() -> void:
+	var turret := world.turrets[0]
+	var reach := turret._current_view(0).range_metres
+	var target := enemy(turret.position + Vector3(reach + .3, 0, 0))
+	turret.cooldown = 0.0
+	turret.target_clock = 0.0
+	turret._physics_process(.01)
+	assert_same(turret.target, target)
+	assert_gt(turret.cooldown, 0.0, "Edge target passes the retained-target check and fires")

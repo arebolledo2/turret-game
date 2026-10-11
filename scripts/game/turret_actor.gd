@@ -37,7 +37,6 @@ var entrench_notice: float = 0.0
 var entrench_config: Dictionary = {}
 
 const STATS_REFRESH: float = .25
-const MELEE_HIT_PADDING: float = .3
 const TESLA_TINT := Color(.35, .9, 1.0)
 static var melee_materials: Dictionary = {}
 
@@ -96,15 +95,11 @@ func _spin_bat(delta: float, stats: TurretStats, reach: float) -> void:
 		rehit_lockouts[key] = float(rehit_lockouts[key]) - delta
 		if float(rehit_lockouts[key]) <= 0.0:
 			rehit_lockouts.erase(key)
-	for enemy in world.crowd.query_radius(position, reach + MELEE_HIT_PADDING):
+	for enemy in world.crowd.query_radius(position, reach, true):
 		if rehit_lockouts.has(enemy.get_instance_id()):
 			continue
 		var offset := WorldGeometry.planar(enemy.position - position)
-		var distance := maxf(offset.length(), MELEE_HIT_PADDING)
-		# The bat tip points along (-sin a, 0, -cos a); widen the arc by the enemy's angular radius.
-		var padding := asin(clampf(MELEE_HIT_PADDING / distance, 0.0, 1.0))
-		var bearing := atan2(-offset.x, -offset.z)
-		if wrapf(bearing - previous + padding, 0.0, TAU) > sweep + 2.0 * padding:
+		if not sweep_overlaps_body(offset, reach, previous, sweep, enemy.hurtbox_radius()):
 			continue
 		var damage := stats.damage
 		if TurretStatsService.roll_turret_crit():
@@ -117,6 +112,19 @@ func _spin_bat(delta: float, stats: TurretStats, reach: float) -> void:
 		bat_hit.slow_intensity = stats.slow_intensity
 		bat_hit.slow_duration = stats.slow_duration
 		world.combat.apply_hit(enemy, bat_hit)
+
+## Distance to the swept bat sector, including rounded contact at either end of the arc.
+static func sweep_overlaps_body(offset: Vector3, reach: float, start: float, sweep: float, radius: float) -> bool:
+	var point := WorldGeometry.planar(offset)
+	var bearing := atan2(-point.x, -point.z)
+	if sweep >= TAU or wrapf(bearing - start, 0.0, TAU) <= sweep:
+		return point.length() <= reach + radius
+	for angle: float in [start, start + sweep]:
+		var direction := Vector3(-sin(angle), 0, -cos(angle))
+		var closest := direction * clampf(point.dot(direction), 0.0, reach)
+		if point.distance_squared_to(closest) <= radius * radius + .000001:
+			return true
+	return false
 
 ## Terrain under this turret, refreshed with the cached stats: high ground range and power node Entrench speed.
 var zone_range_bonus: float = 0.0
@@ -313,7 +321,7 @@ func _physics_process(delta: float) -> void:
 		var radius := stats.aoe_radius_metres if TurretRegistry.targets_clusters(turret_type) else 0.0
 		target = world.combat.select_target(position, range_metres, world.enemies, radius, world.crowd)
 		target_clock = .2
-	if not is_instance_valid(target) or target.dead or WorldGeometry.planar(target.position - position).length() > range_metres:
+	if not is_instance_valid(target) or target.dead or not target.overlaps_attack_range(position, range_metres):
 		return
 	var heading := WorldGeometry.planar(target.position - position)
 	aim.rotation.y = atan2(-heading.x, -heading.z)
