@@ -11,6 +11,7 @@ var continue_button: IconButton
 var offers_grid: GridContainer
 var balance: Label
 var subtitle: Label
+var growth_summary: Label
 var vital_text: Label
 var turret_text: RichTextLabel
 var detail_title: Label
@@ -51,6 +52,7 @@ func _ready() -> void:
 	balance = _label(header, "", 42, UiPalette.SCRAP)
 	balance.autowrap_mode = TextServer.AUTOWRAP_OFF
 	balance.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	growth_summary = _label(column, "", 24, UiPalette.GOOD)
 	column.add_child(HSeparator.new())
 	var content := HBoxContainer.new()
 	content.size_flags_vertical = SIZE_EXPAND_FILL
@@ -148,6 +150,7 @@ func refresh() -> void:
 		return
 	subtitle.text = "Wave %d secured · Prepare for wave %d" % [GameStateService.current_wave, GameStateService.current_wave + 1]
 	balance.text = "%d SCRAP" % EconomyService.total_scrap
+	growth_summary.text = _growth_summary()
 	var compact := size.x < 1650
 	offers_grid.columns = 2 if compact else 4
 	continue_button.custom_minimum_size.x = 250 if compact else 310
@@ -248,20 +251,59 @@ func _refresh_details() -> void:
 		for old: Dictionary in data["turrets"]:
 			if old["id"] == turret["id"]:
 				was = old
-		var cadence_key := "rotation_rate" if turret["rotation_rate"] > 0 else "fire_rate"
-		var cadence_unit := "°/s sweep" if cadence_key == "rotation_rate" else " shots/s"
-		var numbers := _number(was, turret, "damage", " damage") + " · " + _number(was, turret, cadence_key, cadence_unit)
-		numbers += "\n" + _number(was, turret, "range", " m reach")
-		if turret["area"] > 0:
-			numbers += " · " + _number(was, turret, "area", " m area")
-		for spec: Array in [["pierce", " pierce"], ["projectile_speed", " m/s projectile"], ["chain_count", " chain jumps"],
-			["chain_decay", "% chain damage retained"], ["slow", "% slow strength"], ["slow_duration", " s slow"],
-			["rehit_delay", " s rehit"], ["knockback", " m knockback"]]:
-			if not was.is_empty() and not is_equal_approx(float(was["stats"][spec[0]]), float(turret["stats"][spec[0]])):
-				numbers += "\n" + _number(was["stats"], turret["stats"], spec[0], spec[1], spec[0] == "rehit_delay")
-		lines.append("[b]%s ×%d[/b]\n%s" % [turret["name"], turret["count"], numbers])
+		var instances: Array = turret.get("instances", [])
+		if instances.is_empty():
+			lines.append("[b]%s ×%d[/b]\n%s" % [turret["name"], turret["count"], _turret_numbers(was, turret)])
+			continue
+		for growth: Dictionary in instances:
+			var current := turret.duplicate(true)
+			var previous := was.duplicate(true)
+			current["damage"] *= float(growth["damage_multiplier"])
+			if not previous.is_empty():
+				previous["damage"] *= float(growth["damage_multiplier"])
+			var caption := "[b]%s #%d · Lv %d[/b]" % [turret["name"], growth["id"], growth["level"]]
+			caption += "\nXP %d / %d toward Lv %d" % [growth["xp"], growth["next_cost"], int(growth["level"]) + 1]
+			var change: Dictionary = world.salvage.last_settlement.get("changes", {}).get(growth["id"], {})
+			if not change.is_empty() and int(world.salvage.last_settlement.get("wave", -1)) == GameStateService.current_wave:
+				caption += "\n[color=#8be0c9]+%d XP this wave" % change["xp_awarded"]
+				if change["after"]["level"] > change["before"]["level"]:
+					caption += " · Lv %d → %d" % [change["before"]["level"], change["after"]["level"]]
+				caption += "[/color]"
+			lines.append(caption + "\n" + _turret_numbers(previous, current))
+		if int(turret["count"]) > instances.size():
+			lines.append("[b]%s · New Lv 1 turret[/b]\n%s" % [turret["name"], _turret_numbers({}, turret)])
 	turret_text.text = "\n\n".join(lines)
 	_refresh_installed(data["items"])
+
+func _growth_summary() -> String:
+	if not world.session.state.turret_progression_enabled:
+		return "Turret growth is OFF for this run."
+	var ledger := world.salvage.last_settlement
+	if ledger.is_empty() or int(ledger.get("wave", -1)) != GameStateService.current_wave:
+		return "Turret growth is ON · Scrap left on the floor becomes XP at wave end."
+	if int(ledger["raw_scrap"]) == 0:
+		return "Turret growth · +0 XP — no scrap was left on the floor."
+	if int(ledger["xp_awarded"]) == 0:
+		return "Turret growth · No turrets to receive XP; salvage returned %d scrap." % ledger["fallback_cash"]
+	var levels := 0
+	for change: Dictionary in ledger["changes"].values():
+		levels += int(change["after"]["level"]) - int(change["before"]["level"])
+	return "Turret growth · +%d XP from leftover scrap · %d %s gained" % [
+		ledger["xp_awarded"], levels, "level" if levels == 1 else "levels"]
+
+func _turret_numbers(was: Dictionary, turret: Dictionary) -> String:
+	var cadence_key := "rotation_rate" if turret["rotation_rate"] > 0 else "fire_rate"
+	var cadence_unit := "°/s sweep" if cadence_key == "rotation_rate" else " shots/s"
+	var numbers := _number(was, turret, "damage", " damage") + " · " + _number(was, turret, cadence_key, cadence_unit)
+	numbers += "\n" + _number(was, turret, "range", " m reach")
+	if turret["area"] > 0:
+		numbers += " · " + _number(was, turret, "area", " m area")
+	for spec: Array in [["pierce", " pierce"], ["projectile_speed", " m/s projectile"], ["chain_count", " chain jumps"],
+		["chain_decay", "% chain damage retained"], ["slow", "% slow strength"], ["slow_duration", " s slow"],
+		["rehit_delay", " s rehit"], ["knockback", " m knockback"]]:
+		if not was.is_empty() and not is_equal_approx(float(was["stats"][spec[0]]), float(turret["stats"][spec[0]])):
+			numbers += "\n" + _number(was["stats"], turret["stats"], spec[0], spec[1], spec[0] == "rehit_delay")
+	return numbers
 
 ## Explicit before/after numbers; colour reinforces the direction without carrying meaning alone.
 func _number(before: Dictionary, after: Dictionary, key: String, unit: String, lower_is_better: bool = false) -> String:

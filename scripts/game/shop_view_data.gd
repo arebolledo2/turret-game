@@ -82,7 +82,18 @@ static func build_data(world: ArenaWorld, extra_turret: String = "") -> Dictiona
 			"chain_decay": float(stats.get("chain_decay", 0)) * 100.0, "slow": view.slow_intensity * 100.0,
 			"slow_duration": view.slow_duration, "rehit_delay": view.rehit_delay if stats.has("rehit_delay") else 0.0},
 			"area": reach if pulse else view.aoe_radius_metres})
-		dps += count * float(stats["damage"]) * rate
+		var instances: Array[Dictionary] = []
+		var damage_units := float(count)
+		if world.session.state.turret_progression_enabled:
+			for actor in world.turrets:
+				if actor.turret_type != type_id:
+					continue
+				var growth := actor.progression.snapshot()
+				growth["id"] = actor.turret_id
+				instances.append(growth)
+				damage_units += actor.progression.damage_multiplier() - 1.0
+		turrets.back()["instances"] = instances
+		dps += damage_units * float(stats["damage"]) * rate
 	var max_hull := PlayerStatsService.get_player_max_health(float(world.difficulty_config["player_health_mult"]))
 	var items: Array[Dictionary] = []
 	for item_id: String in ItemTrackingService.item_counts:

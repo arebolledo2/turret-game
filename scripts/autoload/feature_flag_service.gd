@@ -62,8 +62,8 @@ const FLAG_DEFINITIONS: Dictionary = {
 		"description": "Shows live counts (wave, enemies, turrets, projectiles, pending flags) on screen.",
 	},
 	TURRET_PROGRESSION: {
-		"name": "Turret Progression (next run)", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 1,
-		"description": "Development foundation: leftover scrap becomes turret XP, unlimited stat levels and scarcer turret pricing. Frozen at run start; restart after changing. Evolution forms and animations are not implemented yet.",
+		"name": "Turret Progression", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 1,
+		"description": "Leftover scrap becomes turret XP, unlimited stat levels and scarcer turret pricing. Changes apply when you start or restart a run. Evolution forms and animations are not implemented yet.",
 	},
 	ENTRENCH: {
 		"name": "Entrench", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 1,

@@ -194,3 +194,44 @@ func test_level_damage_is_individual_and_combines_with_items_once() -> void:
 	assert_almost_eq(float(rookie._current_stats(1.0).damage), base_damage, .0001)
 	assert_true(world.dev_panel.progression_text().contains("Lv 5"))
 	assert_true(world.dev_panel.progression_text().contains("pending [5]"))
+
+func test_shop_exposes_wave_award_individual_levels_and_damage_previews() -> void:
+	_scrap(42)
+	world.finish_wave()
+	var rookie := world.add_turret(Vector3(8, 0, 0))
+	rookie.set_physics_process(false)
+	var screen := ShopScreen.new()
+	screen.world = world
+	add_child_autofree(screen)
+	screen.refresh()
+	assert_true(screen.growth_summary.text.contains("+42 XP"))
+	assert_true(screen.growth_summary.text.contains("4 levels gained"))
+	assert_true(screen.turret_text.text.contains("#1 · Lv 5"))
+	assert_true(screen.turret_text.text.contains("#2 · Lv 1"))
+	assert_true(screen.turret_text.text.contains("XP 0 / 19"))
+	assert_true(screen.turret_text.text.contains("Lv 1 → 5"))
+	var veteran_damage := world.turrets[0]._current_view(1.0).damage
+	assert_true(screen.turret_text.text.contains("%.2f damage" % veteran_damage))
+	var before := ShopViewData.build_data(world)
+	var base: float = before.turrets[0].damage
+	assert_almost_eq(float(before.dps), base * 2.09 * float(before.turrets[0].fire_rate), .001)
+	var offer := ShopOffer.new("item", "dense_rounds", 1)
+	EconomyService.current_shop_offers.assign([offer])
+	screen._select(0)
+	assert_true(screen.turret_text.text.contains("%.2f → %.2f damage" % [veteran_damage, veteran_damage * 1.1]))
+	assert_eq(world.turrets[0].progression.level, 5, "Preview never changes progression")
+
+func test_shop_explains_zero_xp_and_inactive_progression() -> void:
+	world.finish_wave()
+	var screen := ShopScreen.new()
+	screen.world = world
+	add_child_autofree(screen)
+	screen.refresh()
+	assert_true(screen.growth_summary.text.contains("+0 XP"))
+	assert_true(screen.growth_summary.text.contains("no scrap was left"))
+	FeatureFlagService.set_enabled(FeatureFlagService.TURRET_PROGRESSION, false)
+	world.start_run()
+	_freeze()
+	world.finish_wave()
+	screen.refresh()
+	assert_true(screen.growth_summary.text.contains("OFF for this run"))
