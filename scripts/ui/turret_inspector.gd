@@ -133,7 +133,7 @@ func _show_selected() -> void:
 	xp_bar.show_progress(growth.level, growth.xp)
 	var lines := PackedStringArray()
 	lines.append("[color=#8be0c9][b]CURRENT COMBAT STATS[/b][/color]")
-	lines.append("Damage  [b]%.2f[/b]     Reach  [b]%.2f m[/b]" % [stats.damage, stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret.turret_type) == TurretRegistry.FIRE_PULSE else 1.0)])
+	lines.append("Damage  [b]%.0f[/b]     Reach  [b]%.2f m[/b]" % [stats.damage, stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret.turret_type) == TurretRegistry.FIRE_PULSE else 1.0)])
 	if turret.turret_type == "melee":
 		lines.append("Sweep  %.0f°/s     Rehit interval  %.2f s" % [stats.rotation_rate, stats.rehit_delay])
 	else:

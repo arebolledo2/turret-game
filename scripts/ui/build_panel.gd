@@ -102,7 +102,7 @@ func _build_turrets(data: Dictionary, after: Dictionary) -> void:
 		tile.add_child(_icon("turret_" + str(turret["id"]) if UiIcons.has_icon("turret_" + str(turret["id"])) else "turret", UiPalette.TEAL_HI, 34.0))
 		grid.add_child(tile)
 		grid.add_child(_value("×%d" % turret["count"], float(was["count"]), float(turret["count"])))
-		grid.add_child(_value("%.1f" % turret["damage"], float(was["damage"]), float(turret["damage"])))
+		grid.add_child(_value("%.0f" % turret["damage"], float(was["damage"]), float(turret["damage"])))
 		if float(turret["fire_rate"]) > 0.0:
 			grid.add_child(_value("%.2f" % turret["fire_rate"], float(was["fire_rate"]), float(turret["fire_rate"])))
 		else:

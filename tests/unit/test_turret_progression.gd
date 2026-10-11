@@ -3,29 +3,42 @@ extends GutTest
 func before_each() -> void:
 	TestHelpers.reset_all_services()
 
+func test_first_wave_award_gives_one_or_two_levels() -> void:
+	var growth := TurretProgression.new()
+	growth.award(27)
+	assert_eq(growth.level, 2, "Observed Hard wave-one salvage earns one level")
+	assert_eq(growth.xp, 13)
+	growth.award(4)
+	assert_eq(growth.level, 3, "31 total XP earns a second level")
+	assert_eq(growth.xp, 0)
+	growth.award(19)
+	assert_eq(growth.level, 3, "A third level requires 51 total XP")
+	growth.award(1)
+	assert_eq(growth.level, 4)
+
 func test_thresholds_overflow_and_ordered_milestones() -> void:
 	var growth := TurretProgression.new()
-	growth.award(41)
+	growth.award(73)
 	assert_eq(growth.level, 4)
-	assert_eq(growth.xp, 14)
+	assert_eq(growth.xp, 22)
 	assert_true(growth.pending_evolutions.is_empty())
 	var change := growth.award(1)
 	assert_eq(change.before.level, 4)
 	assert_eq(change.after.level, 5)
 	assert_eq(growth.xp, 0)
 	assert_eq(growth.pending_evolutions, [5])
-	growth.award(191 - 42)
+	growth.award(263 - 74)
 	assert_eq(growth.level, 10)
-	growth.award(518 - 191 + 7)
+	growth.award(630 - 263 + 7)
 	assert_eq(growth.level, 15)
 	assert_eq(growth.xp, 7)
-	assert_eq(growth.total_xp, 525)
+	assert_eq(growth.total_xp, 637)
 	assert_eq(growth.pending_evolutions, [5, 10, 15])
 	assert_eq(change.after.pending_evolutions, [5], "Snapshots must not change with the live queue")
 
 func test_growth_continues_beyond_mastery_without_extra_forms_or_compounding() -> void:
 	var growth := TurretProgression.new()
-	growth.award(518)
+	growth.award(630)
 	assert_almost_eq(growth.damage_multiplier(), 1.33, .00001)
 	for step in 35:
 		growth.award(TurretProgression.cost_to_next(growth.level))

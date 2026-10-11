@@ -364,10 +364,11 @@ func _turret_numbers(was: Dictionary, turret: Dictionary) -> String:
 func _number(before: Dictionary, after: Dictionary, key: String, unit: String, lower_is_better: bool = false) -> String:
 	var value := float(after.get(key, 0))
 	var old := float(before.get(key, value))
+	var format := "%.0f" if key == "damage" else "%.2f"
 	if is_equal_approx(old, value):
-		return "%.2f%s" % [value, unit]
+		return (format % value) + unit
 	var better := value < old if lower_is_better else value > old
-	return "[color=#%s]%.2f → %.2f%s[/color]" % ["8be0c9" if better else "ff9b8c", old, value, unit]
+	return "[color=#%s]%s → %s%s[/color]" % ["8be0c9" if better else "ff9b8c", format % old, format % value, unit]
 
 func _needs_turret(offer: ShopOffer) -> bool:
 	if offer.kind == "turret":

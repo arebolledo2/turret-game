@@ -102,7 +102,7 @@ func begin(record: Dictionary) -> void:
 			"floating": floating, "glow": glow, "level": int(change["before"]["level"]),
 			"damage": turret._current_view(1.0).damage, "pulse_until": 0.0}
 	_build_packets()
-	_label(column, "Review your turret growth, then press Continue. All rewards are already secured." + ("  Reduced Motion is on." if reduced else ""), 18).modulate = UiPalette.MUTED
+
 	advance(0.0)
 	skip_button.grab_focus()
 
@@ -203,7 +203,7 @@ func advance(delta: float) -> void:
 		(card["detail"] as Label).text = "Lv %d → %d  ·  +%d XP" % [shown.level, shown.level + 1, awarded]
 		var before_damage := float(card["damage"]) / float(change["after"]["damage_multiplier"]) * float(change["before"]["damage_multiplier"])
 		var current_damage := float(card["damage"]) / float(change["after"]["damage_multiplier"]) * shown.damage_multiplier()
-		(card["stats"] as Label).text = "Damage %.2f → %.2f%s" % [before_damage, current_damage, "  ·  +%d levels!" % levels if levels > 0 else ""]
+		(card["stats"] as Label).text = "Damage %.0f → %.0f%s" % [before_damage, current_damage, "  ·  +%d levels!" % levels if levels > 0 else ""]
 		(card["floating"] as Label3D).text = ("LEVEL UP!  Lv %d\n+%d XP" % [shown.level, awarded]) if levels > 0 else "+%d XP" % awarded
 		var glow: MeshInstance3D = card["glow"]
 		if glow:
