@@ -14,6 +14,9 @@ var actors: Array[TurretActor] = []
 var labels: Array[Label3D] = []
 var hits: Dictionary = {}
 var alternate := "--alternate" in OS.get_cmdline_user_args()
+var moving := "--moving" in OS.get_cmdline_user_args()
+var starts: Dictionary = {}
+var moved_enemies := 0
 var phase := "initial"
 var ticks := 0
 var carried_index := -1
@@ -31,6 +34,9 @@ func _ready() -> void:
 	world.set_physics_process(false)
 	world.player.set_physics_process(false)
 	world.player.position = Vector3(0, 0, 7)
+	if moving:
+		world.player.health = 100000
+		world.player.max_health = 100000
 	world.camera_rig.set_physics_process(false)
 	world.camera.position = CameraRig.OFFSET
 	world.camera.look_at(Vector3.ZERO)
@@ -63,7 +69,9 @@ func _ready() -> void:
 func _targets(center: Vector3) -> void:
 	for offset in [Vector3(-.65, 0, -1.6), Vector3(0, 0, -1.9), Vector3(.65, 0, -1.6)]:
 		var enemy := world.spawn_enemy(center + offset)
-		enemy.stationary = true
+		enemy.stationary = not moving
+		if moving:
+			starts[enemy] = enemy.position
 		enemy.health = 100000
 		enemy.max_health = 100000
 
@@ -74,6 +82,14 @@ func _hit(_target: Node3D, hit: CombatHit3D, damage: float) -> void:
 func _physics_process(_delta: float) -> void:
 	if not world:
 		return
+	if moving and world.is_combat():
+		world.crowd.rebuild(world.enemies)
+		for enemy in starts.keys():
+			if not is_instance_valid(enemy):
+				starts.erase(enemy)
+			elif enemy.position.distance_to(starts[enemy]) > .3:
+				moved_enemies += 1
+				starts.erase(enemy)
 	ticks += 1
 	if ticks == 180 and phase in ["initial", "final"]:
 		capture.call_deferred(phase)
@@ -92,6 +108,10 @@ func _physics_process(_delta: float) -> void:
 					get_tree().quit(1)
 					return
 			labels[i].text = actors[i].display_name()
+		if moving:
+			_reset_moving_targets()
+			for turret in actors:
+				_targets(turret.position)
 		GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 		phase = "final"
 	elif phase == "final":
@@ -130,6 +150,9 @@ func _next_carried() -> void:
 		enemy.statuses.clear()
 	for turret in actors:
 		turret.set_physics_process(false)
+	if moving:
+		_reset_moving_targets()
+		_targets(world.player.position)
 	carried_index += 1
 	actors[carried_index].carried = true
 	actors[carried_index].cooldown = 0
@@ -141,9 +164,20 @@ func _record(prefix: String) -> void:
 
 func capture(suffix: String) -> void:
 	await RenderingServer.frame_post_draw
-	get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path("res://.test-results/roster-%s%s.png" % [suffix, "-alternate" if alternate else ""]))
+	get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path("res://.test-results/roster-%s%s.png" % [suffix, ("-alternate" if alternate else "") + ("-moving" if moving else "")]))
 
 func finish() -> void:
+	if moving:
+		report["enemies_moved_under_normal_ai"] = moved_enemies
+		# Exercise actual player defeat while attacks and enemies are live.
+		world.player.invulnerability = 0.0
+		world.combat.apply_hit(world.player, CombatHit3D.new(1000000, Vector3.ZERO))
+		var stopped := not world.is_combat() and world.player.dead
+		for projectile in world.projectiles:
+			stopped = stopped and not projectile.active
+		for ribbon in world.effects.flame_ribbons:
+			stopped = stopped and not ribbon.visible
+		report["player_defeat_stops_combat_and_clears_attacks"] = 1 if stopped else 0
 	world.clear_field(false)
 	var clean := world.enemies.is_empty()
 	for projectile in world.projectiles:
@@ -154,7 +188,16 @@ func finish() -> void:
 	var passed := true
 	for count in report.values():
 		passed = passed and int(count) > 0
-	var file := FileAccess.open("res://.test-results/roster-showcase%s.json" % ("-alternate" if alternate else ""), FileAccess.WRITE)
+	var file := FileAccess.open("res://.test-results/roster-showcase%s.json" % (("-alternate" if alternate else "") + ("-moving" if moving else "")), FileAccess.WRITE)
 	file.store_string(JSON.stringify(report, "\t"))
 	print("ROSTER_SHOWCASE ", "PASS" if passed else "FAIL", " ", JSON.stringify(report))
 	get_tree().quit(0 if passed else 1)
+
+func _reset_moving_targets() -> void:
+	for enemy in world.enemies:
+		enemy.queue_free()
+	world.enemies.clear()
+	starts.clear()
+	for projectile in world.projectiles:
+		projectile.release()
+	world.crowd.rebuild(world.enemies)

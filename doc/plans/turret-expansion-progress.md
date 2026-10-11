@@ -39,22 +39,20 @@ Branch: `feature/turret-evolution-roster`.
 - Bow, Flamethrower and Bowling are purchasable base turrets. Both branches on each resolve through levels 5/10/15 with distinct attacks: timed arrow bursts / heavy arrows, wide flame / focused burn, heavy rollers / enemy-to-enemy ricochets.
 - Burn attribution, projectile collision size and pool reset, multi-contact sweeps, ricochet residual movement and one-hit-per-enemy behavior have regression coverage.
 - Shop build summaries and purchase previews resolve fresh evolved instance stats without mutating combat caches. Gunblade has separate gun numbers and family badges in detailed inspection.
-- Flame streams have a bounded pool, reduced-motion support and native visual review. Default-zoom representative combat review is still needed.
+- Flame streams have a bounded pool, reduced-motion support and native visual review, including default-zoom moving-enemy combat.
 
 ## Outstanding work toward the full objective
 
-- Finish remaining branch mechanics and milestones; do not treat current availability gates as final scope.
-- Distinct visual evolution treatments at 5/10/15 for the remaining branches. Saber has native-reviewed one/two/three-blade forms. The new-base branches currently reuse the same authored chassis; larger projectiles and attack changes alone do not complete this requirement.
-- Evolved shop portraits, comparison/confirmation polish, controller evolution flow, and pending-choice deployment reminder.
-- Native deterministic showcase covering all ten subjects, their later forms, carried firing, crowded combat, normal gameplay zoom, and pause/death/cleanup behavior.
-- Balance and visual review, then full requirement-by-requirement completion audit.
+- Final requirement-by-requirement audit of the ten selected subjects, source assets, evolution availability, portraits, projectile behavior and ordinary-play access.
+- Reconcile the larger design proposal with this selected roster and document remaining future content explicitly; availability gates alone are not evidence of completion.
+- Balance remains provisional; native showcases verify functioning attacks, not a complete difficulty balance pass.
 
 ## Latest verification
 
-- Full suite: 972 passing tests. Latest additions verify evolved shop summaries and purchase-preview cache isolation.
-- Native close previews: `.test-results/evolution-preview.png`, `.test-results/expansion-preview.png`, `.test-results/flame-preview.png` from `tools/preview_evolution.tscn`.
-- Last resource audit: 189 source files and 37 model records. Re-run on final state before completion.
-- This remains an interim implementation. The goal is active and incomplete.
+- Full suite: 983 passing tests, including controller evolution review, confirmation and deferred deployment.
+- Resource audit: 200 source files and 37 model records.
+- Native stationary and moving-enemy showcases cover all ten subjects and both new-base branch sets, deployed and carried attacks, pause, player defeat and cleanup. Evidence is saved under `doc/art/clockwork-pop/validation/roster-*`.
+- The goal remains active pending the final audit.
 
 ### Shop portrait pass
 
@@ -107,3 +105,7 @@ Omnifire reuses the authored Crossfire barrels and collars in a twelve-spoke rad
 ### Pending evolution deployment reminder
 
 Deploy checks available free evolutions. If any are ready, a modal defaults to Review Turrets, which selects and focuses the first ready turret. Deploy Anyway starts the wave with XP and unspent evolution milestones intact; Back or controller B returns to the Shop. Normal deployment is unchanged when no upgrade is available. Controller tests cover review targeting, cancel focus, deliberate deployment with preserved growth, and uninterrupted deployment without ready forms. Native 1280x720 layout reviewed with `tools/preview_shop.tscn -- --reminder`.
+
+### Moving-enemy and defeat validation
+
+`tools/showcase_turret_roster.tscn -- --moving` enables normal enemy steering, separation and contact damage while rebuilding the crowd index each tick. Targets refresh between initial/final and isolated carried phases; every turret must record damage. Both branch variants pass, with 90 enemies moving more than 0.3 m in each run. Player defeat is delivered through normal combat damage and must stop combat and release every projectile/flame ribbon before final cleanup. Health is raised to sustain the review; this is behavior/visual evidence, not encounter balance. The screenshots and JSON reports are committed in the validation folder.
