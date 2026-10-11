@@ -200,16 +200,30 @@ func advance(delta: float) -> void:
 			world.audio.play_cue("purchase", (card["floating"] as Label3D).position)
 		var bar: TurretXpBar = card["bar"]
 		bar.show_progress(shown.level, shown.xp)
-		(card["detail"] as Label).text = "Lv %d → %d  ·  +%d XP" % [shown.level, shown.level + 1, awarded]
+		var detail: Label = card["detail"]
+		detail.text = "LEVEL UP · Lv %d → %d\n+%d XP · Next: Lv %d" % [change["before"]["level"], shown.level, awarded, shown.level + 1] if levels > 0 else "Lv %d · +%d XP\nProgress toward Lv %d" % [shown.level, awarded, shown.level + 1]
+		detail.modulate = UiPalette.GOOD if levels > 0 else UiPalette.INK
 		var before_damage := float(card["damage"]) / float(change["after"]["damage_multiplier"]) * float(change["before"]["damage_multiplier"])
 		var current_damage := float(card["damage"]) / float(change["after"]["damage_multiplier"]) * shown.damage_multiplier()
-		(card["stats"] as Label).text = "Damage %.1f → %.1f%s" % [before_damage, current_damage, "  ·  +%d levels!" % levels if levels > 0 else ""]
+		var result := "No level-up"
+		if levels > 0:
+			result = ""
+			if current_damage > before_damage:
+				if "%.1f" % before_damage != "%.1f" % current_damage:
+					result = "Damage %.1f → %.1f" % [before_damage, current_damage]
+				else:
+					result = "Damage +%.1f%%" % ((shown.damage_multiplier() / float(change["before"]["damage_multiplier"]) - 1.0) * 100.0)
+			for milestone in TurretProgression.EVOLUTION_LEVELS:
+				if int(change["before"]["level"]) < milestone and shown.level >= milestone:
+					result += ("\n" if not result.is_empty() else "") + "Lv %d milestone · form pending" % milestone
+		(card["stats"] as Label).text = result
 		(card["floating"] as Label3D).text = ("LEVEL UP!  Lv %d\n+%d XP" % [shown.level, awarded]) if levels > 0 else "+%d XP" % awarded
 		var glow: MeshInstance3D = card["glow"]
 		if glow:
 			glow.visible = elapsed < float(card["pulse_until"])
 			glow.scale = Vector3.ONE * (1.0 + .5 * (1.0 - maxf(0, float(card["pulse_until"]) - elapsed) / .5))
-	heading.text = "SALVAGE SECURED · +%d XP · %d LEVELS" % [ledger.get("xp_awarded", 0), gained] if elapsed >= FLIGHT_END else "WAVE SECURED · COLLECTING SALVAGE"
+	var growth_text := "NO LEVEL-UPS" if gained == 0 else "%d LEVEL%s GAINED" % [gained, "" if gained == 1 else "S"]
+	heading.text = "SALVAGE SECURED · +%d XP · %s" % [ledger.get("xp_awarded", 0), growth_text] if elapsed >= FLIGHT_END else "WAVE SECURED · COLLECTING SALVAGE"
 
 func complete() -> void:
 	if not active or world.paused:
