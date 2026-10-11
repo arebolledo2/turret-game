@@ -385,3 +385,39 @@ func test_omnifire_covers_all_twelve_unique_radial_directions() -> void:
 	for i in range(12):
 		var gap := wrapf(angles[(i + 1) % 12] - angles[i], 0.0, TAU)
 		assert_almost_eq(gap, TAU / 12.0, .001)
+
+func test_orbit_saber_has_three_visible_arms_and_three_sweep_directions() -> void:
+	ModifierService.add_modifier({"id": "no_crit_overlap_test", "stat": "turret_crit_chance", "operation": "more", "value": 0.0})
+	var turret := world.add_turret(Vector3.ZERO, "melee")
+	turret.set_physics_process(false)
+	var xp := 0
+	for level in range(1, 15):
+		xp += TurretProgression.cost_to_next(level)
+	turret.progression.award(xp)
+	for stage in range(1, 4):
+		assert_true(turret.evolve("saber"))
+		assert_eq(turret.saber_angles.size(), stage)
+	assert_eq(turret.display_name(), "Orbit Saber")
+	for index in range(1, 3):
+		var arm := turret.aim.get_node("SaberArm%d" % index)
+		assert_not_null(arm.get_node("Prism_Blade"))
+		assert_not_null(arm.get_node("Ceramic_Hand"))
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	var targets: Array[CombatActor] = []
+	for angle in turret.saber_angles:
+		var enemy := world.spawn_enemy(Vector3.FORWARD.rotated(Vector3.UP, angle) * 1.4)
+		enemy.set_physics_process(false)
+		enemy.health = 1000.0
+		targets.append(enemy)
+	var overlapping := world.spawn_enemy(Vector3.ZERO)
+	overlapping.set_physics_process(false)
+	overlapping.health = 1000.0
+	world.crowd.rebuild(world.enemies)
+	var stats := turret._current_view(0)
+	turret._spin_bat(.01, stats, stats.range_metres)
+	for enemy in targets:
+		assert_lt(enemy.health, 1000.0, "Each blade direction deals damage")
+	assert_almost_eq(overlapping.health, 1000.0 - stats.damage, .001, "Overlapping blades share a rehit lockout")
+	var health := overlapping.health
+	turret._spin_bat(.01, stats, stats.range_metres)
+	assert_eq(overlapping.health, health)

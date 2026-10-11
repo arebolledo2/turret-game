@@ -174,3 +174,5 @@ Bowling supports Heavy Roller / Demolition Roller / Juggernaut (larger balls, mo
 Gunblade now advances to Repeater Blade (two-shot bursts) and Stormblade (three-shot piercing bursts) at levels 10/15. Follow-up rounds leave the rotating barrel along its current heading; they share the original burst snapshot and turret attribution. Pending rounds cancel when combat ends.
 
 Ion branches now reach Cyclone Gatling and Omnifire at level 15. Cyclone ramps to 2.5x resting rate and pierces an additional enemy. Omnifire emits twelve evenly spaced radial directions from its four outward muzzles. These attacks still use the Gatling/Crossfire chassis pending final-stage visual upgrades.
+
+Saber now advances to Twin Saber and Orbit Saber: two opposing or three evenly spaced held blades share an enemy rehit lockout. The additional authored arm/hand/hilt/blade assemblies rotate with Aim and scale with gameplay reach. Native three-stage close preview: tools/preview_evolution.tscn -- --saber-preview.

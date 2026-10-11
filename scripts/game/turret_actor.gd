@@ -25,6 +25,7 @@ var loaded_arrow: Node3D
 var cooldown: float = 0.0
 var aim: Node3D
 var model: Node3D
+var saber_angles: Array[float] = [0.0]
 var blade_tip: Node3D
 var gun_stats := TurretStats.new()
 var muzzle: Node3D
@@ -92,6 +93,7 @@ func _rebuild_model() -> void:
 	aim_authored_scale = aim.scale
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
 		bat_authored_reach = maxf(.001, WorldGeometry.planar((blade_tip if blade_tip else muzzle).global_position - aim.global_position).length())
+	_build_saber_arms()
 
 ## Placeholder procedural model: a base post with a pivoting arm; `Aim` is the spin pivot, `Muzzle` the bat tip.
 func _build_melee_model() -> Node3D:
@@ -132,7 +134,12 @@ func _spin_bat(delta: float, stats: TurretStats, reach: float) -> void:
 		if rehit_lockouts.has(enemy.get_instance_id()):
 			continue
 		var offset := WorldGeometry.planar(enemy.position - position)
-		if not sweep_overlaps_body(offset, reach, previous, sweep, enemy.hurtbox_radius()):
+		var touched := false
+		for angle in saber_angles:
+			if sweep_overlaps_body(offset, reach, previous + angle, sweep, enemy.hurtbox_radius()):
+				touched = true
+				break
+		if not touched:
 			continue
 		var damage := stats.damage
 		if TurretStatsService.roll_turret_crit():
@@ -473,7 +480,7 @@ func available_evolutions() -> Array[String]:
 		return result
 	for branch in progression.evolution_options(turret_type):
 		var next_stage := progression.evolution_stage + 1
-		var implemented := branch in ["repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "gunblade", "machine_gun", "scatter"] or (branch in ["saber", "siege"] and next_stage == 1)
+		var implemented := branch in ["repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "gunblade", "machine_gun", "scatter", "saber"] or (branch in ["siege"] and next_stage == 1)
 		if implemented and ClockworkModels.available(TurretEvolution.model_key(turret_type, branch, next_stage)):
 			result.append(branch)
 	return result
@@ -565,3 +572,24 @@ func _tick_gunblade_burst(delta: float) -> void:
 		gun_burst_left -= 1
 		gun_burst_clock += .065
 		cooldown = gun_stats.cooldown_seconds
+
+## Additional held blades reuse the authored arm, hand, hilt and prism geometry.
+func _build_saber_arms() -> void:
+	saber_angles.assign([0.0])
+	if progression.evolution_branch != "saber" or progression.evolution_stage < 2:
+		return
+	var count := progression.evolution_stage
+	var parts: Array[Node3D] = []
+	for part_name: String in ["Ceramic_Arm", "Ceramic_Hand", "Sword_Grip", "Sword_Guard", "Prism_Blade"]:
+		var part := model.find_child(part_name, true, false) as Node3D
+		if part:
+			parts.append(part)
+	for index in range(1, count):
+		var angle := TAU * float(index) / float(count)
+		saber_angles.append(angle)
+		var arm := Node3D.new()
+		arm.name = "SaberArm%d" % index
+		aim.add_child(arm)
+		arm.rotation.y = angle
+		for part in parts:
+			arm.add_child(part.duplicate())

@@ -135,6 +135,6 @@ static func description(branch: String, stage: int) -> String:
 		"repeater_bow": return "Fires a quick burst of %d piercing arrows." % [2, 3, 5][stage - 1]
 		"greatbow": return "Heavy arrows pierce %d enemies and knock them back." % [4, 6, 9][stage - 1]
 		"gunblade": return ["Sweeps a blade and fires when its barrel aligns with an enemy.", "Sweeps a stronger blade and fires two-shot bursts along its rotation.", "Three-shot piercing bursts accompany a longer, faster blade sweep."][stage - 1]
-		"saber": return "A longer, faster energy-blade sweep."
+		"saber": return ["A longer, faster energy-blade sweep.", "Two opposing held blades sweep both sides of the turret.", "Three held energy blades sweep evenly around the turret."][stage - 1]
 		"siege": return "Slow, heavy shells explode over a large area and push enemies back."
 	return ""

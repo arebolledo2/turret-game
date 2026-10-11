@@ -127,7 +127,8 @@ static func _actor_dps(actor: TurretActor) -> float:
 	var branch := actor.progression.evolution_branch
 	var stage := actor.progression.evolution_stage
 	if actor.turret_type == "melee":
-		rate = minf(stats.rotation_rate / 360.0, 1.0 / maxf(.01, stats.rehit_delay))
+		var blades := stage if branch == "saber" else 1
+		rate = minf(stats.rotation_rate * blades / 360.0, 1.0 / maxf(.01, stats.rehit_delay))
 	elif branch == "repeater_bow":
 		var arrows: int = [2, 3, 5][stage - 1]
 		rate = float(arrows) / (stats.cooldown_seconds + .09 * (arrows - 1))

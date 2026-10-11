@@ -35,7 +35,7 @@ Branch: `feature/turret-evolution-roster`.
 ## Current state
 
 - All ten subject models are imported, with builders, frozen audits and native close previews. Original Gunblade is authored independently; arrow and bowling-ball projectile models are imported and used in combat.
-- Machine Gun, Scattershot, Saber, Gunblade and Siege are available level-5 choices. Gatling and Crossfire are available at level 10; Cyclone Gatling and Omnifire attacks are available at level 15. Gunblade progresses through Repeater Blade and Stormblade at levels 10/15 with two-/three-shot bursts and final-stage piercing. Other milestones on those branches remain pending.
+- Machine Gun, Scattershot, Saber, Gunblade and Siege are available level-5 choices. Gatling and Crossfire are available at level 10; Cyclone Gatling and Omnifire attacks are available at level 15. Gunblade progresses through Repeater Blade and Stormblade at levels 10/15 with two-/three-shot bursts and final-stage piercing. Saber now advances through Twin Saber and Orbit Saber, with two/three authored arm-and-blade assemblies and matching sweep directions. Siege later milestones remain pending.
 - Bow, Flamethrower and Bowling are purchasable base turrets. Both branches on each resolve through levels 5/10/15 with distinct attacks: timed arrow bursts / heavy arrows, wide flame / focused burn, heavy rollers / enemy-to-enemy ricochets.
 - Burn attribution, projectile collision size and pool reset, multi-contact sweeps, ricochet residual movement and one-hit-per-enemy behavior have regression coverage.
 - Shop build summaries and purchase previews resolve fresh evolved instance stats without mutating combat caches. Gunblade has separate gun numbers and family badges in detailed inspection.
@@ -44,7 +44,7 @@ Branch: `feature/turret-evolution-roster`.
 ## Outstanding work toward the full objective
 
 - Finish remaining branch mechanics and milestones; do not treat current availability gates as final scope.
-- Distinct visual evolution treatments at 5/10/15. The new-base branches currently reuse the same authored chassis; larger projectiles and attack changes alone do not complete this requirement.
+- Distinct visual evolution treatments at 5/10/15 for the remaining branches. Saber has native-reviewed one/two/three-blade forms. The new-base branches currently reuse the same authored chassis; larger projectiles and attack changes alone do not complete this requirement.
 - Evolved shop portraits, comparison/confirmation polish, controller evolution flow, and pending-choice deployment reminder.
 - Native deterministic showcase covering all ten subjects, their later forms, carried firing, crowded combat, normal gameplay zoom, and pause/death/cleanup behavior.
 - Balance and visual review, then full requirement-by-requirement completion audit.
