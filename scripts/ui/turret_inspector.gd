@@ -10,6 +10,7 @@ var roster_bars: Array[TurretXpBar] = []
 var shown_ids: Array[int] = []
 var art: TextureRect
 var title: Label
+var family_badges: AttackFamilyBadges
 var xp_label: Label
 var xp_bar: TurretXpBar
 var detail: RichTextLabel
@@ -47,6 +48,8 @@ func _ready() -> void:
 	title.size_flags_horizontal = SIZE_EXPAND_FILL
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	header.add_child(title)
+	family_badges = AttackFamilyBadges.new()
+	column.add_child(family_badges)
 	xp_label = Label.new()
 	xp_label.add_theme_font_size_override("font_size", 25)
 	column.add_child(xp_label)
@@ -115,6 +118,7 @@ func _show_selected() -> void:
 			break
 	if not turret:
 		title.text = "No turrets deployed"
+		family_badges.show_turret("")
 		art.texture = null
 		xp_label.text = "Buy a turret in Offers to start your squad."
 		detail.text = ""
@@ -128,6 +132,7 @@ func _show_selected() -> void:
 		return
 	detail_key = key
 	art.texture = ShopArt.turret(turret.turret_type)
+	family_badges.show_turret(turret.turret_type)
 	title.text = "%s #%d\nLEVEL %d" % [ArenaShop.offer_name(ShopOffer.new("turret", turret.turret_type, 0)), selected_id, growth.level]
 	xp_label.text = "LEVEL %d  →  LEVEL %d" % [growth.level, growth.level + 1]
 	xp_bar.show_progress(growth.level, growth.xp)

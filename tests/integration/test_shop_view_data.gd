@@ -19,6 +19,20 @@ func _offer(kind: String, id: String) -> ShopOffer:
 func _same(a: float, b: float) -> bool:
 	return absf(a - b) < .0001
 
+func test_offer_badges_show_overlapping_item_families_and_clear_for_items() -> void:
+	var card := OfferCard.new()
+	add_child_autofree(card)
+	card.setup(_offer("turret", "plasma"), 1.0, true)
+	assert_eq(card.family_badges.get_child_count(), 2)
+	assert_eq(card.family_badges.get_child(0).label.text, "Projectile")
+	assert_eq(card.family_badges.get_child(1).label.text, "AoE")
+	card.setup(_offer("turret", "melee"), 1.0, true)
+	assert_eq(card.family_badges.get_child_count(), 1)
+	assert_eq(card.family_badges.get_child(0).label.text, "Kinetic")
+	card.setup(_offer("item", "dense_rounds"), 1.0, true)
+	assert_false(card.family_badges.visible)
+	assert_eq(card.family_badges.get_child_count(), 0)
+
 func test_build_data_lists_the_starting_turret_and_player_stats() -> void:
 	var data := ShopViewData.build_data(world)
 	assert_gt(data["turrets"].size(), 0)

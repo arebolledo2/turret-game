@@ -7,6 +7,7 @@ var icon_rect: TextureRect
 var name_label: Label
 var desc_label: Label
 var cost_label: Label
+var family_badges: AttackFamilyBadges
 var shown_key: String = ""
 var compact: bool = false
 var content_margin: MarginContainer
@@ -44,6 +45,9 @@ func _init() -> void:
 	column.add_child(icon_rect)
 	name_label = _label(column, 30, UiPalette.INK)
 	name_label.custom_minimum_size.y = 76
+	family_badges = AttackFamilyBadges.new()
+	family_badges.visible = false
+	column.add_child(family_badges)
 	desc_label = _label(column, 23, Color("bfd9d5"))
 	desc_label.custom_minimum_size.y = 130
 	cost_label = _label(column, 34, UiPalette.SCRAP)
@@ -85,6 +89,7 @@ func setup(offer: ShopOffer, damage_mult: float, affordable: bool) -> void:
 	(get_theme_stylebox("normal") as StyleBoxFlat).border_color = accents[clampi(rarity, 0, 4)]
 	icon_rect.texture = ShopArt.turret(offer.asset_id) if offer.kind == "turret" else ShopArt.item(offer.asset_id)
 	name_label.text = ArenaShop.offer_name(offer)
+	family_badges.show_turret(offer.asset_id if offer.kind == "turret" else "")
 	desc_label.text = ArenaShop.offer_description(offer)
 	tooltip_text = name_label.text + "\n" + desc_label.text
 	cost_label.text = "INSTALLED" if offer.sold else "%d scrap" % offer.price

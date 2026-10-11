@@ -25,3 +25,5 @@ The full-screen Shop has **Offers** and **Turrets** tabs. Q/E or controller LB/R
 Before Shop, a short wave-end sequence shows collected salvage flying toward assigned turrets, filling XP bars and celebrating level gains with damage comparisons. The recap waits for A/Space/Continue, which can also skip the animation without forfeiting rewards; Reduced Motion keeps the count-up but removes flights and pulses.
 
 XP presentation uses a shared high-contrast `TurretXpBar`: large meters in the salvage recap and selected turret details, plus compact meters on every Turrets roster button. Current/next level labels lead; exact XP totals remain available in detailed inspection.
+
+Turret offer cards and the Turrets inspector show icon-and-text attack-family badges (Projectile, AoE, Instant, Kinetic). `AttackFamilyBadges` reads `TurretRegistry.get_attack_families`, the same overlapping families used for item eligibility. Item cards keep their effect descriptions without legacy category tags.
