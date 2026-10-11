@@ -87,6 +87,7 @@ func acquire_shot(origin: Vector3, heading: Vector3, spec: CombatShot3D) -> void
 			custom_visual = ClockworkModels.instantiate(shot.visual_key)
 			add_child(custom_visual)
 			custom_key = shot.visual_key
+		custom_visual.scale = Vector3.ONE * shot.visual_scale
 		custom_visual.rotation = Vector3(0, atan2(-direction.x, -direction.z), 0)
 		custom_visual.visible = true
 	visual.visible = not (custom_visual and custom_visual.visible)

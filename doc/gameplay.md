@@ -164,3 +164,5 @@ Approaching a deployed turret within pickup distance reveals its resolved attack
 Bow, Flamethrower and Bowling are shop base types. Bow fires authored arrows; Flamethrower deals cone damage with attributed burn; Bowling uses rolling, piercing balls with knockback.
 
 Implemented first evolution choices include Machine Gun, Scattershot, Saber, Siege Cannon and Gunblade. Gunblade retains melee ownership and XP; its kinetic blade sweeps continuously while its projectile gun fires along the rotating barrel when aligned with an enemy. Each attack resolves its own item family bonuses. The Turrets tab shows separate gun stats. Gatling and Crossfire are available as second stages; other later forms remain under development.
+
+Bow now supports both branches through levels 5/10/15: Repeater Bow / Volley Ballista / Arrowstorm fire timed 2/3/5-arrow bursts; Greatbow / Harpoon Ballista / Titan Bow fire progressively larger arrows with 3/5/8 extra pierces and knockback. Burst shots retain their firing snapshot and attribution, and pending bursts cancel when combat ends. Distinct chassis treatments for these later forms still need visual polish.

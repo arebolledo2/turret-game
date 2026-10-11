@@ -160,3 +160,51 @@ func test_gunblade_sweeps_at_blade_tip_and_shoots_along_bore() -> void:
 	assert_eq(projectile.shot.attack_families, ["projectile"])
 	turret._fire_gunblade()
 	assert_eq(world.projectiles.size(), 1, "Gun respects its cooldown")
+
+func test_bow_branches_consume_all_three_milestones_and_change_attacks() -> void:
+	for branch: String in ["repeater_bow", "greatbow"]:
+		var turret := world.add_turret(Vector3.ZERO, "bow")
+		turret.set_physics_process(false)
+		var xp := 0
+		for level in range(1, 15):
+			xp += TurretProgression.cost_to_next(level)
+		turret.progression.award(xp)
+		var last_damage := 0.0
+		for stage in range(1, 4):
+			assert_true(turret.evolve(branch))
+			assert_eq(turret.progression.evolution_stage, stage)
+			var stats := turret._current_view(0)
+			assert_gt(stats.damage, last_damage)
+			last_damage = stats.damage
+			if branch == "greatbow":
+				var shot := turret._new_shot(stats)
+				assert_gt(shot.visual_scale, 1.0)
+				assert_gte(shot.pierce, 3)
+				assert_gt(shot.knockback, 0.0)
+		assert_true(turret.available_evolutions().is_empty())
+		assert_eq(turret.progression.total_xp, xp)
+
+func test_repeater_burst_is_timed_attributed_and_cancelled_at_wave_end() -> void:
+	var turret := world.add_turret(Vector3.ZERO, "bow")
+	turret.set_physics_process(false)
+	turret.progression.award(110)
+	assert_true(turret.evolve("repeater_bow"))
+	var enemy := world.spawn_enemy(Vector3(0, 0, -3))
+	enemy.set_physics_process(false)
+	turret.target = enemy
+	var stats := turret._current_view(0)
+	turret._fire_projectile(stats)
+	assert_eq(world.projectiles.size(), 1)
+	assert_false(turret.loaded_arrow.visible)
+	turret._tick_bow_burst(.04, stats)
+	assert_eq(world.projectiles.size(), 1)
+	turret._tick_bow_burst(.06, stats)
+	assert_eq(world.projectiles.size(), 2)
+	for projectile in world.projectiles:
+		assert_eq(projectile.shot.visual_key, "arrow")
+		assert_eq(projectile.shot.source_id, turret.turret_id)
+		assert_eq(projectile.shot.attack_families, ["projectile"])
+	turret._fire_projectile(stats)
+	assert_eq(turret.bow_burst_left, 1)
+	turret._physics_process(.1) # Shop state cancels a pending burst.
+	assert_eq(turret.bow_burst_left, 0)

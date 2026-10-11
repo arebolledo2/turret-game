@@ -6,6 +6,7 @@ var damage: float = 0.0
 var speed: float = 0.0
 var radius: float = .075
 var visual_key: String = ""
+var visual_scale: float = 1.0
 var lifetime: float = 3.0
 var splash_radius: float = 0.0
 var knockback: float = 0.0
@@ -36,6 +37,7 @@ func copy() -> CombatShot3D:
 	shot.speed = speed
 	shot.radius = radius
 	shot.visual_key = visual_key
+	shot.visual_scale = visual_scale
 	shot.lifetime = lifetime
 	shot.splash_radius = splash_radius
 	shot.knockback = knockback

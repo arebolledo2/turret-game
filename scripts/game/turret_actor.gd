@@ -13,6 +13,11 @@ var carried: bool = false:
 		target_clock = 0.0
 		if value:
 			reset_entrench()
+var bow_burst_left := 0
+var bow_burst_clock := 0.0
+var bow_burst_heading := Vector3.FORWARD
+var bow_burst_shot: CombatShot3D
+var loaded_arrow: Node3D
 var cooldown: float = 0.0
 var aim: Node3D
 var model: Node3D
@@ -75,6 +80,8 @@ func _rebuild_model() -> void:
 		barrel_rest = recoil_barrel.position
 	muzzle_rest = muzzle.position
 	spool = 0.0
+	bow_burst_left = 0
+	loaded_arrow = model.find_child("LoadedArrow", true, false) as Node3D
 	aim_rest = aim.position
 	aim_authored_scale = aim.scale
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
@@ -330,6 +337,7 @@ func _update_range_ring() -> void:
 
 func _physics_process(delta: float) -> void:
 	if not world.is_combat():
+		bow_burst_left = 0
 		return
 	if carried:
 		position = world.player.position + Vector3(0, 1.15, .25)
@@ -339,6 +347,11 @@ func _physics_process(delta: float) -> void:
 	cooldown = maxf(0.0, cooldown - delta)
 	aim.position = aim.position.lerp(aim_rest, minf(delta * 16.0, 1.0))
 	var stats := _current_view(delta)
+	if loaded_arrow:
+		loaded_arrow.visible = cooldown <= stats.cooldown_seconds * .35 and bow_burst_left == 0
+	if bow_burst_left > 0:
+		_tick_bow_burst(delta, stats)
+		return
 	var range_metres := stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0)
 	var fire_mode := TurretRegistry.get_fire_mode(turret_type)
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
@@ -377,6 +390,9 @@ func _new_shot(stats: TurretStats) -> CombatShot3D:
 	var shot := CombatShot3D.from_stats(stats.values, TurretRegistry.get_damage_type(turret_type))
 	if turret_type == "bow":
 		shot.visual_key = "arrow"
+		if progression.evolution_branch == "greatbow":
+			shot.visual_scale = 1.0 + .3 * progression.evolution_stage
+			shot.radius *= shot.visual_scale
 	elif turret_type == "bowling":
 		shot.visual_key = "bowling_ball"
 		shot.radius = .24
@@ -405,7 +421,13 @@ func _fire_chain(stats: TurretStats) -> void:
 
 func _fire_projectile(stats: TurretStats) -> void:
 	var heading := WorldGeometry.planar(target.position - muzzle.global_position).normalized()
-	if progression.evolution_branch == "scatter" and progression.evolution_stage >= 2:
+	if progression.evolution_branch == "repeater_bow":
+		bow_burst_left = [2, 3, 5][progression.evolution_stage - 1]
+		bow_burst_heading = heading
+		bow_burst_shot = _new_shot(stats)
+		bow_burst_clock = 0.0
+		_tick_bow_burst(0.0, stats)
+	elif progression.evolution_branch == "scatter" and progression.evolution_stage >= 2:
 		for marker: String in ["Muzzle", "Muzzle_1", "Muzzle_2", "Muzzle_3"]:
 			var exit := model.find_child(marker, true, false) as Node3D
 			if exit:
@@ -430,7 +452,7 @@ func available_evolutions() -> Array[String]:
 		return result
 	for branch in progression.evolution_options(turret_type):
 		var next_stage := progression.evolution_stage + 1
-		var implemented := (branch in ["machine_gun", "scatter"] and next_stage <= 2) or (branch in ["saber", "siege", "gunblade"] and next_stage == 1)
+		var implemented := branch in ["repeater_bow", "greatbow"] or (branch in ["machine_gun", "scatter"] and next_stage <= 2) or (branch in ["saber", "siege", "gunblade"] and next_stage == 1)
 		if implemented and ClockworkModels.available(TurretEvolution.model_key(turret_type, branch, next_stage)):
 			result.append(branch)
 	return result
@@ -495,3 +517,14 @@ func _fire_gunblade() -> void:
 		world.fire_direction(muzzle.global_position, heading, shot)
 		cooldown = gun_stats.cooldown_seconds
 		return
+
+func _tick_bow_burst(delta: float, stats: TurretStats) -> void:
+	aim.rotation.y = atan2(-bow_burst_heading.x, -bow_burst_heading.z)
+	bow_burst_clock -= delta
+	while bow_burst_left > 0 and bow_burst_clock <= 0.0:
+		world.fire_direction(muzzle.global_position, bow_burst_heading, bow_burst_shot)
+		bow_burst_left -= 1
+		bow_burst_clock += .09
+		cooldown = stats.cooldown_seconds
+	if loaded_arrow:
+		loaded_arrow.visible = false

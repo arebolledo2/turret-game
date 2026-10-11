@@ -88,6 +88,7 @@ func test_projectile_models_reset_between_arrow_ball_and_energy_shots() -> void:
 	var spec := CombatShot3D.new()
 	spec.speed = 1.0
 	spec.visual_key = "bowling_ball"
+	spec.visual_scale = 1.9
 	spec.radius = .24
 	projectile.acquire_shot(Vector3(0, .24, 0), Vector3.FORWARD, spec)
 	assert_not_null(projectile.custom_visual)
@@ -97,9 +98,11 @@ func test_projectile_models_reset_between_arrow_ball_and_energy_shots() -> void:
 	assert_false(projectile.custom_visual.basis.is_equal_approx(initial_basis), "Ball rolls with travel")
 	projectile.release()
 	spec.visual_key = "arrow"
+	spec.visual_scale = 1.0
 	spec.radius = .075
 	projectile.acquire_shot(Vector3(0, .5, 0), Vector3.RIGHT, spec)
 	assert_eq(projectile.custom_key, "arrow")
+	assert_true(projectile.custom_visual.scale.is_equal_approx(Vector3.ONE), "Pooled model scale resets")
 	assert_true((-projectile.custom_visual.basis.z).is_equal_approx(Vector3.RIGHT), "Arrow points along flight")
 	assert_almost_eq((projectile.sweep.shape as SphereShape3D).radius, .075, .0001)
 	assert_false(projectile.orb.visible)
