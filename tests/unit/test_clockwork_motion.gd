@@ -11,15 +11,21 @@ func _rig() -> Node3D:
 	add_child_autofree(model)
 	return model
 
-func test_reduced_motion_restores_authored_pose_and_motion_resumes() -> void:
+func test_reduced_motion_slows_poses_and_motion_resumes_at_full_speed() -> void:
 	var model := _rig()
 	var motion := ClockworkMotion.new(model, "hero")
 	var leg := model.get_node("Leg_L") as Node3D
 	var initial := leg.transform
 	motion.tick(.1, 2.0, false)
 	assert_false(leg.transform.is_equal_approx(initial), "Moving hero poses a leg")
+	var full_angle := leg.transform.basis.get_euler().length()
+	var slow_model := _rig()
+	var slow_motion := ClockworkMotion.new(slow_model, "hero")
+	var slow_leg := slow_model.get_node("Leg_L") as Node3D
+	slow_motion.tick(.1, 2.0, true)
+	assert_false(slow_leg.transform.is_equal_approx(initial), "Reduced motion still walks")
+	assert_lt(slow_leg.transform.basis.get_euler().length(), full_angle, "Reduced motion walks at a slower cadence")
 	motion.tick(.1, 2.0, true)
-	assert_true(leg.transform.is_equal_approx(initial), "Reduced motion restores the authored basis and position")
 	motion.tick(.1, 2.0, false)
 	assert_false(leg.transform.is_equal_approx(initial), "Leaving reduced motion resumes posing")
 

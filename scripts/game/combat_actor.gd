@@ -282,16 +282,15 @@ func _animate(delta: float, direction: Vector3, reduced_motion: bool) -> void:
 		visual.position.y = 0.0
 		clockwork_motion.tick(delta, velocity.length(), reduced_motion, not is_enemy and is_instance_valid(world.carried_turret))
 		return
-	gait += velocity.length() * delta * 10.0
-	if not reduced_motion or visual.position.y != 0.0:
-		visual.position.y = 0.0 if reduced_motion else sin(gait * 2.0) * 0.025
+	gait += velocity.length() * delta * 10.0 * (GameConstants.REDUCED_MOTION_SPEED if reduced_motion else 1.0)
+	visual.position.y = sin(gait * 2.0) * 0.025
 	# Leg posing is cosmetic: pose each enemy every other physics tick, staggered by instance.
 	var pose_legs := not is_enemy or (Engine.get_physics_frames() + get_instance_id()) % 2 == 0
 	for index in range(legs.size() if pose_legs else 0):
 		var leg: Node3D = legs[index]
 		if leg:
 			var phase := gait + float(index % 2) * PI
-			leg.rotation = Vector3(leg.rotation.x, 0.0, 0.0) if reduced_motion else Vector3(leg.rotation.x, sin(phase) * 0.24, cos(phase) * 0.12)
+			leg.rotation = Vector3(leg.rotation.x, sin(phase) * 0.24, cos(phase) * 0.12)
 
 ## Enemy touch damage to the hero (swept along this tick's step) and, in core mode, to the core on a timer.
 func _apply_contact_damage(delta: float, previous_position: Vector3) -> void:

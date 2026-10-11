@@ -431,7 +431,7 @@ func _update_burns() -> void:
 			flame.mesh = quad
 			var material := ShaderMaterial.new()
 			material.shader = preload("res://assets/shaders/burning_actor.gdshader")
-			material.set_shader_parameter("motion_speed", 0.0 if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else 1.0)
+			material.set_shader_parameter("motion_speed", GameConstants.REDUCED_MOTION_SPEED if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else 1.0)
 			flame.material_override = material
 			flame.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			add_child(flame)
@@ -453,7 +453,7 @@ func _update_shocks() -> void:
 	for actor in shock_visuals.keys():
 		if not is_instance_valid(actor) or actor.dead or not _is_shocked(actor):
 			_release_shock_visual(actor)
-	var motion := 0.0 if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else 1.0
+	var motion := GameConstants.REDUCED_MOTION_SPEED if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else 1.0
 	for actor in world.enemies:
 		if not is_instance_valid(actor) or actor.dead or not _is_shocked(actor):
 			continue
@@ -551,7 +551,7 @@ func show_flame(origin: Vector3, heading: Vector3, reach: float, half_angle: flo
 			flame_ribbons.append(ribbon)
 			flame_ages.append(0.0)
 		var ribbon := flame_ribbons[index]
-		(ribbon.material_override as ShaderMaterial).set_shader_parameter("motion_speed", 0.0 if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else 1.0)
+		(ribbon.material_override as ShaderMaterial).set_shader_parameter("motion_speed", GameConstants.REDUCED_MOTION_SPEED if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else 1.0)
 		ribbon.position = (origin + end) * .5
 		ribbon.rotation.y = atan2(-flat.x, -flat.z)
 		ribbon.scale = Vector3(clampf(reach * .35, .4, 1.8), 1.0, flat.length())

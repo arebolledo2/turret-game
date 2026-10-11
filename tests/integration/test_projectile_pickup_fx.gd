@@ -87,14 +87,14 @@ func test_scrap_pull_accelerates_while_magnetised_and_resets_when_out_of_range()
 	pickup._physics_process(.02)
 	assert_eq(pickup.pulled_for, 0.0)
 
-func test_reduced_motion_pickup_stays_still_and_collect_bursts_once() -> void:
+func test_reduced_motion_pickup_spins_slowly_and_collect_bursts_once() -> void:
 	SettingsService.set_reduced_motion(true, false)
 	var pickup := ScrapPickup.new()
 	pickup.world = world
 	pickup.position = world.player.position + Vector3(5, 0, 0)
 	world.pickup_root.add_child(pickup)
 	pickup._physics_process(.5)
-	assert_eq(pickup.visual.rotation.y, 0.0)
+	assert_almost_eq(pickup.visual.rotation.y, .5 * 2.0 * GameConstants.REDUCED_MOTION_SPEED, .001)
 	assert_eq(pickup.visual.position.y, ScrapPickup.REST_HEIGHT)
 	var before := world.effects.bursts.size()
 	pickup.collect()

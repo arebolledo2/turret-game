@@ -4,7 +4,7 @@ shader_type spatial;
 render_mode unshaded, blend_add, cull_disabled, depth_draw_never, shadows_disabled, fog_disabled;
 
 uniform float visual_time = 0.0;
-uniform float motion_speed = 1.0; // 0 freezes the crackle for reduced motion
+uniform float motion_speed = 1.0; // slowed for reduced motion
 uniform float seed = 0.0;
 uniform vec4 core_color : source_color = vec4(1.0);
 uniform vec4 glow_color : source_color = vec4(0.25, 0.75, 1.0, 1.0);

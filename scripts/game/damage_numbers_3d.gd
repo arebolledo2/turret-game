@@ -61,7 +61,7 @@ func advance(delta: float, reduced_motion: bool) -> void:
 		if not label.visible:
 			continue
 		var t: float = entry.age / LIFETIME
-		label.position = entry.base + Vector3.UP * (0.0 if reduced_motion else .65 * t)
+		label.position = entry.base + Vector3.UP * (GameConstants.REDUCED_MOTION_SPEED if reduced_motion else 1.0) * .65 * t
 		label.modulate.a = 1.0 - smoothstep(.55, 1.0, t)
 		var pop := 1.0 if reduced_motion else 1.0 + .18 * sin(minf(1.0, t * 5.0) * PI)
 		label.scale = Vector3.ONE * pop

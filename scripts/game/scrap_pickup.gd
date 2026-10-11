@@ -62,7 +62,9 @@ func _physics_process(delta: float) -> void:
 		visual.rotation.y += delta * (2.0 + minf(pulled_for * 10.0, 8.0))
 		visual.position.y = REST_HEIGHT + sin(age * 4.0) * .05 + sin(pop * PI) * .28 * (1.0 - pop)
 	else:
+		# Static pose and no pop-in; the slow spin keeps the pickup readable as a live item.
 		visual.position.y = REST_HEIGHT
+		visual.rotation.y += delta * 2.0 * GameConstants.REDUCED_MOTION_SPEED
 	var distance := WorldGeometry.planar(world.player.position - position).length()
 	if distance < PlayerStatsService.get_pickup_radius() * WorldGeometry.METRES_PER_PIXEL + .45:
 		pulled_for += delta

@@ -11,7 +11,7 @@ uniform vec2 plane_size = vec2(6.5); // the mesh size (zone plus margin)
 uniform vec4 base_color : source_color = vec4(0.2, 0.4, 0.6, 1.0);
 uniform vec4 accent_color : source_color = vec4(0.6, 0.85, 1.0, 1.0);
 uniform float fill_alpha = 0.3;
-uniform float motion = 1.0; // 0 freezes every animation (reduced motion)
+uniform float motion = 1.0; // animation speed multiplier (slowed for reduced motion)
 
 float hash(vec2 p) {
 	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);

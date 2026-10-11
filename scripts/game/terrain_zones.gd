@@ -35,7 +35,7 @@ var debug_root: Node3D
 var debug_shown: bool = false
 ## True while the readable look (patterned ground, labels, hints) is built; follows the `zone_readability` flag.
 var readable: bool = false
-var motion_on: bool = true
+var motion_speed: float = 1.0
 var labels: Array[Label3D] = []
 var ground_materials: Array[ShaderMaterial] = []
 
@@ -143,7 +143,7 @@ func build_visuals(parent: Node3D) -> Node3D:
 	ground_materials.clear()
 	debug_root = null
 	debug_shown = false
-	motion_on = _motion_wanted()
+	motion_speed = _motion_speed()
 	root = Node3D.new()
 	root.name = "Terrain"
 	parent.add_child(root)
@@ -164,15 +164,15 @@ func update_frame(hero_position: Vector3, show_debug: bool) -> void:
 		build_visuals(parent_node)
 	if readable:
 		_update_labels(hero_position)
-		var motion := _motion_wanted()
-		if motion != motion_on:
-			motion_on = motion
+		var motion := _motion_speed()
+		if not is_equal_approx(motion, motion_speed):
+			motion_speed = motion
 			for material in ground_materials:
-				material.set_shader_parameter("motion", 1.0 if motion else 0.0)
+				material.set_shader_parameter("motion", motion)
 	update_debug(show_debug)
 
-static func _motion_wanted() -> bool:
-	return not FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION)
+static func _motion_speed() -> float:
+	return GameConstants.REDUCED_MOTION_SPEED if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else 1.0
 
 func _update_labels(hero_position: Vector3) -> void:
 	var fade_span := maxf(GameConstants.ZONE_LABEL_FADE_RANGE - GameConstants.ZONE_LABEL_FULL_RANGE, .1)
@@ -230,7 +230,7 @@ func _ground_material(zone: TerrainZone, plane_size: Vector2) -> ShaderMaterial:
 	material.set_shader_parameter("base_color", style["base"])
 	material.set_shader_parameter("accent_color", style["accent"])
 	material.set_shader_parameter("fill_alpha", float(style["fill"]))
-	material.set_shader_parameter("motion", 1.0 if motion_on else 0.0)
+	material.set_shader_parameter("motion", motion_speed)
 	ground_materials.append(material)
 	return material
 

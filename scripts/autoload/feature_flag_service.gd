@@ -50,7 +50,7 @@ const REJECTED: String = "rejected"
 const FLAG_DEFINITIONS: Dictionary = {
 	REDUCED_MOTION: {
 		"name": "Reduced Motion", "default": false, "scope": SCOPE_USER, "live_safe": true, "phase": 0,
-		"description": "Removes bobbing, recoil and hit blinking.",
+		"description": "Removes flashing, pulsing and recoil; walk cycles, rotors and flames slow to 20%.",
 	},
 	DEV_PANEL: {
 		"name": "Dev Panel", "default": true, "scope": SCOPE_DEV, "live_safe": true, "phase": 0,

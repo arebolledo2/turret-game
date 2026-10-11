@@ -47,7 +47,8 @@ func test_number_pool_merges_rapid_hits_and_respects_reduced_motion() -> void:
 	assert_eq(numbers.entries[0].amount, 5.0)
 	var at: Vector3 = numbers.entries[0].label.position
 	numbers.advance(.3, true)
-	assert_eq(numbers.entries[0].label.position, at)
+	assert_almost_eq(numbers.entries[0].label.position.y - at.y, .65 * (.3 / DamageNumbers3D.LIFETIME) * GameConstants.REDUCED_MOTION_SPEED, .001)
+	assert_eq(numbers.entries[0].label.scale, Vector3.ONE)
 	numbers.show_damage(world.player, 2, false)
 	assert_eq(numbers.entries.size(), 2)
 	for i in range(100):

@@ -258,12 +258,12 @@ func test_props_fit_inside_their_zones() -> void:
 		var prop := holder.get_child(1) as Node3D
 		assert_between(prop.scale.x, 1.0, GameConstants.ZONE_PROP_MAX_SCALE)
 
-func test_reduced_motion_freezes_the_ground() -> void:
+func test_reduced_motion_slows_the_ground() -> void:
 	world = await _world()
 	assert_eq(float(world.terrain.ground_materials[0].get_shader_parameter("motion")), 1.0)
 	FeatureFlagService.set_enabled(FeatureFlagService.REDUCED_MOTION, true)
 	await wait_physics_frames(2)
-	assert_eq(float(world.terrain.ground_materials[0].get_shader_parameter("motion")), 0.0)
+	assert_eq(float(world.terrain.ground_materials[0].get_shader_parameter("motion")), GameConstants.REDUCED_MOTION_SPEED)
 
 func test_turret_on_high_ground_shows_a_badge() -> void:
 	world = await _world()

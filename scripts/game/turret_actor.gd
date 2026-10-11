@@ -543,8 +543,9 @@ func _tick_mechanisms(delta: float, tracking: bool) -> void:
 	if progression.evolution_branch == "machine_gun" and progression.evolution_stage >= 2:
 		var ceiling := 1.5 if progression.evolution_stage >= 3 else 1.0
 		spool = move_toward(spool, ceiling if tracking else 0.0, delta * (ceiling if tracking else 2.0))
-		if rotor and not FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
-			rotor.rotate_object_local(Vector3.FORWARD, delta * spool * 18.0)
+		if rotor:
+			var rate := GameConstants.REDUCED_MOTION_SPEED if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else 1.0
+			rotor.rotate_object_local(Vector3.FORWARD, delta * spool * 18.0 * rate)
 			muzzle.position = rotor.position + rotor.basis * (muzzle_rest - rotor.position)
 	if recoil_barrel:
 		recoil_barrel.position = recoil_barrel.position.lerp(barrel_rest, minf(1.0, delta * 10.0))

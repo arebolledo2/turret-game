@@ -17,7 +17,6 @@ var recoil: float = 0.0
 var phase: float = 0.0
 var hover_phase: float = 0.0
 var stagger: int = 0
-var was_reduced: bool = false
 
 func _init(model: Node3D, asset_kind: String) -> void:
 	kind = asset_kind
@@ -85,15 +84,11 @@ func reset() -> void:
 		node.transform = rest[node]
 
 func tick(delta: float, speed: float, reduced: bool, carrying: bool = false) -> void:
-	phase += speed * delta * 6.0
-	hover_phase += delta * 2.5
+	# Reduced motion keeps gentle, slowed cycles; recoil is suppressed at the source (see fire).
+	var rate := GameConstants.REDUCED_MOTION_SPEED if reduced else 1.0
+	phase += speed * delta * 6.0 * rate
+	hover_phase += delta * 2.5 * rate
 	recoil = maxf(0.0, recoil - delta * .3)
-	if reduced:
-		if not was_reduced:
-			reset()
-		was_reduced = true
-		return
-	was_reduced = false
 	# Hero is immediate; enemy cosmetic poses are staggered over two physics ticks.
 	if kind != "hero" and (Engine.get_physics_frames() + stagger) % 2 != 0:
 		return
