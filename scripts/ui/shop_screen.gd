@@ -149,6 +149,7 @@ func _ready() -> void:
 	continue_button.custom_minimum_size.x = 310
 	continue_button.pressed.connect(func() -> void: world.begin_next_wave(); refresh())
 	footer.add_child(continue_button)
+	turret_inspector.navigation_exit = continue_button
 	status = _label(column, "", 20, UiPalette.MUTED)
 	visible = false
 
@@ -199,6 +200,11 @@ func refresh() -> void:
 	offers_content.visible = active_tab == 0
 	turret_inspector.visible = active_tab == 1
 	reroll_button.visible = active_tab == 0
+	var ready_turrets := 0
+	for turret in world.turrets:
+		if not turret.available_evolutions().is_empty():
+			ready_turrets += 1
+	tabs[1].text = "TURRETS" if ready_turrets == 0 else "TURRETS - %d READY" % ready_turrets
 	for i in tabs.size():
 		tabs[i].set_pressed_no_signal(i == active_tab)
 	if active_tab == 1:
@@ -449,7 +455,7 @@ func _refresh_focus() -> void:
 		for i in roster.size():
 			roster[i].focus_neighbor_top = roster[i].get_path_to(roster[i - 1] if i > 0 else tabs[1])
 			roster[i].focus_neighbor_bottom = roster[i].get_path_to(roster[i + 1] if i + 1 < roster.size() else continue_button)
-			roster[i].focus_neighbor_right = roster[i].get_path_to(continue_button)
+		turret_inspector.refresh_navigation()
 		for button in row:
 			button.focus_neighbor_top = button.get_path_to(roster[-1] if not roster.is_empty() else tabs[1])
 		return

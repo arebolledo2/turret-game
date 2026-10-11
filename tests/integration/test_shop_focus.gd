@@ -128,3 +128,43 @@ func test_installed_items_remain_reachable_after_every_offer_is_sold() -> void:
 	assert_same(get_viewport().gui_get_focus_owner(), hud.owned_buttons[0])
 	await press_direction(JOY_BUTTON_DPAD_DOWN)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
+
+func test_controller_reaches_evolutions_and_resolves_all_earned_stages() -> void:
+	world.session.state.turret_progression_enabled = true
+	var turret := world.turrets[0]
+	turret.progression.award(1500)
+	hud.switch_tab(1)
+	assert_eq(hud.tabs[1].text, "TURRETS - 1 READY")
+	var inspector := hud.turret_inspector
+	assert_string_contains(inspector.buttons[0].text, "EVOLUTION READY")
+	inspector.buttons[0].grab_focus()
+	await press_direction(JOY_BUTTON_DPAD_RIGHT)
+	assert_same(get_viewport().gui_get_focus_owner(), inspector.evolution_choices.get_child(0))
+	await press_direction(JOY_BUTTON_DPAD_DOWN)
+	assert_same(get_viewport().gui_get_focus_owner(), inspector.evolution_choices.get_child(1))
+	await press_direction(JOY_BUTTON_DPAD_LEFT)
+	assert_same(get_viewport().gui_get_focus_owner(), inspector.buttons[0])
+	for stage in range(1, 4):
+		await press_direction(JOY_BUTTON_DPAD_RIGHT)
+		await press_direction(JOY_BUTTON_A)
+		assert_eq(turret.progression.evolution_stage, stage)
+		assert_same(get_viewport().gui_get_focus_owner(), inspector.buttons[0])
+		assert_same(inspector.art.texture, ShopArt.turret("normal", "machine_gun", stage))
+	assert_false("EVOLUTION READY" in inspector.buttons[0].text)
+	await press_direction(JOY_BUTTON_DPAD_RIGHT)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
+
+func test_selecting_another_turret_rebuilds_evolution_focus_links() -> void:
+	world.session.state.turret_progression_enabled = true
+	world.turrets[0].progression.award(1500)
+	world.add_turret(Vector3(2, 0, 2), "melee")
+	hud.switch_tab(1)
+	var inspector := hud.turret_inspector
+	inspector.buttons[0].grab_focus()
+	await press_direction(JOY_BUTTON_DPAD_DOWN)
+	assert_same(get_viewport().gui_get_focus_owner(), inspector.buttons[1])
+	await press_direction(JOY_BUTTON_DPAD_RIGHT)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
+	inspector.buttons[0].grab_focus()
+	await press_direction(JOY_BUTTON_DPAD_RIGHT)
+	assert_same(get_viewport().gui_get_focus_owner(), inspector.evolution_choices.get_child(0))

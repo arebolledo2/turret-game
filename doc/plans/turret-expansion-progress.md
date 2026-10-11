@@ -59,3 +59,7 @@ Branch: `feature/turret-evolution-roster`.
 ### Shop portrait pass
 
 Rendered 41 transparent portraits from the actual native actor assemblies: eight base turrets and 33 implemented evolution forms. The individual turret inspector selects its current branch and stage; Bow, Flamethrower and Bowling offers now have authored-model portraits. The renderer uses a front three-quarter camera so the muzzle, blade and bowling ramp remain visible. Reviewed a 12-form contact sheet in `.test-results/shop-portraits-review.png`; remaining forms sharing the same assemblies use the same framing. Full suite: 972 passing tests. This does not replace the outstanding crowded-combat and controller validation.
+
+### Controller evolution navigation
+
+Fixed ShopScreen overwriting the selected turret’s rightward link to evolution choices. Controller D-pad navigation now enters and traverses the current branch buttons, returns left to the selected turret, and exits right/down to Deploy. Selecting a different turret rebuilds links; focused choices scroll into view. The roster marks evolution-ready turrets and the Turrets tab shows a ready count even from Offers. Integration tests inject D-pad and A events to exercise both choices, all three earned stages in one visit, evolved portraits, and selection changes. Full branch comparison/confirmation and native gameplay review remain outstanding.

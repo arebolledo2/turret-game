@@ -17,6 +17,7 @@ var detail: RichTextLabel
 var detail_key: int = 0
 var evolution_choices: VBoxContainer
 var details_scroll: ScrollContainer
+var navigation_exit: Control
 
 func _ready() -> void:
 	add_theme_constant_override("separation", 40)
@@ -30,6 +31,7 @@ func _ready() -> void:
 	roster_scroll.add_child(roster)
 	var scroll := ScrollContainer.new()
 	details_scroll = scroll
+	scroll.follow_focus = true
 	scroll.size_flags_horizontal = SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	add_child(scroll)
@@ -103,9 +105,12 @@ func refresh() -> void:
 		var turret := world.turrets[i]
 		buttons[i].text = "%s #%d   ·   Lv %d\n" % [turret.display_name(),
 			turret.turret_id, turret.progression.level]
+		if not turret.available_evolutions().is_empty():
+			buttons[i].text += "EVOLUTION READY"
 		roster_bars[i].show_progress(turret.progression.level, turret.progression.xp)
 		buttons[i].set_pressed_no_signal(turret.turret_id == selected_id)
 	_show_selected()
+	refresh_navigation()
 
 func select(id: int) -> void:
 	if id != selected_id:
@@ -198,11 +203,30 @@ func _show_selected() -> void:
 		button.text = "EVOLVE · %s\n%s" % [TurretEvolution.form_name(turret.turret_type, branch, growth.evolution_stage + 1), TurretEvolution.description(branch, growth.evolution_stage + 1)]
 		button.pressed.connect(_evolve_selected.bind(turret, branch))
 		evolution_choices.add_child(button)
-		for roster_button in buttons:
-			if roster_button.button_pressed:
-				roster_button.focus_neighbor_right = roster_button.get_path_to(evolution_choices.get_child(0))
-				button.focus_neighbor_left = button.get_path_to(roster_button)
 	detail.text = "\n".join(lines)
+
+## The selected roster entry owns the path into its current choices. Rebuild on
+## selection as well as shop refresh, so removed evolution buttons never retain focus links.
+func refresh_navigation() -> void:
+	if not is_instance_valid(navigation_exit):
+		return
+	var selected_button: Button
+	for button in buttons:
+		button.focus_neighbor_right = button.get_path_to(navigation_exit)
+		if button.button_pressed:
+			selected_button = button
+	if not selected_button:
+		return
+	var choices := evolution_choices.get_children()
+	if choices.is_empty():
+		return
+	selected_button.focus_neighbor_right = selected_button.get_path_to(choices[0])
+	for i in choices.size():
+		var button := choices[i] as Button
+		button.focus_neighbor_left = button.get_path_to(selected_button)
+		button.focus_neighbor_right = button.get_path_to(navigation_exit)
+		button.focus_neighbor_top = button.get_path_to(choices[i - 1] if i > 0 else selected_button)
+		button.focus_neighbor_bottom = button.get_path_to(choices[i + 1] if i + 1 < choices.size() else navigation_exit)
 
 func _process(delta: float) -> void:
 	if not is_visible_in_tree() or not world.shop.is_open():
