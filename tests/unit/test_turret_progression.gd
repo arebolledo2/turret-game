@@ -44,11 +44,11 @@ func test_thresholds_overflow_and_ordered_milestones() -> void:
 func test_growth_continues_beyond_mastery_without_extra_forms_or_compounding() -> void:
 	var growth := TurretProgression.new()
 	growth.award(896)
-	assert_almost_eq(growth.damage_multiplier(), 1.33, .00001)
+	assert_almost_eq(growth.damage_multiplier(), 1.40, .00001)
 	for step in 35:
 		growth.award(TurretProgression.cost_to_next(growth.level))
 	assert_eq(growth.level, 50)
-	assert_almost_eq(growth.damage_multiplier(), 2.38, .00001)
+	assert_almost_eq(growth.damage_multiplier(), 2.45, .00001)
 	assert_eq(growth.pending_evolutions, [5, 10, 15])
 	var before := growth.snapshot()
 	growth.award(-500)
@@ -99,3 +99,19 @@ func test_purchase_penalty_items_have_linear_floor_and_keep_quadratic_growth() -
 	ModifierService.add_modifiers([Item.create_modifier("turret_penalty_reduction", "add", -1.0)])
 	# 10 * 2 * (1 + .4*4 + .1*16) = 84; the .4 floor cannot remove the quadratic term.
 	assert_eq(EconomyService.calculate_turret_price(10, 0), 84)
+
+func test_levels_reward_distinct_stats_and_milestone_burst() -> void:
+	var growth := TurretProgression.new()
+	growth.level = 3
+	var stats := {"damage": 100.0, "range": 100.0, "fire_rate": 2.0, "rotation_rate": 360.0}
+	growth.apply_stats(stats)
+	assert_almost_eq(stats.damage, 105.0, .001)
+	assert_almost_eq(stats.fire_rate, 2.12, .001)
+	assert_almost_eq(stats.rotation_rate, 381.6, .001)
+	assert_eq(stats.range, 100.0)
+	growth.level = 4
+	assert_almost_eq(float(growth.stat_multipliers().range), 1.05, .001)
+	growth.level = 5
+	assert_almost_eq(growth.damage_multiplier(), 1.10, .001)
+	assert_almost_eq(float(growth.stat_multipliers().speed), 1.10, .001)
+	assert_almost_eq(float(growth.stat_multipliers().range), 1.08, .001)

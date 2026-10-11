@@ -190,7 +190,7 @@ func test_level_damage_is_individual_and_combines_with_items_once() -> void:
 	var base_damage: float = veteran._current_stats(1.0).damage
 	_scrap(0)
 	veteran.progression.award(110)
-	assert_almost_eq(float(veteran._current_stats(1.0).damage), base_damage * 1.09, .0001)
+	assert_almost_eq(float(veteran._current_stats(1.0).damage), base_damage * 1.10, .0001)
 	assert_almost_eq(float(rookie._current_stats(1.0).damage), base_damage, .0001)
 	assert_true(world.dev_panel.progression_text().contains("Lv 5"))
 	assert_true(world.dev_panel.progression_text().contains("pending [5]"))
@@ -214,7 +214,7 @@ func test_shop_exposes_wave_award_individual_levels_and_damage_previews() -> voi
 	assert_true(screen.turret_text.text.contains("%.1f damage" % veteran_damage))
 	var before := ShopViewData.build_data(world)
 	var base: float = before.turrets[0].damage
-	assert_almost_eq(float(before.dps), base * 2.09 * float(before.turrets[0].fire_rate), .001)
+	assert_almost_eq(float(before.dps), base * 2.21 * float(before.turrets[0].fire_rate), .001)
 	var offer := ShopOffer.new("item", "dense_rounds", 1)
 	EconomyService.current_shop_offers.assign([offer])
 	screen._select(0)

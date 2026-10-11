@@ -91,7 +91,7 @@ static func build_data(world: ArenaWorld, extra_turret: String = "") -> Dictiona
 				var growth := actor.progression.snapshot()
 				growth["id"] = actor.turret_id
 				instances.append(growth)
-				damage_units += actor.progression.damage_multiplier() - 1.0
+				damage_units += actor.progression.damage_multiplier() * float(actor.progression.stat_multipliers().speed) - 1.0
 		turrets.back()["instances"] = instances
 		dps += damage_units * float(stats["damage"]) * rate
 	var max_hull := PlayerStatsService.get_player_max_health(float(world.difficulty_config["player_health_mult"]))

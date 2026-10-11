@@ -326,9 +326,11 @@ func _refresh_details() -> void:
 		for growth: Dictionary in instances:
 			var current := turret.duplicate(true)
 			var previous := was.duplicate(true)
-			current["damage"] *= float(growth["damage_multiplier"])
-			if not previous.is_empty():
-				previous["damage"] *= float(growth["damage_multiplier"])
+			for stat_key: String in ["damage", "range", "fire_rate", "rotation_rate"]:
+				var multiplier := float(growth["multipliers"]["speed" if stat_key in ["fire_rate", "rotation_rate"] else stat_key])
+				current[stat_key] *= multiplier
+				if not previous.is_empty():
+					previous[stat_key] *= multiplier
 			var caption := "[b]%s #%d · Lv %d[/b]" % [turret["name"], growth["id"], growth["level"]]
 			caption += "\nXP %d / %d toward Lv %d" % [growth["xp"], growth["next_cost"], int(growth["level"]) + 1]
 			var change: Dictionary = world.salvage.last_settlement.get("changes", {}).get(growth["id"], {})

@@ -154,7 +154,9 @@ func _show_selected() -> void:
 	lines.append("Knockback  %.2f m" % stats.knockback_metres)
 	lines.append("\n[b]PROGRESSION & POSITION[/b]")
 	lines.append("XP  %d / %d to next level  ·  %d total earned" % [growth.xp, TurretProgression.cost_to_next(growth.level), growth.total_xp])
-	lines.append("Level damage bonus  +%.0f%%     Entrenchment  %d stacks" % [(growth.damage_multiplier() - 1.0) * 100, turret.entrench_stacks_cached])
+	var bonuses := growth.stat_multipliers()
+	lines.append("Level bonuses: Damage +%.0f%% · Attack speed +%.0f%% · Range +%.0f%%" % [(bonuses.damage - 1.0) * 100, (bonuses.speed - 1.0) * 100, (bonuses.range - 1.0) * 100])
+	lines.append("Entrenchment  %d stacks" % turret.entrench_stacks_cached)
 	lines.append("Stats include current items, difficulty and this turret’s active bonuses.")
 	if not world.session.state.turret_progression_enabled:
 		lines.append("Turret progression is off for this run.")

@@ -72,13 +72,16 @@ func test_level_report_identifies_actual_levels_and_damage_gain() -> void:
 	assert_true(card.stats.text.begins_with("Damage "))
 	assert_true(world.reward_presentation.heading.text.contains("1 LEVEL GAINED"))
 
-func test_milestone_without_stat_gain_explains_pending_form() -> void:
+func test_milestone_shows_all_stat_gains_and_pending_form() -> void:
 	world.turrets[0].progression.award(75)
 	_finish(35)
 	world.reward_presentation.advance(2.0)
 	var card: Dictionary = world.reward_presentation.cards[1]
 	assert_true(card.detail.text.contains("LEVEL UP · Lv 4 → 5"))
-	assert_eq(card.stats.text, "Lv 5 milestone · form pending")
+	assert_true(card.stats.text.contains("Lv 5 milestone · form pending"))
+	assert_true(card.stats.text.contains("Damage "))
+	assert_true(card.stats.text.contains("Fire rate "))
+	assert_true(card.stats.text.contains("Range "))
 
 func test_controller_accept_keeps_recap_focus_and_continues_after_pause() -> void:
 	_finish()

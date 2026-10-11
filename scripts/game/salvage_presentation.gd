@@ -100,7 +100,9 @@ func begin(record: Dictionary) -> void:
 			fx.add_child(glow)
 		cards[id] = {"change": change, "bar": progress, "detail": detail, "stats": stats,
 			"floating": floating, "glow": glow, "level": int(change["before"]["level"]),
-			"damage": turret._current_view(1.0).damage, "pulse_until": 0.0}
+			"damage": turret._current_view(1.0).damage, "range": turret.stats_view.range_metres * (turret.stats_view.area_size if TurretRegistry.get_fire_mode(turret.turret_type) == TurretRegistry.FIRE_PULSE else 1.0),
+			"speed": turret.stats_view.rotation_rate if TurretRegistry.get_fire_mode(turret.turret_type) == TurretRegistry.FIRE_SWEEP else turret.stats_view.fire_rate,
+			"speed_label": "Swing speed" if TurretRegistry.get_fire_mode(turret.turret_type) == TurretRegistry.FIRE_SWEEP else "Fire rate", "pulse_until": 0.0}
 	_build_packets()
 
 	advance(0.0)
@@ -203,16 +205,22 @@ func advance(delta: float) -> void:
 		var detail: Label = card["detail"]
 		detail.text = "LEVEL UP · Lv %d → %d\n+%d XP · Next: Lv %d" % [change["before"]["level"], shown.level, awarded, shown.level + 1] if levels > 0 else "Lv %d · +%d XP\nProgress toward Lv %d" % [shown.level, awarded, shown.level + 1]
 		detail.modulate = UiPalette.GOOD if levels > 0 else UiPalette.INK
-		var before_damage := float(card["damage"]) / float(change["after"]["damage_multiplier"]) * float(change["before"]["damage_multiplier"])
-		var current_damage := float(card["damage"]) / float(change["after"]["damage_multiplier"]) * shown.damage_multiplier()
 		var result := "No level-up"
 		if levels > 0:
-			result = ""
-			if current_damage > before_damage:
-				if "%.1f" % before_damage != "%.1f" % current_damage:
-					result = "Damage %.1f → %.1f" % [before_damage, current_damage]
-				else:
-					result = "Damage +%.1f%%" % ((shown.damage_multiplier() / float(change["before"]["damage_multiplier"]) - 1.0) * 100.0)
+			var lines: Array[String] = []
+			var multipliers := shown.stat_multipliers()
+			for key: String in ["damage", "speed", "range"]:
+				var before_mult := float(change["before"]["multipliers"][key])
+				var current_mult := float(multipliers[key])
+				if current_mult <= before_mult:
+					continue
+				var base := float(card[key]) / float(change["after"]["multipliers"][key])
+				var title: String = card["speed_label"] if key == "speed" else key.capitalize()
+				var format := "%.2f" if key == "speed" else "%.1f"
+				var old_text := format % (base * before_mult)
+				var new_text := format % (base * current_mult)
+				lines.append("%s %s → %s" % [title, old_text, new_text] if old_text != new_text else "%s +%.1f%%" % [title, (current_mult / before_mult - 1.0) * 100.0])
+			result = "\n".join(lines)
 			for milestone in TurretProgression.EVOLUTION_LEVELS:
 				if int(change["before"]["level"]) < milestone and shown.level >= milestone:
 					result += ("\n" if not result.is_empty() else "") + "Lv %d milestone · form pending" % milestone

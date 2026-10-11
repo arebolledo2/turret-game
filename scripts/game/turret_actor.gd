@@ -252,7 +252,7 @@ func _current_stats(delta: float) -> Dictionary:
 		cached_stats = TurretStatsService.get_turret_stats(turret_type, float(world.difficulty_config["turret_damage_mult"]))
 		cached_stats = cached_stats.duplicate()
 		if world.session.state.turret_progression_enabled:
-			cached_stats["damage"] = float(cached_stats.get("damage", 0.0)) * progression.damage_multiplier()
+			progression.apply_stats(cached_stats)
 		_apply_item_conditions(cached_stats)
 		_refresh_zone_bonuses()
 		if zone_range_bonus > 0.0:
@@ -267,10 +267,11 @@ func _current_stats(delta: float) -> Dictionary:
 var range_ring: MeshInstance3D
 var range_ring_metres: float = 0.0
 
-## Ring on the floor at the turret's current range (item, Entrench-free stats and high ground included) while the
-## world's range toggle is on; also while carried, so a placement can be judged.
+## Resolved attack range, shown by the global toggle or when approaching a deployed turret.
 func _update_range_ring() -> void:
-	if not world.show_ranges or not FeatureFlagService.is_enabled(FeatureFlagService.RANGE_OVERLAY):
+	var inspecting := not carried and is_instance_valid(world.player) and position.distance_to(world.player.position) < TurretPlacement.PICKUP_RANGE
+	var contextual := inspecting and SettingsService.ground_markers != SettingsService.GroundMarkers.OFF
+	if not (world.show_ranges or contextual) or not FeatureFlagService.is_enabled(FeatureFlagService.RANGE_OVERLAY):
 		if range_ring:
 			range_ring.visible = false
 		return

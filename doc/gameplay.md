@@ -152,3 +152,9 @@ Difficulty and mode selections on the title screen are saved immediately and res
 ### Movement smoothing
 
 Moving actors, pickups and the follow camera use physics interpolation to blend rendered poses between simulation ticks. Camera follow runs after actor physics. Idle-animated build zones and effects keep their own render timing. Spawns, reused projectiles, camera snaps and turret carry/place transitions reset interpolation history to avoid trails from old positions. `tools/check_camera_follow.tscn` checks hero stability and enemy movement between rendered frames; run with `--fixed-fps 144`, optionally adding `-- --slow-physics` for a 10 Hz stress check. Normal gameplay retains its existing physics rate.
+
+### Turret level stat rewards
+
+XP costs are unchanged. Level 2 gives +5% damage, level 3 +6% attack speed, and level 4 +5% range. Every fifth level gives +5% damage, +4% attack speed, and +3% range together. In later five-level blocks the first two levels give damage, then speed, then range, then the combined bonus. Bonuses add within each stat rather than compounding per level; they multiply item-resolved stats. Melee uses swing speed. Levels 5/10/15 still queue future evolution forms. Recaps show each increased stat, and turret inspection lists accumulated bonuses.
+
+Approaching a deployed turret within pickup distance reveals its resolved attack range alongside contextual entrenchment. Moving away hides the range unless the global range overlay is enabled. Ground markers Off disables this proximity reveal.

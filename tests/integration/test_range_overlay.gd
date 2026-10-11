@@ -30,6 +30,7 @@ func test_toggle_action_is_bound_to_y_and_tab() -> void:
 
 func test_rings_are_hidden_until_toggled() -> void:
 	var turret := world.turrets[0]
+	world.player.position = turret.position + Vector3(10, 0, 0)
 	await wait_physics_frames(2)
 	assert_null(turret.range_ring)
 	_press_toggle()
@@ -54,3 +55,14 @@ func test_flag_off_disables_the_toggle() -> void:
 	FeatureFlagService.set_enabled(FeatureFlagService.RANGE_OVERLAY, false)
 	_press_toggle()
 	assert_false(world.show_ranges)
+
+func test_nearby_turret_reveals_range_without_global_toggle() -> void:
+	var turret := world.turrets[0]
+	SettingsService.ground_markers = SettingsService.GroundMarkers.CONTEXTUAL
+	world.show_ranges = false
+	world.player.position = turret.position + Vector3(.5, 0, 0)
+	turret._update_range_ring()
+	assert_true(turret.range_ring.visible)
+	world.player.position += Vector3(10, 0, 0)
+	turret._update_range_ring()
+	assert_false(turret.range_ring.visible)
