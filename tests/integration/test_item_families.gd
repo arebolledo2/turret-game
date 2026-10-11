@@ -41,7 +41,7 @@ func test_area_upgrade_reaches_shock_boundary_and_preserves_projectile_targeting
 	world.shop.apply_item("cluster_warheads")
 	world.show_ranges = true
 	shock._update_range_ring()
-	assert_almost_eq(shock.range_ring_metres, base * 1.3, .001)
+	assert_almost_eq(shock.range_ring_metres, base * 1.2, .001)
 	var target := world.spawn_enemy(shock.position + Vector3(base * 1.2, 0, 0))
 	target.set_physics_process(false)
 	target.health = 100
@@ -49,7 +49,7 @@ func test_area_upgrade_reaches_shock_boundary_and_preserves_projectile_targeting
 	shock._physics_process(.01)
 	assert_lt(target.health, 100.0, "The expanded pulse actually hits beyond the old radius")
 	assert_almost_eq(TurretStats.new(stats("plasma")).range_metres, plasma_range, .001)
-	assert_almost_eq(TurretStats.new(stats("plasma")).aoe_radius_metres, plasma_area * 1.3, .001)
+	assert_almost_eq(TurretStats.new(stats("plasma")).aoe_radius_metres, plasma_area * 1.2, .001)
 
 func test_diversity_assigns_separate_turrets_and_mastery_uses_shared_family() -> void:
 	TurretStatsService.turret_counts = {"plasma": 1}

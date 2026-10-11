@@ -17,7 +17,7 @@ All 43 stocked IDs remain stable. Existing feature, wave, stack and Convoy gates
 | `heavy_plating` | Heavy Plating | Uncommon | 18 | Unlimited | Max hull +5. Move speed -3%. |
 | `mass_production` | Mass Production | Uncommon | 18 | 2 | Turret purchase scaling -10 percentage points. |
 | `polished_barrels` | Polished Barrels | Common | 10 | Unlimited | Projectile damage +10%. |
-| `blast_charges` | Blast Charges | Common | 10 | Unlimited | Area radius +12%. Existing area knockback +8%. |
+| `blast_charges` | Blast Charges | Common | 10 | Unlimited | Area radius +9%. Existing area knockback +8%. |
 | `capacitor_bank` | Capacitor Bank | Common | 10 | Unlimited | Instant damage +8%. |
 | `weighted_bat` | Counterweight (was Weighted Bat) | Common | 10 | Unlimited | Kinetic damage +12%. |
 | `concrete_footings` | Concrete Footings | Common | 10 | 3 | Entrench stacks arrive 15% faster. |
@@ -28,7 +28,7 @@ All 43 stocked IDs remain stable. Existing feature, wave, stack and Convoy gates
 | `voltage_doctrine` | Instant Doctrine (was Voltage Doctrine) | Uncommon | 18 | 2 | Instant damage +20%. |
 | `bat_doctrine` | Kinetic Doctrine (was Bat Doctrine) | Uncommon | 18 | 2 | Kinetic damage +20%. |
 | `piercing_rounds` | Piercing Rounds | Uncommon | 18 | 2 | Direct projectiles pass through 1 extra enemy. Explosive shots do not pierce. |
-| `cluster_warheads` | Cluster Warheads | Uncommon | 18 | 2 | Area radius +30%. |
+| `cluster_warheads` | Cluster Warheads | Uncommon | 18 | 2 | Area radius +20%. |
 | `superconductors` | Superconductors | Uncommon | 18 | 2 | Instant chains gain 1 jump; existing Instant slows are 25% stronger. |
 | `spiked_bat` | Impact Head (was Spiked Bat) | Uncommon | 18 | 2 | Kinetic knockback +40% and reach +20%. |
 | `hardpoint` | Hardpoint | Uncommon | 18 | 2 | Entrench stack limit +2 and bonus per stack +50%. Carry speed -10%. |
@@ -36,7 +36,7 @@ All 43 stocked IDs remain stable. Existing feature, wave, stack and Convoy gates
 | `overdrive_engine` | Overdrive Engine | Uncommon | 18 | 2 | Core movement speed +30%. |
 | `heavy_hauler` | Heavy Hauler | Uncommon | 18 | 2 | Core movement speed -20%: longer rounds, more enemies. Kill scrap +15%. |
 | `arc_rod` | Arc Rod | Rare | 28 | 2 | Instant chains gain 2 jumps and retain 15 percentage points more damage per jump. |
-| `plasma_capacitor` | Blast Amplifier (was Plasma Capacitor) | Rare | 28 | 2 | Area radius +60%. Existing area knockback +50%. |
+| `plasma_capacitor` | Blast Amplifier (was Plasma Capacitor) | Rare | 28 | 2 | Area radius +40%. Existing area knockback +50%. |
 | `killzone_bat` | Return Spring (was Killzone Bat) | Rare | 28 | 2 | Kinetic attacks can hit the same enemy twice as often. |
 | `overwatch_optics` | Overwatch Optics | Rare | 28 | 2 | Instant reach +30% and damage +10%. |
 | `army_doctrine` | Army Doctrine | Rare | 28 | 1 | Attack speed +3% per turret beyond the third, up to +30%. |

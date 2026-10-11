@@ -204,14 +204,14 @@ const ROWS: Array = [
 		"special_effect": ""
 	},
 	{
-		"description": "Area radius +12%. Existing area knockback +8%.",
+		"description": "Area radius +9%. Existing area knockback +8%.",
 		"id": "blast_charges",
 		"max_stacks": 0,
 		"modifiers": [
 			{
 				"stat": "area_size",
 				"operation": "increase",
-				"value": 0.12,
+				"value": 0.09,
 				"filter": {
 					"attack_family": [
 						"aoe"
@@ -452,14 +452,14 @@ const ROWS: Array = [
 		"special_effect": ""
 	},
 	{
-		"description": "Area radius +30%.",
+		"description": "Area radius +20%.",
 		"id": "cluster_warheads",
 		"max_stacks": 2,
 		"modifiers": [
 			{
 				"stat": "area_size",
 				"operation": "increase",
-				"value": 0.3,
+				"value": 0.2,
 				"filter": {
 					"attack_family": [
 						"aoe"
@@ -656,14 +656,14 @@ const ROWS: Array = [
 		"special_effect": ""
 	},
 	{
-		"description": "Area radius +60%. Existing area knockback +50%.",
+		"description": "Area radius +40%. Existing area knockback +50%.",
 		"id": "plasma_capacitor",
 		"max_stacks": 2,
 		"modifiers": [
 			{
 				"stat": "area_size",
 				"operation": "increase",
-				"value": 0.6,
+				"value": 0.4,
 				"filter": {
 					"attack_family": [
 						"aoe"
