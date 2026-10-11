@@ -115,3 +115,48 @@ func test_siege_heavy_projectile_radius_resets_when_pool_is_reused() -> void:
 	var reused := world.fire_direction(Vector3.ZERO, Vector3.FORWARD, CombatShot3D.new())
 	assert_same(reused, projectile)
 	assert_almost_eq((reused.sweep.shape as SphereShape3D).radius, .075, .0001)
+
+func test_gunblade_resolves_projectile_and_kinetic_upgrades_separately() -> void:
+	var turret := world.add_turret(Vector3.ZERO, "melee")
+	turret.set_physics_process(false)
+	turret.progression.award(110)
+	assert_true(turret.evolve("gunblade"))
+	var blade_before := turret._current_view(0).damage
+	var gun_before := turret.gun_stats.damage
+	ModifierService.add_modifier({"id": "gun_only", "stat": "damage", "operation": "increase", "value": .2, "filter": {"attack_family": ["projectile"]}})
+	turret.invalidate_stats()
+	assert_almost_eq(turret._current_view(0).damage, blade_before, .001)
+	assert_almost_eq(turret.gun_stats.damage, gun_before * 1.2, .001)
+	ModifierService.add_modifier({"id": "blade_only", "stat": "damage", "operation": "increase", "value": .3, "filter": {"attack_family": ["kinetic"]}})
+	turret.invalidate_stats()
+	assert_almost_eq(turret._current_view(0).damage, blade_before * 1.3, .001)
+	assert_almost_eq(turret.gun_stats.damage, gun_before * 1.2, .001)
+	assert_eq(turret.turret_type, "melee", "Hybrid retains ownership lineage")
+
+func test_gunblade_sweeps_at_blade_tip_and_shoots_along_bore() -> void:
+	var turret := world.add_turret(Vector3.ZERO, "melee")
+	turret.set_physics_process(false)
+	turret.progression.award(110)
+	assert_true(turret.evolve("gunblade"))
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	var close := world.spawn_enemy(Vector3(0, 0, -1.3))
+	close.set_physics_process(false)
+	close.health = 100.0
+	world.crowd.rebuild(world.enemies)
+	var stats := turret._current_view(0)
+	turret._spin_bat(.01, stats, stats.range_metres)
+	assert_lt(close.health, 100.0)
+	assert_not_null(turret.blade_tip)
+	assert_almost_eq(WorldGeometry.planar(turret.blade_tip.global_position - turret.aim.global_position).length(), stats.range_metres, .001)
+	var heading := WorldGeometry.planar(-turret.muzzle.global_basis.z).normalized()
+	var distant := world.spawn_enemy(heading * 2.8)
+	distant.set_physics_process(false)
+	world.crowd.rebuild(world.enemies)
+	turret._fire_gunblade()
+	assert_eq(world.projectiles.size(), 1)
+	var projectile := world.projectiles[0]
+	assert_true(projectile.direction.is_equal_approx(heading))
+	assert_eq(projectile.shot.source_id, turret.turret_id)
+	assert_eq(projectile.shot.attack_families, ["projectile"])
+	turret._fire_gunblade()
+	assert_eq(world.projectiles.size(), 1, "Gun respects its cooldown")

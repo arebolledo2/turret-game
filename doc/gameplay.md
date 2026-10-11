@@ -158,3 +158,9 @@ Moving actors, pickups and the follow camera use physics interpolation to blend 
 XP costs are unchanged. Level 2 gives +5% damage, level 3 +6% attack speed, and level 4 +10% range. Every fifth level gives +5% damage, +4% attack speed, and +3% range together. In later five-level blocks the first two levels give damage, then speed, then range, then the combined bonus. Bonuses add within each stat rather than compounding per level; they multiply item-resolved stats. Melee uses swing speed. Levels 5/10/15 still queue future evolution forms. Recaps show each increased stat, and turret inspection lists accumulated bonuses.
 
 Approaching a deployed turret within pickup distance reveals its resolved attack range alongside contextual entrenchment. Moving away hides the range unless the global range overlay is enabled. Ground markers Off disables this proximity reveal.
+
+### Expansion roster implementation
+
+Bow, Flamethrower and Bowling are shop base types. Bow fires authored arrows; Flamethrower deals cone damage with attributed burn; Bowling uses rolling, piercing balls with knockback.
+
+Implemented first evolution choices include Machine Gun, Scattershot, Saber, Siege Cannon and Gunblade. Gunblade retains melee ownership and XP; its kinetic blade sweeps continuously while its projectile gun fires along the rotating barrel when aligned with an enemy. Each attack resolves its own item family bonuses. The Turrets tab shows separate gun stats. Gatling and Crossfire are available as second stages; other later forms remain under development.

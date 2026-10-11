@@ -109,7 +109,7 @@ func _modifier_matches_turret(modifier: StatModifier, turret_type: String) -> bo
 
 ## Get turret stats with all modifiers applied
 ## Uses PoE formula: (base + flat) × (1 + increases) × more1 × more2 × ...
-func get_turret_stats(turret_type: String, difficulty_config: Dictionary, static_effects: Callable = Callable(), attack_base: Dictionary = {}) -> Dictionary:
+func get_turret_stats(turret_type: String, difficulty_config: Dictionary, static_effects: Callable = Callable(), attack_base: Dictionary = {}, attack_type: String = "") -> Dictionary:
 	var base_stats := TurretRegistry.get_base_stats(turret_type) if attack_base.is_empty() else attack_base.duplicate(true)
 	base_stats["area_size"] = 1.0
 	base_stats["attack_speed"] = 1.0
@@ -127,7 +127,7 @@ func get_turret_stats(turret_type: String, difficulty_config: Dictionary, static
 	var more_mods: Dictionary = {}      # stat -> array of more multipliers
 
 	for modifier in _modifiers:
-		if not _modifier_matches_turret(modifier, turret_type):
+		if not _modifier_matches_turret(modifier, turret_type if attack_type.is_empty() else attack_type):
 			continue
 
 		var stat: String = modifier.stat

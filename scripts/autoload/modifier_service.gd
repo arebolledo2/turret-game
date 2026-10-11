@@ -59,8 +59,8 @@ func apply_modifiers_to_stat(base_value: float, stat_name: String, entity_type: 
 	return _system.apply_to_stat(base_value, stat_name, entity_type)
 
 
-func get_turret_stats(turret_type: String, difficulty_config: Dictionary, attack_base: Dictionary = {}) -> Dictionary:
-	return _system.get_turret_stats(turret_type, difficulty_config, SpecialEffectService.apply_static_effects, attack_base)
+func get_turret_stats(turret_type: String, difficulty_config: Dictionary, attack_base: Dictionary = {}, attack_type: String = "") -> Dictionary:
+	return _system.get_turret_stats(turret_type, difficulty_config, SpecialEffectService.apply_static_effects, attack_base, attack_type)
 
 
 func get_player_speed(base_speed: float) -> float:

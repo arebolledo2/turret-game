@@ -131,12 +131,15 @@ func _show_selected() -> void:
 	var growth := turret.progression
 	var stats := turret._current_view(0.0)
 	var ledger := world.salvage.last_settlement
-	var key := [selected_id, growth.snapshot(), stats.values, ledger.get("wave", -1)].hash()
+	var key := [selected_id, growth.snapshot(), stats.values, turret.gun_stats.values, ledger.get("wave", -1)].hash()
 	if key == detail_key:
 		return
 	detail_key = key
 	art.texture = ShopArt.turret(turret.turret_type)
-	family_badges.show_turret(turret.turret_type)
+	if growth.evolution_branch == "gunblade":
+		family_badges.show_families(["kinetic", "projectile"])
+	else:
+		family_badges.show_turret(turret.turret_type)
 	title.text = "%s #%d\nLEVEL %d" % [turret.display_name(), selected_id, growth.level]
 	xp_label.text = "LEVEL %d  →  LEVEL %d" % [growth.level, growth.level + 1]
 	xp_bar.show_progress(growth.level, growth.xp)
@@ -156,6 +159,11 @@ func _show_selected() -> void:
 	if stats.slow_intensity > 0:
 		lines.append("Slow  %.0f%% for %.2f s" % [stats.slow_intensity * 100, stats.slow_duration])
 	lines.append("Knockback  %.2f m" % stats.knockback_metres)
+	if growth.evolution_branch == "gunblade":
+		var gun := turret.gun_stats
+		lines.append("\n[b]GUN · PROJECTILE[/b]")
+		lines.append("Damage %.1f · Reach %.2f m · %.2f shots/s" % [gun.damage, gun.range_metres, gun.fire_rate])
+		lines.append("Fires along the rotating barrel. Kinetic bonuses affect the blade only.")
 	lines.append("\n[b]PROGRESSION & POSITION[/b]")
 	lines.append("XP  %d / %d to next level  ·  %d total earned" % [growth.xp, TurretProgression.cost_to_next(growth.level), growth.total_xp])
 	var bonuses := growth.stat_multipliers()

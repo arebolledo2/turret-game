@@ -16,16 +16,18 @@ func _init() -> void:
 	add_theme_constant_override("v_separation", 6)
 
 func show_turret(type_id: String) -> void:
-	if type_id == shown_type:
+	show_families(TurretRegistry.get_attack_families(type_id) if not type_id.is_empty() else [], type_id)
+
+func show_families(families: Array, identity: String = "") -> void:
+	var key := identity + ":" + ",".join(families)
+	if key == shown_type:
 		return
-	shown_type = type_id
+	shown_type = key
 	for child in get_children():
 		remove_child(child)
 		child.queue_free()
-	visible = not type_id.is_empty()
-	if type_id.is_empty():
-		return
-	for family in TurretRegistry.get_attack_families(type_id):
+	visible = not families.is_empty()
+	for family in families:
 		var style: Array = STYLES[family]
 		var chip := StatChip.new().setup(style[1], style[0], style[2])
 		chip.label.theme_type_variation = &""

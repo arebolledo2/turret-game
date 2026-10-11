@@ -16,6 +16,8 @@ var carried: bool = false:
 var cooldown: float = 0.0
 var aim: Node3D
 var model: Node3D
+var blade_tip: Node3D
+var gun_stats := TurretStats.new()
 var muzzle: Node3D
 var rotor: Node3D
 var recoil_barrel: Node3D
@@ -65,6 +67,7 @@ func _rebuild_model() -> void:
 		EnemyVariants.tint_model(model, "turret_tesla", TESLA_TINT, .5)
 	add_child(model)
 	aim = model.find_child("Aim", true, false) as Node3D
+	blade_tip = model.find_child("BladeTip", true, false) as Node3D
 	muzzle = model.find_child("Muzzle", true, false) as Node3D
 	rotor = model.find_child("Rotor", true, false) as Node3D
 	recoil_barrel = model.find_child("Barrel", true, false) as Node3D
@@ -75,7 +78,7 @@ func _rebuild_model() -> void:
 	aim_rest = aim.position
 	aim_authored_scale = aim.scale
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
-		bat_authored_reach = maxf(.001, WorldGeometry.planar(muzzle.global_position - aim.global_position).length())
+		bat_authored_reach = maxf(.001, WorldGeometry.planar((blade_tip if blade_tip else muzzle).global_position - aim.global_position).length())
 
 ## Placeholder procedural model: a base post with a pivoting arm; `Aim` is the spin pivot, `Muzzle` the bat tip.
 func _build_melee_model() -> Node3D:
@@ -285,6 +288,19 @@ func _current_stats(delta: float) -> Dictionary:
 		if entrench_stacks_cached > 0:
 			cached_stats["damage"] = float(cached_stats.get("damage", 0.0)) * (1.0 + entrench_damage_bonus())
 			cached_stats["fire_rate"] = float(cached_stats.get("fire_rate", 1.0)) * (1.0 + entrench_fire_rate_bonus())
+		if progression.evolution_branch == "gunblade":
+			var gun_base := TurretRegistry.get_base_stats("normal")
+			gun_base.damage = 7.0
+			gun_base.fire_rate = 2.0
+			gun_base.range = 300.0
+			var gun := ModifierService.get_turret_stats(turret_type, world.difficulty_config, gun_base, "normal")
+			if world.session.state.turret_progression_enabled:
+				progression.apply_stats(gun)
+			_apply_item_conditions(gun)
+			gun.range *= 1.0 + zone_range_bonus
+			gun.damage *= 1.0 + entrench_damage_bonus()
+			gun.fire_rate *= 1.0 + entrench_fire_rate_bonus()
+			gun_stats = TurretStats.new(gun)
 		stats_age = 0.0
 		stats_view = TurretStats.new(cached_stats)
 	return cached_stats
@@ -327,6 +343,8 @@ func _physics_process(delta: float) -> void:
 	var fire_mode := TurretRegistry.get_fire_mode(turret_type)
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
 		_spin_bat(delta, stats, range_metres)
+		if progression.evolution_branch == "gunblade":
+			_fire_gunblade()
 		return
 	if fire_mode == TurretRegistry.FIRE_PULSE:
 		if cooldown <= 0.0 and world.nearest_enemy(position, range_metres):
@@ -412,7 +430,7 @@ func available_evolutions() -> Array[String]:
 		return result
 	for branch in progression.evolution_options(turret_type):
 		var next_stage := progression.evolution_stage + 1
-		var implemented := (branch in ["machine_gun", "scatter"] and next_stage <= 2) or (branch in ["saber", "siege"] and next_stage == 1)
+		var implemented := (branch in ["machine_gun", "scatter"] and next_stage <= 2) or (branch in ["saber", "siege", "gunblade"] and next_stage == 1)
 		if implemented and ClockworkModels.available(TurretEvolution.model_key(turret_type, branch, next_stage)):
 			result.append(branch)
 	return result
@@ -457,3 +475,23 @@ func _fire_flame(stats: TurretStats, reach: float, heading: Vector3) -> void:
 static func cone_overlaps_body(offset: Vector3, heading: Vector3, reach: float, half_angle: float, radius: float) -> bool:
 	var bearing := atan2(-heading.x, -heading.z)
 	return sweep_overlaps_body(offset, reach, bearing - half_angle, 2.0 * half_angle, radius)
+
+## The rotating barrel only shoots along its visible bore; blade and bullet bonuses stay separate.
+func _fire_gunblade() -> void:
+	if cooldown > 0.0:
+		return
+	var heading := WorldGeometry.planar(-muzzle.global_basis.z).normalized()
+	for enemy in world.crowd.query_radius(position, gun_stats.range_metres, true):
+		if not enemy.overlaps_attack_range(position, gun_stats.range_metres):
+			continue
+		var offset := WorldGeometry.planar(enemy.position - muzzle.global_position)
+		if offset.dot(heading) <= 0.0 or not cone_overlaps_body(offset, heading, gun_stats.range_metres, deg_to_rad(5), enemy.hurtbox_radius()):
+			continue
+		var shot := CombatShot3D.from_stats(gun_stats.values, GameEnums.DamageType.PHYSICAL)
+		shot.attack_families.assign(["projectile"])
+		shot.source_id = turret_id
+		if TurretStatsService.roll_turret_crit():
+			shot.damage = TurretStatsService.calculate_turret_crit_damage(shot.damage)
+		world.fire_direction(muzzle.global_position, heading, shot)
+		cooldown = gun_stats.cooldown_seconds
+		return
