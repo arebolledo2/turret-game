@@ -415,6 +415,8 @@ func _process(delta: float) -> void:
 			restart_button.grab_focus()
 		elif panel.visible:
 			continue_button.grab_focus()
+		elif phase == GameStateMachine.GameState.WAVE_END and world.reward_presentation.active:
+			world.reward_presentation.skip_button.grab_focus()
 		else:
 			var focus := get_viewport().gui_get_focus_owner()
 			if focus:

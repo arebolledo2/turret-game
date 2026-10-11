@@ -56,6 +56,30 @@ func test_pause_freezes_sequence_and_skip_keeps_rewards() -> void:
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.SHOP)
 	assert_eq(world.turrets[0].progression.total_xp, 110)
 
+func test_controller_accept_keeps_recap_focus_and_continues_after_pause() -> void:
+	_finish()
+	await wait_process_frames(2)
+	assert_same(get_viewport().gui_get_focus_owner(), world.reward_presentation.skip_button)
+	world.toggle_pause()
+	world.reward_presentation.advance(0.0)
+	await wait_process_frames(2)
+	world.toggle_pause()
+	world.reward_presentation.advance(0.0)
+	await wait_process_frames(2)
+	assert_same(get_viewport().gui_get_focus_owner(), world.reward_presentation.skip_button)
+	var accept := InputEventJoypadButton.new()
+	accept.button_index = JOY_BUTTON_A
+	accept.pressed = true
+	Input.parse_input_event(accept)
+	await wait_process_frames(1)
+	accept = InputEventJoypadButton.new()
+	accept.button_index = JOY_BUTTON_A
+	accept.pressed = false
+	Input.parse_input_event(accept)
+	await wait_process_frames(2)
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.SHOP)
+	assert_eq(world.turrets[0].progression.total_xp, 110)
+
 func test_restart_cancels_old_presentation_without_late_shop_transition() -> void:
 	_finish()
 	world.start_run()
@@ -123,7 +147,7 @@ func test_turrets_tab_uses_individual_stats_and_controller_can_reach_deploy() ->
 	assert_eq(shop.turret_inspector.buttons.size(), 2)
 	assert_true(shop.turret_inspector.title.text.contains("LEVEL 5"))
 	assert_true(shop.turret_inspector.detail.text.contains("+110 XP"))
-	assert_true(shop.turret_inspector.detail.text.contains("%.0f" % world.turrets[0]._current_view(0).damage))
+	assert_true(shop.turret_inspector.detail.text.contains("%.1f" % world.turrets[0]._current_view(0).damage))
 	shop.turret_inspector.select(second.turret_id)
 	assert_true(shop.turret_inspector.title.text.contains("LEVEL 1"))
 	assert_true(shop.turret_inspector.detail.text.contains("Sweep"))

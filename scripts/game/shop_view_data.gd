@@ -51,7 +51,7 @@ static func _turret_chips(type_id: String, damage_mult: float) -> Array[Dictiona
 	var chips: Array[Dictionary] = []
 	if stats.is_empty():
 		return chips
-	chips.append({"stat": "dmg", "icon": "damage", "tone": 0, "text": "%.0f" % stats["damage"]})
+	chips.append({"stat": "dmg", "icon": "damage", "tone": 0, "text": "%.1f" % stats["damage"]})
 	if float(stats.get("fire_rate", 0.0)) > 0.0:
 		chips.append({"stat": "rate", "icon": "rate", "tone": 0, "text": "%.2f" % stats["fire_rate"]})
 	elif stats.has("rotation_rate"):

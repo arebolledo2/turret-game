@@ -364,7 +364,7 @@ func _turret_numbers(was: Dictionary, turret: Dictionary) -> String:
 func _number(before: Dictionary, after: Dictionary, key: String, unit: String, lower_is_better: bool = false) -> String:
 	var value := float(after.get(key, 0))
 	var old := float(before.get(key, value))
-	var format := "%.0f" if key == "damage" else "%.2f"
+	var format := "%.1f" if key == "damage" else "%.2f"
 	if is_equal_approx(old, value):
 		return (format % value) + unit
 	var better := value < old if lower_is_better else value > old

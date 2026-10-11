@@ -211,14 +211,14 @@ func test_shop_exposes_wave_award_individual_levels_and_damage_previews() -> voi
 	assert_true(screen.turret_text.text.contains("XP 0 / 41"))
 	assert_true(screen.turret_text.text.contains("Lv 1 → 5"))
 	var veteran_damage := world.turrets[0]._current_view(1.0).damage
-	assert_true(screen.turret_text.text.contains("%.0f damage" % veteran_damage))
+	assert_true(screen.turret_text.text.contains("%.1f damage" % veteran_damage))
 	var before := ShopViewData.build_data(world)
 	var base: float = before.turrets[0].damage
 	assert_almost_eq(float(before.dps), base * 2.09 * float(before.turrets[0].fire_rate), .001)
 	var offer := ShopOffer.new("item", "dense_rounds", 1)
 	EconomyService.current_shop_offers.assign([offer])
 	screen._select(0)
-	assert_true(screen.turret_text.text.contains("%.0f → %.0f damage" % [veteran_damage, veteran_damage * 1.1]))
+	assert_true(screen.turret_text.text.contains("%.1f → %.1f damage" % [veteran_damage, veteran_damage * 1.1]))
 	assert_eq(world.turrets[0].progression.level, 5, "Preview never changes progression")
 
 func test_shop_explains_zero_xp_and_inactive_progression() -> void:

@@ -138,10 +138,10 @@ func build_summary() -> String:
 		var count := int(TurretStatsService.turret_counts.get(type_id, 0))
 		if count > 0 and type_id == "melee":
 			var bat := TurretStatsService.get_turret_stats(type_id, float(world.difficulty_config["turret_damage_mult"]))
-			lines.append("Melee ×%d   %.0f dmg · %.0f°/s · %.2fm" % [count, bat["damage"], bat["rotation_rate"], float(bat["range"]) * WorldGeometry.METRES_PER_PIXEL])
+			lines.append("Melee ×%d   %.1f dmg · %.0f°/s · %.2fm" % [count, bat["damage"], bat["rotation_rate"], float(bat["range"]) * WorldGeometry.METRES_PER_PIXEL])
 		elif count > 0:
 			var stats := TurretStatsService.get_turret_stats(type_id, float(world.difficulty_config["turret_damage_mult"]))
-			lines.append("%s ×%d   %.0f dmg · %.2f/s · %.2fm" % [TurretRegistry.get_short_name(type_id), count, stats["damage"], stats["fire_rate"], float(stats["range"]) * WorldGeometry.METRES_PER_PIXEL])
+			lines.append("%s ×%d   %.1f dmg · %.2f/s · %.2fm" % [TurretRegistry.get_short_name(type_id), count, stats["damage"], stats["fire_rate"], float(stats["range"]) * WorldGeometry.METRES_PER_PIXEL])
 	lines.append("Hull %.0f/%.0f · Move %.2fm/s · Pickup %.2fm" % [world.player.health, world.player.max_health, PlayerStatsService.get_player_speed() * WorldGeometry.METRES_PER_PIXEL, PlayerStatsService.get_pickup_radius() * WorldGeometry.METRES_PER_PIXEL])
 	if world.convoy_mode:
 		lines.append(convoy_preview_line())
