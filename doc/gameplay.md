@@ -172,3 +172,5 @@ Flamethrower supports Wide Flame / Furnace Fan / Inferno Crown (60/85/110-degree
 Bowling supports Heavy Roller / Demolition Roller / Juggernaut (larger balls, more piercing and knockback) and Bank Shot / Pinball Engine / Ricochet King (2/4/6 redirects toward fresh nearby enemies). Redirects sweep their remaining movement time on the new path; an enemy is never selected twice by the same shot. Purchased piercing can extend a shot when no fresh recipient is nearby. The loaded ball disappears during reload.
 
 Gunblade now advances to Repeater Blade (two-shot bursts) and Stormblade (three-shot piercing bursts) at levels 10/15. Follow-up rounds leave the rotating barrel along its current heading; they share the original burst snapshot and turret attribution. Pending rounds cancel when combat ends.
+
+Ion branches now reach Cyclone Gatling and Omnifire at level 15. Cyclone ramps to 2.5x resting rate and pierces an additional enemy. Omnifire emits twelve evenly spaced radial directions from its four outward muzzles. These attacks still use the Gatling/Crossfire chassis pending final-stage visual upgrades.

@@ -344,3 +344,44 @@ func test_gunblade_later_forms_fire_attributed_bursts_from_moving_barrel() -> vo
 	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
 	turret._physics_process(.1)
 	assert_eq(turret.gun_burst_left, 0, "Wave end cancels delayed shots")
+
+func test_cyclone_gatling_reaches_higher_spool_and_fires_piercing_rounds() -> void:
+	var turret := world.turrets[0]
+	var xp := 0
+	for level in range(1, 15):
+		xp += TurretProgression.cost_to_next(level)
+	turret.progression.award(xp)
+	for stage in range(3):
+		assert_true(turret.evolve("machine_gun"))
+	assert_eq(turret.display_name(), "Cyclone Gatling")
+	var stats := turret._current_view(0)
+	turret._tick_mechanisms(1.0, true)
+	assert_eq(turret.spool, 1.5)
+	turret._reset_cooldown(stats)
+	assert_almost_eq(turret.cooldown, stats.cooldown_seconds / 2.5, .001)
+	assert_eq(turret._new_shot(stats).pierce, 1)
+	turret._tick_mechanisms(1.0, false)
+	assert_eq(turret.spool, 0.0)
+	assert_true(turret.available_evolutions().is_empty())
+
+func test_omnifire_covers_all_twelve_unique_radial_directions() -> void:
+	var turret := world.turrets[0]
+	var xp := 0
+	for level in range(1, 15):
+		xp += TurretProgression.cost_to_next(level)
+	turret.progression.award(xp)
+	for stage in range(3):
+		assert_true(turret.evolve("scatter"))
+	assert_eq(turret.display_name(), "Omnifire")
+	turret.target = world.spawn_enemy(turret.position + Vector3(0, 0, -2))
+	turret.target.set_physics_process(false)
+	turret._fire_projectile(turret._current_view(0))
+	assert_eq(world.projectiles.size(), 12)
+	var angles: Array[float] = []
+	for projectile in world.projectiles:
+		assert_eq(projectile.shot.source_id, turret.turret_id)
+		angles.append(wrapf(atan2(projectile.direction.x, projectile.direction.z), 0.0, TAU))
+	angles.sort()
+	for i in range(12):
+		var gap := wrapf(angles[(i + 1) % 12] - angles[i], 0.0, TAU)
+		assert_almost_eq(gap, TAU / 12.0, .001)

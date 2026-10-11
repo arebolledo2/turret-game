@@ -70,6 +70,7 @@ static func base_stats(base_type: String, branch: String, stage: int) -> Diction
 			stats.damage = [6.5, 5.5, 6.5][stage - 1]
 			stats.fire_rate = [3.2, 4.0, 4.8][stage - 1]
 			stats.projectile_speed = 1000.0
+			stats.pierce = 1 if stage >= 3 else 0
 		"scatter":
 			stats.damage = [8.0, 9.0, 10.0][stage - 1]
 			stats.fire_rate = [1.0, 1.15, 1.25][stage - 1]
@@ -125,8 +126,8 @@ static func base_stats(base_type: String, branch: String, stage: int) -> Diction
 
 static func description(branch: String, stage: int) -> String:
 	match branch:
-		"machine_gun": return "Rapid aimed fire." if stage == 1 else "Rotary fire accelerates while a target remains in range."
-		"scatter": return "Three projectiles fan out with each shot." if stage == 1 else "Fires in four directions at once."
+		"machine_gun": return ["Rapid aimed fire.", "Rotary fire accelerates while a target remains in range.", "Piercing rotary fire accelerates to 2.5 times its resting rate."][stage - 1]
+		"scatter": return ["Three projectiles fan out with each shot.", "Fires in four directions at once.", "Twelve shots cover a full circle in evenly spaced directions."][stage - 1]
 		"heavy_roller": return "Larger balls drive through crowds with stronger knockback."
 		"bank_shot": return "Redirects toward a fresh nearby enemy up to %d times." % [2, 4, 6][stage - 1]
 		"wide_flame": return "A %d-degree fan blankets a crowd and leaves enemies burning." % [60, 85, 110][stage - 1]

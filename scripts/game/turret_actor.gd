@@ -448,7 +448,9 @@ func _fire_projectile(stats: TurretStats) -> void:
 		for marker: String in ["Muzzle", "Muzzle_1", "Muzzle_2", "Muzzle_3"]:
 			var exit := model.find_child(marker, true, false) as Node3D
 			if exit:
-				world.fire_direction(exit.global_position, -exit.global_basis.z, _new_shot(stats))
+				var angles: Array = [-30.0, 0.0, 30.0] if progression.evolution_stage >= 3 else [0.0]
+				for angle: float in angles:
+					world.fire_direction(exit.global_position, (-exit.global_basis.z).rotated(Vector3.UP, deg_to_rad(angle)), _new_shot(stats))
 	elif progression.evolution_branch == "scatter":
 		for angle: float in [-12.0, 0.0, 12.0]:
 			world.fire_direction(muzzle.global_position, heading.rotated(Vector3.UP, deg_to_rad(angle)), _new_shot(stats))
@@ -471,7 +473,7 @@ func available_evolutions() -> Array[String]:
 		return result
 	for branch in progression.evolution_options(turret_type):
 		var next_stage := progression.evolution_stage + 1
-		var implemented := branch in ["repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "gunblade"] or (branch in ["machine_gun", "scatter"] and next_stage <= 2) or (branch in ["saber", "siege"] and next_stage == 1)
+		var implemented := branch in ["repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "gunblade", "machine_gun", "scatter"] or (branch in ["saber", "siege"] and next_stage == 1)
 		if implemented and ClockworkModels.available(TurretEvolution.model_key(turret_type, branch, next_stage)):
 			result.append(branch)
 	return result
@@ -491,7 +493,8 @@ func evolve(branch: String) -> bool:
 
 func _tick_mechanisms(delta: float, tracking: bool) -> void:
 	if progression.evolution_branch == "machine_gun" and progression.evolution_stage >= 2:
-		spool = move_toward(spool, 1.0 if tracking else 0.0, delta * (1.0 if tracking else 2.0))
+		var ceiling := 1.5 if progression.evolution_stage >= 3 else 1.0
+		spool = move_toward(spool, ceiling if tracking else 0.0, delta * (ceiling if tracking else 2.0))
 		if rotor and not FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
 			rotor.rotate_object_local(Vector3.FORWARD, delta * spool * 18.0)
 			muzzle.position = rotor.position + rotor.basis * (muzzle_rest - rotor.position)
