@@ -21,6 +21,7 @@ signal pending_changed()
 const REDUCED_MOTION: String = "reduced_motion"
 const DEV_PANEL: String = "dev_panel"
 const DEBUG_OVERLAYS: String = "debug_overlays"
+const TURRET_PROGRESSION: String = "turret_progression"
 const ENTRENCH: String = "entrench"
 const PLACEMENT_PREVIEW: String = "placement_preview"
 const ITEMS_V2: String = "items_v2"
@@ -60,6 +61,10 @@ const FLAG_DEFINITIONS: Dictionary = {
 		"requires": [DEV_PANEL],
 		"description": "Shows live counts (wave, enemies, turrets, projectiles, pending flags) on screen.",
 	},
+	TURRET_PROGRESSION: {
+		"name": "Turret Progression (next run)", "default": false, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 1,
+		"description": "Development foundation: leftover scrap becomes turret XP, unlimited stat levels and scarcer turret pricing. Frozen at run start; restart after changing. Evolution forms and animations are not implemented yet.",
+	},
 	ENTRENCH: {
 		"name": "Entrench", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 1,
 		"description": "Turrets earn damage and fire rate for every few seconds they stay in place. Picking one up resets its stacks.",
@@ -86,7 +91,7 @@ const FLAG_DEFINITIONS: Dictionary = {
 	},
 	BUILD_ZONES: {
 		"name": "Build Zones", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 5,
-		"description": "Glowing build zones appear during a wave. Stand in one to build a turret or an item. Scrap left uncollected at wave end is still banked and also brings more, better zones next wave.",
+		"description": "Glowing build zones appear during a wave. Stand in one to build a turret or an item. Without Turret Progression, leftover scrap is banked and improves next-wave zones; with progression, it becomes turret XP instead.",
 	},
 	DIFFICULTY_RULES: {
 		"name": "Difficulty Rules", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 5,

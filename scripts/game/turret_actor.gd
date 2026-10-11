@@ -3,6 +3,7 @@ extends Node3D
 
 var world: ArenaWorld
 var turret_type: String = "normal"
+var progression := TurretProgression.new()
 ## Unique within a run (assigned by `ArenaWorld.add_turret`); stamped on shots for kill attribution.
 var turret_id: int = 0
 var carried: bool = false:
@@ -250,6 +251,8 @@ func _current_stats(delta: float) -> Dictionary:
 	if cached_stats.is_empty() or stats_age >= STATS_REFRESH:
 		cached_stats = TurretStatsService.get_turret_stats(turret_type, float(world.difficulty_config["turret_damage_mult"]))
 		cached_stats = cached_stats.duplicate()
+		if world.session.state.turret_progression_enabled:
+			cached_stats["damage"] = float(cached_stats.get("damage", 0.0)) * progression.damage_multiplier()
 		_apply_item_conditions(cached_stats)
 		_refresh_zone_bonuses()
 		if zone_range_bonus > 0.0:

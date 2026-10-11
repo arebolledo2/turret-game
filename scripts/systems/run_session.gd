@@ -6,6 +6,7 @@ var state: RunSessionState = RunSessionState.new()
 
 func begin_run() -> void:
 	state = RunSessionState.new()
+	state.turret_progression_enabled = FeatureFlagService.is_enabled(FeatureFlagService.TURRET_PROGRESSION)
 	# Starting settings have already selected the announcement transition's origin.
 	state.phase = GameStateMachine.current_state
 	bind_state(state)

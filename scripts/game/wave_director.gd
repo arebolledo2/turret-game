@@ -89,7 +89,10 @@ func begin_next_wave() -> bool:
 func finish_wave() -> bool:
 	if not world.is_combat():
 		return false
-	GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_END)
+	if not GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_END):
+		return false
+	# Snapshot carried positions and uncollected pickups before cleanup moves/removes them.
+	world.salvage.settle(GameStateService.current_wave)
 	world.clear_field(true)
 	var reward := EconomyService.get_wave_scrap_base(GameStateService.current_wave)
 	world.collect_scrap(reward)

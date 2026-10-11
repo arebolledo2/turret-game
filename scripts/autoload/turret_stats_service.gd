@@ -145,9 +145,9 @@ func get_turret_min_distance(item_counts: Dictionary) -> float:
 	return SpecialEffectService.get_turret_min_distance(item_counts)
 
 
-## Get turret purchase penalty (base 0.25, can be reduced/increased by items)
-func get_turret_purchase_penalty() -> float:
-	var penalty: float = GameConstants.TURRET_PURCHASE_PENALTY
+## Item adjustments apply to the supplied linear purchase coefficient.
+func get_turret_purchase_penalty(base: float = GameConstants.TURRET_PURCHASE_PENALTY) -> float:
+	var penalty: float = base
 	# Apply reductions (e.g., Compact Design, Mass Production)
 	penalty = ModifierService.apply_modifiers_to_stat(penalty, "turret_penalty_reduction")
 	# Apply increases (e.g., Elite Forces, Diversity Matrix)

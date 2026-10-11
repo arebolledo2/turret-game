@@ -14,6 +14,7 @@ var is_open: bool = false
 var root: Control
 var list: VBoxContainer
 var status_label: Label
+var progression_label: Label
 var overlay_label: Label
 var flag_checks: Dictionary = {}
 var flag_notes: Dictionary = {}
@@ -75,6 +76,26 @@ func overlay_text() -> String:
 		if FeatureFlagService.is_enabled(flag_id):
 			enabled.append(flag_id)
 	lines.append("experiments: " + (", ".join(enabled) if not enabled.is_empty() else "none"))
+	return "\n".join(lines)
+
+## Values are read from the run, not the next-run flag or type-wide shop averages.
+func progression_text() -> String:
+	var active := world.session.state.turret_progression_enabled
+	var lines := PackedStringArray(["This run: %s | additional frames acquired: %d" % [
+		"ON" if active else "OFF", world.session.state.additional_turrets_acquired]])
+	lines.append("Forms/choices and award animations are pending Phase 2.")
+	for turret in world.turrets:
+		var growth := turret.progression
+		var stats := turret._current_view(0.0)
+		lines.append("#%d %s%s | Lv %d | XP %d/%d (%d total)" % [turret.turret_id,
+			turret.turret_type, " [carried]" if turret.carried else "", growth.level,
+			growth.xp, TurretProgression.cost_to_next(growth.level), growth.total_xp])
+		lines.append("Damage %.2f | level bonus +%.0f%% | pending %s" % [stats.damage,
+			(growth.damage_multiplier() - 1.0) * 100.0, str(growth.pending_evolutions)])
+	var ledger := world.salvage.last_settlement
+	if not ledger.is_empty():
+		lines.append("Last settlement (wave %d): %d scrap -> %d XP, %d fallback cash" % [
+			ledger["wave"], ledger["raw_scrap"], ledger["xp_awarded"], ledger["fallback_cash"]])
 	return "\n".join(lines)
 
 func _active_projectiles() -> int:
@@ -186,6 +207,8 @@ func _build() -> void:
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list.add_theme_constant_override("separation", 6)
 	scroll.add_child(list)
+	_section("TURRET PROGRESSION / PHASE 1")
+	progression_label = _label(list, "", 16, Color("d2edeb"))
 	_build_presets()
 	_build_flags()
 	_build_cheats()
@@ -271,6 +294,8 @@ func toggle_flag(flag_id: String, enabled: bool) -> String:
 			FeatureFlagService.QUEUED: status_label.text = "%s will turn %s at the next wave." % [flag_id, "on" if enabled else "off"]
 			FeatureFlagService.REJECTED: status_label.text = "%s cannot change (missing requirement)." % flag_id
 			_: status_label.text = "%s is now %s." % [flag_id, "on" if enabled else "off"]
+		if flag_id == FeatureFlagService.TURRET_PROGRESSION and result == FeatureFlagService.APPLIED:
+			status_label.text = "Progression set %s for the next run. Restart to apply." % ("ON" if enabled else "OFF")
 	refresh()
 	return result
 
@@ -319,6 +344,7 @@ func refresh() -> void:
 			note = "QUEUED %s - %s" % ["ON" if FeatureFlagService.get_effective(flag_id) else "OFF", note]
 		(flag_notes[flag_id] as Label).text = note
 	if is_instance_valid(world):
+		progression_label.text = progression_text()
 		god_check.set_pressed_no_signal(world.god_mode)
 		var wave := GameStateService.current_wave
 		jump_prev_button.text = "Jump to wave %d (opens its shop)" % clampi(wave - 1, 1, world.wave_limit)

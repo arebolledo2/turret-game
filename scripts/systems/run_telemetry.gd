@@ -41,6 +41,12 @@ func record_scrap_earned(amount: int) -> void:
 	_ensure_wave()
 	_current["scrap_earned"] = int(_current["scrap_earned"]) + amount
 
+func record_salvage(ledger: Dictionary) -> void:
+	_ensure_wave()
+	_current["salvage"] = ledger.duplicate(true)
+	_current["turret_xp"] = int(ledger["xp_awarded"])
+	_current["salvage_fallback_cash"] = int(ledger["fallback_cash"])
+
 func record_spend(category: String, amount: int) -> void:
 	_ensure_wave()
 	var spent: Dictionary = _current["scrap_spent"]
@@ -64,6 +70,6 @@ func total_spent(category: String) -> int:
 
 func to_dict() -> Dictionary:
 	return {"flags": flags, "waves": waves.duplicate(true),
-		"totals": {"kills": total("kills"), "turret_moves": total("turret_moves"), "scrap_earned": total("scrap_earned"),
+		"totals": {"turret_xp": total("turret_xp"), "salvage_fallback_cash": total("salvage_fallback_cash"), "kills": total("kills"), "turret_moves": total("turret_moves"), "scrap_earned": total("scrap_earned"),
 			"scrap_spent": {"turret": total_spent("turret"), "item": total_spent("item"),
 				"reroll": total_spent("reroll"), "repair": total_spent("repair")}}}

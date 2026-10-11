@@ -13,6 +13,10 @@ var total_scrap: int = GameConstants.STARTING_SCRAP
 var shop_reroll_count: int = 0
 var current_shop_offers: Array[ShopOffer] = []
 var turrets_purchased: int = 0
+## Frozen at run start; prices and salvage always use the same economy.
+var turret_progression_enabled: bool = false
+var additional_turrets_acquired: int = 0
+var turret_progression: Dictionary = {}
 var player_luck: float = GameConstants.PLAYER_BASE_LUCK
 var turret_counts: Dictionary = {}
 var collected_items: Array[String] = []

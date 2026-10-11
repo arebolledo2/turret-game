@@ -38,6 +38,22 @@ Developer and experiment flag values persist with the preferences file (`[dev_fl
 3. Add a GUT test with the flag on and with it off.
 4. When a system is proven, remove its flag and let the behaviour become the baseline.
 
+## Turret progression foundation (Phase 1)
+
+`turret_progression` is an experiment, **off by default**. In the F1 panel, enable **Turret Progression (next run)**, then **Restart run**. Its configured value updates immediately but `RunSessionState.turret_progression_enabled` is latched at run start; toggling it during combat or a shop never switches the current economy. The panel's top section distinguishes the current run from the next-run setting and lists individual turret IDs, levels, XP, actual damage, level bonuses, pending milestones and the last settlement. Controller access is Back + right-stick click.
+
+When enabled:
+
+- Each uncollected raw scrap unit becomes one turret XP at successful wave end. Per-unit rolls favor proximity using `0.15 + 1 / (1 + planar_distance_squared / 16)`. All owned turrets, including carried ones, remain eligible at every level. Collected/queued-for-deletion pickups are excluded. Only a run with no eligible turret converts leftovers to normal cash.
+- `WaveSalvage` freezes pickup and turret positions before cleanup, commits once per wave, and records allocations and before/after progression snapshots. Its separate RNG is derived from the gameplay RNG state at run start without advancing that stream. Defeat, restart and developer jumps do not settle scrap. Victory does. Cleanup itself never awards progression.
+- `TurretProgression` costs `ceil(6 + 2*(L-1) + .30*(L-1)^2)` per next level. Multiple levels resolve immediately; excess XP carries forward. Ordinary levels add 3% damage additively, with milestone levels 5/10/15 reserved for forms. Growth continues beyond 15. Each turret applies its level multiplier once when constructing attack stats, alongside existing items, difficulty and entrenchment.
+- Prices use `floor(base * 2 * (1 + .20*wave) * (1 + linear*N + .10*N*N) * discounts)`, with a minimum of 1. `linear` starts at .65 and cannot drop below .40. N counts all additional acquired frames, including free build rewards, excluding the starter. Paid purchases remain separate for Quantity Discount. Item prices and the normal wave cash bonus are unchanged.
+- Leftovers no longer bank or improve next-wave build zones. Other build-zone behavior remains unchanged pending the encounter phase.
+
+**Not yet playable evolution:** milestones are queued, with no forms, branch choices, scrap-flight animations or level-up celebration yet. Normal shop type summaries do not display per-instance level bonuses; use the development view. Positive/negative pickup-range items and harder build encounters are later phases. The default economy remains available with the flag off.
+
+Run `./run_tests.ps1 -filter turret_progression` for foundation checks. Telemetry includes a per-wave `salvage` ledger, `turret_xp` and `salvage_fallback_cash`, plus XP/fallback totals; `scrap_earned` continues to count currency only. The original [evolution plan](plans/turret-evolution.html) contains the remaining phases and unvalidated balance targets.
+
 ## Shop catalog
 
 `ShopCatalog.DEFAULT_ENTRIES` lists every turret and item the arena shop can sell, each with an optional required flag. `ArenaShop` stocks from `available_ids` and rejects purchases of entries that are not `is_available`, so a stale offer for gated content cannot be bought. It replaces the old hardcoded allowlist. Items without a 3D consumer stay out of the catalog.

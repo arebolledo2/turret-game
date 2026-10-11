@@ -18,6 +18,7 @@ var dev_panel: DevPanel
 var _next_turret_id: int = 1
 var shop := ArenaShop.new()
 var waves := WaveDirector.new()
+var salvage := WaveSalvage.new()
 var drops := TechDropDirector.new()
 var build_zones := BuildZoneDirector.new()
 var blasts := BlastEffects.new()
@@ -76,6 +77,7 @@ func _ready() -> void:
 	session = RunSession.new()
 	shop.world = self
 	waves.world = self
+	salvage.world = self
 	drops.world = self
 	build_zones.world = self
 	blasts.world = self
@@ -133,6 +135,8 @@ func _ready() -> void:
 func start_run() -> void:
 	_clear_actors()
 	session.begin_run()
+	# Derive a separate stream without advancing combat/shop randomness.
+	salvage.reset(GameRandom.gameplay.state)
 	telemetry.begin_run()
 	FeatureFlagService.clear_pending()
 	_next_turret_id = 1
@@ -169,7 +173,7 @@ func start_run() -> void:
 	var listener := AudioListener3D.new()
 	player.add_child(listener)
 	listener.make_current()
-	add_turret(turret_start)
+	add_turret(turret_start, "normal", true)
 	camera_rig.snap()
 	begin_next_wave()
 
@@ -195,6 +199,8 @@ func _clear_actors() -> void:
 ## Ends the fight on the field: removes enemies, projectiles, effects and drops, stops audio and drops any carried
 ## turret. Scrap pickups are banked when `bank_pickups` is set, otherwise discarded.
 func clear_field(bank_pickups: bool) -> void:
+	# Progression awards are committed explicitly by WaveDirector, never by cleanup.
+	bank_pickups = bank_pickups and not session.state.turret_progression_enabled
 	for enemy in enemies:
 		enemy.dead = true
 		enemy.clear_transients()
@@ -210,7 +216,8 @@ func clear_field(bank_pickups: bool) -> void:
 	if bank_pickups:
 		var leftover := 0
 		for pickup: ScrapPickup in pickup_root.get_children():
-			leftover += pickup.amount
+			if not pickup.collected and not pickup.is_queued_for_deletion():
+				leftover += pickup.amount
 		build_zones.note_leftover(leftover)
 	for pickup: ScrapPickup in pickup_root.get_children():
 		if bank_pickups:
@@ -284,12 +291,15 @@ func fire_shot(origin: Vector3, target: CombatActor, spec: CombatShot3D) -> Proj
 	effects.show_muzzle(origin, spec.damage_type)
 	return shot
 
-func add_turret(at: Vector3, type_id: String = "normal") -> TurretActor:
+func add_turret(at: Vector3, type_id: String = "normal", starting: bool = false) -> TurretActor:
 	var turret := TurretActor.new()
 	turret.world = self
 	turret.turret_type = type_id
 	turret.turret_id = _next_turret_id
 	_next_turret_id += 1
+	session.state.turret_progression[turret.turret_id] = turret.progression
+	if not starting:
+		session.state.additional_turrets_acquired += 1
 	turret.position = at
 	actor_root.add_child(turret)
 	turret.reset_physics_interpolation()

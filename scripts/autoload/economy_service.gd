@@ -1,5 +1,11 @@
 extends Node
 
+## Initial scarcity tuning; item modifiers change only the linear coefficient.
+const PROGRESSION_BASE_MULTIPLIER: float = 2.0
+const PROGRESSION_LINEAR: float = .65
+const PROGRESSION_LINEAR_MIN: float = .40
+const PROGRESSION_QUADRATIC: float = .10
+
 var state: RunSessionState = RunSessionState.new()
 
 var rng: RandomNumberGenerator = GameRandom.gameplay
@@ -31,6 +37,7 @@ func reset_state() -> void:
 	shop_reroll_count = 0
 	current_shop_offers.clear()
 	turrets_purchased = 0
+	state.additional_turrets_acquired = 0
 
 
 ## Calculate reroll cost based on current reroll count, wave, and modifiers
@@ -82,12 +89,18 @@ func deduct_scrap(amount: int) -> bool:
 
 ## Shared pricing policy for both world presentations.
 func calculate_turret_price(base_price: int, wave: int) -> int:
-	# Include turret purchase penalty: +25% per turret owned (can be reduced by items)
+	# Legacy economy counts paid purchases; progression counts every additional frame.
 	var wave_multiplier: float = 1.0 + GameConstants.WAVE_PRICE_SCALE * wave
 	var penalty_per_turret: float = TurretStatsService.get_turret_purchase_penalty()
 	var penalty_multiplier: float = 1.0 + penalty_per_turret * turrets_purchased
+	var base_multiplier := 1.0
+	if state.turret_progression_enabled:
+		base_multiplier = PROGRESSION_BASE_MULTIPLIER
+		var acquired := state.additional_turrets_acquired
+		var linear := maxf(PROGRESSION_LINEAR_MIN, TurretStatsService.get_turret_purchase_penalty(PROGRESSION_LINEAR))
+		penalty_multiplier = 1.0 + linear * acquired + PROGRESSION_QUADRATIC * acquired * acquired
 	var shop_price_mult: float = ItemTrackingService.get_shop_price_multiplier()
-	var price: int = int(base_price * wave_multiplier * penalty_multiplier * shop_price_mult)
+	var price: int = int(base_price * base_multiplier * wave_multiplier * penalty_multiplier * shop_price_mult)
 
 	# Apply Quantity Discount: Every 3rd turret costs 50%
 	if ItemRegistry.has_special_effect("quantity_discount") and ItemTrackingService.item_counts.get("quantity_discount", 0) > 0:
@@ -95,7 +108,7 @@ func calculate_turret_price(base_price: int, wave: int) -> int:
 		if (turrets_purchased + 1) % 3 == 0:
 			price = int(price * 0.5)
 
-	return price
+	return maxi(1, price) if state.turret_progression_enabled else price
 
 
 func calculate_item_price(base_price: int, wave: int, item_id: String = "") -> int:

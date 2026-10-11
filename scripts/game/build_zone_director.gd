@@ -3,7 +3,8 @@ extends RefCounted
 
 ## Build zones: glowing patches that appear during a wave. Standing in one builds a turret or an item (shown on the
 ## zone). Progress holds briefly after the hero steps out, then drains. Scrap left on the field at wave end is still
-## banked, and also sets the next wave's zone allowance and quality (see `note_leftover` / `begin_wave`).
+## banked, and also sets the next wave's zone allowance and quality in the legacy economy.
+## Progression runs convert leftovers to XP and do not call `note_leftover`.
 ## Zones are plain `BuildZoneActor` nodes under `world.actor_root`, so run restarts clear them with everything else.
 var world: ArenaWorld
 var zones: Array[BuildZoneActor] = []

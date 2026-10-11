@@ -80,7 +80,9 @@ func load_dev_flags(config: ConfigFile) -> void:
 	for flag_id in FeatureFlagService.get_flag_ids():
 		if FeatureFlagService.get_definition(flag_id)["scope"] == FeatureFlagService.SCOPE_USER:
 			continue
-		var saved: Variant = config.get_value("dev_flags", flag_id, null)
+		if not config.has_section_key("dev_flags", flag_id):
+			continue # Older preferences do not contain newly introduced flags.
+		var saved: Variant = config.get_value("dev_flags", flag_id)
 		if saved is bool:
 			FeatureFlagService.set_enabled(flag_id, saved)
 
