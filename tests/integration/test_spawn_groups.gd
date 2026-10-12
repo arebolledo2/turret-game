@@ -98,3 +98,54 @@ func test_group_positions_are_independently_scattered() -> void:
 	for a in points:
 		for b in points: spread = maxf(spread, a.distance_to(b))
 	assert_gt(spread, 3.0, "A timed group no longer occupies a fixed 1.4 m grid")
+
+func setup_convoy_route() -> void:
+	world.convoy_mode = true
+	world.convoy_route = ConvoyRoute.new()
+	world.convoy_route.doors = PackedVector3Array([Vector3(-10, 0, 0), Vector3(10, 0, 0), Vector3(10, 0, 10)])
+	world.convoy_mover = ConvoyMover.new()
+	world.convoy_mover.start(world.convoy_route)
+	world.core.position = Vector3(-8, 0, 0)
+	world.player.position = Vector3(-10, 0, -8)
+
+func test_convoy_active_leg_and_core_gap_exclude_spawn_points() -> void:
+	setup_convoy_route()
+	assert_true(world.waves.spawn_blocked(Vector3(5, 0, 0)), "Ahead on active leg")
+	assert_true(world.waves.spawn_blocked(Vector3(-10, 0, 0)), "Behind on active leg")
+	assert_true(world.waves.spawn_blocked(Vector3(5, 0, 1.9)), "Corridor has width")
+	assert_false(world.waves.spawn_blocked(Vector3(5, 0, 2.1)))
+	assert_true(world.waves.spawn_blocked(world.core.position + Vector3(0, 0, 4)))
+	assert_false(world.waves.spawn_blocked(world.core.position + Vector3(0, 0, 5)))
+	assert_false(world.waves.spawn_blocked(Vector3(10, 0, 6)), "Future legs remain eligible")
+	world.convoy_mover.target_index = 2
+	world.core.position = Vector3(10, 0, 0)
+	assert_true(world.waves.spawn_blocked(Vector3(10, 0, 6)))
+	assert_false(world.waves.spawn_blocked(Vector3(-5, 0, 0)), "Completed leg becomes eligible")
+
+func test_convoy_warning_cancels_when_core_or_active_leg_changes() -> void:
+	setup_convoy_route()
+	world.waves.warn_spawn("basic", Vector3(10, 0, 6))
+	assert_eq(world.waves.pending_spawns.size(), 1)
+	world.convoy_mover.target_index = 2
+	world.waves.advance_spawn_warnings(1.0)
+	assert_true(world.waves.pending_spawns.is_empty())
+	assert_true(world.enemies.is_empty())
+	world.waves.warn_spawn("basic", Vector3(0, 0, 5))
+	assert_eq(world.waves.pending_spawns.size(), 1)
+	world.core.position = Vector3(0, 0, 2)
+	world.waves.advance_spawn_warnings(1.0)
+	assert_true(world.enemies.is_empty())
+	assert_true(world.waves.pending_spawns.is_empty())
+
+func test_convoy_sampling_preserves_safe_arrivals_and_summons_obey_exclusion() -> void:
+	setup_convoy_route()
+	GameRandom.gameplay.seed = 719
+	for kind in ["basic", "drowse", "kite", "brass_ram"]:
+		for index in 20:
+			assert_false(world.waves.spawn_blocked(world.waves.encounter_position(kind)))
+	var tender := world.spawn_enemy(Vector3(0, 0, 0), "tender")
+	tender.set_physics_process(false)
+	assert_null(tender.brain._summon("skitter", 0.0))
+	assert_true(tender.brain.children.is_empty())
+	tender.position = Vector3(0, 0, 5)
+	assert_not_null(tender.brain._summon("skitter", 0.0))

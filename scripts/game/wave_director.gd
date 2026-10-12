@@ -21,6 +21,8 @@ var boss_spawned: bool = false
 const GROUP_INTERVAL := 3.5
 const SPAWN_WARNING := .9
 const SPAWN_CLEARANCE := .9
+const CONVOY_CORE_SPAWN_GAP := 4.0
+const CONVOY_PATH_HALF_WIDTH := 2.0
 var pending_spawns: Array[Dictionary] = []
 var spawn_credit := 0.0
 var arrival_time_left := 0.0
@@ -30,7 +32,23 @@ func clear_spawn_warnings() -> void:
 		if is_instance_valid(pending.marker): pending.marker.queue_free()
 	pending_spawns.clear()
 
+## Protect the whole active waypoint-to-waypoint leg, including the part already travelled.
+func convoy_spawn_blocked(at: Vector3) -> bool:
+	if not world.convoy_mode or not is_instance_valid(world.core): return false
+	at = WorldGeometry.planar(at)
+	if at.distance_to(WorldGeometry.planar(world.core.position)) < world.core.radius + CONVOY_CORE_SPAWN_GAP:
+		return true
+	var mover := world.convoy_mover
+	if not mover or not mover.route or mover.finished: return false
+	var index := mover.target_index
+	if index < 1 or index >= mover.route.doors.size(): return false
+	var from := WorldGeometry.planar(mover.route.doors[index - 1])
+	var to := WorldGeometry.planar(mover.route.doors[index])
+	var closest := Geometry3D.get_closest_point_to_segment(at, from, to)
+	return at.distance_to(closest) < CONVOY_PATH_HALF_WIDTH
+
 func spawn_blocked(at: Vector3) -> bool:
+	if convoy_spawn_blocked(at): return true
 	if WorldGeometry.planar(world.player.position - at).length() < SPAWN_CLEARANCE + world.player.hurtbox_radius():
 		return true
 	return world.core != null and WorldGeometry.planar(world.core.position - at).length() < SPAWN_CLEARANCE + world.core.radius
@@ -294,6 +312,14 @@ func active_count(type_id: String) -> int:
 ## Each arrival independently samples a direction; timing is grouped, positions are not.
 ## Lazy beetles must appear within reach: they intentionally will not march in from the map edge.
 func encounter_position(type_id: String) -> Vector3:
+	var candidate := Vector3.ZERO
+	for attempt in 24:
+		candidate = _sample_encounter_position(type_id)
+		if not spawn_blocked(candidate): return candidate
+	# warn_spawn rejects this final candidate if no safe position was found.
+	return candidate
+
+func _sample_encounter_position(type_id: String) -> Vector3:
 	var centre := world.player.position
 	var angle := GameRandom.gameplay.randf() * TAU
 	var distance := GameRandom.gameplay.randf_range(5.0, 7.0)

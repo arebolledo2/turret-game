@@ -285,6 +285,7 @@ func _marionettist(hero: Vector3, speed: float) -> Vector3:
 				for index in 2:
 					if actor.world.waves.active_count("anchor") < 2:
 						var anchor := _summon("anchor", index * PI + .6, 2.4)
+						if not anchor: continue
 						var tether := EnemyOrdnance.launch(anchor, "beam", anchor.position, actor.position, 7.0)
 						tether.warning_time = 1.2
 						tether.beam_length = anchor.position.distance_to(actor.position)
@@ -366,6 +367,8 @@ func _area(at: Vector3, size: float, delay: float, amount: float, core_target: b
 
 func _summon(type_id: String, angle: float, distance: float = 1.0) -> CombatActor:
 	var at := WorldGeometry.clamp_position(actor.position + Vector3(cos(angle), 0, sin(angle)) * distance)
+	if actor.world.waves.convoy_spawn_blocked(at):
+		return null # Summoned enemies obey the same route and core exclusion as arrivals.
 	var child := actor.world.spawn_enemy(at, type_id)
 	child.brain.summon_parent = actor
 	children.append(child)

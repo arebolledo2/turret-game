@@ -97,3 +97,8 @@ Timed arrivals retain the 3.5-second cadence and 0.9-second warnings, but each e
 Below 35% health, a red screen-edge vignette and LOW HULL label warn about the hero; amber and CORE IN DANGER warn about the core. Intensity rises toward 15% health. Both channels can appear together, split across the edges, while the center stays clear. Healing fades the effect; prep, shop, pause and round-end screens suppress it. Reduced Motion uses a steady effect instead of a gentle pulse.
 
 Scattered-arrival and low-health follow-up: **1,062 tests passed**, 81 scripts, 18,704 assertions. Includes core-triggered beetle wake/contact, independently scattered group positions, warning recovery, pause/prep suppression, and Reduced Motion. Low-health visuals inspected in a rendered Godot capture.
+
+
+### Convoy spawn exclusion
+
+In Convoy, enemy arrivals must stay at least 4 m from the core's outer radius and outside a 2 m corridor on either side of the entire active waypoint-to-waypoint segment (rounded endpoint clearance included). Completed and future legs are eligible unless they overlap the active corridor or core exclusion. At a waypoint pause, the next leg is considered active. Initial sampling retries safe positions; an unsafe final candidate is skipped. Pending warnings recheck every tick, so a moving core or leg change cancels an unsafe arrival without relocating it. Enemy summons also respect these exclusions. Other modes retain their existing spawn clearance.
