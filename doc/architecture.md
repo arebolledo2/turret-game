@@ -19,7 +19,7 @@
 | `ArenaShop` | Supported stock, validation, transactions and rerolls |
 | `game_hud.gd` | HUD, refit, build summary and pause/end presentation |
 
-World classes live in `scripts/game/`. `CombatActor` (with the `TechDropActor` crate subclass), `TurretActor`, `Projectile3D` and `ScrapPickup` own individual behavior. `TurretActor` dispatches on the registry's `fire_mode` (projectile, pulse, chain, sweep) rather than on turret ids; resolved stats are read through the typed `TurretStats` and `EnemyStats` views in `scripts/data/`. `ChargeController3D`, `StatusEffects3D`, `CrowdGrid3D` and `CombatEffects3D` isolate combat concerns.
+World classes live in `scripts/game/`. `CombatActor` (with the `TechDropActor` crate subclass), `TurretActor`, `Projectile3D` and `ScrapPickup` own individual behavior. `TurretActor` dispatches on the registry's `fire_mode` (projectile, pulse, chain, sweep) rather than on turret ids; resolved stats are read through the typed `TurretStats` and `EnemyStats` views in `scripts/data/`. `ChargeController3D`, `StatusEffects3D`, `CrowdGrid3D` and `CombatEffects3D` isolate combat concerns. `TurretActor` delegates to `TurretEntrench` (stack rules and ring), `TurretTerrain` (zone bonuses and badge), `TurretRangeRing` and `ShotBurst` (delayed follow-up shots); per-form shot shapes, volley size, gunblade barrel stats and the list of implemented branches live in `TurretEvolution`, so a new form is data plus its visual and attack, not edits across the actor.
 
 ## Shared state and notifications
 

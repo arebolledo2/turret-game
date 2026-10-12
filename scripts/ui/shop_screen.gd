@@ -48,6 +48,25 @@ func _ready() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 24)
 	margin.add_child(column)
+	_build_header(column)
+	_build_tabs(column)
+	var content := _build_offers(column)
+	_build_sidebar(content)
+	turret_inspector = TurretInspector.new()
+	turret_inspector.world = world
+	turret_inspector.size_flags_vertical = SIZE_EXPAND_FILL
+	column.add_child(turret_inspector)
+	_build_footer(column)
+	evolution_reminder = EvolutionReminder.new()
+	add_child(evolution_reminder)
+	evolution_reminder.review_requested.connect(_review_ready_turret)
+	evolution_reminder.deploy_requested.connect(_deploy)
+	evolution_reminder.canceled.connect(func() -> void: continue_button.grab_focus.call_deferred())
+	status = _label(column, "", 20, UiPalette.MUTED)
+	visible = false
+
+## Title, balance and the growth summary line.
+func _build_header(column: VBoxContainer) -> void:
 	var header := HBoxContainer.new()
 	column.add_child(header)
 	var heading := VBoxContainer.new()
@@ -60,6 +79,9 @@ func _ready() -> void:
 	balance.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	growth_summary = _label(column, "", 24, UiPalette.GOOD)
 	column.add_child(HSeparator.new())
+
+## OFFERS / TURRETS tab buttons and the navigation hint.
+func _build_tabs(column: VBoxContainer) -> void:
 	var tab_row := HBoxContainer.new()
 	tab_row.add_theme_constant_override("separation", 16)
 	column.add_child(tab_row)
@@ -76,6 +98,9 @@ func _ready() -> void:
 	tab_hint.autowrap_mode = TextServer.AUTOWRAP_OFF
 	tab_hint.size_flags_horizontal = SIZE_EXPAND_FILL
 	tab_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+
+## The four offer cards; returns the row that also holds the sidebar.
+func _build_offers(column: VBoxContainer) -> HBoxContainer:
 	var content := HBoxContainer.new()
 	offers_content = content
 	content.size_flags_vertical = SIZE_EXPAND_FILL
@@ -107,6 +132,10 @@ func _ready() -> void:
 		card.lock_button.reparent(slot)
 		card.lock_button.custom_minimum_size.y = 44
 		offer_buttons.append(card)
+	return content
+
+## Build summary, offer details and installed upgrades.
+func _build_sidebar(content: HBoxContainer) -> void:
 	var side_scroll := ScrollContainer.new()
 	side_scroll.follow_focus = true
 	side_scroll.custom_minimum_size.x = 410
@@ -132,10 +161,9 @@ func _ready() -> void:
 	_label(sidebar, "Installed upgrades", 26)
 	installed = VBoxContainer.new()
 	sidebar.add_child(installed)
-	turret_inspector = TurretInspector.new()
-	turret_inspector.world = world
-	turret_inspector.size_flags_vertical = SIZE_EXPAND_FILL
-	column.add_child(turret_inspector)
+
+## Reroll, repairs and the deploy button.
+func _build_footer(column: VBoxContainer) -> void:
 	var footer := HBoxContainer.new()
 	footer.add_theme_constant_override("separation", 18)
 	column.add_child(footer)
@@ -159,13 +187,6 @@ func _ready() -> void:
 	continue_button.pressed.connect(_request_deploy)
 	footer.add_child(continue_button)
 	turret_inspector.navigation_exit = continue_button
-	evolution_reminder = EvolutionReminder.new()
-	add_child(evolution_reminder)
-	evolution_reminder.review_requested.connect(_review_ready_turret)
-	evolution_reminder.deploy_requested.connect(_deploy)
-	evolution_reminder.canceled.connect(func() -> void: continue_button.grab_focus.call_deferred())
-	status = _label(column, "", 20, UiPalette.MUTED)
-	visible = false
 
 func _label(parent: Node, text: String, font_size: int, color: Color = UiPalette.INK) -> Label:
 	var label := Label.new()
