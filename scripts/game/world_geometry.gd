@@ -28,20 +28,33 @@ static func material(color: Color, emission: bool = false) -> StandardMaterial3D
 	return result
 
 const FLOOR_TILE_METRES: float = 6.4 # one repeat of the floor textures; keep in sync with tools/build_floor_textures.py
+const FLOOR_THEMES: Array[String] = ["foundry", "concrete", "grating"]
+const DEFAULT_FLOOR_THEME: String = "foundry"
+## Lower metal keeps the warm rim light from glaring across rough, wet or mineral floors.
+const FLOOR_METALLIC := {"foundry": 0.3, "concrete": 0.05, "grating": 0.15}
+const FLOOR_EMISSION_ENERGY: float = 0.9
 
-## Tiling sci-fi plating for a flat floor covering `area` metres. Albedo, normal, roughness and emission come from
-## `assets/textures/floor/`; the emission map carries the seam lines and status lights.
-static func floor_material(area: Vector2) -> StandardMaterial3D:
+static func _floor_texture(theme: String, map: String) -> Texture2D:
+	return load("res://assets/textures/floor/%s/floor_%s.png" % [theme, map])
+
+## Tiling floor plating for a flat floor covering `area` metres. Albedo, normal, roughness and emission come from
+## `assets/textures/floor/<theme>/`; the emission map carries the seam lines and status lights.
+static func floor_material(area: Vector2, theme: String = DEFAULT_FLOOR_THEME) -> StandardMaterial3D:
+	if theme not in FLOOR_THEMES:
+		theme = DEFAULT_FLOOR_THEME
 	var result := StandardMaterial3D.new()
-	result.albedo_texture = load("res://assets/textures/floor/floor_albedo.png")
+	result.albedo_texture = _floor_texture(theme, "albedo")
 	result.roughness = 1.0
-	result.roughness_texture = load("res://assets/textures/floor/floor_roughness.png")
-	result.metallic = 0.3
+	result.roughness_texture = _floor_texture(theme, "roughness")
+	result.metallic = FLOOR_METALLIC.get(theme, 0.3)
 	result.normal_enabled = true
-	result.normal_texture = load("res://assets/textures/floor/floor_normal.png")
+	result.normal_texture = _floor_texture(theme, "normal")
 	result.emission_enabled = true
-	result.emission_texture = load("res://assets/textures/floor/floor_emission.png")
-	result.emission_energy_multiplier = 0.9
+	result.emission_texture = _floor_texture(theme, "emission")
+	# Multiply, so `emission` is a tint on the seam lights (see ArenaStage.set_floor_wave) rather than light added everywhere.
+	result.emission_operator = BaseMaterial3D.EMISSION_OP_MULTIPLY
+	result.emission = Color.WHITE
+	result.emission_energy_multiplier = FLOOR_EMISSION_ENERGY
 	result.uv1_scale = Vector3(area.x / FLOOR_TILE_METRES, area.y / FLOOR_TILE_METRES, 1.0)
 	result.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	return result

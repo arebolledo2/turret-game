@@ -144,6 +144,8 @@ func begin_next_wave() -> bool:
 	world.auto_repair()
 	world.telemetry.begin_wave(GameStateService.current_wave)
 	world.build_zones.begin_wave()
+	if world.stage:
+		world.stage.set_floor_wave(GameStateService.current_wave, EnemyEcology.BOSSES.has(GameStateService.current_wave))
 	announcement_left = ANNOUNCEMENT_TIME
 	clear_spawn_warnings()
 	spawn_credit = 0.0
