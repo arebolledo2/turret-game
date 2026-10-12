@@ -5,7 +5,11 @@ extends RefCounted
 var actor: CombatActor
 var kind: String
 var clock: float = 0.0
-var state: String = "idle"
+var state: String = "idle":
+	set(value):
+		state = value
+		if is_instance_valid(actor) and is_instance_valid(actor.world):
+			actor.world.mark_warning(actor, value == "warning")
 var destination: Vector3
 var locked_target: Vector3
 var awake: bool = false
@@ -60,7 +64,9 @@ func move(delta: float, speed: float) -> Vector3:
 	step_delta = delta
 	age += delta
 	clock -= delta
-	children = children.filter(func(child: CombatActor) -> bool: return is_instance_valid(child) and not child.dead)
+	if not children.is_empty():
+		# Untyped parameter: a freed child cannot be passed to a CombatActor-typed lambda.
+		children.assign(children.filter(func(child: Variant) -> bool: return is_instance_valid(child) and not child.dead))
 	var hero := actor.world.player.position
 	var toward := WorldGeometry.planar(hero - actor.position)
 	actor.chasing_hero = EnemyEcology.hero_only(kind)
@@ -345,14 +351,20 @@ func _visible() -> bool:
 
 func _warning_slot(area: bool) -> bool:
 	var count := 0
-	for other in actor.world.enemies:
-		if other == actor or other.dead or other.position.distance_to(actor.position) > 8.0:
+	var stale: Array = []
+	for other: Variant in actor.world.warning_actors:
+		if not is_instance_valid(other) or other.dead:
+			stale.append(other)
+			continue
+		if other == actor or other.position.distance_squared_to(actor.position) > 64.0:
 			continue
 		if not area and other.charge and other.charge.phase == ChargeController3D.Phase.WINDUP:
 			count += 1
 		if not other.brain: continue
 		if other.brain.state == "warning" and (other.enemy_type == "lobber") == area:
 			count += 1
+	for gone in stale:
+		actor.world.warning_actors.erase(gone)
 	return count < (1 if area else 2)
 
 func _bolt(target: Vector3, amount: float) -> void:
