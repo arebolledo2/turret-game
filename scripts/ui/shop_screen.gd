@@ -6,6 +6,7 @@ var world: ArenaWorld
 var active_tab: int = 0
 var tabs: Array[Button] = []
 var offers_content: HBoxContainer
+var tab_hint: Label
 var turret_inspector: TurretInspector
 var offer_buttons: Array[Button] = []
 var reroll_button: IconButton
@@ -71,7 +72,7 @@ func _ready() -> void:
 		tab.pressed.connect(switch_tab.bind(tabs.size()))
 		tab_row.add_child(tab)
 		tabs.append(tab)
-	var tab_hint := _label(tab_row, "Tabs: Q / E or LB / RB  ·  Details: right stick / mouse wheel", 21, UiPalette.MUTED)
+	tab_hint = _label(tab_row, "Tabs: Q / E or LB / RB  ·  Details: right stick / mouse wheel", 21, UiPalette.MUTED)
 	tab_hint.autowrap_mode = TextServer.AUTOWRAP_OFF
 	tab_hint.size_flags_horizontal = SIZE_EXPAND_FILL
 	tab_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -213,6 +214,7 @@ func refresh() -> void:
 	status.text = world.message
 	offers_content.visible = active_tab == 0
 	turret_inspector.visible = active_tab == 1
+	tab_hint.text = "Tabs: Q / E or LB / RB" if active_tab == 1 else "Tabs: Q / E or LB / RB  -  Details: right stick / mouse wheel"
 	reroll_button.visible = active_tab == 0
 	var ready_turrets := 0
 	for turret in world.turrets:
@@ -471,7 +473,7 @@ func _refresh_focus() -> void:
 	tabs[0].focus_neighbor_right = tabs[0].get_path_to(tabs[1])
 	tabs[1].focus_neighbor_left = tabs[1].get_path_to(tabs[0])
 	if active_tab == 1:
-		var roster := turret_inspector.buttons
+		var roster := turret_inspector.visible_buttons()
 		for tab in tabs:
 			tab.focus_neighbor_bottom = tab.get_path_to(roster[0] if not roster.is_empty() else continue_button)
 		for i in roster.size():
