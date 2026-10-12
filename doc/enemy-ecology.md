@@ -83,7 +83,7 @@ Full suite: **1,044 passing tests**, 79 scripts, 18,303 assertions. Final focuse
 
 ## Moving-core routes and greed
 
-Convoy routes begin and finish at inset wall doorways, with 1.1 m clearance for the core. Interior waypoints preserve the multi-leg journey. The next route begins at the previous exit; the initial hero and turret spawn inside the entry. Thin dashed marks emphasize the current leg, dim future legs and disappear when completed. Small waypoint dials and wall threshold brackets replace large labels and rings.
+Convoy routes begin and finish at inset wall doorways, with 1.1 m clearance for the core. Entry and exit always use different walls; a corner entry excludes both adjacent walls. Exit candidates stay away from corners, and the fallback respects the same rule. Interior waypoints preserve the multi-leg journey. The next route begins at the previous exit; the initial hero and turret spawn inside the entry. Thin dashed marks emphasize the current leg, dim future legs and disappear when completed. Small waypoint dials and wall threshold brackets replace large labels and rings.
 
 Heavy Hauler is the existing Uncommon Convoy-only greed item (two stacks maximum): core speed -20% and kill scrap +15% per stack. Convoy encounter budgets now scale with the full route duration, with no former 2x cap. A slower journey therefore keeps the same approximate arrival pressure for longer and yields additional enemies, rather than stretching a fixed budget across empty time. Tests cover long routes that already exceeded the old cap.
 

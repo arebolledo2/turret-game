@@ -96,3 +96,17 @@ func test_start_and_exit_are_on_walls_and_existing_exit_is_preserved() -> void:
 			assert_true(is_equal_approx(absf(point.x), bounds.x) or is_equal_approx(absf(point.z), bounds.y))
 		var next := _route(seed_value + 1, 9, route.doors[-1])
 		assert_eq(next.doors[0], route.doors[-1])
+
+func test_exit_never_shares_entry_wall_across_seeds_waves_and_corners() -> void:
+	var bounds := WorldGeometry.HALF_ARENA - Vector2.ONE * GameConstants.CONVOY_EDGE_MARGIN
+	var starts := [Vector3(-bounds.x, 0, 0), Vector3(bounds.x, 0, 0), Vector3(0, 0, -bounds.y), Vector3(0, 0, bounds.y), Vector3(bounds.x, 0, bounds.y), Vector3(-bounds.x, 0, -bounds.y)]
+	for start in starts:
+		for seed_value in 100:
+			var route := _route(seed_value, 1 + seed_value % 20, start)
+			var exit := route.doors[-1]
+			assert_eq(route.doors[0], start)
+			if is_equal_approx(absf(start.x), bounds.x):
+				assert_false(is_equal_approx(exit.x, start.x), "exit must not share entry X wall")
+			if is_equal_approx(absf(start.z), bounds.y):
+				assert_false(is_equal_approx(exit.z, start.z), "exit must not share entry Z wall")
+			assert_true(is_equal_approx(absf(exit.x), bounds.x) or is_equal_approx(absf(exit.z), bounds.y))

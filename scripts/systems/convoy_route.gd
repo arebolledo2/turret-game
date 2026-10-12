@@ -26,7 +26,7 @@ static func generate(rng: RandomNumberGenerator, wave: int, start: Vector3, half
 			var candidate := Vector3(rng.randf_range(-bounds.x, bounds.x), 0.0, rng.randf_range(-bounds.y, bounds.y))
 			# Start and exit sit at wall doorways; intermediate navigation points remain inside.
 			if _leg == leg_count(wave) - 1:
-				candidate = wall_point(candidate, bounds)
+				candidate = exit_point(rng, route.doors[0], bounds)
 			var distance := candidate.distance_to(previous)
 			if distance > farthest:
 				farthest = distance
@@ -38,6 +38,20 @@ static func generate(rng: RandomNumberGenerator, wave: int, start: Vector3, half
 		last_dx = chosen.x - previous.x
 		route.doors.append(chosen)
 	return route
+
+## Sample only walls not touched by the entry; corner entries exclude both walls.
+## Every candidate (including the distance fallback) therefore obeys the wall rule.
+static func exit_point(rng: RandomNumberGenerator, entry: Vector3, bounds: Vector2) -> Vector3:
+	var walls: Array[int] = []
+	if not is_equal_approx(entry.x, -bounds.x): walls.append(0)
+	if not is_equal_approx(entry.x, bounds.x): walls.append(1)
+	if not is_equal_approx(entry.z, -bounds.y): walls.append(2)
+	if not is_equal_approx(entry.z, bounds.y): walls.append(3)
+	var wall := walls[rng.randi_range(0, walls.size() - 1)]
+	# Keep exits away from corners so they belong unambiguously to one wall.
+	if wall < 2:
+		return Vector3(-bounds.x if wall == 0 else bounds.x, 0, rng.randf_range(-bounds.y * .95, bounds.y * .95))
+	return Vector3(rng.randf_range(-bounds.x * .95, bounds.x * .95), 0, -bounds.y if wall == 2 else bounds.y)
 
 ## Project to the nearest inset wall, retaining an existing doorway exactly.
 static func wall_point(point: Vector3, bounds: Vector2) -> Vector3:
