@@ -124,6 +124,42 @@ static func base_stats(base_type: String, branch: String, stage: int) -> Diction
 			stats.range = [145.0, 155.0, 170.0][stage - 1]
 	return stats
 
+## Branches with both a working attack and authored art in this build.
+const IMPLEMENTED: Array[String] = ["repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "gunblade", "machine_gun", "scatter", "saber", "siege"]
+
+## Arrows loosed per Repeater Bow volley, rail by rail.
+static func volley_size(stage: int) -> int:
+	return [2, 3, 5][stage - 1]
+
+## Per-form shot shape (visual, size, bounces), applied after the shot is built from stats.
+static func shape_shot(shot: CombatShot3D, base_type: String, branch: String, stage: int) -> void:
+	if base_type == "bow":
+		shot.visual_key = "arrow"
+		if branch == "greatbow":
+			shot.visual_scale = 1.0 + .3 * stage
+			shot.radius *= shot.visual_scale
+	elif base_type == "bowling":
+		shot.visual_key = "bowling_ball"
+		shot.radius = .24
+		shot.lifetime = 4.0
+		if branch == "heavy_roller":
+			shot.visual_scale = 1.0 + .25 * stage
+			shot.radius *= shot.visual_scale
+		elif branch == "bank_shot":
+			shot.ricochets = [2, 4, 6][stage - 1]
+			shot.lifetime = 6.0
+	if branch == "siege":
+		shot.radius = [.22, .28, .34][stage - 1]
+
+## The Gunblade's rotating barrel fires these stats rather than the blade's.
+static func gunblade_barrel_stats(stage: int) -> Dictionary:
+	var stats := TurretRegistry.get_base_stats("normal")
+	stats.damage = [7.0, 8.0, 9.0][clampi(stage - 1, 0, 2)]
+	stats.fire_rate = [2.0, 2.2, 2.4][clampi(stage - 1, 0, 2)]
+	stats.range = 300.0
+	stats.pierce = 1 if stage >= 3 else 0
+	return stats
+
 static func description(branch: String, stage: int) -> String:
 	match branch:
 		"machine_gun": return ["Rapid aimed fire.", "Rotary fire accelerates while a target remains in range.", "Piercing rotary fire accelerates to 2.5 times its resting rate."][stage - 1]

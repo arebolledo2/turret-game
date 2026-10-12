@@ -15,14 +15,8 @@ var carried: bool = false:
 			reset_entrench()
 var crossfire_muzzles: Array[Node3D] = []
 var gun_muzzles: Array[Node3D] = []
-var gun_burst_left := 0
-var gun_burst_clock := 0.0
-var gun_burst_shot: CombatShot3D
-var bow_burst_left := 0
-var bow_burst_clock := 0.0
-var bow_burst_heading := Vector3.FORWARD
-var bow_burst_target := Vector3.ZERO
-var bow_burst_shot: CombatShot3D
+var gun_burst := ShotBurst.new(.065)
+var bow_burst := ShotBurst.new(.09)
 var flame_emitters: Array[Node3D] = []
 var bowling_hardware: BowlingEvolutionVisual
 var loaded_ball: Node3D
@@ -55,17 +49,42 @@ var cached_stats: Dictionary = {}
 var stats_age: float = 0.0
 ## Typed reads of `cached_stats`; rebuilt together with it.
 var stats_view := TurretStats.new()
-## Seconds spent deployed in combat at the current spot; drives Entrench stacks.
-var stay_time: float = 0.0
-var entrench_stacks_cached: int = 0
-var entrench_ring: MeshInstance3D
-var entrench_notice: float = 0.0
-## Shop items retune Entrench through modifier stats; resolved lazily and dropped whenever modifiers change.
-var entrench_config: Dictionary = {}
+## Entrench stacks, the terrain underfoot and the range ring are owned by small helpers; the forwarding
+## properties below keep the common reads short.
+var entrench: TurretEntrench
+var terrain: TurretTerrain
+var range_overlay: TurretRangeRing
 
 const STATS_REFRESH: float = .25
 const TESLA_TINT := Color(.35, .9, 1.0)
 static var melee_materials: Dictionary = {}
+
+func _init() -> void:
+	entrench = TurretEntrench.new(self)
+	terrain = TurretTerrain.new(self)
+	range_overlay = TurretRangeRing.new(self)
+
+## Seconds spent deployed in combat at the current spot; drives Entrench stacks.
+var stay_time: float:
+	get: return entrench.stay_time
+	set(value): entrench.stay_time = value
+var entrench_stacks_cached: int:
+	get: return entrench.stacks
+	set(value): entrench.stacks = value
+var entrench_ring: MeshInstance3D:
+	get: return entrench.ring
+var zone_range_bonus: float:
+	get: return terrain.range_bonus
+var zone_badge: MeshInstance3D:
+	get: return terrain.badge
+var range_ring: MeshInstance3D:
+	get: return range_overlay.ring
+var range_ring_metres: float:
+	get: return range_overlay.metres
+var bow_burst_left: int:
+	get: return bow_burst.left
+var gun_burst_left: int:
+	get: return gun_burst.left
 
 func _ready() -> void:
 	Events.modifiers_changed.connect(invalidate_stats)
@@ -101,8 +120,8 @@ func _rebuild_model() -> void:
 		barrel_rest = recoil_barrel.position
 	muzzle_rest = muzzle.position
 	spool = 0.0
-	bow_burst_left = 0
-	gun_burst_left = 0
+	bow_burst.cancel()
+	gun_burst.cancel()
 	loaded_ball = model.find_child("LoadedBall", true, false) as Node3D
 	loaded_arrow = model.find_child("LoadedArrow", true, false) as Node3D
 	bow_muzzles.clear()
@@ -200,110 +219,36 @@ static func sweep_overlaps_body(offset: Vector3, reach: float, start: float, swe
 			return true
 	return false
 
-## Terrain under this turret, refreshed with the cached stats: high ground range and power node Entrench speed.
-var zone_range_bonus: float = 0.0
-var zone_entrench_bonus: float = 0.0
-
-var zone_badge: MeshInstance3D
-var zone_badge_type: String = ""
-
-func _refresh_zone_bonuses() -> void:
-	if world.terrain and not carried:
-		zone_range_bonus = world.terrain.range_bonus_at(position)
-		zone_entrench_bonus = world.terrain.entrench_bonus_at(position)
-	else:
-		zone_range_bonus = 0.0
-		zone_entrench_bonus = 0.0
-	_update_zone_badge()
-
-## A ring in the zone's colour under a turret that is benefiting from high ground or a power node, so the bonus is
-## visible on the turret itself. Only while zones are readable.
-func _update_zone_badge() -> void:
-	var wanted := ""
-	if world.terrain and world.terrain.readable and not carried:
-		if zone_range_bonus > 0.0:
-			wanted = TerrainZone.HIGH_GROUND
-		elif zone_entrench_bonus > 0.0:
-			wanted = TerrainZone.POWER_NODE
-	if wanted == zone_badge_type:
-		return
-	zone_badge_type = wanted
-	if zone_badge:
-		zone_badge.queue_free()
-		zone_badge = null
-	if wanted != "":
-		zone_badge = WorldGeometry.ring(self, .9, TerrainZone.TYPES[wanted]["color"])
-		zone_badge.position.y = .025
-
-func _stack_seconds() -> float:
-	return float(_entrench()["seconds"]) / (1.0 + zone_entrench_bonus)
-
 func invalidate_stats() -> void:
 	cached_stats = {}
-	entrench_config = {}
-
-func _entrench() -> Dictionary:
-	if entrench_config.is_empty():
-		entrench_config = {
-			"seconds": maxf(.5, ModifierService.apply_modifiers_to_stat(GameConstants.ENTRENCH_STACK_SECONDS, "entrench_stack_seconds")),
-			"max": maxi(0, roundi(ModifierService.apply_modifiers_to_stat(float(GameConstants.ENTRENCH_MAX_STACKS), "entrench_max_stacks"))),
-			"bonus": maxf(0.0, ModifierService.apply_modifiers_to_stat(1.0, "entrench_bonus")),
-		}
-	return entrench_config
+	entrench.invalidate()
 
 func entrench_max() -> int:
-	return int(_entrench()["max"])
+	return entrench.max_stacks()
 
-## Fractional damage / fire rate granted by the current stacks (before shop modifiers, which apply to the base stat).
 func entrench_damage_bonus() -> float:
-	return GameConstants.ENTRENCH_DAMAGE_PER_STACK * float(entrench_stacks_cached) * float(_entrench()["bonus"])
+	return entrench.damage_bonus()
 
 func entrench_fire_rate_bonus() -> float:
-	return GameConstants.ENTRENCH_FIRE_RATE_PER_STACK * float(entrench_stacks_cached) * float(_entrench()["bonus"])
+	return entrench.fire_rate_bonus()
 
 func entrench_stacks() -> int:
-	if not FeatureFlagService.is_enabled(FeatureFlagService.ENTRENCH):
-		return 0
-	return mini(int(stay_time / _stack_seconds()), entrench_max())
+	return entrench.earned_stacks()
 
 func reset_entrench() -> void:
-	stay_time = 0.0
-	_refresh_zone_bonuses()
-	entrench_stacks_cached = 0
-	cached_stats = {}
-	_update_entrench_ring()
+	entrench.reset()
 
-## Fraction (0..1) toward the next stack; 1 when maxed.
 func entrench_progress() -> float:
-	if entrench_stacks_cached >= entrench_max():
-		return 1.0
-	var seconds := _stack_seconds()
-	return fmod(stay_time, seconds) / seconds
+	return entrench.progress()
+
+func _stack_seconds() -> float:
+	return entrench.stack_seconds()
 
 func _tick_entrench(delta: float) -> void:
-	entrench_notice = maxf(0.0, entrench_notice - delta)
-	if FeatureFlagService.is_enabled(FeatureFlagService.ENTRENCH):
-		stay_time += delta
-	elif stay_time > 0.0:
-		stay_time = 0.0
-	var stacks := entrench_stacks()
-	if stacks != entrench_stacks_cached:
-		if stacks > entrench_stacks_cached:
-			entrench_notice = .65
-		entrench_stacks_cached = stacks
-		cached_stats = {}
-	_update_entrench_ring()
+	entrench.tick(delta)
 
 func _update_entrench_ring() -> void:
-	if not entrench_ring:
-		entrench_ring = GroundDial.create(self, .72, Color("e9b969"), true)
-		entrench_ring.position.y = .03
-	var mode := SettingsService.ground_markers
-	var inspecting := is_instance_valid(world) and is_instance_valid(world.player) and position.distance_to(world.player.position) < TurretPlacement.PICKUP_RANGE
-	var contextual := inspecting or entrench_notice > 0.0
-	entrench_ring.visible = entrench_stacks_cached > 0 and not carried and (mode == SettingsService.GroundMarkers.ALL or (mode == SettingsService.GroundMarkers.CONTEXTUAL and contextual))
-	var fill := (float(entrench_stacks_cached) + (entrench_progress() if entrench_stacks_cached < entrench_max() else 0.0)) / float(maxi(entrench_max(), 1))
-	GroundDial.update(entrench_ring, fill, false, entrench_max())
+	entrench.update_ring()
 
 ## Situational item bonuses, resolved with the cached stats: Last Stand (low hull) and Storm Conductor (linked electric turrets).
 func _apply_item_conditions(stats: Dictionary) -> void:
@@ -331,7 +276,7 @@ func _current_view(delta: float) -> TurretStats:
 func _current_stats(delta: float) -> Dictionary:
 	stats_age += delta
 	if cached_stats.is_empty() or stats_age >= STATS_REFRESH:
-		_refresh_zone_bonuses()
+		terrain.refresh()
 		cached_stats = resolve_attack_stats()
 		if progression.evolution_branch == "gunblade":
 			gun_stats = TurretStats.new(resolve_attack_stats(true))
@@ -346,11 +291,7 @@ func resolve_attack_stats(secondary: bool = false, branch: String = "", stage: i
 		stage = progression.evolution_stage
 	var base := TurretEvolution.base_stats(turret_type, branch, stage)
 	if secondary:
-		base = TurretRegistry.get_base_stats("normal")
-		base.damage = [7.0, 8.0, 9.0][clampi(stage - 1, 0, 2)]
-		base.fire_rate = [2.0, 2.2, 2.4][clampi(stage - 1, 0, 2)]
-		base.range = 300.0
-		base.pierce = 1 if stage >= 3 else 0
+		base = TurretEvolution.gunblade_barrel_stats(stage)
 	var stats := ModifierService.get_turret_stats(turret_type, world.difficulty_config, base, "normal" if secondary else "")
 	if world.session.state.turret_progression_enabled:
 		progression.apply_stats(stats)
@@ -364,33 +305,18 @@ func resolve_attack_stats(secondary: bool = false, branch: String = "", stage: i
 		stats["fire_rate"] = float(stats.get("fire_rate", 1.0)) * (1.0 + GameConstants.ENTRENCH_FIRE_RATE_PER_STACK * bonus)
 	return stats
 
-var range_ring: MeshInstance3D
-var range_ring_metres: float = 0.0
+## Range after the area multiplier that pulse and flame attacks apply.
+func effective_range(view: TurretStats) -> float:
+	var area := view.area_size if TurretRegistry.get_fire_mode(turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0
+	return view.range_metres * area
 
-## Resolved attack range, shown by the global toggle or when approaching a deployed turret.
 func _update_range_ring() -> void:
-	var inspecting := not carried and is_instance_valid(world.player) and position.distance_to(world.player.position) < TurretPlacement.PICKUP_RANGE
-	var contextual := inspecting and SettingsService.ground_markers != SettingsService.GroundMarkers.OFF
-	if not (world.show_ranges or contextual) or not FeatureFlagService.is_enabled(FeatureFlagService.RANGE_OVERLAY):
-		if range_ring:
-			range_ring.visible = false
-		return
-	var view := _current_view(0.0)
-	var metres := view.range_metres * (view.area_size if TurretRegistry.get_fire_mode(turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0)
-	if metres <= 0.0:
-		return
-	if not range_ring:
-		range_ring = GroundDial.create(self, metres, Color(.4, .95, .9, .65))
-	if not is_equal_approx(metres, range_ring_metres):
-		range_ring_metres = metres
-		GroundDial.resize(range_ring, metres)
-	range_ring.global_position = Vector3(global_position.x, .04, global_position.z)
-	range_ring.visible = true
+	range_overlay.update()
 
 func _physics_process(delta: float) -> void:
 	if not world.is_combat():
-		bow_burst_left = 0
-		gun_burst_left = 0
+		bow_burst.cancel()
+		gun_burst.cancel()
 		return
 	if carried:
 		position = world.player.position + Vector3(0, 1.15, .25)
@@ -404,11 +330,11 @@ func _physics_process(delta: float) -> void:
 		loaded_ball.visible = cooldown <= stats.cooldown_seconds * .3
 	if loaded_arrow:
 		for arrow in bow_loaded_arrows:
-			arrow.visible = cooldown <= stats.cooldown_seconds * .35 and bow_burst_left == 0
-	if bow_burst_left > 0:
+			arrow.visible = cooldown <= stats.cooldown_seconds * .35 and bow_burst.left == 0
+	if bow_burst.left > 0:
 		_tick_bow_burst(delta, stats)
 		return
-	var range_metres := stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0)
+	var range_metres := effective_range(stats)
 	var fire_mode := TurretRegistry.get_fire_mode(turret_type)
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
 		_spin_bat(delta, stats, range_metres)
@@ -445,23 +371,7 @@ func _physics_process(delta: float) -> void:
 ## A shot of this turret's damage type, stamped for kill attribution, with its crit already rolled.
 func _new_shot(stats: TurretStats) -> CombatShot3D:
 	var shot := CombatShot3D.from_stats(stats.values, TurretRegistry.get_damage_type(turret_type))
-	if turret_type == "bow":
-		shot.visual_key = "arrow"
-		if progression.evolution_branch == "greatbow":
-			shot.visual_scale = 1.0 + .3 * progression.evolution_stage
-			shot.radius *= shot.visual_scale
-	elif turret_type == "bowling":
-		shot.visual_key = "bowling_ball"
-		shot.radius = .24
-		shot.lifetime = 4.0
-		if progression.evolution_branch == "heavy_roller":
-			shot.visual_scale = 1.0 + .25 * progression.evolution_stage
-			shot.radius *= shot.visual_scale
-		elif progression.evolution_branch == "bank_shot":
-			shot.ricochets = [2, 4, 6][progression.evolution_stage - 1]
-			shot.lifetime = 6.0
-	if progression.evolution_branch == "siege":
-		shot.radius = [.22, .28, .34][progression.evolution_stage - 1]
+	TurretEvolution.shape_shot(shot, turret_type, progression.evolution_branch, progression.evolution_stage)
 	shot.source_id = turret_id
 	shot.attack_families = TurretRegistry.get_attack_families(turret_type)
 	if TurretStatsService.roll_turret_crit():
@@ -486,11 +396,9 @@ func _fire_chain(stats: TurretStats) -> void:
 func _fire_projectile(stats: TurretStats) -> void:
 	var heading := WorldGeometry.planar(target.position - muzzle.global_position).normalized()
 	if progression.evolution_branch == "repeater_bow":
-		bow_burst_left = [2, 3, 5][progression.evolution_stage - 1]
-		bow_burst_heading = WorldGeometry.planar(target.position - position).normalized()
-		bow_burst_target = target.position
-		bow_burst_shot = _new_shot(stats)
-		bow_burst_clock = 0.0
+		bow_burst.start(TurretEvolution.volley_size(progression.evolution_stage), _new_shot(stats))
+		bow_burst.heading = WorldGeometry.planar(target.position - position).normalized()
+		bow_burst.aim_point = target.position
 		_tick_bow_burst(0.0, stats)
 	elif progression.evolution_branch == "scatter" and progression.evolution_stage >= 2:
 		for exit: Node3D in crossfire_muzzles:
@@ -519,8 +427,7 @@ func available_evolutions() -> Array[String]:
 		return result
 	for branch in progression.evolution_options(turret_type):
 		var next_stage := progression.evolution_stage + 1
-		var implemented := branch in ["repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "gunblade", "machine_gun", "scatter", "saber", "siege"]
-		if implemented and ClockworkModels.available(TurretEvolution.model_key(turret_type, branch, next_stage)):
+		if branch in TurretEvolution.IMPLEMENTED and ClockworkModels.available(TurretEvolution.model_key(turret_type, branch, next_stage)):
 			result.append(branch)
 	return result
 
@@ -574,7 +481,7 @@ static func cone_overlaps_body(offset: Vector3, heading: Vector3, reach: float, 
 
 ## The rotating barrel only shoots along its visible bore; blade and bullet bonuses stay separate.
 func _fire_gunblade() -> void:
-	if cooldown > 0.0 or gun_burst_left > 0:
+	if cooldown > 0.0 or gun_burst.left > 0:
 		return
 	var heading := WorldGeometry.planar(-muzzle.global_basis.z).normalized()
 	for enemy in world.crowd.query_radius(position, gun_stats.range_metres, true):
@@ -590,37 +497,33 @@ func _fire_gunblade() -> void:
 			shot.critical = true
 			shot.damage = TurretStatsService.calculate_turret_crit_damage(shot.damage)
 		world.fire_direction(muzzle.global_position, heading, shot)
-		gun_burst_shot = shot
-		gun_burst_left = maxi(0, progression.evolution_stage - 1)
-		gun_burst_clock = .065
+		gun_burst.start(maxi(0, progression.evolution_stage - 1), shot, gun_burst.interval)
 		cooldown = gun_stats.cooldown_seconds
 		return
 
 func _tick_bow_burst(delta: float, stats: TurretStats) -> void:
-	aim.rotation.y = atan2(-bow_burst_heading.x, -bow_burst_heading.z)
-	bow_burst_clock -= delta
-	while bow_burst_left > 0 and bow_burst_clock <= 0.0:
-		var rail_index := bow_muzzles.size() - bow_burst_left
+	aim.rotation.y = atan2(-bow_burst.heading.x, -bow_burst.heading.z)
+	bow_burst.advance(delta)
+	while bow_burst.is_due():
+		var rail_index := bow_muzzles.size() - bow_burst.left
 		var rail := bow_muzzles[clampi(rail_index, 0, bow_muzzles.size() - 1)]
-		var flight_heading := WorldGeometry.planar(bow_burst_target - rail.global_position).normalized()
-		world.fire_direction(rail.global_position, flight_heading, bow_burst_shot)
-		bow_burst_left -= 1
-		bow_burst_clock += .09
+		var flight_heading := WorldGeometry.planar(bow_burst.aim_point - rail.global_position).normalized()
+		world.fire_direction(rail.global_position, flight_heading, bow_burst.shot)
+		bow_burst.consume()
 		cooldown = stats.cooldown_seconds
 	for arrow in bow_loaded_arrows:
 		arrow.visible = false
 
 ## Follow-up shots leave the moving barrel instead of aiming invisibly away from the blade.
 func _tick_gunblade_burst(delta: float) -> void:
-	if gun_burst_left <= 0:
+	if gun_burst.left <= 0:
 		return
-	gun_burst_clock -= delta
-	while gun_burst_left > 0 and gun_burst_clock <= 0.0:
-		var exit := gun_muzzles[clampi(gun_muzzles.size() - gun_burst_left, 0, gun_muzzles.size() - 1)]
+	gun_burst.advance(delta)
+	while gun_burst.is_due():
+		var exit := gun_muzzles[clampi(gun_muzzles.size() - gun_burst.left, 0, gun_muzzles.size() - 1)]
 		var heading := WorldGeometry.planar(-exit.global_basis.z).normalized()
-		world.fire_direction(exit.global_position, heading, gun_burst_shot)
-		gun_burst_left -= 1
-		gun_burst_clock += .065
+		world.fire_direction(exit.global_position, heading, gun_burst.shot)
+		gun_burst.consume()
 		cooldown = gun_stats.cooldown_seconds
 
 ## Additional held blades reuse the authored arm, hand, hilt and prism geometry.
