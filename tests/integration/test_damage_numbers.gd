@@ -73,8 +73,28 @@ func test_full_number_pool_recycles_without_exceeding_limit() -> void:
 	for i in range(DamageNumbers3D.LIMIT + 10):
 		var actor := Node3D.new()
 		add_child_autofree(actor)
+		numbers.advance(.001, false)
 		numbers.show_damage(actor, 3, false)
 	assert_eq(numbers.entries.size(), DamageNumbers3D.LIMIT)
 	var shot := CombatShot3D.new()
 	shot.critical = true
 	assert_true(shot.copy().critical)
+
+func test_plain_hits_start_a_bounded_number_of_new_numbers_per_tick() -> void:
+	var numbers := world.effects.damage_numbers
+	var actors: Array[Node3D] = []
+	for i in range(6):
+		var actor := Node3D.new()
+		add_child_autofree(actor)
+		actors.append(actor)
+	for actor in actors:
+		numbers.show_damage(actor, 3, false)
+	assert_eq(numbers.entries.size(), DamageNumbers3D.NEW_PER_TICK, "Plain enemy hits are budgeted")
+	numbers.show_damage(actors[0], 2, false)
+	assert_eq(numbers.entries[0].amount, 5.0, "Hits on a shown target still merge")
+	numbers.show_damage(actors[1], 3, false, true)
+	numbers.show_damage(actors[2], 3, true)
+	assert_eq(numbers.entries.size(), DamageNumbers3D.NEW_PER_TICK + 2, "Crits and player damage bypass the budget")
+	numbers.advance(.01, false)
+	numbers.show_damage(actors[3], 3, false)
+	assert_eq(numbers.entries.size(), DamageNumbers3D.NEW_PER_TICK + 3, "The budget resets each tick")
