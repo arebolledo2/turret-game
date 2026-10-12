@@ -277,7 +277,7 @@ func test_playfield_scaled_projection_roundtrips() -> void:
 	var hit: Vector3 = Plane(Vector3.UP, 0).intersects_ray(origin, direction)
 	assert_lt(hit.distance_to(point), .001)
 
-func test_preparation_resets_overview_and_hero_but_deploy_preserves_chosen_zoom() -> void:
+func test_preparation_resets_overview_and_deploy_eases_to_combat_zoom() -> void:
 	world.player.position = Vector3(15, 0, -8)
 	world.player.velocity = Vector3(2, 0, 1)
 	world.player.knockback_velocity = Vector3(3, 0, 2)
@@ -294,8 +294,11 @@ func test_preparation_resets_overview_and_hero_but_deploy_preserves_chosen_zoom(
 	world.camera_rig.snap()
 	world.preparation.cycle(1)
 	assert_true(world.preparation.deploy())
-	assert_eq(world.camera_rig.zoom, .8, "Deploy retains the player's selected preparation zoom")
+	assert_eq(world.camera_rig.zoom, .8, "Deploy begins its transition at the current zoom")
 	assert_eq(world.camera_rig.focus, Vector3.ZERO)
+	assert_eq(world.camera_rig.target_zoom, GameConstants.CAMERA_DEFAULT_ZOOM)
+	world.camera_rig.advance(1.0)
+	assert_almost_eq(world.camera_rig.zoom, GameConstants.CAMERA_DEFAULT_ZOOM, .001)
 	assert_true(world.player.visible)
 
 func test_core_at_centre_keeps_hero_clear_and_survival_starts_at_origin() -> void:

@@ -14,6 +14,7 @@ func generate(wave: int) -> void:
 		child.queue_free()
 	centres.clear()
 	labels.clear()
+	if not world.core_mode: return
 	var count := GameRandom.gameplay.randi_range(1, 2) if wave <= 5 else GameRandom.gameplay.randi_range(2, 4)
 	var bounds := WorldGeometry.HALF_ARENA - Vector2.ONE * (RADIUS + 1.0)
 	for index in count:

@@ -3,9 +3,9 @@ extends RefCounted
 
 ## One conversion boundary from the existing pixel-based balance data.
 const METRES_PER_PIXEL: float = 0.01
-## Halve the playing area while preserving its aspect ratio and entity/weapon scale.
-const ARENA_LINEAR_SCALE: float = sqrt(0.5)
-const HALF_ARENA: Vector2 = Vector2(28.8, 16.2) * ARENA_LINEAR_SCALE # approximately 40.73 x 22.91 m
+## 37.5% of the original area: 25% smaller than the previous half-area arena.
+const ARENA_LINEAR_SCALE: float = sqrt(0.375)
+const HALF_ARENA: Vector2 = Vector2(28.8, 16.2) * ARENA_LINEAR_SCALE # approximately 35.27 x 19.84 m
 const WORLD_LAYER: int = 1
 const ENEMY_HURTBOX_LAYER: int = 2
 const PLAYER_LAYER: int = 4

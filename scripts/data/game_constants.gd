@@ -10,8 +10,8 @@ extends RefCounted
 const CAMERA_BASE_SIZE: float = 10.0
 ## Continuous, informational motion (walk cycles, rotors, flame shaders) runs at this fraction of full speed with Reduced Motion on.
 const REDUCED_MOTION_SPEED: float = 0.2
-const CAMERA_DEFAULT_ZOOM: float = 0.75
-const CAMERA_ZOOM_MIN: float = 0.5
+const CAMERA_DEFAULT_ZOOM: float = 0.85
+const CAMERA_ZOOM_MIN: float = 0.6
 const CAMERA_ZOOM_MAX: float = 2.0
 const CAMERA_ZOOM_SPEED: float = 10.0 # smoothing rate toward the target zoom
 const CAMERA_ZOOM_WHEEL_STEP: float = 1.12 # multiplier per wheel notch

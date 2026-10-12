@@ -24,9 +24,9 @@ func visible_ground_inside_arena(zoom_value: float) -> bool:
 	var margin := GameConstants.CAMERA_EDGE_MARGIN + .001
 	return abs(rig.focus.x) + half.x <= WorldGeometry.HALF_ARENA.x + margin or rig.focus.x == 0.0
 
-func test_arena_has_half_the_previous_surface_area_and_same_aspect() -> void:
+func test_arena_has_25_percent_less_surface_area_and_same_aspect() -> void:
 	var size := WorldGeometry.HALF_ARENA * 2.0
-	assert_almost_eq(size.x * size.y, 57.6 * 32.4 * .5, .001)
+	assert_almost_eq(size.x * size.y, 57.6 * 32.4 * .5 * .75, .001)
 	assert_almost_eq(size.x / size.y, 16.0 / 9.0, .0001)
 
 func test_camera_keeps_rotation_and_follows_the_player() -> void:
@@ -34,18 +34,18 @@ func test_camera_keeps_rotation_and_follows_the_player() -> void:
 	rig.set_zoom(1.5)
 	rig.snap()
 	var basis_before := world.camera.global_basis
-	world.player.position = Vector3(8, 0, 4)
+	world.player.position = Vector3(4, 0, 2)
 	settle()
-	assert_almost_eq(rig.focus.x, 8.0, .05)
-	assert_almost_eq(rig.focus.z, 4.0, .05)
+	assert_almost_eq(rig.focus.x, 4.0, .05)
+	assert_almost_eq(rig.focus.z, 2.0, .05)
 	assert_eq(world.camera.global_basis, basis_before, "Only translation may change; movement is camera-relative")
 	assert_almost_eq(world.camera.position.x, rig.focus.x, .001)
 
-func test_wave_starts_at_full_overview_zoom() -> void:
+func test_wave_targets_closer_combat_zoom() -> void:
 	var previous := rig.visible_half_extents(1.5)
 	var current := rig.visible_half_extents(GameConstants.CAMERA_ZOOM_MIN)
-	assert_almost_eq(current.x * current.y / (previous.x * previous.y), 9.0, .001)
-	assert_eq(rig.target_zoom, GameConstants.CAMERA_ZOOM_MIN)
+	assert_almost_eq(current.x * current.y / (previous.x * previous.y), 6.25, .001)
+	assert_eq(rig.target_zoom, GameConstants.CAMERA_DEFAULT_ZOOM)
 
 func test_zoom_is_clamped_and_changes_orthographic_size() -> void:
 	rig.set_zoom(100.0)
@@ -103,6 +103,6 @@ func test_turret_placement_search_starts_from_the_player() -> void:
 
 func test_snap_clears_old_camera_interpolation_history() -> void:
 	world.camera.get_global_transform_interpolated()
-	world.player.position = Vector3(8, 0, 4)
+	world.player.position = Vector3(4, 0, 2)
 	rig.snap()
 	assert_almost_eq(world.camera.get_global_transform_interpolated().origin, world.camera.global_position, Vector3.ONE * .001, "Snapping must not sweep from the old view")

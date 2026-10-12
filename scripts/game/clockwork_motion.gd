@@ -87,11 +87,12 @@ func reset() -> void:
 func tick(delta: float, speed: float, reduced: bool, carrying: bool = false) -> void:
 	# Reduced motion keeps gentle, slowed cycles; recoil is suppressed at the source (see fire).
 	var rate := GameConstants.REDUCED_MOTION_SPEED if reduced else 1.0
-	phase += speed * delta * 6.0 * rate
+	# Charger locomotion stays distance-paced, including in Reduced Motion.
+	phase += speed * delta * (10.0 if kind == "charger" else 6.0 * rate)
 	hover_phase += delta * 2.5 * rate
 	recoil = maxf(0.0, recoil - delta * .3)
-	# Hero is immediate; enemy cosmetic poses are staggered over two physics ticks.
-	if kind != "hero" and (Engine.get_physics_frames() + stagger) % 2 != 0:
+	# Hero and charging feet update every tick; other cosmetic poses are staggered.
+	if kind not in ["hero", "charger"] and (Engine.get_physics_frames() + stagger) % 2 != 0:
 		return
 	var moving := clampf(speed / 1.5, 0.0, 1.0)
 	if body:
@@ -104,8 +105,10 @@ func tick(delta: float, speed: float, reduced: bool, carrying: bool = false) -> 
 		if kind in ["tank", "charger"]:
 			var cycle := phase + limb_phases[index]
 			var initial: Transform3D = rest[limbs[index]]
-			var sweep := -sin(cycle) * .16 * moving * limb_sides[index]
-			var lift := maxf(0.0, cos(cycle)) * .14 * moving * limb_sides[index]
+			var stride := (.24 if kind == "charger" else .16)
+			if kind == "charger" and reduced: stride *= .65
+			var sweep := -sin(cycle) * stride * moving * limb_sides[index]
+			var lift := maxf(0.0, cos(cycle)) * (.08 if kind == "charger" and reduced else .14) * moving * limb_sides[index]
 			limbs[index].transform = Transform3D(initial.basis * Basis(Vector3.UP, sweep) * Basis(Vector3.FORWARD, lift), initial.origin)
 		else:
 			var angle := sin(phase + float(index % 2) * PI) * .24 * moving

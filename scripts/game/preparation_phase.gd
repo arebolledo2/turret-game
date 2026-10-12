@@ -149,6 +149,7 @@ func deploy() -> bool:
 	if not GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_ANNOUNCEMENT): return false
 	end()
 	world.camera_rig.snap()
+	world.camera_rig.set_zoom(GameConstants.CAMERA_DEFAULT_ZOOM)
 	world.audio.play_cue("wave", world.player.position)
 	return true
 

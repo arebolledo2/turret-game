@@ -14,7 +14,7 @@ See [the enemy ecology guide](enemy-ecology.md) for the current twenty-wave rost
 
 ## Playable scope
 
-- Elevated orthographic follow camera (`CameraRig`) over a 40.73 x 22.91 metre flat arena (half the previous surface area; same aspect ratio). The camera only translates, stays clamped to the floor, starts at 0.75x zoom (four times the ground area of the old 1.5x default), and zooms 0.5x-2x with the mouse wheel, `+`/`-` keys or gamepad triggers.
+- Elevated orthographic follow camera (`CameraRig`) over a 35.27 x 19.84 metre flat arena (25% smaller than the previous arena; same aspect ratio). The camera only translates, stays clamped to the floor, starts preparation at the farthest 0.6x zoom and eases to 0.85x when deployed, and zooms 0.6x-2x with the mouse wheel, `+`/`-` keys or gamepad triggers.
 - Encounter spawn positions vary by role: nearby wandering Drowse Beetles, alternating ranged flanks, grouped hunters, and the default outer spawn ring.
 - The window is resizable with a title bar (1280 x 720 by default); settings offers size presets and fullscreen. Stretch mode is `canvas_items` with `expand` aspect.
 - WASD/arrow keys or left stick to move; auto-fire targets nearby enemies.
@@ -195,3 +195,5 @@ Damage numbers show actual health lost, with ivory enemy hits, gold critical hit
 Medium and harder tiers gain a gradual elite/core-seeker ramp after wave 4 (Medium elites start at wave 6; Hard/Brutal still start at wave 4). Waves 8/12/16 introduce progressively heavier compositions. Enemy count now multiplies the existing linear count by `1 + 0.025*n + 0.0015*n*n`, where `n = max(0, wave - 7)`. The first seven waves retain their count. See [the balance tracking document](plans/combat-feedback-and-balance.md) for comparison values and validation limits.
 
 Pip's sidearm benefits from matching Projectile and universal weapon modifiers. Shop inspection includes hero damage, cadence and reach with purchase previews. Turret-only conditional bonuses and entrenchment do not apply to the hero. `RunConfig.hero` holds a copied loadout definition (weapon, attack families, capabilities and starting turret), providing an extension point for future heroes.
+
+Spawn zones apply only to Protect Core and Convoy. Survival uses the original unbiased encounter spawn selection.

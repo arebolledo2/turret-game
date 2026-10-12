@@ -105,3 +105,21 @@ func test_quadruped_lift_keeps_feet_above_ground_and_stops_at_rest() -> void:
 	motion.tick(.1, 0.0, false)
 	for hip in motion.limbs:
 		assert_true(hip.transform.is_equal_approx(motion.rest[hip]))
+
+func test_charger_stride_tracks_speed_even_with_reduced_motion() -> void:
+	var model := _rig()
+	var leg := model.get_node("Leg_L")
+	leg.name = "Leg_L_0"
+	var motion := ClockworkMotion.new(model, "charger")
+	# Force the tick other enemies would skip.
+	motion.stagger = 1 - Engine.get_physics_frames() % 2
+	motion.tick(.05, .6, false)
+	var walking_phase := motion.phase
+	assert_false(leg.transform.is_equal_approx(motion.rest[leg]))
+	motion.tick(.05, 1.8, false)
+	assert_almost_eq(motion.phase - walking_phase, walking_phase * 3.0, .0001)
+	var before := motion.phase
+	motion.tick(.05, 1.8, true)
+	assert_almost_eq(motion.phase - before, walking_phase * 3.0, .0001, "Reduced motion preserves foot cadence")
+	motion.tick(.05, 0.0, false)
+	assert_true(leg.transform.is_equal_approx(motion.rest[leg]))

@@ -49,13 +49,13 @@ Roster percentages are encounter-point weights, not exact enemy head counts. Exp
 | 3 | Scrap Meadow | Drowse 85, Basic 15 |
 | 4 | Crossing Paths | Drowse 70, Fast 30 |
 | 5 | Wake-up Call | Drowse 60, Basic 25, Fast 15 |
-| 6 | Brass Ram | Drowse 90, Basic 10, plus boss |
+| 6 | Brass Ram | Drowse 25, Basic 45, Fast 30, plus boss |
 | 7 | The Hunt | Drowse 25, Basic 35, Hopper 40 |
 | 8 | Needle Alley | Basic 30, Fast 25, Kite 45 |
 | 9 | Siege Line | Tank 30, Basic 30, Lobber 40 |
 | 10 | Hatchery | Drowse 45, Basic 20, Tender 35 |
 | 11 | Spring Ambush | Charger 30, Fast 30, Hopper 40 |
-| 12 | Prism Conductor | Drowse 80, Basic 20, plus boss |
+| 12 | Prism Conductor | Basic 25, Fast 30, Tank 20, Kite 25, plus boss |
 | 13 | Glass Crossfire | Fast 25, Exploder 25, Kite 50 |
 | 14 | Heavy Pursuit | Tank 60, Hopper 40 |
 | 15 | Bombardment | Tank 40, Exploder 20, Lobber 40 |
@@ -63,9 +63,9 @@ Roster percentages are encounter-point weights, not exact enemy head counts. Exp
 | 17 | Rapid Interference | Charger 30, Fast 30, Kite 40 |
 | 18 | Last Hunt | Fast 20, Exploder 20, Hopper 60 |
 | 19 | Fortress Break | Tank 30, Basic 20, Lobber 30, Tender 20 |
-| 20 | Grand Marionettist | Drowse 90, Basic 10, plus boss |
+| 20 | Grand Marionettist | Tank 30, Charger 25, Exploder 20, Lobber 25, plus boss |
 
-First-five-wave budgets are 60/65/70/75/80% of the normal difficulty budget. No elite or seeker variants appear before wave 6, including Brutal. Boss escort budgets are 25% in Survival and 60% in core modes. Existing difficulty and later-wave pressure still apply. The native director uses this roster; the retained legacy registry availability API is not the native spawn schedule.
+First-five-wave budgets are 60/65/70/75/80% of the normal difficulty budget. No elite or seeker variants appear before wave 6, including Brutal. Boss waves retain 100% of the normal enemy budget in every mode, with the boss added separately. Existing difficulty and later-wave pressure still apply. The native director uses this roster; the retained legacy registry availability API is not the native spawn schedule.
 
 ## Models and effects
 

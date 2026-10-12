@@ -66,7 +66,7 @@ func test_late_core_waves_raise_pressure_without_early_elites() -> void:
 	for i in range(100):
 		if EnemyVariants.pick_type(14, i) == "tank": tanks += 1
 	assert_gt(tanks, 0)
-	assert_false(EnemyEcology.roster(20).has("tank"), "Final boss has light escorts")
+	assert_true(EnemyEcology.roster(20).has("tank"), "Final boss supplements a full late-wave roster")
 	var disabled := DifficultyService.without_rules(config)
 	assert_eq(DifficultyService.wave_rule(disabled, "seeker_share", 20), 0.0)
 

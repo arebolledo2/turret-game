@@ -33,13 +33,13 @@ const WAVES := [
 	["Scrap Meadow", {"drowse": 85, "basic": 15}],
 	["Crossing Paths", {"drowse": 70, "fast": 30}],
 	["Wake-up Call", {"drowse": 60, "basic": 25, "fast": 15}],
-	["Brass Ram", {"drowse": 90, "basic": 10}],
+	["Brass Ram", {"drowse": 25, "basic": 45, "fast": 30}],
 	["The Hunt", {"drowse": 25, "basic": 35, "hopper": 40}],
 	["Needle Alley", {"basic": 30, "fast": 25, "kite": 45}],
 	["Siege Line", {"tank": 30, "basic": 30, "lobber": 40}],
 	["Hatchery", {"drowse": 45, "basic": 20, "tender": 35}],
 	["Spring Ambush", {"charger": 30, "fast": 30, "hopper": 40}],
-	["Prism Conductor", {"drowse": 80, "basic": 20}],
+	["Prism Conductor", {"basic": 25, "fast": 30, "tank": 20, "kite": 25}],
 	["Glass Crossfire", {"fast": 25, "exploder": 25, "kite": 50}],
 	["Heavy Pursuit", {"tank": 60, "hopper": 40}],
 	["Bombardment", {"tank": 40, "exploder": 20, "lobber": 40}],
@@ -47,19 +47,19 @@ const WAVES := [
 	["Rapid Interference", {"charger": 30, "fast": 30, "kite": 40}],
 	["Last Hunt", {"fast": 20, "exploder": 20, "hopper": 60}],
 	["Fortress Break", {"tank": 30, "basic": 20, "lobber": 30, "tender": 20}],
-	["Grand Marionettist", {"drowse": 90, "basic": 10}],
+	["Grand Marionettist", {"tank": 30, "charger": 25, "exploder": 20, "lobber": 25}],
 ]
 
 ## Protect-the-Core escorts preserve each wave's specialty while maintaining active siege pressure.
 const CORE_ROSTERS := {
-	6: {"basic": 45, "tank": 15, "drowse": 40},
+	6: {"basic": 45, "tank": 15, "fast": 25, "drowse": 15},
 	7: {"basic": 60, "hopper": 40},
 	8: {"basic": 35, "fast": 25, "kite": 40},
 	10: {"basic": 40, "fast": 20, "tender": 35, "drowse": 5},
-	12: {"fast": 40, "tank": 20, "drowse": 40},
+	12: {"fast": 40, "tank": 20, "basic": 20, "kite": 20},
 	13: {"fast": 35, "exploder": 25, "kite": 40},
 	18: {"fast": 35, "exploder": 25, "hopper": 40},
-	20: {"tank": 30, "charger": 30, "drowse": 40},
+	20: {"tank": 30, "charger": 30, "basic": 15, "lobber": 25},
 }
 
 const EXPANSION_BOSSES: Array[String] = ["broadside_baron", "frostforge_yeti", "skyfall_kestrel", "crucible_crab", "pendulum_regent", "crownwheel_colossus"]
@@ -88,10 +88,10 @@ static func title(wave: int) -> String:
 	if BOSSES.has(wave): return str(TYPES[BOSSES[wave]].name)
 	return str(WAVES[clampi(wave - 1, 0, WAVES.size() - 1)][0])
 
-static func budget_multiplier(wave: int, protect_core: bool = false) -> float:
+static func budget_multiplier(wave: int, _protect_core: bool = false) -> float:
 	if wave <= 5:
 		return .55 + .05 * maxi(wave, 1)
-	return (.60 if protect_core else .25) if BOSSES.has(wave) else 1.0
+	return 1.0 # Bosses are additional threats; regular wave budgets are never reduced.
 
 ## Smooth weighted selection by deficit spends encounter points, not enemy counts.
 ## Deterministic and independent of gameplay RNG; no hidden global growing roster.

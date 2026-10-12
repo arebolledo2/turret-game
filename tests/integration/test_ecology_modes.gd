@@ -158,8 +158,8 @@ func test_every_late_core_wave_has_active_pressure_without_changing_early_waves(
 			if kind == "lobber" or not EnemyEcology.TYPES.has(kind): pressure += points
 		assert_gte(float(pressure) / total, .5, "Wave %d must threaten the core" % wave)
 		if EnemyEcology.BOSSES.has(wave):
-			assert_eq(EnemyEcology.budget_multiplier(wave, true), .6)
-			assert_eq(EnemyEcology.budget_multiplier(wave), .25)
+			assert_eq(EnemyEcology.budget_multiplier(wave, true), 1.0)
+			assert_eq(EnemyEcology.budget_multiplier(wave), 1.0)
 
 func test_core_seekers_have_a_late_wave_floor_even_on_easy() -> void:
 	setup_mode(RunConfig.MODE_CORE)

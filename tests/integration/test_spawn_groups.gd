@@ -214,3 +214,11 @@ func test_ranged_enemies_are_tracked_for_offscreen_alerts() -> void:
 		overlay._process(.1)
 		assert_has(overlay.tracked, actor)
 		assert_false(overlay.pointer_data(actor).is_empty())
+
+func test_survival_clears_spawn_zones() -> void:
+	assert_false(world.spawn_zones.centres.is_empty())
+	world.core_mode = false
+	world.spawn_zones.generate(10)
+	assert_true(world.spawn_zones.centres.is_empty())
+	assert_true(world.spawn_zones.labels.is_empty())
+	assert_eq(world.spawn_zones.get_child_count(), 0)
