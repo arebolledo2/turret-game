@@ -18,7 +18,7 @@ Select a turret with the cursor or cycle through the squad. Its effective attack
 | Zoom | Triggers | Wheel or zoom keys |
 | Pause | Start | Escape |
 
-**Deploy requires all moves to be finished or canceled.** It restores the hero at the combat position, returns the camera to the hero, and starts the 0.8-second wave announcement. Combat follows. Deploy is a separate action from Select / Place, so pressing A to place a turret cannot accidentally start the wave.
+**Deploy requires all moves to be finished or canceled.** Each preparation opens with a centred arena overview at minimum zoom. Deploy reveals the hero at the arena centre (offset beside a core occupying the centre), returns camera focus to the hero, retains the zoom chosen in preparation, and starts the 0.8-second wave announcement. Previous-wave movement and knockback are cleared at staging. Combat follows. Deploy is a separate action from Select / Place, so pressing A to place a turret cannot accidentally start the wave.
 
 ## Combat, rewards and the Shop
 

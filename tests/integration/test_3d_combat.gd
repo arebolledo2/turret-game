@@ -166,6 +166,7 @@ func test_pause_freezes_charge_knockback_and_effect_lifetime() -> void:
 	assert_eq(world.combat.apply_hit(charger, CombatHit3D.new(10)), 0.0)
 
 func test_death_wave_end_and_restart_remove_warnings_effects_and_crowd_entries() -> void:
+	world.player.position = Vector3(0, 0, 1) # Avoid contact invulnerability before the explicit lethal hit.
 	var charger := enemy(Vector3.ZERO, "charger")
 	charger._physics_process(.01)
 	assert_true(charger.warning.visible)

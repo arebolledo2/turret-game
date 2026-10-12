@@ -276,3 +276,35 @@ func test_playfield_scaled_projection_roundtrips() -> void:
 	var direction := world.camera.project_ray_normal(pixel)
 	var hit: Vector3 = Plane(Vector3.UP, 0).intersects_ray(origin, direction)
 	assert_lt(hit.distance_to(point), .001)
+
+func test_preparation_resets_overview_and_hero_but_deploy_preserves_chosen_zoom() -> void:
+	world.player.position = Vector3(15, 0, -8)
+	world.player.velocity = Vector3(2, 0, 1)
+	world.player.knockback_velocity = Vector3(3, 0, 2)
+	world.camera_rig.set_zoom(1.8)
+	world.camera_rig.snap()
+	world.preparation.begin()
+	assert_eq(world.player.position, Vector3.ZERO, "Convoy hero starts at centre, not at the route entrance")
+	assert_eq(world.player.velocity, Vector3.ZERO)
+	assert_eq(world.player.knockback_velocity, Vector3.ZERO)
+	assert_eq(world.preparation.view_focus, Vector3.ZERO)
+	assert_eq(world.camera_rig.zoom, GameConstants.CAMERA_ZOOM_MIN)
+	assert_eq(world.camera_rig.focus, Vector3.ZERO)
+	world.camera_rig.set_zoom(.8)
+	world.camera_rig.snap()
+	world.preparation.cycle(1)
+	assert_true(world.preparation.deploy())
+	assert_eq(world.camera_rig.zoom, .8, "Deploy retains the player's selected preparation zoom")
+	assert_eq(world.camera_rig.focus, Vector3.ZERO)
+	assert_true(world.player.visible)
+
+func test_core_at_centre_keeps_hero_clear_and_survival_starts_at_origin() -> void:
+	world.convoy_mode = false
+	world.core.position = Vector3.ZERO
+	world.preparation.begin()
+	assert_eq(world.player.position, Vector3(0, 0, GameConstants.CORE_START_OFFSET))
+	assert_gt(world.player.position.distance_to(world.core.position), world.core.radius + world.player.hurtbox_radius())
+	world.core.queue_free()
+	world.core = null
+	world.preparation.begin()
+	assert_eq(world.player.position, Vector3.ZERO)

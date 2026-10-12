@@ -41,11 +41,11 @@ func test_camera_keeps_rotation_and_follows_the_player() -> void:
 	assert_eq(world.camera.global_basis, basis_before, "Only translation may change; movement is camera-relative")
 	assert_almost_eq(world.camera.position.x, rig.focus.x, .001)
 
-func test_default_view_covers_four_times_previous_ground_area() -> void:
+func test_wave_starts_at_full_overview_zoom() -> void:
 	var previous := rig.visible_half_extents(1.5)
-	var current := rig.visible_half_extents(GameConstants.CAMERA_DEFAULT_ZOOM)
-	assert_almost_eq(current.x * current.y / (previous.x * previous.y), 4.0, .001)
-	assert_eq(rig.target_zoom, GameConstants.CAMERA_DEFAULT_ZOOM)
+	var current := rig.visible_half_extents(GameConstants.CAMERA_ZOOM_MIN)
+	assert_almost_eq(current.x * current.y / (previous.x * previous.y), 9.0, .001)
+	assert_eq(rig.target_zoom, GameConstants.CAMERA_ZOOM_MIN)
 
 func test_zoom_is_clamped_and_changes_orthographic_size() -> void:
 	rig.set_zoom(100.0)
@@ -60,6 +60,7 @@ func test_zoom_is_clamped_and_changes_orthographic_size() -> void:
 	assert_almost_eq(world.camera.size, normal_size / 2.0, .01)
 
 func test_wheel_zoom_steps_in_and_out() -> void:
+	rig.set_zoom(1.0) # Start away from zoom limits.
 	var start := rig.target_zoom
 	rig.zoom_steps(1.0)
 	assert_gt(rig.target_zoom, start)

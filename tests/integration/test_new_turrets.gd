@@ -78,7 +78,8 @@ func test_melee_rehit_lockout_prevents_double_hits_then_expires() -> void:
 	tick(bat, .05)
 	assert_lt(target.health, after_first, "Hit again once the lockout has expired")
 
-func test_melee_does_nothing_while_carried() -> void:
+func test_carried_melee_cannot_hit_enemies_at_its_old_ground_position() -> void:
+	world.player.position = Vector3(5, 0, 5)
 	var bat := turret("melee")
 	var target := enemy(Vector3(0, 0, -1.0))
 	bat.carried = true

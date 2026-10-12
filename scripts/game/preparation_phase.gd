@@ -1,7 +1,7 @@
 class_name PreparationPhase
 extends Node3D
 
-## Untimed direct turret placement. The hero remains at its combat position, hidden and inactive.
+## Untimed direct turret placement. Each wave starts from a consistent central staging position.
 var world: ArenaWorld
 var active := false
 var cursor := Vector3.ZERO
@@ -29,13 +29,16 @@ func begin() -> void:
 	end()
 	active = true
 	world.placement.drop_carried()
+	_reset_hero_start()
 	world.player.hide()
 	if FeatureFlagService.is_enabled(FeatureFlagService.AUTO_DEPLOY): arrange_turrets()
 	cursor = world.player.position
 	if not world.turrets.is_empty():
 		selected = world.turrets[0]
 		cursor = selected.position
-	view_focus = cursor
+	view_focus = Vector3.ZERO
+	world.camera_rig.set_zoom(GameConstants.CAMERA_ZOOM_MIN)
+	world.camera_rig.snap()
 	if not is_instance_valid(cursor_dial):
 		cursor_dial = GroundDial.create(self, .6, UiPalette.TEAL_HI)
 		range_dial = GroundDial.create(self, 1.0, Color(.35, .85, .83, .45), true)
@@ -43,6 +46,20 @@ func begin() -> void:
 	var focus := get_viewport().gui_get_focus_owner()
 	if focus: focus.release_focus()
 	_refresh()
+
+## Centre the hero without placing them inside the stationary core.
+func _reset_hero_start() -> void:
+	var at := Vector3.ZERO
+	if is_instance_valid(world.core):
+		var clearance := maxf(GameConstants.CORE_START_OFFSET, world.core.radius + world.player.hurtbox_radius() + .25)
+		if WorldGeometry.planar(world.core.position).length() < clearance:
+			var away := WorldGeometry.planar(-world.core.position).normalized()
+			if away == Vector3.ZERO: away = Vector3.BACK
+			at = WorldGeometry.planar(world.core.position) + away * clearance
+	world.player.position = at
+	world.player.velocity = Vector3.ZERO
+	world.player.knockback_velocity = Vector3.ZERO
+	world.player.reset_physics_interpolation()
 
 func end() -> void:
 	cancel_move()
