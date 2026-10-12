@@ -112,6 +112,9 @@ func apply_audio_preferences() -> void:
 		AudioServer.add_bus()
 		bus = AudioServer.bus_count - 1
 		AudioServer.set_bus_name(bus, "SFX")
+	# A bus made with add_bus() has no send, so without this the cues never reach the output.
+	if AudioServer.get_bus_send(bus) != &"Master":
+		AudioServer.set_bus_send(bus, &"Master")
 	AudioServer.set_bus_mute(bus, sfx_volume <= 0.0)
 	AudioServer.set_bus_volume_db(bus, linear_to_db(maxf(sfx_volume, .0001)))
 

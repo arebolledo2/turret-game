@@ -23,6 +23,13 @@ func _ready() -> void:
 	add_child(viewport)
 	world.camera.reparent(viewport)
 	world.camera.current = true
+	# 3D sound voices live in the root viewport, which needs an active camera to be audible and now has none
+	# (the real camera renders from this sub-viewport). This one renders nothing; the listener on the hero sets the ears.
+	var audio_anchor := Camera3D.new()
+	audio_anchor.name = "AudioAnchor"
+	audio_anchor.cull_mask = 0
+	world.add_child(audio_anchor)
+	audio_anchor.make_current()
 	picture = TextureRect.new()
 	picture.texture = viewport.get_texture()
 	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE

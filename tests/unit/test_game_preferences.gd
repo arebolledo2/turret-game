@@ -105,3 +105,13 @@ func test_old_saved_build_zone_flag_stays_disabled_for_balance_pass() -> void:
 	SettingsService.load_dev_flags(config)
 	assert_false(FeatureFlagService.is_enabled(FeatureFlagService.BUILD_ZONES))
 	assert_false(FeatureFlagService.get_definition(FeatureFlagService.BUILD_ZONES)["default"])
+
+func test_sfx_bus_routes_to_master() -> void:
+	# A bus created without a send is silent: cues would play but never reach the output.
+	var bus := AudioServer.get_bus_index("SFX")
+	if bus >= 0:
+		AudioServer.set_bus_send(bus, &"")
+	SettingsService.apply_audio_preferences()
+	bus = AudioServer.get_bus_index("SFX")
+	assert_ne(bus, -1)
+	assert_eq(AudioServer.get_bus_send(bus), &"Master")
