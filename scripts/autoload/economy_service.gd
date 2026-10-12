@@ -2,9 +2,10 @@ extends Node
 
 ## First six frames stay accessible; modifier-adjusted scaling applies to the entire later surcharge.
 const PROGRESSION_BASE_MULTIPLIER: float = 1.0
-const PROGRESSION_LINEAR: float = .65
+const PROGRESSION_LINEAR: float = 1.30
+const PROGRESSION_MODIFIER_BASE: float = .65
 const PROGRESSION_AFFORDABLE_TOTAL: int = 6
-const PROGRESSION_QUADRATIC: float = .10
+const PROGRESSION_QUADRATIC: float = .70
 
 var state: RunSessionState = RunSessionState.new()
 
@@ -98,11 +99,12 @@ func calculate_turret_price(base_price: int, wave: int) -> int:
 		base_multiplier = PROGRESSION_BASE_MULTIPLIER
 		# Starter + first five acquisitions have no surcharge. Buying #7 has excess=1.
 		var excess := maxi(0, state.additional_turrets_acquired - (PROGRESSION_AFFORDABLE_TOTAL - 2))
-		var linear := TurretStatsService.get_turret_purchase_penalty(PROGRESSION_LINEAR)
+		var linear := TurretStatsService.get_turret_purchase_penalty(PROGRESSION_MODIFIER_BASE)
 		# Scale the entire surcharge so reduction items never hit a hidden floor.
-		penalty_multiplier = 1.0 + (PROGRESSION_LINEAR * excess + PROGRESSION_QUADRATIC * excess * excess) * (linear / PROGRESSION_LINEAR)
+		penalty_multiplier = 1.0 + (PROGRESSION_LINEAR * excess + PROGRESSION_QUADRATIC * excess * excess) * (linear / PROGRESSION_MODIFIER_BASE)
 	var shop_price_mult: float = ItemTrackingService.get_shop_price_multiplier()
-	var price: int = int(base_price * base_multiplier * wave_multiplier * penalty_multiplier * shop_price_mult)
+	# Avoid flooring an exact integer one scrap low due to binary decimal error.
+	var price: int = floori(base_price * base_multiplier * wave_multiplier * penalty_multiplier * shop_price_mult + (0.0000001 if state.turret_progression_enabled else 0.0))
 
 	# Apply Quantity Discount: Every 3rd turret costs 50%
 	if ItemRegistry.has_special_effect("quantity_discount") and ItemTrackingService.item_counts.get("quantity_discount", 0) > 0:

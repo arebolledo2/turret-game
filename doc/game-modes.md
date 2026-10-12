@@ -43,7 +43,7 @@ Both objective modes give the core an automatic projectile weapon. Its independe
 
 ## Turret purchase curve
 
-Progression pricing counts the starter plus all additional acquired frames. The first six total turrets have no count surcharge and no doubled base cost. The seventh starts escalation. Let `N` be additional frames acquired and `E = max(0, N - 4)` for the next purchase. Price is `floor(base * (1 + 0.20 * wave) * (1 + (0.65*E + 0.10*E*E) * adjusted_coefficient/0.65) * shop_discount)`, with the existing Quantity Discount afterward and a minimum price of 1.
+Progression pricing counts the starter plus all additional acquired frames. The first six total turrets have no count surcharge and no doubled base cost. The seventh starts steep escalation: count multipliers for turrets 7/8/9/10 are 3.0/6.4/11.2/17.4 before reduction items. Let `N` be additional frames acquired and `E = max(0, N - 4)` for the next purchase. Price is `floor(base * (1 + 0.20 * wave) * (1 + (1.30*E + 0.70*E*E) * adjusted_coefficient/0.65) * shop_discount)`, with the existing Quantity Discount afterward and a minimum price of 1.
 
 Compact Design subtracts 0.04 per stack and Mass Production 0.10 from the coefficient (base 0.65); both now reduce the whole surcharge, with a zero floor and no hidden 0.40 minimum. Their legal combined maximum is a coefficient of 0.33. Below seven turrets there is no count surcharge to reduce. Locked offers retain their captured price; unlocked offers reprice after purchases. Acquisition counting prevents selling or losing frames from resetting escalation. Legacy non-progression economy remains unchanged.
 
