@@ -42,7 +42,7 @@ func disturbed() -> void:
 	if kind == "drowse" and not awake:
 		awake = true
 		state = "wake"
-		clock = .7
+		clock = .4
 
 func contact_allowed() -> bool:
 	if kind == "drowse":
@@ -101,10 +101,20 @@ func move(delta: float, speed: float) -> Vector3:
 		_: return toward.normalized() * speed
 
 func _drowse(delta: float, toward: Vector3, speed: float) -> Vector3:
-	if toward.length() <= 2.0:
+	# React to the nearest body, including the core, without becoming a global seeker.
+	var target_radius := actor.world.player.hurtbox_radius()
+	actor.chasing_hero = true
+	if is_instance_valid(actor.world.core) and not actor.world.core.dead:
+		var to_core := WorldGeometry.planar(actor.world.core.position - actor.position)
+		if to_core.length() - actor.world.core.radius < toward.length() - target_radius:
+			toward = to_core
+			target_radius = actor.world.core.radius
+			actor.chasing_hero = false
+	var gap := maxf(0.0, toward.length() - target_radius)
+	if gap <= 2.0:
 		disturbed()
 	if awake:
-		lose_interest = lose_interest + delta if toward.length() > 3.0 else 0.0
+		lose_interest = lose_interest + delta if gap > 3.0 else 0.0
 		if lose_interest >= 2.0:
 			awake = false
 			state = "idle"
@@ -119,16 +129,14 @@ func _drowse(delta: float, toward: Vector3, speed: float) -> Vector3:
 	if clock <= 0.0:
 		if state == "wander":
 			state = "idle"
-			clock = GameRandom.gameplay.randf_range(.6, 1.5)
+			clock = GameRandom.gameplay.randf_range(.25, .65)
 		else:
 			state = "wander"
 			clock = GameRandom.gameplay.randf_range(2.0, 4.0)
 			var angle := GameRandom.gameplay.randf() * TAU
-			destination = WorldGeometry.clamp_position(actor.position + Vector3(cos(angle), 0, sin(angle)) * 1.8, 1.0)
-			if actor.world.core and destination.distance_to(actor.world.core.position) < 2.0:
-				destination = WorldGeometry.clamp_position(actor.position + (actor.position - actor.world.core.position).normalized() * 2.0)
+			destination = WorldGeometry.clamp_position(actor.position + Vector3(cos(angle), 0, sin(angle)) * 2.8, 1.0)
 	var offset := destination - actor.position
-	return offset.normalized() * speed * .4375 if state == "wander" and offset.length() > .15 else Vector3.ZERO
+	return offset.normalized() * speed * .7 if state == "wander" and offset.length() > .15 else Vector3.ZERO
 
 func _charge(delta: float, hero: Vector3, speed: float) -> Vector3:
 	if pounce.phase == ChargeController3D.Phase.APPROACH and (not _visible() or not _warning_slot(false)):

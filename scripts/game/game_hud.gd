@@ -38,6 +38,9 @@ func _ready() -> void:
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(root)
+	var health_warning := LowHealthWarning.new()
+	health_warning.world = world
+	root.add_child(health_warning)
 	_build_corner_clusters(root)
 	var indicator := CoreIndicator.new()
 	indicator.world = world

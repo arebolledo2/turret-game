@@ -3,7 +3,7 @@ extends RefCounted
 
 ## Runtime identities and authored wave budgets. Summons never enter the normal spawn pool.
 const TYPES := {
-	"drowse": {"name": "Drowse Beetle", "health": 4.8, "speed": 60.0, "contact_damage": 2.0, "mass": 1.0, "scale": .85, "cost": 1},
+	"drowse": {"name": "Drowse Beetle", "health": 4.8, "speed": 100.0, "contact_damage": 2.0, "mass": 1.0, "scale": .85, "cost": 1},
 	"hopper": {"name": "Rivet Hopper", "health": 8.0, "speed": 300.0, "contact_damage": 6.0, "mass": 1.0, "scale": .85, "cost": 2},
 	"kite": {"name": "Needle Kite", "health": 6.0, "speed": 150.0, "contact_damage": 0.0, "mass": .8, "scale": .8, "cost": 2},
 	"lobber": {"name": "Kiln Lobber", "health": 12.0, "speed": 65.0, "contact_damage": 0.0, "mass": 3.0, "scale": 1.0, "cost": 4},
@@ -47,7 +47,7 @@ static func is_boss(type_id: String) -> bool:
 	return type_id in BOSSES.values()
 
 static func hero_only(type_id: String) -> bool:
-	return TYPES.has(type_id) and type_id != "lobber"
+	return TYPES.has(type_id) and type_id not in ["lobber", "drowse"]
 
 static func cost(type_id: String) -> int:
 	if TYPES.has(type_id):

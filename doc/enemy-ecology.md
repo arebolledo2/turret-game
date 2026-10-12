@@ -8,7 +8,7 @@ The original five enemies retain their attack identities with 10% smaller bodies
 
 | Enemy | Behaviour |
 |---|---|
-| Drowse Beetle | Wanders and pauses. Wakes when damaged or approached within 2 m; loses interest after the hero leaves. Ignores the core in every mode. |
+| Drowse Beetle | Wanders at 0.7 m/s with brief pauses; chases at 1.0 m/s before difficulty modifiers. Wakes after a 0.4 s warning when damaged or when either the hero or core comes within 2 m of its target body. Chases the nearest target and can damage the core. Loses interest after both targets remain over 3 m away for 2 s. |
 | Rivet Hopper | Always hunts the hero. A committed pounce follows a visible warning; knockback interrupts it. Insect anatomy, no canine silhouette. |
 | Needle Kite | Holds distance and fires a warned needle. Its aim locks before release, allowing a reliable dodge. |
 | Kiln Lobber | Holds distance and drops a warned shell. Targets the core in core modes and the hero in Survival. Core hits use 3% of maximum core HP. |
@@ -88,3 +88,12 @@ Convoy routes begin and finish at inset wall doorways, with 1.1 m clearance for 
 Heavy Hauler is the existing Uncommon Convoy-only greed item (two stacks maximum): core speed -20% and kill scrap +15% per stack. Convoy encounter budgets now scale with the full route duration, with no former 2x cap. A slower journey therefore keeps the same approximate arrival pressure for longer and yields additional enemies, rather than stretching a fixed budget across empty time. Tests cover long routes that already exceeded the old cap.
 
 Route and grouped-spawn follow-up validation: **1,051 tests passed** across 80 scripts (18,630 assertions). Includes wall endpoint continuity, Heavy Hauler on long routes, warning delay, hero/core cancellation, pause/cleanup and sparse escort pacing. Actual route and warning visuals were inspected in Godot.
+
+
+## Scattered arrivals and low-health warnings
+
+Timed arrivals retain the 3.5-second cadence and 0.9-second warnings, but each enemy independently samples its position instead of joining a four-enemy formation or fixed flank. Existing hero/core overlap cancellation remains in place.
+
+Below 35% health, a red screen-edge vignette and LOW HULL label warn about the hero; amber and CORE IN DANGER warn about the core. Intensity rises toward 15% health. Both channels can appear together, split across the edges, while the center stays clear. Healing fades the effect; prep, shop, pause and round-end screens suppress it. Reduced Motion uses a steady effect instead of a gentle pulse.
+
+Scattered-arrival and low-health follow-up: **1,062 tests passed**, 81 scripts, 18,704 assertions. Includes core-triggered beetle wake/contact, independently scattered group positions, warning recovery, pause/prep suppression, and Reduced Motion. Low-health visuals inspected in a rendered Godot capture.

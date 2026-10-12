@@ -33,6 +33,11 @@ func setup() -> void:
 	world.player.set_physics_process(false)
 	world.player.position = Vector3(0, 0, 0)
 	for turret in world.turrets: turret.set_physics_process(false)
+	if mode == "danger":
+		world.player.health = world.player.max_health * .15
+		world.core.health = world.core.max_health * .15
+		world.camera_rig.snap()
+		return
 	if mode == "route":
 		for at in [Vector3(-4, 0, 1), Vector3(-2.6, 0, 1), Vector3(-4, 0, 2.4), Vector3(-2.6, 0, 2.4)]:
 			world.waves.warn_spawn("drowse", at)

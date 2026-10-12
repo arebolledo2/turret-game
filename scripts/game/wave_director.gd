@@ -69,12 +69,9 @@ func queue_spawn_group() -> void:
 	elif count < 2 and remaining_spawns > 1:
 		return # Accumulate a small group instead of exhausting sparse escort waves early.
 	spawn_credit -= count
-	var anchor := Vector3.ZERO
 	for index in count:
 		var type_id := spawn_plan[spawned_this_wave] if spawned_this_wave < spawn_plan.size() else EnemyEcology.fallback(GameStateService.current_wave)
-		if index % 4 == 0: anchor = encounter_position(type_id)
-		var offset := Vector3(float(index % 2) * 1.4, 0, float((index % 4) / 2) * 1.4) - Vector3(.7, 0, .7)
-		warn_spawn(type_id, WorldGeometry.clamp_position(anchor + offset, 1.0))
+		warn_spawn(type_id, encounter_position(type_id))
 		spawned_this_wave += 1
 		remaining_spawns -= 1
 
@@ -294,26 +291,16 @@ func active_count(type_id: String) -> int:
 			count += 1
 	return count
 
-## Alternating lanes and clustered approaches give the roster a spatial identity.
+## Each arrival independently samples a direction; timing is grouped, positions are not.
 ## Lazy beetles must appear within reach: they intentionally will not march in from the map edge.
 func encounter_position(type_id: String) -> Vector3:
 	var centre := world.player.position
-	var wave := GameStateService.current_wave
 	var angle := GameRandom.gameplay.randf() * TAU
 	var distance := GameRandom.gameplay.randf_range(5.0, 7.0)
 	if type_id == "drowse":
 		distance = GameRandom.gameplay.randf_range(3.5, 6.0)
 	elif EnemyEcology.is_boss(type_id):
 		distance = 6.0
-	elif wave in [8, 9, 13, 15, 19]:
-		# Two opposing lanes; siege waves alternate north/south instead of east/west.
-		angle = (0.0 if spawned_this_wave % 2 == 0 else PI) + (.5 * PI if wave in [9, 15] else 0.0)
-		angle += GameRandom.gameplay.randf_range(-.3, .3)
-		if world.core: centre = world.core.position
-		distance = GameRandom.gameplay.randf_range(7.0, 9.0)
-	elif wave in [7, 11, 14, 18]:
-		# Three-enemy groups approach from the same flank, then switch.
-		angle = float((spawned_this_wave / 3) % 4) * PI * .5 + GameRandom.gameplay.randf_range(-.25, .25)
 	elif type_id not in ["tender", "kite", "lobber"]:
 		return spawn_position()
 	var result := Vector3.ZERO

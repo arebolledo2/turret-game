@@ -82,3 +82,19 @@ func test_sparse_escort_budget_is_not_exhausted_early() -> void:
 		if world.waves.spawned_this_wave > before: last_group = elapsed
 	assert_gt(last_group, 55.0, "small escorts are spread across the whole encounter")
 	assert_eq(world.waves.spawned_this_wave, 6)
+
+func test_group_positions_are_independently_scattered() -> void:
+	GameRandom.gameplay.seed = 92741
+	world.player.position = Vector3.ZERO
+	world.core.position = Vector3(10, 0, 5)
+	world.waves.spawn_plan.assign(["drowse", "drowse", "drowse", "drowse"])
+	world.waves.remaining_spawns = 4
+	world.waves.spawn_interval = .8
+	world.waves.queue_spawn_group()
+	assert_eq(world.waves.pending_spawns.size(), 4)
+	var points: Array[Vector3] = []
+	for entry in world.waves.pending_spawns: points.append(entry.at)
+	var spread := 0.0
+	for a in points:
+		for b in points: spread = maxf(spread, a.distance_to(b))
+	assert_gt(spread, 3.0, "A timed group no longer occupies a fixed 1.4 m grid")
