@@ -44,11 +44,6 @@ func get_player_weapon_damage() -> float:
 	return float(get_weapon_stats().damage)
 
 
-## Get player fire rate with modifiers applied
-func get_player_fire_rate() -> float:
-	return float(get_weapon_stats().fire_rate)
-
-
 ## Get player luck with modifiers applied, clamped to valid range
 func get_player_luck() -> float:
 	var modified_luck := ModifierService.apply_modifiers_to_stat(player_luck, "player_luck", "player")
@@ -106,10 +101,6 @@ func get_damage_reduction() -> float:
 	var reduction := ModifierService.apply_modifiers_to_stat(0.0, "damage_reduction", "player")
 	return clampf(1.0 - reduction, 0.0, 1.0)
 
-
-## Get evasion chance (0.10 -> 10% chance to dodge)
-func get_evasion_chance() -> float:
-	return ModifierService.apply_modifiers_to_stat(0.0, "player_evasion", "player")
 
 ## Current hero is Pip: an Ion sidearm. The run profile owns this weapon and starting turret.
 func get_weapon_stats(profile: Dictionary = {}, cached: bool = true) -> Dictionary:

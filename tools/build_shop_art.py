@@ -8,8 +8,8 @@ import json
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-source = (ROOT / 'scripts/registries/items/items_v3.gd').read_text(encoding='utf-8')
-rows = json.loads(source.split('const ROWS: Array = ', 1)[1].split('\n\nstatic func', 1)[0])
+source = (ROOT / 'scripts/registries/items/item_catalog.gd').read_text(encoding='utf-8')
+rows = json.loads(re.sub(r',\s*\]\s*$', ']', source.split('const ROWS: Array = ', 1)[1].split('\n\nstatic func', 1)[0].strip()))
 study = (ROOT / 'doc/plans/shop-layout-study.html').read_text(encoding='utf-8')
 defs = re.search(r'<defs>(.*?)<g id="bolt">', study, re.S)[1]
 bolt = '<circle r="4.7" fill="url(#gold)" stroke="#77592e"/><path d="M-2 0h4" stroke="#635233"/>'

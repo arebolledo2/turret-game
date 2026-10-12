@@ -69,8 +69,9 @@ func _keep_foot_above_floor(limb: Node3D) -> void:
 	if not foot_bounds.has(limb):
 		return
 	var lowest := INF
+	var limb_transform := limb.transform
 	for point: Vector3 in foot_bounds[limb]:
-		lowest = minf(lowest, (limb.transform * point).y)
+		lowest = minf(lowest, (limb_transform * point).y)
 	limb.position.y += maxf(0.0, float(foot_floors[limb]) - lowest)
 
 func _part(model: Node3D, part_name: String) -> Node3D:

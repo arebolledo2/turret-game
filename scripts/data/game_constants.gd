@@ -203,7 +203,6 @@ const TURRET_PURCHASE_PENALTY: float = 0.5 # +50% per turret owned
 # =============================================================================
 # ITEM EFFECT RANGES (proximity-based turret item effects)
 # =============================================================================
-const PERSONAL_SPACE_MIN_DISTANCE: float = 200.0
 
 # =============================================================================
 # RARITY / LUCK SYSTEM

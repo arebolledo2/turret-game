@@ -106,25 +106,11 @@ func calculate_turret_price(base_price: int, wave: int) -> int:
 	# Avoid flooring an exact integer one scrap low due to binary decimal error.
 	var price: int = floori(base_price * base_multiplier * wave_multiplier * penalty_multiplier * shop_price_mult + (0.0000001 if state.turret_progression_enabled else 0.0))
 
-	# Apply Quantity Discount: Every 3rd turret costs 50%
-	if ItemRegistry.has_special_effect("quantity_discount") and ItemTrackingService.item_counts.get("quantity_discount", 0) > 0:
-		# Next purchase will be turrets_purchased + 1
-		if (turrets_purchased + 1) % 3 == 0:
-			price = int(price * 0.5)
-
 	return maxi(1, price) if state.turret_progression_enabled else price
 
 
-func calculate_item_price(base_price: int, wave: int, item_id: String = "") -> int:
+func calculate_item_price(base_price: int, wave: int, _item_id: String = "") -> int:
 	var price := base_price * (1.0 + GameConstants.WAVE_PRICE_SCALE * wave)
-
-	# Apply Fortune's Favor discount for rare+ items
-	if not item_id.is_empty() and ItemRegistry.has_special_effect("fortune_discount"):
-		var rarity := ItemRegistry.get_rarity(item_id)
-		if rarity >= GameEnums.ItemRarity.RARE:
-			# Check if player has Fortune's Favor
-			if ItemTrackingService.item_counts.get("fortunes_favor", 0) > 0:
-				price *= 0.85 # 15% discount
 
 	# Apply shop price multiplier from items
 	var shop_price_mult: float = ItemTrackingService.get_shop_price_multiplier()

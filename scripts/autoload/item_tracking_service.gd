@@ -43,10 +43,6 @@ func get_wave_bonus_multiplier() -> float:
 	return ModifierService.apply_modifiers_to_stat(1.0, "wave_bonus_mult")
 
 
-## Get research conversion multiplier (scrap to research points)
-func get_research_conversion_multiplier() -> float:
-	return ModifierService.apply_modifiers_to_stat(1.0, "research_conversion_mult")
-
 
 ## Get shop offer count (from items like Bargain Hunter)
 func get_shop_offer_count() -> int:

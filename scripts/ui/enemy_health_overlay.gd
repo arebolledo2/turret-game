@@ -4,6 +4,9 @@ extends Control
 ## Screen-space health presentation: readable at every world zoom, no floating box meshes.
 var world: ArenaWorld
 var trails: Dictionary = {}
+## Bosses and crates only; every other enemy shows no world-space health.
+var tracked: Array[CombatActor] = []
+var _had_tracked: bool = false
 var face: Font
 
 func _ready() -> void:
@@ -15,9 +18,11 @@ func _process(delta: float) -> void:
 	if not is_instance_valid(world):
 		return
 	var alive := {}
+	tracked.clear()
 	for actor in world.enemies:
 		if not is_instance_valid(actor) or actor.dead or not (actor.stationary or EnemyEcology.is_boss(actor.enemy_type)):
 			continue
+		tracked.append(actor)
 		var id := actor.get_instance_id()
 		alive[id] = true
 		var fraction := clampf(actor.health / maxf(actor.max_health, .001), 0.0, 1.0)
@@ -25,14 +30,17 @@ func _process(delta: float) -> void:
 		trails[id] = fraction if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else move_toward(previous, fraction, delta * 1.5)
 	for id in trails.keys():
 		if not alive.has(id): trails.erase(id)
-	queue_redraw()
+	# Nothing to draw: skip the canvas rebuild (one extra redraw clears the last frame's pixels).
+	if not tracked.is_empty() or _had_tracked:
+		queue_redraw()
+	_had_tracked = not tracked.is_empty()
 
 func _draw() -> void:
 	if not is_instance_valid(world) or not world.show_hud or not world.is_combat() or not world.camera:
 		return
 	var viewport_size := get_viewport_rect().size
 	var chest_rects: Array[Rect2] = []
-	for actor in world.enemies:
+	for actor in tracked:
 		if not is_instance_valid(actor) or actor.dead:
 			continue
 		if actor.stationary or EnemyEcology.is_boss(actor.enemy_type):

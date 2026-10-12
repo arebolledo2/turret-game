@@ -27,11 +27,6 @@ func get_turret_stats(turret_type: String, difficulty_turret_damage_mult: float)
 	return ModifierService.get_turret_stats(turret_type, difficulty_config)
 
 
-## Get turret color
-func get_turret_color(turret_type: String) -> Color:
-	return TurretRegistry.get_color(turret_type)
-
-
 ## Check if turret has specific attack style
 func turret_has_attack_style(turret_type: String, style: GameEnums.AttackStyle) -> bool:
 	return TurretRegistry.has_attack_style(turret_type, style)

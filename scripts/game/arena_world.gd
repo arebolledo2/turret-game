@@ -59,6 +59,9 @@ var camera_rig: CameraRig
 var playfield: PlayfieldView
 var hud: CanvasLayer
 var enemies: Array[CombatActor] = []
+## Enemies currently telegraphing an attack (brain state "warning" or charger windup). Lets `EnemyBrain._warning_slot`
+## check a handful of actors instead of scanning every enemy.
+var warning_actors: Dictionary = {}
 var turrets: Array[TurretActor] = []
 var projectiles: Array[Projectile3D] = []
 var pickup_root: Node3D
@@ -76,6 +79,21 @@ func _ready() -> void:
 	buff_overlay = BuffOverlay.new()
 	buff_overlay.world = self
 	add_child(buff_overlay)
+	_configure_run()
+	_create_roots()
+	_create_combat_presentation()
+	_create_stage_and_hud()
+	spawn_zones = SpawnZones.new()
+	spawn_zones.world = self
+	add_child(spawn_zones)
+	preparation = PreparationPhase.new()
+	preparation.world = self
+	add_child(preparation)
+	if auto_start:
+		start_run()
+
+## Resolves the run configuration into mode, difficulty and flag state, and binds the helpers that need this world.
+func _configure_run() -> void:
 	if not run_config:
 		run_config = RunConfig.new()
 	run_config.sanitize()
@@ -97,6 +115,9 @@ func _ready() -> void:
 	dev.world = self
 	placement.world = self
 	add_child(session)
+
+## Roots for interpolated actors and pickups, plus the convoy route overlay.
+func _create_roots() -> void:
 	# Interpolate physics-driven actors; scenery/UI/idle effects keep their own clocks.
 	physics_interpolation_mode = Node.PHYSICS_INTERPOLATION_MODE_OFF
 	actor_root = Node3D.new()
@@ -112,6 +133,9 @@ func _ready() -> void:
 		overlay.name = "RouteOverlay"
 		overlay.world = self
 		add_child(overlay)
+
+## Effects, audio and reward screens, and the combat signals that drive them.
+func _create_combat_presentation() -> void:
 	effects = CombatEffects3D.new()
 	effects.world = self
 	add_child(effects)
@@ -136,6 +160,8 @@ func _ready() -> void:
 	chest_rewards = ChestRewardScreen.new()
 	chest_rewards.world = self
 	add_child(chest_rewards)
+
+func _create_stage_and_hud() -> void:
 	stage = ArenaStage.new()
 	stage.name = "Stage"
 	add_child(stage)
@@ -156,14 +182,6 @@ func _ready() -> void:
 		dev_panel = DevPanel.new()
 		dev_panel.world = self
 		add_child(dev_panel)
-	spawn_zones = SpawnZones.new()
-	spawn_zones.world = self
-	add_child(spawn_zones)
-	preparation = PreparationPhase.new()
-	preparation.world = self
-	add_child(preparation)
-	if auto_start:
-		start_run()
 
 func start_run() -> void:
 	_clear_actors()
@@ -277,6 +295,12 @@ func clear_field(bank_pickups: bool, return_carried: bool = true) -> void:
 	if return_carried:
 		placement.drop_carried()
 	audio.reset()
+
+func mark_warning(actor: CombatActor, warning: bool) -> void:
+	if warning:
+		warning_actors[actor] = true
+	else:
+		warning_actors.erase(actor)
 
 func is_combat() -> bool:
 	return not paused and GameStateService.is_game_active and GameStateMachine.is_in_combat()
@@ -437,11 +461,9 @@ func damage_core(amount: float) -> void:
 			_end_run_in_defeat("CORE DESTROYED")
 
 func repair_core() -> bool:
-	if not core or not shop.is_open() or core.dead or core.health >= core.max_health or not EconomyService.deduct_scrap(GameConstants.REPAIR_COST):
+	if not core or core.dead or core.health >= core.max_health or not _pay_for_repair("repair_core"):
 		return false
-	telemetry.record_spend("repair_core", GameConstants.REPAIR_COST)
 	core.repair(GameConstants.REPAIR_HEAL_AMOUNT)
-	audio.play_cue("purchase", player.position)
 	message = "Core repaired."
 	return true
 
@@ -461,12 +483,18 @@ func turret_price(type_id: String = "normal") -> int:
 	return EconomyService.calculate_turret_price(TurretRegistry.get_base_price(type_id), GameStateService.current_wave)
 
 func repair() -> bool:
-	if not shop.is_open() or player.health >= player.max_health or not EconomyService.deduct_scrap(GameConstants.REPAIR_COST):
+	if player.health >= player.max_health or not _pay_for_repair("repair"):
 		return false
-	telemetry.record_spend("repair", GameConstants.REPAIR_COST)
 	player.health = minf(player.max_health, player.health + GameConstants.REPAIR_HEAL_AMOUNT)
-	audio.play_cue("purchase", player.position)
 	message = "Hull repaired."
+	return true
+
+## Shared gate for both repairs: the shop must be open and the scrap must be there.
+func _pay_for_repair(label: String) -> bool:
+	if not shop.is_open() or not EconomyService.deduct_scrap(GameConstants.REPAIR_COST):
+		return false
+	telemetry.record_spend(label, GameConstants.REPAIR_COST)
+	audio.play_cue("purchase", player.position)
 	return true
 
 func find_placement() -> Vector3:

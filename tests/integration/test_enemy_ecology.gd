@@ -212,3 +212,28 @@ func test_last_combat_tick_can_award_boss_before_timeout_cleanup() -> void:
 	await get_tree().process_frame
 	assert_eq(world.drops.pending_items.size(), 1)
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_END)
+
+func test_tender_prunes_freed_children_without_aborting() -> void:
+	var tender := enemy("tender", Vector3(4, 0, 0))
+	var child := enemy("skitter", Vector3(5, 0, 0))
+	tender.brain.children.append(child)
+	world.enemies.erase(child)
+	child.free()
+	tender.brain.move(.1, tender.speed)
+	assert_eq(tender.brain.children.size(), 0)
+
+func test_warning_slot_counts_only_nearby_warning_enemies() -> void:
+	var first := enemy("kite", Vector3.ZERO)
+	var second := enemy("kite", Vector3(2, 0, 0))
+	var third := enemy("kite", Vector3(3, 0, 0))
+	var far := enemy("kite", Vector3(20, 0, 0))
+	assert_true(first.brain._warning_slot(false))
+	second.brain.state = "warning"
+	assert_true(first.brain._warning_slot(false))
+	third.brain.state = "warning"
+	assert_false(first.brain._warning_slot(false))
+	far.brain.state = "warning"
+	third.brain.state = "idle"
+	assert_true(first.brain._warning_slot(false))
+	second.dead = true
+	assert_true(first.brain._warning_slot(false))

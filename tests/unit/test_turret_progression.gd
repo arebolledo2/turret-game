@@ -78,14 +78,6 @@ func test_scarcity_prices_count_acquisitions_and_preserve_item_prices() -> void:
 	assert_eq(EconomyService.calculate_item_price(20, 4), old_item)
 	assert_eq(EconomyService.calculate_turret_price(0, 1), 1)
 
-func test_quantity_discount_counts_paid_purchases_only() -> void:
-	EconomyService.state.turret_progression_enabled = true
-	EconomyService.state.additional_turrets_acquired = 2
-	ItemTrackingService.item_counts["quantity_discount"] = 1
-	assert_eq(EconomyService.calculate_turret_price(10, 1), 12)
-	EconomyService.turrets_purchased = 2
-	assert_eq(EconomyService.calculate_turret_price(10, 1), 6)
-
 func test_older_preferences_keep_new_flag_at_its_default() -> void:
 	var config := ConfigFile.new()
 	config.set_value("dev_flags", "entrench", false)

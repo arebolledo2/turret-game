@@ -5,8 +5,17 @@ extends RefCounted
 const KEYS: Array[String] = ["ion", "plasma", "tesla", "shock", "melee", "basic", "fast", "tank", "charger", "exploder", "hero", "dropbox", "core", "machine_gun", "scatter", "saber", "gatling", "crossfire", "siege", "bow", "flamethrower", "bowling", "gunblade", "arrow", "bowling_ball", "drowse", "hopper", "kite", "lobber", "tender", "skitter", "brass_ram", "prism_conductor", "grand_marionettist", "lens", "anchor", "puppet"]
 static var scenes: Dictionary = {}
 
+static var _availability: Dictionary = {}
+static var _legacy_assets: int = -1
+
 static func available(key: String) -> bool:
-	return not "--legacy-assets" in OS.get_cmdline_user_args() and ResourceLoader.exists(model_path(key))
+	if _legacy_assets < 0:
+		_legacy_assets = 1 if "--legacy-assets" in OS.get_cmdline_user_args() else 0
+	if _legacy_assets == 1:
+		return false
+	if not _availability.has(key):
+		_availability[key] = ResourceLoader.exists(model_path(key))
+	return _availability[key]
 
 static func model_path(key: String) -> String:
 	return "res://assets/models/clockwork/cp_%s.glb" % key

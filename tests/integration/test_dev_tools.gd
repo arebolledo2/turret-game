@@ -112,7 +112,7 @@ func test_restart_discards_queued_flags() -> void:
 
 func test_flag_gated_catalog_rows_leave_stock_and_block_purchase_until_enabled() -> void:
 	_register_experiment()
-	ShopCatalog.entries["item"]["salvage_optimizer"] = EXPERIMENT
+	ShopCatalog.entries["item"]["quick_loader"] = EXPERIMENT
 	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	world.finish_wave()
@@ -121,15 +121,15 @@ func test_flag_gated_catalog_rows_leave_stock_and_block_purchase_until_enabled()
 		world.shop.rng.seed = seed_value
 		world.shop.generate()
 		for offer in EconomyService.current_shop_offers:
-			assert_ne(offer.asset_id, "salvage_optimizer", "Gated items are never stocked while the flag is off")
+			assert_ne(offer.asset_id, "quick_loader", "Gated items are never stocked while the flag is off")
 	var index := EconomyService.current_shop_offers.size()
-	EconomyService.current_shop_offers.append(ShopOffer.new("item", "salvage_optimizer", 1))
+	EconomyService.current_shop_offers.append(ShopOffer.new("item", "quick_loader", 1))
 	EconomyService.total_scrap = 100
 	assert_false(world.shop.purchase(index), "A stale offer for gated content cannot be bought")
 	assert_eq(EconomyService.total_scrap, 100)
 	FeatureFlagService.set_enabled(EXPERIMENT, true)
 	assert_true(world.shop.purchase(index))
-	assert_eq(ItemTrackingService.item_counts.get("salvage_optimizer", 0), 1)
+	assert_eq(ItemTrackingService.item_counts.get("quick_loader", 0), 1)
 
 
 # --- Dev panel ------------------------------------------------------------------------------

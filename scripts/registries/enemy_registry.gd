@@ -9,7 +9,6 @@ const TYPES: Dictionary = {
 		"icon": "🕷️",
 		"description": "Spider-like drone with sleek neon design.",
 		"behaviors": [GameEnums.EnemyBehavior.CHASE],
-		"sprite_folder": "res://assets/sprites/enemy_spider_drone",
 		"base_stats": {
 			"health": 8.0,
 			"speed": 75.0,
@@ -27,8 +26,6 @@ const TYPES: Dictionary = {
 		"icon": "⚡",
 		"description": "Quick but fragile enemy.",
 		"behaviors": [GameEnums.EnemyBehavior.CHASE, GameEnums.EnemyBehavior.SWARM],
-		"sprite_folder": "res://assets/sprites/enemy_fast",
-		"color_tint": Color(0.6, 0.9, 1.0),
 		"base_stats": {
 			"health": 4.0,
 			"speed": 130.0,
@@ -52,8 +49,6 @@ const TYPES: Dictionary = {
 		"icon": "🛡️",
 		"description": "Slow but very tough enemy.",
 		"behaviors": [GameEnums.EnemyBehavior.CHASE, GameEnums.EnemyBehavior.TANK],
-		"sprite_folder": "res://assets/sprites/enemy_tank",
-		"color_tint": Color(0.8, 0.5, 0.3),
 		"base_stats": {
 			"health": 30.0,
 			"speed": 40.0,
@@ -76,8 +71,6 @@ const TYPES: Dictionary = {
 		"icon": "💥",
 		"description": "Explodes on death, damaging nearby enemies and player.",
 		"behaviors": [GameEnums.EnemyBehavior.CHASE, GameEnums.EnemyBehavior.EXPLOSIVE],
-		"sprite_folder": "res://assets/sprites/enemy_tiny",
-		"color_tint": Color(1.0, 0.4, 0.2),
 		"base_stats": {
 			"health": 5.0,
 			"speed": 90.0,
@@ -101,8 +94,6 @@ const TYPES: Dictionary = {
 		"icon": "😴",
 		"description": "Wanders aimlessly, never chases the player.",
 		"behaviors": [GameEnums.EnemyBehavior.WANDER],
-		"sprite_folder": "res://assets/sprites/enemy_tiny",
-		"color_tint": Color(0.7, 0.7, 0.9),
 		"behavior_params": {
 			"wander_pause_min": 0.0,
 			"wander_pause_max": 0.0,
@@ -130,8 +121,6 @@ const TYPES: Dictionary = {
 		"icon": "⚡",
 		"description": "Wanders lazily until player is close, then charges aggressively.",
 		"behaviors": [GameEnums.EnemyBehavior.CHARGE],
-		"sprite_folder": "res://assets/sprites/enemy_tiny",
-		"color_tint": Color(1.0, 0.8, 0.3),
 		"behavior_params": {
 			"wander_pause_min": 1.0,
 			"wander_pause_max": 2.0,
@@ -185,8 +174,6 @@ const TYPES: Dictionary = {
 		"icon": "🔫",
 		"description": "Wanders aimlessly while taking potshots at distant targets.",
 		"behaviors": [GameEnums.EnemyBehavior.WANDER],
-		"sprite_folder": "res://assets/sprites/enemy_tiny",
-		"color_tint": Color(0.9, 0.7, 0.5), # Orange/tan
 		"behavior_params": {
 			"wander_pause_min": 0.0, # No pauses (like lazy_wanderer)
 			"wander_pause_max": 0.0,
@@ -313,23 +300,6 @@ static func get_spawn_count(type_id: String) -> int:
 	return spawn_count
 
 
-## Get color tint for an enemy type
-static func get_color(type_id: String) -> Color:
-	var asset_config := AssetConfigService.get_enemy_config(type_id)
-	if asset_config and asset_config.visual:
-		return asset_config.visual.modulate
-	if not TYPES.has(type_id):
-		return Color.WHITE
-	return TYPES[type_id].get("color_tint", Color.WHITE)
 
 
-## Get sprite folder path for an enemy type
-static func get_sprite_folder(type_id: String) -> String:
-	var asset_config := AssetConfigService.get_enemy_config(type_id)
-	if asset_config and asset_config.visual:
-		for value in asset_config.visual.texture_paths.values():
-			if value is String and not value.is_empty():
-				return value.get_base_dir()
-	if not TYPES.has(type_id):
-		return "res://assets/sprites/enemy_tiny"
-	return TYPES[type_id].get("sprite_folder", "res://assets/sprites/enemy_tiny")
+

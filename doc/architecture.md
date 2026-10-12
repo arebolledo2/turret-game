@@ -19,7 +19,7 @@
 | `ArenaShop` | Supported stock, validation, transactions and rerolls |
 | `game_hud.gd` | HUD, refit, build summary and pause/end presentation |
 
-World classes live in `scripts/game/`. `CombatActor` (with the `TechDropActor` crate subclass), `TurretActor`, `Projectile3D` and `ScrapPickup` own individual behavior. `TurretActor` dispatches on the registry's `fire_mode` (projectile, pulse, chain, sweep) rather than on turret ids; resolved stats are read through the typed `TurretStats` and `EnemyStats` views in `scripts/data/`. `ChargeController3D`, `StatusEffects3D`, `CrowdGrid3D` and `CombatEffects3D` isolate combat concerns.
+World classes live in `scripts/game/`. `CombatActor` (with the `TechDropActor` crate subclass), `TurretActor`, `Projectile3D` and `ScrapPickup` own individual behavior. `TurretActor` dispatches on the registry's `fire_mode` (projectile, pulse, chain, sweep) rather than on turret ids; resolved stats are read through the typed `TurretStats` and `EnemyStats` views in `scripts/data/`. `ChargeController3D`, `StatusEffects3D`, `CrowdGrid3D` and `CombatEffects3D` isolate combat concerns. `TurretActor` delegates to `TurretEntrench` (stack rules and ring), `TurretTerrain` (zone bonuses and badge), `TurretRangeRing` and `ShotBurst` (delayed follow-up shots); per-form shot shapes, volley size, gunblade barrel stats and the list of implemented branches live in `TurretEvolution`, so a new form is data plus its visual and attack, not edits across the actor.
 
 ## Shared state and notifications
 
@@ -31,4 +31,4 @@ Use explicit calls for commands and queries. Shared services expose economy, sta
 
 ## Scope
 
-The native 3D runtime replaces the 2D runtime. Shared registry entries, modifier/buff calculations, research/mode data, and reference-asset storage remain available for future work, but their presence does not imply gameplay support. `ArenaShop` allowlists are the source of truth for exposed purchases. See [gameplay](gameplay.md) for supported behavior and [cutover](3d-cutover.md) for retirement details.
+The native 3D runtime replaces the 2D runtime. Shared registry entries, modifier/buff calculations, and mode data remain available for future work, but their presence does not imply gameplay support. `ArenaShop` allowlists are the source of truth for exposed purchases. See [gameplay](gameplay.md) for supported behavior and [cutover](3d-cutover.md) for retirement details.

@@ -24,55 +24,13 @@ func apply_static_effects(turret_type: String, stats: Dictionary) -> void:
 			stats["damage"] = stats.get("damage", 0.0) * 1.40
 			stats["range"] = stats.get("range", 0.0) * 1.25
 
-	# Focused Investment: Boost most common turret type
-	if ItemRegistry.has_special_effect("focused_investment") and ItemTrackingService.item_counts.get("focused_investment", 0) > 0:
-		var most_common: String = TurretStatsService.get_most_common_turret_type()
-		if turret_type == most_common and not most_common.is_empty():
-			stats["damage"] = stats.get("damage", 0.0) * 1.60
-			stats["fire_rate"] = stats.get("fire_rate", 1.0) * 1.20
-			stats["range"] = stats.get("range", 0.0) * 1.15
-		elif not most_common.is_empty():
-			# Penalty for non-dominant types
-			stats["damage"] = stats.get("damage", 0.0) * 0.80
-
-	# Diversity Matrix: +8% damage per turret type diversity
-	if ItemRegistry.has_special_effect("diversity_matrix") and ItemTrackingService.item_counts.get("diversity_matrix", 0) > 0:
-		var diversity: int = TurretStatsService.get_turret_type_diversity()
-		var stacks: int = ItemTrackingService.item_counts.get("diversity_matrix", 0)
-		var damage_bonus: float = diversity * 0.08 * stacks
-		stats["damage"] = stats.get("damage", 0.0) * (1.0 + damage_bonus)
-
-	# Standardized Parts: +5% fire rate per duplicate of same type
-	if ItemRegistry.has_special_effect("standardized_parts") and ItemTrackingService.item_counts.get("standardized_parts", 0) > 0:
-		var count: int = TurretStatsService.turret_counts.get(turret_type, 0)
-		if count > 1:
-			var fire_rate_bonus: float = (count - 1) * 0.05
-			stats["fire_rate"] = stats.get("fire_rate", 1.0) * (1.0 + fire_rate_bonus)
-
-	# Cross-Training: +15% rotation speed for every 2 turret types
-	if ItemRegistry.has_special_effect("cross_training") and ItemTrackingService.item_counts.get("cross_training", 0) > 0:
-		var diversity: int = TurretStatsService.get_turret_type_diversity()
-		var rotation_bonus: float = floor(diversity / 2.0) * 0.15
-		stats["rotation_speed"] = stats.get("rotation_speed", 180.0) * (1.0 + rotation_bonus)
-
 	# Focused Arsenal: +50% damage, +25% attack speed if all turrets share an attack family
 	if ItemRegistry.has_special_effect("mono_type_mastery") and ItemTrackingService.item_counts.get("mono_type_mastery", 0) > 0:
 		if not TurretStatsService.shared_attack_families().is_empty():
 			stats["damage"] = stats.get("damage", 0.0) * 1.5
 			stats["attack_speed"] = stats.get("attack_speed", 1.0) * 1.25
 
-	# Synergy Core: +12% damage per turret type, +25% if all 6
-	if ItemRegistry.has_special_effect("synergy_core") and ItemTrackingService.item_counts.get("synergy_core", 0) > 0:
-		var diversity: int = TurretStatsService.get_turret_type_diversity()
-		var damage_bonus: float = diversity * 0.12
-		if diversity == 6:
-			damage_bonus += 0.25 # Completion bonus
-		stats["damage"] = stats.get("damage", 0.0) * (1.0 + damage_bonus)
 
-
-func get_turret_min_distance(item_counts: Dictionary) -> float:
+func get_turret_min_distance(_item_counts: Dictionary) -> float:
 	"""Apply modifications to turret placement rules."""
-	# Personal Space increases minimum distance to 200px
-	if ItemRegistry.has_special_effect("personal_space") and item_counts.get("personal_space", 0) > 0:
-		return GameConstants.PERSONAL_SPACE_MIN_DISTANCE
 	return GameConstants.TURRET_MIN_DISTANCE

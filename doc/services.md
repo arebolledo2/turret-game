@@ -18,6 +18,6 @@ Autoload configuration in `project.godot` is authoritative. Commands and queries
 
 ## Retained systems
 
-`TechTreeService`, `SpecialEffectService` and `AssetConfigService` retain shared data, calculations or storage contracts. The current arena does not expose all their capabilities. In particular, research, 2D asset live-apply and chain reactions are not active features. The 2D game modes, loot review, temporary buffs and isometric arena were removed; they remain in git history and at the `prototype-2d-final` tag. Do not equate a feature flag or registry entry with a supported native 3D implementation.
+`SpecialEffectService` retains shared calculations that the current arena does not fully expose; chain reactions are not an active feature. The research tree (`TechTreeService`, `TechRegistry`) and the 2D asset configuration stack (`AssetConfigService`, `CollisionProfile`) were removed. The 2D game modes, loot review, temporary buffs and isometric arena were removed; they remain in git history and at the `prototype-2d-final` tag. Do not equate a feature flag or registry entry with a supported native 3D implementation.
 
 The 2D AudioService, off-screen indicator service, entity query, projectile pool/emitter and target-selection runtime were removed. Native projectile reuse and crowd queries live in `scripts/game/`. The run-owned `GameAudio` now provides native spatial cues through the SFX bus; app-wide volume belongs to `SettingsService`.
