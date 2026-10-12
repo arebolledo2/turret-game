@@ -18,32 +18,16 @@ const NOTICES: Dictionary = {
 static var tinted_materials: Dictionary = {}
 
 static func pick_type(wave: int, index: int) -> String:
-	if wave >= 8:
-		# Alternating assault patterns replace the fixed early-wave mix.
-		var roster: Array[String] = ["basic", "fast", "charger", "basic", "tank", "fast", "exploder", "basic", "charger", "basic"]
-		if wave >= 12:
-			roster = ["tank", "fast", "charger", "exploder", "basic", "tank", "fast", "charger", "exploder", "basic"]
-		if wave >= 16:
-			roster = ["tank", "charger", "fast", "exploder", "tank", "charger", "fast", "exploder", "tank", "basic"]
-		return roster[(index + wave * 3) % roster.size()]
-	if wave >= int(EnemyRegistry.TYPES["charger"]["min_wave"]) and index % 4 == 0:
-		return "charger"
-	if wave >= int(EnemyRegistry.TYPES["exploder"]["min_wave"]) and index % 5 == 2:
-		return "exploder"
-	if wave >= int(EnemyRegistry.TYPES["tank"]["min_wave"]) and index % 7 == 3:
-		return "tank"
-	if wave >= int(EnemyRegistry.TYPES["fast"]["min_wave"]) and index % 4 == 1:
-		return "fast"
-	return "basic"
+	var plan := EnemyEcology.schedule(wave, 100)
+	return plan[posmod(index, plan.size())]
 
 static func notice_for_wave(wave: int) -> String:
-	if wave == 8: return "Assault waves · scouts and chargers probe your defenses"
-	if wave == 12: return "Heavy assault · armored groups and explosive escorts"
-	if wave == 16: return "Final onslaught · heavy bots lead the attack"
-	return NOTICES.get(wave, "")
+	return EnemyEcology.title(wave)
 
 static func body_scale(type_id: String) -> float:
-	return float(VARIANTS.get(type_id, {}).get("scale", 1.0))
+	if EnemyEcology.TYPES.has(type_id):
+		return float(EnemyEcology.TYPES[type_id].scale)
+	return .9 * float(VARIANTS.get(type_id, {}).get("scale", 1.0))
 
 ## Shared per-(type, source material) copies keep identical enemies batchable.
 static func apply_tint(model: Node, type_id: String) -> void:

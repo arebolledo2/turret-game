@@ -220,16 +220,22 @@ const TYPES: Dictionary = {
 
 ## Get the definition for an enemy type
 static func get_type(type_id: String) -> Dictionary:
+	if EnemyEcology.TYPES.has(type_id):
+		return {"name": EnemyEcology.TYPES[type_id].name, "base_stats": get_base_stats(type_id), "behaviors": []}
 	return TYPES.get(type_id, TYPES["basic"])
 
 
 ## Get all type IDs
 static func get_all_type_ids() -> Array:
-	return TYPES.keys()
+	return TYPES.keys() + EnemyEcology.TYPES.keys()
 
 
 ## Get base stats for an enemy type (before wave scaling)
 static func get_base_stats(type_id: String) -> Dictionary:
+	if EnemyEcology.TYPES.has(type_id):
+		var stats: Dictionary = EnemyEcology.TYPES[type_id].duplicate(true)
+		stats["scrap_value"] = 0 if type_id in EnemyEcology.SUMMONS else 1
+		return stats
 	if not TYPES.has(type_id):
 		return TYPES["basic"]["base_stats"].duplicate(true)
 	return TYPES[type_id]["base_stats"].duplicate(true)
@@ -248,6 +254,8 @@ static func get_stats_for_wave(type_id: String, wave: int, difficulty_config: Di
 	base_stats["health"] = base_stats["health"] * pow(difficulty_config["enemy_hp_scale_per_wave"], wave - 1)
 	base_stats["speed"] = base_stats["speed"] * pow(difficulty_config["enemy_speed_scale_per_wave"], wave - 1)
 
+	if EnemyEcology.is_boss(type_id):
+		base_stats["health"] = EnemyEcology.boss_health(type_id, difficulty_config)
 	return base_stats
 
 

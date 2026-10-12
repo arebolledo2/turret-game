@@ -1,0 +1,86 @@
+{
+ "triangles": 33044,
+ "mesh_objects": 10,
+ "materials": 9,
+ "loose_components": 676,
+ "size_m": [
+  1.35,
+  1.014,
+  1.291
+ ],
+ "min_z": 0.0,
+ "centre_xy": [
+  0.0,
+  0.048
+ ],
+ "origin_node": null,
+ "origin_xy": [
+  0.0,
+  0.048
+ ],
+ "missing_nodes": [],
+ "empty_leg_pivots": [],
+ "textures": [
+  [
+   "enamel_atlas",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "enamel_normal",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "enamel_orm",
+   [
+    1024,
+    1024
+   ]
+  ]
+ ],
+ "animations": [
+  "Idle",
+  "Walk",
+  "Swim",
+  "Attack"
+ ],
+ "checks": {
+  "required_nodes_present": true,
+  "each_required_node_has_geometry": true,
+  "height_ok": true,
+  "width_ok": true,
+  "ground_gap_ok": true,
+  "origin_xy_centred": true,
+  "has_meshes": true,
+  "textures_present": true,
+  "required_animations_present": true,
+  "animation_channels_present": true
+ },
+ "passed": true,
+ "limits": {
+  "height": [
+   0.9,
+   1.4
+  ],
+  "max_width": 2.0,
+  "ground_gap": [
+   -0.02,
+   0.1
+  ]
+ },
+ "targets": {
+  "max_texture_px": 1024,
+  "max_textures": 4,
+  "max_triangles": 12000,
+  "max_mesh_objects": 16,
+  "max_materials": 12
+ },
+ "target_overruns": [
+  "max_triangles: 33044 > target 12000"
+ ]
+}

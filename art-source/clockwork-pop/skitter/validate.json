@@ -1,0 +1,93 @@
+{
+ "triangles": 11548,
+ "mesh_objects": 10,
+ "materials": 7,
+ "loose_components": 384,
+ "size_m": [
+  1.064,
+  0.904,
+  0.731
+ ],
+ "min_z": 0.001,
+ "centre_xy": [
+  0.0,
+  0.026
+ ],
+ "origin_node": null,
+ "origin_xy": [
+  0.0,
+  0.026
+ ],
+ "missing_nodes": [],
+ "empty_leg_pivots": [],
+ "textures": [
+  [
+   "skitter_enamel_color",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "skitter_enamel_normal",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "skitter_lens_emission",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "skitter_surface_roughness",
+   [
+    1024,
+    1024
+   ]
+  ]
+ ],
+ "animations": [
+  "Idle",
+  "Walk",
+  "Swim",
+  "Attack"
+ ],
+ "checks": {
+  "required_nodes_present": true,
+  "each_required_node_has_geometry": true,
+  "height_ok": true,
+  "width_ok": true,
+  "ground_gap_ok": true,
+  "origin_xy_centred": true,
+  "has_meshes": true,
+  "textures_present": true,
+  "required_animations_present": true,
+  "animation_channels_present": true
+ },
+ "passed": true,
+ "limits": {
+  "height": [
+   0.5,
+   0.8
+  ],
+  "max_width": 1.2,
+  "ground_gap": [
+   -0.02,
+   0.15
+  ]
+ },
+ "targets": {
+  "max_texture_px": 1024,
+  "max_textures": 4,
+  "max_triangles": 5000,
+  "max_mesh_objects": 16,
+  "max_materials": 8
+ },
+ "target_overruns": [
+  "max_triangles: 11548 > target 5000"
+ ]
+}

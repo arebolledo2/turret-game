@@ -203,8 +203,8 @@ func test_shock_pulse_hits_each_in_range_enemy_and_applies_slow_without_projecti
 	var shock := world.add_turret(Vector3.ZERO, "shock")
 	shock.set_physics_process(false)
 	var near := enemy(Vector3(1, 0, 0))
-	var edge := enemy(Vector3(2.76, 0, 0))
-	var far := enemy(Vector3(2.77, 0, 0))
+	var edge := enemy(Vector3(2.724, 0, 0))
+	var far := enemy(Vector3(2.734, 0, 0))
 	watch_signals(world.combat)
 	shock._physics_process(.01)
 	assert_eq(near.health, 96.0)
@@ -268,6 +268,7 @@ func test_six_wave_loop_supports_distinct_builds_and_only_ends_after_wave_six() 
 			world.waves.time_left = .01
 			world.waves.remaining_spawns = 0
 			world._physics_process(.02)
+			await get_tree().process_frame
 			if wave == 6:
 				assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.VICTORY)
 				assert_false(world.shop.reroll())

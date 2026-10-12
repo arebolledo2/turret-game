@@ -351,6 +351,10 @@ func _update_arc_lights(delta: float) -> void:
 		var remaining := 1.0 - arc_light_ages[index] / ARC_LIGHT_LIFETIME
 		arc_lights[index].light_energy = ARC_LIGHT_ENERGY * (.35 if reduced else 1.0) * remaining * remaining
 
+func show_hostile_impact(at: Vector3, radius: float) -> void:
+	_show_pulse(at, radius, Color("ff8a53"))
+	show_burst(at + Vector3(0, .2, 0), "hurt")
+
 func show_explosion(at: Vector3, radius: float) -> void:
 	_show_pulse(at, radius, Color("b56cff"))
 

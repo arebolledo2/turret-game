@@ -1,0 +1,74 @@
+{
+  "root": "PuppetRoot",
+  "stationary_root": true,
+  "embedded_images": 4,
+  "external_images": [],
+  "animations": [
+    {
+      "name": "Idle",
+      "channels": 6,
+      "duration_s": 2.4,
+      "endpoint_error": 0.0,
+      "moving_channels": 6,
+      "nodes": [
+        "Arm_L",
+        "Arm_R",
+        "Body",
+        "Elbow_L",
+        "Elbow_R",
+        "Head"
+      ]
+    },
+    {
+      "name": "Walk",
+      "channels": 10,
+      "duration_s": 1.0,
+      "endpoint_error": 0.0,
+      "moving_channels": 10,
+      "nodes": [
+        "Arm_L",
+        "Arm_R",
+        "Body",
+        "Elbow_L",
+        "Elbow_R",
+        "Knee_L",
+        "Knee_R",
+        "Leg_L",
+        "Leg_R"
+      ]
+    },
+    {
+      "name": "Swim",
+      "channels": 9,
+      "duration_s": 1.6,
+      "endpoint_error": 0,
+      "moving_channels": 9,
+      "nodes": [
+        "Arm_L",
+        "Arm_R",
+        "Body",
+        "Elbow_L",
+        "Elbow_R",
+        "Knee_L",
+        "Knee_R",
+        "Leg_L",
+        "Leg_R"
+      ]
+    },
+    {
+      "name": "Attack",
+      "channels": 6,
+      "duration_s": 1.1,
+      "endpoint_error": 0.0,
+      "moving_channels": 6,
+      "nodes": [
+        "Arm_L",
+        "Arm_R",
+        "Body",
+        "Elbow_L",
+        "Elbow_R",
+        "Head"
+      ]
+    }
+  ]
+}

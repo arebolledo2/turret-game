@@ -42,7 +42,7 @@ func test_imported_roster_has_the_required_articulation() -> void:
 		var muzzle := model.find_child("Muzzle", true, false) as Node3D
 		if muzzle:
 			assert_eq(muzzle.get_child_count(), 0, "Muzzle is a bare marker")
-			assert_eq(muzzle.get_parent().name, &"Arm_R" if key == "hero" else &"Aim")
+			assert_eq(muzzle.get_parent().name, &"Arm_R" if key == "hero" else (&"Body" if key in ["prism_conductor", "lens"] else &"Aim"))
 			assert_gt((-muzzle.global_basis.z).dot(Vector3.FORWARD), .99, key + " faces forward at rest")
 		if key in ["hero", "tank", "charger"]:
 			var motion := ClockworkMotion.new(model, key)

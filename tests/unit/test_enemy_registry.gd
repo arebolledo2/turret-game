@@ -228,8 +228,8 @@ func test_get_available_types_wave_3():
 func test_get_available_types_late_wave():
 	var available = EnemyRegistry.get_available_types(10)
 
-	# All enemy types should be available by wave 10
-	for type_id in EnemyRegistry.get_all_type_ids():
+	# Legacy weighted-pool API remains separate from authored ecology waves and summons.
+	for type_id in EnemyRegistry.TYPES:
 		var min_wave = EnemyRegistry.get_type(type_id).get("min_wave", 1)
 		if min_wave <= 10:
 			assert_has(available, type_id, "%s should be available on wave 10" % type_id)

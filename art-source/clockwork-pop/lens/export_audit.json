@@ -1,0 +1,141 @@
+{
+  "animations": [
+    {
+      "name": "Attack",
+      "channels": [
+        {
+          "node": "Fin_L",
+          "path": "rotation",
+          "keys": 25,
+          "duration_s": 0.7999999783933163,
+          "rest_return_error": 0.0,
+          "actual_motion": true
+        },
+        {
+          "node": "Fin_R",
+          "path": "rotation",
+          "keys": 25,
+          "duration_s": 0.7999999783933163,
+          "rest_return_error": 0.0,
+          "actual_motion": true
+        },
+        {
+          "node": "Gimbal",
+          "path": "rotation",
+          "keys": 25,
+          "duration_s": 0.7999999783933163,
+          "rest_return_error": 0.0,
+          "actual_motion": true
+        },
+        {
+          "node": "RearEmitter",
+          "path": "scale",
+          "keys": 25,
+          "duration_s": 0.7999999783933163,
+          "rest_return_error": 0.0,
+          "actual_motion": true
+        }
+      ]
+    },
+    {
+      "name": "Swim",
+      "channels": [
+        {
+          "node": "Fin_L",
+          "path": "rotation",
+          "keys": 49,
+          "duration_s": 1.5999999903142452,
+          "rest_return_error": 0.0,
+          "actual_motion": true
+        },
+        {
+          "node": "Fin_R",
+          "path": "rotation",
+          "keys": 49,
+          "duration_s": 1.5999999903142452,
+          "rest_return_error": 0.0,
+          "actual_motion": true
+        },
+        {
+          "node": "Gimbal",
+          "path": "rotation",
+          "keys": 49,
+          "duration_s": 1.5999999903142452,
+          "rest_return_error": 0.0,
+          "actual_motion": true
+        }
+      ]
+    },
+    {
+      "name": "Walk",
+      "channels": [
+        {
+          "node": "Fin_L",
+          "path": "rotation",
+          "keys": 41,
+          "duration_s": 1.3333333395421505,
+          "rest_return_error": 0.0,
+          "actual_motion": true
+        },
+        {
+          "node": "Fin_R",
+          "path": "rotation",
+          "keys": 41,
+          "duration_s": 1.3333333395421505,
+          "rest_return_error": 0.0,
+          "actual_motion": true
+        },
+        {
+          "node": "Gimbal",
+          "path": "rotation",
+          "keys": 41,
+          "duration_s": 1.3333333395421505,
+          "rest_return_error": 0.0,
+          "actual_motion": true
+        }
+      ]
+    },
+    {
+      "name": "Idle",
+      "channels": [
+        {
+          "node": "Fin_L",
+          "path": "rotation",
+          "keys": 61,
+          "duration_s": 1.9999999664723873,
+          "rest_return_error": 0.0,
+          "actual_motion": true
+        },
+        {
+          "node": "Fin_R",
+          "path": "rotation",
+          "keys": 61,
+          "duration_s": 1.9999999664723873,
+          "rest_return_error": 0.0,
+          "actual_motion": true
+        },
+        {
+          "node": "Gimbal",
+          "path": "rotation",
+          "keys": 61,
+          "duration_s": 1.9999999664723873,
+          "rest_return_error": 0.0,
+          "actual_motion": true
+        }
+      ]
+    }
+  ],
+  "stationary_root_and_body": true,
+  "all_animation_names": [
+    "Attack",
+    "Idle",
+    "Swim",
+    "Walk"
+  ],
+  "bare_muzzle": true,
+  "all_mesh_primitives_uv_mapped": true,
+  "embedded_images": 4,
+  "all_images_embedded": true,
+  "all_buffers_embedded": true,
+  "glb_bytes": 1842036
+}

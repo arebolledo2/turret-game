@@ -13,24 +13,27 @@ from pathlib import Path
 game = Path(__file__).resolve().parents[1]
 repo = game.parent
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('key', choices=['ion','plasma','tesla','shock','melee','basic','fast','tank','charger','hero','dropbox','exploder','machine_gun','scatter','saber','gatling','crossfire','siege','bow','flamethrower','bowling','gunblade','arrow','bowling_ball'])
+parser.add_argument('key', choices=['ion','plasma','tesla','shock','melee','basic','fast','tank','charger','hero','dropbox','exploder','machine_gun','scatter','saber','gatling','crossfire','siege','bow','flamethrower','bowling','gunblade','arrow','bowling_ball','drowse','hopper','kite','lobber','tender','brass_ram','prism_conductor','grand_marionettist','skitter','lens','anchor','puppet'])
 parser.add_argument('--iteration', required=True, type=int)
+parser.add_argument('--asset-name', help='Harness subject name, defaults to cp_<key>')
+parser.add_argument('--run-name', help='Harness run directory, defaults to <asset-name>-v1')
 args = parser.parse_args()
 key = args.key
-run = repo / f'3d-eval/runs/cp_{key}-v1'
+asset_name = args.asset_name or f'cp_{key}'
+run = repo / '3d-eval/runs' / (args.run_name or f'{asset_name}-v1')
 validation = run / f'renders/iter{args.iteration:02}/validate.json'
 result = json.loads(validation.read_text())
 if not result['passed']:
     raise SystemExit('Export contract has not passed.')
-glb = run / f'cp_{key}.glb'
-builder = run / f'build_cp_{key}.py'
+glb = run / f'{asset_name}.glb'
+builder = run / f'build_{asset_name}.py'
 if not glb.is_file() or not builder.is_file():
     raise SystemExit('Missing final GLB or deterministic builder.')
 source_dir = game / f'art-source/clockwork-pop/{key}'
 source_dir.mkdir(parents=True,exist_ok=True)
 model_dir = game / 'assets/models/clockwork'
 model_dir.mkdir(parents=True,exist_ok=True)
-destination = model_dir / glb.name
+destination = model_dir / f'cp_{key}.glb'
 shutil.copy2(glb,destination)
 for file in run.iterdir():
     if file.is_file() and file.suffix in ('.py','.png','.blend','.md','.json'):
@@ -38,9 +41,9 @@ for file in run.iterdir():
 (source_dir/'validate.json').write_text(validation.read_text(),encoding='utf-8',newline='\n')
 config = run / 'contract.json'
 if not config.exists():
-    config = repo / f'3d-eval/harness/subjects/cp_{key}_soft.json'
+    config = repo / f'3d-eval/harness/subjects/{asset_name}_soft.json'
 shutil.copy2(config,source_dir/'contract.json')
-reference = repo / f'3d-eval/ref/cp_{key}.png'
+reference = repo / f'3d-eval/ref/{asset_name}.png'
 if reference.is_file():
     refs = game / 'art-source/clockwork-pop/references'
     refs.mkdir(parents=True, exist_ok=True)
@@ -48,7 +51,7 @@ if reference.is_file():
 import_file = destination.with_suffix('.glb.import')
 if not import_file.exists():
     original = (game/'assets/models/game/spider_drone.glb.import').read_text()
-    original = original.replace('assets/models/game/spider_drone.glb',f'assets/models/clockwork/{glb.name}')
+    original = original.replace('assets/models/game/spider_drone.glb',f'assets/models/clockwork/{destination.name}')
     original = original.replace('spider_drone',f'cp_{key}')
     original = re.sub(r'^uid=.*\n','',original,flags=re.M)
     import_file.write_text(original)

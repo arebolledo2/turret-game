@@ -142,6 +142,9 @@ func _ready() -> void:
 		hud = preload("res://scripts/game/game_hud.gd").new()
 		hud.world = self
 		add_child(hud)
+		var health_overlay := EnemyHealthOverlay.new()
+		health_overlay.world = self
+		hud.add_child(health_overlay)
 	if FeatureFlagService.dev_panel_available():
 		dev_panel = DevPanel.new()
 		dev_panel.world = self
@@ -221,6 +224,9 @@ func _clear_actors() -> void:
 ## turret. Scrap pickups are banked when `bank_pickups` is set, otherwise discarded.
 func clear_field(bank_pickups: bool, return_carried: bool = true) -> void:
 	item_effects.clear_wave()
+	for node in get_tree().get_nodes_in_group("hostile_ordnance"):
+		if node.world == self:
+			node.queue_free()
 	# Progression awards are committed explicitly by WaveDirector, never by cleanup.
 	bank_pickups = bank_pickups and not session.state.turret_progression_enabled
 	for enemy in enemies:
@@ -365,13 +371,17 @@ func _on_enemy_died(enemy: CombatActor) -> void:
 		drops.reward(enemy)
 		enemy.queue_free()
 		return
-	GameStateService.total_kills += 1
-	var pickup := ScrapPickup.new()
-	pickup.world = self
-	pickup.amount = enemy.scrap_value
-	pickup.position = enemy.position
-	pickup_root.add_child(pickup)
-	pickup.reset_physics_interpolation()
+	if not enemy.enemy_type in EnemyEcology.SUMMONS:
+		GameStateService.total_kills += 1
+	if EnemyEcology.is_boss(enemy.enemy_type):
+		drops.reward_boss(enemy.enemy_type)
+	if enemy.scrap_value > 0:
+		var pickup := ScrapPickup.new()
+		pickup.world = self
+		pickup.amount = enemy.scrap_value
+		pickup.position = enemy.position
+		pickup_root.add_child(pickup)
+		pickup.reset_physics_interpolation()
 	enemies.erase(enemy)
 	DeathDissolve.spawn(actor_root, enemy)
 	enemy.queue_free()

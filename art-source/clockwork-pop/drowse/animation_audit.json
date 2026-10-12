@@ -1,0 +1,34 @@
+{
+  "embedded_images": 4,
+  "external_image_uris": [],
+  "animations": [
+    {
+      "name": "Idle",
+      "duration": 4.0,
+      "channels": 4,
+      "max_endpoint_difference": 6.123233849335533e-18,
+      "translation_channels": []
+    },
+    {
+      "name": "Walk",
+      "duration": 1.3333333730697632,
+      "channels": 9,
+      "max_endpoint_difference": 2.571758291167179e-17,
+      "translation_channels": []
+    },
+    {
+      "name": "Swim",
+      "duration": 2.0,
+      "channels": 9,
+      "max_endpoint_difference": 4.041334481182156e-17,
+      "translation_channels": []
+    },
+    {
+      "name": "Attack",
+      "duration": 1.0,
+      "channels": 9,
+      "max_endpoint_difference": 2.3996155968602314e-33,
+      "translation_channels": []
+    }
+  ]
+}

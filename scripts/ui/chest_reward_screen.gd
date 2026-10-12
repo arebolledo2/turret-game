@@ -79,7 +79,7 @@ func show_next() -> void:
 		return
 	active = true
 	var reward: Dictionary = world.drops.pending_items[0]
-	heading.text = "CHEST RECOVERED · %d ITEM%s TO REVIEW" % [world.drops.pending_items.size(), "" if world.drops.pending_items.size() == 1 else "S"]
+	heading.text = "%s · %d ITEM%s TO REVIEW" % [reward.get("source", "CHEST RECOVERED"), world.drops.pending_items.size(), "" if world.drops.pending_items.size() == 1 else "S"]
 	var rarity := ItemRegistry.get_rarity(reward.id)
 	rarity_label.text = ItemRegistry.get_rarity_name(rarity).to_upper()
 	rarity_label.modulate = ItemRegistry.get_rarity_color(rarity).lightened(.25)

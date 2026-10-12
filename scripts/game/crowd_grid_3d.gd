@@ -159,6 +159,8 @@ func resolve_overlaps(obstacles: Array = []) -> void:
 func _inverse_mass(actor: CombatActor) -> float:
 	if actor.stationary:
 		return 0.0
+	if actor.brain and actor.brain.pounce and actor.brain.pounce.phase in [ChargeController3D.Phase.WINDUP, ChargeController3D.Phase.DASH]:
+		return 0.0
 	if actor.charge and actor.charge.phase in [ChargeController3D.Phase.WINDUP, ChargeController3D.Phase.DASH]:
 		return 0.0
 	return 1.0 / maxf(actor.mass, .1)

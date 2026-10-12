@@ -1,0 +1,285 @@
+{
+  "animations": [
+    {
+      "name": "Idle",
+      "duration_s": 4.0,
+      "channels": [
+        {
+          "node": "Claw_L",
+          "path": "rotation",
+          "keys": 121,
+          "endpoint_error": 3.429011054889572e-18,
+          "motion_max": 0.013999543152749538
+        },
+        {
+          "node": "Claw_R",
+          "path": "rotation",
+          "keys": 121,
+          "endpoint_error": 3.429011054889572e-18,
+          "motion_max": 0.013999543152749538
+        },
+        {
+          "node": "Crown",
+          "path": "translation",
+          "keys": 121,
+          "endpoint_error": 0.0,
+          "motion_max": 0.008000016212463379
+        },
+        {
+          "node": "Crown",
+          "path": "rotation",
+          "keys": 121,
+          "endpoint_error": 3.429011054889572e-18,
+          "motion_max": 0.013999543152749538
+        },
+        {
+          "node": "Lens_L",
+          "path": "rotation",
+          "keys": 121,
+          "endpoint_error": 5.51091050576101e-18,
+          "motion_max": 0.022498110309243202
+        },
+        {
+          "node": "Lens_R",
+          "path": "rotation",
+          "keys": 121,
+          "endpoint_error": 5.51091050576101e-18,
+          "motion_max": 0.022498110309243202
+        },
+        {
+          "node": "Thruster_L",
+          "path": "rotation",
+          "keys": 121,
+          "endpoint_error": 3.429011054889572e-18,
+          "motion_max": 0.013999543152749538
+        },
+        {
+          "node": "Thruster_R",
+          "path": "rotation",
+          "keys": 121,
+          "endpoint_error": 3.429011054889572e-18,
+          "motion_max": 0.013999543152749538
+        }
+      ],
+      "root_stationary": true,
+      "endpoint_match": true,
+      "actual_transform_motion": true
+    },
+    {
+      "name": "Walk",
+      "duration_s": 1.2,
+      "channels": [
+        {
+          "node": "Claw_L",
+          "path": "rotation",
+          "keys": 37,
+          "endpoint_error": 1.1010667308142356e-17,
+          "motion_max": 0.08996964991092682
+        },
+        {
+          "node": "Claw_R",
+          "path": "rotation",
+          "keys": 37,
+          "endpoint_error": 1.1010667308142356e-17,
+          "motion_max": 0.08996964991092682
+        },
+        {
+          "node": "Crown",
+          "path": "translation",
+          "keys": 37,
+          "endpoint_error": 0.0,
+          "motion_max": 0.013000011444091797
+        },
+        {
+          "node": "Crown",
+          "path": "rotation",
+          "keys": 37,
+          "endpoint_error": 6.735557192910056e-18,
+          "motion_max": 0.027496537193655968
+        },
+        {
+          "node": "Lens_L",
+          "path": "rotation",
+          "keys": 37,
+          "endpoint_error": 1.2246467698671066e-17,
+          "motion_max": 0.04996027797460556
+        },
+        {
+          "node": "Lens_R",
+          "path": "rotation",
+          "keys": 37,
+          "endpoint_error": 1.2246467698671066e-17,
+          "motion_max": 0.04996027797460556
+        },
+        {
+          "node": "Thruster_L",
+          "path": "rotation",
+          "keys": 37,
+          "endpoint_error": 1.469576190014977e-17,
+          "motion_max": 0.059964004904031754
+        },
+        {
+          "node": "Thruster_R",
+          "path": "rotation",
+          "keys": 37,
+          "endpoint_error": 1.469576190014977e-17,
+          "motion_max": 0.059964004904031754
+        }
+      ],
+      "root_stationary": true,
+      "endpoint_match": true,
+      "actual_transform_motion": true
+    },
+    {
+      "name": "Swim",
+      "duration_s": 2.0,
+      "channels": [
+        {
+          "node": "Claw_L",
+          "path": "rotation",
+          "keys": 61,
+          "endpoint_error": 1.957451616637938e-17,
+          "motion_max": 0.08996964991092682
+        },
+        {
+          "node": "Claw_R",
+          "path": "rotation",
+          "keys": 61,
+          "endpoint_error": 1.957451616637938e-17,
+          "motion_max": 0.08996964991092682
+        },
+        {
+          "node": "Crown",
+          "path": "translation",
+          "keys": 61,
+          "endpoint_error": 0.0,
+          "motion_max": 0.013000011444091797
+        },
+        {
+          "node": "Crown",
+          "path": "rotation",
+          "keys": 61,
+          "endpoint_error": 6.735557192910056e-18,
+          "motion_max": 0.027496537193655968
+        },
+        {
+          "node": "Lens_L",
+          "path": "rotation",
+          "keys": 61,
+          "endpoint_error": 1.2246467698671066e-17,
+          "motion_max": 0.04996027797460556
+        },
+        {
+          "node": "Lens_R",
+          "path": "rotation",
+          "keys": 61,
+          "endpoint_error": 1.2246467698671066e-17,
+          "motion_max": 0.04996027797460556
+        },
+        {
+          "node": "Thruster_L",
+          "path": "rotation",
+          "keys": 61,
+          "endpoint_error": 1.469576190014977e-17,
+          "motion_max": 0.059964004904031754
+        },
+        {
+          "node": "Thruster_R",
+          "path": "rotation",
+          "keys": 61,
+          "endpoint_error": 1.469576190014977e-17,
+          "motion_max": 0.059964004904031754
+        }
+      ],
+      "root_stationary": true,
+      "endpoint_match": true,
+      "actual_transform_motion": true
+    },
+    {
+      "name": "Attack",
+      "duration_s": 1.2,
+      "channels": [
+        {
+          "node": "Claw_L",
+          "path": "rotation",
+          "keys": 37,
+          "endpoint_error": 2.249639599097593e-33,
+          "motion_max": 0.1489601880311966
+        },
+        {
+          "node": "Claw_R",
+          "path": "rotation",
+          "keys": 37,
+          "endpoint_error": 2.249639599097593e-33,
+          "motion_max": 0.1489601880311966
+        },
+        {
+          "node": "Crown",
+          "path": "translation",
+          "keys": 37,
+          "endpoint_error": 0.0,
+          "motion_max": 0.039999961853027344
+        },
+        {
+          "node": "Crown",
+          "path": "rotation",
+          "keys": 37,
+          "endpoint_error": 6.748918980963771e-34,
+          "motion_max": 0.04498482123017311
+        },
+        {
+          "node": "Lens_L",
+          "path": "translation",
+          "keys": 37,
+          "endpoint_error": 8.248678958590156e-34,
+          "motion_max": 0.054999999701976776
+        },
+        {
+          "node": "Lens_L",
+          "path": "rotation",
+          "keys": 37,
+          "endpoint_error": 1.7997117894806697e-33,
+          "motion_max": 0.11971218883991241
+        },
+        {
+          "node": "Lens_R",
+          "path": "translation",
+          "keys": 37,
+          "endpoint_error": 8.248678958590156e-34,
+          "motion_max": 0.054999999701976776
+        },
+        {
+          "node": "Lens_R",
+          "path": "rotation",
+          "keys": 37,
+          "endpoint_error": 1.7997117894806697e-33,
+          "motion_max": 0.11971218883991241
+        },
+        {
+          "node": "Thruster_L",
+          "path": "rotation",
+          "keys": 37,
+          "endpoint_error": 9.748438936216541e-34,
+          "motion_max": 0.0649542361497879
+        },
+        {
+          "node": "Thruster_R",
+          "path": "rotation",
+          "keys": 37,
+          "endpoint_error": 9.748438936216541e-34,
+          "motion_max": 0.0649542361497879
+        }
+      ],
+      "root_stationary": true,
+      "endpoint_match": true,
+      "actual_transform_motion": true
+    }
+  ],
+  "images": 4,
+  "images_embedded": true,
+  "meshes_have_uvs": true,
+  "armatures_present": false,
+  "muzzle_bare": true,
+  "body_root": true,
+  "glb_bytes": 2661572
+}

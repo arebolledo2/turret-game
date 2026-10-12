@@ -1,0 +1,339 @@
+{
+  "root": [
+    [
+      "SkitterRoot",
+      null
+    ]
+  ],
+  "images": [
+    {
+      "bufferView": 4,
+      "mimeType": "image/png",
+      "name": "skitter_enamel_normal"
+    },
+    {
+      "bufferView": 5,
+      "mimeType": "image/png",
+      "name": "skitter_enamel_color"
+    },
+    {
+      "bufferView": 6,
+      "mimeType": "image/png",
+      "name": "skitter_surface_roughness"
+    },
+    {
+      "bufferView": 54,
+      "mimeType": "image/png",
+      "name": "skitter_lens_emission"
+    }
+  ],
+  "animations": [
+    {
+      "name": "Idle",
+      "channels": [
+        {
+          "node": "Body",
+          "path": "translation",
+          "duration": 2.0,
+          "endpoint_difference": 0.0,
+          "motion_range": 0.015999972820281982
+        },
+        {
+          "node": "Body",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 1.836970237518721e-18,
+          "motion_range": 0.014999859035015106
+        },
+        {
+          "node": "Antenna_L",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 7.347880950074885e-18,
+          "motion_range": 0.05997582711279392
+        },
+        {
+          "node": "Antenna_R",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 7.347880950074885e-18,
+          "motion_range": 0.05997582711279392
+        },
+        {
+          "node": "Leg_L_0",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 2.20436426434295e-18,
+          "motion_range": 0.017999762669205666
+        },
+        {
+          "node": "Leg_L_1",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 2.2043641609453735e-18,
+          "motion_range": 0.017999762669205666
+        },
+        {
+          "node": "Leg_L_2",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 2.20436426434295e-18,
+          "motion_range": 0.017999762669205666
+        },
+        {
+          "node": "Leg_R_0",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 2.2043641609453735e-18,
+          "motion_range": 0.017999762669205666
+        },
+        {
+          "node": "Leg_R_1",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 2.20436426434295e-18,
+          "motion_range": 0.017999762669205666
+        },
+        {
+          "node": "Leg_R_2",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 2.2043641609453735e-18,
+          "motion_range": 0.017999762669205666
+        }
+      ]
+    },
+    {
+      "name": "Walk",
+      "channels": [
+        {
+          "node": "Body",
+          "path": "translation",
+          "duration": 1.0,
+          "endpoint_difference": 0.0,
+          "motion_range": 0.016281157732009888
+        },
+        {
+          "node": "Body",
+          "path": "rotation",
+          "duration": 1.0,
+          "endpoint_difference": 3.0616169246677665e-18,
+          "motion_range": 0.0237758569419384
+        },
+        {
+          "node": "Antenna_L",
+          "path": "rotation",
+          "duration": 1.0,
+          "endpoint_difference": 7.347880950074885e-18,
+          "motion_range": 0.05704522877931595
+        },
+        {
+          "node": "Antenna_R",
+          "path": "rotation",
+          "duration": 1.0,
+          "endpoint_difference": 7.347880950074885e-18,
+          "motion_range": 0.05704522877931595
+        },
+        {
+          "node": "Leg_L_0",
+          "path": "rotation",
+          "duration": 1.0,
+          "endpoint_difference": 2.5717583738852402e-17,
+          "motion_range": 0.19906456023454666
+        },
+        {
+          "node": "Leg_L_1",
+          "path": "rotation",
+          "duration": 1.0,
+          "endpoint_difference": 2.571758291167179e-17,
+          "motion_range": 0.19906456023454666
+        },
+        {
+          "node": "Leg_L_2",
+          "path": "rotation",
+          "duration": 1.0,
+          "endpoint_difference": 2.5717583738852402e-17,
+          "motion_range": 0.19906456023454666
+        },
+        {
+          "node": "Leg_R_0",
+          "path": "rotation",
+          "duration": 1.0,
+          "endpoint_difference": 2.571758291167179e-17,
+          "motion_range": 0.19906456023454666
+        },
+        {
+          "node": "Leg_R_1",
+          "path": "rotation",
+          "duration": 1.0,
+          "endpoint_difference": 2.5717583738852402e-17,
+          "motion_range": 0.19906456023454666
+        },
+        {
+          "node": "Leg_R_2",
+          "path": "rotation",
+          "duration": 1.0,
+          "endpoint_difference": 2.571758291167179e-17,
+          "motion_range": 0.19906456023454666
+        }
+      ]
+    },
+    {
+      "name": "Swim",
+      "channels": [
+        {
+          "node": "Body",
+          "path": "translation",
+          "duration": 1.600000023841858,
+          "endpoint_difference": 0.0,
+          "motion_range": 0.050000011920928955
+        },
+        {
+          "node": "Body",
+          "path": "rotation",
+          "duration": 1.600000023841858,
+          "endpoint_difference": 6.735557192910056e-18,
+          "motion_range": 0.054993074387311935
+        },
+        {
+          "node": "Antenna_L",
+          "path": "rotation",
+          "duration": 1.600000023841858,
+          "endpoint_difference": 7.347880950074885e-18,
+          "motion_range": 0.05997582525014877
+        },
+        {
+          "node": "Antenna_R",
+          "path": "rotation",
+          "duration": 1.600000023841858,
+          "endpoint_difference": 7.347880950074885e-18,
+          "motion_range": 0.05997582525014877
+        },
+        {
+          "node": "Leg_L_0",
+          "path": "rotation",
+          "duration": 1.600000023841858,
+          "endpoint_difference": 3.533732947619398e-17,
+          "motion_range": 0.286377415060997
+        },
+        {
+          "node": "Leg_L_1",
+          "path": "rotation",
+          "duration": 1.600000023841858,
+          "endpoint_difference": 3.5337331130555204e-17,
+          "motion_range": 0.286377415060997
+        },
+        {
+          "node": "Leg_L_2",
+          "path": "rotation",
+          "duration": 1.600000023841858,
+          "endpoint_difference": 3.533732947619398e-17,
+          "motion_range": 0.286377415060997
+        },
+        {
+          "node": "Leg_R_0",
+          "path": "rotation",
+          "duration": 1.600000023841858,
+          "endpoint_difference": 3.5337331130555204e-17,
+          "motion_range": 0.286377415060997
+        },
+        {
+          "node": "Leg_R_1",
+          "path": "rotation",
+          "duration": 1.600000023841858,
+          "endpoint_difference": 3.533732947619398e-17,
+          "motion_range": 0.286377415060997
+        },
+        {
+          "node": "Leg_R_2",
+          "path": "rotation",
+          "duration": 1.600000023841858,
+          "endpoint_difference": 3.5337331130555204e-17,
+          "motion_range": 0.286377415060997
+        }
+      ]
+    },
+    {
+      "name": "Attack",
+      "channels": [
+        {
+          "node": "Body",
+          "path": "translation",
+          "duration": 0.800000011920929,
+          "endpoint_difference": 5.249159462514867e-34,
+          "motion_range": 0.03500000014901161
+        },
+        {
+          "node": "Body",
+          "path": "rotation",
+          "duration": 0.800000011920929,
+          "endpoint_difference": 1.7997117894806697e-33,
+          "motion_range": 0.11971218883991241
+        },
+        {
+          "node": "Antenna_L",
+          "path": "rotation",
+          "duration": 0.800000011920929,
+          "endpoint_difference": 7.347880950074885e-18,
+          "motion_range": 0.05997582897543907
+        },
+        {
+          "node": "Antenna_R",
+          "path": "rotation",
+          "duration": 0.800000011920929,
+          "endpoint_difference": 7.347880950074885e-18,
+          "motion_range": 0.05997582897543907
+        },
+        {
+          "node": "Eye",
+          "path": "scale",
+          "duration": 0.800000011920929,
+          "endpoint_difference": 0.0,
+          "motion_range": 0.08000004291534424
+        },
+        {
+          "node": "Leg_L_0",
+          "path": "rotation",
+          "duration": 0.800000011920929,
+          "endpoint_difference": 1.3497837961927542e-33,
+          "motion_range": 0.0896584540605545
+        },
+        {
+          "node": "Leg_L_1",
+          "path": "rotation",
+          "duration": 0.800000011920929,
+          "endpoint_difference": 1.0498318925029733e-33,
+          "motion_range": 0.06987205147743225
+        },
+        {
+          "node": "Leg_L_2",
+          "path": "rotation",
+          "duration": 0.800000011920929,
+          "endpoint_difference": 1.0498318925029733e-33,
+          "motion_range": 0.06987205147743225
+        },
+        {
+          "node": "Leg_R_0",
+          "path": "rotation",
+          "duration": 0.800000011920929,
+          "endpoint_difference": 1.3497837961927542e-33,
+          "motion_range": 0.0896584540605545
+        },
+        {
+          "node": "Leg_R_1",
+          "path": "rotation",
+          "duration": 0.800000011920929,
+          "endpoint_difference": 1.0498318925029733e-33,
+          "motion_range": 0.06987205147743225
+        },
+        {
+          "node": "Leg_R_2",
+          "path": "rotation",
+          "duration": 0.800000011920929,
+          "endpoint_difference": 1.0498318925029733e-33,
+          "motion_range": 0.06987205147743225
+        }
+      ]
+    }
+  ]
+}

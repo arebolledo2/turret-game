@@ -1,0 +1,160 @@
+{
+  "animations": {
+    "Idle": {
+      "duration_seconds": 4.0,
+      "channels": [
+        {
+          "node": "Body",
+          "path": "translation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.013
+        },
+        {
+          "node": "Body",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.009
+        },
+        {
+          "node": "Aim",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.0045
+        },
+        {
+          "node": "Fin_L",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.03999
+        },
+        {
+          "node": "Fin_R",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.03999
+        }
+      ],
+      "returns_to_start": true,
+      "has_transform_motion": true,
+      "root_stationary": true
+    },
+    "Walk": {
+      "duration_seconds": 2.0,
+      "channels": [
+        {
+          "node": "Body",
+          "path": "translation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.024
+        },
+        {
+          "node": "Body",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.02
+        },
+        {
+          "node": "Aim",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.0045
+        },
+        {
+          "node": "Fin_L",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.10443
+        },
+        {
+          "node": "Fin_R",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.10443
+        }
+      ],
+      "returns_to_start": true,
+      "has_transform_motion": true,
+      "root_stationary": true
+    },
+    "Swim": {
+      "duration_seconds": 3.0,
+      "channels": [
+        {
+          "node": "Body",
+          "path": "translation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.02387
+        },
+        {
+          "node": "Body",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.01989
+        },
+        {
+          "node": "Aim",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.00448
+        },
+        {
+          "node": "Fin_L",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.10918
+        },
+        {
+          "node": "Fin_R",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.10918
+        }
+      ],
+      "returns_to_start": true,
+      "has_transform_motion": true,
+      "root_stationary": true
+    },
+    "Attack": {
+      "duration_seconds": 1.0,
+      "channels": [
+        {
+          "node": "Body",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.01243
+        },
+        {
+          "node": "Aim",
+          "path": "translation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.05966
+        },
+        {
+          "node": "Aim",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.0174
+        },
+        {
+          "node": "Fin_L",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.06459
+        },
+        {
+          "node": "Fin_R",
+          "path": "rotation",
+          "endpoint_delta": 0.0,
+          "motion_delta": 0.06459
+        }
+      ],
+      "returns_to_start": true,
+      "has_transform_motion": true,
+      "root_stationary": true
+    }
+  },
+  "embedded_images": 4,
+  "all_images_embedded": true,
+  "muzzle_bare": true,
+  "passed": true
+}

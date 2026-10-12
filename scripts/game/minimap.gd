@@ -5,6 +5,10 @@ extends Control
 const MAP_SIZE: Vector2 = Vector2(256, 144) # the arena is 16:9, so one pixel is about 0.225 m
 const REDRAW_INTERVAL: float = 0.05
 const ENEMY_COLORS: Dictionary = {
+	"drowse": Color("dfc99a"), "hopper": Color("db718c"), "kite": Color("8ca7ff"),
+	"lobber": Color("ff904f"), "tender": Color("c19edf"), "skitter": Color("b7d887"),
+	"brass_ram": Color("ffd178"), "prism_conductor": Color("b2a0ff"), "grand_marionettist": Color("ff739b"),
+	"lens": Color("c0acff"), "anchor": Color("ffb889"), "puppet": Color("d2a0be"),
 	"basic": Color("ff6b8a"), "fast": Color("7fe3ff"), "tank": Color("e08a4a"),
 	"exploder": Color("ff5a2a"), "charger": Color("ffc23d"), "tech_drop": Color("f4b942"),
 }

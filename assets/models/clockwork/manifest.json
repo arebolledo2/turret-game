@@ -274,6 +274,138 @@
       "meshes": 15,
       "materials": 9,
       "iteration": 3
+    },
+    {
+      "id": "drowse",
+      "source": "art-source/clockwork-pop/drowse/build_eco_drowse.py",
+      "model": "assets/models/clockwork/cp_drowse.glb",
+      "reference": "art-source/clockwork-pop/references/drowse.png",
+      "sha256": "ce72588ebafcc456f1ef36171ebc1b3f8e15cfab18b194eefc61f25e73de4bb0",
+      "triangles": 30072,
+      "meshes": 16,
+      "materials": 9,
+      "iteration": 3
+    },
+    {
+      "id": "hopper",
+      "source": "art-source/clockwork-pop/hopper/build_eco_hopper.py",
+      "model": "assets/models/clockwork/cp_hopper.glb",
+      "reference": "art-source/clockwork-pop/references/hopper.png",
+      "sha256": "35c4f4a855b4c4a6e1556d4c476985952db7e719bd307f4c0ad467f54a600c3d",
+      "triangles": 18592,
+      "meshes": 15,
+      "materials": 6,
+      "iteration": 4
+    },
+    {
+      "id": "lobber",
+      "source": "art-source/clockwork-pop/lobber/build_eco_lobber.py",
+      "model": "assets/models/clockwork/cp_lobber.glb",
+      "reference": "art-source/clockwork-pop/references/lobber.png",
+      "sha256": "2f9beec315d45ece29e2fd521cef1f4a0797636b5881540973aec50e6139a095",
+      "triangles": 31828,
+      "meshes": 10,
+      "materials": 10,
+      "iteration": 3
+    },
+    {
+      "id": "kite",
+      "source": "art-source/clockwork-pop/kite/build_eco_kite.py",
+      "model": "assets/models/clockwork/cp_kite.glb",
+      "reference": "art-source/clockwork-pop/references/kite.png",
+      "sha256": "18d5526788676d263a9dc7ef06fa39311f74e4648365a1bc42c1c135183e03ac",
+      "triangles": 17168,
+      "meshes": 4,
+      "materials": 8,
+      "iteration": 3
+    },
+    {
+      "id": "brass_ram",
+      "source": "art-source/clockwork-pop/brass_ram/build_eco_ram.py",
+      "model": "assets/models/clockwork/cp_brass_ram.glb",
+      "reference": "art-source/clockwork-pop/references/brass_ram.png",
+      "sha256": "87800ee1601b21142488160dbc9569204bb69a64771087e7a7e16852f8889b99",
+      "triangles": 27792,
+      "meshes": 15,
+      "materials": 8,
+      "iteration": 3
+    },
+    {
+      "id": "tender",
+      "source": "art-source/clockwork-pop/tender/build_eco_tender.py",
+      "model": "assets/models/clockwork/cp_tender.glb",
+      "reference": "art-source/clockwork-pop/references/tender.png",
+      "sha256": "67865a3d4169025be953307cbfd7404de18b68492fa6446b0dc755b09df59c64",
+      "triangles": 33044,
+      "meshes": 10,
+      "materials": 9,
+      "iteration": 5
+    },
+    {
+      "id": "prism_conductor",
+      "source": "art-source/clockwork-pop/prism_conductor/build_eco_prism.py",
+      "model": "assets/models/clockwork/cp_prism_conductor.glb",
+      "reference": "art-source/clockwork-pop/references/prism_conductor.png",
+      "sha256": "15f1a9f58f0b179e7b9e41f44806d435e2df21bf149d09e26cd9d87815a812c5",
+      "triangles": 37694,
+      "meshes": 8,
+      "materials": 14,
+      "iteration": 4
+    },
+    {
+      "id": "skitter",
+      "source": "art-source/clockwork-pop/skitter/build_eco_skitter.py",
+      "model": "assets/models/clockwork/cp_skitter.glb",
+      "reference": "art-source/clockwork-pop/references/skitter.png",
+      "sha256": "7dfa4a052e9def28e32f21d9f17bbe3e1391df88ed9a94060be8a30b0e115999",
+      "triangles": 11548,
+      "meshes": 10,
+      "materials": 7,
+      "iteration": 2
+    },
+    {
+      "id": "grand_marionettist",
+      "source": "art-source/clockwork-pop/grand_marionettist/build_eco_marionettist.py",
+      "model": "assets/models/clockwork/cp_grand_marionettist.glb",
+      "reference": "art-source/clockwork-pop/references/grand_marionettist.png",
+      "sha256": "131e00cfaa75d33eda6839d44b4910ce1686c0d37ba0f273f3642de8ab09d7ae",
+      "triangles": 35114,
+      "meshes": 14,
+      "materials": 8,
+      "iteration": 3
+    },
+    {
+      "id": "lens",
+      "source": "art-source/clockwork-pop/lens/build_eco_lens.py",
+      "model": "assets/models/clockwork/cp_lens.glb",
+      "reference": "art-source/clockwork-pop/references/lens.png",
+      "sha256": "c2e212f55d2c43b933907622af8cd77c01109ce045e6bd845a9165d50b3cc0d6",
+      "triangles": 7760,
+      "meshes": 15,
+      "materials": 6,
+      "iteration": 3
+    },
+    {
+      "id": "anchor",
+      "source": "art-source/clockwork-pop/anchor/build_eco_anchor.py",
+      "model": "assets/models/clockwork/cp_anchor.glb",
+      "reference": "art-source/clockwork-pop/references/anchor.png",
+      "sha256": "9d0558a67cde00baa50ae48937f96468dd2034260c49217a34b1c40484db9c6c",
+      "triangles": 11390,
+      "meshes": 10,
+      "materials": 8,
+      "iteration": 2
+    },
+    {
+      "id": "puppet",
+      "source": "art-source/clockwork-pop/puppet/build_eco_puppet.py",
+      "model": "assets/models/clockwork/cp_puppet.glb",
+      "reference": "art-source/clockwork-pop/references/puppet.png",
+      "sha256": "ce10b33da228f583679e42cbe3f4a4a0537dea2aa6d9099970c53c441e4615b3",
+      "triangles": 14205,
+      "meshes": 10,
+      "materials": 7,
+      "iteration": 3
     }
   ]
 }

@@ -16,6 +16,8 @@ var announcement_left: float = 0.0
 ## even and deterministic (no gameplay RNG is consumed).
 var elite_credit: float = 0.0
 var seeker_credit: float = 0.0
+var spawn_plan: Array[String] = []
+var boss_spawned: bool = false
 
 func tick(delta: float) -> void:
 	if GameStateMachine.current_state == GameStateMachine.GameState.WAVE_END:
@@ -28,15 +30,22 @@ func tick(delta: float) -> void:
 		return
 	if not world.is_combat():
 		return
+	if not boss_spawned and EnemyEcology.BOSSES.has(GameStateService.current_wave):
+		boss_spawned = true
+		var boss_id: String = EnemyEcology.BOSSES[GameStateService.current_wave]
+		spawn_enemy(encounter_position(boss_id), boss_id)
 	world.crowd.rebuild(world.enemies)
 	world.crowd.resolve_overlaps(_fixed_obstacles())
 	time_left = maxf(0.0, time_left - delta)
 	spawn_clock -= delta
 	if remaining_spawns > 0 and spawn_clock <= 0.0:
-		var type_id := EnemyVariants.pick_type(GameStateService.current_wave, spawned_this_wave)
-		var elite := _take_credit("elite_chance")
-		var seeker := world.core != null and _take_credit("seeker_share")
-		spawn_enemy(spawn_position(), type_id, elite, seeker)
+		var type_id := spawn_plan[spawned_this_wave] if spawned_this_wave < spawn_plan.size() else EnemyEcology.fallback(GameStateService.current_wave)
+		if active_count(type_id) >= int(EnemyEcology.CAPS.get(type_id, 10000)):
+			type_id = EnemyEcology.fallback(GameStateService.current_wave)
+		var assault := not EnemyEcology.TYPES.has(type_id)
+		var elite := assault and GameStateService.current_wave >= 6 and _take_credit("elite_chance")
+		var seeker := assault and GameStateService.current_wave >= 6 and world.core != null and _take_credit("seeker_share")
+		spawn_enemy(encounter_position(type_id), type_id, elite, seeker)
 		spawned_this_wave += 1
 		remaining_spawns -= 1
 		spawn_clock += spawn_interval
@@ -44,7 +53,7 @@ func tick(delta: float) -> void:
 	world.build_zones.tick(delta)
 	# Convoy rounds end on arrival at the final door; the timer is only a safety net.
 	if time_left <= 0.0 or (world.convoy_mover != null and world.convoy_mover.finished):
-		finish_wave()
+		finish_wave.call_deferred() # Let actors and projectiles resolve this final physics tick first.
 
 ## Circles enemies may not occupy. The hero is excluded: enemies must reach it for contact damage.
 func _fixed_obstacles() -> Array:
@@ -69,6 +78,7 @@ func begin_next_wave() -> bool:
 	world.audio.play_cue("wave", world.player.position)
 	announcement_left = ANNOUNCEMENT_TIME
 	spawned_this_wave = 0
+	boss_spawned = false
 	elite_credit = 0.0
 	seeker_credit = 0.0
 	time_left = GameStateService.get_wave_duration(GameStateService.current_wave)
@@ -85,6 +95,9 @@ func begin_next_wave() -> bool:
 		# Higher pressure means more arrivals across the whole round, not an early cutoff.
 		var rate := maxf(DifficultyService.wave_rule(world.difficulty_config, "spawn_rate_mult", GameStateService.current_wave), .1)
 		remaining_spawns = maxi(1, roundi(remaining_spawns * rate))
+	var budget := maxi(1, roundi(remaining_spawns * EnemyEcology.budget_multiplier(GameStateService.current_wave)))
+	spawn_plan = EnemyEcology.schedule(GameStateService.current_wave, budget)
+	remaining_spawns = spawn_plan.size()
 	spawn_interval = spawn_window / maxf(float(remaining_spawns), 1.0)
 	spawn_clock = FIRST_SPAWN_DELAY
 	world.message = EnemyVariants.notice_for_wave(GameStateService.current_wave)
@@ -166,7 +179,7 @@ func spawn_enemy(at: Vector3, type_id: String = "basic", elite: bool = false, se
 		enemy.speed *= DifficultyService.rule(world.difficulty_config, "elite_speed_mult")
 		enemy.scrap_value *= 2
 		enemy.body_scale *= 1.15
-	enemy.ignores_hero = seeker
+	enemy.ignores_hero = seeker and not EnemyEcology.TYPES.has(type_id)
 	enemy.position = at
 	world.actor_root.add_child(enemy)
 	enemy.reset_physics_interpolation()
@@ -216,4 +229,41 @@ func spawn_position() -> Vector3:
 		result = WorldGeometry.clamp_position(centre + Vector3(x, 0, z))
 		if WorldGeometry.planar(result - centre).length() >= GameConstants.ENEMY_SPAWN_MIN_DISTANCE:
 			break
+	return result
+
+func active_count(type_id: String) -> int:
+	var count := 0
+	for actor in world.enemies:
+		if is_instance_valid(actor) and not actor.dead and actor.enemy_type == type_id:
+			count += 1
+	return count
+
+## Alternating lanes and clustered approaches give the roster a spatial identity.
+## Lazy beetles must appear within reach: they intentionally will not march in from the map edge.
+func encounter_position(type_id: String) -> Vector3:
+	var centre := world.player.position
+	var wave := GameStateService.current_wave
+	var angle := GameRandom.gameplay.randf() * TAU
+	var distance := GameRandom.gameplay.randf_range(5.0, 7.0)
+	if type_id == "drowse":
+		distance = GameRandom.gameplay.randf_range(3.5, 6.0)
+	elif EnemyEcology.is_boss(type_id):
+		distance = 6.0
+	elif wave in [8, 9, 13, 15, 19]:
+		# Two opposing lanes; siege waves alternate north/south instead of east/west.
+		angle = (0.0 if spawned_this_wave % 2 == 0 else PI) + (.5 * PI if wave in [9, 15] else 0.0)
+		angle += GameRandom.gameplay.randf_range(-.3, .3)
+		if world.core: centre = world.core.position
+		distance = GameRandom.gameplay.randf_range(7.0, 9.0)
+	elif wave in [7, 11, 14, 18]:
+		# Three-enemy groups approach from the same flank, then switch.
+		angle = float((spawned_this_wave / 3) % 4) * PI * .5 + GameRandom.gameplay.randf_range(-.25, .25)
+	elif type_id not in ["tender", "kite", "lobber"]:
+		return spawn_position()
+	var result := Vector3.ZERO
+	for attempt in 8:
+		result = WorldGeometry.clamp_position(centre + Vector3(cos(angle), 0, sin(angle)) * distance, 1.0)
+		if result.distance_to(world.player.position) >= 3.0 and (not world.core or result.distance_to(world.core.position) >= 2.0):
+			break
+		angle += PI * .5
 	return result

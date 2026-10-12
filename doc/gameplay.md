@@ -4,10 +4,14 @@ Launch with **`./launch.ps1`** or Godot F5. The default main scene opens Play, S
 
 Settings persist fullscreen, VSync, reduced motion and SFX volume (70% by default; zero mutes). Pause/end screens can return to the start menu; each Play creates a fresh session.
 
+## Enemy ecology update
+
+See [the enemy ecology guide](enemy-ecology.md) for the current twenty-wave rosters, five new enemy roles, bosses on waves 6/12/20, summon limits and reward rules. [Godot captures](art/enemy-ecology/index.html) show the delivered models and effects.
+
 ## Playable scope
 
 - Elevated orthographic follow camera (`CameraRig`) over a 40.73 x 22.91 metre flat arena (half the previous surface area; same aspect ratio). The camera only translates, stays clamped to the floor, starts at 0.75x zoom (four times the ground area of the old 1.5x default), and zooms 0.5x-2x with the mouse wheel, `+`/`-` keys or gamepad triggers.
-- Enemies spawn on a ring just outside the default-zoom view around the player (`ArenaWorld._spawn_position`).
+- Encounter spawn positions vary by role: nearby wandering Drowse Beetles, alternating ranged flanks, grouped hunters, and the default outer spawn ring.
 - The window is resizable with a title bar (1280 x 720 by default); settings offers size presets and fullscreen. Stretch mode is `canvas_items` with `expand` aspect.
 - WASD/arrow keys or left stick to move; auto-fire targets nearby enemies.
 - E / controller A to pick up and place a nearby turret; carrying slows movement and lets that turret attack instead of the hero's gun. Entrenchment resets on pickup and only builds while deployed; terrain bonuses apply only to deployed turrets.
@@ -15,7 +19,7 @@ Settings persist fullscreen, VSync, reduced motion and SFX volume (70% by defaul
 - Twenty survival waves by default (`RunConfig`, 30 s rising to a 60 s cap from wave 7), using the existing wave-duration, enemy-count, and enemy-stat calculations with the Easy preset. The original six-wave slice is `RunConfig.slice()`.
 - Chasing spider drones, soft crowd separation, contact damage and player invulnerability, swept 3D projectile hits, reusable projectile instances, and collectible scrap.
 - Plasma turrets prioritize clusters, deal splash damage, and push enemies back. Knockback interrupts charger warnings and dashes.
-- Armored chargers join every fourth spawn from wave 3. Amber rails show their locked dash direction during a 0.9-second warning; they dash, recover, and approach again. Their direction is fixed when the warning begins, so a dodge remains reliable. Contact checks sweep the entire movement segment.
+- Armored chargers appear in the authored rosters from wave 11. Amber rails show their locked dash direction during a 0.9-second warning; they dash, recover, and approach again. Their direction is fixed when the warning begins, so a dodge remains reliable. Contact checks sweep the entire movement segment.
 - Shock turrets pulse electric damage around themselves and slow enemies by 25% for 0.5 seconds. Cyan rings identify slowed enemies; slowed chargers keep their locked heading but cover less distance.
 - Between waves: choose from two turret offers and two item offers, reroll stock, or repair 10 hull for 5 scrap. Remaining scrap drops are collected when the wave ends.
 - Shop, pause, and end screens show the current build: turret counts/damage/fire rate/range, player stats, and purchased item stacks.

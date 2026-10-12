@@ -1,0 +1,295 @@
+{
+  "clips": [
+    {
+      "name": "Idle",
+      "duration_seconds": 2.0,
+      "channels": 15,
+      "max_endpoint_difference": 4.898587368981641e-18,
+      "root_animated": false,
+      "targets": [
+        [
+          "Body",
+          "translation"
+        ],
+        [
+          "Antenna_L",
+          "rotation"
+        ],
+        [
+          "Antenna_R",
+          "rotation"
+        ],
+        [
+          "Leg_L_0",
+          "rotation"
+        ],
+        [
+          "Knee_L_0",
+          "rotation"
+        ],
+        [
+          "Ankle_L_0",
+          "rotation"
+        ],
+        [
+          "Leg_L_1",
+          "rotation"
+        ],
+        [
+          "Knee_L_1",
+          "rotation"
+        ],
+        [
+          "Ankle_L_1",
+          "rotation"
+        ],
+        [
+          "Leg_R_0",
+          "rotation"
+        ],
+        [
+          "Knee_R_0",
+          "rotation"
+        ],
+        [
+          "Ankle_R_0",
+          "rotation"
+        ],
+        [
+          "Leg_R_1",
+          "rotation"
+        ],
+        [
+          "Knee_R_1",
+          "rotation"
+        ],
+        [
+          "Ankle_R_1",
+          "rotation"
+        ]
+      ]
+    },
+    {
+      "name": "Walk",
+      "duration_seconds": 1.0,
+      "channels": 16,
+      "max_endpoint_difference": 2.816687628596988e-17,
+      "root_animated": false,
+      "targets": [
+        [
+          "Body",
+          "translation"
+        ],
+        [
+          "Body",
+          "rotation"
+        ],
+        [
+          "Antenna_L",
+          "rotation"
+        ],
+        [
+          "Antenna_R",
+          "rotation"
+        ],
+        [
+          "Leg_L_0",
+          "rotation"
+        ],
+        [
+          "Knee_L_0",
+          "rotation"
+        ],
+        [
+          "Ankle_L_0",
+          "rotation"
+        ],
+        [
+          "Leg_L_1",
+          "rotation"
+        ],
+        [
+          "Knee_L_1",
+          "rotation"
+        ],
+        [
+          "Ankle_L_1",
+          "rotation"
+        ],
+        [
+          "Leg_R_0",
+          "rotation"
+        ],
+        [
+          "Knee_R_0",
+          "rotation"
+        ],
+        [
+          "Ankle_R_0",
+          "rotation"
+        ],
+        [
+          "Leg_R_1",
+          "rotation"
+        ],
+        [
+          "Knee_R_1",
+          "rotation"
+        ],
+        [
+          "Ankle_R_1",
+          "rotation"
+        ]
+      ]
+    },
+    {
+      "name": "Swim",
+      "duration_seconds": 1.0,
+      "channels": 16,
+      "max_endpoint_difference": 2.816687628596988e-17,
+      "root_animated": false,
+      "targets": [
+        [
+          "Body",
+          "translation"
+        ],
+        [
+          "Body",
+          "rotation"
+        ],
+        [
+          "Antenna_L",
+          "rotation"
+        ],
+        [
+          "Antenna_R",
+          "rotation"
+        ],
+        [
+          "Leg_L_0",
+          "rotation"
+        ],
+        [
+          "Knee_L_0",
+          "rotation"
+        ],
+        [
+          "Ankle_L_0",
+          "rotation"
+        ],
+        [
+          "Leg_L_1",
+          "rotation"
+        ],
+        [
+          "Knee_L_1",
+          "rotation"
+        ],
+        [
+          "Ankle_L_1",
+          "rotation"
+        ],
+        [
+          "Leg_R_0",
+          "rotation"
+        ],
+        [
+          "Knee_R_0",
+          "rotation"
+        ],
+        [
+          "Ankle_R_0",
+          "rotation"
+        ],
+        [
+          "Leg_R_1",
+          "rotation"
+        ],
+        [
+          "Knee_R_1",
+          "rotation"
+        ],
+        [
+          "Ankle_R_1",
+          "rotation"
+        ]
+      ]
+    },
+    {
+      "name": "Attack",
+      "duration_seconds": 0.800000011920929,
+      "channels": 16,
+      "max_endpoint_difference": 4.3493033841035395e-33,
+      "root_animated": false,
+      "targets": [
+        [
+          "Body",
+          "translation"
+        ],
+        [
+          "Body",
+          "rotation"
+        ],
+        [
+          "Antenna_L",
+          "rotation"
+        ],
+        [
+          "Antenna_R",
+          "rotation"
+        ],
+        [
+          "Leg_L_0",
+          "rotation"
+        ],
+        [
+          "Knee_L_0",
+          "rotation"
+        ],
+        [
+          "Ankle_L_0",
+          "rotation"
+        ],
+        [
+          "Leg_L_1",
+          "rotation"
+        ],
+        [
+          "Knee_L_1",
+          "rotation"
+        ],
+        [
+          "Ankle_L_1",
+          "rotation"
+        ],
+        [
+          "Leg_R_0",
+          "rotation"
+        ],
+        [
+          "Knee_R_0",
+          "rotation"
+        ],
+        [
+          "Ankle_R_0",
+          "rotation"
+        ],
+        [
+          "Leg_R_1",
+          "rotation"
+        ],
+        [
+          "Knee_R_1",
+          "rotation"
+        ],
+        [
+          "Ankle_R_1",
+          "rotation"
+        ]
+      ]
+    }
+  ],
+  "images": 4,
+  "all_images_embedded": true,
+  "file_size_bytes": 3959260
+}

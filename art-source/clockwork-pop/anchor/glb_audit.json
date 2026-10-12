@@ -1,0 +1,98 @@
+{
+  "images": [
+    {
+      "name": "plum_lacquer",
+      "embedded": true,
+      "uri": null
+    },
+    {
+      "name": "ivory_porcelain",
+      "embedded": true,
+      "uri": null
+    },
+    {
+      "name": "brushed_gold",
+      "embedded": true,
+      "uri": null
+    },
+    {
+      "name": "crystal_rose",
+      "embedded": true,
+      "uri": null
+    }
+  ],
+  "mesh_nodes": 10,
+  "skins": 0,
+  "animations": [
+    {
+      "name": "Idle",
+      "channels": [
+        {
+          "node": "Cage",
+          "path": "rotation",
+          "samples": 90,
+          "endpoint_error": 0.0,
+          "maximum_delta": 0.014978418126702309
+        }
+      ],
+      "duration_seconds": 2.966666664928198,
+      "endpoints_match": true,
+      "actual_motion": true
+    },
+    {
+      "name": "Walk",
+      "channels": [
+        {
+          "node": "Cage",
+          "path": "rotation",
+          "samples": 60,
+          "endpoint_error": 0.0,
+          "maximum_delta": 0.024988092482089996
+        }
+      ],
+      "duration_seconds": 1.9666666649281979,
+      "endpoints_match": true,
+      "actual_motion": true
+    },
+    {
+      "name": "Swim",
+      "channels": [
+        {
+          "node": "Cage",
+          "path": "rotation",
+          "samples": 120,
+          "endpoint_error": 0.0,
+          "maximum_delta": 0.02249574474990368
+        }
+      ],
+      "duration_seconds": 3.966666664928198,
+      "endpoints_match": true,
+      "actual_motion": true
+    },
+    {
+      "name": "Attack",
+      "channels": [
+        {
+          "node": "Cage",
+          "path": "rotation",
+          "samples": 24,
+          "endpoint_error": 0.0,
+          "maximum_delta": 0.15858227014541626
+        },
+        {
+          "node": "Cage",
+          "path": "scale",
+          "samples": 24,
+          "endpoint_error": 0.0,
+          "maximum_delta": 0.03981375694274902
+        }
+      ],
+      "duration_seconds": 0.7666666768491268,
+      "endpoints_match": true,
+      "actual_motion": true
+    }
+  ],
+  "body_animated": false,
+  "only_cage_animated": true,
+  "passed": true
+}

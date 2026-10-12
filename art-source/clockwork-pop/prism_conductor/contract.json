@@ -1,0 +1,41 @@
+{
+  "name": "eco_prism",
+  "ref": "ref/eco_prism.png",
+  "build": "build_eco_prism.py",
+  "glb": "eco_prism.glb",
+  "required_nodes": [
+    "Body",
+    "Lens_L",
+    "Lens_R",
+    "Crown",
+    "Muzzle"
+  ],
+  "limits": {
+    "height": [
+      1.0,
+      1.5
+    ],
+    "max_width": 2.0,
+    "ground_gap": [
+      0.08,
+      0.4
+    ]
+  },
+  "targets": {
+    "max_texture_px": 1024,
+    "max_textures": 4,
+    "max_triangles": 20000,
+    "max_mesh_objects": 16,
+    "max_materials": 14
+  },
+  "render_background": "#182C3A",
+  "require_textures": true,
+  "required_animations": [
+    "Idle",
+    "Swim",
+    "Attack"
+  ],
+  "marker_nodes": [
+    "Muzzle"
+  ]
+}

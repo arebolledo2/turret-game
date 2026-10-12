@@ -7,6 +7,7 @@ var enemy_type: String = "basic"
 var mass: float = 1.0
 var scrap_value: int = 1
 var knockback_velocity: Vector3 = Vector3.ZERO
+var brain: EnemyBrain
 var charge: ChargeController3D
 var warning: Node3D
 var marker: MeshInstance3D
@@ -44,10 +45,11 @@ const PLAYER_FLASH_COLOR := Color(1.0, .28, .22)
 var weapon_clock: float = 0.0
 var weapon_target: CombatActor
 var clockwork_motion: ClockworkMotion
+var ecology_motion: EcologyMotion
 
 ## Planar footprint of the same capsule used by projectile collisions.
 func hurtbox_radius() -> float:
-	return .36 * body_scale
+	return float(EnemyEcology.FOOTPRINTS.get(enemy_type, .36)) * body_scale
 
 func overlaps_attack_range(origin: Vector3, reach: float) -> bool:
 	var radius := maxf(0.0, reach) + hurtbox_radius()
@@ -71,13 +73,19 @@ func _ready() -> void:
 	add_child(visual)
 	if is_enemy:
 		var model := _build_enemy_model()
+		if EnemyEcology.TYPES.has(enemy_type):
+			brain = EnemyBrain.new(self)
 		if ClockworkModels.available(enemy_type) and not stationary:
-			clockwork_motion = ClockworkMotion.new(model, enemy_type)
+			if brain:
+				ecology_motion = EcologyMotion.new(model)
+			else:
+				clockwork_motion = ClockworkMotion.new(model, enemy_type)
 		else:
 			EnemyVariants.apply_tint(model, enemy_type)
 		if elite:
 			EnemyVariants.tint_model(model, enemy_type + "_elite", Color(1.0, .85, .45), .7)
 		visual.add_child(model)
+		weapon_muzzle = model.find_child("Muzzle", true, false) as Node3D
 		visual.scale = Vector3.ONE * body_scale
 		if clockwork_motion:
 			legs.assign(clockwork_motion.limbs)
@@ -219,6 +227,13 @@ func _steer_enemy(delta: float) -> Vector3:
 	if slow_marker.visible != slowed:
 		slow_marker.visible = slowed
 	var effective_speed := speed * speed_factor
+	if brain:
+		var movement := brain.move(delta, effective_speed)
+		if not brain.pounce or brain.pounce.phase == ChargeController3D.Phase.APPROACH:
+			movement += world.crowd.separation(self)
+		velocity = movement + knockback_velocity
+		knockback_velocity *= exp(-GameConstants.KNOCKBACK_DECAY_RATE * delta)
+		return movement.normalized()
 	var goal: Vector3 = world.player.position
 	var at_core := false
 	if world.core:
@@ -278,6 +293,10 @@ static func steer_velocity(current: Vector3, direction: Vector3, desired_speed: 
 func _animate(delta: float, direction: Vector3, reduced_motion: bool) -> void:
 	if direction.length_squared() > 0.001:
 		visual.rotation.y = lerp_angle(visual.rotation.y, atan2(-direction.x, -direction.z), minf(delta * 14.0, 1.0))
+	if ecology_motion:
+		visual.position.y = 0.0
+		ecology_motion.tick(delta, velocity.length_squared() > .01, brain.state in ["warning", "attack"], reduced_motion)
+		return
 	if clockwork_motion:
 		visual.position.y = 0.0
 		clockwork_motion.tick(delta, velocity.length(), reduced_motion, not is_enemy and is_instance_valid(world.carried_turret))
@@ -294,6 +313,8 @@ func _animate(delta: float, direction: Vector3, reduced_motion: bool) -> void:
 
 ## Enemy touch damage to the hero (swept along this tick's step) and, in core mode, to the core on a timer.
 func _apply_contact_damage(delta: float, previous_position: Vector3) -> void:
+	if brain and not brain.contact_allowed():
+		return
 	var player_position: Vector3 = world.player.position
 	var reach := .5 * body_scale
 	var near_x := absf(player_position.x - position.x)
@@ -305,7 +326,7 @@ func _apply_contact_damage(delta: float, previous_position: Vector3) -> void:
 	var closest := Geometry3D.get_closest_point_to_segment(player_position, previous_position, position) if may_touch else position
 	if may_touch and WorldGeometry.planar(player_position - closest).length_squared() < reach * reach:
 		world.combat.apply_hit(world.player, CombatHit3D.new(contact_damage, position))
-	if world.core:
+	if world.core and not EnemyEcology.hero_only(enemy_type):
 		core_clock -= delta
 		if core_clock <= 0.0:
 			var core_reach := world.core.radius + reach
@@ -369,11 +390,15 @@ func receive_hit(hit: CombatHit3D) -> float:
 	var applied := minf(health, amount)
 	health = maxf(0.0, health - amount)
 	_on_health_changed()
+	if brain:
+		brain.disturbed()
 	if is_enemy:
 		statuses.apply(hit)
 		slow_marker.visible = statuses.speed_multiplier() < 1.0
 	if is_enemy and not hit.impulse.is_zero_approx():
 		knockback_velocity = (knockback_velocity + hit.impulse / maxf(mass, .1)).limit_length(GameConstants.KNOCKBACK_MAX_VELOCITY * WorldGeometry.METRES_PER_PIXEL)
+		if brain:
+			brain.interrupt()
 		if charge:
 			charge.interrupt()
 			warning.visible = false

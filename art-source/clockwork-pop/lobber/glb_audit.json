@@ -1,0 +1,123 @@
+{
+  "images": [
+    {
+      "name": "kiln_normal",
+      "embedded": true,
+      "mime": "image/png"
+    },
+    {
+      "name": "kiln_colour",
+      "embedded": true,
+      "mime": "image/png"
+    },
+    {
+      "name": "kiln_orm",
+      "embedded": true,
+      "mime": "image/png"
+    },
+    {
+      "name": "kiln_emission",
+      "embedded": true,
+      "mime": "image/png"
+    }
+  ],
+  "animations": [
+    {
+      "name": "Idle",
+      "duration_s": 2.0,
+      "channels": 2,
+      "changing_channels": 2,
+      "animated_nodes": [
+        "Aim",
+        "Body"
+      ],
+      "endpoint_max_error": 0,
+      "root_channels": []
+    },
+    {
+      "name": "Walk",
+      "duration_s": 1.0,
+      "channels": 9,
+      "changing_channels": 9,
+      "animated_nodes": [
+        "Aim",
+        "Body",
+        "Knee_0",
+        "Knee_1",
+        "Knee_2",
+        "Leg_0",
+        "Leg_1",
+        "Leg_2"
+      ],
+      "endpoint_max_error": 0,
+      "root_channels": []
+    },
+    {
+      "name": "Swim",
+      "duration_s": 1.0,
+      "channels": 9,
+      "changing_channels": 9,
+      "animated_nodes": [
+        "Aim",
+        "Body",
+        "Knee_0",
+        "Knee_1",
+        "Knee_2",
+        "Leg_0",
+        "Leg_1",
+        "Leg_2"
+      ],
+      "endpoint_max_error": 0,
+      "root_channels": []
+    },
+    {
+      "name": "Attack",
+      "duration_s": 0.8,
+      "channels": 8,
+      "changing_channels": 8,
+      "animated_nodes": [
+        "Aim",
+        "Body",
+        "Leg_0",
+        "Leg_1",
+        "Leg_2",
+        "Shutter_L",
+        "Shutter_R"
+      ],
+      "endpoint_max_error": 0,
+      "root_channels": []
+    }
+  ],
+  "nodes": [
+    "Aim_mesh",
+    "Muzzle",
+    "Aim",
+    "Body_mesh",
+    "Shutter_L_mesh",
+    "Shutter_L",
+    "Shutter_R_mesh",
+    "Shutter_R",
+    "Body",
+    "Knee_0_mesh",
+    "Knee_0",
+    "Leg_0_mesh",
+    "Leg_0",
+    "Knee_1_mesh",
+    "Knee_1",
+    "Leg_1_mesh",
+    "Leg_1",
+    "Knee_2_mesh",
+    "Knee_2",
+    "Leg_2_mesh",
+    "Leg_2",
+    "Kiln_Lobber"
+  ],
+  "muzzle": {
+    "name": "Muzzle",
+    "translation": [
+      0,
+      0.004999995231628418,
+      -0.6499999761581421
+    ]
+  }
+}

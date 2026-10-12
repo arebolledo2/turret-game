@@ -1,0 +1,41 @@
+{
+  "name": "eco_tender",
+  "ref": "ref/eco_tender.png",
+  "build": "build_eco_tender.py",
+  "glb": "eco_tender.glb",
+  "required_nodes": [
+    "Body",
+    "Leg_L_0",
+    "Leg_L_1",
+    "Leg_R_0",
+    "Leg_R_1",
+    "Arm_L",
+    "Arm_R",
+    "Hatch"
+  ],
+  "limits": {
+    "height": [
+      0.9,
+      1.4
+    ],
+    "max_width": 2.0,
+    "ground_gap": [
+      -0.02,
+      0.1
+    ]
+  },
+  "targets": {
+    "max_texture_px": 1024,
+    "max_textures": 4,
+    "max_triangles": 12000,
+    "max_mesh_objects": 16,
+    "max_materials": 12
+  },
+  "render_background": "#182C3A",
+  "require_textures": true,
+  "required_animations": [
+    "Idle",
+    "Swim",
+    "Attack"
+  ]
+}

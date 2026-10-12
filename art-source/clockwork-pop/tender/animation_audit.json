@@ -1,0 +1,63 @@
+{
+  "root_stationary": true,
+  "embedded_images": 3,
+  "clips": {
+    "Idle": {
+      "duration_s": 2.4333,
+      "channels": 3,
+      "pose_endpoint_error": 4.286263818611965e-18,
+      "animated_nodes": [
+        "Arm_L",
+        "Arm_R",
+        "Carriage"
+      ],
+      "hatch_max_angle_degrees": 0.0
+    },
+    "Walk": {
+      "duration_s": 1.2333,
+      "channels": 12,
+      "pose_endpoint_error": 2.449293787888397e-17,
+      "animated_nodes": [
+        "Arm_L",
+        "Arm_R",
+        "Carriage",
+        "Leg_L_0",
+        "Leg_L_1",
+        "Leg_R_0",
+        "Leg_R_1"
+      ],
+      "hatch_max_angle_degrees": 0.0
+    },
+    "Swim": {
+      "duration_s": 1.6333,
+      "channels": 8,
+      "pose_endpoint_error": 3.426268454850591e-17,
+      "animated_nodes": [
+        "Arm_L",
+        "Arm_R",
+        "Carriage",
+        "Leg_L_0",
+        "Leg_L_1",
+        "Leg_R_0",
+        "Leg_R_1"
+      ],
+      "hatch_max_angle_degrees": 0.0
+    },
+    "Attack": {
+      "duration_s": 1.2333,
+      "channels": 8,
+      "pose_endpoint_error": 9.373498482632464e-33,
+      "animated_nodes": [
+        "Arm_L",
+        "Arm_R",
+        "Carriage",
+        "Hatch",
+        "Leg_L_0",
+        "Leg_L_1",
+        "Leg_R_0",
+        "Leg_R_1"
+      ],
+      "hatch_max_angle_degrees": 71.62
+    }
+  }
+}

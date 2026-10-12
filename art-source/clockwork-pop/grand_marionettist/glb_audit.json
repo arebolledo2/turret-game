@@ -1,0 +1,323 @@
+{
+  "glb_bytes": 6132880,
+  "images": [
+    {
+      "name": "Joint_Graphite",
+      "embedded": true,
+      "mime": "image/png"
+    },
+    {
+      "name": "Lacquer_Burgundy",
+      "embedded": true,
+      "mime": "image/png"
+    },
+    {
+      "name": "Machined_Brass",
+      "embedded": true,
+      "mime": "image/png"
+    },
+    {
+      "name": "Bone_Porcelain",
+      "embedded": true,
+      "mime": "image/png"
+    }
+  ],
+  "skins": 0,
+  "mesh_nodes": 14,
+  "materials": 8,
+  "clip_audits": [
+    {
+      "name": "Idle",
+      "duration_s": 3.2,
+      "channels": [
+        {
+          "node": "Arm_L",
+          "path": "rotation",
+          "samples": 97,
+          "max_component_change": 0.0125,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Elbow_L",
+          "path": "rotation",
+          "samples": 97,
+          "max_component_change": 0.017499,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Hand_L",
+          "path": "rotation",
+          "samples": 97,
+          "max_component_change": 0.024997,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Arm_R",
+          "path": "rotation",
+          "samples": 97,
+          "max_component_change": 0.0125,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Elbow_R",
+          "path": "rotation",
+          "samples": 97,
+          "max_component_change": 0.017499,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Hand_R",
+          "path": "rotation",
+          "samples": 97,
+          "max_component_change": 0.024997,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Head",
+          "path": "rotation",
+          "samples": 97,
+          "max_component_change": 0.027494,
+          "endpoint_error": 0.0
+        }
+      ],
+      "stationary_root": true,
+      "root_or_translation_channels": [],
+      "endpoint_max_error": 0,
+      "intended_loop": true
+    },
+    {
+      "name": "Walk",
+      "duration_s": 1.2,
+      "channels": [
+        {
+          "node": "Arm_L",
+          "path": "rotation",
+          "samples": 37,
+          "max_component_change": 0.073793,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Elbow_L",
+          "path": "rotation",
+          "samples": 37,
+          "max_component_change": 0.039382,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Arm_R",
+          "path": "rotation",
+          "samples": 37,
+          "max_component_change": 0.073793,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Elbow_R",
+          "path": "rotation",
+          "samples": 37,
+          "max_component_change": 0.039382,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Head",
+          "path": "rotation",
+          "samples": 37,
+          "max_component_change": 0.017233,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Leg_L",
+          "path": "rotation",
+          "samples": 37,
+          "max_component_change": 0.117902,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Knee_L",
+          "path": "rotation",
+          "samples": 37,
+          "max_component_change": 0.147185,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Foot_L",
+          "path": "rotation",
+          "samples": 37,
+          "max_component_change": 0.039382,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Leg_R",
+          "path": "rotation",
+          "samples": 37,
+          "max_component_change": 0.117902,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Knee_R",
+          "path": "rotation",
+          "samples": 37,
+          "max_component_change": 0.147185,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Foot_R",
+          "path": "rotation",
+          "samples": 37,
+          "max_component_change": 0.039382,
+          "endpoint_error": 0.0
+        }
+      ],
+      "stationary_root": true,
+      "root_or_translation_channels": [],
+      "endpoint_max_error": 4.898587162186488e-18,
+      "intended_loop": true
+    },
+    {
+      "name": "Swim",
+      "duration_s": 2.4,
+      "channels": [
+        {
+          "node": "Arm_L",
+          "path": "rotation",
+          "samples": 73,
+          "max_component_change": 0.159318,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Elbow_L",
+          "path": "rotation",
+          "samples": 73,
+          "max_component_change": 0.198669,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Hand_L",
+          "path": "rotation",
+          "samples": 73,
+          "max_component_change": 0.083611,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Arm_R",
+          "path": "rotation",
+          "samples": 73,
+          "max_component_change": 0.159318,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Elbow_R",
+          "path": "rotation",
+          "samples": 73,
+          "max_component_change": 0.198669,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Hand_R",
+          "path": "rotation",
+          "samples": 73,
+          "max_component_change": 0.083611,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Head",
+          "path": "rotation",
+          "samples": 73,
+          "max_component_change": 0.017233,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Leg_L",
+          "path": "rotation",
+          "samples": 73,
+          "max_component_change": 0.059054,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Knee_L",
+          "path": "rotation",
+          "samples": 73,
+          "max_component_change": 0.099833,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Leg_R",
+          "path": "rotation",
+          "samples": 73,
+          "max_component_change": 0.059054,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Knee_R",
+          "path": "rotation",
+          "samples": 73,
+          "max_component_change": 0.099833,
+          "endpoint_error": 0.0
+        }
+      ],
+      "stationary_root": true,
+      "root_or_translation_channels": [],
+      "endpoint_max_error": 0,
+      "intended_loop": true
+    },
+    {
+      "name": "Attack",
+      "duration_s": 1.4,
+      "channels": [
+        {
+          "node": "Arm_L",
+          "path": "rotation",
+          "samples": 43,
+          "max_component_change": 0.406993,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Elbow_L",
+          "path": "rotation",
+          "samples": 43,
+          "max_component_change": 0.197575,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Hand_L",
+          "path": "rotation",
+          "samples": 43,
+          "max_component_change": 0.236401,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Arm_R",
+          "path": "rotation",
+          "samples": 43,
+          "max_component_change": 0.406993,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Elbow_R",
+          "path": "rotation",
+          "samples": 43,
+          "max_component_change": 0.197575,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Hand_R",
+          "path": "rotation",
+          "samples": 43,
+          "max_component_change": 0.236401,
+          "endpoint_error": 0.0
+        },
+        {
+          "node": "Head",
+          "path": "rotation",
+          "samples": 43,
+          "max_component_change": 0.05963,
+          "endpoint_error": 0.0
+        }
+      ],
+      "stationary_root": true,
+      "root_or_translation_channels": [],
+      "endpoint_max_error": 0,
+      "intended_loop": false
+    }
+  ],
+  "external_uris": []
+}

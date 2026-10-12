@@ -201,6 +201,7 @@ func test_announcement_enters_combat_then_timer_opens_shop() -> void:
 	assert_true(world.is_combat())
 	world.waves.remaining_spawns = 0
 	world._physics_process(world.waves.time_left + .1)
+	await get_tree().process_frame
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.SHOP)
 
 func test_real_input_moves_player_and_pause_stops_physics() -> void:

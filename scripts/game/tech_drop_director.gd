@@ -131,9 +131,33 @@ func reward(drop: CombatActor) -> void:
 		world.message = "Chest item secured: %s · choose at wave end" % str(ItemRegistry.get_item_dict(item_id)["name"])
 	world.audio.play_cue("purchase", world.player.position)
 
-func queue_item(item_id: String) -> void:
+func queue_item(item_id: String, source_name: String = "CHEST RECOVERED") -> void:
 	var value := world.shop.item_price(item_id)
-	pending_items.append({"id": item_id, "value": value, "sale": floori(value * .25)})
+	pending_items.append({"id": item_id, "value": value, "sale": floori(value * .25), "source": source_name})
+
+## Boss kills bypass normal rarity unlocks but respect catalog, mode and reserved stack limits.
+func reward_boss(type_id: String) -> void:
+	var rarity := GameEnums.ItemRarity.EPIC
+	if type_id == "grand_marionettist" or (type_id == "prism_conductor" and GameRandom.gameplay.randf() < .25):
+		rarity = GameEnums.ItemRarity.LEGENDARY
+	var counts := ItemTrackingService.item_counts.duplicate()
+	for pending in pending_items:
+		counts[pending.id] = int(counts.get(pending.id, 0)) + 1
+	var excluded := world.shop.unavailable_item_ids()
+	var eligible: Array[String] = []
+	for item_id: String in ItemRegistry.get_items_by_rarity(rarity):
+		if not item_id in excluded and not ItemRegistry.is_at_max_stacks(item_id, counts):
+			eligible.append(item_id)
+	if eligible.is_empty():
+		var value := EconomyService.calculate_item_price(roundi(ItemRegistry.get_rarity_price(rarity) * ArenaShop.ITEM_PRICE_SCALE), GameStateService.current_wave)
+		var scrap := floori(value * .25)
+		EconomyService.total_scrap += scrap
+		GameStateService.lifetime_scrap += scrap
+		world.telemetry.record_scrap_earned(scrap)
+		world.message = "%s reward pool exhausted · +%d scrap" % [ItemRegistry.get_rarity_name(rarity), scrap]
+	else:
+		queue_item(eligible[GameRandom.gameplay.randi_range(0, eligible.size() - 1)], "BOSS DEFEATED")
+		world.message = "%s boss reward secured · choose at wave end" % ItemRegistry.get_rarity_name(rarity)
 
 func can_keep_next() -> bool:
 	return not pending_items.is_empty() and not ItemRegistry.is_at_max_stacks(pending_items[0].id, ItemTrackingService.item_counts)

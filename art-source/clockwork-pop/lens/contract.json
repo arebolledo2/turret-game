@@ -1,0 +1,40 @@
+{
+  "name": "eco_lens",
+  "ref": "ref/eco_lens.png",
+  "build": "build_eco_lens.py",
+  "glb": "eco_lens.glb",
+  "required_nodes": [
+    "Body",
+    "Fin_L",
+    "Fin_R",
+    "Muzzle"
+  ],
+  "limits": {
+    "height": [
+      0.5,
+      0.9
+    ],
+    "max_width": 1.1,
+    "ground_gap": [
+      0.05,
+      0.3
+    ]
+  },
+  "targets": {
+    "max_texture_px": 1024,
+    "max_textures": 4,
+    "max_triangles": 5000,
+    "max_mesh_objects": 16,
+    "max_materials": 8
+  },
+  "render_background": "#182C3A",
+  "require_textures": true,
+  "required_animations": [
+    "Idle",
+    "Swim",
+    "Attack"
+  ],
+  "marker_nodes": [
+    "Muzzle"
+  ]
+}

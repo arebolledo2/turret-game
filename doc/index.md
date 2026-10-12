@@ -17,6 +17,7 @@ Launch with `./launch.ps1` or Godot F5. Run `./run_tests.ps1 -Import` on a fresh
 | [UI](ui.md) | Start screen, settings, HUD and controller focus |
 | [Assets](asset-management.md) | Blender sources, GLBs and preserved 2D references |
 | [Development](development.md) | Commands, tests, CI and conventions |
+| [Enemy ecology](enemy-ecology.md) | Implemented enemy roles, bosses, authored waves and art review |
 | [Combat polish](combat-polish.md) | Native SFX, feedback and performance measurements |
 | [3D cutover](3d-cutover.md) | Retirement scope and verification record |
 

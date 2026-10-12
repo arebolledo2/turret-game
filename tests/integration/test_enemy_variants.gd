@@ -20,18 +20,16 @@ func enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
 	actor.set_physics_process(false)
 	return actor
 
-func test_schedule_respects_registry_min_waves_and_is_deterministic() -> void:
-	for index in range(40):
-		assert_eq(EnemyVariants.pick_type(1, index), "basic", "Wave 1 is spiders only")
+func test_schedule_is_deterministic_and_uses_only_authored_rosters() -> void:
 	var seen := {}
-	for wave in range(1, 7):
-		for index in range(40):
+	for wave in range(1, 21):
+		for index in range(100):
 			var type_id := EnemyVariants.pick_type(wave, index)
-			assert_gte(wave, int(EnemyRegistry.TYPES[type_id]["min_wave"]), "%s too early in wave %d" % [type_id, wave])
+			assert_true(EnemyEcology.roster(wave).has(type_id), "%s not in wave %d" % [type_id, wave])
 			assert_eq(type_id, EnemyVariants.pick_type(wave, index))
 			seen[type_id] = true
-	for type_id in ["basic", "fast", "tank", "exploder", "charger"]:
-		assert_true(seen.has(type_id), "%s appears by wave 6" % type_id)
+	for type_id in ["basic", "fast", "tank", "exploder", "charger", "drowse", "hopper", "kite", "lobber", "tender"]:
+		assert_true(seen.has(type_id), "%s has an authored wave" % type_id)
 
 func test_variants_use_registry_stats_and_body_size() -> void:
 	GameStateService.current_wave = 4
@@ -95,4 +93,4 @@ func test_exploder_chain_reaction_terminates() -> void:
 func test_wave_notices_announce_each_new_enemy() -> void:
 	for wave in [2, 3, 4]:
 		assert_ne(EnemyVariants.notice_for_wave(wave), "")
-	assert_eq(EnemyVariants.notice_for_wave(1), "")
+	assert_eq(EnemyVariants.notice_for_wave(1), "Sleepy Yard")

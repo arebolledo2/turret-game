@@ -228,6 +228,90 @@
       "status": "review",
       "preview": "previews/gunblade.png",
       "metrics": "13,956 triangles \u00c2\u00b7 15 meshes \u00c2\u00b7 9 materials"
+    },
+    {
+      "key": "drowse",
+      "name": "Drowse",
+      "status": "verified",
+      "preview": "previews/drowse.png",
+      "metrics": "30,072 triangles \u00c2\u00b7 16 meshes \u00c2\u00b7 9 materials"
+    },
+    {
+      "key": "hopper",
+      "name": "Hopper",
+      "status": "verified",
+      "preview": "previews/hopper.png",
+      "metrics": "18,592 triangles \u00c2\u00b7 15 meshes \u00c2\u00b7 6 materials"
+    },
+    {
+      "key": "lobber",
+      "name": "Lobber",
+      "status": "verified",
+      "preview": "previews/lobber.png",
+      "metrics": "31,828 triangles \u00c2\u00b7 10 meshes \u00c2\u00b7 10 materials"
+    },
+    {
+      "key": "kite",
+      "name": "Kite",
+      "status": "verified",
+      "preview": "previews/kite.png",
+      "metrics": "17,168 triangles \u00c2\u00b7 4 meshes \u00c2\u00b7 8 materials"
+    },
+    {
+      "key": "brass_ram",
+      "name": "Brass Ram",
+      "status": "verified",
+      "preview": "previews/brass_ram.png",
+      "metrics": "27,792 triangles \u00c2\u00b7 15 meshes \u00c2\u00b7 8 materials"
+    },
+    {
+      "key": "tender",
+      "name": "Tender",
+      "status": "verified",
+      "preview": "previews/tender.png",
+      "metrics": "33,044 triangles \u00c2\u00b7 10 meshes \u00c2\u00b7 9 materials"
+    },
+    {
+      "key": "prism_conductor",
+      "name": "Prism Conductor",
+      "status": "verified",
+      "preview": "previews/prism_conductor.png",
+      "metrics": "37,694 triangles \u00c2\u00b7 8 meshes \u00c2\u00b7 14 materials"
+    },
+    {
+      "key": "skitter",
+      "name": "Skitter",
+      "status": "verified",
+      "preview": "previews/skitter.png",
+      "metrics": "11,548 triangles \u00c2\u00b7 10 meshes \u00c2\u00b7 7 materials"
+    },
+    {
+      "key": "grand_marionettist",
+      "name": "Grand Marionettist",
+      "status": "verified",
+      "preview": "previews/grand_marionettist.png",
+      "metrics": "35,114 triangles \u00c2\u00b7 14 meshes \u00c2\u00b7 8 materials"
+    },
+    {
+      "key": "lens",
+      "name": "Lens",
+      "status": "verified",
+      "preview": "previews/lens.png",
+      "metrics": "7,760 triangles \u00c2\u00b7 15 meshes \u00c2\u00b7 6 materials"
+    },
+    {
+      "key": "anchor",
+      "name": "Anchor",
+      "status": "verified",
+      "preview": "previews/anchor.png",
+      "metrics": "11,390 triangles \u00c2\u00b7 10 meshes \u00c2\u00b7 8 materials"
+    },
+    {
+      "key": "puppet",
+      "name": "Puppet",
+      "status": "verified",
+      "preview": "previews/puppet.png",
+      "metrics": "14,205 triangles \u00c2\u00b7 10 meshes \u00c2\u00b7 7 materials"
     }
   ],
   "events": [
@@ -422,6 +506,58 @@
     {
       "stage": "Export: gunblade",
       "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: drowse",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: hopper",
+      "text": "Reviewed harness iteration 4; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: lobber",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: kite",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: brass_ram",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: tender",
+      "text": "Reviewed harness iteration 5; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: prism_conductor",
+      "text": "Reviewed harness iteration 4; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: skitter",
+      "text": "Reviewed harness iteration 2; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: grand_marionettist",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: lens",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: anchor",
+      "text": "Reviewed harness iteration 2; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: puppet",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Enemy ecology integrated",
+      "text": "All twelve ecology models visually reviewed in Godot, imported clips verified, roles and authored waves implemented. Full suite: 1,044 passing tests. See ../enemy-ecology/index.html for captures."
     }
   ],
   "checks": {

@@ -1,0 +1,12 @@
+{
+  "triangles": 30072,
+  "mesh_objects": 16,
+  "materials": 9,
+  "textures": 4,
+  "clips": [
+    "Idle",
+    "Walk",
+    "Swim",
+    "Attack"
+  ]
+}

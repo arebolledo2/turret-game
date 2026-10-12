@@ -3,8 +3,6 @@ extends CombatActor
 
 ## A tech drop: a stationary, destructible crate that never moves or attacks.
 ## It is a CombatActor in `world.enemies`, so turrets and the hero target it like any enemy.
-var drop_bar_fill: MeshInstance3D
-
 func _init() -> void:
 	is_enemy = true
 	stationary = true
@@ -16,17 +14,11 @@ func _build_enemy_model() -> Node3D:
 func _leg_sides() -> Array[String]:
 	return []
 
-func _on_health_changed() -> void:
-	var fraction := clampf(health / maxf(max_health, .001), 0.0, 1.0)
-	drop_bar_fill.scale.x = maxf(fraction, .001)
-	drop_bar_fill.position.x = -.6 * (1.0 - fraction)
-
 ## A destructible cache with a health bar; retain the original plinth for comparison.
 func _build_drop_model() -> Node3D:
 	var model := Node3D.new()
 	if ClockworkModels.available("dropbox"):
 		model.add_child(ClockworkModels.instantiate("dropbox"))
-		_add_health_bar(model)
 		return model
 	var plinth_material := WorldGeometry.material(Color("2a3a44"))
 	plinth_material.metallic = .5
@@ -36,11 +28,4 @@ func _build_drop_model() -> Node3D:
 	crystal.rotation = Vector3(.6, .785, 0)
 	for side: float in [-1.0, 1.0]:
 		WorldGeometry.box(model, Vector3(.1, .7, .1), Vector3(side * .38, .55, 0), plinth_material)
-	_add_health_bar(model)
 	return model
-
-func _add_health_bar(model: Node3D) -> void:
-	var bar_back := WorldGeometry.material(Color("14232b"))
-	var bar_front := WorldGeometry.material(Color("f4b942"), true)
-	WorldGeometry.box(model, Vector3(1.24, .12, .1), Vector3(0, 1.55, 0), bar_back)
-	drop_bar_fill = WorldGeometry.box(model, Vector3(1.2, .13, .12), Vector3(0, 1.55, 0), bar_front)

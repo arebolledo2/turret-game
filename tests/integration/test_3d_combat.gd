@@ -27,8 +27,8 @@ func plasma() -> CombatShot3D:
 
 func test_splash_damages_primary_once_and_respects_planar_boundary() -> void:
 	var center := enemy(Vector3.ZERO)
-	var edge := enemy(Vector3(1.36, 3, 0))
-	var outside := enemy(Vector3(1.37, 0, 0))
+	var edge := enemy(Vector3(1.324, 3, 0))
+	var outside := enemy(Vector3(1.334, 0, 0))
 	watch_signals(world.combat)
 	var hits := world.combat.impact(center, Vector3.ZERO, Vector3.RIGHT, plasma(), world.enemies)
 	assert_eq(hits, 2)
@@ -220,7 +220,7 @@ func test_resolve_overlaps_pushes_enemies_out_of_obstacles_but_not_dashing_charg
 	for i in range(8):
 		world.crowd.rebuild(world.enemies)
 		world.crowd.resolve_overlaps([obstacle])
-	assert_gt(blocked.position.distance_to(Vector3(10, 0, 10)), GameConstants.TURRET_BODY_RADIUS + GameConstants.ENEMY_BODY_RADIUS - .01)
+	assert_gt(blocked.position.distance_to(Vector3(10, 0, 10)), GameConstants.TURRET_BODY_RADIUS + GameConstants.ENEMY_BODY_RADIUS * blocked.body_scale - .01)
 	var charger := enemy(Vector3(15, 0, 8), "charger")
 	var other := enemy(Vector3(15.1, 0, 8))
 	charger.charge.phase = ChargeController3D.Phase.DASH
@@ -255,12 +255,12 @@ func test_registry_scaling_and_charger_wave_gate_are_authoritative() -> void:
 	world.waves.spawn_clock = 0
 	world.waves.remaining_spawns = 1
 	world._physics_process(.01)
-	assert_eq(world.enemies.back().enemy_type, "charger")
+	assert_eq(world.enemies.back().enemy_type, world.waves.spawn_plan[0])
 	world.start_run()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	world.waves.spawn_clock = 0
 	world._physics_process(.01)
-	assert_eq(world.enemies.back().enemy_type, "basic")
+	assert_eq(world.enemies.back().enemy_type, "drowse")
 
 func test_new_asset_pivots_and_effect_pool_are_bounded() -> void:
 	var turret := world.add_turret(Vector3(3, 0, 0), "plasma")

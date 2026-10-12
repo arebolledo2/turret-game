@@ -1,0 +1,94 @@
+{
+  "bytes": 2747840,
+  "embedded_images": 2,
+  "all_images_embedded": true,
+  "skin_count": 0,
+  "clips": [
+    {
+      "name": "Idle",
+      "seconds": 2.0,
+      "channels": 9,
+      "endpoint_max_error": 1.1021820804726868e-18,
+      "animated_nodes": [
+        "Body",
+        "Knee_L_0",
+        "Knee_L_1",
+        "Knee_R_0",
+        "Knee_R_1",
+        "Leg_L_0",
+        "Leg_L_1",
+        "Leg_R_0",
+        "Leg_R_1"
+      ],
+      "root_stationary": true
+    },
+    {
+      "name": "Walk",
+      "seconds": 1.0,
+      "channels": 13,
+      "endpoint_max_error": 2.32682895373737e-17,
+      "animated_nodes": [
+        "Ankle_L_0",
+        "Ankle_L_1",
+        "Ankle_R_0",
+        "Ankle_R_1",
+        "Body",
+        "Knee_L_0",
+        "Knee_L_1",
+        "Knee_R_0",
+        "Knee_R_1",
+        "Leg_L_0",
+        "Leg_L_1",
+        "Leg_R_0",
+        "Leg_R_1"
+      ],
+      "root_stationary": true
+    },
+    {
+      "name": "Swim",
+      "seconds": 1.600000023841858,
+      "channels": 13,
+      "endpoint_max_error": 3.551475806322538e-17,
+      "animated_nodes": [
+        "Ankle_L_0",
+        "Ankle_L_1",
+        "Ankle_R_0",
+        "Ankle_R_1",
+        "Body",
+        "Knee_L_0",
+        "Knee_L_1",
+        "Knee_R_0",
+        "Knee_R_1",
+        "Leg_L_0",
+        "Leg_L_1",
+        "Leg_R_0",
+        "Leg_R_1"
+      ],
+      "root_stationary": true
+    },
+    {
+      "name": "Attack",
+      "seconds": 1.0,
+      "channels": 16,
+      "endpoint_max_error": 2.324627506143416e-33,
+      "animated_nodes": [
+        "Ankle_L_0",
+        "Ankle_L_1",
+        "Ankle_R_0",
+        "Ankle_R_1",
+        "Body",
+        "Horn_L",
+        "Horn_R",
+        "Knee_L_0",
+        "Knee_L_1",
+        "Knee_R_0",
+        "Knee_R_1",
+        "Leg_L_0",
+        "Leg_L_1",
+        "Leg_R_0",
+        "Leg_R_1"
+      ],
+      "root_stationary": true
+    }
+  ]
+}
