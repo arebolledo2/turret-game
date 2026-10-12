@@ -279,3 +279,26 @@ func test_turret_pages_keep_roster_visible_and_controller_reaches_next_page() ->
 	await press_direction(JOY_BUTTON_DPAD_DOWN)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
 	assert_true(inspector.find_children("*", "ScrollContainer", true, false).is_empty())
+
+func test_auto_repair_disables_paid_repairs_and_heals_at_next_wave() -> void:
+	FeatureFlagService.set_enabled(FeatureFlagService.AUTO_REPAIR, true)
+	world.player.health = 1
+	world.core.health = 1
+	var money := EconomyService.total_scrap
+	hud.refresh()
+	assert_true(hud.repair_button.disabled)
+	assert_true(hud.core_repair_button.disabled)
+	assert_false(world.repair())
+	assert_false(world.repair_core())
+	assert_eq(EconomyService.total_scrap, money)
+	world.begin_next_wave()
+	assert_eq(world.player.health, world.player.max_health)
+	assert_eq(world.core.health, world.core.max_health)
+	world.preparation.deploy()
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	world.player.health = 1
+	world.core.health = 1
+	world.finish_wave()
+	assert_eq(world.player.health, world.player.max_health)
+	assert_eq(world.core.health, world.core.max_health)
+	FeatureFlagService.set_enabled(FeatureFlagService.AUTO_REPAIR, false)

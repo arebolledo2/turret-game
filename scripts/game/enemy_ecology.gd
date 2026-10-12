@@ -60,6 +60,9 @@ const BOSS_IDS: Array[String] = ["brass_ram", "prism_conductor", "grand_marionet
 static func is_boss(type_id: String) -> bool:
 	return type_id in BOSS_IDS
 
+static func ranged_threat(type_id: String) -> bool:
+	return type_id in ["kite", "lobber", "lens", "anchor", "tender", "prism_conductor", "grand_marionettist"]
+
 static func hero_only(type_id: String) -> bool:
 	return TYPES.has(type_id) and type_id not in ["lobber", "drowse"]
 

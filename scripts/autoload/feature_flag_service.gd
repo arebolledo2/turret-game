@@ -23,6 +23,7 @@ const DEV_PANEL: String = "dev_panel"
 const DEBUG_OVERLAYS: String = "debug_overlays"
 const TURRET_PROGRESSION: String = "turret_progression"
 const ENTRENCH: String = "entrench"
+const AUTO_REPAIR: String = "auto_repair"
 const AUTO_DEPLOY: String = "auto_deploy"
 const RESTRICT_SPAWN_PLACEMENT: String = "restrict_spawn_placement"
 const PLACEMENT_PREVIEW: String = "placement_preview"
@@ -115,6 +116,10 @@ const FLAG_DEFINITIONS: Dictionary = {
 	RANGE_OVERLAY: {
 		"name": "Range Toggle", "default": true, "scope": SCOPE_USER, "live_safe": true, "phase": 4,
 		"description": "Y on a controller (Tab on keyboard) toggles a ring showing every turret's range, including high-ground bonuses.",
+	},
+	AUTO_REPAIR: {
+		"name": "Auto Repair", "default": false, "scope": SCOPE_USER, "live_safe": true,
+		"description": "Fully heal hull and core between waves for free; disables shop repairs.",
 	},
 	AUTO_DEPLOY: {
 		"name": "Auto Deploy", "default": false, "scope": SCOPE_USER, "live_safe": true,

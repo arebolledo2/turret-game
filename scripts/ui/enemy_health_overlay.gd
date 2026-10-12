@@ -7,6 +7,7 @@ var trails: Dictionary = {}
 ## Bosses and crates only; every other enemy shows no world-space health.
 var tracked: Array[CombatActor] = []
 var _had_tracked: bool = false
+var pulse_time := 0.0
 var face: Font
 
 func _ready() -> void:
@@ -17,10 +18,11 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if not is_instance_valid(world):
 		return
+	if world.is_combat() and not world.paused: pulse_time += delta
 	var alive := {}
 	tracked.clear()
 	for actor in world.enemies:
-		if not is_instance_valid(actor) or actor.dead or not (actor.stationary or EnemyEcology.is_boss(actor.enemy_type)):
+		if not is_instance_valid(actor) or actor.dead or not (actor.stationary or EnemyEcology.is_boss(actor.enemy_type) or EnemyEcology.ranged_threat(actor.enemy_type)):
 			continue
 		tracked.append(actor)
 		var id := actor.get_instance_id()
@@ -43,7 +45,7 @@ func _draw() -> void:
 	for actor in tracked:
 		if not is_instance_valid(actor) or actor.dead:
 			continue
-		if actor.stationary or EnemyEcology.is_boss(actor.enemy_type):
+		if actor.stationary or EnemyEcology.is_boss(actor.enemy_type) or EnemyEcology.ranged_threat(actor.enemy_type):
 			_draw_pointer(actor)
 		var fraction := clampf(actor.health / maxf(actor.max_health, .001), 0.0, 1.0)
 		var trail := float(trails.get(actor.get_instance_id(), fraction))
@@ -111,10 +113,15 @@ func _draw_pointer(actor: CombatActor) -> void:
 	var direction: Vector2 = data.direction
 	var side := direction.orthogonal()
 	var boss := EnemyEcology.is_boss(actor.enemy_type)
-	var tint := Color("ff887a") if boss else Color("ffd078")
+	var tint := Color("ff887a") if boss else Color("ffd078") if actor.stationary else Color("ffb36b")
+	var pulse := 0.0 if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else (sin(pulse_time * 5.0) + 1.0) * .5
+	at -= direction * pulse * 7.0
+	draw_circle(at, 30 + pulse * 7, Color(tint, .12 + pulse * .12))
+	draw_arc(at, 29 + pulse * 7, 0, TAU, 40, Color(tint, .4), 2, true)
+	var label := "BOSS" if boss else "CRATE" if actor.stationary else "RANGED"
 	draw_circle(at, 22, Color(.025, .05, .07, .9))
 	draw_arc(at, 23, 0, TAU, 32, tint, 2, true)
 	draw_colored_polygon(PackedVector2Array([at + direction * 15, at - direction * 9 + side * 10, at - direction * 9 - side * 10]), tint)
 	var text_at := at - direction * 43 - Vector2(35, -6)
-	draw_string(face, text_at + Vector2(1, 1), "BOSS" if boss else "CRATE", HORIZONTAL_ALIGNMENT_CENTER, 70, 20, Color.BLACK)
-	draw_string(face, text_at, "BOSS" if boss else "CRATE", HORIZONTAL_ALIGNMENT_CENTER, 70, 20, tint)
+	draw_string(face, text_at + Vector2(1, 1), label, HORIZONTAL_ALIGNMENT_CENTER, 70, 20, Color.BLACK)
+	draw_string(face, text_at, label, HORIZONTAL_ALIGNMENT_CENTER, 70, 20, tint)

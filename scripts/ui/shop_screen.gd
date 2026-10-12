@@ -229,9 +229,9 @@ func refresh() -> void:
 	reroll_button.disabled = not world.shop.can_reroll() or EconomyService.total_scrap < cost
 	for button: IconButton in [repair_button, core_repair_button]:
 		button.set_cost(GameConstants.REPAIR_COST, EconomyService.total_scrap >= GameConstants.REPAIR_COST)
-	repair_button.disabled = EconomyService.total_scrap < GameConstants.REPAIR_COST or world.player.health >= world.player.max_health
+	repair_button.disabled = FeatureFlagService.is_enabled(FeatureFlagService.AUTO_REPAIR) or EconomyService.total_scrap < GameConstants.REPAIR_COST or world.player.health >= world.player.max_health
 	core_repair_button.visible = world.core != null
-	core_repair_button.disabled = not world.core or EconomyService.total_scrap < GameConstants.REPAIR_COST or world.core.health >= world.core.max_health
+	core_repair_button.disabled = FeatureFlagService.is_enabled(FeatureFlagService.AUTO_REPAIR) or not world.core or EconomyService.total_scrap < GameConstants.REPAIR_COST or world.core.health >= world.core.max_health
 	status.text = world.message
 	offers_content.visible = active_tab == 0
 	turret_inspector.visible = active_tab == 1

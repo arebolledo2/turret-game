@@ -187,3 +187,30 @@ func test_boss_and_full_health_crate_have_offscreen_pointer_data() -> void:
 		assert_gt(data.direction.x, 0.0)
 		actor.position = world.camera_rig.focus
 		assert_true(overlay.pointer_data(actor).is_empty())
+
+func test_spawn_zone_discs_clear_core_and_entire_convoy_route() -> void:
+	for seed_value in range(20):
+		GameRandom.gameplay.seed = seed_value
+		world.spawn_zones.generate(10)
+		for at in world.spawn_zones.centres:
+			assert_gte(at.distance_to(world.core.position), SpawnZones.RADIUS + SpawnZones.CORE_GAP + world.core.radius)
+	world.convoy_mode = true
+	world.convoy_route = ConvoyRoute.new()
+	world.convoy_route.doors = PackedVector3Array([Vector3(-18, 0, -4), Vector3(0, 0, -4), Vector3(18, 0, 3)])
+	world.core.position = world.convoy_route.doors[0]
+	world.spawn_zones.generate(10)
+	for at in world.spawn_zones.centres:
+		for i in range(1, world.convoy_route.doors.size()):
+			var closest := Geometry3D.get_closest_point_to_segment(at, world.convoy_route.doors[i - 1], world.convoy_route.doors[i])
+			assert_gte(at.distance_to(closest), SpawnZones.RADIUS + SpawnZones.CORE_GAP + world.core.radius)
+
+func test_ranged_enemies_are_tracked_for_offscreen_alerts() -> void:
+	var overlay := EnemyHealthOverlay.new()
+	overlay.world = world
+	add_child_autofree(overlay)
+	for kind in ["kite", "lobber", "lens", "anchor", "tender", "prism_conductor", "grand_marionettist"]:
+		var actor := world.spawn_enemy(Vector3(100, 0, 0), kind)
+		actor.set_physics_process(false)
+		overlay._process(.1)
+		assert_has(overlay.tracked, actor)
+		assert_false(overlay.pointer_data(actor).is_empty())

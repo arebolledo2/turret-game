@@ -488,7 +488,7 @@ func repair() -> bool:
 
 ## Shared gate for both repairs: the shop must be open and the scrap must be there.
 func _pay_for_repair(label: String) -> bool:
-	if not shop.is_open() or not EconomyService.deduct_scrap(GameConstants.REPAIR_COST):
+	if FeatureFlagService.is_enabled(FeatureFlagService.AUTO_REPAIR) or not shop.is_open() or not EconomyService.deduct_scrap(GameConstants.REPAIR_COST):
 		return false
 	telemetry.record_spend(label, GameConstants.REPAIR_COST)
 	audio.play_cue("purchase", player.position)
@@ -547,3 +547,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			toggle_pause()
 		elif event.button_index == JOY_BUTTON_A:
 			interact()
+
+func auto_repair() -> void:
+	if not FeatureFlagService.is_enabled(FeatureFlagService.AUTO_REPAIR): return
+	if is_instance_valid(player) and not player.dead: player.health = player.max_health
+	if is_instance_valid(core) and not core.dead: core.repair(core.max_health)

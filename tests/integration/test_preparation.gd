@@ -220,3 +220,22 @@ func test_unrestricted_auto_layout_uses_exact_spawn_centres() -> void:
 	for i in 2:
 		assert_eq(world.turrets[i].position, world.spawn_zones.centres[i])
 		assert_true(world.valid_placement(world.turrets[i].position, world.turrets[i]))
+
+func test_area_layout_separates_attack_ranges_and_balanced_keeps_centre_covered() -> void:
+	world.convoy_mode = false
+	world.core.position = Vector3.ZERO
+	world.spawn_zones.centres.clear()
+	for i in 3: world.add_turret(Vector3(i * 2, 0, -8), "normal")
+	SettingsService.auto_prepare_mode = 2
+	world.preparation.arrange_turrets()
+	for i in world.turrets.size():
+		for j in range(i):
+			var reach := world.preparation._attack_reach(world.turrets[i]) + world.preparation._attack_reach(world.turrets[j])
+			assert_gte(world.turrets[i].position.distance_to(world.turrets[j].position), reach - .05)
+	SettingsService.auto_prepare_mode = 1
+	world.preparation.arrange_turrets()
+	var centre_covered := false
+	for turret in world.turrets:
+		if turret.position.length() <= world.preparation._attack_reach(turret): centre_covered = true
+	assert_true(centre_covered)
+	SettingsService.auto_prepare_mode = 0

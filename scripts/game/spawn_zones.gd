@@ -3,6 +3,7 @@ extends Node3D
 
 const BIAS := .7
 const RADIUS := 3.0
+const CORE_GAP := 2.0
 var world: ArenaWorld
 var centres: Array[Vector3] = []
 var labels: Array[Label3D] = []
@@ -17,12 +18,18 @@ func generate(wave: int) -> void:
 	var bounds := WorldGeometry.HALF_ARENA - Vector2.ONE * (RADIUS + 1.0)
 	for index in count:
 		var at := Vector3.ZERO
+		var found := false
 		for attempt in 64:
 			at = Vector3(GameRandom.gameplay.randf_range(-bounds.x, bounds.x), 0, GameRandom.gameplay.randf_range(-bounds.y, bounds.y))
 			var separated := true
 			for other in centres:
 				if at.distance_to(other) < RADIUS * 2.0: separated = false
-			if separated and not world.waves.spawn_blocked(at): break
+			if separated and safe_from_core(at) and not world.waves.spawn_blocked(at):
+				found = true
+				break
+		if not found:
+			# Never commit the final rejected candidate. A winding route may leave fewer zones.
+			continue
 		centres.append(at)
 		var dial := GroundDial.create(self, RADIUS, Color(.85, .49, .25, .7), false)
 		dial.position = at + Vector3(0, .03, 0)
@@ -47,3 +54,13 @@ func _process(_delta: float) -> void:
 	var prep := GameStateMachine.current_state == GameStateMachine.GameState.PREPARATION
 	visible = prep or world.is_combat()
 	for label in labels: label.visible = prep
+
+func safe_from_core(at: Vector3) -> bool:
+	if not is_instance_valid(world.core): return true
+	if WorldGeometry.planar(at - world.core.position).length() < RADIUS + CORE_GAP + world.core.radius: return false
+	if world.convoy_mode and world.convoy_route:
+		var points := world.convoy_route.doors
+		for i in range(1, points.size()):
+			var closest := Geometry3D.get_closest_point_to_segment(at, points[i - 1], points[i])
+			if at.distance_to(closest) < RADIUS + CORE_GAP + world.core.radius: return false
+	return true

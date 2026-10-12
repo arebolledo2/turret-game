@@ -52,3 +52,5 @@ Affordability target: purchasing five Ion turrets after waves 1–5 costs 9+11+1
 ### Protect-the-Core wave pressure
 
 Waves 1-5 keep their easy ecology rosters. From wave 6, mode-specific rosters reserve at least half the encounter-point budget for active core attackers (assault enemies and Kiln Lobbers), with hero hunters and bosses retaining their targeting identities. Half or more of ordinary assault arrivals become core seekers, using the higher of 50% and the difficulty seeker share. Boss waves 6/12/20 use 60% escort budgets instead of 25%, with distinct basic/tank, fast/tank, and tank/charger escorts. Capped specialist spawns fall back within the mode-specific roster. Survival and Convoy retain their existing rosters, escort budgets, and seeker rules.
+
+Spawn-zone discs in core modes leave 2 m of clear ground between the zone edge and the core body or any planned convoy route segment (including future legs). Rejected random candidates are never committed; constrained routes may produce fewer zones, with the normal random spawn fallback still active.

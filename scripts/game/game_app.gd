@@ -12,6 +12,7 @@ var fullscreen_check: CheckButton
 var window_size_option: OptionButton
 var vsync_check: CheckButton
 var marker_option: OptionButton
+var auto_repair_check: CheckButton
 var motion_check: CheckButton
 var volume_slider: HSlider
 var volume_label: Label
@@ -97,6 +98,9 @@ func _build_menu() -> void:
 	for label in ["Off", "Contextual", "All"]:
 		marker_option.add_item("Ground markers  -  " + label)
 	marker_option.tooltip_text = "Optional ground markers. Build zones and attack warnings stay visible."
+	auto_repair_check = _check(options, "Auto repair between waves", "repair", func(value: bool) -> void:
+		FeatureFlagService.set_enabled(FeatureFlagService.AUTO_REPAIR, value)
+		SettingsService.save_preferences())
 	motion_check = _check(options, "Reduced motion", "motion", func(value: bool) -> void: SettingsService.set_reduced_motion(value))
 	_label(options, "Reduced motion removes bobbing, recoil and hit blinking, and simplifies salvage animations.\nAttack warnings and effect ranges remain visible.", 20)
 	var volume_row := HBoxContainer.new()
@@ -216,6 +220,7 @@ func show_settings() -> void:
 	vsync_check.set_pressed_no_signal(SettingsService.vsync)
 	window_size_option.select(SettingsService.WINDOW_SIZE_PRESETS.find(SettingsService.window_size))
 	marker_option.select(SettingsService.ground_markers)
+	auto_repair_check.set_pressed_no_signal(FeatureFlagService.is_enabled(FeatureFlagService.AUTO_REPAIR))
 	motion_check.set_pressed_no_signal(FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
 	volume_slider.set_value_no_signal(SettingsService.sfx_volume * 100.0)
 	_update_volume_label()

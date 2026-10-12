@@ -17,6 +17,7 @@ var detail: Label
 var hint: Label
 var move_button: Button
 var cancel_button: Button
+var layout_button: Button
 var auto_button: Button
 var deploy_button: Button
 
@@ -153,6 +154,7 @@ func handle_input(event: InputEvent) -> bool:
 		match event.physical_keycode:
 			KEY_SPACE, KEY_E: interact()
 			KEY_ENTER, KEY_KP_ENTER: deploy()
+			KEY_R: cycle_layout()
 			KEY_F: toggle_auto()
 			KEY_BACKSPACE: cancel_move()
 			KEY_BRACKETLEFT: cycle(-1)
@@ -163,6 +165,7 @@ func handle_input(event: InputEvent) -> bool:
 		match event.button_index:
 			JOY_BUTTON_A: interact()
 			JOY_BUTTON_B: cancel_move()
+			JOY_BUTTON_RIGHT_STICK: cycle_layout()
 			JOY_BUTTON_Y: toggle_auto()
 			JOY_BUTTON_X: deploy()
 			JOY_BUTTON_LEFT_SHOULDER: cycle(-1)
@@ -204,8 +207,9 @@ func _refresh() -> void:
 	move_button.text = "PLACE  A / Space" if moving else "MOVE  A / Space"
 	move_button.disabled = not has_selection or not valid
 	cancel_button.disabled = not moving
+	layout_button.text = "%s  R / RS" % ["TIGHT", "BALANCED", "AREA COVERAGE"][SettingsService.auto_prepare_mode]
 	deploy_button.disabled = moving or not _layout_valid()
-	auto_button.text = "AUTO DEPLOY: %s  Y / F" % ("ON" if FeatureFlagService.is_enabled(FeatureFlagService.AUTO_DEPLOY) else "OFF")
+	auto_button.text = "AUTO: %s  Y / F" % ("ON" if FeatureFlagService.is_enabled(FeatureFlagService.AUTO_DEPLOY) else "OFF")
 	if not moving and not _layout_valid(): hint.text = "Move turrets out of spawn zones, or use Auto Deploy."
 
 func _build_ui() -> void:
@@ -246,6 +250,7 @@ func _build_ui() -> void:
 	move_button = _button(row, "MOVE  A / Space", interact)
 	cancel_button = _button(row, "CANCEL  B / Right click", cancel_move)
 	auto_button = _button(row, "AUTO DEPLOY", toggle_auto)
+	layout_button = _button(row, "LAYOUT", cycle_layout)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)
@@ -288,12 +293,15 @@ func _layout_valid() -> bool:
 
 ## Greedy, deterministic coverage layout; no gameplay RNG is consumed.
 func arrange_turrets() -> void:
+	var mode := SettingsService.auto_prepare_mode
+	var placed: Array[Dictionary] = []
 	var zones := world.spawn_zones.centres
 	var restrict_zones := FeatureFlagService.is_enabled(FeatureFlagService.RESTRICT_SPAWN_PLACEMENT)
 	var focus := world.core.position if is_instance_valid(world.core) else Vector3.ZERO
 	var remaining := maxi(1, world.turrets.size() - zones.size())
 	for index in world.turrets.size():
 		var turret := world.turrets[index]
+		var reach := _attack_reach(turret)
 		var target := focus
 		if index < zones.size():
 			target = zones[index]
@@ -305,22 +313,25 @@ func arrange_turrets() -> void:
 			target = _route_position(float(index - zones.size() + 1) / (remaining + 1))
 		else:
 			var angle := TAU * float(index - zones.size()) / remaining
-			target += Vector3(cos(angle), 0, sin(angle)) * 2.0
+			target += Vector3(cos(angle), 0, sin(angle)) * (2.0 if mode == 0 else maxf(1.2, reach * .6) if mode == 1 else reach)
 		var best := Vector3.INF
 		var score := INF
 		if world.valid_placement(target, turret):
 			best = target
-			score = 0.0
+			score = _layout_score(target, target, reach, placed, mode)
 		# Search the whole arena so crowded zones and terrain always have a fallback.
 		for x in range(-40, 41):
 			for z in range(-22, 23):
 				var at := Vector3(x * .5, 0, z * .5)
-				var cost := at.distance_squared_to(target)
+				var cost := _layout_score(at, target, reach, placed, mode)
 				if cost >= score: continue
 				if not world.valid_placement(at, turret): continue
 				best = at
 				score = cost
-		if best == Vector3.INF: continue
+		if best == Vector3.INF:
+			placed.append({"at": turret.position, "reach": reach})
+			continue
+		placed.append({"at": best, "reach": reach})
 		if turret.position.distance_to(best) > .01:
 			turret.position = best
 			turret.reset_entrench()
@@ -338,3 +349,29 @@ func _route_position(fraction: float) -> Vector3:
 		if distance <= leg: return points[i - 1].lerp(points[i], distance / maxf(.001, leg))
 		distance -= leg
 	return points[-1]
+
+func cycle_layout() -> void:
+	if not active or world.paused: return
+	cancel_move()
+	SettingsService.auto_prepare_mode = (SettingsService.auto_prepare_mode + 1) % 3
+	SettingsService.save_preferences()
+	if FeatureFlagService.is_enabled(FeatureFlagService.AUTO_DEPLOY): arrange_turrets()
+	if is_instance_valid(selected):
+		cursor = selected.position
+		view_focus = cursor
+	_refresh()
+
+func _attack_reach(turret: TurretActor) -> float:
+	var stats := turret._current_view(0.0)
+	var mode := TurretRegistry.get_fire_mode(turret.turret_type)
+	return stats.range_metres * (stats.area_size if mode in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0)
+
+func _layout_score(at: Vector3, target: Vector3, reach: float, placed: Array[Dictionary], mode: int) -> float:
+	var score := at.distance_squared_to(target)
+	if mode == 0: return score
+	# Only turret attack coverage counts; the core contributes no coverage radius.
+	for other in placed:
+		var separation := (reach + float(other.reach)) * (1.0 if mode == 2 else .6)
+		var overlap := maxf(0, separation - at.distance_to(other.at))
+		score += overlap * overlap * (10000.0 if mode == 2 else 20.0)
+	return score

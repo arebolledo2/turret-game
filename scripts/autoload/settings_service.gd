@@ -14,6 +14,7 @@ var window_size: Vector2i = Vector2i.ZERO
 var vsync: bool = true
 var sfx_volume: float = .7
 var run_difficulty: GameEnums.Difficulty = GameEnums.Difficulty.EASY
+var auto_prepare_mode: int = 0 # Tight, Balanced, Area Coverage
 var run_mode: String = RunConfig.MODE_SURVIVE
 
 func _ready() -> void:
@@ -22,9 +23,11 @@ func _ready() -> void:
 func load_preferences() -> void:
 	var config := ConfigFile.new()
 	if config.load(preferences_path) == OK:
-		for flag in [FeatureFlagService.AUTO_DEPLOY, FeatureFlagService.RESTRICT_SPAWN_PLACEMENT]:
+		for flag in [FeatureFlagService.AUTO_DEPLOY, FeatureFlagService.RESTRICT_SPAWN_PLACEMENT, FeatureFlagService.AUTO_REPAIR]:
 			var saved: Variant = config.get_value("deployment", flag, false)
 			if saved is bool: FeatureFlagService.set_enabled(flag, saved)
+		var saved_layout: Variant = config.get_value("deployment", "layout", 0)
+		if saved_layout is int: auto_prepare_mode = clampi(saved_layout, 0, 2)
 		var saved_difficulty: Variant = config.get_value("run", "difficulty", GameEnums.Difficulty.EASY)
 		if saved_difficulty is int and saved_difficulty in GameEnums.Difficulty.values():
 			run_difficulty = saved_difficulty as GameEnums.Difficulty
@@ -57,8 +60,9 @@ func load_preferences() -> void:
 
 func save_preferences() -> Error:
 	var config := ConfigFile.new()
-	for flag in [FeatureFlagService.AUTO_DEPLOY, FeatureFlagService.RESTRICT_SPAWN_PLACEMENT]:
+	for flag in [FeatureFlagService.AUTO_DEPLOY, FeatureFlagService.RESTRICT_SPAWN_PLACEMENT, FeatureFlagService.AUTO_REPAIR]:
 		config.set_value("deployment", flag, FeatureFlagService.is_enabled(flag))
+	config.set_value("deployment", "layout", auto_prepare_mode)
 	config.set_value("run", "difficulty", run_difficulty)
 	config.set_value("run", "mode", run_mode)
 	config.set_value("display", "fullscreen", fullscreen)
