@@ -289,15 +289,18 @@ func _layout_valid() -> bool:
 ## Greedy, deterministic coverage layout; no gameplay RNG is consumed.
 func arrange_turrets() -> void:
 	var zones := world.spawn_zones.centres
+	var restrict_zones := FeatureFlagService.is_enabled(FeatureFlagService.RESTRICT_SPAWN_PLACEMENT)
 	var focus := world.core.position if is_instance_valid(world.core) else Vector3.ZERO
 	var remaining := maxi(1, world.turrets.size() - zones.size())
 	for index in world.turrets.size():
 		var turret := world.turrets[index]
 		var target := focus
 		if index < zones.size():
-			var inward := WorldGeometry.planar(focus - zones[index]).normalized()
-			if inward == Vector3.ZERO: inward = Vector3.RIGHT
-			target = zones[index] + inward * (SpawnZones.RADIUS + TurretPlacement.EDGE_MARGIN + .3)
+			target = zones[index]
+			if restrict_zones:
+				var inward := WorldGeometry.planar(focus - zones[index]).normalized()
+				if inward == Vector3.ZERO: inward = Vector3.RIGHT
+				target += inward * (SpawnZones.RADIUS + TurretPlacement.EDGE_MARGIN + .3)
 		elif world.convoy_mode and world.convoy_route:
 			target = _route_position(float(index - zones.size() + 1) / (remaining + 1))
 		else:
@@ -305,12 +308,15 @@ func arrange_turrets() -> void:
 			target += Vector3(cos(angle), 0, sin(angle)) * 2.0
 		var best := Vector3.INF
 		var score := INF
+		if world.valid_placement(target, turret):
+			best = target
+			score = 0.0
 		# Search the whole arena so crowded zones and terrain always have a fallback.
 		for x in range(-40, 41):
 			for z in range(-22, 23):
 				var at := Vector3(x * .5, 0, z * .5)
 				var cost := at.distance_squared_to(target)
-				if cost >= score or world.placement.spawn_zone_blocked(at): continue
+				if cost >= score: continue
 				if not world.valid_placement(at, turret): continue
 				best = at
 				score = cost

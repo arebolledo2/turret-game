@@ -188,6 +188,7 @@ func test_spawn_zone_restriction_is_optional_and_blocks_deploy_until_cleared() -
 	assert_true(world.preparation.deploy())
 
 func test_auto_layout_covers_zones_and_distributes_remaining_along_route() -> void:
+	FeatureFlagService.set_enabled(FeatureFlagService.RESTRICT_SPAWN_PLACEMENT, true)
 	world.spawn_zones.centres.assign([Vector3(-8, 0, -5), Vector3(8, 0, 5)])
 	for i in 5: world.add_turret(Vector3(i * 2, 0, -9), "normal")
 	world.preparation.arrange_turrets()
@@ -210,3 +211,12 @@ func test_auto_layout_runs_on_next_preparation_and_supports_no_core() -> void:
 	world.preparation.begin()
 	assert_lt(world.turrets[0].position.length(), 3.0)
 	assert_true(world.preparation.active)
+
+func test_unrestricted_auto_layout_uses_exact_spawn_centres() -> void:
+	FeatureFlagService.set_enabled(FeatureFlagService.RESTRICT_SPAWN_PLACEMENT, false)
+	world.spawn_zones.centres.assign([Vector3(-8.13, 0, -5.17), Vector3(8.21, 0, 5.12)])
+	world.add_turret(Vector3(5, 0, -9), "normal")
+	world.preparation.arrange_turrets()
+	for i in 2:
+		assert_eq(world.turrets[i].position, world.spawn_zones.centres[i])
+		assert_true(world.valid_placement(world.turrets[i].position, world.turrets[i]))
