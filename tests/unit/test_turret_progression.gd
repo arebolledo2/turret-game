@@ -70,11 +70,11 @@ func test_distance_weights_are_planar_and_keep_distant_recipients_eligible() -> 
 func test_scarcity_prices_count_acquisitions_and_preserve_item_prices() -> void:
 	var old_item := EconomyService.calculate_item_price(20, 4)
 	EconomyService.state.turret_progression_enabled = true
-	assert_eq(EconomyService.calculate_turret_price(10, 1), 24)
+	assert_eq(EconomyService.calculate_turret_price(10, 1), 12)
 	EconomyService.state.additional_turrets_acquired = 2
-	assert_eq(EconomyService.calculate_turret_price(10, 1), 64)
+	assert_eq(EconomyService.calculate_turret_price(10, 1), 12)
 	EconomyService.turrets_purchased = 20
-	assert_eq(EconomyService.calculate_turret_price(10, 1), 64, "Paid counter alone does not set scarcity")
+	assert_eq(EconomyService.calculate_turret_price(10, 1), 12, "Paid counter alone does not set scarcity")
 	assert_eq(EconomyService.calculate_item_price(20, 4), old_item)
 	assert_eq(EconomyService.calculate_turret_price(0, 1), 1)
 
@@ -82,9 +82,9 @@ func test_quantity_discount_counts_paid_purchases_only() -> void:
 	EconomyService.state.turret_progression_enabled = true
 	EconomyService.state.additional_turrets_acquired = 2
 	ItemTrackingService.item_counts["quantity_discount"] = 1
-	assert_eq(EconomyService.calculate_turret_price(10, 1), 64)
+	assert_eq(EconomyService.calculate_turret_price(10, 1), 12)
 	EconomyService.turrets_purchased = 2
-	assert_eq(EconomyService.calculate_turret_price(10, 1), 32)
+	assert_eq(EconomyService.calculate_turret_price(10, 1), 6)
 
 func test_older_preferences_keep_new_flag_at_its_default() -> void:
 	var config := ConfigFile.new()
@@ -93,12 +93,21 @@ func test_older_preferences_keep_new_flag_at_its_default() -> void:
 	assert_true(FeatureFlagService.is_enabled(FeatureFlagService.TURRET_PROGRESSION))
 	assert_false(FeatureFlagService.is_enabled(FeatureFlagService.ENTRENCH))
 
-func test_purchase_penalty_items_have_linear_floor_and_keep_quadratic_growth() -> void:
+func test_purchase_penalty_reductions_can_remove_the_whole_surcharge() -> void:
 	EconomyService.state.turret_progression_enabled = true
-	EconomyService.state.additional_turrets_acquired = 4
+	EconomyService.state.additional_turrets_acquired = 9
 	ModifierService.add_modifiers([Item.create_modifier("turret_penalty_reduction", "add", -1.0)])
-	# 10 * 2 * (1 + .4*4 + .1*16) = 84; the .4 floor cannot remove the quadratic term.
-	assert_eq(EconomyService.calculate_turret_price(10, 0), 84)
+	assert_eq(EconomyService.calculate_turret_price(10, 0), 10)
+
+func test_first_six_are_affordable_then_count_penalty_starts() -> void:
+	EconomyService.state.turret_progression_enabled = true
+	for acquired in 5:
+		EconomyService.state.additional_turrets_acquired = acquired
+		assert_eq(EconomyService.calculate_turret_price(100, 0), 100)
+	EconomyService.state.additional_turrets_acquired = 5
+	assert_eq(EconomyService.calculate_turret_price(100, 0), 175)
+	EconomyService.state.additional_turrets_acquired = 6
+	assert_eq(EconomyService.calculate_turret_price(100, 0), 270)
 
 func test_levels_reward_distinct_stats_and_milestone_burst() -> void:
 	var growth := TurretProgression.new()

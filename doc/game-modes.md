@@ -39,3 +39,12 @@ Prep reads the same dedicated gamepad stick actions as the hero. Left stick move
 ## Core weapon
 
 Both objective modes give the core an automatic projectile weapon. Its independent `RunConfig.core_weapon` profile initially copies Pip's base sidearm (12 damage, 1.2 shots/s, 3.75 m range). It uses the shared weapon/item resolver and critical-hit rules, targets the nearest enemy whose hurtbox overlaps range, and fires through the normal projectile/effects pipeline from the reactor. Its cooldown and negative source ID are separate from the hero and turret identities. Carrying a turret does not suppress core fire. Prep, pause, shop, round end and core death suppress firing. Future core variants can replace the profile without changing the hero loadout; no new core model is introduced.
+
+
+## Turret purchase curve
+
+Progression pricing counts the starter plus all additional acquired frames. The first six total turrets have no count surcharge and no doubled base cost. The seventh starts escalation. Let `N` be additional frames acquired and `E = max(0, N - 4)` for the next purchase. Price is `floor(base * (1 + 0.20 * wave) * (1 + (0.65*E + 0.10*E*E) * adjusted_coefficient/0.65) * shop_discount)`, with the existing Quantity Discount afterward and a minimum price of 1.
+
+Compact Design subtracts 0.04 per stack and Mass Production 0.10 from the coefficient (base 0.65); both now reduce the whole surcharge, with a zero floor and no hidden 0.40 minimum. Their legal combined maximum is a coefficient of 0.33. Below seven turrets there is no count surcharge to reduce. Locked offers retain their captured price; unlocked offers reprice after purchases. Acquisition counting prevents selling or losing frames from resetting escalation. Legacy non-progression economy remains unchanged.
+
+Affordability target: purchasing five Ion turrets after waves 1–5 costs 9+11+12+14+16 = 62 scrap, for six including the starter before wave 6. Starting funds (20) plus those wave bonuses (75) cover this with 33 left over before pickup income or item spending. More expensive turret mixes require collected scrap; six by wave 7 is a budget target rather than a guarantee of shop choices or player spending.

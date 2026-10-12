@@ -140,3 +140,18 @@ func test_build_readout_uses_runtime_clamps_and_effective_pulse_reach() -> void:
 			var view := TurretStats.new(stats("shock"))
 			assert_almost_eq(float(row["range"]), view.range_metres * view.area_size, .001)
 			assert_eq(row["range"], row["area"])
+
+func test_count_reduction_items_stack_beyond_former_floor_in_progression() -> void:
+	world.session.state.turret_progression_enabled = true
+	world.session.state.additional_turrets_acquired = 9
+	var previous := world.turret_price("normal")
+	for id in ["compact_design", "compact_design", "compact_design", "mass_production", "mass_production"]:
+		world.shop.apply_item(id)
+		var price := world.turret_price("normal")
+		assert_lt(price, previous, "Every legal stack reduces the entire count surcharge")
+		previous = price
+	assert_almost_eq(TurretStatsService.get_turret_purchase_penalty(.65), .33, .001)
+	world.session.state.additional_turrets_acquired = 4
+	var discounted_early := world.turret_price("normal")
+	ModifierService.clear_modifiers()
+	assert_eq(world.turret_price("normal"), discounted_early, "No count surcharge to reduce within first six")

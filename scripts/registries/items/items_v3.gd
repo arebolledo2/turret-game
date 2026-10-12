@@ -98,7 +98,7 @@ const ROWS: Array = [
 		"special_effect": ""
 	},
 	{
-		"description": "Turret purchase scaling -4 percentage points.",
+		"description": "Turret count scaling -4 percentage points; reduces the full surcharge after your sixth turret.",
 		"id": "compact_design",
 		"max_stacks": 3,
 		"modifiers": [
@@ -168,7 +168,7 @@ const ROWS: Array = [
 		"special_effect": ""
 	},
 	{
-		"description": "Turret purchase scaling -10 percentage points.",
+		"description": "Turret count scaling -10 percentage points; reduces the full surcharge after your sixth turret.",
 		"id": "mass_production",
 		"max_stacks": 2,
 		"modifiers": [

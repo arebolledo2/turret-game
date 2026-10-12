@@ -77,6 +77,7 @@ func test_purchase_is_atomic_and_rejects_sold_unsupported_maxed_and_unaffordable
 	assert_eq(EconomyService.total_scrap, 88)
 
 func test_turret_purchase_and_compact_design_reprice_unsold_offers() -> void:
+	world.session.state.additional_turrets_acquired = 5
 	GameStateService.current_wave = 5
 	world.finish_wave()
 	EconomyService.total_scrap = 200

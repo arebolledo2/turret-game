@@ -1,9 +1,9 @@
 extends Node
 
-## Initial scarcity tuning; item modifiers change only the linear coefficient.
-const PROGRESSION_BASE_MULTIPLIER: float = 2.0
+## First six frames stay accessible; modifier-adjusted scaling applies to the entire later surcharge.
+const PROGRESSION_BASE_MULTIPLIER: float = 1.0
 const PROGRESSION_LINEAR: float = .65
-const PROGRESSION_LINEAR_MIN: float = .40
+const PROGRESSION_AFFORDABLE_TOTAL: int = 6
 const PROGRESSION_QUADRATIC: float = .10
 
 var state: RunSessionState = RunSessionState.new()
@@ -96,9 +96,11 @@ func calculate_turret_price(base_price: int, wave: int) -> int:
 	var base_multiplier := 1.0
 	if state.turret_progression_enabled:
 		base_multiplier = PROGRESSION_BASE_MULTIPLIER
-		var acquired := state.additional_turrets_acquired
-		var linear := maxf(PROGRESSION_LINEAR_MIN, TurretStatsService.get_turret_purchase_penalty(PROGRESSION_LINEAR))
-		penalty_multiplier = 1.0 + linear * acquired + PROGRESSION_QUADRATIC * acquired * acquired
+		# Starter + first five acquisitions have no surcharge. Buying #7 has excess=1.
+		var excess := maxi(0, state.additional_turrets_acquired - (PROGRESSION_AFFORDABLE_TOTAL - 2))
+		var linear := TurretStatsService.get_turret_purchase_penalty(PROGRESSION_LINEAR)
+		# Scale the entire surcharge so reduction items never hit a hidden floor.
+		penalty_multiplier = 1.0 + (PROGRESSION_LINEAR * excess + PROGRESSION_QUADRATIC * excess * excess) * (linear / PROGRESSION_LINEAR)
 	var shop_price_mult: float = ItemTrackingService.get_shop_price_multiplier()
 	var price: int = int(base_price * base_multiplier * wave_multiplier * penalty_multiplier * shop_price_mult)
 
