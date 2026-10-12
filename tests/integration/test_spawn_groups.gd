@@ -149,3 +149,41 @@ func test_convoy_sampling_preserves_safe_arrivals_and_summons_obey_exclusion() -
 	assert_true(tender.brain.children.is_empty())
 	tender.position = Vector3(0, 0, 5)
 	assert_not_null(tender.brain._summon("skitter", 0.0))
+
+func test_spawn_zone_counts_and_randomized_bias() -> void:
+	GameRandom.gameplay.seed = 2026
+	for wave in range(1, 21):
+		world.spawn_zones.generate(wave)
+		assert_gte(world.spawn_zones.centres.size(), 1 if wave <= 5 else 2)
+		assert_lte(world.spawn_zones.centres.size(), 2 if wave <= 5 else 4)
+	world.spawn_zones.centres.assign([Vector3(-10, 0, -5)])
+	var nearby := 0
+	for index in 400:
+		var at := world.waves._sample_encounter_position("drowse")
+		if at.distance_to(world.spawn_zones.centres[0]) <= SpawnZones.RADIUS + .01: nearby += 1
+	assert_gt(nearby, 240)
+	assert_lt(nearby, 340, "Some arrivals still use unrestricted random locations")
+	GameStateMachine.force_transition(GameStateMachine.GameState.PREPARATION)
+	world.spawn_zones._process(0)
+	assert_true(world.spawn_zones.visible)
+	assert_true(world.spawn_zones.labels[0].visible)
+	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
+	world.spawn_zones._process(0)
+	assert_false(world.spawn_zones.visible)
+
+func test_boss_and_full_health_crate_have_offscreen_pointer_data() -> void:
+	var overlay := EnemyHealthOverlay.new()
+	overlay.world = world
+	add_child_autofree(overlay)
+	world.camera_rig.set_zoom(1.5)
+	world.camera_rig.snap()
+	await wait_process_frames(2)
+	for kind in ["brass_ram", "tech_drop"]:
+		var actor := world.spawn_enemy(Vector3(100, 0, 0), kind)
+		actor.set_physics_process(false)
+		var data := overlay.pointer_data(actor)
+		assert_false(data.is_empty())
+		assert_true(get_viewport().get_visible_rect().has_point(data.at))
+		assert_gt(data.direction.x, 0.0)
+		actor.position = world.camera_rig.focus
+		assert_true(overlay.pointer_data(actor).is_empty())

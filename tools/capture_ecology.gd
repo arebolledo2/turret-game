@@ -20,6 +20,12 @@ func setup() -> void:
 	add_child(world)
 	world.start_run()
 	world.set_physics_process(false)
+	if mode == "zones":
+		GameRandom.gameplay.seed = 36
+		world.spawn_zones.generate(8)
+		world.camera_rig.set_zoom(.5)
+		world.camera_rig.snap()
+		return
 	if mode == "prep":
 		world.add_turret(Vector3(-4, 0, 0), "plasma")
 		world.add_turret(Vector3(4, 0, 0), "melee")
@@ -33,6 +39,14 @@ func setup() -> void:
 	world.player.set_physics_process(false)
 	world.player.position = Vector3(0, 0, 0)
 	for turret in world.turrets: turret.set_physics_process(false)
+	if mode == "pointers":
+		var boss := world.spawn_enemy(Vector3(-18, 0, 0), "brass_ram")
+		boss.set_physics_process(false)
+		var chest := world.drops.spawn(Vector3(18, 0, 0))
+		chest.set_physics_process(false)
+		world.camera_rig.set_zoom(1.5)
+		world.camera_rig.snap()
+		return
 	if mode == "danger":
 		world.player.health = world.player.max_health * .15
 		world.core.health = world.core.max_health * .15

@@ -35,6 +35,8 @@ func _draw() -> void:
 	for actor in world.enemies:
 		if not is_instance_valid(actor) or actor.dead:
 			continue
+		if actor.stationary or EnemyEcology.is_boss(actor.enemy_type):
+			_draw_pointer(actor)
 		var fraction := clampf(actor.health / maxf(actor.max_health, .001), 0.0, 1.0)
 		var trail := float(trails.get(actor.get_instance_id(), fraction))
 		if EnemyEcology.is_boss(actor.enemy_type):
@@ -52,11 +54,6 @@ func _draw() -> void:
 			for threshold: float in ticks:
 				var x := at.x + 14 + (width - 28) * threshold
 				draw_line(Vector2(x, at.y + 43), Vector2(x, at.y + 59), Color("f5e8ca"), 2)
-			var screen := _screen_position(actor.position)
-			if world.camera.is_position_behind(actor.position) or not get_viewport_rect().has_point(screen):
-				var direction := (screen - viewport_size * .5).normalized()
-				var center := at + Vector2(width + 20, 45)
-				draw_line(center - direction * 8, center + direction * 8, Color("ffb970"), 3)
 		elif actor.stationary and (fraction < 1.0 or actor.position.distance_to(world.player.position) < 5.0 or world.player.weapon_target == actor):
 			var at := _screen_position(actor.position + Vector3(0, 1.45 * actor.body_scale, 0))
 			if world.camera.is_position_behind(actor.position) or not get_viewport_rect().has_point(at): continue
@@ -86,3 +83,30 @@ func _panel() -> StyleBoxFlat:
 
 func _screen_position(at: Vector3) -> Vector2:
 	return world.playfield.to_screen(at) if world.playfield else world.camera.unproject_position(at)
+
+func pointer_data(actor: CombatActor) -> Dictionary:
+	var bounds := world.playfield.rect if world.playfield else get_viewport_rect()
+	var screen := _screen_position(actor.position)
+	var behind := world.camera.is_position_behind(actor.position)
+	if not behind and bounds.has_point(screen): return {}
+	var centre := bounds.get_center()
+	var direction := (screen - centre).normalized() * (-1.0 if behind else 1.0)
+	if direction.is_zero_approx(): direction = Vector2.UP
+	var half := bounds.size * .5 - Vector2(80, 70)
+	var distance := minf(half.x / maxf(absf(direction.x), .001), half.y / maxf(absf(direction.y), .001))
+	return {"at": centre + direction * distance, "direction": direction}
+
+func _draw_pointer(actor: CombatActor) -> void:
+	var data := pointer_data(actor)
+	if data.is_empty(): return
+	var at: Vector2 = data.at
+	var direction: Vector2 = data.direction
+	var side := direction.orthogonal()
+	var boss := EnemyEcology.is_boss(actor.enemy_type)
+	var tint := Color("ff887a") if boss else Color("ffd078")
+	draw_circle(at, 22, Color(.025, .05, .07, .9))
+	draw_arc(at, 23, 0, TAU, 32, tint, 2, true)
+	draw_colored_polygon(PackedVector2Array([at + direction * 15, at - direction * 9 + side * 10, at - direction * 9 - side * 10]), tint)
+	var text_at := at - direction * 43 - Vector2(35, -6)
+	draw_string(face, text_at + Vector2(1, 1), "BOSS" if boss else "CRATE", HORIZONTAL_ALIGNMENT_CENTER, 70, 20, Color.BLACK)
+	draw_string(face, text_at, "BOSS" if boss else "CRATE", HORIZONTAL_ALIGNMENT_CENTER, 70, 20, tint)

@@ -102,3 +102,10 @@ Scattered-arrival and low-health follow-up: **1,062 tests passed**, 81 scripts, 
 ### Convoy spawn exclusion
 
 In Convoy, enemy arrivals must stay at least 4 m from the core's outer radius and outside a 2 m corridor on either side of the entire active waypoint-to-waypoint segment (rounded endpoint clearance included). Completed and future legs are eligible unless they overlap the active corridor or core exclusion. At a waypoint pause, the next leg is considered active. Initial sampling retries safe positions; an unsafe final candidate is skipped. Pending warnings recheck every tick, so a moving core or leg change cancels an unsafe arrival without relocating it. Enemy summons also respect these exclusions. Other modes retain their existing spawn clearance.
+
+
+## Spawn zones and off-screen targets
+
+Each prep phase generates 1–2 spawn zones for waves 1–5 and 2–4 for later waves. Amber dashed ground markers and prep labels identify their positions; markers remain during combat. Per candidate, 70% of arrivals sample a random point within a 3 m zone radius, and 30% use the existing random placement rules. Final accepted proportions can differ when safety exclusions reject candidates. Zones bias normal arrivals and bosses, not summoned minions. Hero/core clearance and Convoy active-segment exclusion remain authoritative, including warning-time cancellation.
+
+Living off-screen bosses and crates have labeled edge arrows (coral BOSS, gold CRATE), using the actual playfield rectangle. Crate arrows do not depend on health, proximity or targeting. Arrows disappear when their actor returns on-screen or is defeated.

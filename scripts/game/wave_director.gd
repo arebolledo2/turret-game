@@ -171,6 +171,7 @@ func begin_next_wave() -> bool:
 	arrival_time_left = spawn_window
 	spawn_clock = FIRST_SPAWN_DELAY
 	world.message = EnemyVariants.notice_for_wave(GameStateService.current_wave)
+	world.spawn_zones.generate(GameStateService.current_wave)
 	world.preparation.begin()
 	return true
 
@@ -320,6 +321,8 @@ func encounter_position(type_id: String) -> Vector3:
 	return candidate
 
 func _sample_encounter_position(type_id: String) -> Vector3:
+	if world.spawn_zones and not world.spawn_zones.centres.is_empty() and GameRandom.gameplay.randf() < SpawnZones.BIAS:
+		return world.spawn_zones.sample()
 	var centre := world.player.position
 	var angle := GameRandom.gameplay.randf() * TAU
 	var distance := GameRandom.gameplay.randf_range(5.0, 7.0)

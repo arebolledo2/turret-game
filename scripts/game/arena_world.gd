@@ -29,6 +29,7 @@ var blasts := BlastEffects.new()
 var dev := DevCommands.new()
 ## This run's terrain (null when the `terrain_zones` flag is off). Chosen once per run and fixed for every wave.
 var terrain: TerrainZones
+var spawn_zones: SpawnZones
 var preparation: PreparationPhase
 var placement := TurretPlacement.new()
 var stage: ArenaStage
@@ -154,6 +155,9 @@ func _ready() -> void:
 		dev_panel = DevPanel.new()
 		dev_panel.world = self
 		add_child(dev_panel)
+	spawn_zones = SpawnZones.new()
+	spawn_zones.world = self
+	add_child(spawn_zones)
 	preparation = PreparationPhase.new()
 	preparation.world = self
 	add_child(preparation)
