@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ckdbrg7n18tuf"
-path="res://.godot/imported/floor_albedo.png-af01cba6e43c27539d50d0c88a81d089.ctex"
+uid="uid://dy7ovtk8p4w68"
+path="res://.godot/imported/floor_albedo.png-9fc9fbaa6f7ecd731bc6e4e074e8e0eb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/textures/floor/floor_albedo.png"
-dest_files=["res://.godot/imported/floor_albedo.png-af01cba6e43c27539d50d0c88a81d089.ctex"]
+source_file="res://assets/textures/floor/grating/floor_albedo.png"
+dest_files=["res://.godot/imported/floor_albedo.png-9fc9fbaa6f7ecd731bc6e4e074e8e0eb.ctex"]
 
 [params]
 

@@ -123,6 +123,7 @@ func _ready() -> void:
 	combat.explosion.connect(audio.on_explosion)
 	combat.shock_pulse.connect(audio.on_shock)
 	combat.explosion.connect(effects.show_explosion)
+	combat.explosion.connect(func(at: Vector3, radius: float) -> void: stage.floor_decals.add_scorch(at, radius))
 	combat.shock_pulse.connect(effects.show_shock)
 	combat.chain_arc.connect(audio.on_arc)
 	combat.chain_arc.connect(effects.show_arc)
@@ -166,6 +167,7 @@ func _ready() -> void:
 
 func start_run() -> void:
 	_clear_actors()
+	stage.floor_decals.clear_scorches()
 	session.begin_run()
 	# Derive a separate stream without advancing combat/shop randomness.
 	salvage.reset(GameRandom.gameplay.state)
@@ -194,6 +196,7 @@ func start_run() -> void:
 		turret_start = Vector3(0, 0, -GameConstants.CORE_START_OFFSET)
 	if FeatureFlagService.is_enabled(FeatureFlagService.TERRAIN_ZONES):
 		var layout := ArenaLayouts.get_layout(run_config.layout_id) if run_config.layout_id != "" else ArenaLayouts.random_layout(GameRandom.gameplay)
+		stage.set_floor_theme(layout.floor_theme)
 		terrain = TerrainZones.new(layout)
 		terrain.build_visuals(actor_root)
 	if convoy_mode:

@@ -4,6 +4,20 @@ extends Node3D
 ## Static arena scenery: floor, rim, markings, lighting and the follow camera. Built once by `ArenaWorld`.
 var camera: Camera3D
 var camera_rig: CameraRig
+var floor_visual: MeshInstance3D
+var floor_decals: FloorDecals
+var floor_theme: String = ""
+var _floor_material: StandardMaterial3D
+var _rim_material: StandardMaterial3D
+var _seam_tween: Tween
+
+## Rim glow per floor theme.
+const RIM_COLORS := {"foundry": Color("258e99"), "concrete": Color("a08d52"), "grating": Color("2f9a78")}
+## Seam light colour multipliers: calm at wave 1, warming as the waves climb, and a hard shift on boss waves.
+const SEAM_CALM: Color = Color(1.0, 1.0, 1.0)
+const SEAM_HOT: Color = Color(1.0, 0.72, 0.5)
+const SEAM_BOSS: Color = Color(1.0, 0.45, 0.85)
+const SEAM_FULL_WAVE: int = 20
 
 func build(arena: ArenaWorld) -> void:
 	_build_lighting()
@@ -16,9 +30,9 @@ func build(arena: ArenaWorld) -> void:
 	# The collider is a slab; the visible surface is one textured plane on top of it (a single draw call).
 	var floor_plane := PlaneMesh.new()
 	floor_plane.size = Vector2(floor_size.x, floor_size.z) * 4.0
-	var floor_visual := MeshInstance3D.new()
+	floor_visual = MeshInstance3D.new()
 	floor_visual.mesh = floor_plane
-	floor_visual.material_override = WorldGeometry.floor_material(floor_plane.size)
+	floor_visual.layers = 1 | FloorDecals.LAYER
 	floor_visual.position.y = -.02
 	ground.add_child(floor_visual)
 	var floor_shape := CollisionShape3D.new()
@@ -27,11 +41,15 @@ func build(arena: ArenaWorld) -> void:
 	floor_shape.shape = floor_box
 	floor_shape.position.y = -.2
 	ground.add_child(floor_shape)
-	var rim := WorldGeometry.material(Color("258e99"), true)
+	_rim_material = WorldGeometry.material(RIM_COLORS["foundry"], true)
 	for z: float in [-half.y - .05, half.y + .05]:
-		WorldGeometry.box(self, Vector3(half.x * 2.0 + .3, .08, .06), Vector3(0, .02, z), rim)
+		WorldGeometry.box(self, Vector3(half.x * 2.0 + .3, .08, .06), Vector3(0, .02, z), _rim_material)
 	for x: float in [-half.x - .05, half.x + .05]:
-		WorldGeometry.box(self, Vector3(.06, .08, half.y * 2.0 + .1), Vector3(x, .02, 0), rim)
+		WorldGeometry.box(self, Vector3(.06, .08, half.y * 2.0 + .1), Vector3(x, .02, 0), _rim_material)
+	floor_decals = FloorDecals.new()
+	floor_decals.position.y = -.02
+	add_child(floor_decals)
+	set_floor_theme(WorldGeometry.DEFAULT_FLOOR_THEME)
 	var markings := WorldGeometry.material(Color("c48c48"))
 	var stripe_transforms: Array[Transform3D] = []
 	for x: float in [-half.x + .35, half.x - .35]:
@@ -43,6 +61,30 @@ func build(arena: ArenaWorld) -> void:
 	camera_rig = CameraRig.new()
 	add_child(camera_rig)
 	camera_rig.setup(camera, arena)
+
+## Swaps the floor textures, rim glow and stain decals for a theme. Cheap enough to call at the start of every run.
+func set_floor_theme(theme: String) -> void:
+	if theme == floor_theme:
+		return
+	floor_theme = theme
+	var size: Vector2 = (floor_visual.mesh as PlaneMesh).size
+	_floor_material = WorldGeometry.floor_material(size, theme)
+	floor_visual.material_override = _floor_material
+	var rim_color: Color = RIM_COLORS.get(theme, RIM_COLORS["foundry"])
+	_rim_material.albedo_color = rim_color
+	_rim_material.emission = rim_color
+	floor_decals.apply_theme(theme)
+
+## Warms the floor's seam lights as the waves climb; boss waves flip them to magenta. Eases over a second.
+func set_floor_wave(wave: int, is_boss: bool) -> void:
+	var target := SEAM_BOSS if is_boss else SEAM_CALM.lerp(SEAM_HOT, clampf(float(wave - 1) / (SEAM_FULL_WAVE - 1), 0.0, 1.0))
+	if _seam_tween:
+		_seam_tween.kill()
+	if not is_inside_tree():
+		_floor_material.emission = target
+		return
+	_seam_tween = create_tween()
+	_seam_tween.tween_property(_floor_material, "emission", target, 1.0)
 
 func _build_lighting() -> void:
 	# A dark gradient sky doubles as the ambient and reflection source, so metal parts have something to mirror.

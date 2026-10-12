@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bjps51s7y2sct"
-path="res://.godot/imported/floor_emission.png-696a6bf4fbccd585c7e50fb7b587cfe3.ctex"
+uid="uid://cvd14flx04asg"
+path="res://.godot/imported/floor_albedo.png-307c2b746fc378f348c2d3413dd50797.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/textures/floor/floor_emission.png"
-dest_files=["res://.godot/imported/floor_emission.png-696a6bf4fbccd585c7e50fb7b587cfe3.ctex"]
+source_file="res://assets/textures/floor/concrete/floor_albedo.png"
+dest_files=["res://.godot/imported/floor_albedo.png-307c2b746fc378f348c2d3413dd50797.ctex"]
 
 [params]
 

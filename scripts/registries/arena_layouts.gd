@@ -4,26 +4,26 @@ extends RefCounted
 ## Hand-authored terrain layouts in the original 57.6 x 32.4 m reference space, scaled to the current arena. Every zone keeps
 ## ZONE_CENTRE_CLEARANCE metres clear of the origin, where the hero, the first turret and (in core mode) the core stand.
 
-## id -> {name, zones}. `random_layout` picks one per run; it stays fixed for every wave of that run.
+## id -> {name, theme, zones}; `theme` picks the floor texture set. `random_layout` picks one per run; it stays fixed for every wave of that run.
 static func all() -> Array[Dictionary]:
 	var H := TerrainZone.HIGH_GROUND
 	var M := TerrainZone.MUD
 	var N := TerrainZone.NO_BUILD
 	var P := TerrainZone.POWER_NODE
 	var layouts: Array[Dictionary] = [
-		{"id": "crossroads", "name": "Crossroads", "zones": [
+		{"id": "crossroads", "name": "Crossroads", "theme": "foundry", "zones": [
 			TerrainZone.circle(H, -14, -8, 3.0), TerrainZone.circle(H, 14, 8, 3.0),
 			TerrainZone.circle(M, 0, -11.5, 3.5), TerrainZone.circle(M, 0, 11.5, 3.5), TerrainZone.circle(M, -21, 4, 3.0),
 			TerrainZone.circle(N, -9, 6.5, 2.5), TerrainZone.circle(N, 9, -6.5, 2.5),
 			TerrainZone.circle(P, -17, 10, 2.2), TerrainZone.circle(P, 18, -10, 2.2),
 		]},
-		{"id": "highlands", "name": "Highlands", "zones": [
+		{"id": "highlands", "name": "Highlands", "theme": "concrete", "zones": [
 			TerrainZone.rect(H, -19, 0, 3.0, 5.0), TerrainZone.circle(H, 19, -9, 3.0),
 			TerrainZone.rect(M, 0, -11, 9.0, 1.8), TerrainZone.rect(M, 0, 11, 9.0, 1.8),
 			TerrainZone.circle(N, 12, 3.5, 3.0), TerrainZone.circle(N, -12, -3.5, 3.0),
 			TerrainZone.circle(P, -10, -12, 2.0), TerrainZone.circle(P, 10, 12, 2.0),
 		]},
-		{"id": "sump", "name": "The Sump", "zones": [
+		{"id": "sump", "name": "The Sump", "theme": "grating", "zones": [
 			TerrainZone.circle(M, -12, -6, 4.0), TerrainZone.circle(M, 12, 6, 4.0), TerrainZone.circle(M, 0, 12.5, 3.0),
 			TerrainZone.circle(M, 0, -12.5, 3.0), TerrainZone.circle(M, 21, -8, 3.0),
 			TerrainZone.circle(H, -20, 9, 3.0), TerrainZone.circle(H, 21, 10, 2.8),
