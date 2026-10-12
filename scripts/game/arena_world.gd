@@ -188,6 +188,10 @@ func start_run() -> void:
 		# A dedicated seed keeps every route reproducible without disturbing the shop and spawn rolls.
 		_convoy_seed = GameRandom.gameplay.randi()
 		plan_convoy_route(1)
+		core.position = convoy_route.doors[0]
+		var inward := -WorldGeometry.planar(core.position).normalized()
+		player.position = core.position + inward * 2.2
+		turret_start = core.position + inward * 3.4
 	actor_root.add_child(player)
 	player.reset_physics_interpolation()
 	var listener := AudioListener3D.new()
@@ -223,6 +227,7 @@ func _clear_actors() -> void:
 ## Ends the fight on the field: removes enemies, projectiles, effects and drops, stops audio and drops any carried
 ## turret. Scrap pickups are banked when `bank_pickups` is set, otherwise discarded.
 func clear_field(bank_pickups: bool, return_carried: bool = true) -> void:
+	waves.clear_spawn_warnings()
 	item_effects.clear_wave()
 	for node in get_tree().get_nodes_in_group("hostile_ordnance"):
 		if node.world == self:
@@ -289,6 +294,8 @@ func start_convoy_round() -> void:
 		plan_convoy_route(GameStateService.current_wave)
 	convoy_mover = ConvoyMover.new()
 	convoy_mover.start(convoy_route)
+	core.position = convoy_mover.position
+	core.reset_physics_interpolation()
 
 func spawn_enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
 	return waves.spawn_enemy(at, type_id)

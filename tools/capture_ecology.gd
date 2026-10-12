@@ -16,7 +16,7 @@ func setup() -> void:
 	world = ArenaWorld.new()
 	world.auto_start = false
 	world.run_config = RunConfig.new()
-	world.run_config.mode = RunConfig.MODE_CORE
+	world.run_config.mode = RunConfig.MODE_CONVOY if mode == "route" else RunConfig.MODE_CORE
 	add_child(world)
 	world.start_run()
 	world.set_physics_process(false)
@@ -24,6 +24,14 @@ func setup() -> void:
 	world.player.set_physics_process(false)
 	world.player.position = Vector3(0, 0, 0)
 	for turret in world.turrets: turret.set_physics_process(false)
+	if mode == "route":
+		for at in [Vector3(-4, 0, 1), Vector3(-2.6, 0, 1), Vector3(-4, 0, 2.4), Vector3(-2.6, 0, 2.4)]:
+			world.waves.warn_spawn("drowse", at)
+		world.waves.advance_spawn_warnings(.6)
+		world.camera_rig.set_zoom(.65)
+		world.camera_rig.snap()
+		world.camera_rig.set_physics_process(false)
+		return
 	var kinds := ["drowse", "hopper", "kite", "lobber", "tender", "skitter"] if mode == "roster" else ["brass_ram", "prism_conductor", "grand_marionettist"]
 	if mode == "effects": kinds = ["kite", "lobber", "prism_conductor", "grand_marionettist"]
 	if mode == "support": kinds = ["skitter", "lens", "anchor", "puppet"]
@@ -77,7 +85,7 @@ func setup() -> void:
 		for turret in world.turrets: turret.hide()
 
 func _process(delta: float) -> void:
-	if not world or actors.is_empty(): return
+	if not world: return
 	elapsed += delta
 	for actor in actors:
 		if actor.ecology_motion: actor.ecology_motion.tick(delta, true, false, false)

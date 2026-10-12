@@ -23,7 +23,7 @@ func test_same_seed_gives_the_same_route() -> void:
 
 func test_route_starts_at_the_given_point_and_has_the_wave_s_doors() -> void:
 	var route := _route(7, 3, Vector3(5, 0, -4))
-	assert_eq(route.doors[0], Vector3(5, 0, -4))
+	assert_eq(route.doors[0], ConvoyRoute.wall_point(Vector3(5, 0, -4), WorldGeometry.HALF_ARENA - Vector2.ONE * GameConstants.CONVOY_EDGE_MARGIN))
 	assert_eq(route.door_count(), 1 + ConvoyRoute.leg_count(3))
 
 func test_doors_stay_inside_the_arena_margin_and_legs_are_long_enough() -> void:
@@ -87,3 +87,12 @@ func test_core_speed_has_a_floor() -> void:
 	slow["id"] = "test_slow"
 	ModifierService.add_modifiers([slow])
 	assert_almost_eq(PlayerStatsService.get_core_move_speed(), GameConstants.CORE_MIN_MOVE_SPEED, .001)
+
+func test_start_and_exit_are_on_walls_and_existing_exit_is_preserved() -> void:
+	var bounds := WorldGeometry.HALF_ARENA - Vector2.ONE * GameConstants.CONVOY_EDGE_MARGIN
+	for seed_value in 100:
+		var route := _route(seed_value, 8)
+		for point in [route.doors[0], route.doors[-1]]:
+			assert_true(is_equal_approx(absf(point.x), bounds.x) or is_equal_approx(absf(point.z), bounds.y))
+		var next := _route(seed_value + 1, 9, route.doors[-1])
+		assert_eq(next.doors[0], route.doors[-1])

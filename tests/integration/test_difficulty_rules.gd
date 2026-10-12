@@ -117,6 +117,8 @@ func test_survive_mode_never_makes_seekers() -> void:
 	world.waves.remaining_spawns = 5
 	world.waves.spawn_clock = 0.0
 	world.waves.tick(.01)
+	world.waves.advance_spawn_warnings(1.0)
+	assert_gt(world.enemies.size(), 0)
 	for enemy in world.enemies:
 		assert_false(enemy.ignores_hero)
 
@@ -145,5 +147,5 @@ func test_hard_core_waves_keep_spawning_in_the_final_seconds() -> void:
 			for enemy in world.enemies:
 				enemy.free()
 			world.enemies.clear()
-		assert_gt(last_spawn, duration - 1.0, "wave %d still spawns in its final second" % wave)
+		assert_gt(last_spawn, duration - WaveDirector.GROUP_INTERVAL - 1.0, "wave %d schedules a group in its final interval" % wave)
 		assert_gte(world.waves.spawned_this_wave, budget - 1)

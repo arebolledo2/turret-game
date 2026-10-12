@@ -10,12 +10,12 @@ var pause_time: float = GameConstants.CONVOY_PAUSE_TIME
 static func leg_count(wave: int) -> int:
 	return clampi(2 + floori((maxi(wave, 1) - 1) / 2.0), 2, 4)
 
-## Doors are random points inside the arena (minus the edge margin), each at least CONVOY_MIN_LEG from the last and
-## preferring to swing to the other side of it, so the route zig-zags instead of drifting one way.
+## Wall entry and exit with interior waypoints, each at least CONVOY_MIN_LEG from the last.
+## Prefer alternating directions so the journey crosses the room rather than drifting along an edge.
 static func generate(rng: RandomNumberGenerator, wave: int, start: Vector3, half_arena: Vector2 = WorldGeometry.HALF_ARENA) -> ConvoyRoute:
 	var route := ConvoyRoute.new()
 	var bounds := half_arena - Vector2.ONE * GameConstants.CONVOY_EDGE_MARGIN
-	route.doors.append(Vector3(start.x, 0.0, start.z))
+	route.doors.append(wall_point(start, bounds))
 	var last_dx := 0.0
 	for _leg in leg_count(wave):
 		var previous := route.doors[route.doors.size() - 1]
@@ -24,6 +24,9 @@ static func generate(rng: RandomNumberGenerator, wave: int, start: Vector3, half
 		# `chosen` tracks the farthest candidate seen, as the fallback when none meets the leg rules.
 		for _attempt in 16:
 			var candidate := Vector3(rng.randf_range(-bounds.x, bounds.x), 0.0, rng.randf_range(-bounds.y, bounds.y))
+			# Start and exit sit at wall doorways; intermediate navigation points remain inside.
+			if _leg == leg_count(wave) - 1:
+				candidate = wall_point(candidate, bounds)
 			var distance := candidate.distance_to(previous)
 			if distance > farthest:
 				farthest = distance
@@ -35,6 +38,15 @@ static func generate(rng: RandomNumberGenerator, wave: int, start: Vector3, half
 		last_dx = chosen.x - previous.x
 		route.doors.append(chosen)
 	return route
+
+## Project to the nearest inset wall, retaining an existing doorway exactly.
+static func wall_point(point: Vector3, bounds: Vector2) -> Vector3:
+	var result := Vector3(clampf(point.x, -bounds.x, bounds.x), 0, clampf(point.z, -bounds.y, bounds.y))
+	if bounds.x - absf(result.x) < bounds.y - absf(result.z):
+		result.x = bounds.x * (1.0 if result.x >= 0 else -1.0)
+	else:
+		result.z = bounds.y * (1.0 if result.z >= 0 else -1.0)
+	return result
 
 func door_count() -> int:
 	return doors.size()

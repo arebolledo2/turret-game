@@ -87,7 +87,7 @@ func test_specialist_cap_falls_back_inside_wave_roster() -> void:
 	world.waves.remaining_spawns = 3
 	world.waves.spawn_clock = 0.0
 	world.waves.spawn_interval = 1.0
-	for index in 3:
+	for index in 5:
 		world.waves.tick(1.0)
 		for actor in world.enemies: actor.set_physics_process(false)
 	assert_eq(world.waves.active_count("lobber"), 2)

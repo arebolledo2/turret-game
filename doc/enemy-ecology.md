@@ -36,7 +36,7 @@ A top-screen boss bar shows health, phase marks and reward rarity; an offscreen 
 
 ## Authored wave identities
 
-Roster percentages are encounter-point weights, not exact enemy head counts. Expensive roles consume more points. Deterministic weighted scheduling replaces the expanding global random pool; caps can change the resulting mix. Arrivals are distributed across the combat timer.
+Roster percentages are encounter-point weights, not exact enemy head counts. Expensive roles consume more points. Deterministic weighted scheduling replaces the expanding global random pool; caps can change the resulting mix. Arrivals are distributed across the combat timer in groups about every 3.5 seconds, with a 0.9-second amber ground warning. Sparse escort budgets accumulate into less frequent groups. A hero or core overlapping a marked point cancels that spawn; it is not moved elsewhere or re-queued. Pending warnings clear at wave end and pause with combat.
 
 | Wave | Identity | Roster weights |
 |---|---|---|
@@ -80,3 +80,11 @@ GLBs: `assets/models/clockwork/`. Editable Blender files, builders, maps, contra
 - `tools/capture_ecology.tscn`: reproducible roster, boss, support, health and effects captures (`--ecology=roster`, etc.).
 
 Full suite: **1,044 passing tests**, 79 scripts, 18,303 assertions. Final focused ecology run: **21 passing tests**, 2,058 assertions. Coverage includes imported animation playback, targets in all three modes, summon caps, pause/cleanup, optional boss timeout, final-tick rewards and attack phase transitions. Captures were visually inspected in Godot. Human playtesting remains the next step for encounter pressure and boss durability.
+
+## Moving-core routes and greed
+
+Convoy routes begin and finish at inset wall doorways, with 1.1 m clearance for the core. Interior waypoints preserve the multi-leg journey. The next route begins at the previous exit; the initial hero and turret spawn inside the entry. Thin dashed marks emphasize the current leg, dim future legs and disappear when completed. Small waypoint dials and wall threshold brackets replace large labels and rings.
+
+Heavy Hauler is the existing Uncommon Convoy-only greed item (two stacks maximum): core speed -20% and kill scrap +15% per stack. Convoy encounter budgets now scale with the full route duration, with no former 2x cap. A slower journey therefore keeps the same approximate arrival pressure for longer and yields additional enemies, rather than stretching a fixed budget across empty time. Tests cover long routes that already exceeded the old cap.
+
+Route and grouped-spawn follow-up validation: **1,051 tests passed** across 80 scripts (18,630 assertions). Includes wall endpoint continuity, Heavy Hauler on long routes, warning delay, hero/core cancellation, pause/cleanup and sparse escort pacing. Actual route and warning visuals were inspected in Godot.

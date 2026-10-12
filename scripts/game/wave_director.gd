@@ -18,6 +18,65 @@ var elite_credit: float = 0.0
 var seeker_credit: float = 0.0
 var spawn_plan: Array[String] = []
 var boss_spawned: bool = false
+const GROUP_INTERVAL := 3.5
+const SPAWN_WARNING := .9
+const SPAWN_CLEARANCE := .9
+var pending_spawns: Array[Dictionary] = []
+var spawn_credit := 0.0
+var arrival_time_left := 0.0
+
+func clear_spawn_warnings() -> void:
+	for pending in pending_spawns:
+		if is_instance_valid(pending.marker): pending.marker.queue_free()
+	pending_spawns.clear()
+
+func spawn_blocked(at: Vector3) -> bool:
+	if WorldGeometry.planar(world.player.position - at).length() < SPAWN_CLEARANCE + world.player.hurtbox_radius():
+		return true
+	return world.core != null and WorldGeometry.planar(world.core.position - at).length() < SPAWN_CLEARANCE + world.core.radius
+
+func warn_spawn(type_id: String, at: Vector3, boss: bool = false) -> void:
+	if spawn_blocked(at): return
+	var marker := GroundDial.create(world.actor_root, SPAWN_CLEARANCE, Color("f4a775"), true)
+	marker.position = at + Vector3(0, .05, 0)
+	GroundDial.update(marker, 0.0, false, 4)
+	pending_spawns.append({"type": type_id, "at": at, "left": SPAWN_WARNING, "marker": marker, "boss": boss})
+
+func advance_spawn_warnings(delta: float) -> void:
+	for index in range(pending_spawns.size() - 1, -1, -1):
+		var pending := pending_spawns[index]
+		pending.left -= delta
+		var blocked := spawn_blocked(pending.at)
+		if blocked or pending.left <= 0.0:
+			if is_instance_valid(pending.marker): pending.marker.queue_free()
+			pending_spawns.remove_at(index)
+			if blocked: continue # Cancel, without relocating or banking a replacement.
+			var type_id: String = pending.type
+			if not pending.boss and active_count(type_id) >= int(EnemyEcology.CAPS.get(type_id, 10000)):
+				type_id = EnemyEcology.fallback(GameStateService.current_wave)
+			var assault := not EnemyEcology.TYPES.has(type_id)
+			var elite := assault and GameStateService.current_wave >= 6 and _take_credit("elite_chance")
+			var seeker := assault and GameStateService.current_wave >= 6 and world.core != null and _take_credit("seeker_share")
+			spawn_enemy(pending.at, type_id, elite, seeker)
+		else:
+			GroundDial.update(pending.marker, 1.0 - float(pending.left) / SPAWN_WARNING, false, 4)
+
+func queue_spawn_group() -> void:
+	spawn_credit += GROUP_INTERVAL / maxf(spawn_interval, .001)
+	var count := mini(remaining_spawns, maxi(0, floori(spawn_credit)))
+	if arrival_time_left <= GROUP_INTERVAL + SPAWN_WARNING:
+		count = remaining_spawns
+	elif count < 2 and remaining_spawns > 1:
+		return # Accumulate a small group instead of exhausting sparse escort waves early.
+	spawn_credit -= count
+	var anchor := Vector3.ZERO
+	for index in count:
+		var type_id := spawn_plan[spawned_this_wave] if spawned_this_wave < spawn_plan.size() else EnemyEcology.fallback(GameStateService.current_wave)
+		if index % 4 == 0: anchor = encounter_position(type_id)
+		var offset := Vector3(float(index % 2) * 1.4, 0, float((index % 4) / 2) * 1.4) - Vector3(.7, 0, .7)
+		warn_spawn(type_id, WorldGeometry.clamp_position(anchor + offset, 1.0))
+		spawned_this_wave += 1
+		remaining_spawns -= 1
 
 func tick(delta: float) -> void:
 	if GameStateMachine.current_state == GameStateMachine.GameState.WAVE_END:
@@ -33,22 +92,16 @@ func tick(delta: float) -> void:
 	if not boss_spawned and EnemyEcology.BOSSES.has(GameStateService.current_wave):
 		boss_spawned = true
 		var boss_id: String = EnemyEcology.BOSSES[GameStateService.current_wave]
-		spawn_enemy(encounter_position(boss_id), boss_id)
+		warn_spawn(boss_id, encounter_position(boss_id), true)
 	world.crowd.rebuild(world.enemies)
 	world.crowd.resolve_overlaps(_fixed_obstacles())
 	time_left = maxf(0.0, time_left - delta)
+	advance_spawn_warnings(delta)
+	arrival_time_left = maxf(0.0, arrival_time_left - delta)
 	spawn_clock -= delta
-	if remaining_spawns > 0 and spawn_clock <= 0.0:
-		var type_id := spawn_plan[spawned_this_wave] if spawned_this_wave < spawn_plan.size() else EnemyEcology.fallback(GameStateService.current_wave)
-		if active_count(type_id) >= int(EnemyEcology.CAPS.get(type_id, 10000)):
-			type_id = EnemyEcology.fallback(GameStateService.current_wave)
-		var assault := not EnemyEcology.TYPES.has(type_id)
-		var elite := assault and GameStateService.current_wave >= 6 and _take_credit("elite_chance")
-		var seeker := assault and GameStateService.current_wave >= 6 and world.core != null and _take_credit("seeker_share")
-		spawn_enemy(encounter_position(type_id), type_id, elite, seeker)
-		spawned_this_wave += 1
-		remaining_spawns -= 1
-		spawn_clock += spawn_interval
+	if remaining_spawns > 0 and spawn_clock <= 0.0 and arrival_time_left > SPAWN_WARNING:
+		queue_spawn_group()
+		spawn_clock += GROUP_INTERVAL
 	world.drops.tick(delta)
 	world.build_zones.tick(delta)
 	# Convoy rounds end on arrival at the final door; the timer is only a safety net.
@@ -77,6 +130,8 @@ func begin_next_wave() -> bool:
 	world.build_zones.begin_wave()
 	world.audio.play_cue("wave", world.player.position)
 	announcement_left = ANNOUNCEMENT_TIME
+	clear_spawn_warnings()
+	spawn_credit = 0.0
 	spawned_this_wave = 0
 	boss_spawned = false
 	elite_credit = 0.0
@@ -88,7 +143,7 @@ func begin_next_wave() -> bool:
 		# The round lasts as long as the route takes, so a faster core gets proportionally fewer enemies.
 		world.start_convoy_round()
 		var route_time := world.convoy_route.duration(PlayerStatsService.get_core_move_speed())
-		remaining_spawns = maxi(1, roundi(remaining_spawns * clampf(route_time / time_left, .4, 2.0)))
+		remaining_spawns = maxi(1, roundi(remaining_spawns * maxf(route_time / time_left, .01)))
 		spawn_window = route_time
 		time_left = route_time * GameConstants.CONVOY_SAFETY_FACTOR
 	if world.core:
@@ -99,6 +154,7 @@ func begin_next_wave() -> bool:
 	spawn_plan = EnemyEcology.schedule(GameStateService.current_wave, budget)
 	remaining_spawns = spawn_plan.size()
 	spawn_interval = spawn_window / maxf(float(remaining_spawns), 1.0)
+	arrival_time_left = spawn_window
 	spawn_clock = FIRST_SPAWN_DELAY
 	world.message = EnemyVariants.notice_for_wave(GameStateService.current_wave)
 	return true

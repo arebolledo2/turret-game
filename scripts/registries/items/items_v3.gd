@@ -598,7 +598,7 @@ const ROWS: Array = [
 		"special_effect": ""
 	},
 	{
-		"description": "Core movement speed -20%: longer rounds, more enemies. Kill scrap +15%.",
+		"description": "Core speed -20%. Enemy groups keep arriving for the longer trip. Kill scrap +15%.",
 		"id": "heavy_hauler",
 		"max_stacks": 2,
 		"modifiers": [

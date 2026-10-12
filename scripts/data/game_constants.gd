@@ -133,7 +133,7 @@ const CORE_MOVE_SPEED: float = 1.2 # metres per second between doors; items chan
 const CORE_MIN_MOVE_SPEED: float = .15 # floor so slowing items can never freeze the convoy
 const CONVOY_PAUSE_TIME: float = 4.0 # seconds the core waits at each intermediate door
 const CONVOY_MIN_LEG: float = 9.0 # metres; doors closer than this to the previous door are rejected
-const CONVOY_EDGE_MARGIN: float = 4.0 # metres kept between any door and the arena edge
+const CONVOY_EDGE_MARGIN: float = 1.1 # core clearance from the wall at door centres
 const CONVOY_SAFETY_FACTOR: float = 2.5 # the round timer is the route's duration times this; hitting it just ends the round
 
 # =============================================================================

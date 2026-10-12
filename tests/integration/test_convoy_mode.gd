@@ -105,3 +105,32 @@ func test_faster_core_means_fewer_enemies_and_a_shorter_round() -> void:
 	world.waves.begin_next_wave()
 	assert_lte(world.waves.remaining_spawns, slow_spawns)
 	assert_lt(world.waves.time_left, slow_limit)
+
+func test_heavy_hauler_adds_real_encounters_even_on_long_routes() -> void:
+	world = await _convoy_world()
+	world.set_physics_process(false)
+	# A long route that already exceeded the old 2x budget cap.
+	var route := ConvoyRoute.new()
+	route.doors = PackedVector3Array([Vector3(-18, 0, 9), Vector3(18, 0, -9), Vector3(-18, 0, -9), Vector3(18, 0, 9)])
+	world.convoy_route = route
+	world.convoy_mover = null
+	GameStateService.current_wave = 0
+	GameStateMachine.force_transition(GameStateMachine.GameState.IDLE)
+	world.begin_next_wave()
+	var normal_count := world.waves.remaining_spawns
+	var normal_time := world.waves.arrival_time_left
+	var normal_interval := world.waves.spawn_interval
+	var entries: Array = []
+	for modifier: Dictionary in ItemRegistry.get_modifiers("heavy_hauler"):
+		var entry := modifier.duplicate(true)
+		entry["id"] = "test_hauler_" + str(entry.stat)
+		entries.append(entry)
+	ModifierService.add_modifiers(entries)
+	world.convoy_mover = null
+	GameStateService.current_wave = 0
+	GameStateMachine.force_transition(GameStateMachine.GameState.IDLE)
+	world.begin_next_wave()
+	assert_gt(world.waves.remaining_spawns, normal_count * 1.15, "slower journey creates additional enemies, not stretched-out downtime")
+	assert_gt(world.waves.arrival_time_left, normal_time * 1.15)
+	assert_almost_eq(world.waves.spawn_interval, normal_interval, .1, "arrival pressure is maintained")
+	assert_almost_eq(PlayerStatsService.get_core_move_speed(), GameConstants.CORE_MOVE_SPEED * .8, .001)
