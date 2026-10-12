@@ -302,3 +302,25 @@ func test_auto_repair_disables_paid_repairs_and_heals_at_next_wave() -> void:
 	assert_eq(world.player.health, world.player.max_health)
 	assert_eq(world.core.health, world.core.max_health)
 	FeatureFlagService.set_enabled(FeatureFlagService.AUTO_REPAIR, false)
+
+func test_lock_row_exits_left_to_reroll_and_right_to_prepare() -> void:
+	# Match the reported case: only the middle two offers remain available.
+	EconomyService.current_shop_offers.assign([
+		ShopOffer.new("item", "polished_barrels", 10), ShopOffer.new("item", "capacitor_bank", 10),
+		ShopOffer.new("item", "blast_charges", 10), ShopOffer.new("item", "scrap_magnet", 10)])
+	EconomyService.current_shop_offers[0].sold = true
+	EconomyService.current_shop_offers[3].sold = true
+	hud.refresh()
+	await wait_process_frames(2)
+	hud.offer_buttons[1].lock_button.grab_focus()
+	await press_direction(JOY_BUTTON_DPAD_LEFT)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.reroll_button)
+	hud.offer_buttons[2].lock_button.grab_focus()
+	await press_direction(JOY_BUTTON_DPAD_RIGHT)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
+	# An unaffordable reroll must not trap focus at the left edge either.
+	EconomyService.total_scrap = 0
+	hud.refresh()
+	hud.offer_buttons[1].lock_button.grab_focus()
+	await press_direction(JOY_BUTTON_DPAD_LEFT)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)

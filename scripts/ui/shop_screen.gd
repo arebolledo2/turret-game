@@ -542,8 +542,10 @@ func _refresh_focus() -> void:
 		card.focus_neighbor_top = card.get_path_to((offer_buttons[above] as OfferCard).lock_button if above >= 0 and offer_buttons[above] in available else tabs[0])
 		lock.focus_neighbor_top = lock.get_path_to(card)
 		lock.focus_neighbor_bottom = lock.get_path_to(offer_buttons[below] if below < offer_buttons.size() and offer_buttons[below] in available else _nearest_horizontal(lock, row))
-		lock.focus_neighbor_left = lock.get_path_to((left as OfferCard).lock_button)
-		lock.focus_neighbor_right = lock.get_path_to((right as OfferCard).lock_button)
+		# Let horizontal navigation leave either end of the available lock row.
+		var left_exit: Button = reroll_button if not reroll_button.disabled else _nearest_horizontal(lock, row)
+		lock.focus_neighbor_left = lock.get_path_to((left as OfferCard).lock_button if left != card else left_exit)
+		lock.focus_neighbor_right = lock.get_path_to((right as OfferCard).lock_button if right != card else continue_button)
 	for i in range(owned_buttons.size()):
 		var button := owned_buttons[i]
 		button.focus_neighbor_left = button.get_path_to(available[-1] if not available.is_empty() else continue_button)
