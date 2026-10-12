@@ -29,8 +29,6 @@ PlayerStatsService="*res://scripts/autoload/player_stats_service.gd"
 TurretStatsService="*res://scripts/autoload/turret_stats_service.gd"
 ItemTrackingService="*res://scripts/autoload/item_tracking_service.gd"
 SettingsService="*res://scripts/autoload/settings_service.gd"
-AssetConfigService="*res://scripts/autoload/asset_config_service.gd"
-TechTreeService="*res://scripts/autoload/tech_tree_service.gd"
 SpecialEffectService="*res://scripts/autoload/special_effect_service.gd"
 
 [debug]

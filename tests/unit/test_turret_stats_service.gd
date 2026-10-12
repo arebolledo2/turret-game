@@ -231,12 +231,6 @@ func test_modifier_filtered_by_attack_style_no_match():
 # TURRET COLOR & TYPE QUERIES
 # =============================================================================
 
-func test_get_turret_color():
-	var color = turret_stats_service.get_turret_color("fire")
-	assert_not_null(color, "Should return a color for fire turret")
-	assert_typeof(color, TYPE_COLOR, "Should return Color type")
-
-
 func test_turret_has_attack_style():
 	var has_instant = turret_stats_service.turret_has_attack_style("sniper", GameEnums.AttackStyle.INSTANT)
 	assert_true(has_instant, "Sniper should have instant attack style")

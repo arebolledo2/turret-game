@@ -31,4 +31,4 @@ Use explicit calls for commands and queries. Shared services expose economy, sta
 
 ## Scope
 
-The native 3D runtime replaces the 2D runtime. Shared registry entries, modifier/buff calculations, research/mode data, and reference-asset storage remain available for future work, but their presence does not imply gameplay support. `ArenaShop` allowlists are the source of truth for exposed purchases. See [gameplay](gameplay.md) for supported behavior and [cutover](3d-cutover.md) for retirement details.
+The native 3D runtime replaces the 2D runtime. Shared registry entries, modifier/buff calculations, and mode data remain available for future work, but their presence does not imply gameplay support. `ArenaShop` allowlists are the source of truth for exposed purchases. See [gameplay](gameplay.md) for supported behavior and [cutover](3d-cutover.md) for retirement details.

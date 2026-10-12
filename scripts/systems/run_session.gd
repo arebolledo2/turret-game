@@ -19,7 +19,6 @@ static func bind_state(value: RunSessionState) -> void:
 	PlayerStatsService.state = value
 	TurretStatsService.state = value
 	ItemTrackingService.state = value
-	TechTreeService.state = value
 	ModifierService.state = value
 
 func _exit_tree() -> void:

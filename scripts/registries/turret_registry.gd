@@ -12,19 +12,6 @@ const FIRE_SWEEP: String = "sweep" # spinning melee bat
 
 const DEFAULT_MODEL: String = "res://assets/models/game/ion_turret.glb"
 
-# Color tints for turret types
-const COLORS: Dictionary = {
-	"bow": Color("e7d89b"), "flamethrower": Color("ff974a"), "bowling": Color("9281c9"),
-	"normal": Color("66CC66"),
-	"sniper": Color("4466AA"),
-	"fire": Color("FF6633"),
-	"plasma": Color("AA44DD"),
-	"shock": Color("DDDD44"),
-	"tesla": Color("44DDDD"),
-	"melee": Color("999999"),
-	"mine": Color("DD8844"),
-}
-
 # Base prices for turret types
 const BASE_PRICES: Dictionary = {
 	"bow": 16, "flamethrower": 18, "bowling": 18,
@@ -261,25 +248,10 @@ static func get_base_stats(type_id: String) -> Dictionary:
 	return TYPES[type_id]["base_stats"].duplicate(true)
 
 
-## Get turret color tint
-static func get_color(type_id: String) -> Color:
-	var asset_config := AssetConfigService.get_turret_config(type_id)
-	if asset_config and asset_config.visual:
-		var configured_color: Color = asset_config.visual.modulate
-		if not configured_color.is_equal_approx(Color.WHITE):
-			return configured_color
-	return COLORS.get(type_id, Color.WHITE)
 
 
-## Get the primary configured sprite path for a turret type
-static func get_sprite_path(type_id: String) -> String:
-	var asset_config := AssetConfigService.get_turret_config(type_id)
-	if asset_config and asset_config.visual:
-		if asset_config.visual.texture_paths.has("default"):
-			return str(asset_config.visual.texture_paths.get("default", ""))
-		if asset_config.visual.texture_paths.has("right"):
-			return str(asset_config.visual.texture_paths.get("right", ""))
-	return ""
+
+
 
 
 ## Get turret base price

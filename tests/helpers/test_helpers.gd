@@ -155,7 +155,6 @@ static func reset_all_services() -> void:
 
 	# Economy & progression
 	ItemTrackingService.reset_state()
-	TechTreeService.reset_state()
 	reset_flags()
 
 	# Presentation

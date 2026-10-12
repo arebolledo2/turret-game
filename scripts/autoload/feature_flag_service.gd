@@ -178,12 +178,6 @@ func register_flag(flag_id: String, definition: Dictionary) -> void:
 	_flags[flag_id] = bool(_definitions[flag_id]["default"])
 
 
-func unregister_flag(flag_id: String) -> void:
-	_definitions.erase(flag_id)
-	_flags.erase(flag_id)
-	_pending.erase(flag_id)
-
-
 static func _normalize(definition: Dictionary) -> Dictionary:
 	var result := {
 		"name": "", "description": "", "default": false, "scope": SCOPE_USER,
@@ -335,14 +329,6 @@ func get_flag_ids(scope: String = "") -> Array[String]:
 
 func get_definition(flag_id: String) -> Dictionary:
 	return _definitions.get(flag_id, {}).duplicate(true)
-
-
-func is_live_safe(flag_id: String) -> bool:
-	return bool(_definitions.get(flag_id, {}).get("live_safe", false))
-
-
-func get_all_flags() -> Dictionary:
-	return _flags.duplicate(true)
 
 
 ## Compact `{flag_id: bool}` of every non-user flag, for telemetry and logs.

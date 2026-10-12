@@ -16,6 +16,6 @@ The arena floor is one `PlaneMesh` with `WorldGeometry.floor_material()`: a seam
 
 2D artwork remains useful for concept and silhouette references. The separate image-generation web app is unchanged. Image generation can supply reference images for scripted Blender work; this cutover does not add a web-to-3D generation service.
 
-Typed `AssetVisualConfig`, `AssetCollisionConfig` and `EntityAssetConfig` resources, built-in presets under `resources/asset_presets/`, collision profiles, and `AssetConfigService` storage/resolution/validation remain covered by tests. These are reference-data facilities. They do not configure current CharacterBody3D collision or replace current GLBs.
+The 2D-era asset configuration stack (`AssetConfigService`, `CollisionProfile`, asset presets) was removed; it remains at the `prototype-2d-final` tag. Collision shapes are built in code (`CombatActor`, `WorldGeometry`).
 
 The former in-game Asset Studio, Sprite2D renderers and live-apply entity adapters were retired with the 2D runtime. Historical workflows can be retrieved from `prototype-2d-final`; they are not supported game UI. User preset files are not deleted or migrated by this change.
