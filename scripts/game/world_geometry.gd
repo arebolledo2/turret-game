@@ -51,6 +51,9 @@ static func floor_material(area: Vector2, theme: String = DEFAULT_FLOOR_THEME) -
 	result.normal_texture = _floor_texture(theme, "normal")
 	result.emission_enabled = true
 	result.emission_texture = _floor_texture(theme, "emission")
+	# Multiply, so `emission` is a tint on the seam lights (see ArenaStage.set_floor_wave) rather than light added everywhere.
+	result.emission_operator = BaseMaterial3D.EMISSION_OP_MULTIPLY
+	result.emission = Color.WHITE
 	result.emission_energy_multiplier = FLOOR_EMISSION_ENERGY
 	result.uv1_scale = Vector3(area.x / FLOOR_TILE_METRES, area.y / FLOOR_TILE_METRES, 1.0)
 	result.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC

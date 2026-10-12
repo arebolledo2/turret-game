@@ -45,3 +45,8 @@ func test_boss_wave_shifts_seam_light() -> void:
 	await get_tree().create_timer(1.2).timeout
 	var seam: Color = world.stage.floor_visual.material_override.emission
 	assert_almost_eq(seam.g, ArenaStage.SEAM_BOSS.g, 0.02)
+
+func test_wave_tint_scales_the_seam_lights_instead_of_lighting_the_whole_floor() -> void:
+	var material := WorldGeometry.floor_material(Vector2(10, 10))
+	assert_eq(material.emission_operator, BaseMaterial3D.EMISSION_OP_MULTIPLY)
+	assert_eq(material.emission, Color.WHITE)
