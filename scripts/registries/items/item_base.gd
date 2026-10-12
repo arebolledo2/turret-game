@@ -12,7 +12,7 @@ extends Resource
 @export var max_stacks: int = 0  ## 0 = unlimited stacking
 @export var always_show_description: bool = false
 @export var special_effect: String = ""  ## ID for special effect logic
-## Build tag shown on the shop card: ION, PLASMA, ELECTRIC, MELEE, WIDE, TALL, HULL, ECON or ANY. Empty falls back to ItemRegistry.LEGACY_TAGS.
+## Build tag shown on the shop card: ION, PLASMA, ELECTRIC, MELEE, WIDE, TALL, HULL, ECON or ANY. Empty means ANY.
 @export var tag: String = ""
 
 ## Array of modifier dictionaries

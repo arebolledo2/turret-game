@@ -6,4 +6,3 @@ extends Node
 
 signal modifiers_changed() # Emitted when items are purchased/modifiers added
 signal feature_flag_changed(flag_id: String, enabled: bool)
-

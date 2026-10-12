@@ -12,7 +12,7 @@ extends GutTest
 
 func test_all_items_exist():
 	# Shop V2 items
-	var expected_items = ["scrap_magnet", "reinforced_hull", "quick_loader", "shock_absorbers", "dense_rounds"]
+	var expected_items = ["scrap_magnet", "reinforced_hull", "quick_loader", "heavy_plating", "dense_rounds"]
 	for item_id in expected_items:
 		assert_true(ItemRegistry.has_item(item_id), "Item '%s' should exist" % item_id)
 
@@ -208,17 +208,6 @@ func test_get_modifiers_returns_array():
 func test_get_modifiers_nonexistent_returns_empty():
 	var mods = ItemRegistry.get_modifiers("nonexistent")
 	assert_eq(mods.size(), 0, "Non-existent item should return empty modifiers")
-
-
-func test_shock_absorbers_has_speed_modifier():
-	var mods = ItemRegistry.get_modifiers("shock_absorbers")
-	var has_speed_mod = false
-	for mod in mods:
-		if mod.get("stat") == "player_speed":
-			has_speed_mod = true
-			assert_eq(mod.get("operation"), "increase", "Speed modifier should be 'increase'")
-			assert_gt(mod.get("value"), 0.0, "Speed modifier value should be positive (percentage)")
-	assert_true(has_speed_mod, "Shock absorbers should have speed modifier")
 
 
 func test_dense_rounds_has_damage_modifier():

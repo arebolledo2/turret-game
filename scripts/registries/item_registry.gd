@@ -1,26 +1,12 @@
 class_name ItemRegistry
 extends RefCounted
 
-## Modern Item Registry - Aggregates items from tier-specific modules
-## Replaces the 904-line monolithic item_registry.gd
-##
-## Items are now organized by rarity in separate files:
-## - common_items.gd (20 items)
-## - uncommon_items.gd (10 items)
-## - rare_items.gd (17 items)
-## - epic_items.gd (9 items)
-## - legendary_items.gd (4 items)
+## Item lookup, pricing and weighted rolls over the ItemCatalog.
 
-# Ensure tier modules are loaded (Godot needs to parse them to make class_name available)
+# Ensure the data and base class are parsed so their class_names resolve.
 const _ensure_loaded = [
 	preload("res://scripts/registries/items/item_base.gd"),
-	preload("res://scripts/registries/items/common_items.gd"),
-	preload("res://scripts/registries/items/uncommon_items.gd"),
-	preload("res://scripts/registries/items/rare_items.gd"),
-	preload("res://scripts/registries/items/epic_items.gd"),
-	preload("res://scripts/registries/items/legendary_items.gd"),
-	preload("res://scripts/registries/items/items_v2.gd"),
-	preload("res://scripts/registries/items/items_v3.gd"),
+	preload("res://scripts/registries/items/item_catalog.gd"),
 ]
 
 # Rarity color scheme
@@ -53,14 +39,6 @@ const BASE_PRICES: Dictionary = {
 
 const TAGS: Array[String] = ["ION", "PLASMA", "ELECTRIC", "MELEE", "WIDE", "TALL", "HULL", "ECON", "CONVOY", "ANY"]
 
-## Tags for items that predate `Item.tag`.
-const LEGACY_TAGS: Dictionary = {
-	"scrap_magnet": "ECON", "budget_capacitor": "ECON", "reinforced_hull": "HULL", "heavy_plating": "HULL",
-	"shock_absorbers": "HULL", "compact_design": "WIDE", "mass_production": "WIDE", "army_doctrine": "WIDE",
-	"elite_forces": "TALL", "glass_cannon_core": "TALL", "mono_type_mastery": "TALL",
-	"quality_over_quantity": "ECON", "elemental_conduit": "WIDE", "kinetic_enhancer": "ION", "overcharged_cells": "ELECTRIC", "plasma_capacitor": "PLASMA",
-}
-
 # Cached item dictionaries (lazy loaded)
 static var _all_items: Dictionary = {}
 static var _items_by_rarity: Dictionary = {}
@@ -73,21 +51,12 @@ static func get_all_items() -> Dictionary:
 	return _all_items
 
 
-## Load all items from tier modules
+## Load the catalog
 static func _load_all_items() -> void:
 	_all_items.clear()
 	_items_by_rarity.clear()
 
-	# Load from each tier - use global class names (class_name declarations)
-	# The preloads above ensure Godot has parsed these files
-	_all_items.merge(CommonItems.get_all())
-	_all_items.merge(UncommonItems.get_all())
-	_all_items.merge(RareItems.get_all())
-	_all_items.merge(EpicItems.get_all())
-	_all_items.merge(LegendaryItems.get_all())
-	# Phase 2 definitions replace same-id tier entries.
-	_all_items.merge(ItemsV2.get_all(), true)
-	_all_items.merge(ItemsV3.get_all(), true)
+	_all_items.merge(ItemCatalog.get_all())
 
 
 ## Get Item resource by ID
@@ -119,7 +88,7 @@ static func get_tag(item_id: String) -> String:
 	var item: Item = get_item(item_id)
 	if item and not item.tag.is_empty():
 		return item.tag
-	return LEGACY_TAGS.get(item_id, "ANY")
+	return "ANY"
 
 
 ## Get item rarity

@@ -106,12 +106,6 @@ func calculate_turret_price(base_price: int, wave: int) -> int:
 	# Avoid flooring an exact integer one scrap low due to binary decimal error.
 	var price: int = floori(base_price * base_multiplier * wave_multiplier * penalty_multiplier * shop_price_mult + (0.0000001 if state.turret_progression_enabled else 0.0))
 
-	# Apply Quantity Discount: Every 3rd turret costs 50%
-	if ItemRegistry.has_special_effect("quantity_discount") and ItemTrackingService.item_counts.get("quantity_discount", 0) > 0:
-		# Next purchase will be turrets_purchased + 1
-		if (turrets_purchased + 1) % 3 == 0:
-			price = int(price * 0.5)
-
 	return maxi(1, price) if state.turret_progression_enabled else price
 
 
