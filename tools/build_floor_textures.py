@@ -1,14 +1,23 @@
-"""Generate the seamless sci-fi arena floor texture sets (albedo, normal, roughness, emission), one per terrain theme.
+"""Generate the seamless arena floor texture sets (albedo, normal, roughness, emission), one per terrain theme.
 
 Run: python tools/build_floor_textures.py [theme|all] [--preview]     (needs numpy and Pillow)
-Output: assets/textures/floor/<theme>/floor_{albedo,normal,roughness,emission}.png, 1024 px, covering TILE_METRES square.
-Themes (see ArenaLayouts): foundry (Crossroads), concrete (Highlands), grating (The Sump).
-Everything is periodic (FFT noise, wrapped distances), so each tile repeats without visible edges.
+Output: assets/textures/floor/<theme>/floor_{albedo,normal,roughness,emission}.png, 2048 px covering TILE_METRES square
+(320 px per metre). Everything is periodic (FFT noise, wrapped distances), so each tile repeats without visible edges.
 
-Art rules shared by every theme: the floor is a gameplay surface under enemies, projectiles and coloured zone overlays
-(blue, olive, hazard orange, violet), so albedo stays dark, low-contrast and low-saturation and the detail lives in the
-normal and roughness maps. Orange/copper is reserved for the no-build zone; only the foundry theme keeps its legacy stripes.
-`--preview` also writes a 2x2 tiled, approximately lit render to .test-results/floor/<theme>_preview.png.
+Themes (ArenaLayouts ids -> theme ids; the ids are code names, the looks are Clockwork Pop):
+  foundry  (Crossroads)  teal enamel stage plates, brass inlay, dials, cogs, key-wound spirals, rivets
+  concrete (Highlands)   warm terracotta and stone flagstones, ivory grout, brass-edged stones, copper inlay, cog medallions
+  grating  (The Sump)    oxidised copper deck, verdigris, brass bar gratings and drains, copper pipe-work, damp sheen
+
+Art rules (see doc/art/floor-themes.md): the floor is a quiet supporting stage under teal/coral/brass models, gold pickups and
+coloured zone overlays (blue, olive, hazard orange, violet, red damage). Albedo stays dark and low-saturation with clear value
+structure (plate / groove / inlay), brass and copper stay muted bronze, no stripes or saturated reds, and roughness stays mostly
+0.72-0.95 because the scene's orange rim light glares off anything glossier. Emission is a few pale seam/indicator lines only,
+since the game tints it per wave.
+
+Anti-aliasing: shapes are signed distance fields turned into coverage with `cover()` (1.2-1.6 px wide edges); noise is only used
+smoothly (wide smoothsteps), never hard-thresholded at pixel scale. `--preview` writes a 2x2 tiled, approximately lit render to
+.test-results/floor/<theme>_preview.png.
 """
 import argparse
 from pathlib import Path
@@ -16,46 +25,21 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-SIZE = 1024
+SIZE = 2048
 TILE_METRES = 6.4  # keep in sync with FLOOR_TILE_METRES in scripts/game/world_geometry.gd
-PX_PER_M = SIZE / TILE_METRES  # 160
+PX_PER_M = SIZE / TILE_METRES  # 320
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets/textures/floor"
 PREVIEW_OUT = ROOT / ".test-results/floor"
 HALF = SIZE / 2
+TAU = np.float32(2 * np.pi)
 
-yy, xx = np.mgrid[0:SIZE, 0:SIZE]
-_freq = np.fft.fftfreq(SIZE)
-_fx, _fy = np.meshgrid(_freq, _freq)
-
-
-# --- Shared helpers ------------------------------------------------------------------------------------------------
-
-def periodic_noise(sigma, seed):
-    """Gaussian-blurred white noise via FFT, so it wraps seamlessly. Returned in [0, 1]."""
-    noise = np.random.default_rng(seed).standard_normal((SIZE, SIZE))
-    kernel = np.exp(-2 * (np.pi * sigma) ** 2 * (_fx ** 2 + _fy ** 2))
-    out = np.real(np.fft.ifft2(np.fft.fft2(noise) * kernel))
-    out -= out.min()
-    return (out / out.max()).astype(np.float32)
+_axis = (np.arange(SIZE, dtype=np.float32) + 0.5)
+X = _axis[None, :]  # pixel-centre coordinates; broadcast against each other
+Y = _axis[:, None]
 
 
-def noise(sigma, seed, sigma_y=None):
-    """Periodic Gaussian noise standardised to zero mean and unit deviation. `sigma_y` stretches it along y."""
-    sy = sigma if sigma_y is None else sigma_y
-    white = np.random.default_rng(seed).standard_normal((SIZE, SIZE))
-    kernel = np.exp(-2 * np.pi ** 2 * ((sigma * _fx) ** 2 + (sy * _fy) ** 2))
-    out = np.real(np.fft.ifft2(np.fft.fft2(white) * kernel))
-    return ((out - out.mean()) / out.std()).astype(np.float32)
-
-
-def uniform(field):
-    """Rank-transform a field to a flat [0, 1] distribution, so a threshold t covers exactly (1 - t) of the tile."""
-    order = np.argsort(field, axis=None)
-    out = np.empty(field.size, np.float32)
-    out[order] = np.linspace(0, 1, field.size, dtype=np.float32)
-    return out.reshape(field.shape)
-
+# --- Maths helpers -------------------------------------------------------------------------------------------------
 
 def smoothstep(a, b, x):
     t = np.clip((x - a) / (b - a), 0, 1)
@@ -66,14 +50,70 @@ def lerp(a, b, t):
     return a + (b - a) * t
 
 
+def cover(d, w=1.4):
+    """Anti-aliased coverage from a signed distance in px (negative inside): a smooth edge about `w` px wide."""
+    return smoothstep(w * 0.5, -w * 0.5, d)
+
+
 def wrap_delta(a, b):
     """Shortest signed distance from b to a on the periodic tile."""
     return (a - b + HALF) % SIZE - HALF
 
 
-def tint(base, color, mask):
-    """Blend `color` over an (H, W, 3) image where `mask` (H, W) is 1."""
-    return base * (1 - mask[..., None]) + np.asarray(color, np.float32) * mask[..., None]
+_noise_kernels = {}
+
+
+def noise(sigma, seed, sigma_y=None):
+    """Periodic Gaussian noise (sigma in px) standardised to zero mean and unit deviation; `sigma_y` stretches it along y."""
+    sy = sigma if sigma_y is None else sigma_y
+    key = (float(sigma), float(sy))
+    if key not in _noise_kernels:
+        fy = np.fft.fftfreq(SIZE).astype(np.float32)[:, None]
+        fx = np.fft.rfftfreq(SIZE).astype(np.float32)[None, :]
+        _noise_kernels[key] = np.exp(-2 * np.pi ** 2 * ((sigma * fx) ** 2 + (sy * fy) ** 2)).astype(np.float32)
+    white = np.random.default_rng(seed).standard_normal((SIZE, SIZE), dtype=np.float32)
+    out = np.fft.irfft2(np.fft.rfft2(white) * _noise_kernels[key], s=(SIZE, SIZE)).astype(np.float32)
+    return (out - out.mean()) / out.std()
+
+
+def uniform(field):
+    """Rank-transform a field to a flat [0, 1] distribution, so a threshold t covers exactly (1 - t) of the tile."""
+    order = np.argsort(field, axis=None)
+    out = np.empty(field.size, np.float32)
+    out[order] = np.linspace(0, 1, field.size, dtype=np.float32)
+    return out.reshape(field.shape)
+
+
+def hash01(*values):
+    """Deterministic pseudo-random float in [0, 1) from integers (numpy arrays or scalars)."""
+    arrays = np.broadcast_arrays(*[np.asarray(v).astype(np.uint32) for v in values])
+    h = np.zeros(arrays[0].shape, np.uint32)
+    for v in arrays:
+        h = (h ^ (v + np.uint32(0x9E3779B9) + (h << np.uint32(6)) + (h >> np.uint32(2)))) * np.uint32(2654435761)
+        h ^= h >> np.uint32(15)
+    return (h & np.uint32(0xFFFFFF)).astype(np.float32) / np.float32(0x1000000)
+
+
+# --- Signed distance shapes (px, negative inside) -----------------------------------------------------------------------
+
+def sd_circle(cx, cy, radius, x=X, y=Y):
+    return np.hypot(wrap_delta(x, cx), wrap_delta(y, cy)) - radius
+
+
+def sd_box(cx, cy, half_w, half_h, rounding=0.0, x=X, y=Y):
+    qx = np.abs(wrap_delta(x, cx)) - (half_w - rounding)
+    qy = np.abs(wrap_delta(y, cy)) - (half_h - rounding)
+    return np.hypot(np.maximum(qx, 0), np.maximum(qy, 0)) + np.minimum(np.maximum(qx, qy), 0) - rounding
+
+
+def sd_segment(x0, y0, x1, y1, radius=0.0, x=X, y=Y):
+    """Capsule from (x0, y0) to (x1, y1); the segment is placed on the tile and wraps with it."""
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    px, py = wrap_delta(x, cx), wrap_delta(y, cy)
+    ax, ay, bx, by = x0 - cx, y0 - cy, x1 - cx, y1 - cy
+    dx, dy = bx - ax, by - ay
+    t = np.clip(((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy), 0, 1)
+    return np.hypot(px - (ax + t * dx), py - (ay + t * dy)) - radius
 
 
 def band_cells(c, edges):
@@ -88,25 +128,9 @@ def band_cells(c, edges):
     return idx, local, size, np.minimum(local, size - local)
 
 
-def rect_sdf(u, v, cx, cy, half_w, half_h):
-    """Signed distance (px, negative inside) to a rectangle centred on (cx, cy), wrapping around the tile."""
-    return np.maximum(np.abs(wrap_delta(u, cx)) - half_w, np.abs(wrap_delta(v, cy)) - half_h)
-
-
-def segment_dist(u, v, x0, y0, x1, y1):
-    """Distance (px) to the segment (x0,y0)-(x1,y1); the segment is placed on the tile and wraps."""
-    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
-    px, py = wrap_delta(u, cx), wrap_delta(v, cy)
-    ax, ay = x0 - cx, y0 - cy
-    bx, by = x1 - cx, y1 - cy
-    dx, dy = bx - ax, by - ay
-    t = np.clip(((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy), 0, 1)
-    return np.hypot(px - (ax + t * dx), py - (ay + t * dy))
-
-
-def voronoi(u, v, cells, seed, jitter=0.9):
-    """Periodic Worley noise on a cells x cells jittered grid. Returns the distances (px) to the nearest and second nearest
-    feature point plus the nearest point's cell id. (f2 - f1) / 2 approximates the distance to the nearest cell border."""
+def voronoi(u, v, cells, seed, jitter=0.8):
+    """Periodic Worley cells on a cells x cells jittered grid. Returns the exact distance (px) to the nearest cell border, the
+    nearest and second nearest cell ids, the nearest feature point and the per-cell point table (px, shape cells x cells x 2)."""
     rng = np.random.default_rng(seed)
     cell = SIZE / cells
     points = rng.random((cells, cells, 2)).astype(np.float32)
@@ -114,461 +138,758 @@ def voronoi(u, v, cells, seed, jitter=0.9):
     v = (v % SIZE).astype(np.float32)
     ci = (u // cell).astype(np.int32)
     cj = (v // cell).astype(np.int32)
-    f1 = np.full(u.shape, 1e9, np.float32)
-    f2 = np.full(u.shape, 1e9, np.float32)
-    ident = np.zeros(u.shape, np.int32)
-    for dj in (-1, 0, 1):
-        for di in (-1, 0, 1):
+    shape = np.broadcast(u, v).shape
+    f1 = np.full(shape, 1e9, np.float32)
+    f2 = np.full(shape, 1e9, np.float32)
+    p1x = np.zeros(shape, np.float32)
+    p1y = np.zeros(shape, np.float32)
+    p2x = np.zeros(shape, np.float32)
+    p2y = np.zeros(shape, np.float32)
+    id1 = np.zeros(shape, np.int32)
+    id2 = np.zeros(shape, np.int32)
+    for dj in (-2, -1, 0, 1, 2):
+        for di in (-2, -1, 0, 1, 2):
             ni, nj = ci + di, cj + dj
             offset = points[nj % cells, ni % cells]
             px = (ni + 0.5 + (offset[..., 0] - 0.5) * jitter) * cell
             py = (nj + 0.5 + (offset[..., 1] - 0.5) * jitter) * cell
             dist = np.hypot(u - px, v - py)
-            closer = dist < f1
-            f2 = np.where(closer, f1, np.minimum(f2, dist))
-            ident = np.where(closer, (nj % cells) * cells + (ni % cells), ident)
-            f1 = np.where(closer, dist, f1)
-    return f1, f2, ident
+            ident = (nj % cells) * cells + (ni % cells)
+            first = dist < f1
+            second = ~first & (dist < f2)
+            f2 = np.where(first, f1, np.where(second, dist, f2))
+            p2x = np.where(first, p1x, np.where(second, px, p2x))
+            p2y = np.where(first, p1y, np.where(second, py, p2y))
+            id2 = np.where(first, id1, np.where(second, ident, id2))
+            f1 = np.where(first, dist, f1)
+            p1x = np.where(first, px, p1x)
+            p1y = np.where(first, py, p1y)
+            id1 = np.where(first, ident, id1)
+    gap = np.maximum(np.hypot(p2x - p1x, p2y - p1y), 1e-3)
+    border = (f2 * f2 - f1 * f1) / (2 * gap)
+    table = np.empty((cells, cells, 2), np.float32)
+    table[..., 0] = (np.arange(cells)[None, :] + 0.5 + (points[..., 0] - 0.5) * jitter) * cell
+    table[..., 1] = (np.arange(cells)[:, None] + 0.5 + (points[..., 1] - 0.5) * jitter) * cell
+    return border, id1, id2, (p1x, p1y), table
 
 
-def normal_from_height(height, strength):
-    """OpenGL-convention tangent normal (+Y green = up in the image) from a periodic height map, as [0, 1] RGB."""
-    dx = (np.roll(height, -1, 1) - np.roll(height, 1, 1)) * 0.5
-    drow = (np.roll(height, -1, 0) - np.roll(height, 1, 0)) * 0.5
-    normal = np.stack([-dx * strength, drow * strength, np.ones_like(dx)], axis=-1)
+def stamp_lines(count, seed, length=(40, 160), width=0.9, direction_bias=None):
+    """Hairline scratch coverage: `count` random capsules drawn in small windows (so it stays cheap), wrapping with the tile."""
+    rng = np.random.default_rng(seed)
+    out = np.zeros((SIZE, SIZE), np.float32)
+    for _ in range(count):
+        cx, cy = rng.uniform(0, SIZE, 2)
+        angle = rng.uniform(0, np.pi) if direction_bias is None or rng.random() < 0.3 else direction_bias + rng.normal(0, 0.18)
+        half = rng.uniform(*length) / 2
+        dx, dy = np.cos(angle) * half, np.sin(angle) * half
+        strength = rng.uniform(0.25, 1.0)
+        reach = int(half + 4)
+        ys = (np.arange(int(cy) - reach, int(cy) + reach + 1)) % SIZE
+        xs = (np.arange(int(cx) - reach, int(cx) + reach + 1)) % SIZE
+        gx = (np.arange(int(cx) - reach, int(cx) + reach + 1) + 0.5 - cx).astype(np.float32)[None, :]
+        gy = (np.arange(int(cy) - reach, int(cy) + reach + 1) + 0.5 - cy).astype(np.float32)[:, None]
+        t = np.clip((gx * dx + gy * dy) / (half * half), -1, 1)
+        d = np.hypot(gx - t * dx, gy - t * dy)
+        taper = 1 - 0.6 * np.abs(t)
+        cov = cover(d - width * 0.5 * taper, 1.1) * strength
+        window = out[np.ix_(ys, xs)]
+        out[np.ix_(ys, xs)] = np.maximum(window, cov)
+    return out
+
+
+# --- Canvas: layered albedo / roughness / height / emission ---------------------------------------------------------------
+
+class Canvas:
+    """Paints coverage masks into the four maps. Heights are in px of relief (slope 1 = 45 degrees)."""
+
+    def __init__(self, albedo, rough):
+        self.albedo = np.empty((SIZE, SIZE, 3), np.float32)
+        self.albedo[:] = np.asarray(albedo, np.float32)
+        self.rough = np.full((SIZE, SIZE), rough, np.float32)
+        self.height = np.zeros((SIZE, SIZE), np.float32)
+        self.emission = np.zeros((SIZE, SIZE, 3), np.float32)
+
+    def paint(self, mask, color=None, rough=None, height=None, height_add=None, emission=None):
+        m = np.asarray(mask, np.float32)
+        if m.shape != (SIZE, SIZE):
+            m = np.broadcast_to(m, (SIZE, SIZE))
+        if color is not None:
+            c = np.asarray(color, np.float32)
+            self.albedo += (c - self.albedo) * m[..., None]
+        if rough is not None:
+            self.rough += (np.asarray(rough, np.float32) - self.rough) * m
+        if height is not None:
+            self.height += (np.asarray(height, np.float32) - self.height) * m
+        if height_add is not None:
+            self.height += np.asarray(height_add, np.float32) * m
+        if emission is not None:
+            self.emission += np.asarray(emission, np.float32) * m[..., None]
+
+    def maps(self, normal_strength=1.0):
+        return pack(self.albedo, normal_from_height(self.height, normal_strength), np.clip(self.rough, 0.3, 0.98), self.emission)
+
+
+def normal_from_height(height, strength=1.0):
+    """OpenGL-convention tangent normal (+Y green = up in the image) from a periodic height map in px, as [0, 1] RGB (Sobel)."""
+    def roll(a, dy, dx):
+        return np.roll(np.roll(a, dy, 0), dx, 1)
+    dx = (roll(height, 0, -1) - roll(height, 0, 1)) * 2 + (roll(height, -1, -1) - roll(height, -1, 1)) + (roll(height, 1, -1) - roll(height, 1, 1))
+    dy = (roll(height, -1, 0) - roll(height, 1, 0)) * 2 + (roll(height, -1, -1) - roll(height, 1, -1)) + (roll(height, -1, 1) - roll(height, 1, 1))
+    dx *= strength / 8
+    dy *= strength / 8
+    normal = np.stack([-dx, dy, np.ones_like(dx)], axis=-1)
     normal /= np.linalg.norm(normal, axis=-1, keepdims=True)
     return normal * 0.5 + 0.5
+
+
+def pack(albedo, normal, roughness, emission):
+    return {"albedo": albedo, "normal": normal, "roughness": roughness, "emission": emission}
 
 
 def save(theme, name, array):
     folder = OUT / theme
     folder.mkdir(parents=True, exist_ok=True)
     data = (np.clip(array, 0, 1) * 255 + 0.5).astype(np.uint8)
-    Image.fromarray(data).save(folder / name, optimize=True)
+    image = Image.fromarray(data, "L" if data.ndim == 2 else "RGB")
+    image.save(folder / name, optimize=True, compress_level=9)
 
 
-def pack(albedo, normal, roughness, emission):
-    return {"albedo": albedo, "normal": normal, "roughness": np.stack([roughness] * 3, axis=-1), "emission": emission}
+def rrect_sd(cx, cy, half_w, half_h, rounding):
+    """Rounded rectangle centred on the origin of local coordinates (cx, cy); half sizes may be per-pixel arrays."""
+    qx = np.abs(cx) - (half_w - rounding)
+    qy = np.abs(cy) - (half_h - rounding)
+    return np.hypot(np.maximum(qx, 0), np.maximum(qy, 0)) + np.minimum(np.maximum(qx, qy), 0) - rounding
 
 
-# --- Theme: foundry (Crossroads) -- the original dark teal plating ---------------------------------------------------
+def cog(r, theta, radius, tooth_h, teeth, half_base, half_tip, phase=0.0, w=1.4):
+    """Coverage of a cog wheel centred on the polar origin: body of `radius` plus trapezoid teeth up to radius + tooth_h."""
+    pitch = TAU / teeth
+    arc = ((theta - phase + pitch / 2) % pitch - pitch / 2) * r  # signed arc length to the nearest tooth centre (px)
+    frac = np.clip((r - radius) / tooth_h, 0, 1)
+    half = lerp(half_base, half_tip, frac)
+    tooth = cover(np.abs(arc) - half, w) * cover(r - (radius + tooth_h), w)
+    return np.maximum(cover(r - radius, w), tooth)
+
+
+def point_field(centers, reach=16):
+    """Distance (px) to, and offset from, the nearest of a few point centres, evaluated only in small windows (rivets, studs)."""
+    dist = np.full((SIZE, SIZE), 99.0, np.float32)
+    off_x = np.zeros((SIZE, SIZE), np.float32)
+    off_y = np.zeros((SIZE, SIZE), np.float32)
+    for cx, cy in centers:
+        ys = np.arange(int(cy) - reach, int(cy) + reach + 1)
+        xs = np.arange(int(cx) - reach, int(cx) + reach + 1)
+        dx = (xs + 0.5 - cx).astype(np.float32)[None, :]
+        dy = (ys + 0.5 - cy).astype(np.float32)[:, None]
+        d = np.hypot(dx, dy)
+        window = np.ix_(ys % SIZE, xs % SIZE)
+        closer = d < dist[window]
+        dist[window] = np.where(closer, d, dist[window])
+        off_x[window] = np.where(closer, dx + 0 * dy, off_x[window])
+        off_y[window] = np.where(closer, dy + 0 * dx, off_y[window])
+    return dist, off_x, off_y
+
+
+def dome(d, radius, height):
+    """Spherical-cap relief for a rivet head: `height` px at the centre falling to zero at `radius`."""
+    return height * np.sqrt(np.maximum(1 - (d / radius) ** 2, 0))
+
+
+# --- Theme: foundry (Crossroads) -- teal enamel stage plates with brass inlay -----------------------------------------
+
+BRONZE = np.array([0.29, 0.245, 0.15], np.float32)  # muted brass: never brighter or more orange than this
+BRONZE_HI = np.array([0.45, 0.39, 0.24], np.float32)
+BRONZE_DARK = np.array([0.20, 0.158, 0.095], np.float32)
+
 
 def build_foundry():
-    """4x4 plates, each a seeded variant (plain, vent grille, hazard band, hatch), with grooves, bevels, rivets, wear and
-    glowing seam lines. Authored directly in sRGB, like the flat colour it replaced."""
-    rng = np.random.default_rng(2026)
-    plates = 4
-    plate = SIZE // plates  # 256 px, 1.6 m
-    lx, ly = xx % plate, yy % plate
-    px, py = xx // plate, yy // plate
-    cx, cy = lx - plate / 2 + 0.5, ly - plate / 2 + 0.5
-    edge = np.minimum.reduce([lx, plate - 1 - lx, ly, plate - 1 - ly]).astype(np.float32)
+    """Enamel stage plates on a 1.6 m grid, some merged into 3.2 x 1.6 and 1.6 x 3.2 panels so the grid does not read as wallpaper.
+    Each plate has a brass inlay frame, domed rivets and a plain, toothed or tick-marked border; 1.6 m slots carry a dial, a
+    cog or a key-wound spiral. Cyan watch-jewel lights, a few amber studs and a pale seam light on the tile border."""
+    seed = 2026
+    rng = np.random.default_rng(seed)
+    S = 512  # slot size (1.6 m)
+    # Plate rectangles as (col, row, cols, rows) on the 4 x 4 slot grid; the border of the tile is always a seam.
+    rects = [(0, 0, 2, 1), (2, 0, 1, 1), (3, 0, 1, 2), (0, 1, 1, 1), (1, 1, 2, 1), (0, 2, 1, 2),
+             (1, 2, 1, 1), (2, 2, 2, 1), (1, 3, 1, 1), (2, 3, 1, 1), (3, 3, 1, 1)]
+    PLAIN, TICKS, TOOTHED = range(3)
+    frame_style = [PLAIN, TICKS, PLAIN, TOOTHED, PLAIN, PLAIN, TICKS, PLAIN, TOOTHED, PLAIN, TICKS]
+    cell_rect = np.zeros((4, 4), np.int32)
+    for index, (c, r_, w_, h_) in enumerate(rects):
+        cell_rect[r_:r_ + h_, c:c + w_] = index
+    rect_x0 = np.array([c * S for c, _, _, _ in rects], np.float32)
+    rect_y0 = np.array([r_ * S for _, r_, _, _ in rects], np.float32)
+    rect_w = np.array([w_ * S for _, _, w_, _ in rects], np.float32)
+    rect_h = np.array([h_ * S for _, _, _, h_ in rects], np.float32)
+    rid = cell_rect[(Y // S).astype(np.int32), (X // S).astype(np.int32)]
+    lx, ly = X - rect_x0[rid], Y - rect_y0[rid]
+    pw, ph = rect_w[rid], rect_h[rid]
+    ed = np.minimum(np.minimum(lx, pw - lx), np.minimum(ly, ph - ly))
+    rcx, rcy = lx - pw / 2, ly - ph / 2
 
-    # Each plate picks a variant from a seeded table: 0 plain, 1 vent grille, 2 hazard band, 3 hatch.
-    variants = rng.integers(0, 4, (plates, plates))
-    variants[0, 0] = 0
-    variant = variants[py, px]
+    # Slot motifs (1.6 m cells): none, dial, cog or spiral.
+    NONE, DIAL, COG, SPIRAL = range(4)
+    slot_kind = np.array([[DIAL, COG, NONE, SPIRAL],
+                          [NONE, NONE, DIAL, NONE],
+                          [COG, NONE, DIAL, NONE],
+                          [NONE, SPIRAL, COG, NONE]]).ravel()
+    slot = ((Y // S) * 4 + (X // S)).astype(np.int32)
+    variant = slot_kind[slot]
+    cxl, cyl = (X % S) - S / 2, (Y % S) - S / 2
+    r = np.hypot(cxl, cyl)
+    th = np.arctan2(cyl, cxl)
+    tone_rng = rng.normal(0, 0.065, len(rects))
+    hue_rng = rng.uniform(-1, 1, len(rects))  # -1 blue-slate .. +1 green-teal
+    phase_rng = rng.uniform(0, TAU, 16)
+    hand_a = rng.uniform(0, TAU, 16)
+    hand_b = rng.uniform(0, TAU, 16)
 
-    # Height (1 = plate surface, 0 = deep groove)
-    height = smoothstep(2, 9, edge)  # groove between plates with a soft bevel up to the surface
-    inset = np.abs(edge - 20)  # shallow engraved border line inside every plate
-    height = np.where(inset < 1.6, height * 0.82, height)
-    for sx in (-1, 1):
-        for sy in (-1, 1):
-            dist = np.hypot(cx - sx * (plate / 2 - 34), cy - sy * (plate / 2 - 34))
-            height = height + np.where(dist < 6, 0.16 * smoothstep(6, 2.5, dist), 0)  # rivet dome
-    vent = (variant == 1) & (np.abs(cx) < 70) & (np.abs(cy) < 52)
-    slat = (np.abs(cy) % 13) < 6
-    height = np.where(vent & slat, 0.12, np.where(vent, height * 0.9, height))
-    radius = np.hypot(cx, cy)
-    hatch = variant == 3
-    height = np.where(hatch & (np.abs(radius - 58) < 2.5), height * 0.4, height)
-    height = np.where(hatch & (radius < 56), height * 0.93, height)
-    height = np.where(hatch & ((np.abs(cx) < 2.5) | (np.abs(cy) < 2.5)) & (radius < 56), height * 0.55, height)
-    scuff = periodic_noise(1.2, 5)
-    height = height - 0.05 * scuff
+    # Enamel: dark teal-slate, a painted top-left light across each plate, per-plate tone and hue, and slow drift across the tile.
+    base = np.array([0.080, 0.160, 0.182], np.float32)
+    drift = noise(300, seed + 1) * 0.05 + noise(90, seed + 2) * 0.03
+    light = 1 + 0.06 * (-rcx / pw - rcy / ph)
+    tone = (1 + tone_rng[rid] + drift) * light
+    hue = hue_rng[rid][..., None] * np.array([-0.012, 0.006, -0.022], np.float32)
+    cv = Canvas(0, 0.80)
+    cv.albedo[:] = (base[None, None, :] + hue) * tone[..., None]
 
-    # Albedo
-    base = np.array([0.09, 0.17, 0.215])  # matches the previous flat floor colour
-    tone = 0.82 + 0.3 * periodic_noise(40, 6) + 0.12 * (scuff - 0.5)  # broad mottling plus fine scuffs
-    albedo = base[None, None, :] * tone[..., None]
-    groove_ao = smoothstep(0, 8, edge)  # grooves read darker
-    albedo *= (0.35 + 0.65 * groove_ao)[..., None]
-    wear = smoothstep(10, 3, edge) * smoothstep(0.55, 0.9, periodic_noise(3, 7))  # edge wear shows bare metal
-    albedo = albedo * (1 - wear[..., None]) + np.array([0.3, 0.36, 0.38]) * wear[..., None]
-    # Hazard band: diagonal copper stripes along the lower edge of "hazard" plates.
-    band = (variant == 2) & (ly > plate - 64) & (ly < plate - 30) & (edge > 6)
-    stripes = ((lx + ly) // 14) % 2 == 0
-    hazard = np.array([0.42, 0.27, 0.10])
-    albedo = np.where((band & stripes)[..., None], hazard * tone[..., None] * 0.9, albedo)
-    albedo = np.where((band & ~stripes)[..., None], albedo * 0.45, albedo)
-    albedo = np.where((vent & slat)[..., None], albedo * 0.3, albedo)
+    # Seams, bevel, enamel relief.
+    seam = cover(ed - 3.6)
+    cv.height += 2.6 * smoothstep(3.6, 9.5, ed) + 1.6 * smoothstep(4, 40, ed)
+    cv.paint(seam, color=[0.022, 0.045, 0.055], rough=0.95, height=-4.0)
+    cv.paint(cover(np.abs(ed - 8.2) - 1.1) * (1 - seam) * 0.55, color=base * 1.55)  # crisp chamfer highlight round every plate
 
-    # Roughness (worn edges are shinier, plates satin)
-    roughness = 0.62 - 0.22 * wear + 0.12 * (scuff - 0.5)
-    roughness = np.where(vent & slat, 0.9, roughness)
-    roughness = np.clip(roughness, 0.25, 0.95)
+    # Brass inlay frame set 26 px in, with a thin dark channel either side so it reads as inlay.
+    fd = rrect_sd(rcx, rcy, pw / 2 - 26, ph / 2 - 26, 16)
+    frame = cover(np.abs(fd) - 2.4, 1.3)
+    cv.paint(cover(np.abs(fd) - 5.0, 1.3) * (1 - frame), color=base * 0.55, rough=0.9, height=-0.8)
+    cv.paint(frame, color=BRONZE, rough=0.66, height=1.4)
 
-    # Emission: dim cyan lines along the tile seam, status dots, and vent glow
-    seam_x = np.minimum(xx, SIZE - 1 - xx) < 2  # the tile border seam wraps, so light both sides
-    seam_y = np.minimum(yy, SIZE - 1 - yy) < 2
-    emission = np.zeros((SIZE, SIZE, 3), np.float32)
-    cyan = np.array([0.04, 0.75, 0.9], np.float32)
-    amber = np.array([0.9, 0.5, 0.1], np.float32)
-    emission += (seam_x | seam_y)[..., None] * cyan * 0.55
-    for sx in (-1, 1):
-        for sy in (-1, 1):
-            dist = np.hypot(cx - sx * (plate / 2 - 34), cy - sy * (plate / 2 - 34))
-            lit = (dist < 3.2) & ((px + py + (sx > 0) + 2 * (sy > 0)) % 5 == 0)  # a few rivets are indicator lights
-            emission += lit[..., None] * np.where(((px + py) % 2 == 0)[..., None], cyan, amber) * 0.9
-    emission += (vent & ~slat & (np.abs(cx) < 66))[..., None] * cyan * 0.08
-    emission += (hatch & (np.abs(radius - 58) < 1.2))[..., None] * cyan * 0.35
+    # Toothed and tick-marked borders just inside the frame.
+    style = np.array(frame_style)[rid]
+    along_h = np.minimum(ly, ph - ly) <= np.minimum(lx, pw - lx)
+    along = np.where(along_h, lx, ly)
+    length = np.where(along_h, pw, ph)
+    inside = cover(np.abs(ed - 46) - 7.5) * cover(np.abs(along - length / 2) - (length / 2 - 74), 1.3)
+    tooth = cover(np.abs((along % 28) - 14) - 7.0)
+    toothed = (style == TOOTHED) * inside
+    cv.paint(toothed * (1 - tooth) * 0.5, color=base * 0.55, rough=0.9, height_add=-1.0)
+    cv.paint(toothed * tooth, color=BRONZE * 0.9, rough=0.66, height=1.5)
+    major = ((along // 16) % 4 == 0)
+    tick = cover(np.abs((along % 16) - 8) - np.where(major, 2.0, 1.1)) * cover(np.abs(ed - 46) - np.where(major, 10.5, 6.5))
+    cv.paint((style == TICKS) * tick * cover(np.abs(along - length / 2) - (length / 2 - 74), 1.3), color=BRONZE * 0.9, rough=0.66, height=1.2)
 
-    return pack(albedo, normal_from_height(height, 5.0), roughness, emission)
+    # Dials: engraved rings, minor and major tick marks, two hands and a watch-jewel boss.
+    dial = (variant == DIAL).astype(np.float32)
+    cv.paint(dial * cover(np.abs(r - 166) - 1.3), color=base * 0.5, rough=0.9, height_add=-1.4)
+    cv.paint(dial * cover(np.abs(r - 118) - 1.3), color=base * 0.5, rough=0.9, height_add=-1.2)
+    ticks_minor = cover(np.abs(((th + np.pi) / TAU * 60 % 1 - 0.5) * (TAU / 60) * r) - 1.2) * cover(np.abs(r - 150) - 9)
+    ticks_major = cover(np.abs(((th + np.pi) / TAU * 12 % 1 - 0.5) * (TAU / 12) * r) - 2.6) * cover(np.abs(r - 146) - 17)
+    cv.paint(dial * ticks_minor, color=base * 0.5, rough=0.9, height_add=-1.3)
+    cv.paint(dial * cover(np.abs(r - 178) - 2.6), color=BRONZE, rough=0.66, height=1.6)
+    cv.paint(dial * ticks_major, color=BRONZE, rough=0.66, height=1.5)
+    for angles, length_, width in ((hand_a, 78, 5.0), (hand_b, 110, 3.4)):
+        a = angles[slot]
+        u = cxl * np.cos(a) + cyl * np.sin(a)
+        v = -cxl * np.sin(a) + cyl * np.cos(a)
+        hw = lerp(width, 1.0, np.clip(u / length_, 0, 1))
+        cv.paint(dial * cover(np.maximum(np.abs(v) - hw, np.maximum(-u - 8, u - length_))), color=BRONZE_DARK, rough=0.7, height=1.0)
+    cv.paint(dial * cover(r - 15), color=BRONZE, rough=0.6, height=dome(r, 15, 3.0) + 1.0)
+    cv.paint(dial * smoothstep(5, 0.5, np.hypot(cxl + 4, cyl + 4)) * 0.6, color=BRONZE_HI)
+    jewel = dial * cover(r - 5.5)
+    cv.paint(jewel, color=[0.10, 0.40, 0.42], rough=0.5, height_add=1.2, emission=[0.30, 0.52, 0.52])
+
+    # Cogs: bronze wheel in a shallow engraved recess, five windows, hub and axle hole.
+    cogm = (variant == COG).astype(np.float32)
+    phase = phase_rng[slot]
+    wheel = cog(r, th, 112, 22, 14, 12.5, 6.5, phase)
+    recess = cog(r, th, 118, 24, 14, 16, 10, phase)
+    windows = np.zeros_like(r)
+    for k in range(5):
+        a = phase + k * TAU / 5
+        windows = np.maximum(windows, cover(np.hypot(cxl - 66 * np.cos(a), cyl - 66 * np.sin(a)) - 24))
+    gear_color = BRONZE * 0.64 + np.array([0.0, 0.012, 0.012], np.float32)
+    cv.paint(cogm * recess * (1 - wheel), color=base * 0.75, rough=0.92, height_add=-2.0)
+    cv.paint(cogm * wheel, color=gear_color, rough=0.68, height=1.8)
+    cv.paint(cogm * wheel * windows, color=base * 0.8, rough=0.9, height=-1.2)
+    cv.paint(cogm * cover(np.abs(r - 100) - 1.2) * wheel, color=BRONZE_DARK * 0.8, height_add=-0.7)
+    cv.paint(cogm * cover(r - 24), color=BRONZE * 0.9, rough=0.6, height=dome(r, 24, 3.4) + 1.6)
+    cv.paint(cogm * cover(r - 7), color=base * 0.4, rough=0.9, height=-1.0)
+    cv.paint(cogm * smoothstep(8, 0.5, np.hypot(cxl + 8, cyl + 8)) * 0.5, color=BRONZE_HI * 0.9)
+
+    # Key-wound spirals: an engraved groove with a bronze wire laid in it, ending in a winding-key boss.
+    spiral = (variant == SPIRAL).astype(np.float32)
+    pitch = 40.0
+    phase_s = (r - 34 - pitch * (th / TAU)) / pitch
+    arm = (phase_s - np.round(phase_s)) * pitch
+    extent = cover(r - 174) * (1 - cover(r - 40))
+    cv.paint(spiral * cover(np.abs(arm) - 4.2) * extent, color=base * 0.42, rough=0.9, height_add=-2.4)
+    cv.paint(spiral * cover(np.abs(arm) - 1.4) * extent, color=BRONZE * 0.9, rough=0.66, height_add=2.0)
+    key = cover(r - 30)
+    slot_cut = cover(np.maximum(np.abs(cxl) - 14, np.abs(cyl) - 3.2) - 1.0)
+    cv.paint(spiral * key, color=BRONZE, rough=0.62, height=2.6)
+    cv.paint(spiral * key * slot_cut, color=base * 0.4, rough=0.9, height=0.2)
+
+    # Rivets: domed brass heads at plate corners (and where a merged panel crosses a slot boundary) with a painted highlight.
+    centers = []
+    for c, r_, w_, h_ in rects:
+        xs_ = [c * S + 60] + [c * S + k * S for k in range(1, w_)] + [(c + w_) * S - 60]
+        ys_ = [r_ * S + 60, (r_ + h_) * S - 60]
+        centers += [(x_, y_) for x_ in xs_ for y_ in ys_]
+        if h_ > 1:
+            centers += [(x_, r_ * S + S) for x_ in (c * S + 60, (c + w_) * S - 60)]
+    rd, rox, roy = point_field(centers)
+    cv.paint(cover(rd - 12) * (1 - cover(rd - 8.6)), color=base * 0.5, rough=0.9, height_add=-0.6)
+    rivet = cover(rd - 8.6)
+    cv.paint(rivet, color=BRONZE, rough=0.6, height=1.4 + dome(rd, 8.6, 5.0))
+    cv.paint(smoothstep(4.6, 0.4, np.hypot(rox + 2.6, roy + 2.6)) * rivet * 0.85, color=BRONZE_HI)
+    amber_ids = {3, 11, 20, 29, 41}
+    amber_centers = [centers[i % len(centers)] for i in amber_ids]
+    ad, aox, aoy = point_field(amber_centers)
+    amber = cover(ad - 8.6)
+    cv.paint(amber, color=[0.40, 0.30, 0.13], emission=[0.45, 0.34, 0.14])
+    cv.paint(smoothstep(4.6, 0.4, np.hypot(aox + 2.6, aoy + 2.6)) * amber * 0.85, color=BRONZE_HI)
+
+    # Fine scratches and enamel grain so close-ups are never smooth plastic.
+    scratch = stamp_lines(110, seed + 5, (60, 200), 1.0, direction_bias=0.35) * (1 - seam)
+    cv.paint(scratch * 0.4, color=[0.27, 0.33, 0.34], rough=0.62, height_add=-0.5)
+    grain = noise(1.1, seed + 6) * 0.22 + noise(2.6, seed + 7) * 0.14 + noise(14, seed + 8) * 0.16
+    cv.height += grain * (1 - seam)
+    cv.rough += (noise(7, seed + 9) * 0.03 + noise(60, seed + 10) * 0.025) * (1 - seam)
+
+    # Emission: a pale seam light round the tile border (pale so the per-wave tint can warm it).
+    border = np.minimum(np.minimum(X, SIZE - X), np.minimum(Y, SIZE - Y))
+    cv.emission += (cover(border - 2.2, 1.4) * 0.5)[..., None] * np.array([0.55, 0.92, 0.92], np.float32)
+    return cv.maps(1.0)
 
 
-# --- Theme: concrete (Highlands) -- cracked survey-grade slabs ---------------------------------------------------------
+# --- Theme: concrete (Highlands) -- terracotta and stone flagstones with ivory grout and copper inlay ----------------------
+
+COPPER = np.array([0.255, 0.180, 0.125], np.float32)  # muted copper: darker and less orange than the coral shells above it
+COPPER_HI = np.array([0.40, 0.30, 0.21], np.float32)
+
 
 def build_concrete():
-    """Five poured slabs in two staggered rows with expansion joints, each with its own level, tilt, tone and crack load; hairline
-    and tar-sealed cracks, damp stains, oil, dust drifts, a repair patch, an asphalt patch and faint teal survey paint.
-    Warm grey, very rough and non-metallic (use metallic 0 on the material)."""
+    """Seven by seven irregular flagstones in warm terracotta, sandstone, warm grey and umber, set in ivory grout with a slight
+    pillow bevel. Some joints carry a fine copper wire, some stones a brass-edged inset line, four large stones a cog-ring
+    medallion, and a few survey studs glow faintly. Dry and rough: roughness stays 0.74 to 0.97."""
     seed = 7301
-    fx = xx.astype(np.float32)
-    fy = yy.astype(np.float32)
-
-    # Joints drift only slightly; cracks meander. Both warps are periodic, so the tile still wraps.
-    ju = fx + noise(45, seed + 1) * 2.2
-    jv = fy + noise(45, seed + 2) * 2.2
-    cu = fx + noise(16, seed + 3) * 9 + noise(4.5, seed + 4) * 2.2
-    cv = fy + noise(16, seed + 5) * 9 + noise(4.5, seed + 6) * 2.2
-
-    # --- Slab layout: two rows with staggered vertical joints (ids: row * 3 + column).
-    row, row_local, row_size, dist_y = band_cells(jv, [0, 560])
-    slab = np.zeros(fx.shape, np.int32)
-    sx_local = np.zeros(fx.shape, np.float32)
-    sx_size = np.ones(fx.shape, np.float32)
-    dist_x = np.zeros(fx.shape, np.float32)
-    for r, splits in enumerate([[90, 650], [300, 640, 930]]):
-        idx, local, size, dist = band_cells(ju, splits)
-        here = row == r
-        slab = np.where(here, r * 3 + idx, slab)
-        sx_local = np.where(here, local, sx_local)
-        sx_size = np.where(here, size, sx_size)
-        dist_x = np.where(here, dist, dist_x)
-    sxn = sx_local / sx_size - 0.5
-    syn = row_local / row_size - 0.5
+    cells = 7
+    wu = X + noise(70, seed + 1) * 5.0 + noise(20, seed + 2) * 1.6
+    wv = Y + noise(70, seed + 3) * 5.0 + noise(20, seed + 4) * 1.6
+    border, id1, id2, (p1x, p1y), table = voronoi(wu, wv, cells, seed + 5, jitter=0.66)
+    n_cells = cells * cells
     rng = np.random.default_rng(seed)
-    slab_tone = rng.normal(0, 0.09, 9)
-    slab_hue = rng.normal(0, 0.005, (9, 1)) * np.array([1.0, 0.3, -1.0])  # each pour dried a slightly warmer or cooler grey
-    slab_level = rng.normal(0, 0.03, 9)
-    slab_tilt = rng.normal(0, 0.05, (9, 2))
-    slab_wear = rng.uniform(0.0, 1.0, 9)  # how much aggregate shows through
-    slab_cracks = np.array([0.34, 0.0, 0, 0.16, 0.50, 0.08, 0, 0, 0])[slab]
 
-    jd = np.minimum(dist_y, dist_x)  # px to the nearest expansion joint centre line
-    jd_chipped = np.maximum(jd + noise(2.5, seed + 7) * 1.4 + noise(9, seed + 8) * 2.6 - 1.0, 0)
-    groove = smoothstep(4.0, 1.2, jd_chipped)
-    arris = smoothstep(11, 2, jd_chipped)
+    # Stone types by cell, drifting across the tile with a slow regional field so clay and umber patches form.
+    region = noise(380, seed + 6)
+    region_at = region[(p1y % SIZE).astype(np.int32), (p1x % SIZE).astype(np.int32)]
+    pick = hash01(id1, seed) + 0.55 * np.tanh(region_at)
+    TERRA, TERRA_DARK, SAND, GREY, SLATE = range(5)
+    kind = np.select([pick < 0.25, pick < 0.52, pick < 0.80, pick < 1.02], [TERRA_DARK, TERRA, SAND, GREY], SLATE)
+    palette = np.array([[0.226, 0.146, 0.116], [0.186, 0.121, 0.100], [0.246, 0.212, 0.166], [0.196, 0.180, 0.158], [0.150, 0.132, 0.118]], np.float32)
+    # Terracotta is baked smooth and slightly glossy, sandstone is coarse, umber is honed.
+    rough_by_kind = np.array([0.80, 0.82, 0.92, 0.88, 0.76], np.float32)
+    grain_by_kind = np.array([0.5, 0.5, 1.0, 0.8, 0.35], np.float32)
+    tone = 1 + (hash01(id1, seed + 1) - 0.5) * 0.16
+    tilt_x = (hash01(id1, seed + 2) - 0.5) * 2.4
+    tilt_y = (hash01(id1, seed + 3) - 0.5) * 2.4
 
-    # --- Cracks: a coarse Voronoi network, gated by noise so each crack starts and stops, sparse per slab.
-    f1, f2, _ = voronoi(cu, cv, 5, seed + 10)
-    edge = (f2 - f1) * 0.5
-    gate = uniform(noise(30, seed + 11))
-    on = np.where(slab_cracks > 0, smoothstep(slab_cracks, slab_cracks * 0.45 + 1e-4, gate), 0)
-    crack_w = 0.7 + 0.9 * on
-    crack = smoothstep(crack_w, crack_w * 0.25, edge) * on
-    sealed = smoothstep(0.52, 0.62, uniform(noise(60, seed + 12)))  # some cracks were routed and filled with tar
-    tar = np.clip(smoothstep(crack_w * 1.7, crack_w * 0.8, edge) * on * sealed, 0, 1)
-    # A few long cracks run clean across slabs and joints (coarse network, not gated by slab).
-    l1, l2, _ = voronoi(cu, cv, 3, seed + 50, 1.0)
-    long_on = smoothstep(0.30, 0.12, uniform(noise(70, seed + 51)))
-    crack = np.maximum(crack, smoothstep(1.5, 0.3, (l2 - l1) * 0.5) * long_on)
-    tar = np.maximum(tar, smoothstep(2.4, 1.0, (l2 - l1) * 0.5) * long_on * sealed)
-    crack_open = crack * (1 - sealed)
-    g1, g2, _ = voronoi(cu * 1.0, cv * 1.0, 14, seed + 13)
-    hair_edge = (g2 - g1) * 0.5
-    hair_gate = uniform(noise(24, seed + 14))
-    hair = smoothstep(0.9, 0.15, hair_edge) * smoothstep(0.20, 0.08, hair_gate)
+    cv = Canvas(0, 0.85)
+    mottle = noise(90, seed + 7) * 0.045 + noise(22, seed + 8) * 0.03
+    grain_albedo = noise(1.3, seed + 9) * 0.022 + noise(3.4, seed + 10) * 0.018
+    stone = palette[kind] * (tone + mottle + grain_albedo)[..., None]
+    wear = smoothstep(34, 5, border)
+    stone = stone * (1 + 0.10 * wear)[..., None]  # edges are worn lighter
+    ao = 0.80 + 0.20 * smoothstep(4, 24, border)
+    cv.albedo[:] = stone * ao[..., None]
+    cv.rough[:] = rough_by_kind[kind] - 0.05 * wear + noise(9, seed + 11) * 0.025
 
-    # --- Patches: a lighter concrete repair, an asphalt skim, a narrow utility trench.
-    rough_edge = noise(3, seed + 15) * 2.0
-    repair = smoothstep(1.2, -1.2, rect_sdf(cu, cv, 830, 190, 92, 66) + rough_edge)
-    asphalt = smoothstep(1.5, -1.5, rect_sdf(cu, cv, 470, 770, 92, 60) + rough_edge * 2.2 + noise(20, seed + 16) * 7)
-    trench = smoothstep(1.2, -1.2, rect_sdf(fx, fy, 330, 330, 80, 10) + rough_edge * 0.5)
-    patch_seam = np.maximum.reduce([smoothstep(2.4, 0.4, np.abs(rect_sdf(cu, cv, 830, 190, 92, 66) + rough_edge)),
-                                    smoothstep(2.4, 0.4, np.abs(rect_sdf(fx, fy, 330, 330, 80, 10) + rough_edge * 0.5))])
+    # Grout: ivory dust packed between the stones, with a pillow bevel on the stones themselves.
+    grout = cover(border - 5.0)
+    gdx, gdy = wrap_delta(X, p1x), wrap_delta(Y, p1y)
+    cv.height += 3.4 * smoothstep(5, 24, border) + tilt_x * gdx / 150 + tilt_y * gdy / 150
+    grout_color = np.array([0.310, 0.278, 0.222], np.float32) * (1 + noise(7, seed + 12) * 0.05 + noise(1.5, seed + 13) * 0.03)[..., None]
+    cv.paint(grout, color=grout_color, rough=0.95, height=-3.0)
+    cv.paint(cover(np.abs(border - 6.4) - 0.9) * (1 - grout), color=palette[kind] * 0.55, height_add=-0.4)  # crisp edge line where stone meets grout
 
-    # --- Large-scale tone, stains, dust.
-    mottle = noise(80, seed + 20) * 0.05 + noise(26, seed + 21) * 0.032 + noise(7, seed + 22) * 0.018
-    stain = smoothstep(0.76, 0.95, uniform(noise(16, seed + 23) + 0.8 * noise(48, seed + 24) + 0.45 * noise(5, seed + 43)))
-    oil = smoothstep(0.988, 0.997, uniform(noise(8, seed + 25) + 0.5 * noise(24, seed + 26)))
-    oil_halo = smoothstep(0.965, 0.990, uniform(noise(8, seed + 25) + 0.5 * noise(24, seed + 26)))
-    dust = smoothstep(0.45, 0.95, uniform(noise(38, seed + 27) + 0.4 * noise(10, seed + 28)))
-    drift = smoothstep(0.55, 0.97, uniform(noise(55, seed + 45, 9) + 0.5 * noise(18, seed + 46, 4)))  # wind-blown sand streaks
-    joint_dust = smoothstep(18, 3, jd) * (0.55 + 0.45 * uniform(noise(7, seed + 29)))
-    trafficked = smoothstep(0.58, 0.92, uniform(noise(55, seed + 30)))
+    # Copper wire along some joints; a brass-edged inset on some stones.
+    lo, hi = np.minimum(id1, id2), np.maximum(id1, id2)
+    wired = (hash01(lo, hi, seed + 20) < 0.30) * 1.0
+    cv.paint(cover(border - 2.0) * wired, color=COPPER, rough=0.7, height_add=1.8)
+    cv.paint(cover(border - 0.9) * wired * 0.35, color=COPPER_HI)
+    framed = (hash01(id1, seed + 21) < 0.25) * 1.0
+    inset = cover(np.abs(border - 18.0) - 1.5) * framed
+    cv.paint(inset, color=BRONZE * 0.95, rough=0.64, height_add=1.4)
 
-    grain_fine = noise(0.8, seed + 31)
-    grain = noise(1.5, seed + 32)
-    grain_mid = noise(3.2, seed + 33)
-    pits = smoothstep(2.0, 3.0, noise(1.1, seed + 34))
-    stones = smoothstep(1.6, 2.4, noise(2.0, seed + 35)) * slab_wear[slab]
-    grit = smoothstep(1.5, 2.3, noise(0.9, seed + 44)) * smoothstep(48, 6, jd)  # sand and chips swept against the joints
+    # Medallions: inlaid in the four stones with the most room, alternating a spoked cog and a tick-ring dial.
+    inradius = np.zeros(n_cells, np.float32)
+    np.maximum.at(inradius, id1.ravel(), border.ravel())
+    for slot, cid in enumerate(np.argsort(inradius)[::-1][:4]):
+        room = float(inradius[cid])
+        if room < 80:
+            continue
+        flat = np.argmax(np.where(id1 == cid, border, -1.0))
+        cy, cx = divmod(int(flat), SIZE)
+        radius = min(room * 0.8, 120.0)
+        lx, ly = wrap_delta(X, cx + 0.5), wrap_delta(Y, cy + 0.5)
+        r = np.hypot(lx, ly)
+        th = np.arctan2(ly, lx)
+        phase = rng.uniform(0, TAU)
+        socket = cover(r - radius * 1.06)  # a shallow, darker socket the inlay sits in
+        cv.paint(socket * 0.4, color=palette[kind] * 0.62, height_add=-1.2)
+        cv.paint(cover(np.abs(r - radius * 1.06) - 1.0), color=palette[kind] * 0.5, height_add=-0.6)
+        boss = cover(r - radius * 0.15)
+        if slot % 2 == 0:
+            ring = cog(r, th, radius * 0.80, radius * 0.18, 16, radius * 0.075, radius * 0.045, phase) * (1 - cover(r - radius * 0.62))
+            pitch = TAU / 5
+            spoke_arc = ((th - phase * 0.5 + pitch / 2) % pitch - pitch / 2) * r
+            spokes = cover(np.abs(spoke_arc) - radius * 0.055) * cover(r - radius * 0.70) * (1 - cover(r - radius * 0.14))
+            cv.paint(np.maximum(ring, spokes), color=BRONZE * 0.88, rough=0.68, height_add=1.6)
+            cv.paint(cover(np.abs(r - radius * 0.62) - 1.0) * (1 - ring), color=palette[kind] * 0.5, height_add=-0.5)  # engraved line inside the rim
+        else:
+            for ring_r, hw in ((0.94, 1.8), (0.84, 1.1), (0.54, 1.4)):
+                cv.paint(cover(np.abs(r - radius * ring_r) - hw), color=BRONZE * 0.88, rough=0.68, height_add=1.4)
+            sector = ((th + np.pi) / TAU * 60) % 1
+            tick = cover(np.abs((sector - 0.5) * (TAU / 60) * r) - 1.0) * cover(np.abs(r - radius * 0.74) - radius * 0.07)
+            major = cover(np.abs((((th + np.pi) / TAU * 12) % 1 - 0.5) * (TAU / 12) * r) - 2.0) * cover(np.abs(r - radius * 0.72) - radius * 0.12)
+            cv.paint(np.maximum(tick, major), color=BRONZE * 0.8, rough=0.7, height_add=1.0)
+            cv.paint(cover(np.minimum(sd_segment(cx + 0.5, cy + 0.5, cx + 0.5 + np.cos(phase) * radius * 0.46, cy + 0.5 + np.sin(phase) * radius * 0.46, 2.4),
+                                      sd_segment(cx + 0.5, cy + 0.5, cx + 0.5 + np.cos(phase + 2.2) * radius * 0.34, cy + 0.5 + np.sin(phase + 2.2) * radius * 0.34, 2.4))),
+                     color=BRONZE * 0.88, rough=0.68, height_add=1.4)
+        cv.paint(boss, color=BRONZE_HI * 0.9, rough=0.62, height_add=2.0 + dome(r, radius * 0.15, 2.6))
 
-    # --- Survey paint (teal, worn, never orange): crosshair with ring, dashed station line, corner bracket.
-    pu = fx + noise(2, seed + 36) * 0.8
-    pv = fy + noise(2, seed + 37) * 0.8
-    cross = np.minimum(segment_dist(pu, pv, 260 - 42, 150, 260 + 42, 150), segment_dist(pu, pv, 260, 150 - 42, 260, 150 + 42))
-    ring = np.abs(np.hypot(wrap_delta(pu, 260), wrap_delta(pv, 150)) - 21)
-    line_dash = ((fx + 60) % 112) < 72
-    station = np.where(line_dash, np.abs(wrap_delta(pv, 868)), 99)
-    bracket = np.minimum(segment_dist(pu, pv, 700, 650, 700, 732), segment_dist(pu, pv, 700, 732, 782, 732))
-    paint_shape = np.maximum.reduce([smoothstep(3.0, 1.8, cross), smoothstep(2.6, 1.4, ring), smoothstep(3.4, 2.2, station),
-                                     smoothstep(3.4, 2.2, bracket)])
-    paint = paint_shape * smoothstep(0.30, 0.62, uniform(noise(2.4, seed + 38) + 0.8 * noise(14, seed + 39)))
-    glints = paint * smoothstep(0.84, 0.92, uniform(noise(1.6, seed + 40)))
+    # Survey studs: small brass benchmarks at five stone centres, faintly lit.
+    stud_cells = rng.choice(n_cells, 5, replace=False)
+    stud_centres = [(float(table[c // cells, c % cells, 0]), float(table[c // cells, c % cells, 1])) for c in stud_cells]
+    sd_, sox, soy = point_field([(cx_ % SIZE, cy_ % SIZE) for cx_, cy_ in stud_centres], 12)
+    stud = cover(sd_ - 6.5)
+    cv.paint(cover(sd_ - 9.5) * (1 - stud), color=[0.06, 0.05, 0.045], height_add=-0.5)
+    cv.paint(stud, color=[0.36, 0.30, 0.17], rough=0.6, height_add=1.0 + dome(sd_, 6.5, 3.2), emission=[0.55, 0.48, 0.30])
+    cv.paint(smoothstep(3.4, 0.3, np.hypot(sox + 1.8, soy + 1.8)) * stud * 0.8, color=COPPER_HI)
 
-    # --- Height
-    height = slab_level[slab] + slab_tilt[slab, 0] * sxn + slab_tilt[slab, 1] * syn
-    height += 0.05 * noise(30, seed + 41) + 0.02 * noise(7, seed + 42)
-    height += (0.020 * grain_mid + 0.020 * grain + 0.012 * grain_fine) * (1 - 0.6 * repair)
-    height -= 0.05 * pits
-    height += 0.035 * stones + 0.04 * grit
-    height -= 0.10 * arris + 0.38 * groove
-    height -= 0.30 * crack_open + 0.12 * tar + 0.07 * hair + 0.05 * smoothstep(7, 1, edge) * on
-    height += 0.025 * repair + 0.012 * asphalt - 0.05 * trench - 0.05 * patch_seam
-    height -= 0.015 * stain
-    height += 0.006 * paint
-
-    # --- Albedo (sRGB)
-    base = np.array([0.215, 0.193, 0.165], np.float32)
-    tone = 1 + mottle + slab_tone[slab]
-    tone = tone + 0.05 * (grain_mid * 0.4 + grain * 0.3 + grain_fine * 0.3) * (0.4 + 0.6 * slab_wear[slab])
-    albedo = (base[None, None, :] + slab_hue[slab]) * tone[..., None]
-    albedo = tint(albedo, base * np.array([0.88, 0.86, 0.84]), stain * 0.5)
-    albedo = tint(albedo, base * np.array([1.10, 1.06, 1.0]), dust * 0.5)
-    albedo = tint(albedo, base * np.array([1.16, 1.11, 1.03]), drift * 0.3)
-    albedo = tint(albedo, base * np.array([0.9, 0.86, 0.8]) * 0.55, oil_halo * 0.5)
-    albedo = tint(albedo, [0.11, 0.108, 0.105], oil * 0.6)
-    albedo = tint(albedo, np.array([0.10, 0.098, 0.092]), np.clip(pits * 0.5, 0, 1))
-    albedo = tint(albedo, base * np.array([1.18, 1.14, 1.06]), np.clip(stones * 0.7 + grit * 0.5, 0, 1))
-    albedo = tint(albedo, np.array([0.205, 0.197, 0.18]), repair * 0.75)
-    albedo = tint(albedo, np.array([0.178, 0.174, 0.168]), asphalt * 0.5)
-    albedo = tint(albedo, np.array([0.12, 0.115, 0.105]), trench * 0.8)
-    ao = 0.5 + 0.5 * smoothstep(0, 7, jd_chipped)
-    albedo = albedo * ao[..., None]
-    albedo = tint(albedo, np.array([0.115, 0.105, 0.095]), groove * 0.9)  # joint fill: packed dirt
-    albedo = tint(albedo, base * np.array([1.2, 1.12, 1.0]), joint_dust * 0.45 * (1 - groove))
-    albedo = tint(albedo, np.array([0.06, 0.058, 0.058]), crack_open * 0.85)
-    albedo = tint(albedo, np.array([0.055, 0.055, 0.058]), tar * 0.9)
-    albedo = tint(albedo, np.array([0.06, 0.058, 0.056]), hair * 0.7)
-    albedo = tint(albedo, np.array([0.07, 0.065, 0.06]), patch_seam * 0.7)
-    albedo = tint(albedo, np.array([0.165, 0.285, 0.29]), paint * 0.6)  # faded survey teal
-
-    # --- Roughness
-    roughness = 0.87 + 0.045 * grain_mid + 0.03 * grain
-    roughness -= 0.13 * trafficked
-    roughness -= 0.05 * stain
-    roughness += 0.09 * dust + 0.05 * drift
-    roughness = lerp(roughness, 0.42, oil * 0.9)
-    roughness = lerp(roughness, 0.60, oil_halo * 0.4)
-    roughness = lerp(roughness, 0.74, repair)
-    roughness = lerp(roughness, 0.82, asphalt)
-    roughness = lerp(roughness, 0.95, groove)
-    roughness = lerp(roughness, 0.55, tar * 0.9)
-    roughness = lerp(roughness, 0.66, paint * 0.8)
-    roughness = lerp(roughness, 0.96, joint_dust * 0.5)
-    roughness = np.clip(roughness, 0.3, 1.0)
-
-    # --- Emission: only the survey paint's reflective flecks, barely there.
-    emission = np.zeros((SIZE, SIZE, 3), np.float32)
-    emission += glints[..., None] * np.array([0.08, 0.62, 0.58], np.float32) * 0.22
-
-    return pack(albedo, normal_from_height(height, 6.0), roughness, emission)
+    # Fine surface grain (kept off the grout joints), and a few hairline scratches.
+    g = grain_by_kind[kind]
+    cv.height += (noise(1.2, seed + 14) * 0.26 + noise(3.0, seed + 15) * 0.2 + noise(12, seed + 16) * 0.14) * g * (1 - grout)
+    cv.height += noise(1.3, seed + 17) * 0.3 * grout
+    scratch = stamp_lines(70, seed + 18, (50, 170), 1.0, direction_bias=1.2) * (1 - grout)
+    cv.paint(scratch * 0.3, color=[0.30, 0.27, 0.23], rough=0.7, height_add=-0.4)
+    cv.rough += noise(70, seed + 19) * 0.02
+    return cv.maps(1.0)
 
 
-# --- Theme: grating (The Sump) -- wet, corroded deck plating over a lit drain -----------------------------------------
+# --- Theme: grating (The Sump) -- oxidised copper deck, verdigris, brass bar gratings, pipe-work with damp sheen ----------------
+
+PATINA = np.array([0.090, 0.178, 0.158], np.float32)  # verdigris: teal-green and well below the enamel teal of the units
+PLATE = np.array([0.150, 0.116, 0.088], np.float32)  # oxidised copper deck plate
+RUST = np.array([0.178, 0.112, 0.074], np.float32)
+VOID = np.array([0.012, 0.02, 0.02], np.float32)
+
+
+def perimeter_points(x0, y0, w, h, inset, spacing):
+    """Rivet positions along the border of a plate (unwrapped; the point field wraps them)."""
+    nx = max(int(round((w - 2 * inset) / spacing)), 1)
+    ny = max(int(round((h - 2 * inset) / spacing)), 1)
+    pts = []
+    for i in range(nx + 1):
+        x = x0 + inset + i * (w - 2 * inset) / nx
+        pts += [(x, y0 + inset), (x, y0 + h - inset)]
+    for j in range(1, ny):
+        y = y0 + inset + j * (h - 2 * inset) / ny
+        pts += [(x0 + inset, y), (x0 + w - inset, y)]
+    return pts
+
 
 def build_grating():
-    """Eight 3.2 x 1.6 m deck plates in staggered rows: welded seams with bolted edges, a bar-grating panel in each direction,
-    a perforated drain, a diamond-tread plate, a pipe run with a valve branch, rust blooms streaking from bolts and seams, green
-    slime in the joints and glossy puddles. The grates and drain holes glow with dim green-teal sump light from below.
-    Dark green-grey steel, rust kept brown and desaturated (never orange); use metallic ~0.3 on the material."""
-    seed = 9120
-    fx = xx.astype(np.float32)
-    fy = yy.astype(np.float32)
+    """Nine deck plates in an irregular running bond (3.2 m class), oxidised copper with smooth verdigris that gathers in the
+    seams, damp patches, two brass bar gratings over softly lit green-teal voids, a round drain, a pipe run between four brass
+    junction boxes (cog hub, pressure dial, set-screw cap, lamp) with a toothed valve wheel, and a few small oily puddles."""
+    seed = 9100
     rng = np.random.default_rng(seed)
-    plate_w, plate_h = 512, 256
+    rows = [(0, 480, [0, 1056]), (480, 560, [380, 1290]), (1040, 464, [200, 800, 1500]), (1504, 544, [60, 1010])]
+    grates = [(0, 1), (2, 0)]
+    corner = 14.0
 
-    # --- Plate layout: four rows of two plates, each row shifted along x (ids: row * 2 + column).
-    row, ly, _, dist_y = band_cells(fy, [0, 256, 512, 768])
-    plate = np.zeros(fx.shape, np.int32)
-    lx = np.zeros(fx.shape, np.float32)
-    dist_x = np.zeros(fx.shape, np.float32)
-    for r, offset in enumerate([0, 300, 120, 410]):
-        idx, local, _, dist = band_cells(fx, [offset, offset + plate_w])
-        here = row == r
-        plate = np.where(here, r * 2 + idx, plate)
-        lx = np.where(here, local, lx)
-        dist_x = np.where(here, dist, dist_x)
-    SOLID, GRATE_X, DRAIN, TREAD, GRATE_Y = range(5)
-    variant = np.array([SOLID, GRATE_X, DRAIN, SOLID, TREAD, SOLID, SOLID, GRATE_Y])[plate]
-    plate_tone = rng.normal(0, 0.07, 8)
-    plate_level = rng.normal(0, 0.02, 8)
-    plate_rust = rng.uniform(0.2, 1.0, 8)
-    ed = np.minimum(dist_x, dist_y)  # px to the nearest plate seam
+    # --- Plate layout: distance to the nearest plate border (rounded corners), plate id, local coordinates --------------------
+    d_edge = np.empty((SIZE, SIZE), np.float32)
+    pid = np.empty((SIZE, SIZE), np.int32)
+    lx = np.empty((SIZE, SIZE), np.float32)
+    ly = np.empty((SIZE, SIZE), np.float32)
+    plates = {}
+    for r, (y0, h, edges) in enumerate(rows):
+        idx, local, size, dx = band_cells(X[0], edges)
+        yl = (np.arange(y0, y0 + h, dtype=np.float32) + 0.5 - y0)[:, None]
+        dy = np.minimum(yl, h - yl)
+        dxx = dx[None, :]
+        d = np.minimum(dxx, dy)
+        in_corner = (dxx < corner) & (dy < corner)
+        d = np.where(in_corner, corner - np.hypot(corner - dxx, corner - dy), d)
+        sl = slice(y0, y0 + h)
+        d_edge[sl] = d
+        pid[sl] = r * 10 + idx[None, :]
+        lx[sl] = (local - size / 2)[None, :] + 0 * yl
+        ly[sl] = (yl - h / 2) + 0 * dxx
+        for c, ex in enumerate(edges):
+            w = (edges[c + 1] - ex) if c + 1 < len(edges) else edges[0] + SIZE - ex
+            plates[r * 10 + c] = (ex, y0, w, h)
+    grate_ids = [r * 10 + c for r, c in grates]
+    is_grate = np.isin(pid, grate_ids)
 
-    # --- Bolts: every 64 px along the plate borders, inset 16 px.
-    dx = ((lx - 32) % 64) - 32
-    dy = ((ly - 32) % 64) - 32
-    bolt_d = np.minimum.reduce([np.hypot(dx, ly - 16), np.hypot(dx, ly - (plate_h - 16)),
-                                np.hypot(lx - 16, dy), np.hypot(lx - (plate_w - 16), dy)]).astype(np.float32)
-    bolt_d = np.where((ed > 8) & (ed < 26), bolt_d, 99)
+    # --- Base: oxidised copper, verdigris creeping in from the seams, rust bloom, damp patches ------------------------------
+    tone = 1 + (hash01(pid, seed) - 0.5) * 0.20
+    bias = (hash01(pid, seed + 1) - 0.5) * 0.7
+    tilt_x = (hash01(pid, seed + 2) - 0.5) * 1.6
+    tilt_y = (hash01(pid, seed + 3) - 0.5) * 1.6
+    mottle = noise(80, seed + 2) * 0.05 + noise(20, seed + 3) * 0.03
+    patina_field = noise(75, seed + 4) * 0.8 + noise(20, seed + 5) * 0.3 + bias + 0.95 * np.exp(-d_edge / 45)
+    P = smoothstep(0.15, 0.95, patina_field)  # soft edges, tens of px wide: no hard threshold
+    rustm = smoothstep(0.7, 1.7, noise(120, seed + 6) + 0.4 * noise(30, seed + 7)) * (1 - P) * 0.55
+    wet = smoothstep(0.0, 1.0, noise(240, seed + 8) + 0.4 * noise(50, seed + 9))
 
-    # --- Pipe run along the row seam at y = 768 (flanges every 256 px), a thin conduit beside it, a valve branch at x = 860.
-    pipe_r, conduit_r = 22.0, 9.0
-    pd = np.abs(wrap_delta(fy, 768))
-    flange_x = np.abs(((fx - 100 + 128) % 256) - 128)
-    strap_x = np.abs(((fx - 228 + 128) % 256) - 128)
-    pipe_h = np.sqrt(np.maximum(pipe_r ** 2 - pd ** 2, 0)) / pipe_r
-    flange_h = np.where(flange_x < 8, np.sqrt(np.maximum((pipe_r + 5) ** 2 - pd ** 2, 0)) / (pipe_r + 5), 0)
-    strap_h = np.where(strap_x < 3.5, np.sqrt(np.maximum((pipe_r + 2) ** 2 - pd ** 2, 0)) / (pipe_r + 2), 0)
-    pipe_main = np.maximum.reduce([pipe_h * 0.55, flange_h * 0.66, strap_h * 0.6])
-    cd = np.abs(wrap_delta(fy, 768 + 40))
-    clamp_x = np.abs(((fx - 164 + 64) % 128) - 64)
-    conduit_h = np.sqrt(np.maximum(conduit_r ** 2 - cd ** 2, 0)) / conduit_r
-    clamp_h = np.where(clamp_x < 4, np.sqrt(np.maximum((conduit_r + 3) ** 2 - cd ** 2, 0)) / (conduit_r + 3), 0)
-    conduit = np.maximum(conduit_h * 0.4, clamp_h * 0.5)
-    branch_d = segment_dist(fx, fy, 860, 768, 860, 470)
-    branch_h = np.sqrt(np.maximum(14.0 ** 2 - branch_d ** 2, 0)) / 14.0
-    cap_d = np.hypot(wrap_delta(fx, 860), wrap_delta(fy, 470))
-    branch = np.maximum(branch_h * 0.5, np.where(cap_d < 24, 0.62 - 0.1 * smoothstep(8, 3, cap_d), 0))
-    box_sdf = rect_sdf(fx, fy, 860, 768, 34, 34)
-    valve_box = smoothstep(1.2, -1.2, box_sdf) * 0.8
-    wheel_d = np.hypot(wrap_delta(fx, 860), wrap_delta(fy, 768))
-    spokes = np.minimum(np.abs(wrap_delta(fx, 860)), np.abs(wrap_delta(fy, 768)))
-    wheel = np.maximum(smoothstep(2.6, 1.0, np.abs(wheel_d - 19)), np.where(wheel_d < 19, smoothstep(2.4, 0.8, spokes), 0))
-    lamp = smoothstep(4.4, 3.0, cap_d)  # a sump indicator on the branch cap
-    pipes = np.maximum.reduce([pipe_main, conduit, branch, valve_box, 0.95 * wheel])
-    pipe_mask = np.maximum.reduce([smoothstep(pipe_r + 1, pipe_r - 2, pd), smoothstep(conduit_r + 1, conduit_r - 2, cd),
-                                   smoothstep(15, 12, branch_d), smoothstep(25, 22, cap_d), smoothstep(1.2, -1.2, box_sdf)])
-    pipe_halo = np.maximum.reduce([smoothstep(pipe_r + 16, pipe_r, pd), smoothstep(conduit_r + 10, conduit_r, cd),
-                                   smoothstep(30, 14, branch_d), smoothstep(14, 0, box_sdf)])
+    cv = Canvas(PLATE, 0.86)
+    base = PLATE * (tone + mottle)[..., None]
+    patina_col = PATINA * (1 + noise(6, seed + 10) * 0.07 + noise(1.6, seed + 11) * 0.035)[..., None]
+    albedo = base + (patina_col - base) * P[..., None]
+    albedo = albedo + (RUST - albedo) * rustm[..., None]
+    albedo *= (1 - 0.20 * wet)[..., None]
+    wear = smoothstep(26, 4, d_edge)
+    albedo *= (0.84 + 0.16 * smoothstep(3, 26, d_edge))[..., None]
+    cv.albedo[:] = albedo
+    cv.rough[:] = 0.88 - 0.17 * wet + 0.04 * P - 0.03 * wear + noise(9, seed + 12) * 0.025
 
-    # --- Grating panels (recessed bar grids over a lit void), drain (perforated hex pattern), diamond tread.
-    inner = smoothstep(26, 28.5, np.minimum.reduce([lx, plate_w - lx, ly, plate_h - ly]))
-    along = np.where(variant == GRATE_X, lx, ly)  # position along the bars
-    across = np.where(variant == GRATE_X, ly, lx)
-    slot = smoothstep(7.4, 5.0, np.abs((across % 26) - 13)) * smoothstep(1.6, 4.0, np.minimum(along % 104, 104 - along % 104))
-    is_grate = (variant == GRATE_X) | (variant == GRATE_Y)
-    grate_gap = np.where(is_grate, slot * inner, 0).astype(np.float32)
-    drain_sdf = rect_sdf(fx, fy, 556, 384, 112, 62)
-    drain_in = smoothstep(1.2, -1.2, drain_sdf + 8) * (variant == DRAIN)
-    px, py = wrap_delta(fx, 556), wrap_delta(fy, 384)
-    hex_row = np.round(py / 21)
-    qx = ((px - (hex_row % 2) * 13 + 13) % 26) - 13
-    qy = py - hex_row * 21
-    hole_inside = (np.abs(px - qx) < 100) & (np.abs(py - qy) < 46)  # whole holes only, never clipped by the recess
-    holes = smoothstep(7.4, 5.4, np.hypot(qx, qy)) * hole_inside
-    holes = np.where(variant == DRAIN, holes, 0).astype(np.float32)
-    drain_lip = smoothstep(3.2, 0.5, np.abs(drain_sdf + 4)) * (variant == DRAIN)
-    tread = np.where(variant == TREAD, 1.0, 0.0) * smoothstep(12, 20, ed)
-    tcx, tcy = (lx % 40) - 20, (ly % 40) - 20
-    sign = np.where((lx // 40 + ly // 40) % 2 == 0, 1.0, -1.0)
-    tu = (tcx + sign * tcy) * 0.7071
-    tv = (-sign * tcx + tcy) * 0.7071
-    lug = smoothstep(1.0, 0.55, np.sqrt((tu / 18.5) ** 2 + (tv / 5.5) ** 2)) * tread
+    # --- Seams, bevel, engraved inset line --------------------------------------------------------------------------------
+    seam = cover(d_edge - 2.4)
+    cv.height += 2.8 * smoothstep(2.5, 16, d_edge) + tilt_x * lx / 300 + tilt_y * ly / 300
+    cv.paint(seam, color=[0.024, 0.026, 0.026], rough=0.95, height=-3.0)
+    cv.paint(cover(np.abs(d_edge - 5.5) - 1.1) * (1 - seam) * 0.45, color=BRONZE * 0.8)
+    inset = cover(np.abs(d_edge - 32) - 1.2) * (1 - is_grate)
+    cv.paint(inset * 0.55, color=PLATE * 0.45, height_add=-0.9)
+    cv.paint(cover(np.abs(d_edge - 34.4) - 0.7) * (1 - is_grate) * 0.35, color=BRONZE * 0.75)
 
-    # --- Weld seams and the plate surface.
-    seam_core = smoothstep(3.0, 1.0, ed)
-    bead = smoothstep(10, 6, ed) * smoothstep(1.5, 4.5, ed)
-    bead_ripple = 0.75 + 0.25 * np.sin((fx + fy) * 0.55 + noise(6, seed + 1) * 2.0)
-    scuff = noise(1.4, seed + 2)
-    dents = noise(7, seed + 3)
-    wave = noise(34, seed + 4)
-    height = 0.5 + plate_level[plate] + 0.012 * wave + 0.006 * dents + 0.004 * scuff
-    height += 0.13 * lug
-    height += 0.10 * smoothstep(6.5, 2.5, bolt_d)
-    height += 0.10 * bead * bead_ripple - 0.34 * seam_core
-    height = np.where(is_grate, lerp(height, 0.46, inner), height)
-    height = lerp(height, 0.04, grate_gap)
-    height = lerp(height, 0.38, drain_in)
-    height += 0.09 * drain_lip
-    height = lerp(height, 0.02, holes)
-    height = lerp(height, 0.5 + 0.55 * pipes, pipe_mask)  # pipes sit on top of whatever is underneath
+    # --- Puddles: small, smooth, dark oily teal, in solid plates away from the pipe run -------------------------------------
+    puddles = [(380, 250, 110), (700, 1750, 120), (1950, 1390, 68), (1660, 790, 120)]
+    puddle_mask = np.zeros((SIZE, SIZE), np.float32)
+    for i, (px, py, pr) in enumerate(puddles):
+        wobble = 1 + 0.16 * noise(42, seed + 40 + i)
+        dp = np.hypot(wrap_delta(X, px), wrap_delta(Y, py)) - pr * wobble
+        body = cover(dp, 3.0)
+        shore = smoothstep(26, 0, np.abs(dp)) * 0.22
+        cv.albedo *= (1 - shore)[..., None]
+        depth = smoothstep(0, -pr * 0.7, dp)  # deeper, darker water towards the middle
+        shallow = np.array([0.060, 0.098, 0.100], np.float32)
+        deep = np.array([0.030, 0.058, 0.066], np.float32)
+        sheen = 0.5 + 0.5 * np.tanh(noise(26, seed + 50 + i) * 1.4)
+        tint = np.array([0.012, -0.004, 0.012], np.float32)  # a faint oily violet drift
+        water = (shallow + (deep - shallow) * depth[..., None]) + tint * sheen[..., None]
+        # A painted highlight crescent on the top-left lip keeps the water readable without a glossy (glare prone) roughness.
+        shifted = np.hypot(wrap_delta(X, px + 13), wrap_delta(Y, py + 13)) - pr * wobble
+        crescent = cover(dp, 1.6) * (1 - cover(shifted, 1.6))
+        cv.paint(body, color=water, rough=0.74, height=-1.6)
+        cv.paint(crescent * 0.55, color=[0.17, 0.25, 0.25])
+        puddle_mask = np.maximum(puddle_mask, body)
 
-    # --- Corrosion, grime, slime, water.
-    seam_prox = smoothstep(34, 3, ed)
-    near = np.maximum.reduce([seam_prox, smoothstep(24, 5, bolt_d), pipe_halo * 0.9, drain_lip * 0.8])
-    rust_noise = uniform(noise(11, seed + 10) + 0.9 * noise(36, seed + 11) + 0.35 * noise(3.2, seed + 12))
-    rust_drive = rust_noise * 0.7 + near * 0.5 + plate_rust[plate] * 0.22
-    rust = smoothstep(0.78, 0.98, rust_drive)
-    streak_field = uniform(noise(1.8, seed + 13, 46) + 0.6 * noise(5, seed + 14, 70))
-    streak = smoothstep(0.80, 0.96, streak_field) * smoothstep(0.1, 0.8, near + 0.3 * rust_noise)
-    rust = np.clip(rust + streak * 0.55, 0, 1)
-    rust_tex = np.clip(noise(1.7, seed + 15) * 0.5 + noise(5, seed + 16) * 0.5, -1, 1)
-    grime = smoothstep(0.55, 0.95, uniform(noise(18, seed + 17) + 0.5 * noise(52, seed + 18))) * (0.35 + 0.65 * near)
-    slime = smoothstep(0.84, 0.97, uniform(noise(9, seed + 19) + 0.7 * noise(30, seed + 20))) * (0.2 + 0.8 * seam_prox)
-    wet = smoothstep(0.30, 0.75, uniform(noise(60, seed + 21) + 0.4 * noise(20, seed + 22)))
+    # --- Gratings: brass frame and bars over green-teal voids ---------------------------------------------------------------
+    frame = 30.0
+    glow = 0.35 + 0.65 * smoothstep(-0.5, 1.0, noise(140, seed + 13))
+    for gid in grate_ids:
+        ex, y0, w, h = plates[gid]
+        sel = (pid == gid).astype(np.float32)
+        inner = cover(frame - d_edge) * sel
+        n = int(round((h - 2 * frame) / 40))
+        pitch = (h - 2 * frame) / n
+        bar_hw = pitch * 0.27
+        t = ((ly + h / 2 - frame) % pitch) - pitch / 2
+        bar = cover(np.abs(t) - bar_hw, 1.6)
+        ties = int(round((w - 2 * frame) / 250))
+        tpitch = (w - 2 * frame) / ties
+        tx = ((lx + w / 2 - frame) % tpitch) - tpitch / 2
+        tie = cover(np.abs(tx) - 8.0, 1.6)
+        solid = np.maximum(bar, tie)
+        void = inner * (1 - solid)
+        bars = inner * solid
+        bar_col = BRONZE * 0.84 + (PATINA * 1.15 - BRONZE * 0.84) * (P * 0.55)[..., None]
+        cv.paint(void, color=VOID, rough=0.9, height=-5.0)
+        cv.emission += (void * glow * 0.55)[..., None] * np.array([0.11, 0.45, 0.40], np.float32)
+        cv.paint(bars, color=bar_col, rough=0.74, height_add=1.4 + 0.7 * (1 - smoothstep(0.0, bar_hw, np.abs(t))))
+        # a lighter lip on the frame next to the bars
+        cv.paint(cover(np.abs(d_edge - frame) - 1.2) * sel * 0.5, color=BRONZE * 0.8, height_add=1.0)
 
-    surface = (1 - np.maximum.reduce([pipe_mask, grate_gap, holes])) * (1 - inner * is_grate) * (1 - drain_in)
-    pud_field = uniform(noise(24, seed + 23) * 0.8 + noise(85, seed + 24) * 1.0 + noise(8, seed + 25) * 0.25
-                        + 0.7 * smoothstep(40, 6, np.abs(drain_sdf)))
-    puddle = smoothstep(0.895, 0.93, pud_field) * surface * (1 - 0.8 * smoothstep(0.1, 0.5, np.maximum(bead, lug)))
-    halo = smoothstep(0.85, 0.91, pud_field) * surface * (1 - puddle)
-    water_level = 0.5 + plate_level[plate] + 0.03
-    height = np.where(puddle > 0.02, lerp(height, np.maximum(height, water_level) + 0.0015 * noise(3, seed + 26), puddle), height)
-    height = height - 0.006 * rust + 0.009 * rust * noise(1.3, seed + 27)  # pitted, flaking corrosion (kept gentle: steep pits catch the warm rim light)
+    # --- Drain: sunken bronze dish with radial slots ----------------------------------------------------------------------
+    dcx, dcy, dR = 1560.0, 1776.0, 150.0
+    lxd, lyd = wrap_delta(X, dcx), wrap_delta(Y, dcy)
+    dr = np.hypot(lxd, lyd)
+    dth = np.arctan2(lyd, lxd)
+    dish = cover(dr - dR)
+    rim = cover(np.abs(dr - (dR + 12)) - 9)
+    cv.paint(cover(dr - (dR + 26)) * (1 - dish) * (1 - rim) * 0.5, color=PLATE * 0.5, height_add=-0.6)
+    cv.paint(rim, color=BRONZE * 0.92, rough=0.7, height_add=3.0)
+    cv.paint(dish, color=BRONZE * 0.55 + PATINA * 0.18, rough=0.8, height=-2.0)
+    pitch = TAU / 16
+    arc = ((dth + pitch / 2) % pitch - pitch / 2) * dr
+    slot = cover(np.abs(arc) - 8.5) * cover(np.abs(dr - 86) - 52) * dish
+    cv.paint(slot, color=VOID, rough=0.9, height=-9.0)
+    cv.emission += (slot * 0.5)[..., None] * np.array([0.11, 0.45, 0.40], np.float32)
+    hub = cover(dr - 26)
+    cv.paint(hub, color=BRONZE * 0.95, rough=0.66, height_add=3.0 + dome(dr, 26, 3.4))
+    cv.paint(cover(np.abs(dr - 10) - 1.2) * hub * 0.6, color=BRONZE * 0.4)
 
-    # --- Albedo (sRGB)
-    base = np.array([0.092, 0.128, 0.122], np.float32)
-    mottle = noise(70, seed + 30) * 0.06 + noise(22, seed + 31) * 0.04 + noise(5, seed + 32) * 0.02
-    albedo = base[None, None, :] * (1 + mottle + plate_tone[plate])[..., None]
-    bright = np.clip(smoothstep(0.55, 1.0, scuff * 0.5 + 0.5) * smoothstep(6, 2, ed) * 0.5 + 0.18 * lug, 0, 1)
-    albedo = tint(albedo, base * 1.35, bright)
-    albedo = tint(albedo, base * 0.6, grime * 0.55)
-    rust_color = np.array([0.118, 0.090, 0.074], np.float32)
-    albedo = tint(albedo, rust_color * (0.75 + 0.35 * rust_tex)[..., None], np.clip(rust * 0.8, 0, 1))
-    albedo = tint(albedo, np.array([0.072, 0.118, 0.088], np.float32), slime * 0.7)
-    ao = 0.35 + 0.65 * smoothstep(0, 7, ed)
-    albedo = albedo * ao[..., None]
-    pipe_color = np.array([0.105, 0.135, 0.14], np.float32)
-    albedo = tint(albedo, pipe_color * (1 + 0.1 * scuff)[..., None], pipe_mask * 0.9)
-    rust_pipe = smoothstep(0.80, 0.97, rust_noise) * 0.75
-    albedo = tint(albedo, rust_color * 0.9, pipe_mask * rust_pipe)
-    pipe_shade = 0.55 + 0.6 * np.clip(pipes * 1.3, 0, 1)
-    albedo = albedo * lerp(1.0, pipe_shade, pipe_mask)[..., None]
-    albedo = albedo * (1 - 0.35 * pipe_halo * (1 - pipe_mask))[..., None]
-    albedo = tint(albedo, np.array([0.02, 0.028, 0.03]), np.maximum(grate_gap, holes) * 0.95)
-    albedo = tint(albedo, base * 0.8, drain_in * 0.5)
-    albedo = tint(albedo, albedo * 0.8, halo * 0.6)
-    albedo = tint(albedo, albedo * 0.92 + np.array([0.003, 0.009, 0.009], np.float32), puddle)
+    # --- Pipe run: copper pipes with brass collars, between junction boxes -------------------------------------------------------
+    PR = 36.0
+    # pipes stop 6 px inside the junction box edge (box half size 86), so the box top stays flat
+    runs = [("h", 760.0, 600.0, 1100.0, (640.0, 1050.0)), ("v", 1180.0, 840.0, 1190.0, (900.0, 1130.0)), ("h", 1270.0, 1260.0, 1660.0, (1330.0, 1560.0))]
+    pipe_m = np.zeros((SIZE, SIZE), np.float32)
+    pipe_h = np.zeros((SIZE, SIZE), np.float32)
+    collar_m = np.zeros((SIZE, SIZE), np.float32)
+    pipe_u = np.zeros((SIZE, SIZE), np.float32)
+    for orient, fixed, a0, a1, collars in runs:
+        if orient == "h":
+            dperp = np.abs(wrap_delta(Y, fixed)) + 0 * X
+            along = X + 0 * Y
+            signed = wrap_delta(Y, fixed) + 0 * X
+        else:
+            dperp = np.abs(wrap_delta(X, fixed)) + 0 * Y
+            along = Y + 0 * X
+            signed = wrap_delta(X, fixed) + 0 * Y
+        ext = cover(np.maximum(a0 - along, along - a1))
+        m = cover(dperp - PR) * ext
+        prof = 0.55 * np.sqrt(np.maximum(PR * PR - dperp * dperp, 0)) * ext
+        for ct in collars:
+            cm = cover(np.abs(along - ct) - 11) * cover(dperp - (PR + 9)) * ext
+            cprof = 0.55 * np.sqrt(np.maximum((PR + 9) ** 2 - dperp * dperp, 0)) * ext
+            collar_m = np.maximum(collar_m, cm)
+            prof = np.where(cm > 0.02, np.maximum(prof, cprof), prof)
+            m = np.maximum(m, cm)
+        pipe_h = np.maximum(pipe_h, prof)
+        pipe_m = np.maximum(pipe_m, m)
+        pipe_u = np.where(m > 0, signed / PR, pipe_u)
+    # contact shadow around the pipes, then the pipes themselves
+    near = np.full((SIZE, SIZE), 99.0, np.float32)
+    for orient, fixed, a0, a1, collars in runs:
+        dperp = (np.abs(wrap_delta(Y, fixed)) if orient == "h" else np.abs(wrap_delta(X, fixed))) + 0 * X + 0 * Y
+        along = (X if orient == "h" else Y) + 0 * X + 0 * Y
+        endd = np.maximum(a0 - along, along - a1)
+        near = np.minimum(near, np.hypot(np.maximum(dperp - PR, 0), np.maximum(endd, 0)))
+    cv.albedo *= (1 - 0.35 * smoothstep(28, 0, near) * (1 - pipe_m))[..., None]
+    pn = smoothstep(0.1, 0.9, noise(45, seed + 30) * 0.8 + 0.5 * pipe_u ** 2)
+    shade = (0.72 + 0.28 * np.sqrt(np.maximum(1 - pipe_u ** 2, 0)))[..., None]
+    copper = np.array([0.225, 0.164, 0.116], np.float32)
+    pipe_col = (copper + (PATINA * 1.15 - copper) * pn[..., None]) * shade
+    cv.paint(pipe_m, color=pipe_col, rough=0.74, height_add=pipe_h)
+    streak = cover(np.abs(pipe_u + 0.42) * PR - 1.6) * pipe_m * 0.22 * (1 - collar_m)
+    cv.paint(streak, color=[0.34, 0.27, 0.20])
+    cv.paint(cover(np.abs(np.abs(pipe_u) * PR - PR) - 1.3) * pipe_m * 0.5 * (1 - collar_m), color=[0.035, 0.03, 0.028])
+    cv.paint(collar_m, color=BRONZE * 0.92 * shade, rough=0.66)
 
-    # --- Roughness: bare plate is satin, rust is dry and matte, slime and wet streaks are slick, puddles are mirrors.
-    # The engine's orange back light glares off anything much shinier than this, so only puddles go truly glossy.
-    roughness = 0.86 + 0.05 * noise(9, seed + 40) + 0.03 * scuff
-    roughness = roughness - 0.12 * wet
-    roughness = lerp(roughness, 0.62, slime * 0.8)
-    roughness = lerp(roughness, 0.95, np.clip(rust * 0.9, 0, 1))
-    roughness = lerp(roughness, 0.9, grime * 0.4)
-    roughness = lerp(roughness, 0.6, pipe_mask * 0.5)
-    roughness = lerp(roughness, 0.95, np.maximum(grate_gap, holes))
-    roughness = lerp(roughness, 0.72, halo * 0.8)
-    roughness = lerp(roughness, 0.07, puddle)
-    roughness = np.clip(roughness, 0.03, 1.0)
+    # --- Junction boxes and fixtures ------------------------------------------------------------------------------------------
+    boxes = [(520.0, 760.0), (1180.0, 760.0), (1180.0, 1270.0), (1740.0, 1270.0)]
+    half = 86.0
+    bolt_pts = []
+    for bx, by in boxes:
+        bd = rrect_sd(wrap_delta(X, bx), wrap_delta(Y, by), half, half, 20)
+        cv.albedo *= (1 - 0.4 * smoothstep(26, 0, np.maximum(bd, 0)) * (bd > 0))[..., None]
+        bnoise = smoothstep(0.2, 1.0, noise(50, seed + 31 + int(bx) % 7) * 0.8)
+        box_col = BRONZE * 1.02 + (PATINA * 1.3 - BRONZE * 1.02) * (bnoise * 0.45)[..., None]
+        bm = cover(bd)
+        cv.paint(bm, color=box_col, rough=0.72, height_add=7.0 * smoothstep(0, 11, -bd))
+        cv.paint(cover(np.abs(bd + 22) - 1.3) * bm, color=BRONZE * 0.4, height_add=-0.8)
+        cv.paint(cover(np.abs(bd) - 1.4) * 0.65, color=[0.03, 0.028, 0.026])  # inked outline keeps the box crisp against the plate
+        cv.paint(cover(np.abs(bd + 6.5) - 1.0) * bm * 0.4, color=BRONZE_HI)
+        for ox, oy in [(-58, -58), (58, -58), (-58, 58), (58, 58), (0, -62), (0, 62), (-62, 0), (62, 0)]:
+            bolt_pts.append((bx + ox, by + oy))
+    bd_, box_ox, box_oy = point_field(bolt_pts, 14)
+    bolt = cover(bd_ - 8.0)
+    cv.paint(cover(bd_ - 11.0) * (1 - bolt), color=[0.045, 0.04, 0.035], height_add=-0.4)
+    cv.paint(bolt, color=BRONZE_HI * 0.85, rough=0.62, height_add=2.0 + dome(bd_, 8.0, 3.6))
+    cv.paint(smoothstep(3.4, 0.3, np.hypot(box_ox + 2.2, box_oy + 2.2)) * bolt * 0.8, color=BRONZE_HI * 1.1)
 
-    # --- Emission: sump light leaking up through the grates, drain holes and the odd indicator lamp.
-    emission = np.zeros((SIZE, SIZE, 3), np.float32)
-    glow_color = np.array([0.08, 0.72, 0.55], np.float32)
-    flicker = 0.55 + 0.45 * uniform(noise(28, seed + 41) + 0.5 * noise(9, seed + 42))
-    gap_glow = grate_gap * smoothstep(7.4, 1.5, np.abs((across % 26) - 13)) * 0.9 + grate_gap * 0.1
-    emission += ((gap_glow + holes * 1.1) * flicker)[..., None] * glow_color * 0.34
-    emission += ((puddle * (0.55 + 0.45 * flicker) + halo * 0.25) * 0.5)[..., None] * glow_color * 0.5  # water mirrors the sump lights
-    emission += lamp[..., None] * np.array([0.1, 0.85, 0.6], np.float32) * 0.8
-    emission += (np.where((flange_x < 2.5) & (pd < 3), 1.0, 0.0) * ((fx // 256) % 2 == 0))[..., None] * glow_color * 0.45
+    def polar(cx_, cy_):
+        a, b = wrap_delta(X, cx_), wrap_delta(Y, cy_)
+        return np.hypot(a, b), np.arctan2(b, a)
 
-    return pack(albedo, normal_from_height(height, 5.5), roughness, emission)
+    # J1: cog hub
+    r_, th_ = polar(520.0, 760.0)
+    cogm = cog(r_, th_, 40, 11, 10, 7, 4.5, 0.3) * (1 - cover(r_ - 24))
+    spokes = cover(np.abs(((th_ + 0.2 + np.pi / 5) % (TAU / 5) - np.pi / 5) * r_) - 4.5) * cover(r_ - 36) * (1 - cover(r_ - 8))
+    cv.paint(cover(r_ - 56) * (1 - cogm) * 0.45, color=BRONZE * 0.4, height_add=-1.0)
+    cv.paint(np.maximum(cogm, spokes), color=BRONZE * 0.95, rough=0.68, height_add=2.2)
+    cv.paint(cover(r_ - 9), color=BRONZE_HI * 0.9, rough=0.62, height_add=2.0 + dome(r_, 9, 3.0))
+
+    # J2: pressure dial
+    r_, th_ = polar(1180.0, 760.0)
+    face = cover(r_ - 44)
+    cv.paint(cover(np.abs(r_ - 49) - 5), color=BRONZE * 0.95, rough=0.66, height_add=3.4)
+    cv.paint(face, color=[0.038, 0.074, 0.074], rough=0.55, height=-1.2)
+    cv.emission += (face * 0.35)[..., None] * np.array([0.10, 0.42, 0.38], np.float32)
+    ticks = cover(np.abs((((th_ + np.pi) / TAU * 24) % 1 - 0.5) * (TAU / 24) * r_) - 1.0) * cover(np.abs(r_ - 35) - 5)
+    cv.paint(ticks, color=[0.30, 0.36, 0.30], height_add=0.5)
+    needle = cover(sd_segment(1180.0, 760.0, 1180.0 + np.cos(-0.9) * 30, 760.0 + np.sin(-0.9) * 30, 1.8))
+    cv.paint(needle, color=[0.32, 0.30, 0.22], height_add=1.0)
+    cv.paint(cover(r_ - 5), color=BRONZE_HI * 0.9, height_add=2.0 + dome(r_, 5, 2.0))
+
+    # J3: set-screw cap
+    r_, th_ = polar(1180.0, 1270.0)
+    cv.paint(cover(r_ - 46), color=BRONZE * 0.82, rough=0.7, height_add=2.6)
+    cv.paint(cover(np.abs(r_ - 40) - 1.2), color=BRONZE * 0.4, height_add=-0.8)
+    screw_pts = [(1180.0 + np.cos(a) * 28, 1270.0 + np.sin(a) * 28) for a in np.linspace(0, TAU, 7)[:-1] + 0.4]
+    sd2, sox2, soy2 = point_field(screw_pts, 10)
+    cv.paint(cover(sd2 - 5.5), color=[0.05, 0.045, 0.04], height_add=-1.2)
+    cv.paint(cover(r_ - 11), color=BRONZE_HI * 0.9, rough=0.62, height_add=1.5 + dome(r_, 11, 3.2))
+
+    # J4: indicator lamp
+    r_, th_ = polar(1740.0, 1270.0)
+    cv.paint(cover(np.abs(r_ - 22) - 5.5), color=BRONZE * 0.95, rough=0.66, height_add=3.4)
+    lamp = cover(r_ - 17)
+    cv.paint(lamp, color=[0.09, 0.19, 0.16], rough=0.5, height_add=1.0 + dome(r_, 17, 5.0))
+    cv.emission += (lamp * 0.9)[..., None] * np.array([0.14, 0.60, 0.50], np.float32)
+
+    # --- Toothed valve wheel on the first pipe ------------------------------------------------------------------------------------
+    r_, th_ = polar(850.0, 760.0)
+    wheel = cog(r_, th_, 52, 12, 12, 7.5, 4.5, 0.2) * (1 - cover(r_ - 40))
+    wspokes = cover(np.abs(((th_ - 0.5 + np.pi / 5) % (TAU / 5) - np.pi / 5) * r_) - 5.0) * cover(r_ - 44) * (1 - cover(r_ - 14))
+    cv.albedo *= (1 - 0.35 * smoothstep(20, 0, np.maximum(r_ - 64, 0)) * (r_ > 64))[..., None]
+    wheel_all = np.maximum(wheel, wspokes)
+    cv.paint(wheel_all, color=PATINA * 1.3 + BRONZE * 0.3, rough=0.7, height_add=12.0)
+    cv.paint(cover(r_ - 15), color=BRONZE_HI * 0.9, rough=0.62, height_add=12.0 + dome(r_, 15, 4.0))
+
+    # --- Rivets along the plates ---------------------------------------------------------------------------------------------------
+    def blocked(x, y):
+        x, y = x % SIZE, y % SIZE
+        for bx, by in boxes:
+            if abs(x - bx) < half + 20 and abs(y - by) < half + 20:
+                return True
+        for orient, fixed, a0, a1, collars in runs:
+            if orient == "h" and abs(y - fixed) < PR + 18 and a0 - 20 < x < a1 + 20:
+                return True
+            if orient == "v" and abs(x - fixed) < PR + 18 and a0 - 20 < y < a1 + 20:
+                return True
+        if np.hypot(x - dcx, y - dcy) < dR + 40:
+            return True
+        for px, py, pr in puddles:
+            if np.hypot(x - px, y - py) < pr * 1.3:
+                return True
+        return False
+
+    solid_pts, grate_pts = [], []
+    for pid_, (ex, y0, w, h) in plates.items():
+        if pid_ in grate_ids:
+            grate_pts += [p for p in perimeter_points(ex, y0, w, h, 14, 120) if not blocked(*p)]
+        else:
+            solid_pts += [p for p in perimeter_points(ex, y0, w, h, 26, 190) if not blocked(*p)]
+    for pts, radius, hgt in ((solid_pts, 9.5, 5.0), (grate_pts, 6.5, 3.4)):
+        rd, rox, roy = point_field(pts, int(radius) + 6)
+        rivet = cover(rd - radius)
+        cv.paint(cover(rd - (radius + 3.0)) * (1 - rivet) * 0.8, color=[0.04, 0.036, 0.032], height_add=-0.5)
+        rcol = BRONZE * 0.92 + (PATINA * 1.1 - BRONZE * 0.92) * (0.35 * P)[..., None]
+        cv.paint(rivet, color=rcol, rough=0.66, height_add=1.0 + dome(rd, radius, hgt))
+        cv.paint(smoothstep(radius * 0.38, 0.3, np.hypot(rox + radius * 0.3, roy + radius * 0.3)) * rivet * 0.75, color=BRONZE_HI * 1.05)
+
+    # --- Fine detail: grain and scratches ---------------------------------------------------------------------------------------------------
+    grain = noise(1.1, seed + 14) * 0.22 + noise(2.6, seed + 15) * 0.16 + noise(14, seed + 16) * 0.16
+    cv.height += grain * (1 - seam) * (1 - 0.85 * puddle_mask)
+    scratch = stamp_lines(110, seed + 17, (50, 190), 1.0, direction_bias=0.12) * (1 - seam) * (1 - puddle_mask)
+    cv.paint(scratch * 0.28, color=[0.30, 0.24, 0.18], rough=0.7, height_add=-0.4)
+    cv.rough += noise(70, seed + 18) * 0.02
+    return cv.maps(1.0)
 
 
 # --- Theme registry ------------------------------------------------------------------------------------------------
@@ -587,7 +908,7 @@ def render_preview(theme, maps, repeat=2):
     Not a substitute for Godot (tools/preview_floor_theme.tscn), but fast enough to judge seams and balance."""
     albedo = np.clip(maps["albedo"], 0, 1) ** 2.2
     n = maps["normal"] * 2 - 1
-    rough = maps["roughness"][..., 0]
+    rough = maps["roughness"]
     emission = np.clip(maps["emission"], 0, 1) ** 2.2
     light = np.array([-0.243, -0.520, 0.819])  # sun, tangent space (x right, y image-up, z out of the floor)
     view = np.array([0.0, -0.581, 0.814])
@@ -599,16 +920,13 @@ def render_preview(theme, maps, repeat=2):
     spec = (ndh ** (2 + 400 * gloss ** 3)) * (0.04 + 0.5 * gloss ** 2) * (1 + 6 * gloss ** 3)
     sun = np.array([0.82, 0.92, 1.0]) * 1.4
     ambient = np.array([0.10, 0.20, 0.25]) * 0.7
-    sky = np.array([0.16, 0.34, 0.40]) * 0.9
-    fresnel = 0.04 + 0.96 * (1 - np.clip(n[..., 2] * view[2] + n[..., 1] * view[1], 0, 1)) ** 5
-    color = albedo * (sun * ndl[..., None] + ambient) + (spec * ndl)[..., None] * sun + (fresnel * gloss ** 4 * 3)[..., None] * sky + emission * 0.9
-    color = color * 1.0
-    mapped = color / (1 + color * 0.9)  # soft shoulder
-    mapped = np.clip(mapped, 0, 1) ** (1 / 2.2)
+    color = albedo * (sun * ndl[..., None] + ambient) + (spec * ndl)[..., None] * sun + emission * 0.9
+    mapped = np.clip(color / (1 + color * 0.9), 0, 1) ** (1 / 2.2)
     tile = np.tile(mapped, (repeat, repeat, 1))
     PREVIEW_OUT.mkdir(parents=True, exist_ok=True)
-    Image.fromarray((tile * 255 + 0.5).astype(np.uint8)).save(PREVIEW_OUT / f"{theme}_preview.png")
-    sheet = np.concatenate([np.clip(maps["albedo"], 0, 1), maps["normal"], maps["roughness"], np.clip(maps["emission"] * 2, 0, 1)], axis=1)
+    Image.fromarray((tile * 255 + 0.5).astype(np.uint8)).resize((2048, 2048), Image.LANCZOS).save(PREVIEW_OUT / f"{theme}_preview.png")
+    rough_rgb = np.stack([rough] * 3, axis=-1)
+    sheet = np.concatenate([np.clip(maps["albedo"], 0, 1), maps["normal"], rough_rgb, np.clip(maps["emission"] * 2, 0, 1)], axis=1)
     Image.fromarray((sheet * 255 + 0.5).astype(np.uint8)).resize((2048, 512), Image.LANCZOS).save(PREVIEW_OUT / f"{theme}_maps.png")
 
 
@@ -623,7 +941,7 @@ def main():
             save(theme, f"floor_{name}.png", array)
         if args.preview:
             render_preview(theme, maps)
-        print(f"{theme}: floor textures written to {OUT / theme} (tile {TILE_METRES} m)")
+        print(f"{theme}: floor textures written to {OUT / theme} (tile {TILE_METRES} m, {SIZE} px)")
 
 
 if __name__ == "__main__":

@@ -1,44 +1,43 @@
 extends Node
 
 ## Developer visual check for the floor texture themes (tools/build_floor_textures.py). Needs a rendering driver (not --headless):
-##   Godot --path . res://tools/preview_floor_theme.tscn -- --theme=concrete [--layout=highlands] [--shots=wide,game,top,detail]
-## Loads the theme's PNGs straight from disk (no import step), puts them on the real arena floor with the real lighting, zone
-## overlays, turrets and enemies, and writes .test-results/floor/<theme>_<shot>.png.
+##   Godot --path . --resolution 1920x1080 res://tools/preview_floor_theme.tscn -- --theme=concrete [--imported] [--shots=default,close,macro,top]
+## Runs the real arena (ArenaWorld, ArenaStage lighting, FloorDecals, zone overlays, camera rig) with a staged scene of turrets,
+## enemies and pickups and writes .test-results/floor/<theme>_<shot>.png. The floor material is the shipping one
+## (WorldGeometry.floor_material through ArenaStage.set_floor_theme). By default its four textures are swapped for the PNGs read
+## straight from disk, so no import step is needed while iterating; `--imported` keeps the imported resources (the faithful path).
+##
+## Shots: default = gameplay zoom 0.75 (about 80 px/m at 1080p), close = about 150 px/m, macro = max zoom 2.0 (about 216 px/m),
+## top = straight down over 2 x 2 tiles for seam checks, wide = the whole arena. `--zoom=` overrides the zoom of default/close.
+const FOCI := {"foundry": Vector3(-7, 0, 0), "concrete": Vector3(-9, 0, -3), "grating": Vector3(-9, 0, 0)}
 const LAYOUTS := {"foundry": "crossroads", "concrete": "highlands", "grating": "sump"}
-## Material settings each theme was authored against (mirror these in WorldGeometry.floor_material).
-const METALLIC := {"foundry": 0.3, "concrete": 0.05, "grating": 0.15}
-const EMISSION_ENERGY := {"foundry": 0.9, "concrete": 0.9, "grating": 0.9}
+const ZOOMS := {"default": 0.75, "close": 1.39, "macro": 2.0}
 
 var theme := "foundry"
-var layout := ""
-var metallic_override := -1.0
+var shots: PackedStringArray = ["default", "close", "macro", "top"]
 var tag := ""
 var use_imported := false
-var debug_flat := false
-var debug_rough := -1.0
-var shots: PackedStringArray = ["wide", "game", "top", "detail"]
+var zoom_override := -1.0
+var focus := Vector3.ZERO
 var world: ArenaWorld
 
 func _ready() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--theme="):
 			theme = argument.trim_prefix("--theme=")
-		elif argument.begins_with("--layout="):
-			layout = argument.trim_prefix("--layout=")
-		elif argument.begins_with("--metallic="):
-			metallic_override = float(argument.trim_prefix("--metallic="))
-		elif argument == "--imported":
-			use_imported = true
-		elif argument == "--flat":
-			debug_flat = true
-		elif argument.begins_with("--rough="):
-			debug_rough = float(argument.trim_prefix("--rough="))
-		elif argument.begins_with("--tag="):
-			tag = argument.trim_prefix("--tag=")
 		elif argument.begins_with("--shots="):
 			shots = argument.trim_prefix("--shots=").split(",")
-	if layout.is_empty():
-		layout = LAYOUTS.get(theme, "crossroads")
+		elif argument.begins_with("--tag="):
+			tag = argument.trim_prefix("--tag=")
+		elif argument.begins_with("--zoom="):
+			zoom_override = float(argument.trim_prefix("--zoom="))
+		elif argument.begins_with("--focus="):
+			var parts := argument.trim_prefix("--focus=").split(",")
+			focus = Vector3(float(parts[0]), 0, float(parts[1]))
+		elif argument == "--imported":
+			use_imported = true
+	if focus == Vector3.ZERO:
+		focus = FOCI.get(theme, Vector3.ZERO)
 	call_deferred("run")
 
 func run() -> void:
@@ -48,17 +47,21 @@ func run() -> void:
 	world = ArenaWorld.new()
 	world.show_hud = false
 	world.run_config = RunConfig.new()
-	world.run_config.layout_id = layout
+	world.run_config.layout_id = LAYOUTS.get(theme, "crossroads")
 	add_child(world)
 	world.waves.remaining_spawns = 0
-	_swap_floor()
+	world.preparation.deploy()
+	world.waves.announcement_left = 0
+	world.stage.set_floor_theme(theme)
+	if not use_imported:
+		_load_textures_from_disk()
 	_stage_actors()
 	world.set_physics_process(false)
 	world.player.set_physics_process(false)
 	world.camera_rig.set_physics_process(false)
 	for shot in shots:
 		_frame(shot)
-		for i in range(20):
+		for i in range(24):
 			await get_tree().process_frame
 		await RenderingServer.frame_post_draw
 		var output := ProjectSettings.globalize_path("res://.test-results/floor/%s_%s%s.png" % [theme, shot, tag])
@@ -67,67 +70,44 @@ func run() -> void:
 		print("FLOOR_PREVIEW ", output)
 	get_tree().quit()
 
-func _texture(file: String) -> Texture2D:
-	if use_imported:
-		return load("res://assets/textures/floor/%s/floor_%s.png" % [theme, file])
+func _disk_texture(file: String) -> ImageTexture:
 	var image := Image.load_from_file(ProjectSettings.globalize_path("res://assets/textures/floor/%s/floor_%s.png" % [theme, file]))
 	image.generate_mipmaps()
 	return ImageTexture.create_from_image(image)
 
-func _swap_floor() -> void:
-	var instance: MeshInstance3D = world.stage.floor_visual if "floor_visual" in world.stage else null
-	if instance == null:
-		for node in world.find_children("*", "MeshInstance3D", true, false):
-			if (node as MeshInstance3D).mesh is PlaneMesh:
-				instance = node
-				break
-	var area: Vector2 = (instance.mesh as PlaneMesh).size
-	var material := StandardMaterial3D.new()
-	material.albedo_texture = _texture("albedo")
-	material.roughness = 1.0
-	material.roughness_texture = _texture("roughness")
-	material.metallic = metallic_override if metallic_override >= 0.0 else METALLIC.get(theme, 0.3)
-	material.normal_enabled = true
-	material.normal_texture = _texture("normal")
-	material.emission_enabled = true
-	material.emission_texture = _texture("emission")
-	material.emission_energy_multiplier = EMISSION_ENERGY.get(theme, 0.9)
-	material.uv1_scale = Vector3(area.x / WorldGeometry.FLOOR_TILE_METRES, area.y / WorldGeometry.FLOOR_TILE_METRES, 1.0)
-	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
-	if debug_flat:
-		material.normal_enabled = false
-	if debug_rough >= 0.0:
-		material.roughness_texture = null
-		material.roughness = debug_rough
-	instance.material_override = material
+func _load_textures_from_disk() -> void:
+	var material := world.stage.floor_visual.material_override as StandardMaterial3D
+	material.albedo_texture = _disk_texture("albedo")
+	material.roughness_texture = _disk_texture("roughness")
+	material.normal_texture = _disk_texture("normal")
+	material.emission_texture = _disk_texture("emission")
 
 func _stage_actors() -> void:
 	var kinds := ["basic", "fast", "tank", "charger", "exploder"]
-	for index in range(14):
+	for index in range(16):
 		var angle := float(index) * 2.39996
-		var enemy := world.spawn_enemy(Vector3(cos(angle) * (3.0 + index % 5) * 1.5, 0, sin(angle) * (3.0 + index % 5) * 0.8), kinds[index % kinds.size()])
+		var ring := 2.0 + float(index % 5) * 1.1
+		var enemy := world.spawn_enemy(focus + Vector3(cos(angle) * ring * 1.5, 0, sin(angle) * ring), kinds[index % kinds.size()])
 		enemy.set_physics_process(false)
-	world.add_turret(Vector3(-3, 0, 0), "plasma")
-	world.add_turret(Vector3(3, 0, 0), "shock")
-	world.player.position = Vector3(0, 0, 2)
+	world.add_turret(focus + Vector3(-2.2, 0, 0.6), "plasma")
+	world.add_turret(focus + Vector3(2.2, 0, 0.6), "shock")
+	world.add_turret(focus + Vector3(0, 0, -2.4), "tesla")
+	world.player.position = focus + Vector3(0, 0, 1.4)
+	world.drops.spawn(focus + Vector3(1.0, 0, 3.0)).set_physics_process(false)
 
 func _frame(shot: String) -> void:
 	var camera := world.camera
+	var rig := world.camera_rig
 	match shot:
+		"default", "close", "macro":
+			rig.set_zoom(zoom_override if zoom_override > 0.0 and shot != "macro" else ZOOMS[shot])
+			rig.snap()
 		"wide":
 			camera.size = 34
 			camera.position = Vector3(0, 35, 25)
 			camera.look_at(Vector3.ZERO)
-		"game":
-			camera.size = 34.0 / 1.5 # about the in-game 0.75x zoom
-			camera.position = Vector3(0, 35, 25) * 0.5 + Vector3(-4, 0, 0)
-			camera.look_at(Vector3(-4, 0, 0))
 		"top":
 			camera.size = WorldGeometry.FLOOR_TILE_METRES * 2.0
-			camera.position = Vector3(0, 40, 0)
-			camera.look_at(Vector3.ZERO, Vector3.FORWARD)
-		"detail":
-			camera.size = 9.0
-			camera.position = Vector3(5, 35, 25) * 0.5
-			camera.look_at(Vector3(5, 0, 0))
+			camera.position = focus + Vector3(0, 40, 0)
+			camera.look_at(focus, Vector3.FORWARD)
 	camera.reset_physics_interpolation()
