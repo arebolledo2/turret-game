@@ -61,7 +61,7 @@ const ROWS: Array = [
 		"modifiers": [{"stat": "damage", "operation": "increase", "value": 0.2, "filter": {"attack_family": ["instant"]}}]},
 	{"id": "bat_doctrine", "name": "Kinetic Doctrine", "icon": "", "description": "Kinetic damage +20%.", "rarity": 1, "max_stacks": 2, "always_show_description": false, "special_effect": "", "tag": "ANY",
 		"modifiers": [{"stat": "damage", "operation": "increase", "value": 0.2, "filter": {"attack_family": ["kinetic"]}}]},
-	{"id": "piercing_rounds", "name": "Piercing Rounds", "icon": "", "description": "Direct projectiles pass through 1 extra enemy. Explosive shots do not pierce.", "rarity": 1, "max_stacks": 2, "always_show_description": false, "special_effect": "", "tag": "ANY",
+	{"id": "piercing_rounds", "name": "Piercing Rounds", "icon": "", "description": "Direct projectiles pass through 1 extra enemy. Explosive shots do not pierce.", "rarity": 3, "max_stacks": 2, "always_show_description": false, "special_effect": "", "tag": "ANY",
 		"modifiers": [{"stat": "pierce", "operation": "add", "value": 1, "filter": {"attack_family": ["projectile"],"requires": ["direct_projectile"]}}]},
 	{"id": "cluster_warheads", "name": "Cluster Warheads", "icon": "", "description": "Area radius +20%.", "rarity": 1, "max_stacks": 2, "always_show_description": false, "special_effect": "", "tag": "ANY",
 		"modifiers": [{"stat": "area_size", "operation": "increase", "value": 0.2, "filter": {"attack_family": ["aoe"]}}]},

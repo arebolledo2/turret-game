@@ -24,6 +24,8 @@ func _ready() -> void:
 			world.shop.apply_item(id)
 	world.hud._process(0)
 	world.hud.shop_screen.offer_buttons[1].grab_focus()
+	if "--lock" in OS.get_cmdline_user_args():
+		world.hud.shop_screen.offer_buttons[2].lock_button.grab_focus()
 	if "--turrets-ready" in OS.get_cmdline_user_args():
 		world.turrets[0].progression.award(1500)
 	if "--turrets" in OS.get_cmdline_user_args() or "--turrets-ready" in OS.get_cmdline_user_args():

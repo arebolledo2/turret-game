@@ -117,7 +117,14 @@ func _build_offers(column: VBoxContainer) -> HBoxContainer:
 	offers_grid.size_flags_vertical = SIZE_EXPAND_FILL
 	offers_grid.add_theme_constant_override("h_separation", 18)
 	offers_grid.add_theme_constant_override("v_separation", 18)
-	offers_scroll.add_child(offers_grid)
+	# Focus outlines extend beyond control bounds; reserve space inside the scroll clip.
+	var focus_margin := MarginContainer.new()
+	focus_margin.size_flags_horizontal = SIZE_EXPAND_FILL
+	focus_margin.size_flags_vertical = SIZE_EXPAND_FILL
+	for edge in ["left", "right", "top", "bottom"]:
+		focus_margin.add_theme_constant_override("margin_" + edge, 6)
+	offers_scroll.add_child(focus_margin)
+	focus_margin.add_child(offers_grid)
 	for i in range(4):
 		var card := OfferCard.new()
 		card.pressed.connect(_purchase.bind(i))
