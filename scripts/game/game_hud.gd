@@ -186,23 +186,23 @@ func _padded(parent: Node, left: int, top: int, right: int, bottom: int) -> Marg
 ## Three corner clusters: hull (and core) top-left, wave and timer top-centre, scrap top-right.
 func _build_corner_clusters(root: Control) -> void:
 	var left := HBoxContainer.new()
-	left.position = Vector2(24, 24)
-	left.custom_minimum_size.x = 600
+	left.position = Vector2(16, 8)
+	left.custom_minimum_size.x = 480
 	left.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	left.add_theme_constant_override("separation", 14)
 	root.add_child(left)
 	hull_bar = VitalBar.new().setup("hull", "hull")
-	hull_bar.custom_minimum_size.x = 280
+	hull_bar.custom_minimum_size.x = 225
 	left.add_child(hull_bar)
 	core_bar = VitalBar.new().setup("core", "core")
 	core_bar.visible = false
-	core_bar.custom_minimum_size.x = 280
+	core_bar.custom_minimum_size.x = 225
 	left.add_child(core_bar)
 
 	var centre := PanelContainer.new()
 	centre.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	centre.custom_minimum_size = Vector2(560, 96)
-	centre.add_theme_stylebox_override("panel", ChamferStyle.make(UiPalette.PANEL, UiPalette.LINE, 10.0, 28.0, 12.0))
+	centre.custom_minimum_size = Vector2(440, 60)
+	centre.add_theme_stylebox_override("panel", ChamferStyle.make(UiPalette.PANEL, UiPalette.LINE, 6.0, 14.0, 4.0))
 	_anchor_top(centre, Control.PRESET_CENTER_TOP, 0.0, Control.GROW_DIRECTION_BOTH)
 	root.add_child(centre)
 	var row := HBoxContainer.new()
@@ -211,43 +211,43 @@ func _build_corner_clusters(root: Control) -> void:
 	var wave_column := VBoxContainer.new()
 	wave_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	wave_column.alignment = BoxContainer.ALIGNMENT_CENTER
-	wave_column.add_theme_constant_override("separation", 10)
+	wave_column.add_theme_constant_override("separation", 3)
 	row.add_child(wave_column)
 	var wave_row := HBoxContainer.new()
 	wave_row.add_theme_constant_override("separation", 12)
 	wave_column.add_child(wave_row)
-	wave_row.add_child(_icon("wave", "wave", 36))
-	wave_value = _numeral(wave_row, 40, UiPalette.INK)
-	wave_total = _numeral(wave_row, 24, UiPalette.MUTED)
+	wave_row.add_child(_icon("wave", "wave", 26))
+	wave_value = _numeral(wave_row, 28, UiPalette.INK)
+	wave_total = _numeral(wave_row, 18, UiPalette.MUTED)
 	wave_total.size_flags_vertical = Control.SIZE_SHRINK_END
 	wave_pips = SegmentedBar.new()
 	wave_pips.color = UiPalette.stat_color("wave")
-	wave_pips.custom_minimum_size = Vector2(0, 12)
+	wave_pips.custom_minimum_size = Vector2(0, 6)
 	wave_column.add_child(wave_pips)
 	var divider := ColorRect.new()
 	divider.color = UiPalette.LINE
-	divider.custom_minimum_size = Vector2(1, 56)
+	divider.custom_minimum_size = Vector2(1, 34)
 	divider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(divider)
 	var timer_row := HBoxContainer.new()
 	timer_row.add_theme_constant_override("separation", 12)
 	timer_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_child(timer_row)
-	timer_row.add_child(_icon("timer", "time", 36))
-	time_label = _numeral(timer_row, 44, UiPalette.INK)
+	timer_row.add_child(_icon("timer", "time", 26))
+	time_label = _numeral(timer_row, 30, UiPalette.INK)
 
 	var scrap := PanelContainer.new()
 	scrap.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	scrap.custom_minimum_size = Vector2(0, 96)
-	scrap.add_theme_stylebox_override("panel", ChamferStyle.make(UiPalette.PANEL, UiPalette.LINE, 10.0, 24.0, 12.0))
+	scrap.custom_minimum_size = Vector2(0, 60)
+	scrap.add_theme_stylebox_override("panel", ChamferStyle.make(UiPalette.PANEL, UiPalette.LINE, 6.0, 14.0, 4.0))
 	_anchor_top(scrap, Control.PRESET_TOP_RIGHT, -48.0, Control.GROW_DIRECTION_BEGIN)
 	root.add_child(scrap)
 	var scrap_row := HBoxContainer.new()
 	scrap_row.add_theme_constant_override("separation", 14)
 	scrap_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	scrap.add_child(scrap_row)
-	scrap_row.add_child(_icon("scrap", "scrap", 48))
-	scrap_label = _numeral(scrap_row, 50, UiPalette.SCRAP)
+	scrap_row.add_child(_icon("scrap", "scrap", 30))
+	scrap_label = _numeral(scrap_row, 32, UiPalette.SCRAP)
 
 ## Quick "WAVE 04" flash while a wave is being announced (no countdown digit).
 func _build_wave_banner(root: Control) -> void:
@@ -271,8 +271,8 @@ func _anchor_top(control: Control, preset: int, edge_offset: float, grow: int) -
 	control.set_anchors_preset(preset)
 	control.offset_left = edge_offset
 	control.offset_right = edge_offset
-	control.offset_top = 40
-	control.offset_bottom = 40
+	control.offset_top = 8
+	control.offset_bottom = 8
 	control.grow_horizontal = grow as Control.GrowDirection
 
 func _icon(icon_name: String, stat: String, size: float) -> TextureRect:

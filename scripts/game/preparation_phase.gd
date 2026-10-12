@@ -213,20 +213,20 @@ func _build_ui() -> void:
 	panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	panel.offset_left = 28
 	panel.offset_right = -28
-	panel.offset_top = 24
-	panel.add_theme_stylebox_override("panel", ChamferStyle.make(UiPalette.PANEL, UiPalette.LINE, 12, 24, 14))
+	panel.offset_top = 4
+	panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	root.add_child(panel)
 	var top := VBoxContainer.new()
 	panel.add_child(top)
-	title = _label(top, "", 30, UiPalette.TEAL_HI)
-	hint = _label(top, "", 21, UiPalette.INK)
+	title = _label(top, "", 26, UiPalette.TEAL_HI)
+	hint = _label(top, "", 18, UiPalette.INK)
 	var footer := PanelContainer.new()
 	footer.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	footer.offset_left = 28
 	footer.offset_right = -28
 	footer.offset_top = -180
 	footer.offset_bottom = -24
-	footer.add_theme_stylebox_override("panel", ChamferStyle.make(UiPalette.PANEL, UiPalette.LINE, 12, 24, 14))
+	footer.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	root.add_child(footer)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 10)
@@ -248,6 +248,8 @@ func _label(parent: Node, text: String, size: int, colour: Color) -> Label:
 	label.text = text
 	label.add_theme_font_size_override("font_size", size)
 	label.add_theme_color_override("font_color", colour)
+	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, .9))
+	label.add_theme_constant_override("outline_size", 4)
 	parent.add_child(label)
 	return label
 

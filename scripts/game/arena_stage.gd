@@ -15,7 +15,7 @@ func build(arena: ArenaWorld) -> void:
 	var floor_size := Vector3(half.x * 2.0 + .6, .35, half.y * 2.0 + .6)
 	# The collider is a slab; the visible surface is one textured plane on top of it (a single draw call).
 	var floor_plane := PlaneMesh.new()
-	floor_plane.size = Vector2(floor_size.x, floor_size.z)
+	floor_plane.size = Vector2(floor_size.x, floor_size.z) * 4.0
 	var floor_visual := MeshInstance3D.new()
 	floor_visual.mesh = floor_plane
 	floor_visual.material_override = WorldGeometry.floor_material(floor_plane.size)

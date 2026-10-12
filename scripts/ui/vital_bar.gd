@@ -14,12 +14,12 @@ var low: bool = false
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_theme_stylebox_override("panel", ChamferStyle.make(UiPalette.PANEL, UiPalette.LINE, 10.0, 20.0, 12.0))
+	add_theme_stylebox_override("panel", ChamferStyle.make(UiPalette.PANEL, UiPalette.LINE, 6.0, 12.0, 4.0))
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 18)
 	add_child(row)
 	icon_rect = TextureRect.new()
-	icon_rect.custom_minimum_size = Vector2(48, 48)
+	icon_rect.custom_minimum_size = Vector2(30, 30)
 	icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon_rect.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -27,24 +27,24 @@ func _init() -> void:
 	row.add_child(icon_rect)
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	column.add_theme_constant_override("separation", 6)
+	column.add_theme_constant_override("separation", 2)
 	row.add_child(column)
 	var numbers := HBoxContainer.new()
 	numbers.add_theme_constant_override("separation", 4)
 	column.add_child(numbers)
 	value_label = Label.new()
 	value_label.theme_type_variation = &"Numeral"
-	value_label.add_theme_font_size_override("font_size", 34)
+	value_label.add_theme_font_size_override("font_size", 26)
 	value_label.add_theme_color_override("font_color", UiPalette.INK)
 	numbers.add_child(value_label)
 	max_label = Label.new()
 	max_label.theme_type_variation = &"Numeral"
-	max_label.add_theme_font_size_override("font_size", 22)
+	max_label.add_theme_font_size_override("font_size", 18)
 	max_label.add_theme_color_override("font_color", UiPalette.MUTED)
 	max_label.size_flags_vertical = Control.SIZE_SHRINK_END
 	numbers.add_child(max_label)
 	bar = SegmentedBar.new()
-	bar.custom_minimum_size = Vector2(0, 18)
+	bar.custom_minimum_size = Vector2(0, 8)
 	column.add_child(bar)
 
 func setup(icon_name: String, stat: String) -> VitalBar:

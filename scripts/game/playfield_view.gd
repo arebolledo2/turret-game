@@ -1,9 +1,9 @@
 class_name PlayfieldView
 extends CanvasLayer
 
-## Render the world between UI rails, rather than hiding gameplay beneath panels.
-const TOP := 150.0
-const BOTTOM := 180.0
+## Reserve only a slim status header; the minimap and hints overlay the full-height playfield.
+const TOP := 76.0
+const BOTTOM := 0.0
 var world: ArenaWorld
 var viewport: SubViewport
 var picture: TextureRect
