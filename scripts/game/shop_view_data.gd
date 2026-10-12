@@ -196,7 +196,7 @@ static func affected_turrets(world: ArenaWorld, offer: ShopOffer) -> Array[Strin
 			affected = TurretRegistry.get_fire_mode(turret["id"]) == TurretRegistry.FIRE_FLAME
 		elif offer.asset_id == "arc_insurance":
 			affected = TurretRegistry.get_fire_mode(turret["id"]) == TurretRegistry.FIRE_CHAIN
-		elif offer.asset_id in ["rescue_beacon", "close_partnership"]:
+		elif offer.asset_id in ["rescue_beacon", "close_partnership", "lone_sentry", "crosslink_array"]:
 			affected = true
 		if affected:
 			result.append("%s x%d" % [turret["name"], int(turret["count"])])

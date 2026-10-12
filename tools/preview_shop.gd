@@ -22,6 +22,8 @@ func _ready() -> void:
 		EconomyService.current_shop_offers.assign([ShopOffer.new("item", "hardpoint", 18), ShopOffer.new("item", "reactor_overload", 40), ShopOffer.new("item", "mono_type_mastery", 40), ShopOffer.new("item", "elemental_conduit", 60)])
 		for id: String in ["polished_barrels", "reinforced_hull", "quick_loader", "scrap_magnet", "rapid_coolant", "dense_rounds", "blast_charges", "capacitor_bank"]:
 			world.shop.apply_item(id)
+	if "--proximity" in OS.get_cmdline_user_args():
+		EconomyService.current_shop_offers.assign([ShopOffer.new("turret", "normal", 43), ShopOffer.new("item", "lone_sentry", 21), ShopOffer.new("item", "crosslink_array", 21), ShopOffer.new("item", "extended_barrel", 21)])
 	world.hud._process(0)
 	world.hud.shop_screen.offer_buttons[1].grab_focus()
 	if "--lock" in OS.get_cmdline_user_args():

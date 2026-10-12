@@ -53,3 +53,7 @@ Art tooling: `python tools/build_shop_art.py` rebuilds the full-colour SVG set f
 Nearby turret inspection and the range toggle show active item icons with stack counts and duration strips. Hero buffs appear above the hero. This includes Follow-Through, Victory Lap, Rescue Beacon, Close Partnership, Last Stand, Resonance Link and Entrenchment. See the [expansion rules](plans/new-item-concepts.md) for trigger and reset behaviour.
 
 Convoy greed: **Heavy Hauler** slows the core by 20% and increases kill scrap by 15% (Uncommon, up to two stacks). Longer journeys receive proportionally more enemy groups without a duration-scaling cap. See [moving-core routes](enemy-ecology.md#moving-core-routes-and-greed).
+
+## Turret proximity items
+
+Both are Uncommon, single-copy items (not Unique-rarity items). Lone Sentry grants +20% damage and attack speed with zero other deployed turret centres inside the recipient's final attack range. Crosslink Array grants +5% to both per neighbour, without a neighbour cap. Carried turrets are excluded as recipients and neighbours; hero/core weapons are unaffected. Each turret evaluates its own range, including progression, range items, terrain and pulse/flame area scaling. Buff icons show the active effect and Crosslink neighbour count.

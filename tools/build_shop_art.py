@@ -47,6 +47,10 @@ groups['engine'] += ['victory_lap']
 groups['shield'] += ['rescue_beacon']
 groups['capacitor'] += ['reserve_battery']
 groups['orb'] += ['close_partnership']
+motifs['sentry'] = '<path d="M58 192l18-28h88l18 28z" fill="url(#steel)" stroke="url(#gold)" stroke-width="5"/><path d="M99 164V89h42v75" fill="url(#teal)" stroke="url(#gold)" stroke-width="5"/><circle cx="120" cy="76" r="29" fill="url(#steel)" stroke="url(#gold)" stroke-width="7"/><circle cx="120" cy="76" r="13" fill="#8affdb"/><path d="M57 54q-26 31 0 63M183 54q26 31 0 63" fill="none" stroke="#81dcca" stroke-width="5"/>'
+motifs['crosslink'] = '<path d="M61 166l59-90 59 90z" fill="none" stroke="url(#gold)" stroke-width="13"/><path d="M61 166l59-90 59 90z" fill="none" stroke="#8affdb" stroke-width="4"/>'+''.join(f'<circle cx="{x}" cy="{y}" r="26" fill="url(#steel)" stroke="url(#gold)" stroke-width="7"/><circle cx="{x}" cy="{y}" r="12" fill="#8affdb"/>' for x,y in [(61,166),(120,76),(179,166)])
+groups['sentry'] = ['lone_sentry']
+groups['crosslink'] = ['crosslink_array']
 lookup = {id: (motif, i) for motif, ids in groups.items() for i,id in enumerate(ids)}
 assert set(lookup) == {r['id'] for r in rows}
 out = ROOT / 'assets/ui/items'; out.mkdir(parents=True, exist_ok=True)

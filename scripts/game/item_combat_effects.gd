@@ -64,6 +64,26 @@ func modify_stats(stats: Dictionary, source: int, kinetic: bool) -> void:
 		if stats.has(key):
 			stats[key] = float(stats[key]) * (1.0 + speed)
 
+## Count deployed turret centres inside this turret's final attack reach, never itself.
+func neighbours(turret: TurretActor, reach: float) -> int:
+	if turret.carried: return 0
+	var count := 0
+	for other in world.turrets:
+		if other != turret and not other.carried and WorldGeometry.planar(other.position - turret.position).length_squared() <= reach * reach + .000001:
+			count += 1
+	return count
+
+func proximity_bonus(turret: TurretActor, reach: float) -> float:
+	if turret.carried or not (owns("lone_sentry") or owns("crosslink_array")): return 0.0
+	var count := neighbours(turret, reach)
+	if count == 0: return .20 if owns("lone_sentry") else 0.0
+	return .05 * count if owns("crosslink_array") else 0.0
+
+func apply_proximity(stats: Dictionary, turret: TurretActor, reach: float) -> void:
+	var bonus := proximity_bonus(turret, reach)
+	for key in ["damage", "fire_rate", "rotation_rate"]:
+		if stats.has(key): stats[key] = float(stats[key]) * (1.0 + bonus)
+
 ## Snapshot burn before death clears it. Do not apply on-hit procs to resolved DoT ticks.
 func before_hit(target: CombatActor, hit: CombatHit3D) -> Dictionary:
 	var burn := {"dps": target.statuses.burn_dps, "remaining": target.statuses.burn_remaining,
@@ -139,6 +159,12 @@ func visible_buffs(source: int) -> Array[Dictionary]:
 	for turret in world.turrets:
 		if turret.turret_id != source:
 			continue
+		if not turret.carried and (owns("lone_sentry") or owns("crosslink_array")):
+			var reach := turret.effective_range(TurretStats.new(turret.resolve_attack_stats()))
+			var count := neighbours(turret, reach)
+			var bonus := proximity_bonus(turret, reach)
+			if bonus > 0.0:
+				result.append({"id": "lone_sentry" if count == 0 else "crosslink_array", "stacks": maxi(1, count), "fraction": 1.0, "tooltip": "+%.0f%% damage and attack speed · %d nearby turrets" % [bonus * 100, count]})
 		if turret.entrench_stacks_cached > 0 and not turret.carried:
 			result.append({"id": "concrete_footings", "stacks": turret.entrench_stacks_cached, "fraction": turret.entrench_progress(), "tooltip": "Entrenched: +%.0f%% damage, +%.0f%% attack speed" % [turret.entrench_damage_bonus() * 100, turret.entrench_fire_rate_bonus() * 100]})
 		if owns("last_stand") and world.player.health < world.player.max_health * GameConstants.LAST_STAND_HULL_FRACTION:

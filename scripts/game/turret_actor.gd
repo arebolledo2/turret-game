@@ -303,6 +303,8 @@ func resolve_attack_stats(secondary: bool = false, branch: String = "", stage: i
 	if bonus > 0.0:
 		stats["damage"] *= 1.0 + GameConstants.ENTRENCH_DAMAGE_PER_STACK * bonus
 		stats["fire_rate"] = float(stats.get("fire_rate", 1.0)) * (1.0 + GameConstants.ENTRENCH_FIRE_RATE_PER_STACK * bonus)
+	var proximity_stats := resolve_attack_stats() if secondary else stats
+	world.item_effects.apply_proximity(stats, self, effective_range(TurretStats.new(proximity_stats)))
 	return stats
 
 ## Range after the area multiplier that pulse and flame attacks apply.

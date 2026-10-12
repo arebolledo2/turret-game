@@ -225,3 +225,59 @@ func test_conditional_item_previews_restore_inventory() -> void:
 	assert_gt(float(preview.hero_weapon.damage), float(data.hero_weapon.damage))
 	assert_eq(ItemTrackingService.item_counts, before)
 	assert_eq(ShopViewData.build_data(world), data)
+
+func test_proximity_items_switch_with_layout_and_never_buff_hero() -> void:
+	var turret := world.turrets[0]
+	turret.position = Vector3.ZERO
+	var base := turret.resolve_attack_stats()
+	world.shop.apply_item("lone_sentry")
+	world.shop.apply_item("crosslink_array")
+	var isolated := turret.resolve_attack_stats()
+	assert_almost_eq(float(isolated.damage), float(base.damage) * 1.2, .001)
+	assert_almost_eq(float(isolated.fire_rate), float(base.fire_rate) * 1.2, .001)
+	assert_eq(world.item_effects.visible_buffs(turret.turret_id)[0].id, "lone_sentry")
+	var reach := turret.effective_range(TurretStats.new(base))
+	var neighbour := world.add_turret(Vector3(reach, 0, 0), "melee")
+	neighbour.set_physics_process(false)
+	var linked := turret.resolve_attack_stats()
+	assert_almost_eq(float(linked.damage), float(base.damage) * 1.05, .001, "Range boundary includes centre; never counts itself")
+	assert_almost_eq(float(linked.fire_rate), float(base.fire_rate) * 1.05, .001)
+	assert_eq(world.item_effects.visible_buffs(turret.turret_id)[0].id, "crosslink_array")
+	neighbour.position.x = reach + .01
+	assert_almost_eq(float(turret.resolve_attack_stats().damage), float(base.damage) * 1.2, .001)
+	world.shop.apply_item("extended_barrel")
+	assert_almost_eq(float(turret.resolve_attack_stats().damage), float(base.damage) * 1.05, .001, "Range items extend the neighbour check")
+	neighbour.carried = true
+	assert_almost_eq(float(turret.resolve_attack_stats().damage), float(base.damage) * 1.2, .001)
+	turret.carried = true
+	assert_almost_eq(float(turret.resolve_attack_stats().damage), float(base.damage), .001)
+	var hero := {"damage": 10.0, "fire_rate": 2.0}
+	world.item_effects.modify_stats(hero, 0, false)
+	assert_eq(hero.damage, 10.0)
+	assert_eq(hero.fire_rate, 2.0)
+
+func test_crosslink_counts_each_neighbour_and_boosts_melee_rotation() -> void:
+	var melee := world.add_turret(Vector3.ZERO, "melee")
+	melee.set_physics_process(false)
+	world.turrets[0].position = Vector3(.2, 0, 0)
+	for at in [Vector3(-.2, 0, 0), Vector3(0, 0, .3)]:
+		var turret := world.add_turret(at)
+		turret.set_physics_process(false)
+	var base := melee.resolve_attack_stats()
+	world.shop.apply_item("crosslink_array")
+	var linked := melee.resolve_attack_stats()
+	assert_almost_eq(float(linked.damage), float(base.damage) * 1.15, .001)
+	assert_almost_eq(float(linked.rotation_rate), float(base.rotation_rate) * 1.15, .001)
+	assert_eq(world.item_effects.visible_buffs(melee.turret_id)[0].stacks, 3)
+
+func test_proximity_items_are_uncommon_single_copy_and_stocked() -> void:
+	for id in ["lone_sentry", "crosslink_array"]:
+		assert_eq(ItemRegistry.get_item(id).rarity, GameEnums.ItemRarity.UNCOMMON)
+		assert_eq(ItemRegistry.get_max_stacks(id), 1)
+		assert_true(ShopCatalog.is_available("item", id))
+		assert_false(ItemRegistry.is_at_max_stacks(id, {}))
+		world.shop.apply_item(id)
+		assert_true(ItemRegistry.is_at_max_stacks(id, ItemTrackingService.item_counts))
+		var counts := ItemTrackingService.item_counts.duplicate()
+		for i in 100:
+			assert_ne(ItemRegistry.get_weighted_random_item(20, 0.0, counts, [], GameRandom.gameplay), id)

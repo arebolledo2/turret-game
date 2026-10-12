@@ -113,6 +113,8 @@ const ROWS: Array = [
 		"modifiers": []},
 	{"id": "close_partnership", "name": "Close Partnership", "icon": "", "description": "You and every deployed turret within 1.5 m gain +8% damage. Multiple nearby turrets do not multiply the hero bonus.", "rarity": 1, "max_stacks": 1, "always_show_description": false, "special_effect": "close_partnership", "tag": "ANY",
 		"modifiers": []},
+	{"id": "lone_sentry", "name": "Lone Sentry", "icon": "", "description": "Deployed turrets gain +20% damage and attack speed when no other deployed turret is within their attack range. One per run.", "rarity": 1, "max_stacks": 1, "always_show_description": false, "special_effect": "lone_sentry", "tag": "ANY", "modifiers": []},
+	{"id": "crosslink_array", "name": "Crosslink Array", "icon": "", "description": "Deployed turrets gain +5% damage and attack speed per other deployed turret within their attack range. One per run.", "rarity": 1, "max_stacks": 1, "always_show_description": false, "special_effect": "crosslink_array", "tag": "ANY", "modifiers": []},
 ]
 
 static func get_all() -> Dictionary:
