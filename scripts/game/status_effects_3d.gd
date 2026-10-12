@@ -35,6 +35,9 @@ func apply(hit: CombatHit3D) -> void:
 	else:
 		effects[hit.damage_type] = StatusEffect.new(hit.damage_type, 0.0, hit.slow_duration, 1.0, intensity)
 
+func is_burning() -> bool:
+	return burn_remaining > 0.0 or not _pending_burn_hits.is_empty()
+
 func advance(delta: float) -> void:
 	for type in effects.keys():
 		var effect: StatusEffect = effects[type]

@@ -59,6 +59,9 @@ var camera_rig: CameraRig
 var playfield: PlayfieldView
 var hud: CanvasLayer
 var enemies: Array[CombatActor] = []
+## Enemies currently telegraphing an attack (brain state "warning" or charger windup). Lets `EnemyBrain._warning_slot`
+## check a handful of actors instead of scanning every enemy.
+var warning_actors: Dictionary = {}
 var turrets: Array[TurretActor] = []
 var projectiles: Array[Projectile3D] = []
 var pickup_root: Node3D
@@ -289,6 +292,12 @@ func clear_field(bank_pickups: bool, return_carried: bool = true) -> void:
 	if return_carried:
 		placement.drop_carried()
 	audio.reset()
+
+func mark_warning(actor: CombatActor, warning: bool) -> void:
+	if warning:
+		warning_actors[actor] = true
+	else:
+		warning_actors.erase(actor)
 
 func is_combat() -> bool:
 	return not paused and GameStateService.is_game_active and GameStateMachine.is_in_combat()

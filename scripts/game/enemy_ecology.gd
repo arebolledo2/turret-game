@@ -55,8 +55,10 @@ const CORE_ROSTERS := {
 	20: {"tank": 30, "charger": 30, "drowse": 40},
 }
 
+const BOSS_IDS: Array[String] = ["brass_ram", "prism_conductor", "grand_marionettist"]
+
 static func is_boss(type_id: String) -> bool:
-	return type_id in BOSSES.values()
+	return type_id in BOSS_IDS
 
 static func hero_only(type_id: String) -> bool:
 	return TYPES.has(type_id) and type_id not in ["lobber", "drowse"]

@@ -43,13 +43,16 @@ const FLASH_DURATION: float = .18
 const ENEMY_FLASH_COLOR := Color(1.0, .92, .8)
 const PLAYER_FLASH_COLOR := Color(1.0, .28, .22)
 var weapon_clock: float = 0.0
+var _footprint: float = -1.0
 var weapon_target: CombatActor
 var clockwork_motion: ClockworkMotion
 var ecology_motion: EcologyMotion
 
 ## Planar footprint of the same capsule used by projectile collisions.
 func hurtbox_radius() -> float:
-	return float(EnemyEcology.FOOTPRINTS.get(enemy_type, .36)) * body_scale
+	if _footprint < 0.0:
+		_footprint = float(EnemyEcology.FOOTPRINTS.get(enemy_type, .36))
+	return _footprint * body_scale
 
 func overlaps_attack_range(origin: Vector3, reach: float) -> bool:
 	var radius := maxf(0.0, reach) + hurtbox_radius()
@@ -191,7 +194,7 @@ func _physics_process(delta: float) -> void:
 	var reduced_motion := FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION)
 	if hit_flash:
 		hit_flash.update(flash_time / FLASH_DURATION, reduced_motion)
-	if is_enemy:
+	if is_enemy and statuses.is_burning():
 		for burn_hit in statuses.advance_burn(delta):
 			world.combat.apply_hit(self, burn_hit)
 			if dead:
@@ -246,6 +249,7 @@ func _steer_enemy(delta: float) -> Vector3:
 		movement = charge.advance(delta, position, goal, effective_speed)
 		if charge.phase == ChargeController3D.Phase.WINDUP and previous_phase != charge.phase:
 			world.audio.play_cue("warning", position)
+		world.mark_warning(self, charge.phase == ChargeController3D.Phase.WINDUP)
 		warning.visible = charge.phase in [ChargeController3D.Phase.WINDUP, ChargeController3D.Phase.DASH]
 		if warning.visible:
 			warning.global_position = charge.origin
