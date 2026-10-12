@@ -71,7 +71,7 @@ func advance_spawn_warnings(delta: float) -> void:
 			if blocked: continue # Cancel, without relocating or banking a replacement.
 			var type_id: String = pending.type
 			if not pending.boss and active_count(type_id) >= int(EnemyEcology.CAPS.get(type_id, 10000)):
-				type_id = EnemyEcology.fallback(GameStateService.current_wave)
+				type_id = EnemyEcology.fallback(GameStateService.current_wave, world.core_mode and not world.convoy_mode)
 			var assault := not EnemyEcology.TYPES.has(type_id)
 			var elite := assault and GameStateService.current_wave >= 6 and _take_credit("elite_chance")
 			var seeker := assault and GameStateService.current_wave >= 6 and world.core != null and _take_credit("seeker_share")
@@ -88,7 +88,7 @@ func queue_spawn_group() -> void:
 		return # Accumulate a small group instead of exhausting sparse escort waves early.
 	spawn_credit -= count
 	for index in count:
-		var type_id := spawn_plan[spawned_this_wave] if spawned_this_wave < spawn_plan.size() else EnemyEcology.fallback(GameStateService.current_wave)
+		var type_id := spawn_plan[spawned_this_wave] if spawned_this_wave < spawn_plan.size() else EnemyEcology.fallback(GameStateService.current_wave, world.core_mode and not world.convoy_mode)
 		warn_spawn(type_id, encounter_position(type_id))
 		spawned_this_wave += 1
 		remaining_spawns -= 1
@@ -164,8 +164,8 @@ func begin_next_wave() -> bool:
 		# Higher pressure means more arrivals across the whole round, not an early cutoff.
 		var rate := maxf(DifficultyService.wave_rule(world.difficulty_config, "spawn_rate_mult", GameStateService.current_wave), .1)
 		remaining_spawns = maxi(1, roundi(remaining_spawns * rate))
-	var budget := maxi(1, roundi(remaining_spawns * EnemyEcology.budget_multiplier(GameStateService.current_wave)))
-	spawn_plan = EnemyEcology.schedule(GameStateService.current_wave, budget)
+	var budget := maxi(1, roundi(remaining_spawns * EnemyEcology.budget_multiplier(GameStateService.current_wave, world.core_mode and not world.convoy_mode)))
+	spawn_plan = EnemyEcology.schedule(GameStateService.current_wave, budget, world.core_mode and not world.convoy_mode)
 	remaining_spawns = spawn_plan.size()
 	spawn_interval = spawn_window / maxf(float(remaining_spawns), 1.0)
 	arrival_time_left = spawn_window
@@ -216,6 +216,8 @@ func _take_credit(rule_key: String) -> bool:
 	if rule_key == "elite_chance" and GameStateService.current_wave < int(DifficultyService.rule(world.difficulty_config, "elite_start_wave")):
 		return false
 	var share := DifficultyService.wave_rule(world.difficulty_config, rule_key, GameStateService.current_wave)
+	if rule_key == "seeker_share" and world.core_mode and not world.convoy_mode and GameStateService.current_wave >= 6:
+		share = maxf(share, .5)
 	if share <= 0.0:
 		return false
 	var credit := (elite_credit if rule_key == "elite_chance" else seeker_credit) + share

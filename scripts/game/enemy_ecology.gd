@@ -43,6 +43,18 @@ const WAVES := [
 	["Grand Marionettist", {"drowse": 90, "basic": 10}],
 ]
 
+## Protect-the-Core escorts preserve each wave's specialty while maintaining active siege pressure.
+const CORE_ROSTERS := {
+	6: {"basic": 45, "tank": 15, "drowse": 40},
+	7: {"basic": 60, "hopper": 40},
+	8: {"basic": 35, "fast": 25, "kite": 40},
+	10: {"basic": 40, "fast": 20, "tender": 35, "drowse": 5},
+	12: {"fast": 40, "tank": 20, "drowse": 40},
+	13: {"fast": 35, "exploder": 25, "kite": 40},
+	18: {"fast": 35, "exploder": 25, "hopper": 40},
+	20: {"tank": 30, "charger": 30, "drowse": 40},
+}
+
 static func is_boss(type_id: String) -> bool:
 	return type_id in BOSSES.values()
 
@@ -54,21 +66,22 @@ static func cost(type_id: String) -> int:
 		return int(TYPES[type_id].cost)
 	return int({"basic": 1, "fast": 1, "tank": 3, "charger": 2, "exploder": 2}.get(type_id, 1))
 
-static func roster(wave: int) -> Dictionary:
+static func roster(wave: int, protect_core: bool = false) -> Dictionary:
+	if protect_core and CORE_ROSTERS.has(wave): return CORE_ROSTERS[wave]
 	return WAVES[clampi(wave - 1, 0, WAVES.size() - 1)][1]
 
 static func title(wave: int) -> String:
 	return str(WAVES[clampi(wave - 1, 0, WAVES.size() - 1)][0])
 
-static func budget_multiplier(wave: int) -> float:
+static func budget_multiplier(wave: int, protect_core: bool = false) -> float:
 	if wave <= 5:
 		return .55 + .05 * maxi(wave, 1)
-	return .25 if BOSSES.has(wave) else 1.0
+	return (.60 if protect_core else .25) if BOSSES.has(wave) else 1.0
 
 ## Smooth weighted selection by deficit spends encounter points, not enemy counts.
 ## Deterministic and independent of gameplay RNG; no hidden global growing roster.
-static func schedule(wave: int, budget: int) -> Array[String]:
-	var weights := roster(wave)
+static func schedule(wave: int, budget: int, protect_core: bool = false) -> Array[String]:
+	var weights := roster(wave, protect_core)
 	var spent := {}
 	var result: Array[String] = []
 	var total := 0
@@ -91,9 +104,9 @@ static func schedule(wave: int, budget: int) -> Array[String]:
 		result.append(selected)
 	return result
 
-static func fallback(wave: int) -> String:
+static func fallback(wave: int, protect_core: bool = false) -> String:
 	var best := ""
-	for type_id: String in roster(wave):
+	for type_id: String in roster(wave, protect_core):
 		if best.is_empty() or cost(type_id) < cost(best):
 			best = type_id
 	return best
