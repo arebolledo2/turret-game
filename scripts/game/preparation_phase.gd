@@ -177,7 +177,7 @@ func handle_input(event: InputEvent) -> bool:
 func _aim_mouse(screen: Vector2) -> void:
 	if world.playfield:
 		if not world.playfield.rect.has_point(screen): return
-		screen -= world.playfield.rect.position
+		screen = world.playfield.to_viewport(screen)
 	var origin := world.camera.project_ray_origin(screen)
 	var ray := world.camera.project_ray_normal(screen)
 	var point: Variant = Plane(Vector3.UP, 0).intersects_ray(origin, ray)
@@ -311,7 +311,7 @@ func arrange_turrets() -> void:
 				target += inward * (SpawnZones.RADIUS + TurretPlacement.EDGE_MARGIN + .3)
 		elif world.convoy_mode and world.convoy_route:
 			target = _route_position(float(index - zones.size() + 1) / (remaining + 1))
-		else:
+		elif mode != 2:
 			var angle := TAU * float(index - zones.size()) / remaining
 			target += Vector3(cos(angle), 0, sin(angle)) * (2.0 if mode == 0 else maxf(1.2, reach * .6) if mode == 1 else reach)
 		var best := Vector3.INF
@@ -328,6 +328,26 @@ func arrange_turrets() -> void:
 				if not world.valid_placement(at, turret): continue
 				best = at
 				score = cost
+		if mode == 2:
+			# Exact tangencies fill the gaps a half-metre grid cannot resolve.
+			for at in _coverage_candidates(target, reach, placed):
+				var cost := _layout_score(at, target, reach, placed, mode)
+				if cost < score and world.valid_placement(at, turret):
+					best = at
+					score = cost
+			# Refine around obstacles and arena edges, where tangencies can be invalid.
+			if best != Vector3.INF:
+				for step: float in [.125, .03125]:
+					for iteration in 8:
+						var origin := best
+						for direction in 8:
+							var angle := TAU * direction / 8.0
+							var at := origin + Vector3(cos(angle), 0, sin(angle)) * step
+							var cost := _layout_score(at, target, reach, placed, mode)
+							if cost < score and world.valid_placement(at, turret):
+								best = at
+								score = cost
+						if best == origin: break
 		if best == Vector3.INF:
 			placed.append({"at": turret.position, "reach": reach})
 			continue
@@ -375,3 +395,25 @@ func _layout_score(at: Vector3, target: Vector3, reach: float, placed: Array[Dic
 		var overlap := maxf(0, separation - at.distance_to(other.at))
 		score += overlap * overlap * (10000.0 if mode == 2 else 20.0)
 	return score
+
+## Candidate centres tangent to one or two already placed attack circles.
+func _coverage_candidates(target: Vector3, reach: float, placed: Array[Dictionary]) -> Array[Vector3]:
+	var result: Array[Vector3] = []
+	for i in placed.size():
+		var centre: Vector3 = placed[i].at
+		var radius := reach + float(placed[i].reach)
+		var toward := WorldGeometry.planar(target - centre).normalized()
+		if toward == Vector3.ZERO: toward = Vector3.RIGHT
+		result.append(centre + toward * radius)
+		for j in range(i):
+			var other: Vector3 = placed[j].at
+			var other_radius := reach + float(placed[j].reach)
+			var distance := centre.distance_to(other)
+			if distance < .001 or distance > radius + other_radius or distance < absf(radius - other_radius): continue
+			var along := (radius * radius - other_radius * other_radius + distance * distance) / (2.0 * distance)
+			var height := sqrt(maxf(0.0, radius * radius - along * along))
+			var axis := (other - centre) / distance
+			var perpendicular := Vector3(-axis.z, 0, axis.x)
+			result.append(centre + axis * along + perpendicular * height)
+			result.append(centre + axis * along - perpendicular * height)
+	return result

@@ -34,8 +34,14 @@ const DEFAULT_FLOOR_THEME: String = "foundry"
 const FLOOR_METALLIC := {"foundry": 0.3, "concrete": 0.05, "grating": 0.15}
 const FLOOR_EMISSION_ENERGY: float = 0.9
 
+## Keep immutable textures alive across arena teardown; the loader cache alone is weak.
+static var _floor_textures: Dictionary = {}
+
 static func _floor_texture(theme: String, map: String) -> Texture2D:
-	return load("res://assets/textures/floor/%s/floor_%s.png" % [theme, map])
+	var path := "res://assets/textures/floor/%s/floor_%s.png" % [theme, map]
+	if not _floor_textures.has(path):
+		_floor_textures[path] = load(path)
+	return _floor_textures[path]
 
 ## Tiling floor plating for a flat floor covering `area` metres. Albedo, normal, roughness and emission come from
 ## `assets/textures/floor/<theme>/`; the emission map carries the seam lines and status lights.

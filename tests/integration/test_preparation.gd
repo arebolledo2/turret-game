@@ -159,7 +159,7 @@ func test_playfield_reserves_ui_space_and_mouse_projection_roundtrips() -> void:
 	assert_eq(field.rect.position.y, PlayfieldView.TOP)
 	assert_eq(field.rect.end.y, size.y - PlayfieldView.BOTTOM)
 	assert_eq(world.camera.get_viewport(), field.viewport)
-	assert_almost_eq(world.camera_rig.aspect, field.rect.size.x / field.rect.size.y, .001)
+	assert_almost_eq(world.camera_rig.aspect, float(field.viewport.size.x) / field.viewport.size.y, .001)
 	var turret := world.turrets[0]
 	var event := InputEventMouseButton.new()
 	event.pressed = true
@@ -239,3 +239,40 @@ func test_area_layout_separates_attack_ranges_and_balanced_keeps_centre_covered(
 		if turret.position.length() <= world.preparation._attack_reach(turret): centre_covered = true
 	assert_true(centre_covered)
 	SettingsService.auto_prepare_mode = 0
+
+func test_area_layout_packs_mixed_ranges_without_grid_gaps() -> void:
+	world.convoy_mode = false
+	world.core.position = Vector3.ZERO
+	world.spawn_zones.centres.clear()
+	for type_id: String in ["melee", "bow", "plasma", "shock", "bowling"]:
+		world.add_turret(Vector3(12, 0, 8), type_id)
+	SettingsService.auto_prepare_mode = 2
+	world.preparation.arrange_turrets()
+	for i in world.turrets.size():
+		var turret := world.turrets[i]
+		assert_true(world.valid_placement(turret.position, turret))
+		if i == 0: continue
+		var nearest_gap := INF
+		for j in range(i):
+			var other := world.turrets[j]
+			var gap := turret.position.distance_to(other.position) - world.preparation._attack_reach(turret) - world.preparation._attack_reach(other)
+			assert_gte(gap, -.05, "Attack circles should not materially overlap")
+			nearest_gap = minf(nearest_gap, gap)
+		assert_lt(nearest_gap, .08, "Each added turret joins the coverage instead of leaving a grid-sized gap")
+	SettingsService.auto_prepare_mode = 0
+
+func test_playfield_scaled_projection_roundtrips() -> void:
+	world.playfield = PlayfieldView.new()
+	world.playfield.world = world
+	world.add_child(world.playfield)
+	var field := world.playfield
+	# Exercise a non-unit pixel ratio independent of the headless window size.
+	field.viewport.size = Vector2i(2560, 1339)
+	world.camera_rig.refresh_aspect()
+	world.camera_rig.snap()
+	var point := Vector3(4, 0, 0)
+	var pixel := field.to_viewport(field.to_screen(point))
+	var origin := world.camera.project_ray_origin(pixel)
+	var direction := world.camera.project_ray_normal(pixel)
+	var hit: Vector3 = Plane(Vector3.UP, 0).intersects_ray(origin, direction)
+	assert_lt(hit.distance_to(point), .001)

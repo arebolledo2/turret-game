@@ -33,3 +33,7 @@ Smoke runs default to the six-wave slice; see [dev tools](dev-tools.md) for `--w
 CI installs the pinned engine, verifies the test gate, audits resource links, imports assets, runs the complete GUT suite and both progression routes, and retains diagnostics. See [tests/README.md](../tests/README.md) for isolation and strict error handling.
 
 Current implementation directories and ownership are listed in [architecture](architecture.md). Use the [Blender asset skill](../.claude/skills/blender-assets/SKILL.md) for geometry/model edits. Historical 2D code is available at `prototype-2d-final`; preserve shared contracts, but do not maintain a second gameplay runtime.
+
+## Arena test performance
+
+Floor texture resources are retained in `WorldGeometry` across arena teardown. Godot's resource cache does not keep otherwise unreferenced maps alive, so loading them afresh for each fixture repeatedly decompresses the 2048px maps. Materials remain per-arena so wave tints do not leak between runs. On the October 12 local check, retaining textures reduced the preparation suite from 8.9s to 1.6s; the complete suite passed 984 tests in 31.2s versus the previous 244.6s run. These are local timings, not CI time limits.

@@ -19,7 +19,7 @@ func _ready() -> void:
 	viewport = SubViewport.new()
 	viewport.world_3d = world.get_world_3d()
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
-	viewport.msaa_3d = get_viewport().msaa_3d
+	viewport.msaa_3d = Viewport.MSAA_2X
 	add_child(viewport)
 	world.camera.reparent(viewport)
 	world.camera.current = true
@@ -33,6 +33,7 @@ func _ready() -> void:
 	picture = TextureRect.new()
 	picture.texture = viewport.get_texture()
 	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	picture.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(picture)
 	get_viewport().size_changed.connect(refresh)
@@ -41,10 +42,15 @@ func _ready() -> void:
 func refresh() -> void:
 	var size := get_viewport().get_visible_rect().size
 	rect = Rect2(0, TOP, size.x, maxf(1, size.y - TOP - BOTTOM))
-	viewport.size = Vector2i(rect.size)
+	# Canvas stretch uses logical UI pixels; render 3D at the actual window density.
+	var pixel_scale := get_viewport().get_final_transform().get_scale().abs()
+	viewport.size = Vector2i((rect.size * pixel_scale).round().max(Vector2.ONE))
 	picture.position = rect.position
 	picture.size = rect.size
 	world.camera_rig.refresh_aspect()
 
 func to_screen(point: Vector3) -> Vector2:
-	return rect.position + world.camera.unproject_position(point)
+	return rect.position + world.camera.unproject_position(point) * rect.size / Vector2(viewport.size)
+
+func to_viewport(screen: Vector2) -> Vector2:
+	return (screen - rect.position) * Vector2(viewport.size) / rect.size
