@@ -97,7 +97,14 @@ func _ready() -> void:
 		card.pressed.connect(_purchase.bind(i))
 		card.previewed.connect(_select.bind(i))
 		card.lock_requested.connect(_toggle_lock.bind(i))
-		offers_grid.add_child(card)
+		var slot := VBoxContainer.new()
+		slot.size_flags_horizontal = SIZE_EXPAND_FILL
+		slot.size_flags_vertical = SIZE_EXPAND_FILL
+		slot.add_theme_constant_override("separation", 10)
+		offers_grid.add_child(slot)
+		slot.add_child(card)
+		card.lock_button.reparent(slot)
+		card.lock_button.custom_minimum_size.y = 44
 		offer_buttons.append(card)
 	var side_scroll := ScrollContainer.new()
 	side_scroll.follow_focus = true
@@ -190,6 +197,7 @@ func refresh() -> void:
 	for i in range(offer_buttons.size()):
 		var card := offer_buttons[i] as OfferCard
 		card.visible = i < EconomyService.current_shop_offers.size()
+		(card.get_parent() as Control).visible = card.visible
 		card.set_compact(compact)
 		if card.visible:
 			var offer := EconomyService.current_shop_offers[i]
@@ -275,7 +283,8 @@ func _purchase(index: int) -> void:
 		refresh()
 		if had_focus:
 			continue_button.grab_focus()
-			for card in offer_buttons:
+			for offset in range(1, offer_buttons.size() + 1):
+				var card := offer_buttons[(index + offset) % offer_buttons.size()]
 				if card.visible and not card.disabled:
 					card.grab_focus()
 					break
@@ -478,12 +487,23 @@ func _refresh_focus() -> void:
 			available.append(card)
 	for tab in tabs:
 		tab.focus_neighbor_bottom = tab.get_path_to(available[0] if not available.is_empty() else continue_button)
+	var bottom_locks: Array[Button] = []
+	for card in available:
+		var index := offer_buttons.find(card)
+		if index + offers_grid.columns >= offer_buttons.size() or offer_buttons[index + offers_grid.columns] not in available:
+			bottom_locks.append((card as OfferCard).lock_button)
 	for button in row:
-		button.focus_neighbor_top = button.get_path_to((available[-1] as OfferCard).lock_button if not available.is_empty() else owned_buttons[0] if not owned_buttons.is_empty() else button)
+		button.focus_neighbor_top = button.get_path_to(_nearest_horizontal(button, bottom_locks) if not bottom_locks.is_empty() else owned_buttons[0] if not owned_buttons.is_empty() else tabs[0])
+		button.focus_neighbor_bottom = button.get_path_to(button)
 	for i in range(available.size()):
 		var card := available[i]
-		card.focus_neighbor_left = card.get_path_to(available[maxi(0, i - 1)])
-		card.focus_neighbor_right = card.get_path_to(available[i + 1] if i + 1 < available.size() else owned_buttons[0] if not owned_buttons.is_empty() else card)
+		var left: Button = card
+		var right: Button = card
+		var grid_row := offer_buttons.find(card) / offers_grid.columns
+		if i > 0 and offer_buttons.find(available[i - 1]) / offers_grid.columns == grid_row: left = available[i - 1]
+		if i + 1 < available.size() and offer_buttons.find(available[i + 1]) / offers_grid.columns == grid_row: right = available[i + 1]
+		card.focus_neighbor_left = card.get_path_to(left)
+		card.focus_neighbor_right = card.get_path_to(right if right != card else owned_buttons[0] if not owned_buttons.is_empty() else card)
 		var position := offer_buttons.find(card)
 		var below := position + offers_grid.columns
 		var above := position - offers_grid.columns
@@ -491,9 +511,9 @@ func _refresh_focus() -> void:
 		card.focus_neighbor_bottom = card.get_path_to(lock)
 		card.focus_neighbor_top = card.get_path_to((offer_buttons[above] as OfferCard).lock_button if above >= 0 and offer_buttons[above] in available else tabs[0])
 		lock.focus_neighbor_top = lock.get_path_to(card)
-		lock.focus_neighbor_bottom = lock.get_path_to(offer_buttons[below] if below < offer_buttons.size() and offer_buttons[below] in available else continue_button)
-		lock.focus_neighbor_left = lock.get_path_to((available[maxi(0, i - 1)] as OfferCard).lock_button)
-		lock.focus_neighbor_right = lock.get_path_to((available[mini(available.size() - 1, i + 1)] as OfferCard).lock_button)
+		lock.focus_neighbor_bottom = lock.get_path_to(offer_buttons[below] if below < offer_buttons.size() and offer_buttons[below] in available else _nearest_horizontal(lock, row))
+		lock.focus_neighbor_left = lock.get_path_to((left as OfferCard).lock_button)
+		lock.focus_neighbor_right = lock.get_path_to((right as OfferCard).lock_button)
 	for i in range(owned_buttons.size()):
 		var button := owned_buttons[i]
 		button.focus_neighbor_left = button.get_path_to(available[-1] if not available.is_empty() else continue_button)
@@ -522,3 +542,14 @@ func _review_ready_turret() -> void:
 			turret_inspector.select(turret.turret_id)
 			turret_inspector.buttons[i].grab_focus.call_deferred()
 			return
+
+func _nearest_horizontal(from: Control, candidates: Array[Button]) -> Button:
+	var best: Button = continue_button
+	var distance := INF
+	for candidate in candidates:
+		if not candidate.is_visible_in_tree() or candidate.disabled: continue
+		var gap := absf(candidate.get_global_rect().get_center().x - from.get_global_rect().get_center().x)
+		if gap < distance:
+			distance = gap
+			best = candidate
+	return best

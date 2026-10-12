@@ -232,3 +232,29 @@ func test_deploy_without_ready_evolutions_does_not_interrupt() -> void:
 	await press_direction(JOY_BUTTON_A)
 	assert_false(hud.evolution_reminder.visible)
 	assert_false(world.shop.is_open())
+
+func test_controller_moves_between_card_lock_and_nearest_footer_action() -> void:
+	hud.offer_buttons[0].grab_focus()
+	var lock: Button = hud.offer_buttons[0].lock_button
+	assert_true(lock.get_global_rect().position.y >= hud.offer_buttons[0].get_global_rect().end.y)
+	await press_direction(JOY_BUTTON_DPAD_DOWN)
+	assert_same(get_viewport().gui_get_focus_owner(), lock)
+	await press_direction(JOY_BUTTON_DPAD_RIGHT)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.offer_buttons[1].lock_button)
+	await press_direction(JOY_BUTTON_DPAD_LEFT)
+	await press_direction(JOY_BUTTON_DPAD_UP)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.offer_buttons[0])
+	# The last row leads to the nearest enabled footer action, not always Deploy.
+	var bottom_index := 0 if hud.offers_grid.columns == 4 else 2
+	hud.offer_buttons[bottom_index].lock_button.grab_focus()
+	await press_direction(JOY_BUTTON_DPAD_DOWN)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.reroll_button)
+	await press_direction(JOY_BUTTON_DPAD_UP)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.offer_buttons[bottom_index].lock_button)
+
+func test_purchase_focus_advances_to_next_offer_instead_of_first() -> void:
+	EconomyService.current_shop_offers.assign([ShopOffer.new("item", "polished_barrels", 10), ShopOffer.new("item", "capacitor_bank", 10), ShopOffer.new("item", "blast_charges", 10)])
+	hud.refresh()
+	hud.offer_buttons[1].grab_focus()
+	hud._purchase(1)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.offer_buttons[2])

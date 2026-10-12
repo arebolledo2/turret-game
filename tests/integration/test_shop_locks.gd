@@ -94,7 +94,7 @@ func test_controller_navigates_to_lock_and_accept_does_not_buy() -> void:
 	await _press(JOY_BUTTON_DPAD_RIGHT)
 	assert_same(get_viewport().gui_get_focus_owner(), (shop.offer_buttons[2] as OfferCard).lock_button)
 	await _press(JOY_BUTTON_DPAD_DOWN)
-	assert_same(get_viewport().gui_get_focus_owner(), shop.continue_button)
+	assert_same(get_viewport().gui_get_focus_owner(), shop.reroll_button)
 
 func _press(button: JoyButton) -> void:
 	for pressed in [true, false]:

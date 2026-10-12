@@ -30,6 +30,6 @@ Turret offer cards and the Turrets inspector show icon-and-text attack-family ba
 
 Shop offers can be locked for free using the card lock button, controller X or keyboard L. Locks preserve the offer, slot and quoted price through rerolls and wave transitions, including turret offers. Unlocking restores current pricing. Buying consumes the lock; restarting clears stock. Reroll is disabled when every offer is locked. Unlocked stock retains normal reroll costs and pricing.
 
-Lock controls display LOCK / UNLOCK and participate in controller focus: Down from an offer enters its lock button; left/right moves between locks, Up returns to the offer, and Down proceeds to the next offer row or Deploy. A activates the lock independently of purchasing.
+Lock controls sit outside and below each card, display LOCK / UNLOCK and participate in controller focus: Down from an offer enters its lock button; left/right moves between locks, Up returns to the offer, and Down proceeds to the next offer row or nearest enabled footer action. Footer Up returns to the nearest available lock. Horizontal navigation stays within each visual row, and purchasing advances focus to the next available offer. A activates the lock independently of purchasing.
 
 Item offers show registry rarity through their name and border colors, plus a text label: Common white, Uncommon green, Rare blue, Epic purple, Legendary orange, Unique red. Focus retains its teal outline. Item SVG artwork contains no variant-count dots; rarity comes from ItemRegistry rather than the illustration.
