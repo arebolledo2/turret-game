@@ -13,6 +13,7 @@ func before_each() -> void:
 	world.set_physics_process(false)
 	world.player.set_physics_process(false)
 	world.turrets[0].set_physics_process(false)
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	world.shop.rng = RandomNumberGenerator.new()
 	world.shop.rng.seed = 42
@@ -113,6 +114,7 @@ func test_reroll_cost_pause_empty_wallet_free_refresh_and_wave_reset() -> void:
 	assert_eq(world.shop.reroll_cost(), 0)
 	assert_true(world.shop.reroll())
 	world.begin_next_wave()
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	world.finish_wave()
 	assert_eq(EconomyService.shop_reroll_count, 0)
@@ -177,6 +179,7 @@ func test_pickup_and_movement_use_purchased_stats_in_the_world() -> void:
 	assert_true(world.shop.purchase(stock("item", "scrap_magnet")))
 	assert_true(world.shop.purchase(stock("item", "reinforced_hull")))
 	world.begin_next_wave()
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	pickup = ScrapPickup.new()
 	pickup.world = world
@@ -262,6 +265,7 @@ func test_six_wave_loop_supports_distinct_builds_and_only_ends_after_wave_six() 
 		world.set_physics_process(false)
 		world.player.set_physics_process(false)
 		for wave in range(1, 7):
+			world.preparation.deploy()
 			GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 			for kill in range(3):
 				enemy(Vector3.ZERO).take_damage(1000)
@@ -300,6 +304,7 @@ func test_hud_shows_offers_build_and_terminal_summary() -> void:
 	assert_eq(ShopViewData.build_data(world)["turrets"][0]["name"], "Ion")
 	world.player.health = 1
 	world.begin_next_wave()
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	world.player.take_damage(100)
 	hud._process(0)

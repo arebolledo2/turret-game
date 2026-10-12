@@ -13,7 +13,8 @@ enum GameState {
 	WAVE_END,
 	SHOP,
 	VICTORY,
-	GAME_OVER
+	GAME_OVER,
+	PREPARATION
 }
 
 var state: RunSessionState = RunSessionState.new()
@@ -27,11 +28,12 @@ var current_state: GameState:
 # =============================================================================
 
 const VALID_TRANSITIONS: Dictionary = {
-	GameState.IDLE: [GameState.WAVE_ANNOUNCEMENT],
+	GameState.IDLE: [GameState.PREPARATION, GameState.WAVE_ANNOUNCEMENT],
 	GameState.WAVE_ANNOUNCEMENT: [GameState.COMBAT, GameState.WAVE_END],
 	GameState.COMBAT: [GameState.WAVE_END, GameState.VICTORY, GameState.GAME_OVER],
 	GameState.WAVE_END: [GameState.SHOP, GameState.VICTORY, GameState.WAVE_ANNOUNCEMENT],
-	GameState.SHOP: [GameState.WAVE_ANNOUNCEMENT],
+	GameState.SHOP: [GameState.PREPARATION, GameState.WAVE_ANNOUNCEMENT],
+	GameState.PREPARATION: [GameState.WAVE_ANNOUNCEMENT, GameState.GAME_OVER],
 	GameState.VICTORY: [GameState.IDLE],
 	GameState.GAME_OVER: [GameState.IDLE]
 }
@@ -82,6 +84,7 @@ func reset() -> void:
 
 func is_playing() -> bool:
 	return current_state in [
+		GameState.PREPARATION,
 		GameState.WAVE_ANNOUNCEMENT,
 		GameState.COMBAT,
 		GameState.WAVE_END,
@@ -111,6 +114,7 @@ func is_in_menu() -> bool:
 
 func get_state_name(state: GameState) -> String:
 	match state:
+		GameState.PREPARATION: return "PREPARATION"
 		GameState.IDLE: return "IDLE"
 		GameState.WAVE_ANNOUNCEMENT: return "WAVE_ANNOUNCEMENT"
 		GameState.COMBAT: return "COMBAT"

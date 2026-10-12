@@ -75,7 +75,9 @@ func test_shop_is_opaque_hides_combat_and_restores_rendering_on_exit() -> void:
 	world.begin_next_wave()
 	world.hud._process(0)
 	assert_false(hud.visible)
-	assert_true(world.hud.combat_root.visible)
+	assert_false(world.hud.combat_root.visible)
+	assert_true(world.preparation.active)
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.PREPARATION)
 	assert_false(get_viewport().disable_3d)
 
 func test_purchase_retains_card_slot_and_hands_focus_to_available_offer() -> void:

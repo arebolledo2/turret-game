@@ -20,6 +20,15 @@ func setup() -> void:
 	add_child(world)
 	world.start_run()
 	world.set_physics_process(false)
+	if mode == "prep":
+		world.add_turret(Vector3(-4, 0, 0), "plasma")
+		world.add_turret(Vector3(4, 0, 0), "melee")
+		world.add_turret(Vector3(0, 0, 4), "tesla")
+		world.preparation.begin()
+		world.camera_rig.set_zoom(.75)
+		world.camera_rig.snap()
+		return
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	world.player.set_physics_process(false)
 	world.player.position = Vector3(0, 0, 0)

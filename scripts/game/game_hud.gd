@@ -353,7 +353,7 @@ func _process(delta: float) -> void:
 		return
 	var phase := GameStateMachine.current_state
 	shop_screen.refresh()
-	combat_root.visible = not shop_screen.visible and (phase != GameStateMachine.GameState.WAVE_END or world.paused)
+	combat_root.visible = not shop_screen.visible and (phase not in [GameStateMachine.GameState.WAVE_END, GameStateMachine.GameState.PREPARATION] or world.paused)
 	if shop_screen.visible:
 		panel.visible = false
 		minimap.suppressed = true

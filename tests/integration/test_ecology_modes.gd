@@ -20,6 +20,7 @@ func setup_mode(mode: String) -> void:
 	world.player.set_physics_process(false)
 	world.player.invulnerability = 999.0
 	for turret in world.turrets: turret.set_physics_process(false)
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 
 func test_core_target_masks_and_lobber_impact() -> void:

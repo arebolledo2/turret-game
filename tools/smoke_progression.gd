@@ -60,6 +60,9 @@ func _physics_process(delta: float) -> void:
 			shop()
 		world.begin_next_wave()
 		return
+	if GameStateMachine.current_state == GameStateMachine.GameState.PREPARATION:
+		world.preparation.deploy()
+		return
 	if not world.is_combat():
 		return
 	# Orbit the defended central area, steering away from nearby enemies.

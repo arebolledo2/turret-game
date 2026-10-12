@@ -112,7 +112,7 @@ func test_restart_cancels_old_presentation_without_late_shop_transition() -> voi
 	world.start_run()
 	assert_false(world.reward_presentation.active)
 	world.reward_presentation.advance(10)
-	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_ANNOUNCEMENT)
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.PREPARATION)
 	assert_eq(world.turrets[0].progression.total_xp, 0)
 	assert_true(world.salvage.settlements.is_empty())
 

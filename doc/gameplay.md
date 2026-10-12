@@ -4,6 +4,10 @@ Launch with **`./launch.ps1`** or Godot F5. The default main scene opens Play, S
 
 Settings persist fullscreen, VSync, reduced motion and SFX volume (70% by default; zero mutes). Pause/end screens can return to the start menu; each Play creates a fresh session.
 
+## Untimed preparation
+
+Before every wave, position turrets directly with the hero hidden, then explicitly Deploy. Nothing advances while you prepare. See [controls and phase rules](game-modes.md#preparation-before-every-wave).
+
 ## Enemy ecology update
 
 See [the enemy ecology guide](enemy-ecology.md) for the current twenty-wave rosters, five new enemy roles, bosses on waves 6/12/20, summon limits and reward rules. [Godot captures](art/enemy-ecology/index.html) show the delivered models and effects.

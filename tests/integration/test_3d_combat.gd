@@ -13,6 +13,7 @@ func before_each() -> void:
 	world.player.set_physics_process(false)
 	world.turrets[0].set_physics_process(false)
 	world.pickup_root.process_mode = Node.PROCESS_MODE_DISABLED
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 
 func enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
@@ -176,6 +177,7 @@ func test_death_wave_end_and_restart_remove_warnings_effects_and_crowd_entries()
 	world.start_run()
 	assert_eq(world.crowd.positions.size(), 0)
 	assert_eq(world.enemies.size(), 0)
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	charger = enemy(Vector3.ZERO, "charger")
 	charger._physics_process(.01)
@@ -258,6 +260,7 @@ func test_registry_scaling_and_charger_wave_gate_are_authoritative() -> void:
 	world.waves.advance_spawn_warnings(1.0)
 	assert_eq(world.enemies.back().enemy_type, world.waves.spawn_plan[0])
 	world.start_run()
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	world.waves.spawn_clock = 0
 	world._physics_process(.01)

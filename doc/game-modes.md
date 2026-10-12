@@ -1,13 +1,29 @@
 # Game flow
 
-The normal launch exposes one supported mode: survival at Easy difficulty, 20 waves by default. A `RunConfig` (wave limit, difficulty, flag preset) is created by the start screen and read once by `ArenaWorld`; restarts reuse it. There are no difficulty, spawn-mode, arena-mode or win-condition selectors in the UI. The Medium and Hard difficulty presets in `DifficultyService` are retained for future work.
+The start screen selects difficulty and Survival, Protect the Core or Convoy mode. These choices persist between runs. Play creates a fresh arena/session from `RunConfig`; the normal run has twenty waves.
 
-Play creates a fresh arena/session. Internally the shared state machine moves from `IDLE` into `WAVE_ANNOUNCEMENT`, waits two seconds, and enters `COMBAT`.
+## Preparation before every wave
 
-When the wave timer expires, `ArenaWorld.finish_wave()` clears surviving enemies and transient combat effects, collects remaining scrap, and awards the wave bonus. Waves before the configured limit enter `SHOP`; Continue begins the next announcement. Queued feature-flag changes apply as a wave begins (see [dev tools](dev-tools.md)). The final wave ends in `VICTORY`. Player death ends in `GAME_OVER`.
+Every run begins in **PREPARATION**, and the Shop's **PREPARE** button enters preparation for the next wave. This phase has no time limit. The hero is hidden; the core, combat timers, enemy arrivals, attacks and entrenchment accumulation are stopped. Turrets can be moved directly anywhere valid in the arena, without the hero carrying them.
 
-The shop offers two distinct turret types and two weighted supported items, repair, and reroll. Pause suspends simulation and transactions. The pause/end panels expose Main Menu, and end panels expose a fresh run. Restart resets purchases, modifiers, actors, drops and offers. Preferences survive.
+Select a turret with the cursor or cycle through the squad. Its effective attack range is shown. Begin a move, choose a destination, and place it. Core clearance, arena edges, other turrets and blocked terrain remain authoritative. Invalid positions are red and cannot be committed. Cancel restores the exact original position and entrenchment. A confirmed relocation resets entrenchment; leaving a turret in place preserves it. Moving turrets is free.
 
-`GameApp.return_to_menu()` removes the arena from the tree before freeing it, letting `RunSession` detach shared state synchronously. It then marks the game inactive, returns the shared phase to `IDLE`, and focuses Play. Repeated menu → Play → pause → menu cycles are covered by integration tests.
+| Action | Controller | Mouse / keyboard |
+|---|---|---|
+| Move cursor / turret | Left stick | Mouse or WASD / arrows |
+| Select / place | A | Left click, Space or E |
+| Cycle turrets | LB / RB | [ / ] |
+| Cancel move | B | Right click or Backspace |
+| Start wave | X | Deploy button or Enter |
+| Zoom | Triggers | Wheel or zoom keys |
+| Pause | Start | Escape |
 
-Wave duration/count calculations remain shared. Chargers join from wave 3. The progression smoke tool (six waves by default, `--waves=N` for longer runs) exercises actual physics, spawning, damage, earned scrap, purchases and victory for ion and plasma/shock builds. See [development](development.md).
+**Deploy requires all moves to be finished or canceled.** It restores the hero at the combat position, returns the camera to the hero, and starts the 0.8-second wave announcement. Combat follows. Deploy is a separate action from Select / Place, so pressing A to place a turret cannot accidentally start the wave.
+
+## Combat, rewards and the Shop
+
+Survival and stationary core rounds end at the timer. Convoy rounds normally end when the core reaches the final wall doorway; a safety timer remains. Wave cleanup resolves final-tick damage, settles uncollected scrap as turret XP when progression is enabled, and clears surviving enemies and temporary attacks. The XP presentation requires Continue. Pending chest or boss items then receive Keep / Sell review. Waves before the run limit enter the Shop; the final wave ends in Victory. Hero death or core destruction ends the run.
+
+The full-screen Shop offers one turret and three items, free offer locking, rerolls, repairs and turret inspection/evolution. Prepare exits the Shop into untimed placement. Queued feature flags apply when the next wave is initialized. Pause suspends simulation and transactions. Returning to the main menu removes the arena before freeing it, allowing `RunSession` to detach shared state synchronously. Restart clears run purchases, modifiers, actors, drops, offers and any unfinished placement; preferences persist.
+
+See [enemy ecology](enemy-ecology.md) for authored wave rosters, grouped arrival warnings and moving-core routes. Automated combat tools explicitly deploy preparation before simulating combat.

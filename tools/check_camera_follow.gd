@@ -21,6 +21,7 @@ func _ready() -> void:
 		turret.set_physics_process(false)
 	enemy = world.spawn_enemy(Vector3(-5, 0, 1))
 	enemy.health = 10000
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	Input.action_press("move_right")
 

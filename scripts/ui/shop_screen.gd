@@ -146,7 +146,7 @@ func _ready() -> void:
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = SIZE_EXPAND_FILL
 	footer.add_child(spacer)
-	continue_button = IconButton.new().setup("deploy", "DEPLOY", true)
+	continue_button = IconButton.new().setup("deploy", "PREPARE", true)
 	continue_button.custom_minimum_size.x = 310
 	continue_button.pressed.connect(_request_deploy)
 	footer.add_child(continue_button)

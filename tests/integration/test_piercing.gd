@@ -12,6 +12,7 @@ func before_each() -> void:
 	world.set_physics_process(false)
 	world.player.set_physics_process(false)
 	world.turrets[0].set_physics_process(false)
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 
 func _line_of_three() -> Array[CombatActor]:

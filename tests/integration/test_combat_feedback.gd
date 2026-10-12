@@ -12,6 +12,7 @@ func before_each() -> void:
 	world.turrets[0].set_physics_process(false)
 	world.audio.set_process(false)
 	world.effects.set_physics_process(false)
+	world.preparation.deploy()
 	world.audio.reset()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 
@@ -64,6 +65,7 @@ func test_hits_warning_and_terminal_states_route_real_combat_notifications() -> 
 	assert_false(world.audio.cooldowns.has("warning"))
 	assert_false(world.effects.sparks[0].visible)
 	world.start_run()
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	GameStateService.current_wave = world.wave_limit
 	world.finish_wave()

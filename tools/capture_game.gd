@@ -42,6 +42,7 @@ func setup() -> void:
 		FeatureFlagService.set_enabled(FeatureFlagService.ZONE_READABILITY, false)
 	add_child(world)
 	world.waves.remaining_spawns = 0
+	world.preparation.deploy()
 	world.waves.announcement_left = 0
 	world.player.invulnerability = 999
 	mixed_stress = "--mixed-stress" in arguments

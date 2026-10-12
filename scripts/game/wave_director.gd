@@ -79,7 +79,7 @@ func queue_spawn_group() -> void:
 		remaining_spawns -= 1
 
 func tick(delta: float) -> void:
-	if GameStateMachine.current_state == GameStateMachine.GameState.WAVE_END:
+	if GameStateMachine.current_state in [GameStateMachine.GameState.WAVE_END, GameStateMachine.GameState.PREPARATION]:
 		return
 	GameStateService.time_survived += delta
 	if GameStateMachine.current_state == GameStateMachine.GameState.WAVE_ANNOUNCEMENT:
@@ -121,14 +121,13 @@ func _fixed_obstacles() -> Array:
 func begin_next_wave() -> bool:
 	if GameStateMachine.current_state not in [GameStateMachine.GameState.IDLE, GameStateMachine.GameState.SHOP]:
 		return false
-	if not GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_ANNOUNCEMENT):
+	if not GameStateMachine.transition_to(GameStateMachine.GameState.PREPARATION):
 		return false
 	GameStateService.current_wave += 1
 	# Flags requested during the previous wave land here, before this wave's systems start.
 	FeatureFlagService.apply_pending()
 	world.telemetry.begin_wave(GameStateService.current_wave)
 	world.build_zones.begin_wave()
-	world.audio.play_cue("wave", world.player.position)
 	announcement_left = ANNOUNCEMENT_TIME
 	clear_spawn_warnings()
 	spawn_credit = 0.0
@@ -157,6 +156,7 @@ func begin_next_wave() -> bool:
 	arrival_time_left = spawn_window
 	spawn_clock = FIRST_SPAWN_DELAY
 	world.message = EnemyVariants.notice_for_wave(GameStateService.current_wave)
+	world.preparation.begin()
 	return true
 
 func finish_wave() -> bool:

@@ -29,6 +29,7 @@ var blasts := BlastEffects.new()
 var dev := DevCommands.new()
 ## This run's terrain (null when the `terrain_zones` flag is off). Chosen once per run and fixed for every wave.
 var terrain: TerrainZones
+var preparation: PreparationPhase
 var placement := TurretPlacement.new()
 var stage: ArenaStage
 var session: RunSession
@@ -149,6 +150,9 @@ func _ready() -> void:
 		dev_panel = DevPanel.new()
 		dev_panel.world = self
 		add_child(dev_panel)
+	preparation = PreparationPhase.new()
+	preparation.world = self
+	add_child(preparation)
 	if auto_start:
 		start_run()
 
@@ -202,6 +206,8 @@ func start_run() -> void:
 	begin_next_wave()
 
 func _clear_actors() -> void:
+	preparation.end()
+	waves.clear_spawn_warnings()
 	item_effects.reset()
 	reward_presentation.cancel()
 	chest_rewards.cancel()
@@ -265,7 +271,7 @@ func is_combat() -> bool:
 	return not paused and GameStateService.is_game_active and GameStateMachine.is_in_combat()
 
 func _physics_process(delta: float) -> void:
-	if paused or not GameStateService.is_game_active:
+	if paused or not GameStateService.is_game_active or GameStateMachine.current_state == GameStateMachine.GameState.PREPARATION:
 		return
 	item_effects.tick(delta)
 	waves.tick(delta)
@@ -483,6 +489,9 @@ func toggle_ranges() -> void:
 	message = "Turret ranges %s" % ("shown" if show_ranges else "hidden")
 
 func _unhandled_input(event: InputEvent) -> void:
+	if preparation and preparation.handle_input(event):
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("toggle_range") and not event.is_echo() and GameStateService.is_game_active:
 		toggle_ranges()
 	if event is InputEventKey and event.pressed and not event.echo:

@@ -89,6 +89,7 @@ func test_victory_defeat_restart_and_main_menu_paths() -> void:
 	app.start_game()
 	var arena := app.arena
 	arena.set_physics_process(false)
+	arena.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	arena.player.take_damage(1000)
 	arena.hud._process(0)
@@ -97,6 +98,7 @@ func test_victory_defeat_restart_and_main_menu_paths() -> void:
 	arena.hud.restart_button.pressed.emit()
 	assert_eq(GameStateService.current_wave, 1)
 	assert_false(arena.player.dead)
+	arena.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	GameStateService.current_wave = arena.wave_limit
 	arena.finish_wave()
@@ -112,6 +114,7 @@ func test_reduced_motion_survives_runs_and_preserves_warning_and_pulse_informati
 	app.start_game()
 	var arena := app.arena
 	arena.set_physics_process(false)
+	arena.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	var charger := arena.spawn_enemy(Vector3.ZERO, "charger")
 	charger.set_physics_process(false)

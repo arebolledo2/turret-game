@@ -84,6 +84,8 @@ func _physics_process(delta: float) -> void:
 		advance(delta)
 
 func _follow_point() -> Vector3:
+	if is_instance_valid(world) and world.preparation and world.preparation.active:
+		return world.preparation.view_focus
 	var player: Variant = world.get("player") if is_instance_valid(world) else null
 	if player is Node3D and is_instance_valid(player):
 		return WorldGeometry.planar((player as Node3D).position)

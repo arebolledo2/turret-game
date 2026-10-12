@@ -10,6 +10,7 @@ func before_each() -> void:
 	world.set_physics_process(false)
 	world.player.set_physics_process(false)
 	world.audio.set_process(false)
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 
 func _target() -> CombatActor:

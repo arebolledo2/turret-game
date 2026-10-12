@@ -68,6 +68,7 @@ func test_run_config_sets_wave_limit_and_difficulty() -> void:
 	assert_eq(arena.wave_limit, 3)
 	assert_eq(arena.difficulty_config["name"], "Hard")
 	GameStateService.current_wave = 3
+	arena.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	arena.finish_wave()
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.VICTORY, "The configured limit ends the run")
@@ -89,6 +90,7 @@ func test_queued_flags_land_when_the_next_wave_begins() -> void:
 	assert_not_null(panel)
 	assert_eq(panel.toggle_flag(EXPERIMENT, true), FeatureFlagService.QUEUED)
 	assert_false(FeatureFlagService.is_enabled(EXPERIMENT))
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	world.finish_wave()
 	assert_false(FeatureFlagService.is_enabled(EXPERIMENT), "Still queued during the shop")
@@ -111,6 +113,7 @@ func test_restart_discards_queued_flags() -> void:
 func test_flag_gated_catalog_rows_leave_stock_and_block_purchase_until_enabled() -> void:
 	_register_experiment()
 	ShopCatalog.entries["item"]["salvage_optimizer"] = EXPERIMENT
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	world.finish_wave()
 	world.shop.rng = RandomNumberGenerator.new()
@@ -216,6 +219,7 @@ func test_time_scale_resets_when_the_panel_leaves_the_tree() -> void:
 # --- Dev commands ---------------------------------------------------------------------------
 
 func test_god_mode_blocks_player_damage_only() -> void:
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	world.god_mode = true
 	var before := world.player.health
@@ -243,6 +247,7 @@ func test_scrap_hull_and_spawn_commands() -> void:
 
 
 func test_kill_all_enemies_works_while_the_panel_pauses_the_run() -> void:
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	_enemy()
 	_enemy(Vector3(2, 0, 0))
@@ -253,6 +258,7 @@ func test_kill_all_enemies_works_while_the_panel_pauses_the_run() -> void:
 
 
 func test_jump_to_wave_opens_that_waves_shop_and_deploys_it() -> void:
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	_enemy()
 	assert_true(world.dev.jump_to_wave(4))
@@ -275,6 +281,7 @@ func test_jump_is_rejected_outside_a_live_run() -> void:
 # --- Telemetry ------------------------------------------------------------------------------
 
 func test_telemetry_attributes_kills_to_the_turret_that_fired() -> void:
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	var starter := world.turrets[0]
 	assert_eq(starter.turret_id, 1)
@@ -290,6 +297,7 @@ func test_telemetry_attributes_kills_to_the_turret_that_fired() -> void:
 
 
 func test_shots_carry_their_turret_id_into_hits() -> void:
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	var shot := CombatShot3D.new()
 	shot.damage = 10000.0
@@ -303,6 +311,7 @@ func test_shots_carry_their_turret_id_into_hits() -> void:
 
 
 func test_telemetry_counts_turret_moves_and_spending() -> void:
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	world.player.position = world.turrets[0].position + Vector3(0, 0, .5)
 	assert_true(world.interact(), "Pick up")
@@ -323,6 +332,7 @@ func test_telemetry_counts_turret_moves_and_spending() -> void:
 
 
 func test_telemetry_resets_with_each_run_and_records_flags() -> void:
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	_enemy().take_damage(10000.0)
 	assert_eq(world.telemetry.total("kills"), 1)

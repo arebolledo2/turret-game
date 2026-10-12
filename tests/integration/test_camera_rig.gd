@@ -10,6 +10,7 @@ func before_each() -> void:
 	world.show_hud = false
 	add_child_autofree(world)
 	world.start_run()
+	world.preparation.deploy()
 	world.set_physics_process(false)
 	world.player.set_physics_process(false)
 	rig = world.camera_rig

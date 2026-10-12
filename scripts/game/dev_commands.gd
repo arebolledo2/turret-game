@@ -37,7 +37,7 @@ func kill_all_enemies() -> int:
 
 ## Lands in the shop that precedes `target_wave` (deploy to start it). Clears the field without rewards.
 func jump_to_wave(target_wave: int) -> bool:
-	if not GameStateService.is_game_active or GameStateMachine.current_state not in [GameStateMachine.GameState.WAVE_ANNOUNCEMENT,
+	if not GameStateService.is_game_active or GameStateMachine.current_state not in [GameStateMachine.GameState.PREPARATION, GameStateMachine.GameState.WAVE_ANNOUNCEMENT,
 			GameStateMachine.GameState.COMBAT, GameStateMachine.GameState.SHOP]:
 		return false
 	target_wave = clampi(target_wave, 1, world.wave_limit)

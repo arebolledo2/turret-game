@@ -14,10 +14,12 @@ func _ready() -> void:
 	app.arena.toggle_pause()
 	await capture("pause")
 	app.arena.toggle_pause()
+	app.arena.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	app.arena.player.take_damage(1000)
 	await capture("defeat")
 	app.arena.start_run()
+	app.arena.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	GameStateService.current_wave = 6
 	app.arena.finish_wave()

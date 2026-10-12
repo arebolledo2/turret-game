@@ -13,6 +13,7 @@ func before_each() -> void:
 	world.player.set_physics_process(false)
 	world.turrets[0].set_physics_process(false)
 	world.pickup_root.process_mode = Node.PROCESS_MODE_DISABLED
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 
 func enemy(at: Vector3) -> CombatActor:

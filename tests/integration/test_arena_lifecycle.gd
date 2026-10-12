@@ -20,6 +20,7 @@ func spawn_enemy(at: Vector3) -> CombatActor:
 	return actor
 
 func combat() -> void:
+	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 
 func test_wave_shop_purchase_and_restart_use_shared_run_services() -> void:
@@ -197,6 +198,7 @@ func test_imported_hero_boots_stay_above_the_ground_during_a_stride() -> void:
 	assert_gte(lowest, -.002, "Imported boots must not dip beneath the arena floor")
 
 func test_announcement_enters_combat_then_timer_opens_shop() -> void:
+	assert_true(world.preparation.deploy())
 	world._physics_process(2.1)
 	assert_true(world.is_combat())
 	world.waves.remaining_spawns = 0

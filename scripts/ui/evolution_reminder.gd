@@ -9,7 +9,7 @@ func _ready() -> void:
 	title = "Evolutions ready"
 	get_ok_button().text = "REVIEW TURRETS"
 	get_cancel_button().text = "BACK"
-	deploy_button = add_button("DEPLOY ANYWAY", false, "deploy")
+	deploy_button = add_button("PREPARE ANYWAY", false, "deploy")
 	var panel := StyleBoxFlat.new()
 	panel.bg_color = Color("0b2530")
 	panel.border_color = Color("48dcd4")
@@ -36,7 +36,7 @@ func _ready() -> void:
 func show_ready(count: int) -> void:
 	dialog_text = "%d turret%s ready to evolve.
 Review your free upgrades before the next wave.
-You can deploy now and keep them for a later Shop visit." % [count, " is" if count == 1 else "s are"]
+You can prepare for the wave now and keep them for a later Shop visit." % [count, " is" if count == 1 else "s are"]
 	popup_centered(Vector2i(760, 220))
 	get_ok_button().grab_focus.call_deferred()
 
