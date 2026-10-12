@@ -15,11 +15,20 @@ var fx: Node3D
 var cards: Dictionary = {}
 var packets: Array[Dictionary] = []
 var heading: Label
+var panel: PanelContainer
+var grid: GridContainer
 var skip_button: Button
 
 func begin(record: Dictionary) -> void:
 	cancel()
 	ledger = record.duplicate(true)
+	# Include zero-XP recipients in the roster without changing the committed settlement.
+	for target: Dictionary in ledger.get("targets", []):
+		var id := int(target["id"])
+		var turret := _turret(id)
+		if turret and not ledger["changes"].has(id):
+			var snapshot := turret.progression.snapshot()
+			ledger["changes"][id] = {"before": snapshot, "after": snapshot, "xp_awarded": 0}
 	active = true
 	elapsed = 0.0
 	reduced = FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION)
@@ -30,12 +39,7 @@ func begin(record: Dictionary) -> void:
 	add_child(root)
 	fx = Node3D.new()
 	world.add_child(fx)
-	var panel := PanelContainer.new()
-	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	panel.offset_left = -540
-	panel.offset_right = 540
-	panel.offset_top = -350
-	panel.offset_bottom = -35
+	panel = PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", ChamferStyle.make(UiPalette.PANEL, UiPalette.TEAL, 12, 24, 18))
 	root.add_child(panel)
 	var column := VBoxContainer.new()
@@ -50,16 +54,21 @@ func begin(record: Dictionary) -> void:
 	skip_button.custom_minimum_size = Vector2(260, 48)
 	skip_button.pressed.connect(complete)
 	header.add_child(skip_button)
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	column.add_child(scroll)
-	var grid := GridContainer.new()
-	grid.columns = 3
+	grid = GridContainer.new()
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	grid.add_theme_constant_override("h_separation", 18)
-	grid.add_theme_constant_override("v_separation", 18)
-	scroll.add_child(grid)
-	for target: Dictionary in ledger.get("targets", []):
+	grid.add_theme_constant_override("h_separation", 20)
+	grid.add_theme_constant_override("v_separation", 16)
+	column.add_child(grid)
+	root.resized.connect(_layout_report)
+	grid.minimum_size_changed.connect(_layout_report.call_deferred)
+	var targets: Array = ledger.get("targets", []).duplicate()
+	targets.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		var a_change: Dictionary = ledger["changes"].get(a["id"], {})
+		var b_change: Dictionary = ledger["changes"].get(b["id"], {})
+		var a_levels := int(a_change.get("after", {}).get("level", 0)) - int(a_change.get("before", {}).get("level", 0))
+		var b_levels := int(b_change.get("after", {}).get("level", 0)) - int(b_change.get("before", {}).get("level", 0))
+		return a_levels > b_levels if a_levels != b_levels else int(a["id"]) < int(b["id"]))
+	for target: Dictionary in targets:
 		var id: int = target["id"]
 		if not ledger["changes"].has(id):
 			continue
@@ -68,20 +77,23 @@ func begin(record: Dictionary) -> void:
 			continue
 		var change: Dictionary = ledger["changes"][id]
 		var card := VBoxContainer.new()
-		card.custom_minimum_size.x = 315
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.add_theme_constant_override("separation", 3)
 		grid.add_child(card)
-		var name_label := _label(card, "%s #%d" % [TurretRegistry.get_short_name(turret.turret_type), id], 23)
+		var name_label := _label(card, "%s #%d" % [TurretRegistry.get_short_name(turret.turret_type), id], 21)
 		name_label.modulate = UiPalette.TEAL_HI
-		var detail := _label(card, "", 21)
+		var detail := _label(card, "", 19)
 		var progress := TurretXpBar.new()
+		progress.custom_minimum_size.y = 14
 		card.add_child(progress)
-		var stats := _label(card, "", 20)
+		var stats := _label(card, "", 18)
 		var floating := Label3D.new()
 		floating.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		floating.no_depth_test = true
 		floating.font_size = 38
 		floating.pixel_size = .01
 		floating.position = target["position"] + Vector3(0, 1.8, 0)
+		floating.visible = int(change["xp_awarded"]) > 0
 		fx.add_child(floating)
 		var glow: MeshInstance3D
 		if not reduced:
@@ -106,7 +118,20 @@ func begin(record: Dictionary) -> void:
 	_build_packets()
 
 	advance(0.0)
+	_layout_report.call_deferred()
 	skip_button.grab_focus()
+
+## Grow to fit the roster, then fit the whole report for unusually large armies.
+## No scrolling, clipped cards or hidden stat gains; layout responds to window resizing.
+func _layout_report() -> void:
+	if not active or not is_instance_valid(panel): return
+	var available := root.size - Vector2(64, 64)
+	var width := minf(1560, available.x)
+	grid.columns = 4 if width >= 1400 else 3 if width >= 1050 else 2
+	panel.size = Vector2(width, panel.get_combined_minimum_size().y)
+	var fit := minf(1.0, minf(available.x / panel.size.x, available.y / panel.size.y))
+	panel.scale = Vector2.ONE * fit
+	panel.position = Vector2((root.size.x - panel.size.x * fit) * .5, root.size.y - panel.size.y * fit - 32)
 
 func _label(parent: Node, text: String, size: int) -> Label:
 	var result := Label.new()
@@ -203,9 +228,9 @@ func advance(delta: float) -> void:
 		var bar: TurretXpBar = card["bar"]
 		bar.show_progress(shown.level, shown.xp)
 		var detail: Label = card["detail"]
-		detail.text = "LEVEL UP · Lv %d → %d\n+%d XP · Next: Lv %d" % [change["before"]["level"], shown.level, awarded, shown.level + 1] if levels > 0 else "Lv %d · +%d XP\nProgress toward Lv %d" % [shown.level, awarded, shown.level + 1]
+		detail.text = "LEVEL UP · Lv %d → %d · +%d XP" % [change["before"]["level"], shown.level, awarded] if levels > 0 else "Lv %d · +%d XP → Lv %d" % [shown.level, awarded, shown.level + 1]
 		detail.modulate = UiPalette.GOOD if levels > 0 else UiPalette.INK
-		var result := "No level-up"
+		var result := ""
 		if levels > 0:
 			var lines: Array[String] = []
 			var multipliers := shown.stat_multipliers()
@@ -225,6 +250,7 @@ func advance(delta: float) -> void:
 				if int(change["before"]["level"]) < milestone and shown.level >= milestone:
 					result += ("\n" if not result.is_empty() else "") + "Lv %d milestone · form pending" % milestone
 		(card["stats"] as Label).text = result
+		(card["stats"] as Label).visible = not result.is_empty()
 		(card["floating"] as Label3D).text = ("LEVEL UP!  Lv %d\n+%d XP" % [shown.level, awarded]) if levels > 0 else "+%d XP" % awarded
 		var glow: MeshInstance3D = card["glow"]
 		if glow:

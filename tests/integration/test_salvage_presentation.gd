@@ -60,8 +60,9 @@ func test_xp_only_report_does_not_claim_a_level_or_damage_increase() -> void:
 	_finish(10)
 	world.reward_presentation.advance(2.0)
 	var card: Dictionary = world.reward_presentation.cards[1]
-	assert_eq(card.detail.text, "Lv 1 · +10 XP\nProgress toward Lv 2")
-	assert_eq(card.stats.text, "No level-up")
+	assert_eq(card.detail.text, "Lv 1 · +10 XP → Lv 2")
+	assert_eq(card.stats.text, "")
+	assert_false(card.stats.visible)
 	assert_true(world.reward_presentation.heading.text.contains("NO LEVEL-UPS"))
 
 func test_level_report_identifies_actual_levels_and_damage_gain() -> void:
@@ -193,3 +194,36 @@ func test_turrets_tab_uses_individual_stats_and_controller_can_reach_deploy() ->
 	await wait_process_frames(1)
 	assert_eq(shop.active_tab, 0)
 	assert_true(shop.offers_content.visible)
+
+func test_large_roster_fits_without_scroll_and_level_ups_come_first() -> void:
+	for i in 11:
+		var turret := world.add_turret(Vector3(i - 5, 0, 3), "normal")
+		turret.set_physics_process(false)
+		if i % 2 == 0: turret.progression.award(19)
+	_finish(120)
+	var report := world.reward_presentation
+	report.advance(2.0)
+	await wait_process_frames(4)
+	assert_eq(report.cards.size(), 12)
+	assert_true(report.root.find_children("*", "ScrollContainer", true, false).is_empty())
+	var previous := 999
+	for id: int in report.cards:
+		var card: Dictionary = report.cards[id]
+		var levels := int(card.change.after.level) - int(card.change.before.level)
+		assert_lte(levels, previous, "Biggest level-ups first, XP-only entries last")
+		previous = levels
+		var bounds: Rect2 = card.detail.get_parent().get_global_rect()
+		assert_true(report.root.get_global_rect().encloses(bounds), "Every card fits onscreen")
+		assert_true(report.panel.get_global_rect().encloses(bounds), "No card extends beyond the panel")
+
+func test_zero_xp_turrets_still_appear_without_mutating_settlement() -> void:
+	world.add_turret(Vector3(5, 0, 0), "normal").set_physics_process(false)
+	_finish(1)
+	var report := world.reward_presentation
+	report.advance(2.0)
+	assert_eq(report.cards.size(), 2)
+	assert_eq(world.salvage.last_settlement.changes.size(), 1)
+	for id: int in report.cards:
+		if report.cards[id].change.xp_awarded == 0:
+			assert_false(report.cards[id].floating.visible)
+			assert_true(report.cards[id].detail.text.contains("+0 XP"))
