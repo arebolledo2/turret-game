@@ -183,6 +183,15 @@ func _create_stage_and_hud() -> void:
 		dev_panel.world = self
 		add_child(dev_panel)
 
+## Floor theme for a run without terrain zones: the named layout's, else one picked from a stream derived from (not
+## advancing) the gameplay RNG, so combat and shop rolls are undisturbed and seeded runs still repeat.
+func _zoneless_floor_theme() -> String:
+	if run_config.layout_id != "":
+		return ArenaLayouts.get_layout(run_config.layout_id).floor_theme
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(GameRandom.gameplay.state)
+	return WorldGeometry.FLOOR_THEMES[rng.randi_range(0, WorldGeometry.FLOOR_THEMES.size() - 1)]
+
 func start_run() -> void:
 	_clear_actors()
 	stage.floor_decals.clear_scorches()
@@ -217,6 +226,8 @@ func start_run() -> void:
 		stage.set_floor_theme(layout.floor_theme)
 		terrain = TerrainZones.new(layout)
 		terrain.build_visuals(actor_root)
+	else:
+		stage.set_floor_theme(_zoneless_floor_theme())
 	if convoy_mode:
 		# A dedicated seed keeps every route reproducible without disturbing the shop and spawn rolls.
 		_convoy_seed = GameRandom.gameplay.randi()

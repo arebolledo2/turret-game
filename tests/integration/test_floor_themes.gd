@@ -50,3 +50,15 @@ func test_wave_tint_scales_the_seam_lights_instead_of_lighting_the_whole_floor()
 	var material := WorldGeometry.floor_material(Vector2(10, 10))
 	assert_eq(material.emission_operator, BaseMaterial3D.EMISSION_OP_MULTIPLY)
 	assert_eq(material.emission, Color.WHITE)
+
+func test_floor_theme_applies_when_terrain_zones_are_off() -> void:
+	FeatureFlagService.set_enabled(FeatureFlagService.TERRAIN_ZONES, false)
+	world.run_config.layout_id = "highlands"
+	world.start_run()
+	assert_eq(world.stage.floor_theme, "concrete")
+
+func test_random_zoneless_theme_leaves_the_gameplay_rng_untouched() -> void:
+	FeatureFlagService.set_enabled(FeatureFlagService.TERRAIN_ZONES, false)
+	var state_before := GameRandom.gameplay.state
+	assert_has(WorldGeometry.FLOOR_THEMES, world._zoneless_floor_theme())
+	assert_eq(GameRandom.gameplay.state, state_before)
