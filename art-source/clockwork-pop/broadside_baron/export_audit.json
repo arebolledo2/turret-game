@@ -1,0 +1,101 @@
+{
+  "animations": [
+    {
+      "name": "Idle",
+      "seconds": 2.0,
+      "channels": 7,
+      "endpoint_error": 0.0,
+      "returns_to_rest": true
+    },
+    {
+      "name": "Walk",
+      "seconds": 1.6,
+      "channels": 7,
+      "endpoint_error": 0.0,
+      "returns_to_rest": true
+    },
+    {
+      "name": "Swim",
+      "seconds": 1.6,
+      "channels": 7,
+      "endpoint_error": 0.0,
+      "returns_to_rest": true
+    },
+    {
+      "name": "Attack",
+      "seconds": 1.0333,
+      "channels": 11,
+      "endpoint_error": 0.0,
+      "returns_to_rest": true
+    }
+  ],
+  "stations": [
+    {
+      "station": "FL",
+      "cannon_rotation_xyzw": [
+        0,
+        0.3826834559440613,
+        0,
+        0.9238795638084412
+      ],
+      "marker_translation_gltf_yup": [
+        0,
+        0.029999971389770508,
+        -0.7749999761581421
+      ],
+      "recoil_under_cannon": true,
+      "muzzle_under_recoil": true
+    },
+    {
+      "station": "FR",
+      "cannon_rotation_xyzw": [
+        0,
+        -0.3826834559440613,
+        0,
+        0.9238795638084412
+      ],
+      "marker_translation_gltf_yup": [
+        0,
+        0.029999971389770508,
+        -0.7749999761581421
+      ],
+      "recoil_under_cannon": true,
+      "muzzle_under_recoil": true
+    },
+    {
+      "station": "RL",
+      "cannon_rotation_xyzw": [
+        0,
+        0.9238795638084412,
+        0,
+        0.3826834559440613
+      ],
+      "marker_translation_gltf_yup": [
+        0,
+        0.029999971389770508,
+        -0.7749999761581421
+      ],
+      "recoil_under_cannon": true,
+      "muzzle_under_recoil": true
+    },
+    {
+      "station": "RR",
+      "cannon_rotation_xyzw": [
+        0,
+        -0.9238795638084412,
+        0,
+        0.3826834559440613
+      ],
+      "marker_translation_gltf_yup": [
+        0,
+        0.029999971389770508,
+        -0.7749999761581421
+      ],
+      "recoil_under_cannon": true,
+      "muzzle_under_recoil": true
+    }
+  ],
+  "embedded_images": 4,
+  "all_images_embedded": true,
+  "file_bytes": 3944436
+}

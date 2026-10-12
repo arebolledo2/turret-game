@@ -1,0 +1,218 @@
+{
+  "embedded_images": 4,
+  "external_uris": [],
+  "clips": {
+    "Idle": {
+      "duration_seconds": 2.0,
+      "channels": [
+        {
+          "node": "Body",
+          "path": "translation",
+          "samples": 61,
+          "first": [
+            0.0,
+            0.9049999713897705,
+            -0.0
+          ],
+          "last": [
+            0.0,
+            0.9049999713897705,
+            -0.0
+          ]
+        },
+        {
+          "node": "Optic",
+          "path": "rotation",
+          "samples": 61,
+          "first": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "last": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "endpoint_orientation_error_degrees": 0.0
+        }
+      ]
+    },
+    "Walk": {
+      "duration_seconds": 2.0,
+      "channels": [
+        {
+          "node": "Body",
+          "path": "translation",
+          "samples": 61,
+          "first": [
+            0.0,
+            0.9049999713897705,
+            -0.0
+          ],
+          "last": [
+            0.0,
+            0.9049999713897705,
+            -0.0
+          ]
+        },
+        {
+          "node": "Optic",
+          "path": "rotation",
+          "samples": 61,
+          "first": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "last": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "endpoint_orientation_error_degrees": 0.0
+        },
+        {
+          "node": "Wheel",
+          "path": "rotation",
+          "samples": 61,
+          "first": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "last": [
+            -8.742277657347586e-08,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "endpoint_orientation_error_degrees": 0.0,
+          "total_axle_rotation_degrees": -360.0,
+          "maximum_nonaxle_quaternion_component": 0.0
+        }
+      ]
+    },
+    "Swim": {
+      "duration_seconds": 2.0,
+      "channels": [
+        {
+          "node": "Body",
+          "path": "translation",
+          "samples": 61,
+          "first": [
+            0.0,
+            0.9049999713897705,
+            -0.0
+          ],
+          "last": [
+            0.0,
+            0.9049999713897705,
+            -0.0
+          ]
+        },
+        {
+          "node": "Optic",
+          "path": "rotation",
+          "samples": 61,
+          "first": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "last": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "endpoint_orientation_error_degrees": 0.0
+        },
+        {
+          "node": "Wheel",
+          "path": "rotation",
+          "samples": 61,
+          "first": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "last": [
+            -8.742277657347586e-08,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "endpoint_orientation_error_degrees": 0.0,
+          "total_axle_rotation_degrees": -360.0,
+          "maximum_nonaxle_quaternion_component": 0.0
+        }
+      ]
+    },
+    "Attack": {
+      "duration_seconds": 1.0,
+      "channels": [
+        {
+          "node": "Body",
+          "path": "translation",
+          "samples": 31,
+          "first": [
+            0.0,
+            0.9049999713897705,
+            -0.0
+          ],
+          "last": [
+            0.0,
+            0.9049999713897705,
+            -0.0
+          ]
+        },
+        {
+          "node": "Optic",
+          "path": "rotation",
+          "samples": 31,
+          "first": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "last": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "endpoint_orientation_error_degrees": 0.0
+        },
+        {
+          "node": "Wheel",
+          "path": "rotation",
+          "samples": 31,
+          "first": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "last": [
+            0.0,
+            0.0,
+            -0.0,
+            1.0
+          ],
+          "endpoint_orientation_error_degrees": 0.0,
+          "total_axle_rotation_degrees": -0.0,
+          "maximum_nonaxle_quaternion_component": 0.0
+        }
+      ]
+    }
+  }
+}

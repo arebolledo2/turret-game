@@ -3,6 +3,13 @@ extends RefCounted
 
 ## Runtime identities and authored wave budgets. Summons never enter the normal spawn pool.
 const TYPES := {
+	"broadside_baron": {"name": "Broadside Baron", "health": 260.0, "speed": 90.0, "contact_damage": 0.0, "mass": 35.0, "scale": 0.95, "cost": 0},
+	"frostforge_yeti": {"name": "Frostforge Yeti", "health": 260.0, "speed": 130.0, "contact_damage": 0.0, "mass": 35.0, "scale": 1.10, "cost": 0},
+	"skyfall_kestrel": {"name": "Skyfall Kestrel", "health": 260.0, "speed": 280.0, "contact_damage": 0.0, "mass": 35.0, "scale": 0.90, "cost": 0},
+	"crucible_crab": {"name": "Crucible Crab", "health": 260.0, "speed": 85.0, "contact_damage": 0.0, "mass": 35.0, "scale": 1.05, "cost": 0},
+	"pendulum_regent": {"name": "Pendulum Regent", "health": 260.0, "speed": 105.0, "contact_damage": 0.0, "mass": 35.0, "scale": 1.00, "cost": 0},
+	"crownwheel_colossus": {"name": "Crownwheel Colossus", "health": 260.0, "speed": 150.0, "contact_damage": 10.0, "mass": 35.0, "scale": 1.05, "cost": 0},
+
 	"drowse": {"name": "Drowse Beetle", "health": 4.8, "speed": 100.0, "contact_damage": 2.0, "mass": 1.0, "scale": .85, "cost": 1},
 	"hopper": {"name": "Rivet Hopper", "health": 8.0, "speed": 300.0, "contact_damage": 6.0, "mass": 1.0, "scale": .85, "cost": 2},
 	"kite": {"name": "Needle Kite", "health": 6.0, "speed": 150.0, "contact_damage": 0.0, "mass": .8, "scale": .8, "cost": 2},
@@ -16,8 +23,8 @@ const TYPES := {
 	"anchor": {"name": "Tether Anchor", "health": 6.0, "speed": 0.0, "contact_damage": 0.0, "mass": 100.0, "scale": .6, "cost": 0},
 	"puppet": {"name": "Clockwork Puppet", "health": 6.0, "speed": 130.0, "contact_damage": 4.0, "mass": .8, "scale": .6, "cost": 0},
 }
-const FOOTPRINTS := {"drowse": .48, "hopper": .38, "kite": .34, "lobber": .45, "tender": .55, "skitter": .44, "brass_ram": .6, "prism_conductor": .52, "grand_marionettist": .38, "lens": .42, "anchor": .3, "puppet": .25}
-const BOSSES := {6: "brass_ram", 12: "prism_conductor", 20: "grand_marionettist"}
+const FOOTPRINTS := {"broadside_baron": 0.85, "frostforge_yeti": 0.65, "skyfall_kestrel": 0.80, "crucible_crab": 0.80, "pendulum_regent": 0.60, "crownwheel_colossus": 0.65, "drowse": .48, "hopper": .38, "kite": .34, "lobber": .45, "tender": .55, "skitter": .44, "brass_ram": .6, "prism_conductor": .52, "grand_marionettist": .38, "lens": .42, "anchor": .3, "puppet": .25}
+const BOSSES := {6: "brass_ram", 8: "frostforge_yeti", 10: "broadside_baron", 12: "prism_conductor", 14: "crucible_crab", 16: "skyfall_kestrel", 18: "pendulum_regent", 19: "crownwheel_colossus", 20: "grand_marionettist"}
 const SUMMONS: Array[String] = ["skitter", "lens", "anchor", "puppet"]
 const CAPS := {"kite": 4, "lobber": 2, "tender": 2, "skitter": 8, "lens": 2, "anchor": 2, "puppet": 4}
 const WAVES := [
@@ -55,13 +62,15 @@ const CORE_ROSTERS := {
 	20: {"tank": 30, "charger": 30, "drowse": 40},
 }
 
-const BOSS_IDS: Array[String] = ["brass_ram", "prism_conductor", "grand_marionettist"]
+const EXPANSION_BOSSES: Array[String] = ["broadside_baron", "frostforge_yeti", "skyfall_kestrel", "crucible_crab", "pendulum_regent", "crownwheel_colossus"]
+
+const BOSS_IDS: Array[String] = ["broadside_baron", "frostforge_yeti", "skyfall_kestrel", "crucible_crab", "pendulum_regent", "crownwheel_colossus", "brass_ram", "prism_conductor", "grand_marionettist"]
 
 static func is_boss(type_id: String) -> bool:
 	return type_id in BOSS_IDS
 
 static func ranged_threat(type_id: String) -> bool:
-	return type_id in ["kite", "lobber", "lens", "anchor", "tender", "prism_conductor", "grand_marionettist"]
+	return type_id in EXPANSION_BOSSES or type_id in ["kite", "lobber", "lens", "anchor", "tender", "prism_conductor", "grand_marionettist"]
 
 static func hero_only(type_id: String) -> bool:
 	return TYPES.has(type_id) and type_id not in ["lobber", "drowse"]
@@ -76,6 +85,7 @@ static func roster(wave: int, protect_core: bool = false) -> Dictionary:
 	return WAVES[clampi(wave - 1, 0, WAVES.size() - 1)][1]
 
 static func title(wave: int) -> String:
+	if BOSSES.has(wave): return str(TYPES[BOSSES[wave]].name)
 	return str(WAVES[clampi(wave - 1, 0, WAVES.size() - 1)][0])
 
 static func budget_multiplier(wave: int, protect_core: bool = false) -> float:
@@ -120,5 +130,5 @@ static func fallback(wave: int, protect_core: bool = false) -> String:
 ## Reference focused DPS: 30 at wave6, 75 at12, 180 at20; movement makes actual kills slower.
 static func boss_health(type_id: String, difficulty: Dictionary) -> float:
 	var wave: int = BOSSES.find_key(type_id)
-	var reference_dps: float = {6: 30.0, 12: 75.0, 20: 180.0}[wave]
+	var reference_dps := lerpf(30.0, 75.0, clampf((wave - 6) / 6.0, 0.0, 1.0)) if wave <= 12 else lerpf(75.0, 180.0, clampf((wave - 12) / 8.0, 0.0, 1.0))
 	return roundf(reference_dps * GameStateService.get_wave_duration(wave) * .9 * float(difficulty.get("enemy_health_mult", 1.0)))

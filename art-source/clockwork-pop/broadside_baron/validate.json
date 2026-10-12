@@ -1,0 +1,93 @@
+{
+ "triangles": 43196,
+ "mesh_objects": 6,
+ "materials": 6,
+ "loose_components": 819,
+ "size_m": [
+  3.197,
+  3.092,
+  1.952
+ ],
+ "min_z": 0.2,
+ "centre_xy": [
+  0.0,
+  -0.056
+ ],
+ "origin_node": null,
+ "origin_xy": [
+  0.0,
+  -0.056
+ ],
+ "missing_nodes": [],
+ "empty_leg_pivots": [],
+ "textures": [
+  [
+   "amber_optics",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "brushed_brass",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "ivory_enamel",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "navy_enamel",
+   [
+    1024,
+    1024
+   ]
+  ]
+ ],
+ "animations": [
+  "Idle",
+  "Walk",
+  "Swim",
+  "Attack"
+ ],
+ "checks": {
+  "required_nodes_present": true,
+  "each_required_node_has_geometry": true,
+  "height_ok": true,
+  "width_ok": true,
+  "ground_gap_ok": true,
+  "origin_xy_centred": true,
+  "has_meshes": true,
+  "textures_present": true,
+  "required_animations_present": true,
+  "animation_channels_present": true
+ },
+ "passed": true,
+ "limits": {
+  "height": [
+   1.5,
+   2.3
+  ],
+  "max_width": 3.5,
+  "ground_gap": [
+   0.0,
+   0.45
+  ]
+ },
+ "targets": {
+  "max_texture_px": 1024,
+  "max_textures": 4,
+  "max_triangles": 18000,
+  "max_mesh_objects": 35,
+  "max_materials": 12
+ },
+ "target_overruns": [
+  "max_triangles: 43196 > target 18000"
+ ]
+}

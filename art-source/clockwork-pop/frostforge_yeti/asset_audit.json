@@ -1,0 +1,33 @@
+{
+  "glb_bytes": 1590288,
+  "mesh_count": 12,
+  "material_count": 8,
+  "images": 4,
+  "all_images_embedded": true,
+  "animations": [
+    {
+      "name": "Idle",
+      "duration_seconds": 2.0,
+      "transform_channels": 6,
+      "first_last_max_delta": 2.2043641609453735e-18
+    },
+    {
+      "name": "Walk",
+      "duration_seconds": 1.2,
+      "transform_channels": 13,
+      "first_last_max_delta": 3.429011054889572e-17
+    },
+    {
+      "name": "Swim",
+      "duration_seconds": 2.0,
+      "transform_channels": 10,
+      "first_last_max_delta": 0.0
+    },
+    {
+      "name": "Attack",
+      "duration_seconds": 1.4,
+      "transform_channels": 11,
+      "first_last_max_delta": 9.797174324372975e-18
+    }
+  ]
+}

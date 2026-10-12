@@ -60,7 +60,7 @@ func _draw() -> void:
 			var reward := "LEGENDARY" if actor.enemy_type == "grand_marionettist" else ("EPIC / LEGENDARY" if actor.enemy_type == "prism_conductor" else "EPIC")
 			draw_string(face, at + Vector2(14, 82), "%d / %d HP" % [ceili(actor.health), ceili(actor.max_health)], HORIZONTAL_ALIGNMENT_LEFT, width * .48, 18, Color("e8d6c0"))
 			draw_string(face, at + Vector2(width * .48, 82), reward + " REWARD", HORIZONTAL_ALIGNMENT_RIGHT, width * .52 - 14, 18, Color("c8a1ef"))
-			var ticks: Array = [.5] if actor.enemy_type == "brass_ram" else ([.6] if actor.enemy_type == "prism_conductor" else [.3, .65])
+			var ticks: Array = [.5] if (actor.enemy_type == "brass_ram" or actor.enemy_type in EnemyEcology.EXPANSION_BOSSES) else ([.6] if actor.enemy_type == "prism_conductor" else [.3, .65])
 			for threshold: float in ticks:
 				var x := at.x + 14 + (width - 28) * threshold
 				draw_line(Vector2(x, at.y + 43), Vector2(x, at.y + 59), Color("f5e8ca"), 2)

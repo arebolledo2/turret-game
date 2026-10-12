@@ -312,6 +312,48 @@
       "status": "verified",
       "preview": "previews/puppet.png",
       "metrics": "14,205 triangles \u00c2\u00b7 10 meshes \u00c2\u00b7 7 materials"
+    },
+    {
+      "key": "broadside_baron",
+      "name": "Broadside Baron",
+      "status": "review",
+      "preview": "previews/broadside_baron.png",
+      "metrics": "43,196 triangles \u00c2\u00b7 6 meshes \u00c2\u00b7 6 materials"
+    },
+    {
+      "key": "skyfall_kestrel",
+      "name": "Skyfall Kestrel",
+      "status": "review",
+      "preview": "previews/skyfall_kestrel.png",
+      "metrics": "30,322 triangles \u00c2\u00b7 19 meshes \u00c2\u00b7 11 materials"
+    },
+    {
+      "key": "frostforge_yeti",
+      "name": "Frostforge Yeti",
+      "status": "review",
+      "preview": "previews/frostforge_yeti.png",
+      "metrics": "25,430 triangles \u00c2\u00b7 12 meshes \u00c2\u00b7 8 materials"
+    },
+    {
+      "key": "crucible_crab",
+      "name": "Crucible Crab",
+      "status": "review",
+      "preview": "previews/crucible_crab.png",
+      "metrics": "35,710 triangles \u00c2\u00b7 19 meshes \u00c2\u00b7 8 materials"
+    },
+    {
+      "key": "pendulum_regent",
+      "name": "Pendulum Regent",
+      "status": "review",
+      "preview": "previews/pendulum_regent.png",
+      "metrics": "37,676 triangles \u00c2\u00b7 6 meshes \u00c2\u00b7 7 materials"
+    },
+    {
+      "key": "crownwheel_colossus",
+      "name": "Crownwheel Colossus",
+      "status": "review",
+      "preview": "previews/crownwheel_colossus.png",
+      "metrics": "30,860 triangles \u00c2\u00b7 26 meshes \u00c2\u00b7 8 materials"
     }
   ],
   "events": [
@@ -558,6 +600,30 @@
     {
       "stage": "Enemy ecology integrated",
       "text": "All twelve ecology models visually reviewed in Godot, imported clips verified, roles and authored waves implemented. Full suite: 1,044 passing tests. See ../enemy-ecology/index.html for captures."
+    },
+    {
+      "stage": "Export: broadside_baron",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: skyfall_kestrel",
+      "text": "Reviewed harness iteration 4; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: frostforge_yeti",
+      "text": "Reviewed harness iteration 4; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: crucible_crab",
+      "text": "Reviewed harness iteration 4; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: pendulum_regent",
+      "text": "Reviewed harness iteration 5; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: crownwheel_colossus",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
     }
   ],
   "checks": {

@@ -1,6 +1,6 @@
 # Enemy ecology
 
-Implemented on `feat/enemy-ecology`, 11 October 2026. [Visual review](art/enemy-ecology/index.html) · [Design notebook](plans/enemy-ecology.html).
+Implemented on `feat/enemy-ecology`, 11 October 2026. [Visual review](art/enemy-ecology/index.html) Â· [Design notebook](plans/enemy-ecology.html).
 
 ## Roles and targeting
 
@@ -24,17 +24,21 @@ All bosses attack the hero, never the core. Their supporting attacks also respec
 |---|---|---|---|
 | 6 | Brass Ram | Locked charges; alternating stomp; paired charges below half health | Epic item |
 | 12 | Prism Conductor | Three-bolt volleys and sweeping beam; two lenses at 60% HP; destroy both to interrupt and stun | Epic, 25% chance Legendary |
-| 20 | Grand Marionettist | Volleys above 65%; puppets and breakable tether anchors from 65–30%; charges and gapped pulses below 30% | Legendary item |
+| 20 | Grand Marionettist | Volleys above 65%; puppets and breakable tether anchors from 65â€“30%; charges and gapped pulses below 30% | Legendary item |
+
+Six additional bosses now occupy waves 8, 10, 14, 16, 18 and 19. See the [implemented encounter table](plans/boss-expansion.md) and [model / motion review](art/boss-expansion/index.html). They use the same hero-only targeting, timer cleanup and rewards contract above. All six award Epic items.
 
 Boss health uses a fixed benchmark, never the current player's DPS:
 
-`HP = round(reference DPS × normal wave duration × 0.9 × difficulty health multiplier)`
+`HP = round(reference DPS Ã— normal wave duration Ã— 0.9 Ã— difficulty health multiplier)`
 
-Reference DPS is 30 / 75 / 180 for waves 6 / 12 / 20. These are starting balance assumptions, not measured kill-time guarantees. Rewards respect mode eligibility, stack caps and pending rewards. If no eligible item exists, the fallback is scrap worth 25% of the corresponding item value. Escaped bosses award nothing.
+Reference DPS interpolates between 30 / 75 / 180 at waves 6 / 12 / 20. These are starting balance assumptions, not measured kill-time guarantees. Rewards respect mode eligibility, stack caps and pending rewards. If no eligible item exists, the fallback is scrap worth 25% of the corresponding item value. Escaped bosses award nothing.
 
 A top-screen boss bar shows health, phase marks and reward rarity; an offscreen indicator helps locate it. Treasure caches use compact anchored amber health bars instead of the former 3D bars.
 
 ## Authored wave identities
+
+The new boss wave names override the corresponding identities below; escort roster weights are retained.
 
 Roster percentages are encounter-point weights, not exact enemy head counts. Expensive roles consume more points. Deterministic weighted scheduling replaces the expanding global random pool; caps can change the resulting mix. Arrivals are distributed across the combat timer in groups about every 3.5 seconds, with a 0.9-second amber ground warning. Sparse escort budgets accumulate into less frequent groups. A hero or core overlapping a marked point cancels that spawn; it is not moved elsewhere or re-queued. Pending warnings clear at wave end and pause with combat.
 
@@ -61,7 +65,7 @@ Roster percentages are encounter-point weights, not exact enemy head counts. Exp
 | 19 | Fortress Break | Tank 30, Basic 20, Lobber 30, Tender 20 |
 | 20 | Grand Marionettist | Drowse 90, Basic 10, plus boss |
 
-First-five-wave budgets are 60/65/70/75/80% of the normal difficulty budget. No elite or seeker variants appear before wave 6, including Brutal. Boss escort budgets are 25%. Existing difficulty and later-wave pressure still apply. The native director uses this roster; the retained legacy registry availability API is not the native spawn schedule.
+First-five-wave budgets are 60/65/70/75/80% of the normal difficulty budget. No elite or seeker variants appear before wave 6, including Brutal. Boss escort budgets are 25% in Survival and 60% in core modes. Existing difficulty and later-wave pressure still apply. The native director uses this roster; the retained legacy registry availability API is not the native spawn schedule.
 
 ## Models and effects
 
@@ -106,6 +110,6 @@ In Convoy, enemy arrivals must stay at least 4 m from the core's outer radius an
 
 ## Spawn zones and off-screen targets
 
-Each prep phase generates 1–2 spawn zones for waves 1–5 and 2–4 for later waves. Amber dashed ground markers and prep labels identify their positions; markers remain during combat. Per candidate, 70% of arrivals sample a random point within a 3 m zone radius, and 30% use the existing random placement rules. Final accepted proportions can differ when safety exclusions reject candidates. Zones bias normal arrivals and bosses, not summoned minions. Hero/core clearance and Convoy active-segment exclusion remain authoritative, including warning-time cancellation.
+Each prep phase generates 1â€“2 spawn zones for waves 1â€“5 and 2â€“4 for later waves. Amber dashed ground markers and prep labels identify their positions; markers remain during combat. Per candidate, 70% of arrivals sample a random point within a 3 m zone radius, and 30% use the existing random placement rules. Final accepted proportions can differ when safety exclusions reject candidates. Zones bias normal arrivals and bosses, not summoned minions. Hero/core clearance and Convoy active-segment exclusion remain authoritative, including warning-time cancellation.
 
 Living off-screen bosses and crates have labeled edge arrows (coral BOSS, gold CRATE), using the actual playfield rectangle. Crate arrows do not depend on health, proximity or targeting. Arrows disappear when their actor returns on-screen or is defeated.

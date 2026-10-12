@@ -2,7 +2,7 @@ class_name ClockworkModels
 extends RefCounted
 
 ## Separate from the generated legacy manifest. --legacy-assets supports visual/performance A/B runs.
-const KEYS: Array[String] = ["ion", "plasma", "tesla", "shock", "melee", "basic", "fast", "tank", "charger", "exploder", "hero", "dropbox", "core", "machine_gun", "scatter", "saber", "gatling", "crossfire", "siege", "bow", "flamethrower", "bowling", "gunblade", "arrow", "bowling_ball", "drowse", "hopper", "kite", "lobber", "tender", "skitter", "brass_ram", "prism_conductor", "grand_marionettist", "lens", "anchor", "puppet"]
+const KEYS: Array[String] = ["broadside_baron", "frostforge_yeti", "skyfall_kestrel", "crucible_crab", "pendulum_regent", "crownwheel_colossus", "ion", "plasma", "tesla", "shock", "melee", "basic", "fast", "tank", "charger", "exploder", "hero", "dropbox", "core", "machine_gun", "scatter", "saber", "gatling", "crossfire", "siege", "bow", "flamethrower", "bowling", "gunblade", "arrow", "bowling_ball", "drowse", "hopper", "kite", "lobber", "tender", "skitter", "brass_ram", "prism_conductor", "grand_marionettist", "lens", "anchor", "puppet"]
 static var scenes: Dictionary = {}
 
 static var _availability: Dictionary = {}

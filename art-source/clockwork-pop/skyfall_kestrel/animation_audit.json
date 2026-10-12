@@ -1,0 +1,167 @@
+{
+  "embedded_images": true,
+  "image_count": 4,
+  "clips": {
+    "Idle": {
+      "duration": 2.0,
+      "channel_count": 4,
+      "returns_to_pose": true,
+      "channels": [
+        {
+          "node": "Body",
+          "path": "translation",
+          "duration": 2.0,
+          "endpoint_difference": 0.0,
+          "sampled_motion": 0.025
+        },
+        {
+          "node": "Body",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 0.0,
+          "sampled_motion": 0.006
+        },
+        {
+          "node": "Engine_L",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 0.0,
+          "sampled_motion": 1.342071
+        },
+        {
+          "node": "Engine_R",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 0.0,
+          "sampled_motion": 1.342071
+        }
+      ]
+    },
+    "Walk": {
+      "duration": 2.0,
+      "channel_count": 4,
+      "returns_to_pose": true,
+      "channels": [
+        {
+          "node": "Body",
+          "path": "translation",
+          "duration": 2.0,
+          "endpoint_difference": 0.0,
+          "sampled_motion": 0.045
+        },
+        {
+          "node": "Body",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 0.0,
+          "sampled_motion": 0.0125
+        },
+        {
+          "node": "Engine_L",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 1e-06,
+          "sampled_motion": 1.340304
+        },
+        {
+          "node": "Engine_R",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 1e-06,
+          "sampled_motion": 1.340304
+        }
+      ]
+    },
+    "Swim": {
+      "duration": 2.0,
+      "channel_count": 4,
+      "returns_to_pose": true,
+      "channels": [
+        {
+          "node": "Body",
+          "path": "translation",
+          "duration": 2.0,
+          "endpoint_difference": 0.0,
+          "sampled_motion": 0.045
+        },
+        {
+          "node": "Body",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 0.0,
+          "sampled_motion": 0.023584
+        },
+        {
+          "node": "Engine_L",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 1e-06,
+          "sampled_motion": 1.340304
+        },
+        {
+          "node": "Engine_R",
+          "path": "rotation",
+          "duration": 2.0,
+          "endpoint_difference": 1e-06,
+          "sampled_motion": 1.340304
+        }
+      ]
+    },
+    "Attack": {
+      "duration": 1.0,
+      "channel_count": 7,
+      "returns_to_pose": true,
+      "channels": [
+        {
+          "node": "Body",
+          "path": "translation",
+          "duration": 1.0,
+          "endpoint_difference": 0.0,
+          "sampled_motion": 0.011413
+        },
+        {
+          "node": "Body",
+          "path": "rotation",
+          "duration": 1.0,
+          "endpoint_difference": 0.0,
+          "sampled_motion": 0.011888
+        },
+        {
+          "node": "BombBay",
+          "path": "translation",
+          "duration": 1.0,
+          "endpoint_difference": 0.0,
+          "sampled_motion": 0.17
+        },
+        {
+          "node": "BayDoor_L",
+          "path": "rotation",
+          "duration": 1.0,
+          "endpoint_difference": 0.0,
+          "sampled_motion": 0.397339
+        },
+        {
+          "node": "BayDoor_R",
+          "path": "rotation",
+          "duration": 1.0,
+          "endpoint_difference": 0.0,
+          "sampled_motion": 0.397339
+        },
+        {
+          "node": "Engine_L",
+          "path": "rotation",
+          "duration": 1.0,
+          "endpoint_difference": 1e-06,
+          "sampled_motion": 1.336349
+        },
+        {
+          "node": "Engine_R",
+          "path": "rotation",
+          "duration": 1.0,
+          "endpoint_difference": 1e-06,
+          "sampled_motion": 1.336349
+        }
+      ]
+    }
+  }
+}

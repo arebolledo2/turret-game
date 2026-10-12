@@ -28,10 +28,13 @@ var enraged: bool = false
 var attack_mode: String = ""
 var had_anchors: bool = false
 var step_delta: float = 0.0
+var expansion: BossExpansionBrain
 
 func _init(owner_actor: CombatActor) -> void:
 	actor = owner_actor
 	kind = actor.enemy_type
+	if kind in EnemyEcology.EXPANSION_BOSSES:
+		expansion = BossExpansionBrain.new(self)
 	clock = .5 + GameRandom.gameplay.randf()
 	destination = actor.position
 	if kind in ["hopper", "brass_ram", "grand_marionettist"]:
@@ -49,6 +52,7 @@ func disturbed() -> void:
 		clock = .4
 
 func contact_allowed() -> bool:
+	if expansion: return expansion.contact_allowed()
 	if kind == "drowse":
 		return awake and state != "wake"
 	if pounce:
@@ -70,6 +74,8 @@ func move(delta: float, speed: float) -> Vector3:
 	var hero := actor.world.player.position
 	var toward := WorldGeometry.planar(hero - actor.position)
 	actor.chasing_hero = EnemyEcology.hero_only(kind)
+	if expansion:
+		return expansion.move(delta, hero, speed)
 	if state == "warning" and not pounce:
 		var aim := WorldGeometry.planar(locked_target - actor.position)
 		if not aim.is_zero_approx(): actor.visual.rotation.y = atan2(-aim.x, -aim.z)

@@ -406,6 +406,72 @@
       "meshes": 10,
       "materials": 7,
       "iteration": 3
+    },
+    {
+      "id": "broadside_baron",
+      "source": "art-source/clockwork-pop/broadside_baron/build_cp_broadside_baron.py",
+      "model": "assets/models/clockwork/cp_broadside_baron.glb",
+      "reference": "art-source/clockwork-pop/references/broadside_baron.png",
+      "sha256": "0272098fcd71d4d16c12a6b0e28075610565ea7471f304ea39dd91cafd1017c0",
+      "triangles": 43196,
+      "meshes": 6,
+      "materials": 6,
+      "iteration": 3
+    },
+    {
+      "id": "skyfall_kestrel",
+      "source": "art-source/clockwork-pop/skyfall_kestrel/build_cp_skyfall_kestrel.py",
+      "model": "assets/models/clockwork/cp_skyfall_kestrel.glb",
+      "reference": "art-source/clockwork-pop/references/skyfall_kestrel.png",
+      "sha256": "11cb912dca6e3160c2482d2047bd891dd17c2d969eb67c4319dc875f607c5c62",
+      "triangles": 30322,
+      "meshes": 19,
+      "materials": 11,
+      "iteration": 4
+    },
+    {
+      "id": "frostforge_yeti",
+      "source": "art-source/clockwork-pop/frostforge_yeti/build_cp_frostforge_yeti.py",
+      "model": "assets/models/clockwork/cp_frostforge_yeti.glb",
+      "reference": "art-source/clockwork-pop/references/frostforge_yeti.png",
+      "sha256": "8f942f8a9fd6642fe112e876dcbf465188dad778433b0df930027313b2233718",
+      "triangles": 25430,
+      "meshes": 12,
+      "materials": 8,
+      "iteration": 4
+    },
+    {
+      "id": "crucible_crab",
+      "source": "art-source/clockwork-pop/crucible_crab/build_cp_crucible_crab.py",
+      "model": "assets/models/clockwork/cp_crucible_crab.glb",
+      "reference": "art-source/clockwork-pop/references/crucible_crab.png",
+      "sha256": "21a8ff76491793041f1aa8270cf3c6675a62cac70b6a786f51087fc9b9c2260b",
+      "triangles": 35710,
+      "meshes": 19,
+      "materials": 8,
+      "iteration": 4
+    },
+    {
+      "id": "pendulum_regent",
+      "source": "art-source/clockwork-pop/pendulum_regent/build_cp_pendulum_regent.py",
+      "model": "assets/models/clockwork/cp_pendulum_regent.glb",
+      "reference": "art-source/clockwork-pop/references/pendulum_regent.png",
+      "sha256": "bd5a75ed49fb0e07ea772292b733e6b6604bf4774ac6c42824f1365764486181",
+      "triangles": 37676,
+      "meshes": 6,
+      "materials": 7,
+      "iteration": 5
+    },
+    {
+      "id": "crownwheel_colossus",
+      "source": "art-source/clockwork-pop/crownwheel_colossus/build_cp_crownwheel_colossus.py",
+      "model": "assets/models/clockwork/cp_crownwheel_colossus.glb",
+      "reference": "art-source/clockwork-pop/references/crownwheel_colossus.png",
+      "sha256": "bb34937253f9415c345e0697aba42921eac947bb3aac70758dd1149e00742bdb",
+      "triangles": 30860,
+      "meshes": 26,
+      "materials": 8,
+      "iteration": 3
     }
   ]
 }

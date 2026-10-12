@@ -1,0 +1,38 @@
+{
+  "name": "cp_frostforge_yeti",
+  "ref": "ref/cp_frostforge_yeti.png",
+  "build": "build_cp_frostforge_yeti.py",
+  "glb": "cp_frostforge_yeti.glb",
+  "required_nodes": [
+    "Body",
+    "Arm_L",
+    "Arm_R",
+    "Leg_L",
+    "Leg_R"
+  ],
+  "limits": {
+    "height": [
+      1.5,
+      2.3
+    ],
+    "max_width": 3.5,
+    "ground_gap": [
+      0.0,
+      0.45
+    ]
+  },
+  "targets": {
+    "max_texture_px": 1024,
+    "max_textures": 4,
+    "max_triangles": 18000,
+    "max_mesh_objects": 35,
+    "max_materials": 12
+  },
+  "render_background": "#243541",
+  "require_textures": true,
+  "required_animations": [
+    "Idle",
+    "Swim",
+    "Attack"
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "name": "cp_crownwheel_colossus",
+  "ref": "ref/cp_crownwheel_colossus.png",
+  "build": "build_cp_crownwheel_colossus.py",
+  "glb": "cp_crownwheel_colossus.glb",
+  "required_nodes": [
+    "Body",
+    "Wheel"
+  ],
+  "limits": {
+    "height": [
+      1.5,
+      2.3
+    ],
+    "max_width": 3.5,
+    "ground_gap": [
+      0.0,
+      0.45
+    ]
+  },
+  "targets": {
+    "max_texture_px": 1024,
+    "max_textures": 4,
+    "max_triangles": 18000,
+    "max_mesh_objects": 35,
+    "max_materials": 12
+  },
+  "render_background": "#243541",
+  "require_textures": true,
+  "required_animations": [
+    "Idle",
+    "Swim",
+    "Attack"
+  ]
+}

@@ -1,0 +1,269 @@
+[
+  {
+    "clip": "Idle",
+    "duration_s": 3.0,
+    "channels": 7,
+    "moving_channels": [
+      {
+        "node": "Body",
+        "path": "translation",
+        "range": 0.014
+      },
+      {
+        "node": "Claw_L",
+        "path": "rotation",
+        "range": 0.01099
+      },
+      {
+        "node": "Jaw_L_Bottom",
+        "path": "rotation",
+        "range": 0.025
+      },
+      {
+        "node": "Jaw_L_Top",
+        "path": "rotation",
+        "range": 0.025
+      },
+      {
+        "node": "Claw_R",
+        "path": "rotation",
+        "range": 0.01099
+      },
+      {
+        "node": "Jaw_R_Bottom",
+        "path": "rotation",
+        "range": 0.025
+      },
+      {
+        "node": "Jaw_R_Top",
+        "path": "rotation",
+        "range": 0.025
+      }
+    ],
+    "max_endpoint_delta": 2.692067368564801e-18
+  },
+  {
+    "clip": "Walk",
+    "duration_s": 1.6,
+    "channels": 16,
+    "moving_channels": [
+      {
+        "node": "Body",
+        "path": "translation",
+        "range": 0.026
+      },
+      {
+        "node": "Body",
+        "path": "rotation",
+        "range": 0.0175
+      },
+      {
+        "node": "Claw_L",
+        "path": "rotation",
+        "range": 0.03499
+      },
+      {
+        "node": "Claw_R",
+        "path": "rotation",
+        "range": 0.03499
+      },
+      {
+        "node": "Leg_L_0",
+        "path": "rotation",
+        "range": 0.06986
+      },
+      {
+        "node": "Knee_L_0",
+        "path": "rotation",
+        "range": 0.08988
+      },
+      {
+        "node": "Foot_L_0",
+        "path": "rotation",
+        "range": 0.04998
+      },
+      {
+        "node": "Leg_L_1",
+        "path": "rotation",
+        "range": 0.06986
+      },
+      {
+        "node": "Knee_L_1",
+        "path": "rotation",
+        "range": 0.08988
+      },
+      {
+        "node": "Foot_L_1",
+        "path": "rotation",
+        "range": 0.04998
+      },
+      {
+        "node": "Leg_R_0",
+        "path": "rotation",
+        "range": 0.06986
+      },
+      {
+        "node": "Knee_R_0",
+        "path": "rotation",
+        "range": 0.08988
+      },
+      {
+        "node": "Foot_R_0",
+        "path": "rotation",
+        "range": 0.04998
+      },
+      {
+        "node": "Leg_R_1",
+        "path": "rotation",
+        "range": 0.06986
+      },
+      {
+        "node": "Knee_R_1",
+        "path": "rotation",
+        "range": 0.08988
+      },
+      {
+        "node": "Foot_R_1",
+        "path": "rotation",
+        "range": 0.04998
+      }
+    ],
+    "max_endpoint_delta": 2.204364202304404e-17
+  },
+  {
+    "clip": "Swim",
+    "duration_s": 2.4,
+    "channels": 16,
+    "moving_channels": [
+      {
+        "node": "Body",
+        "path": "translation",
+        "range": 0.05
+      },
+      {
+        "node": "Body",
+        "path": "rotation",
+        "range": 0.0175
+      },
+      {
+        "node": "Claw_L",
+        "path": "rotation",
+        "range": 0.03499
+      },
+      {
+        "node": "Claw_R",
+        "path": "rotation",
+        "range": 0.03499
+      },
+      {
+        "node": "Leg_L_0",
+        "path": "rotation",
+        "range": 0.10964
+      },
+      {
+        "node": "Knee_L_0",
+        "path": "rotation",
+        "range": 0.08988
+      },
+      {
+        "node": "Foot_L_0",
+        "path": "rotation",
+        "range": 0.04998
+      },
+      {
+        "node": "Leg_L_1",
+        "path": "rotation",
+        "range": 0.10964
+      },
+      {
+        "node": "Knee_L_1",
+        "path": "rotation",
+        "range": 0.08988
+      },
+      {
+        "node": "Foot_L_1",
+        "path": "rotation",
+        "range": 0.04998
+      },
+      {
+        "node": "Leg_R_0",
+        "path": "rotation",
+        "range": 0.10964
+      },
+      {
+        "node": "Knee_R_0",
+        "path": "rotation",
+        "range": 0.08988
+      },
+      {
+        "node": "Foot_R_0",
+        "path": "rotation",
+        "range": 0.04998
+      },
+      {
+        "node": "Leg_R_1",
+        "path": "rotation",
+        "range": 0.10964
+      },
+      {
+        "node": "Knee_R_1",
+        "path": "rotation",
+        "range": 0.08988
+      },
+      {
+        "node": "Foot_R_1",
+        "path": "rotation",
+        "range": 0.04998
+      }
+    ],
+    "max_endpoint_delta": 2.6942230426001448e-17
+  },
+  {
+    "clip": "Attack",
+    "duration_s": 1.4,
+    "channels": 8,
+    "moving_channels": [
+      {
+        "node": "Body",
+        "path": "translation",
+        "range": 0.03487
+      },
+      {
+        "node": "Body",
+        "path": "rotation",
+        "range": 0.03984
+      },
+      {
+        "node": "Claw_L",
+        "path": "rotation",
+        "range": 0.13343
+      },
+      {
+        "node": "Jaw_L_Bottom",
+        "path": "rotation",
+        "range": 0.19857
+      },
+      {
+        "node": "Jaw_L_Top",
+        "path": "rotation",
+        "range": 0.19857
+      },
+      {
+        "node": "Claw_R",
+        "path": "rotation",
+        "range": 0.13343
+      },
+      {
+        "node": "Jaw_R_Bottom",
+        "path": "rotation",
+        "range": 0.19857
+      },
+      {
+        "node": "Jaw_R_Top",
+        "path": "rotation",
+        "range": 0.19857
+      }
+    ],
+    "max_endpoint_delta": 0
+  }
+]

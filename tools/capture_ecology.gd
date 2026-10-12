@@ -6,6 +6,9 @@ var actors: Array[CombatActor] = []
 var elapsed := 0.0
 var captured := false
 var mode := "roster"
+var sequence := false
+var frame := 0
+var attacks := false
 
 func _ready() -> void:
 	call_deferred("setup")
@@ -13,6 +16,8 @@ func _ready() -> void:
 func setup() -> void:
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--ecology="): mode = arg.trim_prefix("--ecology=")
+		if arg == "--sequence": sequence = true
+		if arg == "--attacks": attacks = true
 	world = ArenaWorld.new()
 	world.auto_start = false
 	world.run_config = RunConfig.new()
@@ -37,7 +42,9 @@ func setup() -> void:
 	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	world.player.set_physics_process(false)
+	if world.core: world.core.set_physics_process(false)
 	world.player.position = Vector3(0, 0, 0)
+	world.player.invulnerability = 999.0
 	for turret in world.turrets: turret.set_physics_process(false)
 	if mode == "pointers":
 		var boss := world.spawn_enemy(Vector3(-18, 0, 0), "brass_ram")
@@ -61,6 +68,9 @@ func setup() -> void:
 		world.camera_rig.set_physics_process(false)
 		return
 	var kinds := ["drowse", "hopper", "kite", "lobber", "tender", "skitter"] if mode == "roster" else ["brass_ram", "prism_conductor", "grand_marionettist"]
+	if mode == "expansion-a": kinds = ["broadside_baron", "frostforge_yeti", "skyfall_kestrel"]
+	if mode == "expansion-b": kinds = ["crucible_crab", "pendulum_regent", "crownwheel_colossus"]
+	if mode.begins_with("boss-"): kinds = [mode.trim_prefix("boss-")]
 	if mode == "effects": kinds = ["kite", "lobber", "prism_conductor", "grand_marionettist"]
 	if mode == "support": kinds = ["skitter", "lens", "anchor", "puppet"]
 	if mode == "health": kinds = ["brass_ram"]
@@ -68,10 +78,12 @@ func setup() -> void:
 		var at := Vector3((index - (kinds.size() - 1) * .5) * 3.3, 0, 0)
 		if mode == "effects": at = Vector3((index % 2 - .5) * 7, 0, (index / 2 - .5) * 4.2)
 		if mode == "roster": at = Vector3((index % 3 - 1) * 3.5, 0, (index / 3 - .5) * 3.4)
+		if attacks: at = Vector3(3.5, 0, 0)
 		var actor := world.spawn_enemy(at, kinds[index])
 		actor.set_physics_process(false)
 		actor.visual.rotation.y = PI - .35
 		actors.append(actor)
+		if attacks: actor.brain.clock = 0.0
 		if mode != "health":
 			var label := Label3D.new()
 			label.text = EnemyEcology.TYPES[kinds[index]].name
@@ -108,7 +120,7 @@ func setup() -> void:
 		chest.health *= .6
 	else:
 		world.hud.hide()
-		world.player.hide()
+		if not attacks: world.player.hide()
 		if world.core: world.core.hide()
 		for turret in world.turrets: turret.hide()
 
@@ -116,14 +128,21 @@ func _process(delta: float) -> void:
 	if not world: return
 	elapsed += delta
 	for actor in actors:
-		if actor.ecology_motion: actor.ecology_motion.tick(delta, true, false, false)
-	if elapsed > 1.5 and not captured:
+		if attacks: actor._physics_process(delta)
+		elif actor.ecology_motion: actor.ecology_motion.tick(delta, true, false, false)
+	if elapsed > (.1 if sequence else 1.5) and not captured:
 		captured = true
 		capture.call_deferred()
 
 func capture() -> void:
 	await RenderingServer.frame_post_draw
 	var path := "res://.test-results/ecology-%s.png" % mode
+	if sequence: path = "res://.test-results/ecology-%s-%02d.png" % [mode, frame]
 	get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path(path))
 	print("ECOLOGY_CAPTURE ", path)
+	if sequence and frame < 23:
+		frame += 1
+		elapsed = 0.0
+		captured = false
+		return
 	get_tree().quit()

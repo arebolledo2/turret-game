@@ -23,6 +23,8 @@ var beam_length: float = 7.0
 var beam_width: float = .22
 var hit_clock: float = 0.0
 var angular_speed: float = 0.0
+var palette := Color("ff7356")
+var ground_strike := false
 
 static func launch(actor: CombatActor, mode: String, at: Vector3, target: Vector3, amount: float, core_target: bool = false) -> EnemyOrdnance:
 	var attack := EnemyOrdnance.new()
@@ -35,12 +37,22 @@ static func launch(actor: CombatActor, mode: String, at: Vector3, target: Vector
 	attack.heading = WorldGeometry.planar(target - at).normalized()
 	attack.damage = amount
 	attack.to_core = core_target
+	match actor.enemy_type:
+		"frostforge_yeti":
+			attack.palette = Color("ffb377") # Warm danger outline, even for the ice-colored boss.
+			attack.ground_strike = true
+		"pendulum_regent":
+			attack.palette = Color("ffadce")
+			attack.ground_strike = mode == "area"
+		"broadside_baron": attack.palette = Color("ffc56a")
+		"crucible_crab": attack.palette = Color("ff672c")
+		"crownwheel_colossus": attack.palette = Color("ffd269")
 	return attack
 
 func _ready() -> void:
 	add_to_group("hostile_ordnance")
 	var dark := WorldGeometry.material(Color("382632"))
-	var warm := WorldGeometry.material(Color("ff7356"), true)
+	var warm := WorldGeometry.material(palette, true)
 	var hot := WorldGeometry.material(Color("ffe4a5"), true)
 	body = Node3D.new()
 	add_child(body)
@@ -57,10 +69,22 @@ func _ready() -> void:
 	else:
 		if kind == "area":
 			position = target_at
-			dial = GroundDial.create(self, radius, Color("ff865e"))
+			dial = GroundDial.create(self, radius, palette)
 			var pearl := WorldGeometry.sphere(body, .12, Vector3(0, 2.5, 0), hot)
 			pearl.name = "Shell"
 			WorldGeometry.sphere(pearl, .16, Vector3.ZERO, dark).scale = Vector3(.8, 1.4, .8)
+			if ground_strike:
+				pearl.hide()
+				# Four inward-pointing brackets mark the impact center without a fake falling shell.
+				for index in 4:
+					var angle := index * PI * .5
+					var bracket := WorldGeometry.box(body, Vector3(.08, .035, radius * .35), Vector3(sin(angle), 0, cos(angle)) * radius * .5 + Vector3.UP * .07, warm)
+					bracket.rotation.y = angle
+			else:
+				# Artillery has a metal body, hot nose and four tail fins, readable as it descends.
+				for index in 4:
+					var fin := WorldGeometry.box(pearl, Vector3(.055, .18, .17), Vector3(sin(index * PI * .5) * .16, .15, cos(index * PI * .5) * .16), warm)
+					fin.rotation.y = index * PI * .5
 		else:
 			body.rotation.y = atan2(-heading.x, -heading.z)
 			for side: float in [-1.0, 1.0]:
@@ -71,6 +95,7 @@ func _ready() -> void:
 			ray.mesh = plane
 			var energy := ShaderMaterial.new()
 			energy.shader = preload("res://assets/shaders/hostile_beam.gdshader")
+			energy.set_shader_parameter("edge_color", palette)
 			ray.material_override = energy
 			ray.position = Vector3(0, .45, -beam_length * .5)
 			body.add_child(ray)
@@ -84,6 +109,10 @@ func _physics_process(delta: float) -> void:
 	if kind == "bolt":
 		var previous := position
 		position += heading * shot_speed * delta
+		# Elevated cannon muzzles visibly descend toward the hero's body height.
+		var travel := WorldGeometry.planar(position - origin).length()
+		var distance := maxf(WorldGeometry.planar(target_at - origin).length(), .01)
+		position.y = lerpf(origin.y, .45, clampf(travel / distance, 0.0, 1.0))
 		if _segment_hits(previous, position, .14):
 			_hit()
 			world.effects.show_hostile_impact(position, .25)

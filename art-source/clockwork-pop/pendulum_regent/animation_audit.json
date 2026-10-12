@@ -1,0 +1,59 @@
+{
+  "clips": [
+    {
+      "name": "Idle",
+      "channels": 4,
+      "duration_seconds": 2.0,
+      "loop_endpoint_max_error": 5.878304760059908e-17,
+      "articulated_nodes": [
+        "Body",
+        "Arm_L",
+        "Arm_R",
+        "Pendulum"
+      ]
+    },
+    {
+      "name": "Walk",
+      "channels": 6,
+      "duration_seconds": 1.3333333730697632,
+      "loop_endpoint_max_error": 5.878304760059908e-17,
+      "articulated_nodes": [
+        "Body",
+        "Arm_L",
+        "Arm_R",
+        "Pendulum",
+        "Leg_L",
+        "Leg_R"
+      ]
+    },
+    {
+      "name": "Swim",
+      "channels": 6,
+      "duration_seconds": 2.0,
+      "loop_endpoint_max_error": 5.878304760059908e-17,
+      "articulated_nodes": [
+        "Body",
+        "Arm_L",
+        "Arm_R",
+        "Pendulum",
+        "Leg_L",
+        "Leg_R"
+      ]
+    },
+    {
+      "name": "Attack",
+      "channels": 5,
+      "duration_seconds": 1.25,
+      "loop_endpoint_max_error": 5.3884457543280445e-17,
+      "articulated_nodes": [
+        "Body",
+        "Arm_L",
+        "Arm_R",
+        "Pendulum"
+      ]
+    }
+  ],
+  "embedded_images": 4,
+  "external_image_uris": [],
+  "bytes": 4303180
+}
