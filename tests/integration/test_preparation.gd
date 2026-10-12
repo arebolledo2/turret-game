@@ -174,3 +174,39 @@ func test_playfield_reserves_ui_space_and_mouse_projection_roundtrips() -> void:
 	world.preparation.handle_input(event)
 	assert_lt(turret.position.distance_to(at), .01)
 	assert_false(world.preparation.moving)
+
+func test_spawn_zone_restriction_is_optional_and_blocks_deploy_until_cleared() -> void:
+	var turret := world.turrets[0]
+	world.spawn_zones.centres.assign([turret.position])
+	FeatureFlagService.set_enabled(FeatureFlagService.RESTRICT_SPAWN_PLACEMENT, false)
+	assert_true(world.valid_placement(turret.position, turret))
+	FeatureFlagService.set_enabled(FeatureFlagService.RESTRICT_SPAWN_PLACEMENT, true)
+	assert_false(world.valid_placement(turret.position, turret))
+	assert_false(world.preparation.deploy())
+	world.preparation.arrange_turrets()
+	assert_true(world.valid_placement(turret.position, turret))
+	assert_true(world.preparation.deploy())
+
+func test_auto_layout_covers_zones_and_distributes_remaining_along_route() -> void:
+	world.spawn_zones.centres.assign([Vector3(-8, 0, -5), Vector3(8, 0, 5)])
+	for i in 5: world.add_turret(Vector3(i * 2, 0, -9), "normal")
+	world.preparation.arrange_turrets()
+	for i in world.turrets.size():
+		var turret := world.turrets[i]
+		assert_true(world.valid_placement(turret.position, turret))
+		assert_false(world.placement.spawn_zone_blocked(turret.position))
+		if i < 2:
+			assert_lt(turret.position.distance_to(world.spawn_zones.centres[i]), 4.5)
+	assert_true(world.preparation.active, "arranging never starts the wave")
+	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.PREPARATION)
+
+func test_auto_layout_runs_on_next_preparation_and_supports_no_core() -> void:
+	FeatureFlagService.set_enabled(FeatureFlagService.AUTO_DEPLOY, true)
+	world.core.queue_free()
+	world.core = null
+	world.convoy_mode = false
+	world.spawn_zones.centres.clear()
+	world.turrets[0].position = Vector3(15, 0, 8)
+	world.preparation.begin()
+	assert_lt(world.turrets[0].position.length(), 3.0)
+	assert_true(world.preparation.active)

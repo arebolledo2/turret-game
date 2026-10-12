@@ -33,3 +33,8 @@ Shop offers can be locked for free using the card lock button, controller X or k
 Lock controls sit outside and below each card, display LOCK / UNLOCK and participate in controller focus: Down from an offer enters its lock button; left/right moves between locks, Up returns to the offer, and Down proceeds to the next offer row or nearest enabled footer action. Footer Up returns to the nearest available lock. Horizontal navigation stays within each visual row, and purchasing advances focus to the next available offer. A activates the lock independently of purchasing.
 
 Item offers show registry rarity through their name and border colors, plus a text label: Common white, Uncommon green, Rare blue, Epic purple, Legendary orange, Unique red. Focus retains its teal outline. Item SVG artwork contains no variant-count dots; rarity comes from ItemRegistry rather than the illustration.
+
+
+Preparation offers Auto Deploy (Y / F), off by default and saved between launches. Enabling it arranges immediately; subsequent preparation phases arrange again. It never starts combat and manual adjustments remain available. One turret guards each spawn zone from outside its boundary, then remaining turrets spread along the convoy route or around the stationary core/map centre. All placements respect terrain, edges, core clearance and turret spacing. Moving resets entrenchment.
+
+The optional Restrict Spawn Zone Placement user feature flag (F1 developer panel) defaults off. When enabled, deployment rejects positions within the zone radius plus turret clearance, including combat drops. Existing turrets inside newly generated zones must be moved before starting combat; Auto Deploy can clear them. Auto Deploy always avoids spawn zones regardless of this toggle.

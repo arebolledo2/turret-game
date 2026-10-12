@@ -28,6 +28,8 @@ func valid_placement(at: Vector3, excluding: TurretActor = null) -> bool:
 		return false
 	if world.core and WorldGeometry.planar(world.core.position - at).length() < world.core.radius + GameConstants.CORE_PLACEMENT_CLEARANCE:
 		return false
+	if FeatureFlagService.is_enabled(FeatureFlagService.RESTRICT_SPAWN_PLACEMENT) and spawn_zone_blocked(at):
+		return false
 	if world.terrain and world.terrain.blocks_build(at):
 		return false
 	for turret in world.turrets:
@@ -120,3 +122,9 @@ func drop_carried() -> void:
 		carried.position = carry_origin
 		carried.reset_physics_interpolation()
 	carried = null
+
+func spawn_zone_blocked(at: Vector3) -> bool:
+	if not world.spawn_zones: return false
+	for centre in world.spawn_zones.centres:
+		if WorldGeometry.planar(at - centre).length() < SpawnZones.RADIUS + EDGE_MARGIN: return true
+	return false

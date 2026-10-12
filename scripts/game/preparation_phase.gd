@@ -17,6 +17,7 @@ var detail: Label
 var hint: Label
 var move_button: Button
 var cancel_button: Button
+var auto_button: Button
 var deploy_button: Button
 
 func _ready() -> void:
@@ -28,6 +29,7 @@ func begin() -> void:
 	active = true
 	world.placement.drop_carried()
 	world.player.hide()
+	if FeatureFlagService.is_enabled(FeatureFlagService.AUTO_DEPLOY): arrange_turrets()
 	cursor = world.player.position
 	if not world.turrets.is_empty():
 		selected = world.turrets[0]
@@ -125,6 +127,7 @@ func cancel_move() -> void:
 
 func deploy() -> bool:
 	if not active or world.paused or moving: return false
+	if not _layout_valid(): return false
 	if not GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_ANNOUNCEMENT): return false
 	end()
 	world.camera_rig.snap()
@@ -150,6 +153,7 @@ func handle_input(event: InputEvent) -> bool:
 		match event.physical_keycode:
 			KEY_SPACE, KEY_E: interact()
 			KEY_ENTER, KEY_KP_ENTER: deploy()
+			KEY_F: toggle_auto()
 			KEY_BACKSPACE: cancel_move()
 			KEY_BRACKETLEFT: cycle(-1)
 			KEY_BRACKETRIGHT: cycle(1)
@@ -159,6 +163,7 @@ func handle_input(event: InputEvent) -> bool:
 		match event.button_index:
 			JOY_BUTTON_A: interact()
 			JOY_BUTTON_B: cancel_move()
+			JOY_BUTTON_Y: toggle_auto()
 			JOY_BUTTON_X: deploy()
 			JOY_BUTTON_LEFT_SHOULDER: cycle(-1)
 			JOY_BUTTON_RIGHT_SHOULDER: cycle(1)
@@ -199,7 +204,9 @@ func _refresh() -> void:
 	move_button.text = "PLACE  A / Space" if moving else "MOVE  A / Space"
 	move_button.disabled = not has_selection or not valid
 	cancel_button.disabled = not moving
-	deploy_button.disabled = moving
+	deploy_button.disabled = moving or not _layout_valid()
+	auto_button.text = "AUTO DEPLOY: %s  Y / F" % ("ON" if FeatureFlagService.is_enabled(FeatureFlagService.AUTO_DEPLOY) else "OFF")
+	if not moving and not _layout_valid(): hint.text = "Move turrets out of spawn zones, or use Auto Deploy."
 
 func _build_ui() -> void:
 	layer = CanvasLayer.new()
@@ -238,6 +245,7 @@ func _build_ui() -> void:
 	column.add_child(row)
 	move_button = _button(row, "MOVE  A / Space", interact)
 	cancel_button = _button(row, "CANCEL  B / Right click", cancel_move)
+	auto_button = _button(row, "AUTO DEPLOY", toggle_auto)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)
@@ -259,3 +267,68 @@ func _button(parent: Node, text: String, action: Callable, primary: bool = false
 	button.pressed.connect(action)
 	parent.add_child(button)
 	return button
+
+func toggle_auto() -> void:
+	if not active or world.paused: return
+	cancel_move()
+	var enabled := not FeatureFlagService.is_enabled(FeatureFlagService.AUTO_DEPLOY)
+	FeatureFlagService.set_enabled(FeatureFlagService.AUTO_DEPLOY, enabled)
+	SettingsService.save_preferences()
+	if enabled: arrange_turrets()
+	if is_instance_valid(selected):
+		cursor = selected.position
+		view_focus = cursor
+	_refresh()
+
+func _layout_valid() -> bool:
+	if not FeatureFlagService.is_enabled(FeatureFlagService.RESTRICT_SPAWN_PLACEMENT): return true
+	for turret in world.turrets:
+		if world.placement.spawn_zone_blocked(turret.position): return false
+	return true
+
+## Greedy, deterministic coverage layout; no gameplay RNG is consumed.
+func arrange_turrets() -> void:
+	var zones := world.spawn_zones.centres
+	var focus := world.core.position if is_instance_valid(world.core) else Vector3.ZERO
+	var remaining := maxi(1, world.turrets.size() - zones.size())
+	for index in world.turrets.size():
+		var turret := world.turrets[index]
+		var target := focus
+		if index < zones.size():
+			var inward := WorldGeometry.planar(focus - zones[index]).normalized()
+			if inward == Vector3.ZERO: inward = Vector3.RIGHT
+			target = zones[index] + inward * (SpawnZones.RADIUS + TurretPlacement.EDGE_MARGIN + .3)
+		elif world.convoy_mode and world.convoy_route:
+			target = _route_position(float(index - zones.size() + 1) / (remaining + 1))
+		else:
+			var angle := TAU * float(index - zones.size()) / remaining
+			target += Vector3(cos(angle), 0, sin(angle)) * 2.0
+		var best := Vector3.INF
+		var score := INF
+		# Search the whole arena so crowded zones and terrain always have a fallback.
+		for x in range(-40, 41):
+			for z in range(-22, 23):
+				var at := Vector3(x * .5, 0, z * .5)
+				var cost := at.distance_squared_to(target)
+				if cost >= score or world.placement.spawn_zone_blocked(at): continue
+				if not world.valid_placement(at, turret): continue
+				best = at
+				score = cost
+		if best == Vector3.INF: continue
+		if turret.position.distance_to(best) > .01:
+			turret.position = best
+			turret.reset_entrench()
+			turret.invalidate_stats()
+			turret.reset_physics_interpolation()
+			world.telemetry.record_turret_move()
+
+func _route_position(fraction: float) -> Vector3:
+	var points := world.convoy_route.doors
+	var length := 0.0
+	for i in range(1, points.size()): length += points[i - 1].distance_to(points[i])
+	var distance := fraction * length
+	for i in range(1, points.size()):
+		var leg := points[i - 1].distance_to(points[i])
+		if distance <= leg: return points[i - 1].lerp(points[i], distance / maxf(.001, leg))
+		distance -= leg
+	return points[-1]

@@ -22,6 +22,9 @@ func _ready() -> void:
 func load_preferences() -> void:
 	var config := ConfigFile.new()
 	if config.load(preferences_path) == OK:
+		for flag in [FeatureFlagService.AUTO_DEPLOY, FeatureFlagService.RESTRICT_SPAWN_PLACEMENT]:
+			var saved: Variant = config.get_value("deployment", flag, false)
+			if saved is bool: FeatureFlagService.set_enabled(flag, saved)
 		var saved_difficulty: Variant = config.get_value("run", "difficulty", GameEnums.Difficulty.EASY)
 		if saved_difficulty is int and saved_difficulty in GameEnums.Difficulty.values():
 			run_difficulty = saved_difficulty as GameEnums.Difficulty
@@ -54,6 +57,8 @@ func load_preferences() -> void:
 
 func save_preferences() -> Error:
 	var config := ConfigFile.new()
+	for flag in [FeatureFlagService.AUTO_DEPLOY, FeatureFlagService.RESTRICT_SPAWN_PLACEMENT]:
+		config.set_value("deployment", flag, FeatureFlagService.is_enabled(flag))
 	config.set_value("run", "difficulty", run_difficulty)
 	config.set_value("run", "mode", run_mode)
 	config.set_value("display", "fullscreen", fullscreen)

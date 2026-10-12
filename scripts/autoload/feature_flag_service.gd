@@ -23,6 +23,8 @@ const DEV_PANEL: String = "dev_panel"
 const DEBUG_OVERLAYS: String = "debug_overlays"
 const TURRET_PROGRESSION: String = "turret_progression"
 const ENTRENCH: String = "entrench"
+const AUTO_DEPLOY: String = "auto_deploy"
+const RESTRICT_SPAWN_PLACEMENT: String = "restrict_spawn_placement"
 const PLACEMENT_PREVIEW: String = "placement_preview"
 const ITEMS_V2: String = "items_v2"
 const ITEMS_V2_HOOKS: String = "items_v2_hooks"
@@ -113,6 +115,14 @@ const FLAG_DEFINITIONS: Dictionary = {
 	RANGE_OVERLAY: {
 		"name": "Range Toggle", "default": true, "scope": SCOPE_USER, "live_safe": true, "phase": 4,
 		"description": "Y on a controller (Tab on keyboard) toggles a ring showing every turret's range, including high-ground bonuses.",
+	},
+	AUTO_DEPLOY: {
+		"name": "Auto Deploy", "default": false, "scope": SCOPE_USER, "live_safe": true,
+		"description": "Automatically arrange turrets each preparation phase. Review and press Deploy to start.",
+	},
+	RESTRICT_SPAWN_PLACEMENT: {
+		"name": "Restrict Spawn Zone Placement", "default": false, "scope": SCOPE_USER, "live_safe": true,
+		"description": "Prevent turret placement inside spawn zones. Existing positions must be cleared before Deploy.",
 	},
 	PLACEMENT_PREVIEW: {
 		"name": "Placement Preview", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 1,
