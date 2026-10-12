@@ -4,8 +4,11 @@ extends Node3D
 const LIMIT := 64
 const LIFETIME := .85
 const MERGE_WINDOW := .16
+## Plain enemy hits may start this many new numbers per tick. Every new number shapes a fresh glyph mesh, and the pool can only display about LIMIT / LIFETIME of them per second anyway; crits and damage to the player always show.
+const NEW_PER_TICK := 1
 var entries: Array[Dictionary] = []
 var serial := 0
+var started_this_tick := 0
 
 func show_damage(actor: Node3D, amount: float, friendly: bool, critical: bool = false, fire: bool = false) -> void:
 	if amount <= 0.0:
@@ -17,6 +20,9 @@ func show_damage(actor: Node3D, amount: float, friendly: bool, critical: bool = 
 			entry = candidate
 			break
 	if entry.is_empty():
+		if not (friendly or critical) and started_this_tick >= NEW_PER_TICK:
+			return
+		started_this_tick += 1
 		for candidate in entries:
 			if candidate.age >= LIFETIME:
 				entry = candidate
@@ -54,6 +60,7 @@ func show_damage(actor: Node3D, amount: float, friendly: bool, critical: bool = 
 	label.scale = Vector3.ONE
 
 func advance(delta: float, reduced_motion: bool) -> void:
+	started_this_tick = 0
 	for entry in entries:
 		entry.age += delta
 		var label: Label3D = entry.label
