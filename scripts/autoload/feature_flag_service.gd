@@ -345,7 +345,6 @@ func _apply(flag_id: String, enabled: bool) -> void:
 	_flags[flag_id] = enabled
 	if previous != enabled:
 		flag_changed.emit(flag_id, enabled)
-		Events.feature_flag_changed.emit(flag_id, enabled)
 
 
 func _run_active() -> bool:
