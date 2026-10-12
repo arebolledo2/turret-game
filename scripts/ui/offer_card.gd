@@ -58,6 +58,7 @@ func _init() -> void:
 	cost_label = _label(column, 34, UiPalette.SCRAP)
 	cost_label.theme_type_variation = &"Numeral"
 	lock_button = Button.new()
+	ChamferStyle.style_button(lock_button)
 	lock_button.focus_mode = Control.FOCUS_ALL
 	lock_button.mouse_filter = Control.MOUSE_FILTER_STOP
 	lock_button.custom_minimum_size.y = 36
@@ -104,7 +105,7 @@ func setup(offer: ShopOffer, damage_mult: float, affordable: bool) -> void:
 	lock_button.tooltip_text = "Keep this offer and price across rerolls and waves. Unlocking restores its current price."
 	var is_item := offer.kind == "item"
 	var rarity := ItemRegistry.get_rarity(offer.asset_id) if is_item else GameEnums.ItemRarity.COMMON
-	var accent := ItemRegistry.get_rarity_color(rarity).lightened(.25) if is_item else UiPalette.INK
+	var accent := ItemRegistry.get_rarity_color(rarity) if is_item else UiPalette.INK
 	(get_theme_stylebox("normal") as StyleBoxFlat).border_color = Color(accent, .65) if is_item else Color("36505b")
 	name_label.add_theme_color_override("font_color", accent)
 	rarity_label.visible = is_item

@@ -87,6 +87,7 @@ func _build_tabs(column: VBoxContainer) -> void:
 	column.add_child(tab_row)
 	for tab_name in ["OFFERS", "TURRETS"]:
 		var tab := Button.new()
+		ChamferStyle.style_button(tab)
 		tab.text = tab_name
 		tab.toggle_mode = true
 		tab.custom_minimum_size = Vector2(220, 52)
@@ -220,6 +221,7 @@ func refresh() -> void:
 	subtitle.text = "Wave %d secured · Prepare for wave %d" % [GameStateService.current_wave, GameStateService.current_wave + 1]
 	balance.text = "%d SCRAP" % EconomyService.total_scrap
 	growth_summary.text = _growth_summary()
+	growth_summary.add_theme_color_override("font_color", UiPalette.GOOD if int(world.salvage.last_settlement.get("xp_awarded", 0)) > 0 else UiPalette.MUTED)
 	var compact := size.x < 1650
 	offers_grid.columns = 2 if compact else 4
 	continue_button.custom_minimum_size.x = 250 if compact else 310

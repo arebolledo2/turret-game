@@ -96,17 +96,17 @@ func test_all_rarity_colors_defined():
 
 func test_rarity_color_common_is_white():
 	var color = ItemRegistry.get_rarity_color(GameEnums.ItemRarity.COMMON)
-	assert_eq(color, Color.WHITE, "COMMON rarity should be WHITE")
+	assert_eq(color, Color("d4e2e6"), "COMMON uses the neutral rarity palette")
 
 
 func test_rarity_color_uncommon_is_green():
 	var color = ItemRegistry.get_rarity_color(GameEnums.ItemRarity.UNCOMMON)
-	assert_eq(color, Color.GREEN, "UNCOMMON rarity should be GREEN")
+	assert_eq(color, Color("83dba4"), "UNCOMMON uses readable mint green")
 
 
 func test_rarity_color_rare_is_blue():
 	var color = ItemRegistry.get_rarity_color(GameEnums.ItemRarity.RARE)
-	assert_eq(color, Color.CORNFLOWER_BLUE, "RARE rarity should be CORNFLOWER_BLUE")
+	assert_eq(color, Color("7ebaff"), "RARE uses readable sky blue")
 
 
 func test_all_rarity_names_defined():

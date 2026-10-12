@@ -50,6 +50,7 @@ func begin(record: Dictionary) -> void:
 	heading = _label(header, "WAVE SECURED · COLLECTING SALVAGE", 28)
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	skip_button = Button.new()
+	ChamferStyle.style_button(skip_button)
 	skip_button.text = "CONTINUE  ·  A / Space"
 	skip_button.custom_minimum_size = Vector2(260, 48)
 	skip_button.pressed.connect(complete)

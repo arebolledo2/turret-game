@@ -182,3 +182,20 @@ func test_run_choices_survive_return_to_menu_and_new_app() -> void:
 	reopened.show_home()
 	assert_eq(reopened.run_config.mode, RunConfig.MODE_SURVIVE)
 	assert_eq(SettingsService.run_mode, RunConfig.MODE_CORE, "Unavailable mode does not erase preference")
+
+func test_settings_displays_default_and_custom_window_sizes() -> void:
+	var previous := SettingsService.window_size
+	SettingsService.window_size = Vector2i.ZERO
+	app.show_settings()
+	assert_gte(app.window_size_option.selected, 0, "Default window size must not leave a blank selector")
+	assert_false(app.window_size_option.text.is_empty())
+	SettingsService.window_size = Vector2i(1234, 777)
+	app.show_settings()
+	assert_true(app.window_size_option.text.contains("1234 x 777"))
+	assert_true(app.window_size_option.text.contains("custom"))
+	var count := app.window_size_option.item_count
+	app.show_settings()
+	assert_eq(app.window_size_option.item_count, count, "Reopening settings must not duplicate custom entries")
+	app.window_size_option.item_selected.emit(app.window_size_option.selected)
+	assert_eq(SettingsService.window_size, Vector2i(1234, 777))
+	SettingsService.window_size = previous

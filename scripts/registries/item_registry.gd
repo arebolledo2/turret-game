@@ -11,12 +11,12 @@ const _ensure_loaded = [
 
 # Rarity color scheme
 const RARITY_COLORS: Dictionary = {
-	GameEnums.ItemRarity.COMMON: Color.WHITE,
-	GameEnums.ItemRarity.UNCOMMON: Color.GREEN,
-	GameEnums.ItemRarity.RARE: Color.CORNFLOWER_BLUE,
-	GameEnums.ItemRarity.EPIC: Color.PURPLE,
-	GameEnums.ItemRarity.LEGENDARY: Color.ORANGE,
-	GameEnums.ItemRarity.UNIQUE: Color.RED,
+	GameEnums.ItemRarity.COMMON: Color("d4e2e6"),
+	GameEnums.ItemRarity.UNCOMMON: Color("83dba4"),
+	GameEnums.ItemRarity.RARE: Color("7ebaff"),
+	GameEnums.ItemRarity.EPIC: Color("c69bfa"),
+	GameEnums.ItemRarity.LEGENDARY: Color("f5c46a"),
+	GameEnums.ItemRarity.UNIQUE: Color("ff8293"),
 }
 
 const RARITY_NAMES: Dictionary = {

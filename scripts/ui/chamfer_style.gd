@@ -38,3 +38,19 @@ func _draw(to_canvas_item: RID, rect: Rect2) -> void:
 		var loop := points.duplicate()
 		loop.append(points[0])
 		RenderingServer.canvas_item_add_polyline(to_canvas_item, loop, PackedColorArray([edge]), edge_width, true)
+
+## Shared compact control treatment: visible selected state and an inset controller focus edge.
+static func style_button(button: Button) -> void:
+	for state: String in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
+		var selected := state in ["pressed", "hover_pressed"]
+		var lit := selected or state == "hover"
+		var box := make(UiPalette.PANEL_HI if lit else UiPalette.PANEL_SOLID,
+			UiPalette.TEAL if lit else UiPalette.LINE, 8, 12, 6)
+		button.add_theme_stylebox_override(state, box)
+	var focus := make(Color.TRANSPARENT, UiPalette.TEAL_HI, 8, 12, 6)
+	focus.edge_width = 2.0
+	button.add_theme_stylebox_override("focus", focus)
+	button.add_theme_color_override("font_color", UiPalette.INK)
+	button.add_theme_color_override("font_hover_color", Color.WHITE)
+	button.add_theme_color_override("font_pressed_color", UiPalette.TEAL_HI)
+	button.add_theme_color_override("font_disabled_color", Color("526a73"))

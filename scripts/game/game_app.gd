@@ -91,7 +91,9 @@ func _build_menu() -> void:
 	window_size_option.accessibility_name = "Window size; you can also drag the window edges"
 	for preset in SettingsService.WINDOW_SIZE_PRESETS:
 		window_size_option.add_item("Window  %d x %d" % [preset.x, preset.y])
-	window_size_option.item_selected.connect(func(index: int) -> void: SettingsService.set_window_size(SettingsService.WINDOW_SIZE_PRESETS[index]))
+	window_size_option.item_selected.connect(func(index: int) -> void:
+		if index < SettingsService.WINDOW_SIZE_PRESETS.size():
+			SettingsService.set_window_size(SettingsService.WINDOW_SIZE_PRESETS[index]))
 	options.add_child(window_size_option)
 	vsync_check = _check(options, "VSync", "signal", func(value: bool) -> void: SettingsService.set_vsync(value))
 	marker_option = _option(options, "Ground markers", func(index: int) -> void: SettingsService.set_ground_markers(index))
@@ -218,7 +220,15 @@ func show_settings() -> void:
 	options.visible = true
 	fullscreen_check.set_pressed_no_signal(SettingsService.fullscreen)
 	vsync_check.set_pressed_no_signal(SettingsService.vsync)
-	window_size_option.select(SettingsService.WINDOW_SIZE_PRESETS.find(SettingsService.window_size))
+	# Default/custom window dimensions are valid even when they are not a preset.
+	while window_size_option.item_count > SettingsService.WINDOW_SIZE_PRESETS.size():
+		window_size_option.remove_item(window_size_option.item_count - 1)
+	var actual_size := get_window().size if SettingsService.window_size == Vector2i.ZERO else SettingsService.window_size
+	var preset_index := SettingsService.WINDOW_SIZE_PRESETS.find(actual_size)
+	if preset_index < 0:
+		window_size_option.add_item("Window  %d x %d (custom)" % [actual_size.x, actual_size.y])
+		preset_index = window_size_option.item_count - 1
+	window_size_option.select(preset_index)
 	marker_option.select(SettingsService.ground_markers)
 	auto_repair_check.set_pressed_no_signal(FeatureFlagService.is_enabled(FeatureFlagService.AUTO_REPAIR))
 	motion_check.set_pressed_no_signal(FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))

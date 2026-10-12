@@ -44,3 +44,5 @@ Auto-prepare layouts: Tight preserves compact placement; Balanced spreads attack
 Offscreen pointers include ranged enemies (Needle Kite, Kiln Lobber, Prism Lens, ranged bosses) and Brood Tender summoners, in addition to crates and all bosses. Pointers use a pulsing amber/red halo and a moving arrow; Reduced Motion keeps them static.
 
 Auto Repair is a saved, default-off setting available in Settings and the F1 user feature flags. It fully heals living hero/core at successful wave end and at next-wave preparation, without spending scrap. Paid repair buttons and repair commands are disabled while enabled. It never revives a defeated hero or core.
+
+Shop tabs, offer locks and salvage Continue share compact chamfered controls with teal selected/focus states. Rarity accents use muted neutral, mint, sky blue, lavender, gold and coral colours; rarity names remain visible. Zero-XP summaries use subdued text. Settings shows the actual/default or custom window dimensions even when no preset is selected.
