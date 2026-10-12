@@ -13,6 +13,8 @@ const MODE_CORE: String = "core"
 const MODE_CONVOY: String = "convoy"
 const MODES: Array[String] = [MODE_SURVIVE, MODE_CORE, MODE_CONVOY]
 var hero: Dictionary = HeroLoadouts.pip()
+## Independent weapon profile; initially identical to Pip, ready for future core variants.
+var core_weapon: Dictionary = HeroLoadouts.pip()
 var mode: String = MODE_SURVIVE
 ## A specific terrain layout id (`--layout=`); empty picks one at random for the run.
 var layout_id: String = ""

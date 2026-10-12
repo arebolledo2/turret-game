@@ -16,6 +16,8 @@ var crystal: MeshInstance3D
 var crystal_material: StandardMaterial3D
 var flash_time: float = 0.0
 var pulse: float = 0.0
+var weapon_clock := 0.0
+const WEAPON_SOURCE_ID := -1 # Separate from hero (0) and turret IDs (positive).
 
 const FLASH_DURATION: float = .2
 const HEALTHY := Color("58ece1")
@@ -63,6 +65,7 @@ func reset(new_max: float) -> void:
 	max_health = new_max
 	health = new_max
 	dead = false
+	weapon_clock = 0.0
 	flash_time = 0.0
 	_refresh_colour()
 
@@ -114,6 +117,31 @@ func _process(delta: float) -> void:
 	crystal_material.emission_energy_multiplier = 2.5 + beat + (6.0 if flash_time > 0.0 and not reduced else 0.0)
 
 func _physics_process(delta: float) -> void:
+	_tick_weapon(delta)
 	if reactor:
 		flash_time = maxf(0.0, flash_time - delta)
 		reactor.tick(delta, fraction(), dead, flash_time / FLASH_DURATION, FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
+
+## Uses the shared projectile/modifier pipeline, without borrowing the hero's cooldown or carry state.
+func weapon_stats() -> Dictionary:
+	var profile := world.run_config.core_weapon
+	var stats := PlayerStatsService.get_weapon_stats(profile).duplicate(true)
+	world.item_effects.modify_stats(stats, WEAPON_SOURCE_ID, "kinetic" in profile.families)
+	return stats
+
+func _tick_weapon(delta: float) -> void:
+	if dead or not is_instance_valid(world) or not world.is_combat(): return
+	weapon_clock = maxf(0.0, weapon_clock - delta)
+	if weapon_clock > 0.0: return
+	var profile := world.run_config.core_weapon
+	var stats := weapon_stats()
+	var target := world.nearest_enemy(position, float(stats.range) * WorldGeometry.METRES_PER_PIXEL)
+	if not is_instance_valid(target): return
+	var shot := CombatShot3D.from_stats(stats, profile.damage_type)
+	shot.source_id = WEAPON_SOURCE_ID
+	shot.attack_families.assign(profile.families)
+	if PlayerStatsService.roll_player_crit():
+		shot.critical = true
+		shot.damage = PlayerStatsService.calculate_player_crit_damage(shot.damage)
+	world.fire_shot(global_position + Vector3(0, .7, 0), target, shot)
+	weapon_clock = 1.0 / maxf(float(stats.fire_rate), .01)

@@ -34,3 +34,8 @@ See [enemy ecology](enemy-ecology.md) for authored wave rosters, grouped arrival
 Prep reads the same dedicated gamepad stick actions as the hero. Left stick moves the cursor (and a selected turret while repositioning); A selects/places, B cancels, LB/RB cycles turrets, X deploys, and triggers zoom. Cursor button commands are handled before GUI focus navigation. Keyboard and mouse placement remain supported; clicking the UI rail cannot place a turret.
 
 `PlayfieldView` reserves a compact 76-unit header and no footer. The minimap, status text, boss health and prep controls overlay the playfield; prep has no full-width opaque footer panel. The camera uses the playfield viewport aspect ratio, and mouse projection and world-attached indicators account for its screen offset. Decorative floor extends beyond arena bounds so wide zoom does not expose background strips; collisions and playable bounds are unchanged. Shop/pause/reward review remain separate modal screens.
+
+
+## Core weapon
+
+Both objective modes give the core an automatic projectile weapon. Its independent `RunConfig.core_weapon` profile initially copies Pip's base sidearm (12 damage, 1.2 shots/s, 3.75 m range). It uses the shared weapon/item resolver and critical-hit rules, targets the nearest enemy whose hurtbox overlaps range, and fires through the normal projectile/effects pipeline from the reactor. Its cooldown and negative source ID are separate from the hero and turret identities. Carrying a turret does not suppress core fire. Prep, pause, shop, round end and core death suppress firing. Future core variants can replace the profile without changing the hero loadout; no new core model is introduced.
