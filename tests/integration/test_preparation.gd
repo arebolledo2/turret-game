@@ -133,3 +133,44 @@ func test_mouse_click_selects_and_places_using_ground_projection() -> void:
 	assert_true(world.preparation.handle_input(event))
 	assert_false(world.preparation.moving)
 	assert_lt(turret.position.distance_to(destination), .01)
+
+func test_gamepad_stick_moves_cursor_and_carried_turret() -> void:
+	var prep := world.preparation
+	prep.interact()
+	var start := prep.cursor
+	Input.action_press("gamepad_right", .8)
+	prep._physics_process(.2)
+	Input.action_release("gamepad_right")
+	assert_gt(prep.cursor.x, start.x)
+	assert_eq(prep.selected.position, prep.cursor)
+	assert_eq(prep.view_focus, prep.cursor)
+	var stopped := prep.cursor
+	prep._physics_process(.2)
+	assert_eq(prep.cursor, stopped, "Releasing the stick stops movement")
+
+func test_playfield_reserves_ui_space_and_mouse_projection_roundtrips() -> void:
+	world.playfield = PlayfieldView.new()
+	world.playfield.world = world
+	world.add_child(world.playfield)
+	world.camera_rig.snap()
+	await wait_process_frames(2)
+	var field := world.playfield
+	var size := get_viewport().get_visible_rect().size
+	assert_eq(field.rect.position.y, PlayfieldView.TOP)
+	assert_eq(field.rect.end.y, size.y - PlayfieldView.BOTTOM)
+	assert_eq(world.camera.get_viewport(), field.viewport)
+	assert_almost_eq(world.camera_rig.aspect, field.rect.size.x / field.rect.size.y, .001)
+	var turret := world.turrets[0]
+	var event := InputEventMouseButton.new()
+	event.pressed = true
+	event.button_index = MOUSE_BUTTON_LEFT
+	event.position = Vector2(10, 10)
+	assert_false(world.preparation.handle_input(event), "UI rail cannot place a turret")
+	event.position = field.to_screen(turret.position)
+	assert_true(world.preparation.handle_input(event))
+	assert_true(world.preparation.moving)
+	var at := Vector3(4, 0, 0)
+	event.position = field.to_screen(at)
+	world.preparation.handle_input(event)
+	assert_lt(turret.position.distance_to(at), .01)
+	assert_false(world.preparation.moving)

@@ -50,6 +50,11 @@ func end() -> void:
 	if is_instance_valid(range_dial): range_dial.hide()
 	if layer: layer.hide()
 
+func _input(event: InputEvent) -> void:
+	# Cursor commands must precede GUI focus navigation (especially after leaving Shop).
+	if event is InputEventJoypadButton and handle_input(event):
+		get_viewport().set_input_as_handled()
+
 func _physics_process(delta: float) -> void:
 	if not active: return
 	if GameStateMachine.current_state != GameStateMachine.GameState.PREPARATION:
@@ -58,6 +63,8 @@ func _physics_process(delta: float) -> void:
 	if layer: layer.visible = not world.paused
 	if world.paused: return
 	var direction := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var stick := Input.get_vector("gamepad_left", "gamepad_right", "gamepad_up", "gamepad_down")
+	if stick.length_squared() > direction.length_squared(): direction = stick
 	if direction.length_squared() > .01:
 		set_cursor(cursor + Vector3(direction.x, 0, direction.y) * delta * 7.0)
 		view_focus = cursor
@@ -128,10 +135,11 @@ func deploy() -> bool:
 func handle_input(event: InputEvent) -> bool:
 	if not active or world.paused: return false
 	if event is InputEventMouseMotion:
-		_aim_mouse(event.position)
+		if event.relative.length_squared() > 1.0: _aim_mouse(event.position)
 		return false
 	if event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
+			if world.playfield and not world.playfield.rect.has_point(event.position): return false
 			_aim_mouse(event.position)
 			interact()
 			return true
@@ -159,6 +167,9 @@ func handle_input(event: InputEvent) -> bool:
 	return false
 
 func _aim_mouse(screen: Vector2) -> void:
+	if world.playfield:
+		if not world.playfield.rect.has_point(screen): return
+		screen -= world.playfield.rect.position
 	var origin := world.camera.project_ray_origin(screen)
 	var ray := world.camera.project_ray_normal(screen)
 	var point: Variant = Plane(Vector3.UP, 0).intersects_ray(origin, ray)

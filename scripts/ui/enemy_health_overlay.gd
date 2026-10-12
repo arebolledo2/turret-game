@@ -39,7 +39,7 @@ func _draw() -> void:
 		var trail := float(trails.get(actor.get_instance_id(), fraction))
 		if EnemyEcology.is_boss(actor.enemy_type):
 			var width := minf(650.0, viewport_size.x * .55)
-			var at := Vector2((viewport_size.x - width) * .5, 150)
+			var at := Vector2((viewport_size.x - width) * .5, viewport_size.y - 174)
 			var panel := Rect2(at, Vector2(width, 95))
 			draw_style_box(_panel(), panel)
 			var name_text: String = EnemyEcology.TYPES[actor.enemy_type].name
@@ -52,13 +52,13 @@ func _draw() -> void:
 			for threshold: float in ticks:
 				var x := at.x + 14 + (width - 28) * threshold
 				draw_line(Vector2(x, at.y + 43), Vector2(x, at.y + 59), Color("f5e8ca"), 2)
-			var screen := world.camera.unproject_position(actor.position)
+			var screen := _screen_position(actor.position)
 			if world.camera.is_position_behind(actor.position) or not get_viewport_rect().has_point(screen):
 				var direction := (screen - viewport_size * .5).normalized()
 				var center := at + Vector2(width + 20, 45)
 				draw_line(center - direction * 8, center + direction * 8, Color("ffb970"), 3)
 		elif actor.stationary and (fraction < 1.0 or actor.position.distance_to(world.player.position) < 5.0 or world.player.weapon_target == actor):
-			var at := world.camera.unproject_position(actor.position + Vector3(0, 1.45 * actor.body_scale, 0))
+			var at := _screen_position(actor.position + Vector3(0, 1.45 * actor.body_scale, 0))
 			if world.camera.is_position_behind(actor.position) or not get_viewport_rect().has_point(at): continue
 			at = Vector2(clampf(at.x - 70, 8, viewport_size.x - 148), clampf(at.y - 20, 195, viewport_size.y - 45))
 			var panel := Rect2(at, Vector2(140, 42))
@@ -83,3 +83,6 @@ func _panel() -> StyleBoxFlat:
 	panel.set_border_width_all(1)
 	panel.set_corner_radius_all(5)
 	return panel
+
+func _screen_position(at: Vector3) -> Vector2:
+	return world.playfield.to_screen(at) if world.playfield else world.camera.unproject_position(at)

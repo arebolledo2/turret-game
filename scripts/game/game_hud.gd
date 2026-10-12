@@ -185,16 +185,18 @@ func _padded(parent: Node, left: int, top: int, right: int, bottom: int) -> Marg
 
 ## Three corner clusters: hull (and core) top-left, wave and timer top-centre, scrap top-right.
 func _build_corner_clusters(root: Control) -> void:
-	var left := VBoxContainer.new()
-	left.position = Vector2(48, 40)
-	left.custom_minimum_size.x = 540
+	var left := HBoxContainer.new()
+	left.position = Vector2(24, 24)
+	left.custom_minimum_size.x = 600
 	left.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	left.add_theme_constant_override("separation", 14)
 	root.add_child(left)
 	hull_bar = VitalBar.new().setup("hull", "hull")
+	hull_bar.custom_minimum_size.x = 280
 	left.add_child(hull_bar)
 	core_bar = VitalBar.new().setup("core", "core")
 	core_bar.visible = false
+	core_bar.custom_minimum_size.x = 280
 	left.add_child(core_bar)
 
 	var centre := PanelContainer.new()
@@ -254,8 +256,9 @@ func _build_wave_banner(root: Control) -> void:
 	banner.visible = false
 	banner.add_theme_stylebox_override("panel", ChamferStyle.make(UiPalette.PANEL, UiPalette.TEAL_HI, 16.0, 56.0, 20.0))
 	_anchor_top(banner, Control.PRESET_CENTER_TOP, 0.0, Control.GROW_DIRECTION_BOTH)
-	banner.offset_top = 300
-	banner.offset_bottom = 300
+	banner.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	banner.offset_top = -170
+	banner.offset_bottom = -45
 	root.add_child(banner)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 28)

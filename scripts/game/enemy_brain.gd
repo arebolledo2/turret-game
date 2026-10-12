@@ -340,7 +340,7 @@ func _range_motion(toward: Vector3, speed: float, low: float, high: float) -> Ve
 
 func _visible() -> bool:
 	var camera := actor.world.camera
-	return camera != null and not camera.is_position_behind(actor.position) and actor.get_viewport().get_visible_rect().has_point(camera.unproject_position(actor.position))
+	return camera != null and not camera.is_position_behind(actor.position) and camera.get_viewport().get_visible_rect().has_point(camera.unproject_position(actor.position))
 
 func _warning_slot(area: bool) -> bool:
 	var count := 0

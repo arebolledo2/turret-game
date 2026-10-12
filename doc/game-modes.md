@@ -27,3 +27,10 @@ Survival and stationary core rounds end at the timer. Convoy rounds normally end
 The full-screen Shop offers one turret and three items, free offer locking, rerolls, repairs and turret inspection/evolution. Prepare exits the Shop into untimed placement. Queued feature flags apply when the next wave is initialized. Pause suspends simulation and transactions. Returning to the main menu removes the arena before freeing it, allowing `RunSession` to detach shared state synchronously. Restart clears run purchases, modifiers, actors, drops, offers and any unfinished placement; preferences persist.
 
 See [enemy ecology](enemy-ecology.md) for authored wave rosters, grouped arrival warnings and moving-core routes. Automated combat tools explicitly deploy preparation before simulating combat.
+
+
+## Playfield and controls
+
+Prep reads the same dedicated gamepad stick actions as the hero. Left stick moves the cursor (and a selected turret while repositioning); A selects/places, B cancels, LB/RB cycles turrets, X deploys, and triggers zoom. Cursor button commands are handled before GUI focus navigation. Keyboard and mouse placement remain supported; clicking the UI rail cannot place a turret.
+
+`PlayfieldView` renders the shared 3D world into a separate viewport between the top status rail and bottom controls/radar rail. The camera uses this viewport's aspect ratio, and mouse projection and world-attached indicators account for its screen offset. Prep panels, combat status, minimap, wave announcements and boss health occupy the rails rather than covering the rendered battlefield. World-attached cache health, buff icons and damage feedback remain contextual overlays. Shop/pause/reward review remain separate modal screens.

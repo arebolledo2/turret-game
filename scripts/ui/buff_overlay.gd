@@ -55,7 +55,7 @@ func _process(_delta: float) -> void:
 			chip.get_node("Stacks").text = str(entries[index].stacks) if int(entries[index].stacks) > 1 else ""
 			chip.get_node("Timer/Fill").size.x = 32.0 * clampf(float(entries[index].fraction), 0.0, 1.0)
 		row.visible = true
-		row.position = world.camera.unproject_position(anchor) - Vector2(float(entries.size()) * 42.0 * .5, 0)
+		row.position = _screen_position(anchor) - Vector2(float(entries.size()) * 42.0 * .5, 0)
 	for source in panels.keys():
 		if not live.has(source):
 			panels[source].queue_free()
@@ -103,3 +103,6 @@ func _chip(id: String) -> Panel:
 	fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	timer.add_child(fill)
 	return chip
+
+func _screen_position(at: Vector3) -> Vector2:
+	return world.playfield.to_screen(at) if world.playfield else world.camera.unproject_position(at)

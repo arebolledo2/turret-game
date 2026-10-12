@@ -64,6 +64,10 @@ func _process(delta: float) -> void:
 		hero_strength = 0.0
 		core_strength = 0.0
 		return
+	if world.playfield:
+		rim.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+		rim.position = world.playfield.rect.position
+		rim.size = world.playfield.rect.size
 	var hero_target := severity(world.player.health, world.player.max_health)
 	var core_target := severity(world.core.health, world.core.max_health) if is_instance_valid(world.core) else 0.0
 	hero_strength = move_toward(hero_strength, hero_target, delta * 2.0)

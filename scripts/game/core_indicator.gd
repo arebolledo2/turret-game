@@ -17,16 +17,17 @@ func _process(_delta: float) -> void:
 	arrow_visible = false
 	if is_instance_valid(world) and world.core and not world.core.dead and world.camera and visible:
 		var target := world.core.position + Vector3(0, .6, 0)
-		var viewport_size := get_viewport_rect().size
-		var centre := viewport_size * .5
+		var bounds := world.playfield.rect if world.playfield else get_viewport_rect()
+		var viewport_size := bounds.size
+		var centre := bounds.get_center()
 		var behind := world.camera.is_position_behind(target)
-		var projected := world.camera.unproject_position(target)
-		var inside := not behind and Rect2(Vector2(MARGIN, MARGIN), viewport_size - Vector2.ONE * MARGIN * 2.0).has_point(projected)
+		var projected := world.playfield.to_screen(target) if world.playfield else world.camera.unproject_position(target)
+		var inside := not behind and bounds.grow(-MARGIN).has_point(projected)
 		if not inside:
 			var direction := (projected - centre).normalized() * (-1.0 if behind else 1.0)
 			if direction.is_zero_approx():
 				direction = Vector2.UP
-			var limit := centre - Vector2.ONE * MARGIN
+			var limit := viewport_size * .5 - Vector2.ONE * MARGIN
 			var scale_to_edge := minf(limit.x / maxf(absf(direction.x), .0001), limit.y / maxf(absf(direction.y), .0001))
 			arrow_at = centre + direction * scale_to_edge
 			arrow_heading = direction

@@ -37,7 +37,7 @@ func setup(new_camera: Camera3D, new_world: Node3D) -> void:
 
 func refresh_aspect() -> void:
 	if is_inside_tree():
-		aspect = aspect_for(get_viewport().get_visible_rect().size)
+		aspect = aspect_for(camera.get_viewport().get_visible_rect().size)
 	_apply()
 
 ## Vertical orthographic size at the given zoom. Narrow windows widen the view so the horizontal span never shrinks.

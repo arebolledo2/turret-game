@@ -55,6 +55,7 @@ var defeat_reason: String = ""
 var player: CombatActor
 var camera: Camera3D
 var camera_rig: CameraRig
+var playfield: PlayfieldView
 var hud: CanvasLayer
 var enemies: Array[CombatActor] = []
 var turrets: Array[TurretActor] = []
@@ -140,6 +141,9 @@ func _ready() -> void:
 	camera = stage.camera
 	camera_rig = stage.camera_rig
 	if show_hud:
+		playfield = PlayfieldView.new()
+		playfield.world = self
+		add_child(playfield)
 		hud = preload("res://scripts/game/game_hud.gd").new()
 		hud.world = self
 		add_child(hud)
