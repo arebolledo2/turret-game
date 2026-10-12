@@ -18,7 +18,10 @@ func _leg_sides() -> Array[String]:
 func _build_drop_model() -> Node3D:
 	var model := Node3D.new()
 	if ClockworkModels.available("dropbox"):
-		model.add_child(ClockworkModels.instantiate("dropbox"))
+		var chest := ClockworkModels.instantiate("dropbox")
+		# Exported latch faces -Z; the fixed gameplay camera views from +Z.
+		chest.rotation.y = PI
+		model.add_child(chest)
 		return model
 	var plinth_material := WorldGeometry.material(Color("2a3a44"))
 	plinth_material.metallic = .5
