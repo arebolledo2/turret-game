@@ -118,6 +118,9 @@ The `PROGRESSION_SMOKE` line includes the flag snapshot so results from differen
 | `res://tools/capture_game.tscn -- --stress` | Windowed stress capture. `GAME_METRICS` reports frame, physics, process, GPU and render-CPU medians and p95 |
 | `res://tools/bench_physics.tscn` | Headless ablation: switches enemy, turret, world, effects and HUD processing off one at a time |
 | `res://tools/bench_split.tscn` | Headless per-subsystem script timing per physics tick (engine-side physics cost is the remainder) |
+| `res://tools/bench_shatter.tscn -- --mode=shatter\|dissolve\|none` | Windowed: kills 16 beetles among 100 bystanders and reports kill-call time, frame time and draw calls per death effect |
+| `res://tools/capture_shatter.tscn` | Windowed: kills three enemies and saves the shatter at fixed ages plus a contact sheet to `.test-results/` (`--enemy=`, `--zoom=`) |
+| `godot --headless --path . -s tools/bake_shatter.gd -- <model key>` | Pre-fractures a clockwork model for [the death shatter](combat-polish.md#death-shatter) |
 
 Run the headless tools with `godot --headless --path . <scene>`. They measure CPU only, so a busy GPU does not affect them.
 

@@ -193,6 +193,7 @@ func _zoneless_floor_theme() -> String:
 	return WorldGeometry.FLOOR_THEMES[rng.randi_range(0, WorldGeometry.FLOOR_THEMES.size() - 1)]
 
 func start_run() -> void:
+	DeathShatter.warm_up()
 	_clear_actors()
 	stage.floor_decals.clear_scorches()
 	session.begin_run()
@@ -443,7 +444,8 @@ func _on_enemy_died(enemy: CombatActor) -> void:
 		pickup_root.add_child(pickup)
 		pickup.reset_physics_interpolation()
 	enemies.erase(enemy)
-	DeathDissolve.spawn(actor_root, enemy)
+	if not DeathShatter.spawn(actor_root, enemy):
+		DeathDissolve.spawn(actor_root, enemy)
 	enemy.queue_free()
 	if enemy.explosion_radius > 0.0:
 		blasts.detonate(enemy)
