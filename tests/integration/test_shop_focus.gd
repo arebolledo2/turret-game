@@ -80,13 +80,12 @@ func test_shop_is_opaque_hides_combat_and_restores_rendering_on_exit() -> void:
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.PREPARATION)
 	assert_false(get_viewport().disable_3d)
 
-func test_purchase_retains_card_slot_and_hands_focus_to_available_offer() -> void:
+func test_purchase_hides_card_and_hands_focus_to_available_offer() -> void:
 	EconomyService.current_shop_offers.assign([ShopOffer.new("item", "polished_barrels", 10), ShopOffer.new("item", "capacitor_bank", 10)])
 	hud.refresh()
 	hud.offer_buttons[0].grab_focus()
 	hud._purchase(0)
-	assert_true(hud.offer_buttons[0].visible)
-	assert_true(hud.offer_buttons[0].disabled)
+	assert_false(hud.offer_buttons[0].visible)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.offer_buttons[1])
 	hud._purchase(1)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
