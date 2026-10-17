@@ -22,6 +22,7 @@ var auto_button: Button
 var deploy_button: Button
 var save_button: Button
 var note: Label
+var badges: Dictionary = {}
 var controls: Label
 var layout_buttons: Array[Button] = []
 var layout_row: Array[Button] = []
@@ -316,6 +317,7 @@ func _refresh() -> void:
 		layout_buttons[i].set_pressed_no_signal(i == SettingsService.auto_prepare_mode and auto_on)
 		layout_buttons[i].disabled = moving or (i == SAVED and saved_positions.is_empty())
 	for button in layout_row + action_row: button.focus_mode = Control.FOCUS_NONE if button.disabled else Control.FOCUS_ALL
+	for button: Button in badges: badges[button].modulate.a = .35 if button.disabled else 1.0
 	var focus := get_viewport().gui_get_focus_owner()
 	if focus is Button and (focus in layout_row or focus in action_row) and focus.disabled:
 		(move_button if not move_button.disabled else deploy_button).grab_focus()
@@ -390,23 +392,31 @@ func _build_ui() -> void:
 	var layout_line := HBoxContainer.new()
 	layout_line.add_theme_constant_override("separation", 10)
 	column.add_child(layout_line)
-	auto_button = _button(layout_line, "AUTO", toggle_auto, "power")
+	auto_button = _button(layout_line, "AUTO", toggle_auto, "power", false, "Y")
 	auto_button.toggle_mode = true
 	for index in LAYOUT_SHORT.size():
 		layout_buttons.append(_layout_choice(layout_line, index))
 	var gap := Control.new()
 	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	layout_line.add_child(gap)
-	save_button = _button(layout_line, "SAVE", save_layout, "star")
+	var cycle_hint := HBoxContainer.new()
+	cycle_hint.add_theme_constant_override("separation", 8)
+	cycle_hint.alignment = BoxContainer.ALIGNMENT_END
+	cycle_hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	cycle_hint.add_child(_glyph("RS"))
+	_label(cycle_hint, "next layout", 18, UiPalette.MUTED)
+	gap.add_child(cycle_hint)
+	cycle_hint.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	save_button = _button(layout_line, "SAVE", save_layout, "star", false, "LS")
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
 	column.add_child(row)
-	move_button = _button(row, "MOVE", interact, "motion")
-	cancel_button = _button(row, "CANCEL", cancel_move, "back")
+	move_button = _button(row, "MOVE", interact, "motion", false, "A")
+	cancel_button = _button(row, "CANCEL", cancel_move, "back", false, "B")
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)
-	deploy_button = _button(row, "DEPLOY", deploy, "deploy", true)
+	deploy_button = _button(row, "DEPLOY", deploy, "deploy", true, "X")
 	layout_row.assign([auto_button] + layout_buttons + [save_button])
 	action_row.assign([move_button, cancel_button, deploy_button])
 	# Rows stop at their edges; up from the layouts hands control back to the map.
@@ -449,14 +459,51 @@ func _label(parent: Node, text: String, size: int, colour: Color) -> Label:
 	return label
 
 ## Option buttons take controller focus only after D-pad down, so A still operates the cursor on the map.
-func _button(parent: Node, text: String, action: Callable, icon_name: String = "turret", primary: bool = false) -> Button:
+func _button(parent: Node, text: String, action: Callable, icon_name: String = "turret", primary: bool = false, glyph: String = "") -> Button:
 	var button := IconButton.new().setup(icon_name, text, primary)
 	button.focus_mode = Control.FOCUS_ALL
 	button.focus_entered.connect(_refresh)
 	button.focus_exited.connect(_refresh)
 	button.pressed.connect(action)
 	parent.add_child(button)
+	if not glyph.is_empty():
+		# Reserve room so the centred label never runs under the controller glyph.
+		button.custom_minimum_size.x = 210
+		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		var badge := _glyph(glyph)
+		button.add_child(badge)
+		badge.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT)
+		badge.offset_left = -44
+		badge.offset_right = -14
+		badge.offset_top = -15
+		badge.offset_bottom = 15
+		badges[button] = badge
 	return button
+
+## A small controller-button chip: coloured circle for A/B/X/Y, pill for stick clicks.
+func _glyph(text: String) -> Control:
+	var tint: Color = {"A": Color("5fc47a"), "B": Color("e0605a"), "X": Color("5b9be0"), "Y": Color("e6c24f")}.get(text, UiPalette.MUTED)
+	var chip := PanelContainer.new()
+	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chip.custom_minimum_size = Vector2(30, 30)
+	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var box := StyleBoxFlat.new()
+	box.bg_color = Color(tint, .22)
+	box.border_color = tint
+	box.set_border_width_all(2)
+	box.set_corner_radius_all(15)
+	box.content_margin_left = 6
+	box.content_margin_right = 6
+	chip.add_theme_stylebox_override("panel", box)
+	var label := Label.new()
+	label.text = text
+	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	label.add_theme_font_size_override("font_size", 17)
+	label.add_theme_color_override("font_color", tint.lightened(.35))
+	chip.add_child(label)
+	return chip
 
 func toggle_auto() -> void:
 	if not active or world.paused: return

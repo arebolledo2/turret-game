@@ -86,6 +86,7 @@ func test_purchase_hides_card_and_hands_focus_to_available_offer() -> void:
 	hud.offer_buttons[0].grab_focus()
 	hud._purchase(0)
 	assert_false(hud.offer_buttons[0].visible)
+	assert_true(hud.offer_buttons[0].get_parent().visible, "bought slot stays so other cards do not shift")
 	assert_same(get_viewport().gui_get_focus_owner(), hud.offer_buttons[1])
 	hud._purchase(1)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)

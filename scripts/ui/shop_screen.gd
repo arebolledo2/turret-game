@@ -227,8 +227,11 @@ func refresh() -> void:
 	continue_button.custom_minimum_size.x = 250 if compact else 310
 	for i in range(offer_buttons.size()):
 		var card := offer_buttons[i] as OfferCard
-		card.visible = i < EconomyService.current_shop_offers.size() and not EconomyService.current_shop_offers[i].sold
-		(card.get_parent() as Control).visible = card.visible
+		var exists := i < EconomyService.current_shop_offers.size()
+		card.visible = exists and not EconomyService.current_shop_offers[i].sold
+		# A bought offer leaves its slot empty so the other cards keep their places.
+		(card.get_parent() as Control).visible = exists
+		card.lock_button.visible = card.visible
 		card.set_compact(compact)
 		if card.visible:
 			var offer := EconomyService.current_shop_offers[i]
