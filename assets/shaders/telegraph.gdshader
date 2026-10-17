@@ -54,13 +54,13 @@ void fragment() {
 
 	// Gentle travelling bands inside the fill so the gauge reads as moving, not a flat wash.
 	float band = 0.5 + 0.5 * sin(t * reach * 7.0 - TIME * 6.0 * flow);
-	float body = mix(0.10, 0.30 + 0.07 * band * flow, filled);
+	float body = mix(0.06, 0.40 + 0.08 * band * flow, filled);
 	body += (1.0 - t) * 0.06 * filled;
 	// Faint inner glow keeps the edge of the footprint readable on bright floors.
 	float glow = exp(-edge * 6.0) * inside * 0.20;
 
-	float ink = inside * body + glow + rim * mix(0.55, 0.95, urgency) + lead * inside * 0.55;
-	vec3 hot = mix(tint.rgb, vec3(1.0, 0.95, 0.80), clamp(lead * 0.7 + urgency * 0.25, 0.0, 1.0));
+	float ink = inside * body + glow + rim * mix(0.55, 0.95, urgency) + lead * inside * 0.30;
+	vec3 hot = mix(tint.rgb, vec3(1.0, 0.95, 0.80), clamp(lead * 0.35 + urgency * 0.2, 0.0, 1.0));
 	ALBEDO = hot;
 	EMISSION = hot * (0.35 + 0.65 * (rim + lead * inside) + urgency * 0.3 * filled * inside);
 	ALPHA = clamp(ink, 0.0, 1.0) * tint.a;
