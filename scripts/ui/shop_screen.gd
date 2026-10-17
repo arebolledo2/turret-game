@@ -227,7 +227,7 @@ func refresh() -> void:
 	continue_button.custom_minimum_size.x = 250 if compact else 310
 	for i in range(offer_buttons.size()):
 		var card := offer_buttons[i] as OfferCard
-		card.visible = i < EconomyService.current_shop_offers.size()
+		card.visible = i < EconomyService.current_shop_offers.size() and not EconomyService.current_shop_offers[i].sold
 		(card.get_parent() as Control).visible = card.visible
 		card.set_compact(compact)
 		if card.visible:

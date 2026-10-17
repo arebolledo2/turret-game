@@ -21,7 +21,21 @@ var layout_button: Button
 var auto_button: Button
 var deploy_button: Button
 var save_button: Button
+var note: Label
+var controls: Label
+var layout_buttons: Array[Button] = []
+var layout_row: Array[Button] = []
+var action_row: Array[Button] = []
 const LAYOUT_NAMES := ["TIGHT", "BALANCED", "AREA COVERAGE", "MAX SPREAD", "SAVED"]
+const LAYOUT_SHORT := ["TIGHT", "BALANCED", "AREA", "SPREAD", "SAVED"]
+const LAYOUT_KINDS := ["tight", "balanced", "area", "spread", "saved"]
+const LAYOUT_NOTES := [
+	"Tight: turrets bunch up near the core.",
+	"Balanced: turrets ring the core with overlapping reach.",
+	"Area: turret reach just touches, covering the most ground.",
+	"Spread: turrets sit as far apart as the arena allows.",
+	"Saved: your remembered turret positions. Press SAVE to remember the current ones.",
+]
 const SAVED := 4
 var saved_positions: Dictionary = {}
 var new_markers: Dictionary = {}
@@ -211,6 +225,7 @@ func handle_input(event: InputEvent) -> bool:
 			cancel_move()
 			return true
 	if event is InputEventKey and event.pressed and not event.echo:
+		if menu_focused() and event.physical_keycode in [KEY_SPACE, KEY_ENTER, KEY_KP_ENTER]: return false
 		match event.physical_keycode:
 			KEY_SPACE, KEY_E: interact()
 			KEY_ENTER, KEY_KP_ENTER: deploy()
@@ -223,6 +238,27 @@ func handle_input(event: InputEvent) -> bool:
 			_: return false
 		return true
 	if event is InputEventJoypadButton and event.pressed:
+		var in_menu := menu_focused()
+		# D-pad: left/right pick a turret on the map; down opens the option bar; up leaves it.
+		match event.button_index:
+			JOY_BUTTON_DPAD_LEFT, JOY_BUTTON_DPAD_RIGHT:
+				if in_menu: return false
+				cycle(-1 if event.button_index == JOY_BUTTON_DPAD_LEFT else 1)
+				return true
+			JOY_BUTTON_DPAD_DOWN:
+				if in_menu: return false
+				focus_menu()
+				return true
+			JOY_BUTTON_DPAD_UP:
+				if not in_menu: return false
+				if get_viewport().gui_get_focus_owner() in layout_row: leave_menu()
+				else: return false
+				return true
+		# While an option is focused A presses it (GUI handles ui_accept); B steps back to the map.
+		if in_menu and event.button_index == JOY_BUTTON_A: return false
+		if in_menu and event.button_index == JOY_BUTTON_B:
+			leave_menu()
+			return true
 		match event.button_index:
 			JOY_BUTTON_A: interact()
 			JOY_BUTTON_B: cancel_move()
@@ -268,14 +304,55 @@ func _refresh() -> void:
 	layer.visible = active and not world.paused
 	title.text = "PREPARE WAVE %02d" % GameStateService.current_wave
 	hint.text = "Clear the core, other turrets and blocked ground." if not valid else ("Choose a position, then place. Cancel returns it to its original spot." if moving else "Take your time. The wave starts only when you Deploy.")
-	move_button.text = "PLACE  A / Space" if moving else "MOVE  A / Space"
+	move_button.text = "PLACE" if moving else "MOVE"
 	move_button.disabled = not has_selection or not valid
 	cancel_button.disabled = not moving
-	layout_button.text = "%s  R / RS" % LAYOUT_NAMES[SettingsService.auto_prepare_mode]
 	save_button.disabled = moving or not _layout_valid()
 	deploy_button.disabled = moving or not _layout_valid()
-	auto_button.text = "AUTO: %s  Y / F" % ("ON" if FeatureFlagService.is_enabled(FeatureFlagService.AUTO_DEPLOY) else "OFF")
+	var auto_on := FeatureFlagService.is_enabled(FeatureFlagService.AUTO_DEPLOY)
+	auto_button.text = "AUTO " + ("ON" if auto_on else "OFF")
+	auto_button.set_pressed_no_signal(auto_on)
+	for i in layout_buttons.size():
+		layout_buttons[i].set_pressed_no_signal(i == SettingsService.auto_prepare_mode and auto_on)
+		layout_buttons[i].disabled = moving or (i == SAVED and saved_positions.is_empty())
+	for button in layout_row + action_row: button.focus_mode = Control.FOCUS_NONE if button.disabled else Control.FOCUS_ALL
+	var focus := get_viewport().gui_get_focus_owner()
+	if focus is Button and (focus in layout_row or focus in action_row) and focus.disabled:
+		(move_button if not move_button.disabled else deploy_button).grab_focus()
+	var layout_index := layout_buttons.find(focus)
+	note.text = LAYOUT_NOTES[layout_index if layout_index >= 0 else SettingsService.auto_prepare_mode]
+	if layout_index < 0 and not auto_on: note.text = "Auto is off: turrets stay where you put them."
+	controls.text = "D-pad: move between options    A: choose    B / D-pad up: back to the map    X: deploy" if menu_focused() else "Left stick: aim    D-pad left/right or LB/RB: pick turret    A: move / place    D-pad down: layouts and options    X: deploy"
 	if not moving and not _layout_valid(): hint.text = "Move turrets out of spawn zones, or use Auto Deploy."
+
+func menu_focused() -> bool:
+	var focus := get_viewport().gui_get_focus_owner()
+	return focus is Button and (focus in layout_row or focus in action_row)
+
+## Hand the controller over to the option bar, starting on the active layout.
+func focus_menu() -> void:
+	if not active or world.paused or not layer: return
+	var start := layout_buttons[SettingsService.auto_prepare_mode]
+	if start.disabled or not FeatureFlagService.is_enabled(FeatureFlagService.AUTO_DEPLOY): start = move_button if not move_button.disabled else deploy_button
+	start.grab_focus()
+	_refresh()
+
+func leave_menu() -> void:
+	var focus := get_viewport().gui_get_focus_owner()
+	if focus: focus.release_focus()
+	_refresh()
+
+func set_layout(mode: int) -> void:
+	if not active or world.paused or (mode == SAVED and saved_positions.is_empty()): return
+	cancel_move()
+	SettingsService.auto_prepare_mode = mode
+	FeatureFlagService.set_enabled(FeatureFlagService.AUTO_DEPLOY, true)
+	SettingsService.save_preferences()
+	arrange_turrets()
+	if is_instance_valid(selected):
+		cursor = selected.position
+		view_focus = cursor
+	_refresh()
 
 func _build_ui() -> void:
 	layer = CanvasLayer.new()
@@ -300,7 +377,7 @@ func _build_ui() -> void:
 	footer.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	footer.offset_left = 28
 	footer.offset_right = -28
-	footer.offset_top = -220
+	footer.offset_top = -330
 	footer.offset_bottom = -24
 	footer.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	root.add_child(footer)
@@ -308,22 +385,58 @@ func _build_ui() -> void:
 	column.add_theme_constant_override("separation", 10)
 	footer.add_child(column)
 	detail = _label(column, "", 25, UiPalette.INK)
-	_label(column, "Aim: mouse / left stick / WASD    Cycle turrets: LB / RB or [ / ]    Zoom: triggers / wheel", 18, UiPalette.MUTED)
-	var layout_row := HBoxContainer.new()
-	layout_row.add_theme_constant_override("separation", 10)
-	column.add_child(layout_row)
-	auto_button = _button(layout_row, "AUTO", toggle_auto)
-	layout_button = _button(layout_row, "LAYOUT", cycle_layout)
-	save_button = _button(layout_row, "SAVE LAYOUT  L / LS", save_layout)
+	note = _label(column, "", 20, UiPalette.TEAL_HI)
+	controls = _label(column, "", 18, UiPalette.MUTED)
+	var layout_line := HBoxContainer.new()
+	layout_line.add_theme_constant_override("separation", 10)
+	column.add_child(layout_line)
+	auto_button = _button(layout_line, "AUTO", toggle_auto, "power")
+	auto_button.toggle_mode = true
+	for index in LAYOUT_SHORT.size():
+		layout_buttons.append(_layout_choice(layout_line, index))
+	var gap := Control.new()
+	gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layout_line.add_child(gap)
+	save_button = _button(layout_line, "SAVE", save_layout, "star")
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
 	column.add_child(row)
-	move_button = _button(row, "MOVE  A / Space", interact)
-	cancel_button = _button(row, "CANCEL  B / Right click", cancel_move)
+	move_button = _button(row, "MOVE", interact, "motion")
+	cancel_button = _button(row, "CANCEL", cancel_move, "back")
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)
-	deploy_button = _button(row, "DEPLOY  X / Enter", deploy, true)
+	deploy_button = _button(row, "DEPLOY", deploy, "deploy", true)
+	layout_row.assign([auto_button] + layout_buttons + [save_button])
+	action_row.assign([move_button, cancel_button, deploy_button])
+	# Rows stop at their edges; up from the layouts hands control back to the map.
+	for button in layout_row: button.focus_neighbor_top = button.get_path_to(button)
+	for button in action_row: button.focus_neighbor_bottom = button.get_path_to(button)
+	for rowset in [layout_row, action_row]:
+		rowset[0].focus_neighbor_left = rowset[0].get_path_to(rowset[0])
+		rowset[-1].focus_neighbor_right = rowset[-1].get_path_to(rowset[-1])
+
+## A toggle button showing a LayoutIcon over the layout's short name.
+func _layout_choice(parent: Node, index: int) -> Button:
+	var button := IconButton.new().setup("turret", "", false)
+	button.icon = null
+	button.toggle_mode = true
+	button.custom_minimum_size = Vector2(132, 104)
+	button.pressed.connect(set_layout.bind(index))
+	var stack := VBoxContainer.new()
+	stack.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stack.alignment = BoxContainer.ALIGNMENT_CENTER
+	stack.add_theme_constant_override("separation", 4)
+	button.add_child(stack)
+	stack.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var picture := LayoutIcon.new().setup(LAYOUT_KINDS[index], 56.0)
+	picture.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	stack.add_child(picture)
+	var caption := _label(stack, LAYOUT_SHORT[index], 18, UiPalette.INK)
+	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	parent.add_child(button)
+	return button
 
 func _label(parent: Node, text: String, size: int, colour: Color) -> Label:
 	var label := Label.new()
@@ -335,9 +448,12 @@ func _label(parent: Node, text: String, size: int, colour: Color) -> Label:
 	parent.add_child(label)
 	return label
 
-func _button(parent: Node, text: String, action: Callable, primary: bool = false) -> Button:
-	var button := IconButton.new().setup("deploy" if primary else "turret", text, primary)
-	button.focus_mode = Control.FOCUS_NONE # A operates the cursor, never an accidentally focused Deploy button.
+## Option buttons take controller focus only after D-pad down, so A still operates the cursor on the map.
+func _button(parent: Node, text: String, action: Callable, icon_name: String = "turret", primary: bool = false) -> Button:
+	var button := IconButton.new().setup(icon_name, text, primary)
+	button.focus_mode = Control.FOCUS_ALL
+	button.focus_entered.connect(_refresh)
+	button.focus_exited.connect(_refresh)
 	button.pressed.connect(action)
 	parent.add_child(button)
 	return button
