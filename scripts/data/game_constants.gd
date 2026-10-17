@@ -19,7 +19,6 @@ const CAMERA_ZOOM_HELD_RATE: float = 1.6 # exp rate/second while a zoom key or t
 const CAMERA_FOLLOW_SPEED: float = 8.0 # smoothing rate toward the player
 const CAMERA_EDGE_MARGIN: float = 0.5 # metres of floor rim allowed past the arena bounds
 # Enemies appear this far outside the default-zoom view, never closer than SPAWN_MIN_DISTANCE to the player.
-const ENEMY_SPAWN_VIEW_MARGIN: float = 2.0
 const ENEMY_SPAWN_MIN_DISTANCE: float = 6.0
 
 # =============================================================================

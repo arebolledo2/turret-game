@@ -96,9 +96,10 @@ func test_old_enemy_sizes_are_reduced_without_changing_stats() -> void:
 	assert_almost_eq(enemy("tank").body_scale, 1.26, .001)
 	assert_almost_eq(enemy("fast").body_scale, .72, .001)
 
-func test_early_waves_remain_lazy_on_all_difficulties() -> void:
+func test_early_waves_mix_few_lazy_beetles_with_active_enemies() -> void:
 	for wave in range(1, 6):
-		assert_gte(float(EnemyEcology.roster(wave).drowse), 60.0)
+		assert_gt(float(EnemyEcology.roster(wave).drowse), 0.0)
+		assert_lte(float(EnemyEcology.roster(wave).drowse), 40.0, "Beetles are a minority so early waves stay interesting")
 		assert_lte(EnemyEcology.budget_multiplier(wave), .8)
 		for kind in EnemyEcology.roster(wave):
 			assert_true(kind in ["drowse", "basic", "fast"])

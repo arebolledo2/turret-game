@@ -28,11 +28,11 @@ const BOSSES := {6: "brass_ram", 8: "frostforge_yeti", 10: "broadside_baron", 12
 const SUMMONS: Array[String] = ["skitter", "lens", "anchor", "puppet"]
 const CAPS := {"kite": 4, "lobber": 2, "tender": 2, "skitter": 8, "lens": 2, "anchor": 2, "puppet": 4}
 const WAVES := [
-	["Sleepy Yard", {"drowse": 80, "basic": 20}],
-	["Scout Patrol", {"drowse": 75, "fast": 25}],
-	["Scrap Meadow", {"drowse": 85, "basic": 15}],
-	["Crossing Paths", {"drowse": 70, "fast": 30}],
-	["Wake-up Call", {"drowse": 60, "basic": 25, "fast": 15}],
+	["Sleepy Yard", {"drowse": 40, "basic": 60}],
+	["Scout Patrol", {"drowse": 35, "basic": 25, "fast": 40}],
+	["Scrap Meadow", {"drowse": 40, "basic": 45, "fast": 15}],
+	["Crossing Paths", {"drowse": 30, "basic": 25, "fast": 45}],
+	["Wake-up Call", {"drowse": 25, "basic": 45, "fast": 30}],
 	["Brass Ram", {"drowse": 25, "basic": 45, "fast": 30}],
 	["The Hunt", {"drowse": 25, "basic": 35, "hopper": 40}],
 	["Needle Alley", {"basic": 30, "fast": 25, "kite": 45}],

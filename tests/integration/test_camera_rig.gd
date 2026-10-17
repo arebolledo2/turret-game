@@ -96,6 +96,22 @@ func test_enemy_spawns_stay_inside_the_arena_and_away_from_the_player() -> void:
 			assert_eq(at, WorldGeometry.clamp_position(at), "spawn must be within the arena")
 			assert_gt(WorldGeometry.planar(at - world.player.position).length(), 2.0, "never spawn on top of the player")
 
+func test_survive_arrivals_are_scattered_over_the_whole_arena() -> void:
+	assert_null(world.core)
+	GameRandom.gameplay.seed = 4411
+	world.player.position = Vector3.ZERO
+	for kind in ["drowse", "basic", "fast", "kite", "lobber", "tender"]:
+		var quadrants := {}
+		var far := 0
+		for i in 80:
+			var at := world.waves._sample_encounter_position(kind)
+			assert_eq(at, WorldGeometry.clamp_position(at), kind + " inside the arena")
+			assert_gte(at.distance_to(world.player.position), GameConstants.ENEMY_SPAWN_MIN_DISTANCE, kind + " keeps clear of the hero")
+			quadrants[Vector2i(int(signf(at.x)), int(signf(at.z)))] = true
+			if at.distance_to(world.player.position) > 12.0: far += 1
+		assert_eq(quadrants.size(), 4, kind + " arrives from every part of the map")
+		assert_gt(far, 10, kind + " is not confined to a ring around the hero")
+
 func test_turret_placement_search_starts_from_the_player() -> void:
 	world.player.position = Vector3(20, 0, 10)
 	var at := world.find_placement()

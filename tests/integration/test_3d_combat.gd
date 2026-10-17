@@ -266,7 +266,8 @@ func test_registry_scaling_and_charger_wave_gate_are_authoritative() -> void:
 	world.waves.spawn_clock = 0
 	world._physics_process(.01)
 	world.waves.advance_spawn_warnings(1.0)
-	assert_eq(world.enemies.back().enemy_type, "drowse")
+	assert_eq(world.enemies.back().enemy_type, world.waves.spawn_plan[0])
+	assert_true(EnemyEcology.roster(1).has(world.enemies.back().enemy_type), "Wave 1 never spawns chargers")
 
 func test_new_asset_pivots_and_effect_pool_are_bounded() -> void:
 	var turret := world.add_turret(Vector3(3, 0, 0), "plasma")

@@ -23,6 +23,7 @@ const SPAWN_WARNING := .9
 const SPAWN_CLEARANCE := .9
 const CONVOY_CORE_SPAWN_GAP := 4.0
 const CONVOY_PATH_HALF_WIDTH := 2.0
+const SURVIVE_SPAWN_EDGE_MARGIN := 1.0
 var pending_spawns: Array[Dictionary] = []
 var spawn_credit := 0.0
 var arrival_time_left := 0.0
@@ -287,25 +288,17 @@ func _core_spawn_position() -> Vector3:
 			break
 	return result
 
-## Enemies appear on a ring just outside the default-zoom view around the player, clamped to the arena, so they
-## reach the fight quickly on the large map. A spot clamped back into view is retried a few times.
+## Survive mode: a uniformly random point anywhere in the arena, kept ENEMY_SPAWN_MIN_DISTANCE from the hero, so
+## arrivals are spread over the whole map instead of crowding the hero's surroundings.
 func spawn_position() -> Vector3:
 	if world.core:
 		return _core_spawn_position()
 	var centre := WorldGeometry.planar(world.player.position) if is_instance_valid(world.player) else Vector3.ZERO
-	var ring := world.camera_rig.visible_half_extents(GameConstants.CAMERA_DEFAULT_ZOOM) + Vector2.ONE * GameConstants.ENEMY_SPAWN_VIEW_MARGIN
+	var bounds := WorldGeometry.HALF_ARENA - Vector2.ONE * SURVIVE_SPAWN_EDGE_MARGIN
 	var result := Vector3.ZERO
-	for attempt in 8:
-		var edge := GameRandom.gameplay.randi_range(0, 3)
-		var x := GameRandom.gameplay.randf_range(-ring.x, ring.x)
-		var z := GameRandom.gameplay.randf_range(-ring.y, ring.y)
-		match edge:
-			0: x = -ring.x
-			1: x = ring.x
-			2: z = -ring.y
-			3: z = ring.y
-		result = WorldGeometry.clamp_position(centre + Vector3(x, 0, z))
-		if WorldGeometry.planar(result - centre).length() >= GameConstants.ENEMY_SPAWN_MIN_DISTANCE:
+	for attempt in 12:
+		result = Vector3(GameRandom.gameplay.randf_range(-bounds.x, bounds.x), 0, GameRandom.gameplay.randf_range(-bounds.y, bounds.y))
+		if result.distance_to(centre) >= GameConstants.ENEMY_SPAWN_MIN_DISTANCE:
 			break
 	return result
 
@@ -316,8 +309,9 @@ func active_count(type_id: String) -> int:
 			count += 1
 	return count
 
-## Each arrival independently samples a direction; timing is grouped, positions are not.
-## Lazy beetles must appear within reach: they intentionally will not march in from the map edge.
+## Each arrival independently samples a position; timing is grouped, positions are not.
+## Survive mode scatters every non-boss arrival over the arena. Core mode keeps lazy beetles within reach of the
+## hero: they intentionally will not march in from the map edge.
 func encounter_position(type_id: String) -> Vector3:
 	var candidate := Vector3.ZERO
 	for attempt in 24:
@@ -329,6 +323,8 @@ func encounter_position(type_id: String) -> Vector3:
 func _sample_encounter_position(type_id: String) -> Vector3:
 	if world.spawn_zones and not world.spawn_zones.centres.is_empty() and GameRandom.gameplay.randf() < SpawnZones.BIAS:
 		return world.spawn_zones.sample()
+	if not world.core and not EnemyEcology.is_boss(type_id):
+		return spawn_position()
 	var centre := world.player.position
 	var angle := GameRandom.gameplay.randf() * TAU
 	var distance := GameRandom.gameplay.randf_range(5.0, 7.0)
