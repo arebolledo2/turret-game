@@ -382,6 +382,13 @@
       "status": "review",
       "preview": "previews/thunderhead.png",
       "metrics": "74,800 triangles \u00c2\u00b7 12 meshes \u00c2\u00b7 9 materials"
+    },
+    {
+      "key": "storm_network",
+      "name": "Storm Network",
+      "status": "review",
+      "preview": "previews/storm_network.png",
+      "metrics": "118,208 triangles \u00c2\u00b7 5 meshes \u00c2\u00b7 1 materials"
     }
   ],
   "events": [
@@ -668,6 +675,10 @@
     {
       "stage": "Export: thunderhead",
       "text": "Reviewed harness iteration 6; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: storm_network",
+      "text": "Reviewed harness iteration 5; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
     }
   ],
   "checks": {

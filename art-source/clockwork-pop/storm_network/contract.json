@@ -1,0 +1,38 @@
+{
+  "name": "cp_storm_network",
+  "ref": "ref/cp_storm_network.png",
+  "build": "build_cp_storm_network.py",
+  "glb": "cp_storm_network.glb",
+  "required_nodes": [
+    "Aim",
+    "Muzzle"
+  ],
+  "limits": {
+    "height": [
+      0.9,
+      1.6
+    ],
+    "max_width": 1.9,
+    "ground_gap": [
+      -0.02,
+      0.1
+    ]
+  },
+  "targets": {
+    "max_texture_px": 1024,
+    "max_textures": 4
+  },
+  "render_background": "#152536",
+  "require_textures": true,
+  "required_animations": [],
+  "marker_nodes": [
+    "Muzzle"
+  ],
+  "nested": [
+    [
+      "Muzzle",
+      "Aim"
+    ]
+  ],
+  "muzzle_forward": true
+}

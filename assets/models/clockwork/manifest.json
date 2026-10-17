@@ -516,6 +516,17 @@
       "meshes": 12,
       "materials": 9,
       "iteration": 6
+    },
+    {
+      "id": "storm_network",
+      "source": "art-source/clockwork-pop/storm_network/build_cp_storm_network.py",
+      "model": "assets/models/clockwork/cp_storm_network.glb",
+      "reference": "art-source/clockwork-pop/references/storm_network.png",
+      "sha256": "7a21e60018ebe4b55582e21bb2e1662512b32ef551140ad677d4f98302dd0d84",
+      "triangles": 118208,
+      "meshes": 5,
+      "materials": 1,
+      "iteration": 5
     }
   ]
 }
