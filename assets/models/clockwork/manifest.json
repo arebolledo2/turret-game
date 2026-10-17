@@ -505,6 +505,17 @@
       "meshes": 31,
       "materials": 11,
       "iteration": 4
+    },
+    {
+      "id": "thunderhead",
+      "source": "art-source/clockwork-pop/thunderhead/build_cp_thunderhead.py",
+      "model": "assets/models/clockwork/cp_thunderhead.glb",
+      "reference": "art-source/clockwork-pop/references/thunderhead.png",
+      "sha256": "8a3b8799826cf11e379fcf4ca82eebf6c3f3ae087c9fda7a8b479d47e7d73182",
+      "triangles": 74800,
+      "meshes": 12,
+      "materials": 9,
+      "iteration": 6
     }
   ]
 }
