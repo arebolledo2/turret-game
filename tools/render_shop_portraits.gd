@@ -6,7 +6,7 @@ func _ready() -> void:
 	for base: String in TurretEvolution.PATHS:
 		forms.append({"base": base, "branch": "", "stage": 0})
 		for branch: String in TurretEvolution.branches(base):
-			if branch not in ["machine_gun", "scatter", "saber", "gunblade", "siege", "repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "lance"]:
+			if branch not in ["machine_gun", "scatter", "saber", "gunblade", "siege", "repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "lance", "resonator"]:
 				continue
 			for level in range(1, 4):
 				forms.append({"base": base, "branch": branch, "stage": level})

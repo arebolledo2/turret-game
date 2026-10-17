@@ -494,6 +494,17 @@
       "meshes": 17,
       "materials": 10,
       "iteration": 6
+    },
+    {
+      "id": "resonance_engine",
+      "source": "art-source/clockwork-pop/resonance_engine/build_cp_resonance_engine.py",
+      "model": "assets/models/clockwork/cp_resonance_engine.glb",
+      "reference": "art-source/clockwork-pop/references/resonance_engine.png",
+      "sha256": "06e6b520577c08776b91ee539c1cdb68e8f9092635086e2cf62cd1b308a952c1",
+      "triangles": 55344,
+      "meshes": 31,
+      "materials": 11,
+      "iteration": 4
     }
   ]
 }

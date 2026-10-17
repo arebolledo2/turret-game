@@ -55,6 +55,7 @@ static func model_key(base_type: String, branch: String, stage: int) -> String:
 		"scatter": return "crossfire" if stage >= 2 else "scatter"
 		"saber", "gunblade": return branch
 		"siege", "mortar": return "siege"
+		"resonator": return "resonance_engine" if stage >= 3 else "shock"
 		"lance": return ["shock", "thunder_pin", "thunder_spear"][clampi(stage - 1, 0, 2)] if stage > 0 else "shock"
 		"repeater_bow", "greatbow": return "bow"
 		"wide_flame", "focused_jet": return "flamethrower"

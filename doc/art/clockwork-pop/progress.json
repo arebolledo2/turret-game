@@ -368,6 +368,13 @@
       "status": "review",
       "preview": "previews/thunder_spear.png",
       "metrics": "17,066 triangles \u00c2\u00b7 17 meshes \u00c2\u00b7 10 materials"
+    },
+    {
+      "key": "resonance_engine",
+      "name": "Resonance Engine",
+      "status": "review",
+      "preview": "previews/resonance_engine.png",
+      "metrics": "55,344 triangles \u00c2\u00b7 31 meshes \u00c2\u00b7 11 materials"
     }
   ],
   "events": [
@@ -646,6 +653,10 @@
     {
       "stage": "Export: thunder_spear",
       "text": "Reviewed harness iteration 6; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: resonance_engine",
+      "text": "Reviewed harness iteration 4; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
     }
   ],
   "checks": {

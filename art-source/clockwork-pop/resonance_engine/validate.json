@@ -1,0 +1,83 @@
+{
+ "triangles": 55344,
+ "mesh_objects": 31,
+ "materials": 11,
+ "loose_components": 610,
+ "size_m": [
+  1.4,
+  1.4,
+  1.508
+ ],
+ "min_z": 0.0,
+ "centre_xy": [
+  0.0,
+  0.0
+ ],
+ "origin_node": null,
+ "origin_xy": [
+  0.0,
+  0.0
+ ],
+ "missing_nodes": [],
+ "empty_leg_pivots": [],
+ "textures": [
+  [
+   "tex_brass",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "tex_gem",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "tex_paint",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "tex_paint_normal",
+   [
+    1024,
+    1024
+   ]
+  ]
+ ],
+ "animations": [],
+ "checks": {
+  "required_nodes_present": true,
+  "each_required_node_has_geometry": true,
+  "height_ok": true,
+  "width_ok": true,
+  "ground_gap_ok": true,
+  "origin_xy_centred": true,
+  "has_meshes": true,
+  "Muzzle_under_Aim": true,
+  "muzzle_in_front_and_raised": true,
+  "textures_present": true
+ },
+ "passed": true,
+ "limits": {
+  "height": [
+   0.9,
+   1.6
+  ],
+  "max_width": 1.9,
+  "ground_gap": [
+   -0.02,
+   0.1
+  ]
+ },
+ "targets": {
+  "max_texture_px": 1024,
+  "max_textures": 4
+ },
+ "target_overruns": []
+}
