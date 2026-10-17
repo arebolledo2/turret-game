@@ -354,6 +354,20 @@
       "status": "review",
       "preview": "previews/crownwheel_colossus.png",
       "metrics": "30,860 triangles \u00c2\u00b7 26 meshes \u00c2\u00b7 8 materials"
+    },
+    {
+      "key": "thunder_pin",
+      "name": "Thunder Pin",
+      "status": "review",
+      "preview": "previews/thunder_pin.png",
+      "metrics": "17,384 triangles \u00c2\u00b7 15 meshes \u00c2\u00b7 10 materials"
+    },
+    {
+      "key": "thunder_spear",
+      "name": "Thunder Spear",
+      "status": "review",
+      "preview": "previews/thunder_spear.png",
+      "metrics": "17,066 triangles \u00c2\u00b7 17 meshes \u00c2\u00b7 10 materials"
     }
   ],
   "events": [
@@ -624,6 +638,14 @@
     {
       "stage": "Export: crownwheel_colossus",
       "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: thunder_pin",
+      "text": "Reviewed harness iteration 8; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: thunder_spear",
+      "text": "Reviewed harness iteration 6; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
     }
   ],
   "checks": {

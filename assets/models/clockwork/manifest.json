@@ -472,6 +472,28 @@
       "meshes": 26,
       "materials": 8,
       "iteration": 3
+    },
+    {
+      "id": "thunder_pin",
+      "source": "art-source/clockwork-pop/thunder_pin/build_cp_thunder_pin.py",
+      "model": "assets/models/clockwork/cp_thunder_pin.glb",
+      "reference": "art-source/clockwork-pop/references/thunder_pin.png",
+      "sha256": "11ead0396d59e17eaa8bd9bf4036bfe91a17ff50f9cf7d92ba5e32fa8da40ca5",
+      "triangles": 17384,
+      "meshes": 15,
+      "materials": 10,
+      "iteration": 8
+    },
+    {
+      "id": "thunder_spear",
+      "source": "art-source/clockwork-pop/thunder_spear/build_cp_thunder_spear.py",
+      "model": "assets/models/clockwork/cp_thunder_spear.glb",
+      "reference": "art-source/clockwork-pop/references/thunder_spear.png",
+      "sha256": "e0992edabb2353c5542392f138f504d6f6db6646731f58ad0b63eefcaba841c3",
+      "triangles": 17066,
+      "meshes": 17,
+      "materials": 10,
+      "iteration": 6
     }
   ]
 }
