@@ -14,7 +14,7 @@ const BLAST := Color("ff5a4a")
 const SWEEP := Color("ff743d")
 const SUMMON := Color("eab66b")
 ## Thin laser lines would be unreadable as a gauge, so lines never narrow below this.
-const MIN_LINE_WIDTH := .16
+const MIN_LINE_WIDTH := .24
 const FLOOR_LIFT := .06
 static var quad: PlaneMesh
 
