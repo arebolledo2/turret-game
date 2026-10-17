@@ -585,3 +585,31 @@ func test_bowling_hardware_matches_heavy_launch_and_animates_bank_paddles() -> v
 	assert_almost_eq(bank.bowling_hardware.flippers[0].rotation.y, 0, .001)
 	bank.bowling_hardware.advance(1, false)
 	assert_almost_eq(bank.bowling_hardware.flippers[1].rotation.y, 0, .001)
+
+func test_lance_strikes_one_target_then_spear_pierces_a_lane() -> void:
+	var turret := world.add_turret(Vector3.ZERO, "shock")
+	turret.set_physics_process(false)
+	turret.progression.award(896)
+	assert_true(turret.evolve("lance"))
+	assert_eq(turret.display_name(), "Focused Lance")
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	var front := world.spawn_enemy(Vector3(0, 0, -2.0))
+	var behind := world.spawn_enemy(Vector3(0, 0, -3.0))
+	var beside := world.spawn_enemy(Vector3(2.5, 0, -2.0))
+	for enemy in [front, behind, beside]:
+		enemy.set_physics_process(false)
+		enemy.health = 500
+	world.crowd.rebuild(world.enemies)
+	turret._fire_lance(turret._current_view(0), turret.effective_range(turret._current_view(0)), front)
+	assert_lt(front.health, 500.0)
+	assert_eq(behind.health, 500.0)
+	assert_gt(turret.cooldown, 0.0)
+	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
+	assert_true(turret.evolve("lance"))
+	assert_true(turret.evolve("lance"))
+	assert_eq(turret.display_name(), "Thunder Spear")
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	turret.cooldown = 0.0
+	turret._fire_lance(turret._current_view(0), turret.effective_range(turret._current_view(0)), front)
+	assert_lt(behind.health, 500.0, "Spear drives through the lane")
+	assert_eq(beside.health, 500.0, "Enemies off the lane are spared")

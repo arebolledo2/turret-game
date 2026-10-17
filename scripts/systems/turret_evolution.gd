@@ -118,6 +118,12 @@ static func base_stats(base_type: String, branch: String, stage: int) -> Diction
 			stats.damage = [9.0, 10.0, 12.0][stage - 1]
 			stats.rotation_rate = [300.0, 330.0, 360.0][stage - 1]
 			stats.range = [150.0, 160.0, 170.0][stage - 1]
+		"lance":
+			stats.damage = [16.0, 24.0, 36.0][stage - 1]
+			stats.fire_rate = [.75, .8, .85][stage - 1]
+			stats.range = [300.0, 340.0, 400.0][stage - 1]
+			stats.slow_intensity = [.3, .9, .9][stage - 1]
+			stats.slow_duration = [.8, 1.6, 2.0][stage - 1]
 		"saber":
 			stats.damage = [11.0, 12.0, 14.0][stage - 1]
 			stats.rotation_rate = [420.0, 450.0, 480.0][stage - 1]
@@ -125,7 +131,10 @@ static func base_stats(base_type: String, branch: String, stage: int) -> Diction
 	return stats
 
 ## Branches with both a working attack and authored art in this build.
-const IMPLEMENTED: Array[String] = ["repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "gunblade", "machine_gun", "scatter", "saber", "siege"]
+const IMPLEMENTED: Array[String] = ["repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "gunblade", "machine_gun", "scatter", "saber", "siege", "lance"]
+
+## Half-width in metres of the Thunder Spear's piercing lane.
+const LANCE_LANE_HALF_WIDTH: float = .6
 
 ## Arrows loosed per Repeater Bow volley, rail by rail.
 static func volley_size(stage: int) -> int:
@@ -172,5 +181,6 @@ static func description(branch: String, stage: int) -> String:
 		"greatbow": return "Heavy arrows pierce %d enemies and knock them back." % [4, 6, 9][stage - 1]
 		"gunblade": return ["Sweeps a blade and fires when its barrel aligns with an enemy.", "Sweeps a stronger blade and fires two-shot bursts along its rotation.", "Three-shot piercing bursts accompany a longer, faster blade sweep."][stage - 1]
 		"saber": return ["A longer, faster energy-blade sweep.", "Two opposing held blades sweep both sides of the turret.", "Three held energy blades sweep evenly around the turret."][stage - 1]
+		"lance": return ["Replaces the pulse with a single focused bolt that slows its target.", "The bolt pins its target almost in place for a moment.", "The bolt drives through a whole lane of enemies and pins every one."][stage - 1]
 		"siege": return "Slow, heavy shells explode over a large area and push enemies back."
 	return ""

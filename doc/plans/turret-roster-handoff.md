@@ -1,0 +1,183 @@
+# Turret roster expansion: handoff
+
+Written 17 Oct 2026. Audience: the next agent picking this work up. Treat code as the source of truth where this doc and the repo disagree.
+
+## What this is
+
+The user asked for a full turret roster plan, then moved on to 2D concept art in `image-gen-web`. Design is done and agreed. 2D concept work is nearly done. **No game code or 3D asset has been written for any new turret yet.**
+
+- Live design board (private Claude artifact, read it with the Artifact tool `action: "read"`): https://claude.ai/artifact/Louc8dHXV2KCMke888k3Kn
+- That artifact is the most complete record: stats, all branch and stage text, the engine work table (S1-S12), build order, decisions, and embedded concept thumbnails. Read it first.
+- Its HTML source lived in a session scratchpad and may be gone. The artifact copy is authoritative.
+
+## Result in one paragraph
+
+19 base turrets (8 in game, 5 requested, 6 proposed), each with two three-stage branches (levels 5/10/15), so 114 forms. 33 are built. 81 remain: 15 on Plasma/Shock/Tesla and 66 on new turrets. Cryo and Vortex were considered and dropped by the user.
+
+## Roster
+
+| Group | Turrets |
+|---|---|
+| In game (8) | Ion, Plasma, Shock, Tesla, Melee, Bow, Flamethrower, Bowling Launcher |
+| Requested (5) | Sniper (targets toughest), Scrap Press, Decoy, Earthquake, Boomerang |
+| Proposed (6) | Mine Layer, Laser, Beacon, Drone Bay, Lullaby, Discord |
+| Aggro family (new build family) | Decoy, Lullaby, Discord: weird support turrets that change enemy behaviour. Bosses are immune. |
+
+Unbuilt branches on existing turrets (names are already in `scripts/systems/turret_evolution.gd` `PATHS` but not in `IMPLEMENTED`):
+
+- Plasma / Mortar: Mortar, Starburst, Constellation
+- Shock / Resonator: Resonator, Echo Chamber, Resonance Engine
+- Shock / Lance: Focused Lance, Thunder Pin, Thunder Spear (game logic done, see below; awaiting real models)
+- Tesla / Relay: Forked Coil, Storm Relay, Storm Network
+- Tesla / Capacitor: Capacitor, Rail Discharge, Thunderhead
+
+The older `doc/plans/turret-evolution.html` names Shock's first branch "Arc Pulse". The code says Resonator, and the code wins.
+
+New turret branches (levels 5 / 10 / 15; full mechanics are in the artifact):
+
+| Turret | Branch A | Branch B |
+|---|---|---|
+| Sniper | Piercer: Piercer Rifle, Skewer Rifle, Horizon Piercer | Spotter: Spotter Scope, Designator, Overwatch |
+| Scrap Press | Mint: Coin Feeder, Mint, Treasury | Salvage: Salvage Hopper, Tutor Engine, Academy |
+| Decoy | Bumper: Bumper Post, Spike Bumper, Pile Driver | Siren: Lure, Gravity Lure, Maelstrom |
+| Earthquake | Fault Line: Fault Line, Rift Hammer, Tectonic | Aftershock: Aftershock, Tremor Engine, Cataclysm |
+| Boomerang | Sawblade: Sawblade, Hover Saw, Perpetual Saw | Splinter: Splinter, Shatterwing, Boomerang Storm |
+| Mine Layer | Minefield: Minefield, Pressure Grid, Dead Zone | Limpet: Limpet Layer, Demolition Charge, Chain Reaction |
+| Laser | Sweep: Sweep Laser, Scythe Laser, Halo Cutter | Focus: Focus Beam, Burnthrough, Sunpiercer |
+| Beacon | Overclock: Overclock Beacon, Overclock Tower, Command Spire | Mender: Repair Beacon, Core Mender, Aegis Field |
+| Drone Bay | Escort: Escort Drones, Wingmen, Guardian Wing | Hunter: Hunter Drones, Stalkers, Reaper Swarm |
+| Lullaby | Deep Sleep: Deep Sleep, Heavy Sleeper, Coma | Drowse Field: Drowse Field, Dreamland, Sandman |
+| Discord | Riot: Riot Coil, Uprising, Anarchy | Mutiny: Instigator, Rabble-Rouser, Civil War |
+
+## Shock / Lance logic (built 17 Oct 2026)
+
+`lance` is in `TurretEvolution.IMPLEMENTED`. It keeps Shock's `FIRE_PULSE` mode but `TurretActor._fire_lance` replaces the pulse with a bolt at the nearest enemy (same `chain_arc` visual as Tesla). Model key falls back to `shock`, so the existing chassis and base portrait stand in until real models land.
+
+| Form | Level | Damage | Rate | Range | Slow | Behaviour |
+|---|---|---|---|---|---|---|
+| Focused Lance | 5 | 16 | .75 | 300 | 30% / .8 s | single bolt |
+| Thunder Pin | 10 | 24 | .80 | 340 | 90% / 1.6 s | near-stop pin |
+| Thunder Spear | 15 | 36 | .85 | 400 | 90% / 2.0 s | also hits every enemy in a 1.2 m lane behind the target (`LANCE_LANE_HALF_WIDTH`) |
+
+To swap in real models: add `lance`/`thunder_pin`/`thunder_spear` keys to `ClockworkModels.KEYS`, return them from `TurretEvolution.model_key`, keep a `Muzzle` node, and add `res://assets/ui/turrets/lance_{1,2,3}.png` portraits. Stats and numbers are untuned; no showcase run yet.
+
+## Decisions already made by the user
+
+- Decoy has **infinite health**, so no turret health system. It taunts, does light kinetic damage with knockback through a pulse (3 dmg every 1.5 s, radius 150), and its upgrades raise damage (Bumper branch) or extend hooks and pull (Siren branch).
+- Sleep and infighting are **separate turrets** (Lullaby, Discord), not Decoy upgrades.
+- No-attack turrets (Scrap Press, Beacon, Lullaby, Discord) are **excluded** from the Focused Arsenal check and from the Army Doctrine and Crosslink Array counts. Add an `"aggro"` entry to `TurretRegistry.FAMILIES`.
+- Cryo and Vortex are omitted.
+
+Still open (recommendations are in the artifact): the shop slot count with 19 bases (one weapon per visit today, `GameConstants.SHOP_OFFER_COUNT`), whether to hold Drone Bay and Beacon until the first batch is playtested, and whether Decoy ever gets health.
+
+## Codebase facts worth knowing (verified 12 Oct 2026)
+
+- Registry: `scripts/registries/turret_registry.gd`. It already has unstocked `sniper` (instant, range 750, `"farthest"` targeting), `fire` (redundant with Flamethrower; retire it) and `mine` entries. `mine` has only the DEPLOYABLE attack style, which maps to no item family in `get_attack_families()`, so no item would apply until AOE is added.
+- `GameEnums.DamageType` is Physical, Fire, Electric, Plasma. "Kinetic" is only an attack family.
+- Turrets cannot be damaged, and enemies are hard-separated from turrets. Enemy goal selection is `CombatActor.chase_position()`.
+- Status effects cover slow (90% cap) and burn only (`StatusEffects3D`). Terrain mud slows the hero as well as enemies.
+- Evolution architecture: `TurretEvolution` (paths, `base_stats`, `shape_shot`, `description`), `TurretActor` dispatch, and `*_evolution_visual.gd` for articulated runtime hardware that reuses frozen chassis models through `model_key`. Copy the Bow, Flame and Bowling visual passes in `doc/plans/turret-expansion-progress.md`.
+- Shop screens, portraits, controller flow and tests exist for the current roster; see `doc/plans/turret-expansion-audit.md`.
+
+## Shared engine work (S1-S12; sizes are in the artifact)
+
+- S1 Taunt targeting and pull (Decoy)
+- S2 Targeting modes: toughest and backline-first (Sniper, Drone Hunters, Limpet)
+- S3 Exposed status, a damage-taken multiplier (Spotter, Resonance Engine, Lullaby)
+- S4 Enemy behaviour overrides: sleep and enemy-vs-enemy (Lullaby, Discord)
+- S5 Scrap generation, direct deposit and direct XP (Scrap Press)
+- S6 Returning projectile path (Boomerang)
+- S7 Enemy-only ground zones (Earthquake Fault Line)
+- S8 Deployable runtime (Mine Layer)
+- S9 Auras and healing (Beacon)
+- S10 Drone actors (Drone Bay)
+- S11 Continuous beam (Laser)
+- S12 Delayed ground-target shell (Mortar)
+
+## Suggested order
+
+0. Targeting modes, Exposed status, DEPLOYABLE family mapping, utility-turret item rules.
+1. Finish Plasma, Shock and Tesla (15 forms, reusing chassis; only Mortar needs S12).
+2. Sniper, Earthquake, Decoy, Scrap Press, Boomerang.
+3. Mine Layer and Laser; Beacon and Drone Bay after a playtest.
+4. Lullaby and Discord (S4 is the largest piece).
+
+The per-turret definition of done matches the existing roster: attack, evolution at 5/10/15, a visible silhouette change per stage, Shop portrait, controller flow, showcase run and tests. Use `.claude/skills/godot-test` for tests and `.claude/skills/2d-to-3d-asset` for models.
+
+## 2D concept art (image-gen-web, local API on port 3000)
+
+Style used throughout: **Clockwork Pop** (style id `3b7b7bc4-4403-4b69-8a10-809235eb4924`), category Turret (`d6f603f7-5efe-4005-9ac1-3d11bda5276c`), provider `comfyui`, 1024x1024, magenta `#FF00FF` background. Prompts are composed as plain text. The generation code in `image-gen-web/lib` has no reference-image support, so each capstone prompt describes its base turret in words and may not match the favorited base exactly.
+
+| Batch | Id | Contents |
+|---|---|---|
+| New Turret Roster - 3 Each | `ce5635c2-d52d-4699-8976-f8583d51fb72` | 11 base concepts, 3 each |
+| Boomerang and Lullaby Retry - 3 Each | `e74ea1bc-beb2-4721-9913-748255d6a6a5` | 4 concepts replacing the rejected Wing Slinger and Cradle Chime |
+| Level 15 Mastery Forms - 2 Each | `5ef1997e-50d6-4d4d-99b9-77a9cdbe2712` | 27 capstones, 2 each |
+
+Favorited base concepts (image ids; use these as inputs to `2d-to-3d-asset`):
+
+| Turret | Concept | Image id |
+|---|---|---|
+| Beacon | Lantern Mast | `86239ee7-f870-42d9-b629-f6bd70d061dd` |
+| Boomerang (finalist) | Windup Disc | `57ab7a66-b07d-47a1-a053-c5d0fc0fb6b1` |
+| Boomerang (finalist) | Return Pitcher | `3f18ef58-efed-4d73-925e-ea855210541d` |
+| Decoy | Bumper Post | `d4c09728-afeb-40a7-8a26-fe840674916a` |
+| Discord | Tuning Fork Riot | `7061d2b8-18ab-449b-a55a-d2c2fe92b6c8` |
+| Drone Bay | Hive Dock | `4a06cfce-8174-4dcf-ba63-f278632f012d` |
+| Earthquake | Thumper | `368cb3c5-8b81-49c7-8a59-064dab860214` |
+| Laser | Prism Needle | `a8164453-ff54-465f-8f76-fd643711dcaf` |
+| Lullaby (finalist) | Pendulum Hush | `0f0ea218-2bbd-4c6b-be67-c9a188b18bfc` |
+| Lullaby (finalist) | Crescent Nightlight | `61c7f1d5-d6fe-4d6a-9124-0a0fa44c99bc` |
+| Mine Layer | Pocket Sapper | `ef59bb3a-5146-4794-b6ab-26f67d941cb2` |
+| Scrap Press | Tinker Press | `bd3f2f9a-19a3-45f3-942a-314f2411a6b6` |
+| Sniper | Plumb Rifle | `1be85414-42ab-4607-8b6f-1c5c7145dfb8` |
+
+Boomerang and Lullaby each have **two finalists**. The user has not picked one yet.
+
+Level 15 capstone favorites:
+
+| Branch | Concept | Image id |
+|---|---|---|
+| Plasma / Mortar | Constellation | `a74431ea-7511-4385-9fcd-dff7e31aa656` |
+| Shock / Resonator | Resonance Engine | `2568b133-906f-470e-abaa-c2b04806f33b` |
+| Shock / Lance | Thunder Spear | `108af945-655e-41a1-bab8-dbe76d052595` |
+| Tesla / Relay | Storm Network | `452c55e5-3ea7-498b-8346-bcf91bd0e0aa` |
+| Tesla / Capacitor | Thunderhead | `0d4b7673-dee9-4195-9a1c-fb70154f8786` |
+| Sniper / Piercer | Horizon Piercer | `68859448-975c-4e5d-9ce4-3c6a47299951` |
+| Sniper / Spotter | Overwatch | `9839d0fd-6a4d-428c-a93f-c768d7ad8cb9` |
+| Scrap Press / Mint | Treasury | `bf69887e-b85c-4e31-9ba2-ded8723bcaab` |
+| Scrap Press / Salvage | Academy | `86160a31-2191-412e-b16d-1cd62b7df869` |
+| Decoy / Bumper | Pile Driver | `7a8c0bf1-0b24-4a9f-a4dd-17cc2a2e3a59` |
+| Decoy / Siren | Maelstrom | `35af3905-b264-41a0-b47b-5effe8fc676e` |
+| Earthquake / Fault Line | Tectonic | `fad6751a-1e22-487e-ac18-975c5849d17e` |
+| Earthquake / Aftershock | Cataclysm | **no favorite yet** |
+| Boomerang / Sawblade | Perpetual Saw | **no favorite yet** |
+| Boomerang / Splinter | Boomerang Storm | **no favorite yet** |
+| Mine Layer / Minefield | Dead Zone | `f392aec0-2c73-4003-9896-c6df502d4a43` |
+| Mine Layer / Limpet | Chain Reaction | `06a3b980-42a6-44ea-bbb1-190a7599fd60` |
+| Laser / Sweep | Halo Cutter | `90d1141d-4164-4ada-9ee8-321181b80e9e` |
+| Laser / Focus | Sunpiercer | `38b44d34-85f8-4ea2-8db0-8f09bd318a40` |
+| Beacon / Overclock | Command Spire | `0e0e3564-5eb0-47b2-8a3a-0f05de834e62` |
+| Beacon / Mender | Aegis Field | `884f984a-0e17-4a3e-b578-84eff29c4dad` |
+| Drone Bay / Escort | Guardian Wing | `ca0bea82-f5fb-4ed7-bb4c-6dccf2879aa9` |
+| Drone Bay / Hunter | Reaper Swarm | `1ec1bff8-6df0-48cb-aab2-cde16cc0e0d3` |
+| Lullaby / Deep Sleep | Coma | `7046b099-b492-46d4-8260-8761a05e26ee` |
+| Lullaby / Drowse Field | Sandman | `3c00981b-f021-4112-9cff-c95dabb65603` |
+| Discord / Riot | Anarchy | `16326d70-b87f-41b4-aee9-3600f5b712d0` |
+| Discord / Mutiny | Civil War | **no favorite yet** |
+
+Four capstones have no favorite: Cataclysm, Perpetual Saw, Boomerang Storm and Civil War. Regenerate them or ask the user before building those branches.
+
+Not yet generated: level 5 and level 10 concepts. Existing turrets handled those as runtime attachments on the chassis, so only generate them for a branch if the user asks.
+
+### API notes
+
+- `jq` is not installed. Use PowerShell `Invoke-RestMethod` and send UTF-8 bytes for request bodies.
+- Create subjects with `POST /api/subjects` (`name`, `description`, `isTransparent`, `categoryId`), then `POST /api/batches` with `prompts: [{promptText}]`, then `POST /api/batches/<id>/execute`. Batch prompts here are not linked to subjects, so the gallery labels come from the prompt text.
+- List images with `GET /api/images?batchId=<id>&limit=100&offset=0`. Favorites are the `isFavorite` flag. The skill is `.claude/skills/image-gen-api`.
+- Subject names are placeholders chosen by the previous agent and are safe to rename.
+
+## Other changes made along the way
+
+- `image-gen-web/components/batch/image-gallery.tsx` and `image-gen-web/app/batches/[id]/page.tsx`: the batch gallery now groups images by subject (batch prompt), with a "Group by subject" switch and per-group favorite counts. Typecheck and lint were clean. These edits are not committed.
+- Nothing in `turret-game` changed apart from this file.

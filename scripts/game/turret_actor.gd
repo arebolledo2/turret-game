@@ -345,7 +345,12 @@ func _physics_process(delta: float) -> void:
 			_fire_gunblade()
 		return
 	if fire_mode == TurretRegistry.FIRE_PULSE:
-		if cooldown <= 0.0 and world.nearest_enemy(position, range_metres):
+		if cooldown > 0.0:
+			return
+		var pulse_target := world.nearest_enemy(position, range_metres)
+		if pulse_target and progression.evolution_branch == "lance":
+			_fire_lance(stats, range_metres, pulse_target)
+		elif pulse_target:
 			_fire_pulse(stats, range_metres)
 		return
 	target_clock -= delta
@@ -388,6 +393,27 @@ func _fire_pulse(stats: TurretStats, range_metres: float) -> void:
 	var pulse := _new_shot(stats)
 	pulse.splash_radius = range_metres
 	world.combat.impact(null, position, Vector3.ZERO, pulse, world.enemies)
+	_reset_cooldown(stats)
+
+## Shock / Lance: one bolt at the nearest enemy; the final form also strikes everything in line behind it.
+func _fire_lance(stats: TurretStats, range_metres: float, struck: CombatActor) -> void:
+	var heading := WorldGeometry.planar(struck.position - position).normalized()
+	var shot := _new_shot(stats)
+	var victims: Array[CombatActor] = [struck]
+	if progression.evolution_stage >= 3:
+		for enemy: CombatActor in world.enemies:
+			if not is_instance_valid(enemy) or enemy.dead or enemy == struck:
+				continue
+			var offset := WorldGeometry.planar(enemy.position - position)
+			var along := offset.dot(heading)
+			if along > 0.0 and along <= range_metres and absf(offset.cross(heading).y) <= TurretEvolution.LANCE_LANE_HALF_WIDTH:
+				victims.append(enemy)
+	var tip := position + heading * (range_metres if progression.evolution_stage >= 3 else WorldGeometry.planar(struck.position - position).length())
+	world.combat.chain_arc.emit(muzzle.global_position, tip + Vector3(0, .45, 0), 0)
+	for victim in victims:
+		var bolt := shot.copy()
+		bolt.critical = shot.critical
+		world.combat.impact(victim, victim.position, heading, bolt, [] as Array[CombatActor])
 	_reset_cooldown(stats)
 
 func _fire_chain(stats: TurretStats) -> void:
