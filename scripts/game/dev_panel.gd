@@ -19,6 +19,8 @@ var overlay_label: Label
 var flag_checks: Dictionary = {}
 var flag_notes: Dictionary = {}
 var god_check: CheckButton
+var level_box: VBoxContainer
+var _level_signature: String = ""
 var spawn_button: Button
 var jump_prev_button: Button
 var jump_next_button: Button
@@ -272,6 +274,10 @@ func _build_cheats() -> void:
 	jump_next_button = _button(list, "", func() -> void: jump_waves(1))
 	_button(list, "Deploy now (skip shop)", func() -> void: _close_then(world.dev.skip_shop(), "Deploying"))
 	_button(list, "Restart run", func() -> void: _close_then(restart_run(), "Restarted"))
+	_section("TURRET LEVELS (progression must be on for this run)")
+	level_box = VBoxContainer.new()
+	level_box.add_theme_constant_override("separation", 4)
+	list.add_child(level_box)
 	_section("ENEMIES")
 	spawn_button = _button(list, "", func() -> void: _report(world.dev.spawn_enemy(SPAWN_TYPES[spawn_index], 5), "Spawned 5"))
 	_button(list, "Next enemy type", func() -> void:
@@ -320,6 +326,29 @@ func restart_run() -> bool:
 	world.start_run()
 	return true
 
+## One row per owned turret; rebuilt only when the roster changes so focus is not lost.
+func _refresh_level_buttons() -> void:
+	if not is_instance_valid(world):
+		return
+	var ids := PackedStringArray()
+	for turret in world.turrets:
+		ids.append("%d:%s" % [turret.turret_id, turret.turret_type])
+	var signature := ",".join(ids)
+	if signature == _level_signature:
+		return
+	_level_signature = signature
+	for child in level_box.get_children():
+		level_box.remove_child(child)
+		child.queue_free()
+	for turret in world.turrets:
+		var id: int = turret.turret_id
+		var row := HBoxContainer.new()
+		level_box.add_child(row)
+		var name_label := _label(row, "#%d %s" % [id, turret.turret_type], 16, Color("d2edeb"))
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		_button(row, "+1 level", func() -> void: _report(world.dev.level_up_turret(id), "Turret #%d +1 level" % id))
+		_button(row, "To milestone", func() -> void: _report(world.dev.level_up_to_milestone(id), "Turret #%d to milestone" % id))
+
 func _close_then(ok: bool, text: String) -> void:
 	_report(ok, text)
 	if ok:
@@ -333,6 +362,7 @@ func _report(result: Variant, text: String) -> void:
 func refresh() -> void:
 	if not _built:
 		return
+	_refresh_level_buttons()
 	for flag_id: String in flag_checks:
 		var check: CheckButton = flag_checks[flag_id]
 		check.set_pressed_no_signal(FeatureFlagService.get_effective(flag_id))

@@ -35,6 +35,36 @@ func kill_all_enemies() -> int:
 	world.paused = was_paused
 	return killed
 
+## Awards exactly the XP for `levels` more levels through the normal progression path.
+## Evolution milestones still queue and resolve in the shop like earned ones.
+func level_up_turret(turret_id: int, levels: int = 1) -> bool:
+	var turret := _find_turret(turret_id)
+	if not turret or not world.session.state.turret_progression_enabled or levels < 1:
+		return false
+	var growth := turret.progression
+	var target := growth.level + levels
+	while growth.level < target:
+		growth.award(TurretProgression.cost_to_next(growth.level) - growth.xp)
+	turret.invalidate_stats()
+	return true
+
+## Levels a turret up to its next unspent evolution milestone (5/10/15), if one remains.
+func level_up_to_milestone(turret_id: int) -> bool:
+	var turret := _find_turret(turret_id)
+	if not turret:
+		return false
+	var growth := turret.progression
+	for milestone: int in TurretProgression.EVOLUTION_LEVELS:
+		if milestone > growth.level and milestone not in growth.pending_evolutions:
+			return level_up_turret(turret_id, milestone - growth.level)
+	return false
+
+func _find_turret(turret_id: int) -> TurretActor:
+	for turret in world.turrets:
+		if is_instance_valid(turret) and turret.turret_id == turret_id:
+			return turret
+	return null
+
 ## Lands in the shop that precedes `target_wave` (deploy to start it). Clears the field without rewards.
 func jump_to_wave(target_wave: int) -> bool:
 	if not GameStateService.is_game_active or GameStateMachine.current_state not in [GameStateMachine.GameState.PREPARATION, GameStateMachine.GameState.WAVE_ANNOUNCEMENT,

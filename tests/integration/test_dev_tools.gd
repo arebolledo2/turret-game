@@ -339,3 +339,28 @@ func test_telemetry_resets_with_each_run_and_records_flags() -> void:
 	assert_eq(world.telemetry.waves.size(), 1, "Wave 1 is open for the new run")
 	assert_true(world.telemetry.flags[FeatureFlagService.DEBUG_OVERLAYS])
 	await wait_process_frames(2)
+
+func test_dev_level_up_turret_awards_levels_and_queues_milestones() -> void:
+	world.session.state.turret_progression_enabled = true
+	var turret := world.turrets[0]
+	var id := turret.turret_id
+	assert_true(world.dev.level_up_turret(id))
+	assert_eq(turret.progression.level, 2)
+	assert_eq(turret.progression.xp, 0)
+	assert_true(world.dev.level_up_to_milestone(id))
+	assert_eq(turret.progression.level, 5)
+	assert_eq(turret.progression.pending_evolutions, [5])
+	assert_true(world.dev.level_up_to_milestone(id))
+	assert_eq(turret.progression.level, 10)
+	assert_false(world.dev.level_up_turret(-1), "Unknown turret")
+	world.session.state.turret_progression_enabled = false
+	assert_false(world.dev.level_up_turret(id), "Needs progression on for this run")
+
+func test_dev_panel_lists_a_level_row_per_turret() -> void:
+	world.session.state.turret_progression_enabled = true
+	var panel := world.dev_panel
+	panel.set_open(true)
+	assert_eq(panel.level_box.get_child_count(), world.turrets.size())
+	var row := panel.level_box.get_child(0)
+	(row.get_child(1) as Button).pressed.emit()
+	assert_eq(world.turrets[0].progression.level, 2)
