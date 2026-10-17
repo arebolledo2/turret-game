@@ -35,6 +35,15 @@ func kill_all_enemies() -> int:
 	world.paused = was_paused
 	return killed
 
+## Places a free turret of a shop-stocked type beside the hero. Returns its id, or 0 if unavailable.
+## It counts as a starter, so it leaves the purchase-price ladder alone.
+func add_turret(type_id: String) -> int:
+	if not is_instance_valid(world.player) or not GameStateService.is_game_active or not ShopCatalog.ids("turret").has(type_id):
+		return 0
+	var angle := float(world.turrets.size()) * 2.4
+	var at := world.player.position + Vector3(sin(angle), 0.0, cos(angle)) * 2.0
+	return world.add_turret(at, type_id, true).turret_id
+
 ## Awards exactly the XP for `levels` more levels through the normal progression path.
 ## Evolution milestones still queue and resolve in the shop like earned ones.
 func level_up_turret(turret_id: int, levels: int = 1) -> bool:

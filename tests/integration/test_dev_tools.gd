@@ -364,3 +364,18 @@ func test_dev_panel_lists_a_level_row_per_turret() -> void:
 	var row := panel.level_box.get_child(0)
 	(row.get_child(1) as Button).pressed.emit()
 	assert_eq(world.turrets[0].progression.level, 2)
+
+func test_dev_add_turret_places_a_free_stocked_turret() -> void:
+	var before := world.turrets.size()
+	var acquired := world.session.state.additional_turrets_acquired
+	var id := world.dev.add_turret("tesla")
+	assert_gt(id, 0)
+	assert_eq(world.turrets.size(), before + 1)
+	assert_eq(world.turrets[-1].turret_type, "tesla")
+	assert_eq(world.session.state.additional_turrets_acquired, acquired, "Does not raise shop prices")
+	assert_eq(world.dev.add_turret("not_a_turret"), 0)
+	var panel := world.dev_panel
+	panel.set_open(true)
+	panel.add_turret_button.pressed.emit()
+	assert_eq(world.turrets.size(), before + 2)
+	assert_eq(panel.level_box.get_child_count(), world.turrets.size())

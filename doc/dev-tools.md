@@ -82,6 +82,7 @@ Navigation uses the standard UI focus actions (d-pad or left stick, A to activat
 
 - **Flag presets** and a checkbox for every flag, grouped by scope, each with its description and an "applies next wave" note. Queued changes show as `QUEUED ON/OFF`.
 - **Run**: +50 / +500 scrap, restore hull, god mode, jump to the shop before the previous/next wave, deploy now (skip the shop), restart run.
+- **Add turret**: pick a shop-stocked type and place one free beside the hero (counts as a starter, so shop prices are unaffected).
 - **Turret levels**: a row per owned turret with **+1 level** and **To milestone** (next of level 5/10/15). They award exact XP through `TurretProgression.award`, so milestones queue and evolve in the shop as normal. Needs turret progression on for the run.
 - **Enemies**: spawn five of the selected type (basic, fast, tank, exploder, charger), kill all enemies.
 - **Time**: cycle 0.25x to 4x. Time scale resets when the panel leaves the tree.

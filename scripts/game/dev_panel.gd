@@ -20,6 +20,8 @@ var flag_checks: Dictionary = {}
 var flag_notes: Dictionary = {}
 var god_check: CheckButton
 var level_box: VBoxContainer
+var add_turret_button: Button
+var add_turret_index: int = 0
 var _level_signature: String = ""
 var spawn_button: Button
 var jump_prev_button: Button
@@ -274,6 +276,13 @@ func _build_cheats() -> void:
 	jump_next_button = _button(list, "", func() -> void: jump_waves(1))
 	_button(list, "Deploy now (skip shop)", func() -> void: _close_then(world.dev.skip_shop(), "Deploying"))
 	_button(list, "Restart run", func() -> void: _close_then(restart_run(), "Restarted"))
+	_section("ADD TURRET")
+	add_turret_button = _button(list, "", func() -> void:
+		var type_id := _add_turret_type()
+		_report(world.dev.add_turret(type_id) > 0, "Added %s" % type_id))
+	_button(list, "Next turret type", func() -> void:
+		add_turret_index += 1
+		refresh())
 	_section("TURRET LEVELS (progression must be on for this run)")
 	level_box = VBoxContainer.new()
 	level_box.add_theme_constant_override("separation", 4)
@@ -327,6 +336,10 @@ func restart_run() -> bool:
 	return true
 
 ## One row per owned turret; rebuilt only when the roster changes so focus is not lost.
+func _add_turret_type() -> String:
+	var types := ShopCatalog.ids("turret")
+	return types[add_turret_index % types.size()] if not types.is_empty() else ""
+
 func _refresh_level_buttons() -> void:
 	if not is_instance_valid(world):
 		return
@@ -379,5 +392,6 @@ func refresh() -> void:
 		var wave := GameStateService.current_wave
 		jump_prev_button.text = "Jump to wave %d (opens its shop)" % clampi(wave - 1, 1, world.wave_limit)
 		jump_next_button.text = "Jump to wave %d (opens its shop)" % clampi(wave + 1, 1, world.wave_limit)
+	add_turret_button.text = "Add free turret: %s" % _add_turret_type()
 	spawn_button.text = "Spawn 5 x %s" % SPAWN_TYPES[spawn_index]
 	time_button.text = "Time scale: %sx (tap to cycle)" % str(TIME_SCALES[time_index])
