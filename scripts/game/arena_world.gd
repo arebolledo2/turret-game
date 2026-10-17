@@ -472,13 +472,6 @@ func damage_core(amount: float) -> void:
 		if core.dead:
 			_end_run_in_defeat("CORE DESTROYED")
 
-func repair_core() -> bool:
-	if not core or core.dead or core.health >= core.max_health or not _pay_for_repair("repair_core"):
-		return false
-	core.repair(GameConstants.REPAIR_HEAL_AMOUNT)
-	message = "Core repaired."
-	return true
-
 func _end_run_in_defeat(reason: String) -> void:
 	defeat_reason = reason
 	audio.reset()
@@ -493,21 +486,6 @@ func _end_run_in_defeat(reason: String) -> void:
 
 func turret_price(type_id: String = "normal") -> int:
 	return EconomyService.calculate_turret_price(TurretRegistry.get_base_price(type_id), GameStateService.current_wave)
-
-func repair() -> bool:
-	if player.health >= player.max_health or not _pay_for_repair("repair"):
-		return false
-	player.health = minf(player.max_health, player.health + GameConstants.REPAIR_HEAL_AMOUNT)
-	message = "Hull repaired."
-	return true
-
-## Shared gate for both repairs: the shop must be open and the scrap must be there.
-func _pay_for_repair(label: String) -> bool:
-	if FeatureFlagService.is_enabled(FeatureFlagService.AUTO_REPAIR) or not shop.is_open() or not EconomyService.deduct_scrap(GameConstants.REPAIR_COST):
-		return false
-	telemetry.record_spend(label, GameConstants.REPAIR_COST)
-	audio.play_cue("purchase", player.position)
-	return true
 
 func find_placement() -> Vector3:
 	return placement.find_placement()
@@ -563,7 +541,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.button_index == JOY_BUTTON_A:
 			interact()
 
-func auto_repair() -> void:
-	if not FeatureFlagService.is_enabled(FeatureFlagService.AUTO_REPAIR): return
+## Between waves the hero and the core are fully healed for free.
+func heal_between_waves() -> void:
 	if is_instance_valid(player) and not player.dead: player.health = player.max_health
 	if is_instance_valid(core) and not core.dead: core.repair(core.max_health)

@@ -29,43 +29,12 @@ func press_direction(button: JoyButton) -> void:
 	Input.parse_input_event(event)
 	await wait_process_frames(1)
 
-func test_bottom_row_reaches_deploy_and_returns_with_both_repairs_disabled() -> void:
-	assert_true(hud.repair_button.disabled)
-	assert_true(hud.core_repair_button.disabled)
+func test_bottom_row_reaches_deploy_and_returns() -> void:
 	hud.reroll_button.grab_focus()
 	await press_direction(JOY_BUTTON_DPAD_RIGHT)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
 	await press_direction(JOY_BUTTON_DPAD_LEFT)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.reroll_button)
-
-func test_enabled_repairs_follow_visual_order_and_update_after_healing() -> void:
-	world.player.health -= 10
-	world.core.take_hit(10)
-	hud.refresh()
-	hud.reroll_button.grab_focus()
-	for expected: Button in [hud.repair_button, hud.core_repair_button, hud.continue_button]:
-		await press_direction(JOY_BUTTON_DPAD_RIGHT)
-		assert_same(get_viewport().gui_get_focus_owner(), expected)
-	world.core.repair(10)
-	hud.refresh()
-	await press_direction(JOY_BUTTON_DPAD_LEFT)
-	assert_same(get_viewport().gui_get_focus_owner(), hud.repair_button)
-	# A repair that becomes disabled while focused must still allow an exit to Deploy.
-	world.player.health = world.player.max_health
-	hud.refresh()
-	await press_direction(JOY_BUTTON_DPAD_RIGHT)
-	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
-
-func test_hidden_core_repair_is_skipped_in_survival() -> void:
-	world.core.queue_free()
-	world.core = null
-	world.player.health -= 10
-	hud.refresh()
-	hud.repair_button.grab_focus()
-	await press_direction(JOY_BUTTON_DPAD_RIGHT)
-	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
-	await press_direction(JOY_BUTTON_DPAD_LEFT)
-	assert_same(get_viewport().gui_get_focus_owner(), hud.repair_button)
 
 func test_shop_is_opaque_hides_combat_and_restores_rendering_on_exit() -> void:
 	world.hud._process(0)
@@ -280,20 +249,15 @@ func test_turret_pages_keep_roster_visible_and_controller_reaches_next_page() ->
 	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
 	assert_true(inspector.find_children("*", "ScrollContainer", true, false).is_empty())
 
-func test_auto_repair_disables_paid_repairs_and_heals_at_next_wave() -> void:
-	FeatureFlagService.set_enabled(FeatureFlagService.AUTO_REPAIR, true)
+func test_core_and_hero_are_healed_between_waves() -> void:
 	world.player.health = 1
 	world.core.health = 1
 	var money := EconomyService.total_scrap
 	hud.refresh()
-	assert_true(hud.repair_button.disabled)
-	assert_true(hud.core_repair_button.disabled)
-	assert_false(world.repair())
-	assert_false(world.repair_core())
-	assert_eq(EconomyService.total_scrap, money)
 	world.begin_next_wave()
 	assert_eq(world.player.health, world.player.max_health)
 	assert_eq(world.core.health, world.core.max_health)
+	assert_eq(EconomyService.total_scrap, money, "Healing is free")
 	world.preparation.deploy()
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 	world.player.health = 1
@@ -301,7 +265,6 @@ func test_auto_repair_disables_paid_repairs_and_heals_at_next_wave() -> void:
 	world.finish_wave()
 	assert_eq(world.player.health, world.player.max_health)
 	assert_eq(world.core.health, world.core.max_health)
-	FeatureFlagService.set_enabled(FeatureFlagService.AUTO_REPAIR, false)
 
 func test_lock_row_exits_left_to_reroll_and_right_to_prepare() -> void:
 	# Match the reported case: only the middle two offers remain available.

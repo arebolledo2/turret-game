@@ -3,7 +3,7 @@ extends RefCounted
 
 ## Per-wave counters used to compare balance and behaviour across flag sets and builds.
 ## Pure data: the arena records into it, tools print `to_dict()`. It never affects gameplay.
-const SPEND_CATEGORIES: Array[String] = ["turret", "item", "reroll", "repair"]
+const SPEND_CATEGORIES: Array[String] = ["turret", "item", "reroll"]
 
 var waves: Array[Dictionary] = []
 var flags: Dictionary = {}
@@ -72,4 +72,4 @@ func to_dict() -> Dictionary:
 	return {"flags": flags, "waves": waves.duplicate(true),
 		"totals": {"turret_xp": total("turret_xp"), "salvage_fallback_cash": total("salvage_fallback_cash"), "kills": total("kills"), "turret_moves": total("turret_moves"), "scrap_earned": total("scrap_earned"),
 			"scrap_spent": {"turret": total_spent("turret"), "item": total_spent("item"),
-				"reroll": total_spent("reroll"), "repair": total_spent("repair")}}}
+				"reroll": total_spent("reroll")}}}

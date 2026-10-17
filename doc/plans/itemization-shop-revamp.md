@@ -88,7 +88,7 @@ At normal widescreen sizes:
 - Header: SHOP, upcoming wave, one scrap balance. No duplicated combat HUD.
 - Main area, about 70% width: retain the current four offers initially—one turret and three items—using the extra space for richer art and clearer benefits.
 - Right area, about 30%: owned turrets and installed items, with a selected-offer section showing exact benefit text and affected owned turrets. Show plain “No matching turret owned” for future-build purchases; do not hide the offer just because it does not fit yet.
-- Footer: reroll, available repairs, and a prominent Deploy button in one predictable focus row. Preserve direct left/right navigation and skip unavailable actions.
+- Footer: reroll and a prominent Deploy button in one predictable focus row. Preserve direct left/right navigation and skip unavailable actions.
 - Card: large illustration, name, primary effect, any genuine drawback, cost, and sold/affordability state. **No category/tag label above the art or title.** Important rules and costs remain visible without hover.
 
 Use an independent `ShopScreen` scene/controller rather than extending the shared shop/pause/end panel further. `GameHud` continues to own combat HUD; the app/arena presents the shop during SHOP. Reuse `ArenaShop` transactions and structured preview data. Pause, settings, game over and victory retain their own presentation and focus restoration.
@@ -139,7 +139,7 @@ Acceptance criteria:
 - The common pool is predominantly positive; all retained penalties are deliberate and visible. Hybrid builds do not silently receive old “other turret” penalties.
 - All shop-facing tags are absent, including offer headings, installed-item summaries and tooltips. Natural-language scope remains understandable.
 - No arena or combat HUD is visible at any supported screen size; shop exit restores the game correctly.
-- All offers, repairs, reroll, item details and Deploy are reachable with controller only. Focus survives purchases, rerolls, disabled controls, settings and shop exit.
+- All offers, reroll, item details and Deploy are reachable with controller only. Focus survives purchases, rerolls, disabled controls, settings and shop exit.
 - New SVGs remain crisp at target sizes in Godot and have distinct silhouettes; selected, unaffordable and sold states stay readable.
 - Existing progression, transactions, core/convoy rules and feature-gate tests pass alongside the new scope and preview tests.
 

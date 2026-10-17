@@ -99,10 +99,6 @@ func finish(won: bool) -> void:
 	get_tree().quit(0 if won else 1)
 
 func shop() -> void:
-	while world.player.health < world.player.max_health - 5 and EconomyService.total_scrap >= 5:
-		world.repair()
-	while world.core and world.core.health < world.core.max_health - 5 and EconomyService.total_scrap >= 5:
-		world.repair_core()
 	for attempt in range(3):
 		for index in range(EconomyService.current_shop_offers.size()):
 			var offer := EconomyService.current_shop_offers[index]

@@ -30,7 +30,7 @@ func test_counters_accumulate_per_wave() -> void:
 	assert_eq(telemetry.total_spent("turret"), 13)
 	var totals: Dictionary = telemetry.to_dict()["totals"]
 	assert_eq(totals["scrap_earned"], 7)
-	assert_eq(totals["scrap_spent"], {"turret": 13, "item": 0, "reroll": 1, "repair": 0})
+	assert_eq(totals["scrap_spent"], {"turret": 13, "item": 0, "reroll": 1})
 
 
 func test_recording_before_the_first_wave_opens_wave_zero() -> void:

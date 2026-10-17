@@ -105,7 +105,6 @@ func test_reroll_cost_pause_empty_wallet_free_refresh_and_wave_reset() -> void:
 	world.toggle_pause()
 	assert_false(world.shop.reroll())
 	assert_false(world.shop.purchase(0))
-	assert_false(world.repair())
 	assert_eq(_offer_snapshot(), offers)
 	world.toggle_pause()
 	EconomyService.total_scrap = 0
@@ -140,13 +139,13 @@ func test_hull_speed_and_pickup_upgrades_apply_and_restart_clears_build() -> voi
 	world.player.health = 20
 	assert_true(world.shop.purchase(stock("item", "reinforced_hull")))
 	assert_eq(world.player.max_health, 29.0)
-	assert_eq(world.player.health, 20.0, "Capacity upgrades are not repairs")
+	assert_eq(world.player.health, 20.0, "Capacity upgrades do not heal")
 	assert_almost_eq(PlayerStatsService.get_player_speed(), GameConstants.PLAYER_SPEED, .001)
 	assert_true(world.shop.purchase(stock("item", "scrap_magnet")))
 	assert_almost_eq(PlayerStatsService.get_pickup_radius(), GameConstants.PLAYER_PICKUP_RADIUS * 1.2, .001)
 	assert_string_contains(world.shop.build_summary(), "Reinforced Hull")
 	assert_string_contains(ArenaShop.item_description("reinforced_hull"), "Max hull +4")
-	assert_true(world.repair())
+	world.heal_between_waves()
 	assert_eq(world.player.health, 29.0)
 	world.start_run()
 	assert_true(ItemTrackingService.item_counts.is_empty())

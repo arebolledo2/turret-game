@@ -23,7 +23,7 @@ func _ready() -> void:
 func load_preferences() -> void:
 	var config := ConfigFile.new()
 	if config.load(preferences_path) == OK:
-		for flag in [FeatureFlagService.AUTO_DEPLOY, FeatureFlagService.RESTRICT_SPAWN_PLACEMENT, FeatureFlagService.AUTO_REPAIR]:
+		for flag in [FeatureFlagService.AUTO_DEPLOY, FeatureFlagService.RESTRICT_SPAWN_PLACEMENT]:
 			var saved: Variant = config.get_value("deployment", flag, false)
 			if saved is bool: FeatureFlagService.set_enabled(flag, saved)
 		var saved_layout: Variant = config.get_value("deployment", "layout", 0)
@@ -60,7 +60,7 @@ func load_preferences() -> void:
 
 func save_preferences() -> Error:
 	var config := ConfigFile.new()
-	for flag in [FeatureFlagService.AUTO_DEPLOY, FeatureFlagService.RESTRICT_SPAWN_PLACEMENT, FeatureFlagService.AUTO_REPAIR]:
+	for flag in [FeatureFlagService.AUTO_DEPLOY, FeatureFlagService.RESTRICT_SPAWN_PLACEMENT]:
 		config.set_value("deployment", flag, FeatureFlagService.is_enabled(flag))
 	config.set_value("deployment", "layout", auto_prepare_mode)
 	config.set_value("run", "difficulty", run_difficulty)

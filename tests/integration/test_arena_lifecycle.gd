@@ -57,7 +57,6 @@ func test_upgrade_uses_existing_modifier_calculation_and_rejects_invalid_purchas
 	var after: float = TurretStatsService.get_turret_stats("normal", 1.0)["damage"]
 	assert_almost_eq(after, before * 1.1, .001)
 	var balance := EconomyService.total_scrap
-	assert_false(world.repair(), "Full health must not charge for a repair")
 	assert_false(world.shop.purchase(-1))
 	assert_eq(EconomyService.total_scrap, balance)
 	EconomyService.total_scrap = 0
@@ -220,17 +219,14 @@ func test_real_input_moves_player_and_pause_stops_physics() -> void:
 	await wait_physics_frames(3)
 	assert_eq(world.player.position, paused_position)
 
-func test_contact_damage_has_invulnerability_and_repair_is_capped() -> void:
+func test_contact_damage_has_invulnerability_and_hero_is_healed_at_wave_end() -> void:
 	combat()
 	var before := world.player.health
 	world.player.take_damage(4)
 	world.player.take_damage(4)
 	assert_eq(world.player.health, before - 4)
 	world.finish_wave()
-	EconomyService.total_scrap = 20
-	assert_true(world.repair())
 	assert_eq(world.player.health, world.player.max_health)
-	assert_eq(EconomyService.total_scrap, 15)
 
 func test_spawn_overlap_hits_once_and_wave_cleanup_releases_all_projectiles() -> void:
 	combat()

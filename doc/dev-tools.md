@@ -90,7 +90,7 @@ The console commands behind the buttons live on `DevCommands` (`world.dev.add_sc
 
 ## Telemetry
 
-`RunTelemetry` (`ArenaWorld.telemetry`) records per wave: kills, kills by turret (`"<id>:<type>"`; blank source means player gun or blast), completed turret moves, scrap earned, scrap spent by category (turret, item, reroll, repair) and hull lost. It never affects gameplay. Kill attribution uses `CombatShot3D.source_id` / `CombatHit3D.source_id`, stamped from `TurretActor.turret_id`.
+`RunTelemetry` (`ArenaWorld.telemetry`) records per wave: kills, kills by turret (`"<id>:<type>"`; blank source means player gun or blast), completed turret moves, scrap earned, scrap spent by category (turret, item, reroll) and hull lost. It never affects gameplay. Kill attribution uses `CombatShot3D.source_id` / `CombatHit3D.source_id`, stamped from `TurretActor.turret_id`.
 
 ## Smoke tool options
 

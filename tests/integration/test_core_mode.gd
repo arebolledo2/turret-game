@@ -99,16 +99,13 @@ func test_hero_death_still_ends_the_run() -> void:
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.GAME_OVER)
 	assert_eq(world.defeat_reason, "HULL LOST")
 
-func test_core_repair_costs_scrap_in_the_shop() -> void:
+func test_core_is_fully_healed_when_the_wave_ends() -> void:
 	world = await _core_world()
 	_to_combat(world)
 	world.damage_core(30.0)
+	assert_lt(world.core.health, world.core.max_health)
 	world.finish_wave()
-	var before := EconomyService.total_scrap
-	EconomyService.total_scrap = maxi(before, 10)
-	var hurt := world.core.health
-	assert_true(world.repair_core())
-	assert_almost_eq(world.core.health, hurt + GameConstants.REPAIR_HEAL_AMOUNT, .01)
+	assert_eq(world.core.health, world.core.max_health)
 
 func test_spawns_land_on_the_spawn_box() -> void:
 	world = await _core_world()

@@ -16,7 +16,7 @@ var warning_time: float = 1.2
 var elapsed: float = 0.0
 var lifetime: float = 5.0
 var fired: bool = false
-var dial: MeshInstance3D
+var telegraph: MeshInstance3D
 var body: Node3D
 var origin: Vector3
 var beam_length: float = 7.0
@@ -69,17 +69,13 @@ func _ready() -> void:
 	else:
 		if kind == "area":
 			position = target_at
-			dial = GroundDial.create(self, radius, palette)
+			telegraph = Telegraph.create(self, Telegraph.Shape.CIRCLE, Telegraph.BLAST.lerp(palette, .35))
+			Telegraph.place_circle(telegraph, target_at, radius)
 			var pearl := WorldGeometry.sphere(body, .12, Vector3(0, 2.5, 0), hot)
 			pearl.name = "Shell"
 			WorldGeometry.sphere(pearl, .16, Vector3.ZERO, dark).scale = Vector3(.8, 1.4, .8)
 			if ground_strike:
-				pearl.hide()
-				# Four inward-pointing brackets mark the impact center without a fake falling shell.
-				for index in 4:
-					var angle := index * PI * .5
-					var bracket := WorldGeometry.box(body, Vector3(.08, .035, radius * .35), Vector3(sin(angle), 0, cos(angle)) * radius * .5 + Vector3.UP * .07, warm)
-					bracket.rotation.y = angle
+				pearl.hide() # Ground slams have no falling shell; the gauge alone marks the impact.
 			else:
 				# Artillery has a metal body, hot nose and four tail fins, readable as it descends.
 				for index in 4:
@@ -87,8 +83,9 @@ func _ready() -> void:
 					fin.rotation.y = index * PI * .5
 		else:
 			body.rotation.y = atan2(-heading.x, -heading.z)
-			for side: float in [-1.0, 1.0]:
-				WorldGeometry.box(body, Vector3(.025, .02, beam_length), Vector3(side * beam_width, .055, -beam_length * .5), warm)
+			if warning_time >= .1:
+				telegraph = Telegraph.create(self, Telegraph.Shape.LINE, Telegraph.SWEEP.lerp(palette, .35))
+				Telegraph.place_line(telegraph, position, heading, beam_length, beam_width * 2.0)
 			var ray := MeshInstance3D.new()
 			var plane := PlaneMesh.new()
 			plane.size = Vector2(beam_width * 4.0, beam_length)
@@ -124,7 +121,7 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 		return
 	if kind == "area":
-		GroundDial.update(dial, minf(elapsed / warning_time, 1.0), false, 8)
+		Telegraph.set_progress(telegraph, elapsed / warning_time)
 		body.get_node("Shell").position.y = lerpf(2.5, .2, clampf(elapsed / warning_time, 0.0, 1.0))
 		if elapsed >= warning_time:
 			if _segment_hits(position, position, radius):
@@ -133,7 +130,11 @@ func _physics_process(delta: float) -> void:
 			queue_free()
 		return
 	if elapsed < warning_time:
+		if telegraph:
+			Telegraph.set_progress(telegraph, elapsed / warning_time)
 		return
+	if not fired and telegraph:
+		telegraph.visible = false
 	fired = true
 	body.get_node("Ray").visible = true
 	if angular_speed != 0.0:

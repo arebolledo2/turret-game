@@ -142,7 +142,7 @@ func begin_next_wave() -> bool:
 	GameStateService.current_wave += 1
 	# Flags requested during the previous wave land here, before this wave's systems start.
 	FeatureFlagService.apply_pending()
-	world.auto_repair()
+	world.heal_between_waves()
 	world.telemetry.begin_wave(GameStateService.current_wave)
 	world.build_zones.begin_wave()
 	if world.stage:
@@ -184,7 +184,7 @@ func finish_wave() -> bool:
 		return false
 	if not GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_END):
 		return false
-	world.auto_repair()
+	world.heal_between_waves()
 	# Snapshot carried positions and uncollected pickups before cleanup moves/removes them.
 	var settled := world.salvage.settle(GameStateService.current_wave)
 	var show_rewards := settled and world.present_wave_rewards and world.show_hud and int(world.salvage.last_settlement.get("xp_awarded", 0)) > 0

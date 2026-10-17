@@ -9,7 +9,7 @@ var scrap_value: int = 1
 var knockback_velocity: Vector3 = Vector3.ZERO
 var brain: EnemyBrain
 var charge: ChargeController3D
-var warning: Node3D
+var warning: MeshInstance3D
 var marker: MeshInstance3D
 var weapon_muzzle: Node3D
 var statuses := StatusEffects3D.new()
@@ -157,19 +157,8 @@ func _on_health_changed() -> void:
 	pass
 
 func _build_warning() -> void:
-	warning = Node3D.new()
+	warning = Telegraph.create(self, Telegraph.Shape.LINE, Telegraph.CHARGE)
 	warning.name = "ChargeWarning"
-	add_child(warning)
-	warning.top_level = true
-	var length := speed * charge.speed_multiplier * charge.dash_duration
-	var mat := WorldGeometry.material(Color("ff963d"), true)
-	# The two rails show the swept contact width; the arrow shows the locked path.
-	for side: float in [-.5, .5]:
-		WorldGeometry.box(warning, Vector3(.035, .012, length), Vector3(side, .035, -length / 2.0), mat)
-	for side: float in [-1.0, 1.0]:
-		var arrow := WorldGeometry.box(warning, Vector3(.045, .014, .4), Vector3(side * .13, .037, -length + .13), mat)
-		arrow.rotation.y = side * -.75
-	warning.visible = false
 
 func clear_transients() -> void:
 	statuses.clear()
@@ -252,9 +241,14 @@ func _steer_enemy(delta: float) -> Vector3:
 		world.mark_warning(self, charge.phase == ChargeController3D.Phase.WINDUP)
 		warning.visible = charge.phase in [ChargeController3D.Phase.WINDUP, ChargeController3D.Phase.DASH]
 		if warning.visible:
-			warning.global_position = charge.origin
-			warning.rotation.y = atan2(-charge.heading.x, -charge.heading.z)
-			visual.rotation.y = warning.rotation.y
+			if charge.phase == ChargeController3D.Phase.WINDUP:
+				# The swept contact width and the locked path fill up as the wind-up elapses.
+				var lane := speed * charge.speed_multiplier * charge.dash_duration
+				Telegraph.place_line(warning, charge.origin, charge.heading, lane, 1.0)
+				Telegraph.set_progress(warning, 1.0 - charge.remaining / maxf(charge.windup_duration, .001))
+			else:
+				Telegraph.set_progress(warning, 1.0)
+			visual.rotation.y = atan2(-charge.heading.x, -charge.heading.z)
 	if not charge or charge.phase in [ChargeController3D.Phase.APPROACH, ChargeController3D.Phase.RECOVER]:
 		if at_core:
 			movement = Vector3.ZERO

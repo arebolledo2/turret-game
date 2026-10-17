@@ -2,7 +2,7 @@ class_name CoreObjective
 extends Node3D
 
 ## The reactor core that enemies try to destroy in core mode. A stationary or convoy target: it takes hits from enemy
-## contact and blasts, is repaired in the shop, and ends the run when it reaches zero.
+## contact and blasts, is fully healed between waves, and ends the run when it reaches zero.
 var world: ArenaWorld
 var footprint: MeshInstance3D
 var clearance: MeshInstance3D

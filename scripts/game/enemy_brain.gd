@@ -10,6 +10,8 @@ var state: String = "idle":
 		state = value
 		if is_instance_valid(actor) and is_instance_valid(actor.world):
 			actor.world.mark_warning(actor, value == "warning")
+		if value == "warning":
+			warn_total = 0.0
 var destination: Vector3
 var locked_target: Vector3
 var awake: bool = false
@@ -28,6 +30,8 @@ var enraged: bool = false
 var attack_mode: String = ""
 var had_anchors: bool = false
 var step_delta: float = 0.0
+## Longest warning clock seen since the telegraph started; the fill gauge is 1 - clock / warn_total.
+var warn_total: float = 0.0
 var expansion: BossExpansionBrain
 
 func _init(owner_actor: CombatActor) -> void:
@@ -68,6 +72,7 @@ func move(delta: float, speed: float) -> Vector3:
 	step_delta = delta
 	age += delta
 	clock -= delta
+	_tick_telegraph()
 	if not children.is_empty():
 		# Untyped parameter: a freed child cannot be passed to a CombatActor-typed lambda.
 		children.assign(children.filter(func(child: Variant) -> bool: return is_instance_valid(child) and not child.dead))
@@ -157,7 +162,7 @@ func _charge(delta: float, hero: Vector3, speed: float) -> Vector3:
 	var movement := pounce.advance(delta, actor.position, hero, speed)
 	if pounce.phase == ChargeController3D.Phase.WINDUP:
 		state = "warning"
-		_line(pounce.origin, pounce.heading, speed * pounce.speed_multiplier * pounce.dash_duration, .25 if kind == "hopper" else .6)
+		_line(pounce.origin, pounce.heading, speed * pounce.speed_multiplier * pounce.dash_duration, .25 if kind == "hopper" else .6, Telegraph.CHARGE)
 	elif pounce.phase == ChargeController3D.Phase.DASH:
 		state = "attack"
 	elif previous == ChargeController3D.Phase.DASH:
@@ -211,7 +216,7 @@ func _tender(hero: Vector3, speed: float) -> Vector3:
 	if clock <= 0.0 and deployments < 3 and children.size() < 4 and actor.world.waves.active_count("skitter") < 8 and _visible():
 		state = "warning"
 		clock = 1.0
-		_ring(.85, Color("eab66b"))
+		_ring(.85, Telegraph.SUMMON)
 		return Vector3.ZERO
 	return _range_motion(hero - actor.position, speed, 4.0, 5.0)
 
@@ -256,7 +261,7 @@ func _prism(hero: Vector3, speed: float) -> Vector3:
 		attack_mode = "volley" if attacks % 2 == 0 else "beam"
 		state = "warning"
 		clock = 1.0
-		_sector((hero - actor.position).normalized(), 7.0, .45 if attack_mode == "beam" else .22)
+		_sector((hero - actor.position).normalized(), 7.0, .45 if attack_mode == "beam" else .22, false, Telegraph.SWEEP if attack_mode == "beam" else Telegraph.SHOT)
 		for child in children:
 			child.brain.clock = 4.0
 			child.brain.state = "idle"
@@ -325,7 +330,7 @@ func _marionettist(hero: Vector3, speed: float) -> Vector3:
 		clock = 1.2
 		attack_mode = "volley" if phase == 1 else ("puppets" if phase == 2 else "pulse")
 		if attack_mode == "pulse":
-			_sector((hero - actor.position).normalized(), 3.5, PI - .5, true)
+			_sector((hero - actor.position).normalized(), 3.5, PI - .5, true, Telegraph.BLAST)
 		else:
 			_line(actor.position, (hero - actor.position).normalized(), 5.0, .3)
 		return Vector3.ZERO
@@ -392,19 +397,34 @@ func _summon(type_id: String, angle: float, distance: float = 1.0) -> CombatActo
 	children.append(child)
 	return child
 
-func _ring(size: float, color: Color) -> void:
+func _ring(size: float, color: Color = Telegraph.BLAST) -> void:
 	if not marker:
-		marker = GroundDial.create(actor, size, color)
-	marker.visible = true
+		marker = Telegraph.create(actor, Telegraph.Shape.CIRCLE, color)
+	Telegraph.recolor(marker, color)
+	Telegraph.place_circle(marker, actor.position, size)
+	_tick_telegraph()
 
-func _line(at: Vector3, direction: Vector3, length: float, width: float) -> void:
+func _line(at: Vector3, direction: Vector3, length: float, width: float, color: Color = Telegraph.SHOT) -> void:
 	if not aim_line:
-		aim_line = WorldGeometry.box(actor, Vector3.ONE, Vector3.ZERO, WorldGeometry.material(Color("ffb35c"), true))
-		aim_line.top_level = true
-	aim_line.visible = true
-	aim_line.scale = Vector3(width, .015, length)
-	aim_line.global_position = at + direction * length * .5 + Vector3(0, .06, 0)
-	aim_line.rotation.y = atan2(-direction.x, -direction.z)
+		aim_line = Telegraph.create(actor, Telegraph.Shape.LINE, color)
+	Telegraph.recolor(aim_line, color)
+	Telegraph.place_line(aim_line, at, direction, length, width)
+	_tick_telegraph()
+
+## 0..1 fill of the current wind-up, from the charge controller or the warning clock.
+func warning_progress() -> float:
+	if pounce and pounce.phase == ChargeController3D.Phase.WINDUP:
+		return 1.0 - pounce.remaining / maxf(pounce.windup_duration, .001)
+	if state != "warning":
+		return 1.0
+	warn_total = maxf(warn_total, clock)
+	return 1.0 - clampf(clock / maxf(warn_total, .001), 0.0, 1.0)
+
+func _tick_telegraph() -> void:
+	var progress := warning_progress()
+	for gauge: MeshInstance3D in [marker, sector, aim_line]:
+		if gauge and gauge.visible:
+			Telegraph.set_progress(gauge, progress)
 
 func _hide_warning() -> void:
 	if sector: sector.visible = false
@@ -417,37 +437,9 @@ func _cancel_attacks() -> void:
 			node.queue_free()
 
 ## A filled sector makes the entire future beam sweep / pulse gap readable before damage starts.
-func _sector(direction: Vector3, radius: float, half_angle: float, rear: bool = false) -> void:
+func _sector(direction: Vector3, radius: float, half_angle: float, rear: bool = false, color: Color = Telegraph.SWEEP) -> void:
 	if not sector:
-		sector = MeshInstance3D.new()
-		sector.top_level = true
-		actor.add_child(sector)
-		var material := WorldGeometry.material(Color.WHITE, true)
-		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		material.vertex_color_use_as_albedo = true
-		material.emission = Color("ff743d")
-		material.emission_energy_multiplier = .5
-		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		material.cull_mode = BaseMaterial3D.CULL_DISABLED
-		sector.material_override = material
-	var mesh := ImmediateMesh.new()
-	mesh.surface_begin(Mesh.PRIMITIVE_TRIANGLES)
-	for index in 48:
-		var a := -half_angle + 2.0 * half_angle * index / 48.0
-		var b := -half_angle + 2.0 * half_angle * (index + 1) / 48.0
-		mesh.surface_set_color(Color(1.0, .3, .12, .07))
-		mesh.surface_add_vertex(Vector3.ZERO)
-		mesh.surface_set_color(Color(1.0, .42, .2, .16))
-		var edge_a := Vector3(sin(a), 0, -cos(a)) * radius
-		var edge_b := Vector3(sin(b), 0, -cos(b)) * radius
-		mesh.surface_add_vertex(edge_a)
-		mesh.surface_add_vertex(edge_b)
-		if index % 4 != 3:
-			mesh.surface_set_color(Color(1.0, .55, .27, .85))
-			for point: Vector3 in [edge_a, edge_b, edge_a * .975, edge_b, edge_b * .975, edge_a * .975]:
-				mesh.surface_add_vertex(point)
-	mesh.surface_end()
-	sector.mesh = mesh
-	sector.global_position = actor.position + Vector3(0, .065, 0)
-	sector.rotation.y = atan2(-direction.x, -direction.z) + (PI if rear else 0.0)
-	sector.visible = true
+		sector = Telegraph.create(actor, Telegraph.Shape.SECTOR, color)
+	Telegraph.recolor(sector, color)
+	Telegraph.place_sector(sector, actor.position, direction, radius, half_angle, rear)
+	_tick_telegraph()

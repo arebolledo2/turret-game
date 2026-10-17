@@ -66,6 +66,7 @@ static func within_cannon_arc(outward: Vector3, target_direction: Vector3) -> bo
 
 func _airship(hero: Vector3, speed: float) -> Vector3:
 	if brain.state == "warning":
+		for line in salvo_lines: Telegraph.set_progress(line, brain.warning_progress())
 		if brain.clock <= 0.0:
 			for shot in salvo:
 				var bolt := EnemyOrdnance.launch(actor, "bolt", shot.origin, shot.target, 7.0)
@@ -91,10 +92,8 @@ func _airship(hero: Vector3, speed: float) -> Vector3:
 				pivot.global_rotation.y += WorldGeometry.planar(-pivot.global_basis.z).signed_angle_to(direction, Vector3.UP)
 			if muzzle: origin = muzzle.global_position
 			salvo.append({"origin": origin, "target": brain.locked_target, "corner": CANNONS[index]})
-			var line := WorldGeometry.box(actor, Vector3(.045, .018, origin.distance_to(hero)), Vector3.ZERO, WorldGeometry.material(Color("ffc267"), true))
-			line.top_level = true
-			line.global_position = (WorldGeometry.planar(origin) + brain.locked_target) * .5 + Vector3.UP * .07
-			line.rotation.y = atan2(-direction.x, -direction.z)
+			var line := Telegraph.create(actor, Telegraph.Shape.LINE, Telegraph.SHOT)
+			Telegraph.place_line(line, origin, direction, WorldGeometry.planar(origin).distance_to(brain.locked_target), .3)
 			salvo_lines.append(line)
 		if salvo.is_empty(): _recover(.5)
 		return Vector3.ZERO
@@ -110,7 +109,7 @@ func _yeti(hero: Vector3, speed: float) -> Vector3:
 		brain._area(brain.locked_target + side * (-1.0 if brain.attacks % 2 == 0 else 1.0), 1.0, 1.15, 9.0)
 		if brain.phase == 2:
 			brain._area(brain.locked_target - side * (-1.0 if brain.attacks % 2 == 0 else 1.0), 1.0, 1.65, 9.0)
-		brain._ring(1.1, Color("a9e9ff"))
+		brain._ring(1.1, Telegraph.BLAST)
 		return Vector3.ZERO
 	return brain._range_motion(hero - actor.position, speed, 1.2, 2.0)
 
@@ -135,7 +134,7 @@ func _bomber(delta: float, hero: Vector3, speed: float) -> Vector3:
 		return heading * speed * 1.45
 	if _ready_attack() and actor.position.distance_to(hero) < 8.0:
 		_lock(hero, 1.0)
-		brain._line(actor.position, heading, 8.0, .12)
+		brain._line(actor.position, heading, 8.0, .45, Telegraph.CHARGE)
 		return Vector3.ZERO
 	return brain._range_motion(hero - actor.position, speed, 4.0, 5.5)
 
@@ -152,7 +151,7 @@ func _crab(hero: Vector3, speed: float) -> Vector3:
 		_lock(hero, 1.25)
 		brain.attack_mode = "furnace" if brain.attacks % 2 else "shells"
 		if brain.attack_mode == "furnace":
-			brain._sector(heading, 4.5, .55)
+			brain._sector(heading, 4.5, .55, false, Telegraph.SWEEP)
 		else:
 			var side := heading.cross(Vector3.UP)
 			var offsets: Array = [-1.6, -.8, 0.0, .8, 1.6] if brain.phase == 2 else [-1.2, 0.0, 1.2]
@@ -173,7 +172,7 @@ func _regent(hero: Vector3, speed: float) -> Vector3:
 	if _ready_attack() and actor.position.distance_to(hero) < 5.5:
 		_lock(hero, 1.3)
 		brain.attack_mode = "pendulum" if brain.attacks % 2 else "hammer"
-		if brain.attack_mode == "pendulum": brain._sector(heading, 5.0, .8)
+		if brain.attack_mode == "pendulum": brain._sector(heading, 5.0, .8, false, Telegraph.SWEEP)
 		else:
 			brain._area(hero, 1.15, 1.3, 11.0)
 			if brain.phase == 2: brain._area(hero, 1.55, 2.0, 7.0)
@@ -214,7 +213,7 @@ func _wheel(hero: Vector3, speed: float) -> Vector3:
 	if _ready_attack() and actor.position.distance_to(hero) < 9.0:
 		_lock(hero, 1.2)
 		brain.attack_mode = "roll" if brain.attacks % 2 == 0 else "pulse"
-		if brain.attack_mode == "roll": brain._line(actor.position, heading, speed * 3.4 * 1.25, actor.hurtbox_radius() * 2.0 + .46)
-		else: brain._sector(heading, 3.5, PI - .5, true)
+		if brain.attack_mode == "roll": brain._line(actor.position, heading, speed * 3.4 * 1.25, actor.hurtbox_radius() * 2.0 + .46, Telegraph.CHARGE)
+		else: brain._sector(heading, 3.5, PI - .5, true, Telegraph.BLAST)
 		return Vector3.ZERO
 	return brain._range_motion(hero - actor.position, speed, 3.0, 4.5)

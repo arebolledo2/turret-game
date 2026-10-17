@@ -10,8 +10,6 @@ var tab_hint: Label
 var turret_inspector: TurretInspector
 var offer_buttons: Array[Button] = []
 var reroll_button: IconButton
-var repair_button: IconButton
-var core_repair_button: IconButton
 var evolution_reminder: EvolutionReminder
 var continue_button: IconButton
 var offers_grid: GridContainer
@@ -170,7 +168,7 @@ func _build_sidebar(content: HBoxContainer) -> void:
 	installed = VBoxContainer.new()
 	sidebar.add_child(installed)
 
-## Reroll, repairs and the deploy button.
+## Reroll and the deploy button.
 func _build_footer(column: VBoxContainer) -> void:
 	var footer := HBoxContainer.new()
 	footer.add_theme_constant_override("separation", 18)
@@ -179,14 +177,6 @@ func _build_footer(column: VBoxContainer) -> void:
 	reroll_button.custom_minimum_size.x = 265
 	reroll_button.pressed.connect(_reroll)
 	footer.add_child(reroll_button)
-	repair_button = IconButton.new().setup("repair", "+10 HULL")
-	repair_button.custom_minimum_size.x = 285
-	repair_button.pressed.connect(func() -> void: world.repair(); refresh())
-	footer.add_child(repair_button)
-	core_repair_button = IconButton.new().setup("core", "+10 CORE")
-	core_repair_button.custom_minimum_size.x = 285
-	core_repair_button.pressed.connect(func() -> void: world.repair_core(); refresh())
-	footer.add_child(core_repair_button)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = SIZE_EXPAND_FILL
 	footer.add_child(spacer)
@@ -239,11 +229,6 @@ func refresh() -> void:
 	var cost := world.shop.reroll_cost()
 	reroll_button.set_cost(cost, EconomyService.total_scrap >= cost)
 	reroll_button.disabled = not world.shop.can_reroll() or EconomyService.total_scrap < cost
-	for button: IconButton in [repair_button, core_repair_button]:
-		button.set_cost(GameConstants.REPAIR_COST, EconomyService.total_scrap >= GameConstants.REPAIR_COST)
-	repair_button.disabled = FeatureFlagService.is_enabled(FeatureFlagService.AUTO_REPAIR) or EconomyService.total_scrap < GameConstants.REPAIR_COST or world.player.health >= world.player.max_health
-	core_repair_button.visible = world.core != null
-	core_repair_button.disabled = FeatureFlagService.is_enabled(FeatureFlagService.AUTO_REPAIR) or not world.core or EconomyService.total_scrap < GameConstants.REPAIR_COST or world.core.health >= world.core.max_health
 	status.text = world.message
 	offers_content.visible = active_tab == 0
 	turret_inspector.visible = active_tab == 1
@@ -492,7 +477,7 @@ func _inspect_owned(id: String) -> void:
 	impact_text.text = "Installed ×%d" % ItemTrackingService.item_counts.get(id, 0)
 
 func _refresh_focus() -> void:
-	var row: Array[Button] = [reroll_button, repair_button, core_repair_button, continue_button]
+	var row: Array[Button] = [reroll_button, continue_button]
 	for i in range(row.size()):
 		for direction: int in [-1, 1]:
 			var target := row[i]

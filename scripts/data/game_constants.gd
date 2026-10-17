@@ -111,8 +111,6 @@ const RUN_MAX_WAVE_LIMIT: int = 100
 const STARTING_SCRAP: int = 20
 const SCRAP_WAVE_BONUS_BASE: int = 0
 const SCRAP_WAVE_BONUS_PER_WAVE: int = 5 # added to the wave bonus for each wave number
-const REPAIR_COST: int = 5
-const REPAIR_HEAL_AMOUNT: float = 10.0
 
 # =============================================================================
 # PROTECT THE CORE (core mode)

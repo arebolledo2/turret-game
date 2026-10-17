@@ -324,11 +324,8 @@ func test_telemetry_counts_turret_moves_and_spending() -> void:
 	EconomyService.current_shop_offers.append(ShopOffer.new("item", "scrap_magnet", 5))
 	assert_true(world.shop.purchase(index))
 	assert_true(world.shop.reroll())
-	world.player.health = 1.0
-	assert_true(world.repair())
 	assert_eq(world.telemetry.total_spent("item"), 5)
 	assert_gt(world.telemetry.total_spent("reroll"), 0)
-	assert_eq(world.telemetry.total_spent("repair"), GameConstants.REPAIR_COST)
 
 
 func test_telemetry_resets_with_each_run_and_records_flags() -> void:

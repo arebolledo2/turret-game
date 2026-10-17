@@ -4,7 +4,7 @@
 
 - Full GUT suite: **884 passed**, 64 scripts; no risky tests, unexpected errors or remaining orphans.
 - New coverage includes overlapping-family modifiers applying once, additive stacking, physical/projectile versus Kinetic classification, supported capabilities, firing/sweep cadence, actual Shock hit boundaries and range display, family diversity/mastery, source-aware AoE procs and chain depth, purchase/preview equivalence, state/RNG preservation, runtime clamps and safe purchase penalties.
-- Shop input tests dispatch controller events through Godot. They cover direct footer navigation, disabled/hidden repairs, purchase focus handoff, inspecting installed items (including after all stock is sold), pause/dev transitions and 3D rendering restoration.
+- Shop input tests dispatch controller events through Godot. They cover direct footer navigation, purchase focus handoff, inspecting installed items (including after all stock is sold), pause/dev transitions and 3D rendering restoration.
 - Engine import completed without script/resource errors. All 43 catalog item illustrations load; five model portraits were rendered with Forward+.
 - Native visual captures inspected at 1920×1080, 1280×720, 1280×800 and 2560×1080. Also inspected long rare-item descriptions and a populated installed-item list at 1280×720. Arena/HUD are hidden; prices and footer remain visible.
 - Seeded real-physics six-wave smoke runs: Ion route **victory, 346 kills, 25 hull**; mixed Plasma/Shock route **victory, 356 kills, 25 hull**. Both used gameplay seed 20260916 and shop seed 42. These spend different budgets and are regression smoke checks, not an equal-spend balance ranking.
