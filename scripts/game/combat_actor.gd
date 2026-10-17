@@ -210,7 +210,7 @@ func _physics_process(delta: float) -> void:
 ## Sets the enemy's velocity for this tick (chase, charge windup/dash, separation, knockback) and returns its heading.
 func _steer_enemy(delta: float) -> Vector3:
 	var speed_factor := 1.0
-	if not statuses.effects.is_empty():
+	if not statuses.effects.is_empty() or statuses.exposed_remaining > 0.0:
 		statuses.advance(delta)
 		speed_factor = statuses.speed_multiplier()
 	if world.terrain:
@@ -383,6 +383,8 @@ func receive_hit(hit: CombatHit3D) -> float:
 	if not is_enemy and world.god_mode:
 		return 0.0
 	var amount := hit.damage
+	if is_enemy:
+		amount *= statuses.exposure_multiplier(hit)
 	if not is_enemy:
 		amount *= PlayerStatsService.get_damage_reduction()
 		invulnerability = GameConstants.PLAYER_INVINCIBILITY_TIME

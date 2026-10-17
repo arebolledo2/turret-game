@@ -3,6 +3,9 @@ extends RefCounted
 
 ## Uses the shared status lifetime/refresh rules without the Node2D event bus.
 var effects: Dictionary = {}
+## Exposed: extra damage taken from Instant-family turrets while the timer runs.
+const EXPOSED_BONUS: float = .3
+var exposed_remaining: float = 0.0
 const BURN_TICK: float = .25
 var burn_transferred: bool = false
 var burn_dps: float = 0.0
@@ -38,7 +41,14 @@ func apply(hit: CombatHit3D) -> void:
 func is_burning() -> bool:
 	return burn_remaining > 0.0 or not _pending_burn_hits.is_empty()
 
+func expose(duration: float) -> void:
+	exposed_remaining = maxf(exposed_remaining, duration)
+
+func exposure_multiplier(hit: CombatHit3D) -> float:
+	return 1.0 + EXPOSED_BONUS if exposed_remaining > 0.0 and "instant" in hit.attack_families else 1.0
+
 func advance(delta: float) -> void:
+	exposed_remaining = maxf(0.0, exposed_remaining - delta)
 	for type in effects.keys():
 		var effect: StatusEffect = effects[type]
 		effect.process(delta)
@@ -89,5 +99,6 @@ func clear_burn() -> void:
 
 func clear() -> void:
 	effects.clear()
+	exposed_remaining = 0.0
 	_pending_burn_hits.clear()
 	clear_burn()

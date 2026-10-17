@@ -119,6 +119,9 @@ static func base_stats(base_type: String, branch: String, stage: int) -> Diction
 			stats.damage = [9.0, 10.0, 12.0][stage - 1]
 			stats.rotation_rate = [300.0, 330.0, 360.0][stage - 1]
 			stats.range = [150.0, 160.0, 170.0][stage - 1]
+		"resonator":
+			stats.damage = [4.0, 4.5, 5.0][stage - 1]
+			stats.range = [240.0, 276.0, 276.0][stage - 1]
 		"lance":
 			stats.damage = [16.0, 24.0, 36.0][stage - 1]
 			stats.fire_rate = [.75, .8, .85][stage - 1]
@@ -132,7 +135,18 @@ static func base_stats(base_type: String, branch: String, stage: int) -> Diction
 	return stats
 
 ## Branches with both a working attack and authored art in this build.
-const IMPLEMENTED: Array[String] = ["repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "gunblade", "machine_gun", "scatter", "saber", "siege", "lance"]
+const IMPLEMENTED: Array[String] = ["repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "gunblade", "machine_gun", "scatter", "saber", "siege", "lance", "resonator"]
+
+## Delays in seconds and damage fractions of the Resonator's echoes, per stage.
+const RESONATOR_ECHO_DELAYS: Array = [[.5], [.4, .8], [.4, .8]]
+const RESONATOR_ECHO_DAMAGE: float = .5
+## Resonance Engine: inner pulse (half radius, double damage) and outer pulse (wider) alternate.
+const ENGINE_INNER_RADIUS: float = .5
+const ENGINE_INNER_DAMAGE: float = 2.0
+const ENGINE_OUTER_RADIUS: float = 1.3
+## An enemy struck by both pulse kinds within this window becomes Exposed.
+const ENGINE_EXPOSE_WINDOW: float = 1.2
+const ENGINE_EXPOSE_DURATION: float = 2.0
 
 ## Half-width in metres of the Thunder Spear's piercing lane.
 const LANCE_LANE_HALF_WIDTH: float = .6
@@ -182,6 +196,7 @@ static func description(branch: String, stage: int) -> String:
 		"greatbow": return "Heavy arrows pierce %d enemies and knock them back." % [4, 6, 9][stage - 1]
 		"gunblade": return ["Sweeps a blade and fires when its barrel aligns with an enemy.", "Sweeps a stronger blade and fires two-shot bursts along its rotation.", "Three-shot piercing bursts accompany a longer, faster blade sweep."][stage - 1]
 		"saber": return ["A longer, faster energy-blade sweep.", "Two opposing held blades sweep both sides of the turret.", "Three held energy blades sweep evenly around the turret."][stage - 1]
+		"resonator": return ["Each pulse echoes once half a second later at half damage, refreshing the slow.", "Two echoes follow each pulse and the pulse reaches 15% farther.", "Pulses alternate a tight, hard inner ring and a wide outer ring; enemies caught by both are Exposed, taking 30% more from Instant turrets."][stage - 1]
 		"lance": return ["Replaces the pulse with a single focused bolt that slows its target.", "The bolt pins its target almost in place for a moment.", "The bolt drives through a whole lane of enemies and pins every one."][stage - 1]
 		"siege": return "Slow, heavy shells explode over a large area and push enemies back."
 	return ""

@@ -26,7 +26,7 @@ The user asked for a full turret roster plan, then moved on to 2D concept art in
 Unbuilt branches on existing turrets (names are already in `scripts/systems/turret_evolution.gd` `PATHS` but not in `IMPLEMENTED`):
 
 - Plasma / Mortar: Mortar, Starburst, Constellation
-- Shock / Resonator: Resonator, Echo Chamber, Resonance Engine
+- Shock / Resonator: Resonator, Echo Chamber, Resonance Engine (game logic done, see below; awaiting real models)
 - Shock / Lance: Focused Lance, Thunder Pin, Thunder Spear (game logic done, see below; awaiting real models)
 - Tesla / Relay: Forked Coil, Storm Relay, Storm Network
 - Tesla / Capacitor: Capacitor, Rail Discharge, Thunderhead
@@ -60,6 +60,12 @@ New turret branches (levels 5 / 10 / 15; full mechanics are in the artifact):
 | Thunder Spear | 15 | 36 | .85 | 400 | 90% / 2.0 s | also hits every enemy in a 1.2 m lane behind the target (`LANCE_LANE_HALF_WIDTH`) |
 
 To swap in real models: add `lance`/`thunder_pin`/`thunder_spear` keys to `ClockworkModels.KEYS`, return them from `TurretEvolution.model_key`, keep a `Muzzle` node, and add `res://assets/ui/turrets/lance_{1,2,3}.png` portraits. Stats and numbers are untuned; no showcase run yet.
+
+## Shock / Resonator logic (built 17 Oct 2026)
+
+`resonator` is in `IMPLEMENTED`. `TurretActor._fire_resonator` pulses as before, then queues echoes that `_tick_resonator` fires later at 50% damage (Resonator: one at 0.5 s; Echo Chamber and Engine: 0.4 s and 0.8 s). Echo Chamber and Engine reach 15% farther (range 276). Resonance Engine alternates an inner pulse (half radius, double damage) with an outer pulse (130% radius); an enemy struck by both within 1.2 s is Exposed for 2 s. Echoes copy the ring of the pulse that spawned them but never count towards Exposed.
+
+**Exposed (S3) is built:** `StatusEffects3D.expose()`, `exposed_remaining` and `exposure_multiplier()`; `CombatActor.receive_hit` applies +30% to hits whose `attack_families` include `instant`. Sniper Spotter and Lullaby can reuse it (Spotter's mark is a different bonus, +15% from every turret, so it will need its own multiplier). There is no visual cue on Exposed enemies yet. Models and portraits follow the same swap-in steps as Lance, using `resonator_{1,2,3}`.
 
 ## Decisions already made by the user
 

@@ -613,3 +613,64 @@ func test_lance_strikes_one_target_then_spear_pierces_a_lane() -> void:
 	turret._fire_lance(turret._current_view(0), turret.effective_range(turret._current_view(0)), front)
 	assert_lt(behind.health, 500.0, "Spear drives through the lane")
 	assert_eq(beside.health, 500.0, "Enemies off the lane are spared")
+
+func test_resonator_echoes_after_the_pulse() -> void:
+	var turret := world.add_turret(Vector3.ZERO, "shock")
+	turret.set_physics_process(false)
+	turret.progression.award(896)
+	assert_true(turret.evolve("resonator"))
+	assert_eq(turret.display_name(), "Resonator")
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	var enemy := world.spawn_enemy(Vector3(0, 0, -1.5))
+	enemy.set_physics_process(false)
+	enemy.health = 500
+	var stats := turret._current_view(0)
+	turret._fire_resonator(stats, turret.effective_range(stats))
+	var after_pulse := enemy.health
+	assert_lt(after_pulse, 500.0)
+	assert_eq(turret.resonator_echoes.size(), 1)
+	turret._tick_resonator(.3)
+	assert_eq(enemy.health, after_pulse, "Echo waits for its delay")
+	turret._tick_resonator(.3)
+	assert_lt(enemy.health, after_pulse)
+	assert_true(turret.resonator_echoes.is_empty())
+
+func test_resonance_engine_exposes_enemies_hit_by_both_rings() -> void:
+	var turret := world.add_turret(Vector3.ZERO, "shock")
+	turret.set_physics_process(false)
+	turret.progression.award(896)
+	for i in 3:
+		assert_true(turret.evolve("resonator"))
+	assert_eq(turret.display_name(), "Resonance Engine")
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	var near := world.spawn_enemy(Vector3(0, 0, -.8))
+	var far := world.spawn_enemy(Vector3(0, 0, -2.6))
+	for enemy in [near, far]:
+		enemy.set_physics_process(false)
+		enemy.health = 1000
+	var stats := turret._current_view(0)
+	var reach := turret.effective_range(stats)
+	assert_gt(reach * TurretEvolution.ENGINE_OUTER_RADIUS, 2.6, "Test setup: far enemy sits inside the outer ring")
+	turret._fire_resonator(stats, reach)
+	assert_lt(near.health, 1000.0)
+	assert_eq(far.health, 1000.0, "Inner ring is tight")
+	assert_eq(near.statuses.exposed_remaining, 0.0)
+	turret._tick_resonator(.6)
+	turret._fire_resonator(stats, reach)
+	assert_gt(near.statuses.exposed_remaining, 0.0, "Both rings hit the near enemy")
+	assert_eq(far.statuses.exposed_remaining, 0.0, "Outer ring alone does not Expose")
+
+func test_exposed_boosts_only_instant_attacks() -> void:
+	var enemy := world.spawn_enemy(Vector3(0, 0, -3))
+	enemy.set_physics_process(false)
+	enemy.health = 1000
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	enemy.statuses.expose(2.0)
+	var instant := CombatHit3D.new(10.0, Vector3.ZERO, Vector3.ZERO, GameEnums.DamageType.ELECTRIC)
+	instant.attack_families = ["instant"]
+	assert_almost_eq(enemy.receive_hit(instant), 13.0, .001)
+	var projectile := CombatHit3D.new(10.0, Vector3.ZERO, Vector3.ZERO, GameEnums.DamageType.PHYSICAL)
+	projectile.attack_families = ["projectile"]
+	assert_almost_eq(enemy.receive_hit(projectile), 10.0, .001)
+	enemy.statuses.advance(2.5)
+	assert_almost_eq(enemy.receive_hit(instant), 10.0, .001)

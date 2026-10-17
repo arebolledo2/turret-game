@@ -24,6 +24,11 @@ var loaded_arrow: Node3D
 var bow_muzzles: Array[Node3D] = []
 var bow_loaded_arrows: Array[Node3D] = []
 var cooldown: float = 0.0
+## Resonator state: queued echoes as [time_left, damage_scale, radius_scale], pulse parity and per-enemy ring marks.
+var resonator_echoes: Array = []
+var resonator_outer_next: bool = false
+var resonator_clock: float = 0.0
+var resonator_marks: Dictionary = {}
 var aim: Node3D
 var model: Node3D
 var saber_angles: Array[float] = [0.0]
@@ -317,6 +322,7 @@ func _update_range_ring() -> void:
 
 func _physics_process(delta: float) -> void:
 	if not world.is_combat():
+		resonator_echoes.clear()
 		bow_burst.cancel()
 		gun_burst.cancel()
 		return
@@ -326,6 +332,8 @@ func _physics_process(delta: float) -> void:
 		_tick_entrench(delta)
 	_update_range_ring()
 	cooldown = maxf(0.0, cooldown - delta)
+	if progression.evolution_branch == "resonator":
+		_tick_resonator(delta)
 	aim.position = aim.position.lerp(aim_rest, minf(delta * 16.0, 1.0))
 	var stats := _current_view(delta)
 	if loaded_ball:
@@ -350,6 +358,8 @@ func _physics_process(delta: float) -> void:
 		var pulse_target := world.nearest_enemy(position, range_metres)
 		if pulse_target and progression.evolution_branch == "lance":
 			_fire_lance(stats, range_metres, pulse_target)
+		elif pulse_target and progression.evolution_branch == "resonator":
+			_fire_resonator(stats, range_metres)
 		elif pulse_target:
 			_fire_pulse(stats, range_metres)
 		return
@@ -394,6 +404,58 @@ func _fire_pulse(stats: TurretStats, range_metres: float) -> void:
 	pulse.splash_radius = range_metres
 	world.combat.impact(null, position, Vector3.ZERO, pulse, world.enemies)
 	_reset_cooldown(stats)
+
+## Shock / Resonator: each pulse queues echoes; the final form alternates inner and outer rings and Exposes enemies caught by both.
+func _fire_resonator(stats: TurretStats, range_metres: float) -> void:
+	var stage := progression.evolution_stage
+	var damage_scale := 1.0
+	var radius_scale := 1.0
+	if stage >= 3:
+		var outer := resonator_outer_next
+		resonator_outer_next = not outer
+		damage_scale = 1.0 if outer else TurretEvolution.ENGINE_INNER_DAMAGE
+		radius_scale = TurretEvolution.ENGINE_OUTER_RADIUS if outer else TurretEvolution.ENGINE_INNER_RADIUS
+		_mark_resonance(range_metres * radius_scale, outer)
+	_resonator_pulse(stats, range_metres * radius_scale, damage_scale)
+	for delay: float in TurretEvolution.RESONATOR_ECHO_DELAYS[stage - 1]:
+		resonator_echoes.append([delay, damage_scale * TurretEvolution.RESONATOR_ECHO_DAMAGE, radius_scale])
+	_reset_cooldown(stats)
+
+func _resonator_pulse(stats: TurretStats, radius: float, damage_scale: float) -> void:
+	var pulse := _new_shot(stats)
+	pulse.damage *= damage_scale
+	pulse.splash_radius = radius
+	world.combat.impact(null, position, Vector3.ZERO, pulse, world.enemies)
+
+## Records which ring struck each enemy; one struck by both kinds inside the window becomes Exposed.
+func _mark_resonance(radius: float, outer: bool) -> void:
+	for id: int in resonator_marks.keys():
+		var marks: Array = resonator_marks[id]
+		if resonator_clock - maxf(marks[0], marks[1]) > TurretEvolution.ENGINE_EXPOSE_WINDOW:
+			resonator_marks.erase(id)
+	var slot := 1 if outer else 0
+	for enemy: CombatActor in world.enemies:
+		if not is_instance_valid(enemy) or enemy.dead or not enemy.overlaps_attack_range(position, radius):
+			continue
+		var marks: Array = resonator_marks.get(enemy.get_instance_id(), [-INF, -INF])
+		marks[slot] = resonator_clock
+		resonator_marks[enemy.get_instance_id()] = marks
+		if resonator_clock - marks[1 - slot] <= TurretEvolution.ENGINE_EXPOSE_WINDOW:
+			enemy.statuses.expose(TurretEvolution.ENGINE_EXPOSE_DURATION)
+
+func _tick_resonator(delta: float) -> void:
+	resonator_clock += delta
+	if resonator_echoes.is_empty():
+		return
+	var stats := _current_view(0.0)
+	var due: Array = []
+	for echo: Array in resonator_echoes:
+		echo[0] -= delta
+		if echo[0] <= 0.0:
+			due.append(echo)
+	for echo: Array in due:
+		resonator_echoes.erase(echo)
+		_resonator_pulse(stats, effective_range(stats) * echo[2], echo[1])
 
 ## Shock / Lance: one bolt at the nearest enemy; the final form also strikes everything in line behind it.
 func _fire_lance(stats: TurretStats, range_metres: float, struck: CombatActor) -> void:
