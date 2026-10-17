@@ -247,6 +247,7 @@ func start_run() -> void:
 
 func _clear_actors() -> void:
 	preparation.end()
+	preparation.reset_layout()
 	waves.clear_spawn_warnings()
 	item_effects.reset()
 	reward_presentation.cancel()

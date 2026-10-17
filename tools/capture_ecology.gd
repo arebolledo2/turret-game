@@ -31,12 +31,18 @@ func setup() -> void:
 		world.camera_rig.set_zoom(.5)
 		world.camera_rig.snap()
 		return
-	if mode == "prep":
+	if mode in ["prep", "prep-saved", "prep-spread"]:
 		world.add_turret(Vector3(-4, 0, 0), "plasma")
 		world.add_turret(Vector3(4, 0, 0), "melee")
 		world.add_turret(Vector3(0, 0, 4), "tesla")
+		if mode == "prep-saved":
+			world.preparation.save_layout()
+			world.add_turret(Vector3(6, 0, 0), "bow")
+		if mode == "prep-spread":
+			SettingsService.auto_prepare_mode = 3
+			FeatureFlagService.set_enabled(FeatureFlagService.AUTO_DEPLOY, true)
 		world.preparation.begin()
-		world.camera_rig.set_zoom(.75)
+		world.camera_rig.set_zoom(.6 if mode != "prep" else .75)
 		world.camera_rig.snap()
 		return
 	world.preparation.deploy()

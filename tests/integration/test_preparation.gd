@@ -311,3 +311,58 @@ func test_core_at_centre_keeps_hero_clear_and_survival_starts_at_origin() -> voi
 	world.core = null
 	world.preparation.begin()
 	assert_eq(world.player.position, Vector3.ZERO)
+
+func test_saved_layout_restores_positions_and_stages_new_turrets() -> void:
+	FeatureFlagService.set_enabled(FeatureFlagService.RESTRICT_SPAWN_PLACEMENT, false)
+	var prep := world.preparation
+	var first := world.turrets[0]
+	first.position = Vector3(4, 0, 0)
+	prep.save_layout()
+	assert_eq(SettingsService.auto_prepare_mode, 4)
+	first.position = Vector3(-4, 0, 0)
+	var second := world.add_turret(Vector3(7, 0, 0), "plasma")
+	prep.begin()
+	assert_eq(first.position, Vector3(4, 0, 0))
+	assert_lt(second.position.length(), 3.0)
+	assert_true(prep.new_markers.has(second.turret_id))
+	assert_false(prep.new_markers.has(first.turret_id))
+	assert_true(world.valid_placement(second.position, second))
+	assert_true(prep.deploy())
+	assert_true(prep.saved_positions.has(second.turret_id))
+	assert_true(prep.new_markers.is_empty())
+	SettingsService.auto_prepare_mode = 0
+
+func test_saved_layout_relocates_blocked_spot_and_resets_for_new_run() -> void:
+	FeatureFlagService.set_enabled(FeatureFlagService.RESTRICT_SPAWN_PLACEMENT, false)
+	var prep := world.preparation
+	var turret := world.turrets[0]
+	prep.saved_positions[turret.turret_id] = world.core.position
+	SettingsService.auto_prepare_mode = 4
+	prep.arrange_turrets()
+	assert_true(world.valid_placement(turret.position, turret))
+	assert_gt(turret.position.distance_to(world.core.position), world.core.radius)
+	world.start_run()
+	assert_true(prep.saved_positions.is_empty())
+	SettingsService.auto_prepare_mode = 0
+
+func test_max_spread_separates_turrets_and_respects_exclusions() -> void:
+	for i in 5: world.add_turret(Vector3(3 + i, 0, 0), "normal")
+	FeatureFlagService.set_enabled(FeatureFlagService.RESTRICT_SPAWN_PLACEMENT, true)
+	SettingsService.auto_prepare_mode = 3
+	world.preparation.arrange_turrets()
+	var positions: Array[Vector3] = []
+	for turret in world.turrets:
+		assert_true(world.valid_placement(turret.position, turret))
+		assert_gt(world.preparation._nearest_distance(turret.position, turret), 36.0)
+		positions.append(turret.position)
+	world.preparation.arrange_turrets()
+	for i in world.turrets.size(): assert_eq(world.turrets[i].position, positions[i])
+	SettingsService.auto_prepare_mode = 0
+
+func test_controller_can_save_layout() -> void:
+	var event := InputEventJoypadButton.new()
+	event.pressed = true
+	event.button_index = JOY_BUTTON_LEFT_STICK
+	assert_true(world.preparation.handle_input(event))
+	assert_true(world.preparation.saved_positions.has(world.turrets[0].turret_id))
+	SettingsService.auto_prepare_mode = 0

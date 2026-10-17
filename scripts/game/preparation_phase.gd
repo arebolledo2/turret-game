@@ -20,6 +20,46 @@ var cancel_button: Button
 var layout_button: Button
 var auto_button: Button
 var deploy_button: Button
+var save_button: Button
+const LAYOUT_NAMES := ["TIGHT", "BALANCED", "AREA COVERAGE", "MAX SPREAD", "SAVED"]
+const SAVED := 4
+var saved_positions: Dictionary = {}
+var new_markers: Dictionary = {}
+
+func reset_layout() -> void:
+	saved_positions.clear()
+	_clear_new_markers()
+
+func _clear_new_markers() -> void:
+	for marker in new_markers.values():
+		if is_instance_valid(marker): marker.queue_free()
+	new_markers.clear()
+
+func save_layout() -> void:
+	if not active or world.paused or moving or not _layout_valid(): return
+	_snapshot_layout()
+	SettingsService.auto_prepare_mode = SAVED
+	FeatureFlagService.set_enabled(FeatureFlagService.AUTO_DEPLOY, true)
+	SettingsService.save_preferences()
+	_clear_new_markers()
+	_refresh()
+
+func _snapshot_layout() -> void:
+	saved_positions.clear()
+	for turret in world.turrets: saved_positions[turret.turret_id] = turret.position
+
+func _mark_new(turret: TurretActor) -> void:
+	if new_markers.has(turret.turret_id): return
+	var label := Label3D.new()
+	label.text = "NEW"
+	label.font_size = 48
+	label.pixel_size = .008
+	label.modulate = Color("ffc55c")
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	add_child(label)
+	new_markers[turret.turret_id] = label
+
 
 func _ready() -> void:
 	GameStateMachine.state_changed.connect(func(_old: int, phase: int) -> void:
@@ -64,6 +104,7 @@ func _reset_hero_start() -> void:
 func end() -> void:
 	cancel_move()
 	active = false
+	_clear_new_markers()
 	selected = null
 	if is_instance_valid(world.player): world.player.show()
 	if is_instance_valid(cursor_dial): cursor_dial.hide()
@@ -146,6 +187,7 @@ func cancel_move() -> void:
 func deploy() -> bool:
 	if not active or world.paused or moving: return false
 	if not _layout_valid(): return false
+	if SettingsService.auto_prepare_mode == SAVED: _snapshot_layout()
 	if not GameStateMachine.transition_to(GameStateMachine.GameState.WAVE_ANNOUNCEMENT): return false
 	end()
 	world.camera_rig.snap()
@@ -174,6 +216,7 @@ func handle_input(event: InputEvent) -> bool:
 			KEY_ENTER, KEY_KP_ENTER: deploy()
 			KEY_R: cycle_layout()
 			KEY_F: toggle_auto()
+			KEY_L: save_layout()
 			KEY_BACKSPACE: cancel_move()
 			KEY_BRACKETLEFT: cycle(-1)
 			KEY_BRACKETRIGHT: cycle(1)
@@ -185,6 +228,7 @@ func handle_input(event: InputEvent) -> bool:
 			JOY_BUTTON_B: cancel_move()
 			JOY_BUTTON_RIGHT_STICK: cycle_layout()
 			JOY_BUTTON_Y: toggle_auto()
+			JOY_BUTTON_LEFT_STICK: save_layout()
 			JOY_BUTTON_X: deploy()
 			JOY_BUTTON_LEFT_SHOULDER: cycle(-1)
 			JOY_BUTTON_RIGHT_SHOULDER: cycle(1)
@@ -202,6 +246,8 @@ func _aim_mouse(screen: Vector2) -> void:
 	if point != null: set_cursor(point)
 
 func _refresh() -> void:
+	for turret in world.turrets:
+		if new_markers.has(turret.turret_id): new_markers[turret.turret_id].position = turret.position + Vector3(0, 1.3, 0)
 	var has_selection := is_instance_valid(selected)
 	var valid := not moving or world.valid_placement(cursor, selected)
 	cursor_dial.visible = active
@@ -225,7 +271,8 @@ func _refresh() -> void:
 	move_button.text = "PLACE  A / Space" if moving else "MOVE  A / Space"
 	move_button.disabled = not has_selection or not valid
 	cancel_button.disabled = not moving
-	layout_button.text = "%s  R / RS" % ["TIGHT", "BALANCED", "AREA COVERAGE"][SettingsService.auto_prepare_mode]
+	layout_button.text = "%s  R / RS" % LAYOUT_NAMES[SettingsService.auto_prepare_mode]
+	save_button.disabled = moving or not _layout_valid()
 	deploy_button.disabled = moving or not _layout_valid()
 	auto_button.text = "AUTO: %s  Y / F" % ("ON" if FeatureFlagService.is_enabled(FeatureFlagService.AUTO_DEPLOY) else "OFF")
 	if not moving and not _layout_valid(): hint.text = "Move turrets out of spawn zones, or use Auto Deploy."
@@ -253,7 +300,7 @@ func _build_ui() -> void:
 	footer.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	footer.offset_left = 28
 	footer.offset_right = -28
-	footer.offset_top = -180
+	footer.offset_top = -220
 	footer.offset_bottom = -24
 	footer.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	root.add_child(footer)
@@ -262,13 +309,17 @@ func _build_ui() -> void:
 	footer.add_child(column)
 	detail = _label(column, "", 25, UiPalette.INK)
 	_label(column, "Aim: mouse / left stick / WASD    Cycle turrets: LB / RB or [ / ]    Zoom: triggers / wheel", 18, UiPalette.MUTED)
+	var layout_row := HBoxContainer.new()
+	layout_row.add_theme_constant_override("separation", 10)
+	column.add_child(layout_row)
+	auto_button = _button(layout_row, "AUTO", toggle_auto)
+	layout_button = _button(layout_row, "LAYOUT", cycle_layout)
+	save_button = _button(layout_row, "SAVE LAYOUT  L / LS", save_layout)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 14)
 	column.add_child(row)
 	move_button = _button(row, "MOVE  A / Space", interact)
 	cancel_button = _button(row, "CANCEL  B / Right click", cancel_move)
-	auto_button = _button(row, "AUTO DEPLOY", toggle_auto)
-	layout_button = _button(row, "LAYOUT", cycle_layout)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(spacer)
@@ -311,6 +362,12 @@ func _layout_valid() -> bool:
 
 ## Greedy, deterministic coverage layout; no gameplay RNG is consumed.
 func arrange_turrets() -> void:
+	if SettingsService.auto_prepare_mode == SAVED:
+		_restore_layout()
+		return
+	if SettingsService.auto_prepare_mode == 3:
+		_spread_layout()
+		return
 	var mode := SettingsService.auto_prepare_mode
 	var placed: Array[Dictionary] = []
 	var zones := world.spawn_zones.centres
@@ -391,7 +448,7 @@ func _route_position(fraction: float) -> Vector3:
 func cycle_layout() -> void:
 	if not active or world.paused: return
 	cancel_move()
-	SettingsService.auto_prepare_mode = (SettingsService.auto_prepare_mode + 1) % 3
+	SettingsService.auto_prepare_mode = (SettingsService.auto_prepare_mode + 1) % LAYOUT_NAMES.size()
 	SettingsService.save_preferences()
 	if FeatureFlagService.is_enabled(FeatureFlagService.AUTO_DEPLOY): arrange_turrets()
 	if is_instance_valid(selected):
@@ -435,3 +492,87 @@ func _coverage_candidates(target: Vector3, reach: float, placed: Array[Dictionar
 			result.append(centre + axis * along + perpendicular * height)
 			result.append(centre + axis * along - perpendicular * height)
 	return result
+
+## Restore stable IDs first, then stage new acquisitions near the centre.
+func _restore_layout() -> void:
+	var originals: Dictionary = {}
+	for turret in world.turrets:
+		originals[turret.turret_id] = turret.position
+		# Temporarily remove old positions from planar collision checks.
+		turret.position = Vector3(1000 + turret.turret_id * 2, 0, 1000)
+	var ordered := world.turrets.duplicate()
+	ordered.sort_custom(func(a: TurretActor, b: TurretActor) -> bool:
+		return saved_positions.has(a.turret_id) and not saved_positions.has(b.turret_id))
+	for turret: TurretActor in ordered:
+		var target: Vector3 = saved_positions.get(turret.turret_id, Vector3.ZERO)
+		var best := _nearest_valid(target, turret)
+		if best == Vector3.INF: best = originals[turret.turret_id]
+		_set_layout_position(turret, best, originals[turret.turret_id])
+		if not saved_positions.has(turret.turret_id): _mark_new(turret)
+
+func _nearest_valid(target: Vector3, turret: TurretActor) -> Vector3:
+	if world.valid_placement(target, turret): return target
+	var best := Vector3.INF
+	var score := INF
+	for at in _layout_grid():
+		var cost := at.distance_squared_to(target)
+		if cost < score and world.valid_placement(at, turret):
+			best = at
+			score = cost
+	return best
+
+func _layout_grid() -> Array[Vector3]:
+	var result: Array[Vector3] = []
+	var extent := WorldGeometry.HALF_ARENA - Vector2.ONE * TurretPlacement.EDGE_MARGIN
+	for x in range(int(ceil(extent.x * 2)) + 1):
+		for z in range(int(ceil(extent.y * 2)) + 1):
+			result.append(Vector3(minf(-extent.x + x, extent.x), 0, minf(-extent.y + z, extent.y)))
+	return result
+
+func _set_layout_position(turret: TurretActor, at: Vector3, original: Vector3) -> void:
+	turret.position = at
+	if at.distance_to(original) > .01:
+		turret.reset_entrench()
+		turret.invalidate_stats()
+		world.telemetry.record_turret_move()
+	turret.reset_physics_interpolation()
+
+## Farthest-point placement followed by maximin relaxation. Range is irrelevant.
+func _spread_layout() -> void:
+	var originals: Dictionary = {}
+	var placed: Array[TurretActor] = []
+	var candidates := _layout_grid()
+	for turret in world.turrets:
+		originals[turret.turret_id] = turret.position
+		turret.position = Vector3(1000 + turret.turret_id * 2, 0, 1000)
+	for turret in world.turrets:
+		var best := Vector3.INF
+		var score := -INF
+		for at in candidates:
+			if not world.valid_placement(at, turret): continue
+			var distance := at.length_squared() if not world.turrets.size() == 1 else -at.length_squared()
+			if not placed.is_empty():
+				distance = INF
+				for other in placed: distance = minf(distance, at.distance_squared_to(other.position))
+			if distance > score:
+				score = distance
+				best = at
+		turret.position = best if best != Vector3.INF else originals[turret.turret_id]
+		placed.append(turret)
+	for iteration in 3:
+		for turret in placed:
+			var best := turret.position
+			var score := _nearest_distance(best, turret)
+			for at in candidates:
+				var distance := _nearest_distance(at, turret)
+				if distance > score + .001 and world.valid_placement(at, turret):
+					best = at
+					score = distance
+			turret.position = best
+	for turret in placed: _set_layout_position(turret, turret.position, originals[turret.turret_id])
+
+func _nearest_distance(at: Vector3, excluded: TurretActor) -> float:
+	var distance := INF
+	for turret in world.turrets:
+		if turret != excluded: distance = minf(distance, at.distance_squared_to(turret.position))
+	return distance

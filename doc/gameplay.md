@@ -197,3 +197,9 @@ Medium and harder tiers gain a gradual elite/core-seeker ramp after wave 4 (Medi
 Pip's sidearm benefits from matching Projectile and universal weapon modifiers. Shop inspection includes hero damage, cadence and reach with purchase previews. Turret-only conditional bonuses and entrenchment do not apply to the hero. `RunConfig.hero` holds a copied loadout definition (weapon, attack families, capabilities and starting turret), providing an extension point for future heroes.
 
 Spawn zones apply only to Protect Core and Convoy. Survival uses the original unbiased encounter spawn selection.
+
+### Saved and Max Spread layouts
+
+Preparation offers Tight, Balanced, Area Coverage, Max Spread and Saved arrangements (R / right-stick click). **Save Layout** (L / left-stick click) records turret positions for this run and enables Auto with Saved selected. Subsequent preparations restore those positions; new turrets stage near the centre with gold NEW markers. Deploying in Saved mode remembers manual adjustments. Blocked saved spots move to the nearest legal position. Layouts reset on a new run; the selected arrangement preference persists. Turn Auto off to leave positions untouched.
+
+Max Spread uses deterministic farthest-point placement and distance refinement to maximize separation between turrets, independent of weapon range. It respects terrain, the core, arena boundaries and the optional spawn-zone restriction. It is a practical spacing heuristic, not an exact global packing solver.
