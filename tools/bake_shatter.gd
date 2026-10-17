@@ -1,7 +1,7 @@
 extends SceneTree
 
 ## Pre-fractures an enemy model into shards for `DeathShatter`. Needs no window.
-##   godot --headless --path . -s tools/bake_shatter.gd -- drowse [--cells=40] [--seed=7]
+##   godot --headless --path . -s tools/bake_shatter.gd -- drowse [--cells=16] [--seed=7]
 ## Writes res://assets/models/clockwork/shatter/cp_<key>.res; the next kill of that enemy picks it up automatically.
 ## Re-run it whenever the model's meshes change, otherwise the baked paths no longer match.
 

@@ -80,13 +80,13 @@ func test_age_advances_and_the_corpse_frees_itself() -> void:
 	assert_eq(DeathShatter.active_count, before)
 
 func test_enemy_without_baked_shards_still_dissolves() -> void:
-	assert_null(DeathShatter.shatter_set("basic"))
-	_kill(_enemy("basic"))
+	assert_null(DeathShatter.shatter_set("fast"))
+	_kill(_enemy("fast"))
 	assert_eq(_corpses(DeathShatter).size(), 0)
 	assert_eq(_corpses(DeathDissolve).size(), 1)
 
 func test_unsupported_spawn_leaves_the_actor_visual_untouched() -> void:
-	var enemy := _enemy("basic")
+	var enemy := _enemy("fast")
 	assert_null(DeathShatter.spawn(world.actor_root, enemy))
 	assert_eq(enemy.visual.get_parent(), enemy)
 
@@ -114,3 +114,14 @@ func test_elite_tint_survives_into_the_shards() -> void:
 	_kill(enemy)
 	var copy := (_corpses(DeathShatter)[0] as DeathShatter).meshes[0].get_active_material(0) as ShaderMaterial
 	assert_eq(copy.get_shader_parameter("albedo_color"), tinted.albedo_color)
+
+func test_every_baked_enemy_shatters_in_the_arena() -> void:
+	var tried := 0
+	for key in ClockworkModels.KEYS:
+		if not DeathShatter.shatter_set(key) or not (EnemyRegistry.TYPES.has(key) or EnemyEcology.TYPES.has(key)):
+			continue
+		tried += 1
+		var before := _corpses(DeathShatter).size()
+		_kill(_enemy(key))
+		assert_eq(_corpses(DeathShatter).size(), before + 1, "%s has baked shards but did not shatter" % key)
+	assert_gt(tried, 1, "Expected the beetle and the Basic drone to be baked")

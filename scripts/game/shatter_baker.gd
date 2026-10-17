@@ -7,7 +7,7 @@ extends RefCounted
 ## space, with the assignment wobbled by noise so the cracks are ragged). A shard is one cell inside one mesh object: it
 ## keeps the mesh's own space, so animated parts such as the feet still shatter from wherever the pose left them.
 ## Vertices on a crack are duplicated per shard, which is why each surface is rebuilt rather than reused.
-const DEFAULT_CELLS: int = 40
+const DEFAULT_CELLS: int = 16
 const WARP_METRES: float = .05
 const LLOYD_STEPS: int = 3
 const ID_STRIDE: int = 8192

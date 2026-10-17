@@ -14,7 +14,7 @@ func before_each() -> void:
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 
 func _enemy(health: float = 100.0) -> CombatActor:
-	var enemy := world.spawn_enemy(Vector3(2, 0, 0))
+	var enemy := world.spawn_enemy(Vector3(2, 0, 0), "fast") # the Basic drone and the beetle shatter instead of dissolving
 	enemy.set_physics_process(false)
 	enemy.health = health
 	return enemy

@@ -59,12 +59,24 @@ func test_bake_is_deterministic() -> void:
 func test_more_cells_means_more_shards() -> void:
 	assert_gt(ShatterBaker.bake(model, 30).shard_count, ShatterBaker.bake(model, 8).shard_count)
 
-func test_committed_bake_still_matches_the_model() -> void:
-	var shards := load(ShatterSet.path_for(KEY)) as ShatterSet
-	assert_not_null(shards, "Run tools/bake_shatter.gd to (re)create %s" % ShatterSet.path_for(KEY))
-	for instance in _mesh_instances():
-		var baked := shards.meshes.get(str(model.get_path_to(instance))) as ArrayMesh
-		assert_not_null(baked, "%s is missing from the baked set; rebake after changing the model" % instance.name)
-		if baked:
-			assert_eq(baked.get_surface_count(), instance.mesh.get_surface_count())
-			assert_eq(_triangles(baked), _triangles(instance.mesh), "Rebake after changing %s" % instance.name)
+func _baked_keys() -> Array[String]:
+	var keys: Array[String] = []
+	for key in ClockworkModels.KEYS:
+		if ResourceLoader.exists(ShatterSet.path_for(key)):
+			keys.append(key)
+	return keys
+
+func test_every_committed_bake_still_matches_its_model() -> void:
+	assert_gt(_baked_keys().size(), 1, "Expected committed bakes under %s" % ShatterSet.DIRECTORY)
+	for key in _baked_keys():
+		var fresh := ClockworkModels.instantiate(key)
+		add_child_autofree(fresh)
+		var shards := load(ShatterSet.path_for(key)) as ShatterSet
+		assert_not_null(shards, "Run tools/bake_shatter.gd to (re)create %s" % ShatterSet.path_for(key))
+		for node in fresh.find_children("*", "MeshInstance3D", true, false):
+			var instance := node as MeshInstance3D
+			var baked := shards.meshes.get(str(fresh.get_path_to(instance))) as ArrayMesh
+			assert_not_null(baked, "%s: %s is missing from the baked set; rebake after changing the model" % [key, instance.name])
+			if baked:
+				assert_eq(baked.get_surface_count(), instance.mesh.get_surface_count(), "%s: %s surfaces" % [key, instance.name])
+				assert_eq(_triangles(baked), _triangles(instance.mesh), "%s: rebake after changing %s" % [key, instance.name])
