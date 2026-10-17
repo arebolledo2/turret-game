@@ -13,13 +13,18 @@ func _init(model: Node3D) -> void:
 			if clip != "RESET":
 				player.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
 
-func tick(delta: float, moving: bool, attacking: bool, reduced: bool) -> void:
+func tick(delta: float, moving: bool, attacking: bool, reduced: bool, stride_speed: float = -1.0) -> void:
 	if not player:
 		return
 	var clip := "Attack" if attacking else ("Walk" if moving else "Idle")
+	# Hopper attack clips are a crouch/extension, not a running cycle. During
+	# translation use its articulated Walk clip, paced at one cycle per 0.9 m.
+	var running := stride_speed > .1
+	if running: clip = "Walk"
 	if not player.has_animation(clip):
 		return
 	if clip != current:
 		current = clip
 		player.play(clip, .12)
-	player.advance(delta * (.25 if reduced else 1.0))
+	var rate := clampf(stride_speed / .9, .1, 8.0) if running else (.25 if reduced else 1.0)
+	player.advance(delta * rate)

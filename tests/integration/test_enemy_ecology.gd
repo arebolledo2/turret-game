@@ -237,3 +237,28 @@ func test_warning_slot_counts_only_nearby_warning_enemies() -> void:
 	assert_true(first.brain._warning_slot(false))
 	second.dead = true
 	assert_true(first.brain._warning_slot(false))
+
+func test_actual_hopper_uses_speed_matched_legs_during_charge() -> void:
+	var hopper := enemy("hopper", Vector3(3, 0, 0))
+	assert_not_null(hopper.ecology_motion)
+	assert_null(hopper.clockwork_motion, "The red hopper has a different rig from the horned charger")
+	hopper.brain.state = "attack"
+	hopper.velocity = Vector3(6.6, 0, 0)
+	hopper._animate(.01, Vector3.RIGHT, true)
+	var motion := hopper.ecology_motion
+	assert_eq(motion.current, "Walk", "Moving dash must not use the slow crouch/extension Attack clip")
+	motion.player.seek(0.0, true)
+	hopper._animate(.03, Vector3.RIGHT, true)
+	assert_almost_eq(motion.player.current_animation_position, .22, .002, "Reduced Motion keeps the dash stride in sync")
+	var leg := hopper.visual.find_child("Leg_L_0", true, false) as Node3D
+	assert_not_null(leg)
+	var pose := leg.transform
+	hopper._animate(.04, Vector3.RIGHT, true)
+	assert_false(leg.transform.is_equal_approx(pose), "Actual imported leg pivots move")
+	hopper.velocity = Vector3.ZERO
+	hopper.brain.state = "warning"
+	hopper._animate(.01, Vector3.ZERO, false)
+	assert_eq(motion.current, "Attack", "Stationary windup retains the authored crouch")
+	hopper.brain.state = "idle"
+	hopper._animate(.01, Vector3.ZERO, false)
+	assert_eq(motion.current, "Idle")
