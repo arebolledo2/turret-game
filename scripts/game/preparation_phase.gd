@@ -537,39 +537,73 @@ func _set_layout_position(turret: TurretActor, at: Vector3, original: Vector3) -
 		world.telemetry.record_turret_move()
 	turret.reset_physics_interpolation()
 
-## Farthest-point placement followed by maximin relaxation. Range is irrelevant.
+## Balance wall clearance against half the distance to the nearest turret.
+## Start with evenly sized cells so four turrets occupy quadrant centres.
 func _spread_layout() -> void:
+	if world.turrets.is_empty(): return
 	var originals: Dictionary = {}
-	var placed: Array[TurretActor] = []
-	var candidates := _layout_grid()
+	var targets: Array[Vector3] = []
+	var count := world.turrets.size()
+	var columns := 1
+	var best_shape := INF
+	for candidate in range(1, count + 1):
+		var rows := ceili(float(count) / candidate)
+		var aspect := WorldGeometry.HALF_ARENA.x * rows / (WorldGeometry.HALF_ARENA.y * candidate)
+		var shape := absf(log(aspect)) + (candidate * rows - count) * 1.0
+		if shape < best_shape:
+			best_shape = shape
+			columns = candidate
+	var rows := ceili(float(count) / columns)
 	for turret in world.turrets:
 		originals[turret.turret_id] = turret.position
 		turret.position = Vector3(1000 + turret.turret_id * 2, 0, 1000)
-	for turret in world.turrets:
-		var best := Vector3.INF
-		var score := -INF
-		for at in candidates:
-			if not world.valid_placement(at, turret): continue
-			var distance := at.length_squared() if not world.turrets.size() == 1 else -at.length_squared()
-			if not placed.is_empty():
-				distance = INF
-				for other in placed: distance = minf(distance, at.distance_squared_to(other.position))
-			if distance > score:
-				score = distance
-				best = at
-		turret.position = best if best != Vector3.INF else originals[turret.turret_id]
-		placed.append(turret)
-	for iteration in 3:
-		for turret in placed:
+	for index in count:
+		var row := index / columns
+		var in_row := mini(columns, count - row * columns)
+		var target := Vector3(
+			((index % columns + .5) / in_row * 2.0 - 1.0) * WorldGeometry.HALF_ARENA.x,
+			0, ((row + .5) / rows * 2.0 - 1.0) * WorldGeometry.HALF_ARENA.y)
+		targets.append(target)
+		var turret := world.turrets[index]
+		var at := _nearest_valid(target, turret)
+		turret.position = at if at != Vector3.INF else originals[turret.turret_id]
+	var candidates := _layout_grid()
+	for iteration in 4:
+		for index in count:
+			var turret := world.turrets[index]
 			var best := turret.position
-			var score := _nearest_distance(best, turret)
+			var score := _spread_score(best, turret, targets[index])
 			for at in candidates:
-				var distance := _nearest_distance(at, turret)
-				if distance > score + .001 and world.valid_placement(at, turret):
+				var clearance := _spread_score(at, turret, targets[index])
+				if _better_spread(at, clearance, best, score, targets[index]) and world.valid_placement(at, turret):
 					best = at
-					score = distance
+					score = clearance
+			for step: float in [.25, .0625]:
+				for refinement in 8:
+					var origin := best
+					for direction in 8:
+						var angle := TAU * direction / 8.0
+						var at := origin + Vector3(cos(angle), 0, sin(angle)) * step
+						var clearance := _spread_score(at, turret, targets[index])
+						if _better_spread(at, clearance, best, score, targets[index]) and world.valid_placement(at, turret):
+							best = at
+							score = clearance
+					if best == origin: break
 			turret.position = best
-	for turret in placed: _set_layout_position(turret, turret.position, originals[turret.turret_id])
+	for turret in world.turrets: _set_layout_position(turret, turret.position, originals[turret.turret_id])
+
+func _better_spread(at: Vector3, score: float, best: Vector3, best_score: float, target: Vector3) -> bool:
+	return score > best_score + .001 or (absf(score - best_score) <= .001 and at.distance_squared_to(target) < best.distance_squared_to(target) - .001)
+
+func _spread_score(at: Vector3, turret: TurretActor, target: Vector3) -> float:
+	# Prefer evenly distributed cells over a staggered circle-packing arrangement.
+	var scale := minf(WorldGeometry.HALF_ARENA.x, WorldGeometry.HALF_ARENA.y)
+	return _spread_clearance(at, turret) - at.distance_squared_to(target) * .75 / scale
+
+func _spread_clearance(at: Vector3, excluded: TurretActor) -> float:
+	var wall := minf(WorldGeometry.HALF_ARENA.x - absf(at.x), WorldGeometry.HALF_ARENA.y - absf(at.z))
+	# Equal personal space: each turret contributes half the gap between neighbours.
+	return minf(wall, sqrt(_nearest_distance(at, excluded)) * .5)
 
 func _nearest_distance(at: Vector3, excluded: TurretActor) -> float:
 	var distance := INF

@@ -353,7 +353,8 @@ func test_max_spread_separates_turrets_and_respects_exclusions() -> void:
 	var positions: Array[Vector3] = []
 	for turret in world.turrets:
 		assert_true(world.valid_placement(turret.position, turret))
-		assert_gt(world.preparation._nearest_distance(turret.position, turret), 36.0)
+		assert_gt(world.preparation._nearest_distance(turret.position, turret), 25.0)
+		assert_gt(world.preparation._spread_clearance(turret.position, turret), 2.5)
 		positions.append(turret.position)
 	world.preparation.arrange_turrets()
 	for i in world.turrets.size(): assert_eq(world.turrets[i].position, positions[i])
@@ -365,4 +366,21 @@ func test_controller_can_save_layout() -> void:
 	event.button_index = JOY_BUTTON_LEFT_STICK
 	assert_true(world.preparation.handle_input(event))
 	assert_true(world.preparation.saved_positions.has(world.turrets[0].turret_id))
+	SettingsService.auto_prepare_mode = 0
+
+func test_max_spread_four_turrets_balance_quadrants_and_walls() -> void:
+	FeatureFlagService.set_enabled(FeatureFlagService.RESTRICT_SPAWN_PLACEMENT, false)
+	# Isolate the spacing objective from terrain and core placement restrictions.
+	world.terrain = null
+	world.core.position = Vector3(100, 0, 100)
+	for i in 3: world.add_turret(Vector3(3 + i, 0, 0), "normal")
+	SettingsService.auto_prepare_mode = 3
+	world.preparation.arrange_turrets()
+	var quadrants: Dictionary = {}
+	for turret in world.turrets:
+		quadrants[Vector2(signf(turret.position.x), signf(turret.position.z))] = true
+		assert_almost_eq(absf(turret.position.x), WorldGeometry.HALF_ARENA.x * .5, .3)
+		assert_almost_eq(absf(turret.position.z), WorldGeometry.HALF_ARENA.y * .5, .3)
+		assert_true(world.valid_placement(turret.position, turret))
+	assert_eq(quadrants.size(), 4)
 	SettingsService.auto_prepare_mode = 0
