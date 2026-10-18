@@ -230,13 +230,13 @@ func test_area_layout_separates_attack_ranges_and_balanced_keeps_centre_covered(
 	world.preparation.arrange_turrets()
 	for i in world.turrets.size():
 		for j in range(i):
-			var reach := world.preparation._attack_reach(world.turrets[i]) + world.preparation._attack_reach(world.turrets[j])
+			var reach := TurretLayoutSolver.new(world).attack_reach(world.turrets[i]) + TurretLayoutSolver.new(world).attack_reach(world.turrets[j])
 			assert_gte(world.turrets[i].position.distance_to(world.turrets[j].position), reach - .05)
 	SettingsService.auto_prepare_mode = 1
 	world.preparation.arrange_turrets()
 	var centre_covered := false
 	for turret in world.turrets:
-		if turret.position.length() <= world.preparation._attack_reach(turret): centre_covered = true
+		if turret.position.length() <= TurretLayoutSolver.new(world).attack_reach(turret): centre_covered = true
 	assert_true(centre_covered)
 	SettingsService.auto_prepare_mode = 0
 
@@ -255,7 +255,7 @@ func test_area_layout_packs_mixed_ranges_without_grid_gaps() -> void:
 		var nearest_gap := INF
 		for j in range(i):
 			var other := world.turrets[j]
-			var gap := turret.position.distance_to(other.position) - world.preparation._attack_reach(turret) - world.preparation._attack_reach(other)
+			var gap := turret.position.distance_to(other.position) - TurretLayoutSolver.new(world).attack_reach(turret) - TurretLayoutSolver.new(world).attack_reach(other)
 			assert_gte(gap, -.05, "Attack circles should not materially overlap")
 			nearest_gap = minf(nearest_gap, gap)
 		assert_lt(nearest_gap, .08, "Each added turret joins the coverage instead of leaving a grid-sized gap")
@@ -353,8 +353,8 @@ func test_max_spread_separates_turrets_and_respects_exclusions() -> void:
 	var positions: Array[Vector3] = []
 	for turret in world.turrets:
 		assert_true(world.valid_placement(turret.position, turret))
-		assert_gt(world.preparation._nearest_distance(turret.position, turret), 25.0)
-		assert_gt(world.preparation._spread_clearance(turret.position, turret), 2.5)
+		assert_gt(TurretLayoutSolver.new(world)._nearest_distance(turret.position, turret), 25.0)
+		assert_gt(TurretLayoutSolver.new(world)._spread_clearance(turret.position, turret), 2.5)
 		positions.append(turret.position)
 	world.preparation.arrange_turrets()
 	for i in world.turrets.size(): assert_eq(world.turrets[i].position, positions[i])
