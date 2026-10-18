@@ -24,7 +24,7 @@ const SPAWN_CLEARANCE := .9
 const CONVOY_CORE_SPAWN_GAP := 4.0
 const CONVOY_PATH_HALF_WIDTH := 2.0
 const SURVIVE_SPAWN_EDGE_MARGIN := 1.0
-var pending_spawns: Array[Dictionary] = []
+var pending_spawns: Array[PendingSpawn] = []
 var spawn_credit := 0.0
 var arrival_time_left := 0.0
 
@@ -59,7 +59,7 @@ func warn_spawn(type_id: String, at: Vector3, boss: bool = false) -> void:
 	var marker := GroundDial.create(world.actor_root, SPAWN_CLEARANCE, Color("f4a775"), true)
 	marker.position = at + Vector3(0, .05, 0)
 	GroundDial.update(marker, 0.0, false, 4)
-	pending_spawns.append({"type": type_id, "at": at, "left": SPAWN_WARNING, "marker": marker, "boss": boss})
+	pending_spawns.append(PendingSpawn.new(type_id, at, SPAWN_WARNING, marker, boss))
 
 func advance_spawn_warnings(delta: float) -> void:
 	for index in range(pending_spawns.size() - 1, -1, -1):
