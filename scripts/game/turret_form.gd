@@ -12,6 +12,8 @@ static func create(owner: TurretActor, branch_id: String) -> TurretForm:
 	match branch_id:
 		"resonator": result = ResonatorForm.new()
 		"lance": result = LanceForm.new()
+		"scatter": result = ScatterForm.new()
+		"repeater_bow": result = RepeaterBowForm.new()
 		_: return null
 	result.actor = owner
 	result.branch = branch_id
@@ -28,3 +30,7 @@ func clear() -> void:
 ## Pulse-mode attack at `target`, the nearest enemy in range.
 func fire_pulse(_stats: TurretStats, _range_metres: float, _target: CombatActor) -> void:
 	pass
+
+## Projectile-mode attack along `heading` (toward the actor's target). Returns false to use the default single shot.
+func fire_projectile(_stats: TurretStats, _heading: Vector3) -> bool:
+	return false

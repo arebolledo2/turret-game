@@ -411,18 +411,7 @@ func _fire_chain(stats: TurretStats) -> void:
 
 func _fire_projectile(stats: TurretStats) -> void:
 	var heading := WorldGeometry.planar(target.position - muzzle.global_position).normalized()
-	if progression.evolution_branch == "repeater_bow":
-		bow_burst.start(TurretEvolution.volley_size(progression.evolution_stage), _new_shot(stats))
-		bow_burst.heading = WorldGeometry.planar(target.position - position).normalized()
-		bow_burst.aim_point = target.position
-		_tick_bow_burst(0.0, stats)
-	elif progression.evolution_branch == "scatter" and progression.evolution_stage >= 2:
-		for exit: Node3D in crossfire_muzzles:
-			world.fire_direction(exit.global_position, -exit.global_basis.z, _new_shot(stats))
-	elif progression.evolution_branch == "scatter":
-		for angle: float in [-12.0, 0.0, 12.0]:
-			world.fire_direction(muzzle.global_position, heading.rotated(Vector3.UP, deg_to_rad(angle)), _new_shot(stats))
-	else:
+	if not form or not form.fire_projectile(stats, heading):
 		world.fire_shot(muzzle.global_position, target, _new_shot(stats))
 	if loaded_ball:
 		loaded_ball.visible = false
