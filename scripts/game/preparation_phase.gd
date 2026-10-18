@@ -374,8 +374,8 @@ func _build_ui() -> void:
 	root.add_child(panel)
 	var top := VBoxContainer.new()
 	panel.add_child(top)
-	title = _label(top, "", 26, UiPalette.TEAL_HI)
-	hint = _label(top, "", 18, UiPalette.INK)
+	title = UiBuilder.outlined_label(top, "", 26, UiPalette.TEAL_HI)
+	hint = UiBuilder.outlined_label(top, "", 18, UiPalette.INK)
 	var footer := PanelContainer.new()
 	footer.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 	footer.offset_left = 28
@@ -387,9 +387,9 @@ func _build_ui() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 10)
 	footer.add_child(column)
-	detail = _label(column, "", 25, UiPalette.INK)
-	note = _label(column, "", 20, UiPalette.TEAL_HI)
-	controls = _label(column, "", 18, UiPalette.MUTED)
+	detail = UiBuilder.outlined_label(column, "", 25, UiPalette.INK)
+	note = UiBuilder.outlined_label(column, "", 20, UiPalette.TEAL_HI)
+	controls = UiBuilder.outlined_label(column, "", 18, UiPalette.MUTED)
 	var layout_line := HBoxContainer.new()
 	layout_line.add_theme_constant_override("separation", 10)
 	column.add_child(layout_line)
@@ -405,7 +405,7 @@ func _build_ui() -> void:
 	cycle_hint.alignment = BoxContainer.ALIGNMENT_END
 	cycle_hint.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	cycle_hint.add_child(_glyph("RS"))
-	_label(cycle_hint, "next layout", 18, UiPalette.MUTED)
+	UiBuilder.outlined_label(cycle_hint, "next layout", 18, UiPalette.MUTED)
 	gap.add_child(cycle_hint)
 	cycle_hint.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	save_button = _button(layout_line, "SAVE", save_layout, "star", false, "LS")
@@ -443,21 +443,11 @@ func _layout_choice(parent: Node, index: int) -> Button:
 	var picture := LayoutIcon.new().setup(LAYOUT_KINDS[index], 56.0)
 	picture.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	stack.add_child(picture)
-	var caption := _label(stack, LAYOUT_SHORT[index], 18, UiPalette.INK)
+	var caption := UiBuilder.outlined_label(stack, LAYOUT_SHORT[index], 18, UiPalette.INK)
 	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	caption.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	parent.add_child(button)
 	return button
-
-func _label(parent: Node, text: String, size: int, colour: Color) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", size)
-	label.add_theme_color_override("font_color", colour)
-	label.add_theme_color_override("font_outline_color", Color(0, 0, 0, .9))
-	label.add_theme_constant_override("outline_size", 4)
-	parent.add_child(label)
-	return label
 
 ## Option buttons take controller focus only after D-pad down, so A still operates the cursor on the map.
 func _button(parent: Node, text: String, action: Callable, icon_name: String = "turret", primary: bool = false, glyph: String = "") -> Button:

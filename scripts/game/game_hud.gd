@@ -101,8 +101,8 @@ func _build_panel(root: Control) -> void:
 	column.add_child(header)
 	title_icon = _icon("signal", "hull", 52)
 	header.add_child(title_icon)
-	title = _label(header, "", 46, UiPalette.INK)
-	description = _label(header, "", 24, UiPalette.MUTED)
+	title = UiBuilder.label(header, "", 46, UiPalette.INK)
+	description = UiBuilder.label(header, "", 24, UiPalette.MUTED)
 	description.size_flags_vertical = Control.SIZE_SHRINK_END
 	var header_gap := Control.new()
 	header_gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -287,16 +287,8 @@ func _icon(icon_name: String, stat: String, size: float) -> TextureRect:
 	return rect
 
 func _numeral(parent: Node, size: int, color: Color) -> Label:
-	var label := _label(parent, "", size, color)
+	var label := UiBuilder.label(parent, "", size, color)
 	label.theme_type_variation = &"Numeral"
-	return label
-
-func _label(parent: Node, text: String, size: int, color: Color) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", size)
-	label.add_theme_color_override("font_color", color)
-	parent.add_child(label)
 	return label
 
 ## Cross the nested action container and spacer explicitly instead of relying on spatial focus search.

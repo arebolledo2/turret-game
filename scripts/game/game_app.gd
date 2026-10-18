@@ -48,14 +48,14 @@ func _build_menu() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 22)
 	panel.add_child(column)
-	var wordmark := _label(column, "TURRET / SURVIVOR", 76, UiPalette.INK)
+	var wordmark := UiBuilder.label(column, "TURRET / SURVIVOR", 76, UiPalette.INK)
 	wordmark.theme_type_variation = &"Header1"
 	wordmark.add_theme_font_size_override("font_size", 76)
-	_label(column, "Build your defenses. Survive the swarm.", 26, UiPalette.TEAL_HI)
+	UiBuilder.label(column, "Build your defenses. Survive the swarm.", 26, UiPalette.TEAL_HI)
 	home = VBoxContainer.new()
 	home.add_theme_constant_override("separation", 18)
 	column.add_child(home)
-	home_summary = _label(home, "", 22) # text mirror of the chips, kept for screen readers and tests
+	home_summary = UiBuilder.label(home, "", 22) # text mirror of the chips, kept for screen readers and tests
 	home_summary.visible = false
 	summary_chips = HBoxContainer.new()
 	summary_chips.add_theme_constant_override("separation", 10)
@@ -79,7 +79,7 @@ func _build_menu() -> void:
 	options = VBoxContainer.new()
 	options.add_theme_constant_override("separation", 18)
 	column.add_child(options)
-	var settings_title := _label(options, "SETTINGS", 40, UiPalette.INK)
+	var settings_title := UiBuilder.label(options, "SETTINGS", 40, UiPalette.INK)
 	settings_title.theme_type_variation = &"Header2"
 	fullscreen_check = _check(options, "Fullscreen", "fullscreen", func(value: bool) -> void: SettingsService.set_fullscreen(value))
 	window_size_option = OptionButton.new()
@@ -100,7 +100,7 @@ func _build_menu() -> void:
 		marker_option.add_item("Ground markers  -  " + label)
 	marker_option.tooltip_text = "Optional ground markers. Build zones and attack warnings stay visible."
 	motion_check = _check(options, "Reduced motion", "motion", func(value: bool) -> void: SettingsService.set_reduced_motion(value))
-	_label(options, "Reduced motion removes bobbing, recoil and hit blinking, and simplifies salvage animations.\nAttack warnings and effect ranges remain visible.", 20)
+	UiBuilder.label(options, "Reduced motion removes bobbing, recoil and hit blinking, and simplifies salvage animations.\nAttack warnings and effect ranges remain visible.", 20)
 	var volume_row := HBoxContainer.new()
 	volume_row.add_theme_constant_override("separation", 12)
 	options.add_child(volume_row)
@@ -126,14 +126,6 @@ func _build_menu() -> void:
 		SettingsService.set_sfx_volume(value / 100.0)
 		_update_volume_label())
 	back_button = _button(options, "BACK", show_home, "back")
-
-func _label(parent: Node, text: String, size: int, color: Color = UiPalette.INK) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", size)
-	label.add_theme_color_override("font_color", color)
-	parent.add_child(label)
-	return label
 
 func _button(parent: Node, text: String, action: Callable, icon_name: String = "", primary: bool = false) -> Button:
 	var button := IconButton.new().setup(icon_name, text, primary, 30)

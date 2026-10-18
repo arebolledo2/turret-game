@@ -199,9 +199,9 @@ func _build() -> void:
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 8)
 	panel.add_child(column)
-	_label(column, "DEV PANEL", 26, Color("e8f7a0"))
-	_label(column, "D-pad / stick: move   A: activate   B / F1: close   Run is paused while open", 14, Color("9db8bd"))
-	status_label = _label(column, "", 15, Color("f4d298"))
+	UiBuilder.label(column, "DEV PANEL", 26, Color("e8f7a0"), true, true)
+	UiBuilder.label(column, "D-pad / stick: move   A: activate   B / F1: close   Run is paused while open", 14, Color("9db8bd"), true, true)
+	status_label = UiBuilder.label(column, "", 15, Color("f4d298"), true, true)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -212,22 +212,12 @@ func _build() -> void:
 	list.add_theme_constant_override("separation", 6)
 	scroll.add_child(list)
 	_section("TURRET PROGRESSION / PHASE 1")
-	progression_label = _label(list, "", 16, Color("d2edeb"))
+	progression_label = UiBuilder.label(list, "", 16, Color("d2edeb"), true, true)
 	_build_presets()
 	_build_flags()
 	_build_cheats()
 	_button(column, "CLOSE", func() -> void: set_open(false))
 	root.visible = false
-
-func _label(parent: Node, text: String, size: int, color: Color) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.add_theme_font_size_override("font_size", size)
-	label.add_theme_color_override("font_color", color)
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	parent.add_child(label)
-	return label
 
 func _button(parent: Node, text: String, action: Callable) -> Button:
 	var button := Button.new()
@@ -248,7 +238,7 @@ func _check(parent: Node, text: String, action: Callable) -> CheckButton:
 	return button
 
 func _section(title: String) -> void:
-	_label(list, title, 17, Color("71d3d3"))
+	UiBuilder.label(list, title, 17, Color("71d3d3"), true, true)
 
 func _build_presets() -> void:
 	_section("FLAG PRESETS")
@@ -264,7 +254,7 @@ func _build_flags() -> void:
 			var definition := FeatureFlagService.get_definition(flag_id)
 			var check := _check(list, str(definition["name"]), func(pressed: bool) -> void: toggle_flag(flag_id, pressed))
 			flag_checks[flag_id] = check
-			flag_notes[flag_id] = _label(list, "", 13, Color("9db8bd"))
+			flag_notes[flag_id] = UiBuilder.label(list, "", 13, Color("9db8bd"), true, true)
 
 func _build_cheats() -> void:
 	_section("RUN")
@@ -357,7 +347,7 @@ func _refresh_level_buttons() -> void:
 		var id: int = turret.turret_id
 		var row := HBoxContainer.new()
 		level_box.add_child(row)
-		var name_label := _label(row, "#%d %s" % [id, turret.turret_type], 16, Color("d2edeb"))
+		var name_label := UiBuilder.label(row, "#%d %s" % [id, turret.turret_type], 16, Color("d2edeb"), true, true)
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		_button(row, "+1 level", func() -> void: _report(world.dev.level_up_turret(id), "Turret #%d +1 level" % id))
 		_button(row, "To milestone", func() -> void: _report(world.dev.level_up_to_milestone(id), "Turret #%d to milestone" % id))

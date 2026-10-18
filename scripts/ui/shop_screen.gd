@@ -60,7 +60,7 @@ func _ready() -> void:
 	evolution_reminder.review_requested.connect(_review_ready_turret)
 	evolution_reminder.deploy_requested.connect(_deploy)
 	evolution_reminder.canceled.connect(func() -> void: continue_button.grab_focus.call_deferred())
-	status = _label(column, "", 20, UiPalette.MUTED)
+	status = UiBuilder.label(column, "", 20, UiPalette.MUTED, true)
 	visible = false
 
 ## Title, balance and the growth summary line.
@@ -70,12 +70,12 @@ func _build_header(column: VBoxContainer) -> void:
 	var heading := VBoxContainer.new()
 	heading.size_flags_horizontal = SIZE_EXPAND_FILL
 	header.add_child(heading)
-	_label(heading, "SHOP", 48)
-	subtitle = _label(heading, "", 23, UiPalette.MUTED)
-	balance = _label(header, "", 42, UiPalette.SCRAP)
+	UiBuilder.label(heading, "SHOP", 48, UiPalette.INK, true)
+	subtitle = UiBuilder.label(heading, "", 23, UiPalette.MUTED, true)
+	balance = UiBuilder.label(header, "", 42, UiPalette.SCRAP, true)
 	balance.autowrap_mode = TextServer.AUTOWRAP_OFF
 	balance.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	growth_summary = _label(column, "", 24, UiPalette.GOOD)
+	growth_summary = UiBuilder.label(column, "", 24, UiPalette.GOOD, true)
 	column.add_child(HSeparator.new())
 
 ## OFFERS / TURRETS tab buttons and the navigation hint.
@@ -93,7 +93,7 @@ func _build_tabs(column: VBoxContainer) -> void:
 		tab.pressed.connect(switch_tab.bind(tabs.size()))
 		tab_row.add_child(tab)
 		tabs.append(tab)
-	tab_hint = _label(tab_row, "Tabs: Q / E or LB / RB  ·  Details: right stick / mouse wheel", 21, UiPalette.MUTED)
+	tab_hint = UiBuilder.label(tab_row, "Tabs: Q / E or LB / RB  ·  Details: right stick / mouse wheel", 21, UiPalette.MUTED, true)
 	tab_hint.autowrap_mode = TextServer.AUTOWRAP_OFF
 	tab_hint.size_flags_horizontal = SIZE_EXPAND_FILL
 	tab_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -151,8 +151,8 @@ func _build_sidebar(content: HBoxContainer) -> void:
 	sidebar.size_flags_horizontal = SIZE_EXPAND_FILL
 	sidebar.add_theme_constant_override("separation", 16)
 	side_scroll.add_child(sidebar)
-	_label(sidebar, "Your build", 30)
-	vital_text = _label(sidebar, "", 23, UiPalette.MUTED)
+	UiBuilder.label(sidebar, "Your build", 30, UiPalette.INK, true)
+	vital_text = UiBuilder.label(sidebar, "", 23, UiPalette.MUTED, true)
 	turret_text = RichTextLabel.new()
 	turret_text.bbcode_enabled = true
 	turret_text.fit_content = true
@@ -160,11 +160,11 @@ func _build_sidebar(content: HBoxContainer) -> void:
 	turret_text.add_theme_font_size_override("normal_font_size", 23)
 	sidebar.add_child(turret_text)
 	sidebar.add_child(HSeparator.new())
-	detail_title = _label(sidebar, "Choose an offer", 30)
-	detail_text = _label(sidebar, "See what it adds to your build.", 23, Color("b9cdd0"))
-	impact_text = _label(sidebar, "", 23, UiPalette.GOOD)
+	detail_title = UiBuilder.label(sidebar, "Choose an offer", 30, UiPalette.INK, true)
+	detail_text = UiBuilder.label(sidebar, "See what it adds to your build.", 23, Color("b9cdd0"), true)
+	impact_text = UiBuilder.label(sidebar, "", 23, UiPalette.GOOD, true)
 	sidebar.add_child(HSeparator.new())
-	_label(sidebar, "Installed upgrades", 26)
+	UiBuilder.label(sidebar, "Installed upgrades", 26, UiPalette.INK, true)
 	installed = VBoxContainer.new()
 	sidebar.add_child(installed)
 
@@ -185,15 +185,6 @@ func _build_footer(column: VBoxContainer) -> void:
 	continue_button.pressed.connect(_request_deploy)
 	footer.add_child(continue_button)
 	turret_inspector.navigation_exit = continue_button
-
-func _label(parent: Node, text: String, font_size: int, color: Color = UiPalette.INK) -> Label:
-	var label := Label.new()
-	label.text = text
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", color)
-	parent.add_child(label)
-	return label
 
 func refresh() -> void:
 	var active := world.shop.is_open() and not world.dev_menu_open
@@ -467,7 +458,7 @@ func _refresh_installed(items: Array) -> void:
 		installed.add_child(button)
 		owned_buttons.append(button)
 	if items.is_empty():
-		_label(installed, "No upgrades installed yet.", 22, UiPalette.MUTED)
+		UiBuilder.label(installed, "No upgrades installed yet.", 22, UiPalette.MUTED, true)
 
 func _inspect_owned(id: String) -> void:
 	selected = -1
