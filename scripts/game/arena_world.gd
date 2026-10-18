@@ -315,6 +315,10 @@ func mark_warning(actor: CombatActor, warning: bool) -> void:
 	else:
 		warning_actors.erase(actor)
 
+## Core runs that use the escort rosters; convoy rounds keep the standard ones.
+func escort_mode() -> bool:
+	return core_mode and not convoy_mode
+
 func is_combat() -> bool:
 	return not paused and GameStateService.is_game_active and GameStateMachine.is_in_combat()
 
@@ -353,9 +357,6 @@ func start_convoy_round() -> void:
 
 func spawn_enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
 	return waves.spawn_enemy(at, type_id)
-
-func _spawn_position() -> Vector3:
-	return waves.spawn_position()
 
 func nearest_enemy(origin: Vector3, range_metres: float) -> CombatActor:
 	return combat.select_target(origin, range_metres, enemies)

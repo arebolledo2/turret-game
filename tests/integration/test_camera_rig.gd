@@ -92,7 +92,7 @@ func test_enemy_spawns_stay_inside_the_arena_and_away_from_the_player() -> void:
 	for player_at in [Vector3.ZERO, Vector3(27, 0, 15), Vector3(-27, 0, -15)]:
 		world.player.position = WorldGeometry.clamp_position(player_at)
 		for i in 40:
-			var at := world._spawn_position()
+			var at := world.waves.spawn_position()
 			assert_eq(at, WorldGeometry.clamp_position(at), "spawn must be within the arena")
 			assert_gt(WorldGeometry.planar(at - world.player.position).length(), 2.0, "never spawn on top of the player")
 
