@@ -600,7 +600,7 @@ func test_lance_strikes_one_target_then_spear_pierces_a_lane() -> void:
 		enemy.set_physics_process(false)
 		enemy.health = 500
 	world.crowd.rebuild(world.enemies)
-	turret._fire_lance(turret._current_view(0), turret.effective_range(turret._current_view(0)), front)
+	turret.form.fire(turret._current_view(0), turret.effective_range(turret._current_view(0)), front)
 	assert_lt(front.health, 500.0)
 	assert_eq(behind.health, 500.0)
 	assert_gt(turret.cooldown, 0.0)
@@ -610,7 +610,7 @@ func test_lance_strikes_one_target_then_spear_pierces_a_lane() -> void:
 	assert_eq(turret.display_name(), "Thunder Spear")
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 	turret.cooldown = 0.0
-	turret._fire_lance(turret._current_view(0), turret.effective_range(turret._current_view(0)), front)
+	turret.form.fire(turret._current_view(0), turret.effective_range(turret._current_view(0)), front)
 	assert_lt(behind.health, 500.0, "Spear drives through the lane")
 	assert_eq(beside.health, 500.0, "Enemies off the lane are spared")
 
@@ -625,15 +625,15 @@ func test_resonator_echoes_after_the_pulse() -> void:
 	enemy.set_physics_process(false)
 	enemy.health = 500
 	var stats := turret._current_view(0)
-	turret._fire_resonator(stats, turret.effective_range(stats))
+	turret.form.fire(stats, turret.effective_range(stats))
 	var after_pulse := enemy.health
 	assert_lt(after_pulse, 500.0)
-	assert_eq(turret.resonator_echoes.size(), 1)
-	turret._tick_resonator(.3)
+	assert_eq(turret.form.echoes.size(), 1)
+	turret.form.tick(.3)
 	assert_eq(enemy.health, after_pulse, "Echo waits for its delay")
-	turret._tick_resonator(.3)
+	turret.form.tick(.3)
 	assert_lt(enemy.health, after_pulse)
-	assert_true(turret.resonator_echoes.is_empty())
+	assert_true(turret.form.echoes.is_empty())
 
 func test_resonance_engine_exposes_enemies_hit_by_both_rings() -> void:
 	var turret := world.add_turret(Vector3.ZERO, "shock")
@@ -651,12 +651,12 @@ func test_resonance_engine_exposes_enemies_hit_by_both_rings() -> void:
 	var stats := turret._current_view(0)
 	var reach := turret.effective_range(stats)
 	assert_gt(reach * TurretEvolution.ENGINE_OUTER_RADIUS, 2.6, "Test setup: far enemy sits inside the outer ring")
-	turret._fire_resonator(stats, reach)
+	turret.form.fire(stats, reach)
 	assert_lt(near.health, 1000.0)
 	assert_eq(far.health, 1000.0, "Inner ring is tight")
 	assert_eq(near.statuses.exposed_remaining, 0.0)
-	turret._tick_resonator(.6)
-	turret._fire_resonator(stats, reach)
+	turret.form.tick(.6)
+	turret.form.fire(stats, reach)
 	assert_gt(near.statuses.exposed_remaining, 0.0, "Both rings hit the near enemy")
 	assert_eq(far.statuses.exposed_remaining, 0.0, "Outer ring alone does not Expose")
 
