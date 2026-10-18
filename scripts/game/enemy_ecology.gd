@@ -64,7 +64,7 @@ const CORE_ROSTERS := {
 
 const EXPANSION_BOSSES: Array[String] = ["broadside_baron", "frostforge_yeti", "skyfall_kestrel", "crucible_crab", "pendulum_regent", "crownwheel_colossus"]
 
-const BOSS_IDS: Array[String] = ["broadside_baron", "frostforge_yeti", "skyfall_kestrel", "crucible_crab", "pendulum_regent", "crownwheel_colossus", "brass_ram", "prism_conductor", "grand_marionettist"]
+const BOSS_IDS: Array[String] = ["brass_ram", "prism_conductor", "grand_marionettist"] + EXPANSION_BOSSES
 
 static func is_boss(type_id: String) -> bool:
 	return type_id in BOSS_IDS

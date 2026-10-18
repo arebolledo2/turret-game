@@ -12,9 +12,6 @@ enum AttackStyle {PROJECTILE, INSTANT, AOE, CHAIN, MELEE, DEPLOYABLE}
 # Damage type tags - elemental classification
 enum DamageType {PHYSICAL, FIRE, ELECTRIC, PLASMA}
 
-# Enemy behavior tags - how enemies move/attack
-enum EnemyBehavior {CHASE, RANGED, SWARM, TANK, EXPLOSIVE, WANDER, CHARGE}
-
 # Enemy rank - scaling and reward tiers
 enum EnemyRank {NORMAL, LIEUTENANT, CAPTAIN}
 

@@ -8,7 +8,6 @@ const TYPES: Dictionary = {
 		"name": "Spider Drone",
 		"icon": "🕷️",
 		"description": "Spider-like drone with sleek neon design.",
-		"behaviors": [GameEnums.EnemyBehavior.CHASE],
 		"base_stats": {
 			"health": 8.0,
 			"speed": 75.0,
@@ -17,15 +16,11 @@ const TYPES: Dictionary = {
 			"scale": 0.075, # Smaller scale for sprite clarity
 			"mass": 1.0,
 		},
-		"spawn_weight": 100,
-		"min_wave": 1,
-		"spawn_count": [1, 5], # Random 1-5, average ~3
 	},
 	"fast": {
 		"name": "Scout Bot",
 		"icon": "⚡",
 		"description": "Quick but fragile enemy.",
-		"behaviors": [GameEnums.EnemyBehavior.CHASE, GameEnums.EnemyBehavior.SWARM],
 		"base_stats": {
 			"health": 4.0,
 			"speed": 130.0,
@@ -36,19 +31,11 @@ const TYPES: Dictionary = {
 			"scale": 0.075,
 			"mass": 0.6,
 		},
-		"hurtbox": {
-			"type": "circle",
-			"size": Vector2(14, 14),
-		},
-		"spawn_weight": 60,
-		"min_wave": 2,
-		"spawn_count": 5,
 	},
 	"tank": {
 		"name": "Heavy Bot",
 		"icon": "🛡️",
 		"description": "Slow but very tough enemy.",
-		"behaviors": [GameEnums.EnemyBehavior.CHASE, GameEnums.EnemyBehavior.TANK],
 		"base_stats": {
 			"health": 30.0,
 			"speed": 40.0,
@@ -59,18 +46,11 @@ const TYPES: Dictionary = {
 			"scale": 0.1,
 			"mass": 3.0,
 		},
-		"hurtbox": {
-			"type": "rectangle",
-			"size": Vector2(40, 50),
-		},
-		"spawn_weight": 20,
-		"min_wave": 3,
 	},
 	"exploder": {
 		"name": "Boom Bot",
 		"icon": "💥",
 		"description": "Explodes on death, damaging nearby enemies and player.",
-		"behaviors": [GameEnums.EnemyBehavior.CHASE, GameEnums.EnemyBehavior.EXPLOSIVE],
 		"base_stats": {
 			"health": 5.0,
 			"speed": 90.0,
@@ -81,19 +61,11 @@ const TYPES: Dictionary = {
 			"explosion_damage": 10.0,
 			"mass": 0.8,
 		},
-		"hurtbox": {
-			"type": "circle",
-			"size": Vector2(16, 16),
-		},
-		"spawn_weight": 0, # Disabled
-		"min_wave": 4,
-		"spawn_count": 3,
 	},
 	"lazy_wanderer": {
 		"name": "Lazy Bot",
 		"icon": "😴",
 		"description": "Wanders aimlessly, never chases the player.",
-		"behaviors": [GameEnums.EnemyBehavior.WANDER],
 		"behavior_params": {
 			"wander_pause_min": 0.0,
 			"wander_pause_max": 0.0,
@@ -108,19 +80,11 @@ const TYPES: Dictionary = {
 			"scale": 1.4,
 			"mass": 1.2,
 		},
-		"hurtbox": {
-			"type": "circle",
-			"size": Vector2(17, 17),
-		},
-		"spawn_weight": 80,
-		"min_wave": 2,
-		"spawn_count": 2,
 	},
 	"charger": {
 		"name": "Charger Bot",
 		"icon": "⚡",
 		"description": "Wanders lazily until player is close, then charges aggressively.",
-		"behaviors": [GameEnums.EnemyBehavior.CHARGE],
 		"behavior_params": {
 			"wander_pause_min": 1.0,
 			"wander_pause_max": 2.0,
@@ -140,19 +104,11 @@ const TYPES: Dictionary = {
 			"scale": 1.5,
 			"mass": 1.5,
 		},
-		"hurtbox": {
-			"type": "circle",
-			"size": Vector2(18, 18),
-		},
-		"spawn_weight": 30,
-		"min_wave": 3,
-		"spawn_count": 1,
 	},
 	"neon_drone": {
 		"name": "Neon Drone",
 		"icon": "💠",
 		"description": "Animated hovering drone with neon synth aesthetics.",
-		"behaviors": [GameEnums.EnemyBehavior.CHASE],
 		"base_stats": {
 			"health": 10.0,
 			"speed": 100.0,
@@ -161,19 +117,11 @@ const TYPES: Dictionary = {
 			"scale": 0.15,
 			"mass": 1.0,
 		},
-		"hurtbox": {
-			"type": "circle",
-			"size": Vector2(24, 24),
-		},
-		"spawn_weight": 40,
-		"min_wave": 2,
-		"spawn_count": 2,
 	},
 	"lazy_shooter": {
 		"name": "Lazy Shooter",
 		"icon": "🔫",
 		"description": "Wanders aimlessly while taking potshots at distant targets.",
-		"behaviors": [GameEnums.EnemyBehavior.WANDER],
 		"behavior_params": {
 			"wander_pause_min": 0.0, # No pauses (like lazy_wanderer)
 			"wander_pause_max": 0.0,
@@ -194,22 +142,8 @@ const TYPES: Dictionary = {
 			"scale": 1.3,
 			"mass": 1.0,
 		},
-		"hurtbox": {
-			"type": "circle",
-			"size": Vector2(16, 16),
-		},
-		"spawn_weight": 50, # Moderate spawn rate
-		"min_wave": 3, # Appears wave 3+
-		"spawn_count": 2, # Spawn in pairs
 	},
 }
-
-
-## Get the definition for an enemy type
-static func get_type(type_id: String) -> Dictionary:
-	if EnemyEcology.TYPES.has(type_id):
-		return {"name": EnemyEcology.TYPES[type_id].name, "base_stats": get_base_stats(type_id), "behaviors": []}
-	return TYPES.get(type_id, TYPES["basic"])
 
 
 ## Get all type IDs
@@ -244,62 +178,3 @@ static func get_stats_for_wave(type_id: String, wave: int, difficulty_config: Di
 	if EnemyEcology.is_boss(type_id):
 		base_stats["health"] = EnemyEcology.boss_health(type_id, difficulty_config)
 	return base_stats
-
-
-## Get available enemy types for a given wave (respects min_wave)
-static func get_available_types(wave: int) -> Array:
-	var available: Array = []
-	for type_id in TYPES:
-		if TYPES[type_id].get("min_wave", 1) <= wave:
-			available.append(type_id)
-	return available
-
-
-## Select a random enemy type based on spawn weights
-static func select_random_type(wave: int) -> String:
-	var available := get_available_types(wave)
-	if available.is_empty():
-		return "basic"
-
-	# Calculate total weight
-	var total_weight: float = 0.0
-	for type_id in available:
-		total_weight += TYPES[type_id].get("spawn_weight", 100)
-
-	# Random selection based on weight
-	var roll := GameRandom.gameplay.randf() * total_weight
-	var cumulative: float = 0.0
-
-	for type_id in available:
-		cumulative += TYPES[type_id].get("spawn_weight", 100)
-		if roll <= cumulative:
-			return type_id
-
-	return available[-1]
-
-
-## Check if enemy type has a specific behavior
-static func has_behavior(type_id: String, behavior: GameEnums.EnemyBehavior) -> bool:
-	if not TYPES.has(type_id):
-		return false
-	return behavior in TYPES[type_id].get("behaviors", [])
-
-
-## Get spawn count for an enemy type
-static func get_spawn_count(type_id: String) -> int:
-	if not TYPES.has(type_id):
-		return 1
-
-	var spawn_count: Variant = TYPES[type_id].get("spawn_count", 1)
-
-	# Handle array format for random range [min, max]
-	if spawn_count is Array and spawn_count.size() == 2:
-		return GameRandom.gameplay.randi_range(spawn_count[0], spawn_count[1])
-
-	# Handle fixed integer
-	return spawn_count
-
-
-
-
-
