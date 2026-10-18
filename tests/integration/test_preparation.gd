@@ -207,7 +207,7 @@ func test_auto_layout_runs_on_next_preparation_and_supports_no_core() -> void:
 	world.core = null
 	world.convoy_mode = false
 	world.spawn_zones.centres.clear()
-	world.turrets[0].position = Vector3(15, 0, 8)
+	world.turrets[0].position = Vector3(10, 0, 8)
 	world.preparation.begin()
 	assert_lt(world.turrets[0].position.length(), 3.0)
 	assert_true(world.preparation.active)
@@ -278,7 +278,7 @@ func test_playfield_scaled_projection_roundtrips() -> void:
 	assert_lt(hit.distance_to(point), .001)
 
 func test_preparation_resets_overview_and_deploy_eases_to_combat_zoom() -> void:
-	world.player.position = Vector3(15, 0, -8)
+	world.player.position = Vector3(10, 0, -8)
 	world.player.velocity = Vector3(2, 0, 1)
 	world.player.knockback_velocity = Vector3(3, 0, 2)
 	world.camera_rig.set_zoom(1.8)

@@ -3,9 +3,15 @@ extends RefCounted
 
 ## One conversion boundary from the existing pixel-based balance data.
 const METRES_PER_PIXEL: float = 0.01
-## 37.5% of the original area: 25% smaller than the previous half-area arena.
-const ARENA_LINEAR_SCALE: float = sqrt(0.375)
-const HALF_ARENA: Vector2 = Vector2(28.8, 16.2) * ARENA_LINEAR_SCALE # approximately 35.27 x 19.84 m
+## 37.5% of the original area, then a further 10% linear reduction.
+const ARENA_LINEAR_SCALE: float = sqrt(0.375) * 0.9
+## The arena is further narrowed by 20% along x only (depth is unchanged).
+const ARENA_WIDTH_SCALE: float = 0.8
+const HALF_ARENA: Vector2 = Vector2(28.8 * ARENA_WIDTH_SCALE, 16.2) * ARENA_LINEAR_SCALE # approximately 25.39 x 17.86 m
+
+## Maps a point authored in the original 57.6 x 32.4 m reference space (terrain layouts) into the current arena.
+static func from_reference(point: Vector3) -> Vector3:
+	return Vector3(point.x * ARENA_WIDTH_SCALE, point.y, point.z) * ARENA_LINEAR_SCALE
 const WORLD_LAYER: int = 1
 const ENEMY_HURTBOX_LAYER: int = 2
 const PLAYER_LAYER: int = 4

@@ -2,7 +2,7 @@ class_name Minimap
 extends Control
 
 ## Whole-arena radar drawn straight from world state (no second render). Screen-up is world -Z, matching the camera.
-const MAP_SIZE: Vector2 = Vector2(256, 144) # the arena is 16:9, so one pixel is about 0.225 m
+const MAP_SIZE: Vector2 = Vector2(204.8, 144) # matches the arena aspect (HALF_ARENA.x / HALF_ARENA.y); one pixel is about 0.124 m
 const REDRAW_INTERVAL: float = 0.05
 const ENEMY_COLORS: Dictionary = {
 	"broadside_baron": Color("ffe5a7"), "frostforge_yeti": Color("b4ebff"), "skyfall_kestrel": Color("ff6955"),

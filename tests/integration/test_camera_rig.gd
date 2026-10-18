@@ -24,10 +24,10 @@ func visible_ground_inside_arena(zoom_value: float) -> bool:
 	var margin := GameConstants.CAMERA_EDGE_MARGIN + .001
 	return abs(rig.focus.x) + half.x <= WorldGeometry.HALF_ARENA.x + margin or rig.focus.x == 0.0
 
-func test_arena_has_25_percent_less_surface_area_and_same_aspect() -> void:
+func test_arena_is_narrowed_20_percent_with_unchanged_depth() -> void:
 	var size := WorldGeometry.HALF_ARENA * 2.0
-	assert_almost_eq(size.x * size.y, 57.6 * 32.4 * .5 * .75, .001)
-	assert_almost_eq(size.x / size.y, 16.0 / 9.0, .0001)
+	assert_almost_eq(size.x * size.y, 57.6 * 32.4 * .5 * .75 * .81 * WorldGeometry.ARENA_WIDTH_SCALE, .001)
+	assert_almost_eq(size.x / size.y, 16.0 / 9.0 * WorldGeometry.ARENA_WIDTH_SCALE, .0001)
 
 func test_camera_keeps_rotation_and_follows_the_player() -> void:
 	# Test unrestricted follow at a close zoom; wider views clamp at arena edges.
@@ -108,12 +108,12 @@ func test_survive_arrivals_are_scattered_over_the_whole_arena() -> void:
 			assert_eq(at, WorldGeometry.clamp_position(at), kind + " inside the arena")
 			assert_gte(at.distance_to(world.player.position), GameConstants.ENEMY_SPAWN_MIN_DISTANCE, kind + " keeps clear of the hero")
 			quadrants[Vector2i(int(signf(at.x)), int(signf(at.z)))] = true
-			if at.distance_to(world.player.position) > 12.0: far += 1
+			if at.distance_to(world.player.position) > 8.0: far += 1
 		assert_eq(quadrants.size(), 4, kind + " arrives from every part of the map")
 		assert_gt(far, 10, kind + " is not confined to a ring around the hero")
 
 func test_turret_placement_search_starts_from_the_player() -> void:
-	world.player.position = Vector3(20, 0, 10)
+	world.player.position = Vector3(10, 0, 8)
 	var at := world.find_placement()
 	assert_lt(WorldGeometry.planar(at - world.player.position).length(), 8.0)
 

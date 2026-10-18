@@ -76,13 +76,13 @@ func test_next_route_is_planned_from_the_end_point_and_differs() -> void:
 func test_enemies_head_for_the_moved_core() -> void:
 	world = await _convoy_world()
 	_to_combat(world)
-	world.core.position = Vector3(15, 0, 8)
+	world.core.position = Vector3(10, 0, 8)
 	var enemy := world.spawn_enemy(Vector3(-12, 0, -6), "basic")
 	assert_eq(enemy.chase_position(), world.core.position)
 
 func test_spawn_box_follows_the_core() -> void:
 	world = await _convoy_world()
-	world.core.position = Vector3(20, 0, 10)
+	world.core.position = Vector3(10, 0, 8)
 	for attempt in 20:
 		var at := world.waves.spawn_position()
 		var half := WorldGeometry.HALF_ARENA * GameConstants.CORE_SPAWN_BOX

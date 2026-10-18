@@ -224,14 +224,14 @@ func test_resolve_overlaps_pushes_enemies_out_of_obstacles_but_not_dashing_charg
 		world.crowd.rebuild(world.enemies)
 		world.crowd.resolve_overlaps([obstacle])
 	assert_gt(blocked.position.distance_to(Vector3(10, 0, 10)), GameConstants.TURRET_BODY_RADIUS + GameConstants.ENEMY_BODY_RADIUS * blocked.body_scale - .01)
-	var charger := enemy(Vector3(15, 0, 8), "charger")
-	var other := enemy(Vector3(15.1, 0, 8))
+	var charger := enemy(Vector3(10, 0, 8), "charger")
+	var other := enemy(Vector3(10.1, 0, 8))
 	charger.charge.phase = ChargeController3D.Phase.DASH
 	var charger_start := charger.position
 	world.crowd.rebuild(world.enemies)
 	world.crowd.resolve_overlaps()
 	assert_eq(charger.position, charger_start)
-	assert_gt(other.position.x, 15.1)
+	assert_gt(other.position.x, 10.1)
 
 func test_plasma_purchase_counts_and_damage_upgrade_use_shared_services() -> void:
 	world.finish_wave()
