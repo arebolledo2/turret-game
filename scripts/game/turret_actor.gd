@@ -15,7 +15,6 @@ var carried: bool = false:
 			reset_entrench()
 var crossfire_muzzles: Array[Node3D] = []
 var gun_muzzles: Array[Node3D] = []
-var gun_burst := ShotBurst.new(.065)
 var bow_burst := ShotBurst.new(.09)
 var flame_emitters: Array[Node3D] = []
 var bowling_hardware: BowlingEvolutionVisual
@@ -30,13 +29,11 @@ var aim: Node3D
 var model: Node3D
 var saber_angles: Array[float] = [0.0]
 var blade_tip: Node3D
-var gun_stats := TurretStats.new()
 var muzzle: Node3D
 var rotor: Node3D
 var recoil_barrel: Node3D
 var barrel_rest := Vector3.ZERO
 var muzzle_rest := Vector3.ZERO
-var spool: float = 0.0
 var aim_rest: Vector3
 var target: CombatActor
 var target_clock: float = 0.0
@@ -58,6 +55,7 @@ var terrain: TurretTerrain
 var range_overlay: TurretRangeRing
 
 const STATS_REFRESH: float = .25
+static var _no_gun_stats := TurretStats.new()
 const TESLA_TINT := Color(.35, .9, 1.0)
 static var melee_materials: Dictionary = {}
 
@@ -86,7 +84,12 @@ var range_ring_metres: float:
 var bow_burst_left: int:
 	get: return bow_burst.left
 var gun_burst_left: int:
-	get: return gun_burst.left
+	get: return form.burst.left if form is GunbladeForm else 0
+## The gunblade's barrel stats (defaults for every other form).
+var gun_stats: TurretStats:
+	get: return form.gun_stats if form is GunbladeForm else _no_gun_stats
+var spool: float:
+	get: return form.spool if form is MachineGunForm else 0.0
 
 func _ready() -> void:
 	Events.modifiers_changed.connect(invalidate_stats)
@@ -123,9 +126,9 @@ func _rebuild_model() -> void:
 	if recoil_barrel:
 		barrel_rest = recoil_barrel.position
 	muzzle_rest = muzzle.position
-	spool = 0.0
 	bow_burst.cancel()
-	gun_burst.cancel()
+	if form:
+		form.rebuilt()
 	loaded_ball = model.find_child("LoadedBall", true, false) as Node3D
 	loaded_arrow = model.find_child("LoadedArrow", true, false) as Node3D
 	bow_muzzles.clear()
@@ -282,8 +285,8 @@ func _current_stats(delta: float) -> Dictionary:
 	if cached_stats.is_empty() or stats_age >= STATS_REFRESH:
 		terrain.refresh()
 		cached_stats = resolve_attack_stats()
-		if progression.evolution_branch == "gunblade":
-			gun_stats = TurretStats.new(resolve_attack_stats(true))
+		if form:
+			form.refresh_stats()
 		stats_age = 0.0
 		stats_view = TurretStats.new(cached_stats)
 	return cached_stats
@@ -323,7 +326,6 @@ func _physics_process(delta: float) -> void:
 	if not world.is_combat():
 		if form: form.clear()
 		bow_burst.cancel()
-		gun_burst.cancel()
 		return
 	if carried:
 		position = world.player.position + Vector3(0, 1.15, .25)
@@ -347,9 +349,8 @@ func _physics_process(delta: float) -> void:
 	var fire_mode := TurretRegistry.get_fire_mode(turret_type)
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
 		_spin_bat(delta, stats, range_metres)
-		if progression.evolution_branch == "gunblade":
-			_tick_gunblade_burst(delta)
-			_fire_gunblade()
+		if form:
+			form.tick_sweep(delta)
 		return
 	if fire_mode == TurretRegistry.FIRE_PULSE:
 		if cooldown > 0.0:
@@ -396,7 +397,7 @@ func _new_shot(stats: TurretStats) -> CombatShot3D:
 	return shot
 
 func _reset_cooldown(stats: TurretStats) -> void:
-	cooldown = stats.cooldown_seconds / (1.0 + spool if progression.evolution_branch == "machine_gun" and progression.evolution_stage >= 2 else 1.0)
+	cooldown = stats.cooldown_seconds / (form.cooldown_divisor() if form else 1.0)
 
 func _fire_pulse(stats: TurretStats, range_metres: float) -> void:
 	var pulse := _new_shot(stats)
@@ -452,13 +453,8 @@ func evolve(branch: String) -> bool:
 func _tick_mechanisms(delta: float, tracking: bool) -> void:
 	if bowling_hardware:
 		bowling_hardware.advance(delta, FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION))
-	if progression.evolution_branch == "machine_gun" and progression.evolution_stage >= 2:
-		var ceiling := 1.5 if progression.evolution_stage >= 3 else 1.0
-		spool = move_toward(spool, ceiling if tracking else 0.0, delta * (ceiling if tracking else 2.0))
-		if rotor:
-			var rate := GameConstants.REDUCED_MOTION_SPEED if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else 1.0
-			rotor.rotate_object_local(Vector3.FORWARD, delta * spool * 18.0 * rate)
-			muzzle.position = rotor.position + rotor.basis * (muzzle_rest - rotor.position)
+	if form:
+		form.tick_mechanisms(delta, tracking)
 	if recoil_barrel:
 		recoil_barrel.position = recoil_barrel.position.lerp(barrel_rest, minf(1.0, delta * 10.0))
 
@@ -484,28 +480,6 @@ static func cone_overlaps_body(offset: Vector3, heading: Vector3, reach: float, 
 	var bearing := atan2(-heading.x, -heading.z)
 	return sweep_overlaps_body(offset, reach, bearing - half_angle, 2.0 * half_angle, radius)
 
-## The rotating barrel only shoots along its visible bore; blade and bullet bonuses stay separate.
-func _fire_gunblade() -> void:
-	if cooldown > 0.0 or gun_burst.left > 0:
-		return
-	var heading := WorldGeometry.planar(-muzzle.global_basis.z).normalized()
-	for enemy in world.crowd.query_radius(position, gun_stats.range_metres, true):
-		if not enemy.overlaps_attack_range(position, gun_stats.range_metres):
-			continue
-		var offset := WorldGeometry.planar(enemy.position - muzzle.global_position)
-		if offset.dot(heading) <= 0.0 or not cone_overlaps_body(offset, heading, gun_stats.range_metres, deg_to_rad(5), enemy.hurtbox_radius()):
-			continue
-		var shot := CombatShot3D.from_stats(gun_stats.values, GameEnums.DamageType.PHYSICAL)
-		shot.attack_families.assign(["projectile"])
-		shot.source_id = turret_id
-		if TurretStatsService.roll_turret_crit():
-			shot.critical = true
-			shot.damage = TurretStatsService.calculate_turret_crit_damage(shot.damage)
-		world.fire_direction(muzzle.global_position, heading, shot)
-		gun_burst.start(maxi(0, progression.evolution_stage - 1), shot, gun_burst.interval)
-		cooldown = gun_stats.cooldown_seconds
-		return
-
 func _tick_bow_burst(delta: float, stats: TurretStats) -> void:
 	aim.rotation.y = atan2(-bow_burst.heading.x, -bow_burst.heading.z)
 	bow_burst.advance(delta)
@@ -518,18 +492,6 @@ func _tick_bow_burst(delta: float, stats: TurretStats) -> void:
 		cooldown = stats.cooldown_seconds
 	for arrow in bow_loaded_arrows:
 		arrow.visible = false
-
-## Follow-up shots leave the moving barrel instead of aiming invisibly away from the blade.
-func _tick_gunblade_burst(delta: float) -> void:
-	if gun_burst.left <= 0:
-		return
-	gun_burst.advance(delta)
-	while gun_burst.is_due():
-		var exit := gun_muzzles[clampi(gun_muzzles.size() - gun_burst.left, 0, gun_muzzles.size() - 1)]
-		var heading := WorldGeometry.planar(-exit.global_basis.z).normalized()
-		world.fire_direction(exit.global_position, heading, gun_burst.shot)
-		gun_burst.consume()
-		cooldown = gun_stats.cooldown_seconds
 
 ## Additional held blades reuse the authored arm, hand, hilt and prism geometry.
 func _build_saber_arms() -> void:

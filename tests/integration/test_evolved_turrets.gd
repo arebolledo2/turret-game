@@ -152,13 +152,13 @@ func test_gunblade_sweeps_at_blade_tip_and_shoots_along_bore() -> void:
 	var distant := world.spawn_enemy(heading * 2.8)
 	distant.set_physics_process(false)
 	world.crowd.rebuild(world.enemies)
-	turret._fire_gunblade()
+	turret.form.fire()
 	assert_eq(world.projectiles.size(), 1)
 	var projectile := world.projectiles[0]
 	assert_true(projectile.direction.is_equal_approx(heading))
 	assert_eq(projectile.shot.source_id, turret.turret_id)
 	assert_eq(projectile.shot.attack_families, ["projectile"])
-	turret._fire_gunblade()
+	turret.form.fire()
 	assert_eq(world.projectiles.size(), 1, "Gun respects its cooldown")
 
 func test_bow_branches_consume_all_three_milestones_and_change_attacks() -> void:
@@ -324,16 +324,16 @@ func test_gunblade_later_forms_fire_attributed_bursts_from_moving_barrel() -> vo
 	enemy.set_physics_process(false)
 	world.crowd.rebuild(world.enemies)
 	turret._current_view(0)
-	turret._fire_gunblade()
+	turret.form.fire()
 	assert_eq(world.projectiles.size(), 1)
 	assert_eq(turret.gun_burst_left, 2)
 	turret.aim.rotation.y = .3
-	turret._tick_gunblade_burst(.07)
+	turret.form.tick_burst(.07)
 	assert_eq(world.projectiles.size(), 2)
 	assert_lt(world.projectiles[1].global_position.distance_to(turret.gun_muzzles[1].global_position), .001)
 	assert_lt(world.projectiles[1].direction.distance_to(WorldGeometry.planar(-turret.gun_muzzles[1].global_basis.z).normalized()), .001)
 	assert_false(world.projectiles[0].direction.is_equal_approx(world.projectiles[1].direction))
-	turret._tick_gunblade_burst(.07)
+	turret.form.tick_burst(.07)
 	assert_eq(world.projectiles.size(), 3)
 	assert_lt(world.projectiles[2].global_position.distance_to(turret.gun_muzzles[2].global_position), .001)
 	assert_false(turret.gun_muzzles[1].global_position.is_equal_approx(turret.gun_muzzles[2].global_position))
@@ -344,7 +344,7 @@ func test_gunblade_later_forms_fire_attributed_bursts_from_moving_barrel() -> vo
 	assert_eq(turret.gun_burst_left, 0)
 	turret.cooldown = 0.0
 	turret.aim.rotation.y = 0.0
-	turret._fire_gunblade()
+	turret.form.fire()
 	assert_eq(turret.gun_burst_left, 2)
 	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
 	turret._physics_process(.1)

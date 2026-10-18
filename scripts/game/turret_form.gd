@@ -13,11 +13,33 @@ static func create(owner: TurretActor, branch_id: String) -> TurretForm:
 		"resonator": result = ResonatorForm.new()
 		"lance": result = LanceForm.new()
 		"scatter": result = ScatterForm.new()
+		"gunblade": result = GunbladeForm.new()
+		"machine_gun": result = MachineGunForm.new()
 		"repeater_bow": result = RepeaterBowForm.new()
 		_: return null
 	result.actor = owner
 	result.branch = branch_id
 	return result
+
+## Called after the actor rebuilds its model (spawn or evolution); reset visual-linked state.
+func rebuilt() -> void:
+	pass
+
+## Called whenever the actor re-resolves its cached stats.
+func refresh_stats() -> void:
+	pass
+
+## Per-tick work for sweep-mode turrets, after the bat has turned.
+func tick_sweep(_delta: float) -> void:
+	pass
+
+## Per-tick visual and mechanical upkeep; `tracking` is true while a target is in reach.
+func tick_mechanisms(_delta: float, _tracking: bool) -> void:
+	pass
+
+## Divides the cooldown after a shot (fire-rate boosts such as a spooled rotor).
+func cooldown_divisor() -> float:
+	return 1.0
 
 ## Per-tick state advance while in combat.
 func tick(_delta: float) -> void:
