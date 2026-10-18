@@ -71,9 +71,9 @@ func interact() -> bool:
 		return true
 	return false
 
-## Marker at the spot the carried turret would be deployed; hidden when nothing is carried or the flag is off.
+## Marker at the spot the carried turret would be deployed; hidden when nothing is carried.
 func update_preview() -> void:
-	var showing := is_instance_valid(carried) and FeatureFlagService.is_enabled(FeatureFlagService.PLACEMENT_PREVIEW)
+	var showing := is_instance_valid(carried)
 	if not showing:
 		if preview:
 			preview.visible = false

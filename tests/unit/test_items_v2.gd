@@ -72,18 +72,8 @@ func test_specialists_change_the_right_stats() -> void:
 	assert_eq(_stat("normal", "pierce"), 1.0)
 	assert_eq(_stat("plasma", "pierce"), 0.0)
 
-func test_pool_flag_gates_the_new_items() -> void:
-	assert_true(ShopCatalog.is_available("item", "ion_doctrine"))
-	FeatureFlagService.set_enabled(FeatureFlagService.ITEMS_V2, false)
-	assert_false(ShopCatalog.is_available("item", "ion_doctrine"))
-	assert_true(ShopCatalog.is_available("item", "dense_rounds"))
-	assert_false(ShopCatalog.is_available("item", "reactor_overload"), "Rares depend on items_v2")
-	assert_eq(ShopCatalog.available_ids("item").size(), 26, "10 original + 3 convoy + 13 expansion items")
-	FeatureFlagService.reset_state()
-	FeatureFlagService.set_enabled(FeatureFlagService.ITEMS_V2_HOOKS, false)
-	assert_true(ShopCatalog.is_available("item", "ion_doctrine"))
-	assert_false(ShopCatalog.is_available("item", "reactor_overload"))
-	assert_eq(ShopCatalog.available_ids("item").size(), 42)
+func test_every_catalogued_item_is_available() -> void:
+	assert_eq(ShopCatalog.available_ids("item").size(), ShopCatalog.ids("item").size())
 
 func test_tall_items_use_entrench_and_carry_stats() -> void:
 	_own("hardpoint")

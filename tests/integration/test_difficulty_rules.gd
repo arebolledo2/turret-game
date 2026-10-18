@@ -81,14 +81,6 @@ func test_easy_and_medium_spawn_no_elites() -> void:
 		for index in 50:
 			assert_false(world.waves._take_credit("elite_chance"))
 
-func test_rules_flag_off_neutralises_everything() -> void:
-	FeatureFlagService.set_enabled(FeatureFlagService.DIFFICULTY_RULES, false)
-	var world := await _world(GameEnums.Difficulty.BRUTAL, RunConfig.MODE_CORE)
-	assert_eq(DifficultyService.rule(world.difficulty_config, "elite_chance"), 0.0)
-	assert_eq(world.core.max_health, GameConstants.PLAYER_BASE_MAX_HEALTH * GameConstants.CORE_HEALTH_MULT)
-	assert_eq(world.difficulty_config["enemy_health_mult"], DifficultyService.DIFFICULTY_CONFIG[GameEnums.Difficulty.BRUTAL]["enemy_health_mult"],
-		"the multipliers still apply")
-
 func test_brutal_core_has_less_health() -> void:
 	var world := await _world(GameEnums.Difficulty.BRUTAL, RunConfig.MODE_CORE)
 	assert_almost_eq(world.core.max_health, GameConstants.PLAYER_BASE_MAX_HEALTH * GameConstants.CORE_HEALTH_MULT * .7, .01)

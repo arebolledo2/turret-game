@@ -42,7 +42,7 @@ The opaque `ShopScreen` hides the arena and combat HUD, suspends 3D drawing whil
 
 ## Gates and authoring
 
-`ShopCatalog` remains the stock/reward authority. The existing `items_v2` and `items_v2_hooks` flags still gate their original IDs; turning them off removes those items rather than restoring old balance. `mode_convoy` items additionally require Convoy mode. Sniper and Mine remain outside supported shop content; Flamethrower, Bow and Bowling are stocked. Reserve Battery additionally requires a core mode.
+`ShopCatalog` remains the stock/reward authority. Every catalogued item is always stocked unless its row names a flag. `mode_convoy` items additionally require Convoy mode. Sniper and Mine remain outside supported shop content; Flamethrower, Bow and Bowling are stocked. Reserve Battery additionally requires a core mode.
 
 To add an item, add a reviewed row to ItemCatalog, a catalog entry and supported family/capability filters. Provide a separate `assets/ui/items/<id>.svg`, a clear description and appropriate rarity/stack cap. Add tests for actual stat or combat behaviour and preview equivalence. New stats require a runtime consumer.
 

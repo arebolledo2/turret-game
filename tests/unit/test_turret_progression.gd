@@ -80,10 +80,10 @@ func test_scarcity_prices_count_acquisitions_and_preserve_item_prices() -> void:
 
 func test_older_preferences_keep_new_flag_at_its_default() -> void:
 	var config := ConfigFile.new()
-	config.set_value("dev_flags", "entrench", false)
+	config.set_value("dev_flags", "zone_readability", false)
 	SettingsService.load_dev_flags(config)
 	assert_true(FeatureFlagService.is_enabled(FeatureFlagService.TURRET_PROGRESSION))
-	assert_false(FeatureFlagService.is_enabled(FeatureFlagService.ENTRENCH))
+	assert_false(FeatureFlagService.is_enabled(FeatureFlagService.ZONE_READABILITY))
 
 func test_purchase_penalty_reductions_can_remove_the_whole_surcharge() -> void:
 	EconomyService.state.turret_progression_enabled = true

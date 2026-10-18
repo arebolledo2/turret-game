@@ -38,10 +38,8 @@ func damage_bonus() -> float:
 func fire_rate_bonus() -> float:
 	return GameConstants.ENTRENCH_FIRE_RATE_PER_STACK * float(stacks) * float(settings()["bonus"])
 
-## Stacks earned by the time spent so far; zero while the feature is off.
+## Stacks earned by the time spent so far.
 func earned_stacks() -> int:
-	if not FeatureFlagService.is_enabled(FeatureFlagService.ENTRENCH):
-		return 0
 	return mini(int(stay_time / stack_seconds()), max_stacks())
 
 func reset() -> void:
@@ -60,10 +58,7 @@ func progress() -> float:
 
 func tick(delta: float) -> void:
 	notice = maxf(0.0, notice - delta)
-	if FeatureFlagService.is_enabled(FeatureFlagService.ENTRENCH):
-		stay_time += delta
-	elif stay_time > 0.0:
-		stay_time = 0.0
+	stay_time += delta
 	var earned := earned_stacks()
 	if earned != stacks:
 		if earned > stacks:

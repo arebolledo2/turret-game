@@ -31,12 +31,6 @@ func test_pickup_resets_stacks() -> void:
 	assert_eq(turret.stay_time, 0.0)
 	assert_eq(turret.entrench_stacks(), 0)
 
-func test_flag_off_gives_no_stacks() -> void:
-	var turret := await _turret()
-	turret.stay_time = 30.0
-	FeatureFlagService.set_enabled(FeatureFlagService.ENTRENCH, false)
-	assert_eq(turret.entrench_stacks(), 0)
-
 func test_stacks_raise_damage_and_fire_rate() -> void:
 	var turret := await _turret()
 	var base := TurretStatsService.get_turret_stats("normal", float(world.difficulty_config["turret_damage_mult"]))
@@ -63,13 +57,13 @@ func test_stay_time_accrues_only_in_combat() -> void:
 	turret._physics_process(1.0)
 	assert_eq(turret.stay_time, 1.0 if world.is_combat() else 0.0)
 
-func test_preview_follows_carry_and_flag() -> void:
+func test_preview_follows_carry() -> void:
 	var turret := await _turret()
 	world.placement.carried = turret
 	turret.carried = true
 	world.placement.update_preview()
 	assert_not_null(world.placement.preview)
 	assert_true(world.placement.preview.visible)
-	FeatureFlagService.set_enabled(FeatureFlagService.PLACEMENT_PREVIEW, false)
+	world.placement.carried = null
 	world.placement.update_preview()
 	assert_false(world.placement.preview.visible)

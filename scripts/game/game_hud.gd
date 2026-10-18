@@ -322,7 +322,7 @@ func _continue() -> void:
 
 ## One line about the turret within reach (or carried) so the Entrench bonus is readable.
 func _entrench_readout() -> String:
-	if not FeatureFlagService.is_enabled(FeatureFlagService.ENTRENCH) or not is_instance_valid(world.player):
+	if not is_instance_valid(world.player):
 		return ""
 	var best: TurretActor = null
 	var best_distance := TurretPlacement.PICKUP_RANGE

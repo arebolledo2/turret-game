@@ -22,17 +22,11 @@ const REDUCED_MOTION: String = "reduced_motion"
 const DEV_PANEL: String = "dev_panel"
 const DEBUG_OVERLAYS: String = "debug_overlays"
 const TURRET_PROGRESSION: String = "turret_progression"
-const ENTRENCH: String = "entrench"
 const AUTO_DEPLOY: String = "auto_deploy"
 const RESTRICT_SPAWN_PLACEMENT: String = "restrict_spawn_placement"
-const PLACEMENT_PREVIEW: String = "placement_preview"
-const ITEMS_V2: String = "items_v2"
-const ITEMS_V2_HOOKS: String = "items_v2_hooks"
 const MODE_PROTECT_CORE: String = "mode_protect_core"
 const MODE_CONVOY: String = "mode_convoy"
-const TECH_DROPS: String = "tech_drops"
 const BUILD_ZONES: String = "build_zones"
-const DIFFICULTY_RULES: String = "difficulty_rules"
 const TERRAIN_ZONES: String = "terrain_zones"
 const DEBUG_ZONES: String = "debug_zones"
 const ZONE_READABILITY: String = "zone_readability"
@@ -67,18 +61,6 @@ const FLAG_DEFINITIONS: Dictionary = {
 		"name": "Turret Progression", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 1,
 		"description": "Leftover scrap becomes turret XP, unlimited stat levels and scarcer turret pricing. Changes apply when you start or restart a run. Evolution forms are not implemented yet.",
 	},
-	ENTRENCH: {
-		"name": "Entrench", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 1,
-		"description": "Turrets earn damage and fire rate for every few seconds they stay in place. Picking one up resets its stacks.",
-	},
-	ITEMS_V2: {
-		"name": "Item Pool v2", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 2,
-		"description": "Adds the build-direction items (family Doctrines, specialists, tall and wide trades) to the shop pool. Applies from the next shop.",
-	},
-	ITEMS_V2_HOOKS: {
-		"name": "Item Pool v2 Rares", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 2, "requires": [ITEMS_V2],
-		"description": "Adds the rare, epic and legendary items, including those with new mechanics (Reactor Overload, Storm Conductor, Last Stand).",
-	},
 	MODE_PROTECT_CORE: {
 		"name": "Protect the Core", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 5,
 		"description": "Allows the Protect the Core mode: enemies head for a fixed core and chase the hero only within aggro range. Applies from the next run.",
@@ -87,17 +69,9 @@ const FLAG_DEFINITIONS: Dictionary = {
 		"name": "Convoy", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 5,
 		"description": "Allows the Convoy mode: the core drives door to door along a route that changes every round and is previewed in the shop. Applies from the next run.",
 	},
-	TECH_DROPS: {
-		"name": "Tech Drops", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 5,
-		"description": "Destructible crates appear away from your turrets during a wave. Destroy one for scrap and a chance at a free item; it is lost when the wave ends.",
-	},
 	BUILD_ZONES: {
 		"name": "Build Zones", "default": false, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 5,
 		"description": "Glowing build zones appear during a wave. Stand in one to build a turret or an item. Without Turret Progression, leftover scrap is banked and improves next-wave zones; with progression, it becomes turret XP instead.",
-	},
-	DIFFICULTY_RULES: {
-		"name": "Difficulty Rules", "default": true, "scope": SCOPE_EXPERIMENT, "phase": 5,
-		"description": "Higher difficulties add elite enemies and, in core mode, core seekers, a weaker core and faster waves. Applies from the next run.",
 	},
 	TERRAIN_ZONES: {
 		"name": "Terrain Zones", "default": false, "scope": SCOPE_EXPERIMENT, "phase": 4,
@@ -123,10 +97,6 @@ const FLAG_DEFINITIONS: Dictionary = {
 	RESTRICT_SPAWN_PLACEMENT: {
 		"name": "Restrict Spawn Zone Placement", "default": false, "scope": SCOPE_USER, "live_safe": true,
 		"description": "Prevent turret placement inside spawn zones. Existing positions must be cleared before Deploy.",
-	},
-	PLACEMENT_PREVIEW: {
-		"name": "Placement Preview", "default": true, "scope": SCOPE_EXPERIMENT, "live_safe": true, "phase": 1,
-		"description": "While carrying a turret, shows a marker where it would be deployed (green clear, red blocked).",
 	},
 }
 

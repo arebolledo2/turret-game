@@ -32,7 +32,7 @@ func active_count() -> int:
 	return count
 
 func tick(delta: float) -> void:
-	if not FeatureFlagService.is_enabled(FeatureFlagService.TECH_DROPS) or not world.is_combat():
+	if not world.is_combat():
 		return
 	pulse += delta * 8.0
 	for index in range(queued.size() - 1, -1, -1):

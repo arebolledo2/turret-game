@@ -76,14 +76,6 @@ func test_only_one_drop_at_a_time() -> void:
 	world.drops.spawn(Vector3(10, 0, 5))
 	assert_gte(world.drops.active_count(), GameConstants.TECH_DROP_MAX_ACTIVE)
 
-func test_flag_off_stops_spawning() -> void:
-	FeatureFlagService.set_enabled(FeatureFlagService.TECH_DROPS, false)
-	world.drops.roll_clock = 999.0
-	GameRandom.gameplay.seed = 3
-	for index in 200:
-		world.drops.tick(.1)
-	assert_eq(world.drops.active_count(), 0)
-
 func test_turret_shoots_a_drop_in_range() -> void:
 	var drop := world.drops.spawn(world.turrets[0].position + Vector3(3, 0, 0))
 	drop.max_health = 1e9
