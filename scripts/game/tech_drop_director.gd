@@ -86,7 +86,7 @@ func queue_drop(at: Vector3) -> void:
 	marker.position = Vector3(at.x, .05, at.z)
 	queued.append({"at": at, "left": GameConstants.TECH_DROP_WARNING_TIME, "marker": marker})
 
-func spawn(at: Vector3) -> CombatActor:
+func spawn(at: Vector3) -> TechDropActor:
 	var wave := maxi(GameStateService.current_wave, 1)
 	var tank := EnemyStats.for_wave("tank", wave, world.difficulty_config)
 	var drop := TechDropActor.new()

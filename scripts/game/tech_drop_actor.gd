@@ -1,5 +1,5 @@
 class_name TechDropActor
-extends CombatActor
+extends EnemyActor
 
 ## A tech drop: a stationary, destructible crate that never moves or attacks.
 ## It is a CombatActor in `world.enemies`, so turrets and the hero target it like any enemy.

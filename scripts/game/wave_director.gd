@@ -236,10 +236,9 @@ func _take_credit(rule_key: String) -> bool:
 	return taken
 
 ## `elite` toughens the enemy; `seeker` (core mode) makes it ignore the hero and head for the core.
-func spawn_enemy(at: Vector3, type_id: String = "basic", elite: bool = false, seeker: bool = false) -> CombatActor:
-	var enemy := CombatActor.new()
+func spawn_enemy(at: Vector3, type_id: String = "basic", elite: bool = false, seeker: bool = false) -> EnemyActor:
+	var enemy := EnemyActor.new()
 	enemy.world = world
-	enemy.is_enemy = true
 	enemy.enemy_type = type_id
 	var base := EnemyStats.for_wave(type_id, maxi(GameStateService.current_wave, 1), world.difficulty_config)
 	enemy.max_health = base.health

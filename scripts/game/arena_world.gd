@@ -53,7 +53,7 @@ var convoy_mover: ConvoyMover
 var _convoy_seed: int = 0
 ## Why the run ended in defeat ("" while running or after a victory); shown on the end screen.
 var defeat_reason: String = ""
-var player: CombatActor
+var player: HeroActor
 var camera: Camera3D
 var camera_rig: CameraRig
 var playfield: PlayfieldView
@@ -205,7 +205,7 @@ func start_run() -> void:
 	GameStateService.current_wave = 0
 	paused = false
 	message = ""
-	player = CombatActor.new()
+	player = HeroActor.new()
 	player.world = self
 	player.max_health = PlayerStatsService.get_player_max_health(float(difficulty_config["player_health_mult"]))
 	player.health = player.max_health
@@ -353,7 +353,7 @@ func start_convoy_round() -> void:
 	core.position = convoy_mover.position
 	core.reset_physics_interpolation()
 
-func spawn_enemy(at: Vector3, type_id: String = "basic") -> CombatActor:
+func spawn_enemy(at: Vector3, type_id: String = "basic") -> EnemyActor:
 	return waves.spawn_enemy(at, type_id)
 
 func nearest_enemy(origin: Vector3, range_metres: float) -> CombatActor:
