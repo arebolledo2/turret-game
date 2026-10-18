@@ -145,14 +145,14 @@ func test_prism_lens_destruction_interrupts_and_stuns() -> void:
 		lens.set_physics_process(false)
 		lens.dead = true
 	boss.brain.move(.01, boss.speed)
-	assert_eq(boss.brain.state, "stunned")
+	assert_eq(boss.brain.state, EnemyBrain.State.STUNNED)
 	assert_almost_eq(boss.brain.clock, 2.0, .001)
 	assert_eq(boss.brain.move(.2, boss.speed), Vector3.ZERO)
 
 func test_hatchery_caps_summons_and_never_awards_scrap() -> void:
 	var tender := enemy("tender", Vector3(3, 0, 0))
 	for cycle in range(4):
-		tender.brain.state = "warning"
+		tender.brain.state = EnemyBrain.State.WARNING
 		tender.brain.clock = 0.0
 		tender.brain.move(.01, tender.speed)
 	assert_eq(tender.brain.children.size(), 4)
@@ -198,7 +198,7 @@ func test_precision_warning_cap_defers_extra_attackers() -> void:
 		kite.brain.move(.01, kite.speed)
 	var warnings := 0
 	for actor in world.enemies:
-		if actor.brain and actor.brain.state == "warning": warnings += 1
+		if actor.brain and actor.brain.state == EnemyBrain.State.WARNING: warnings += 1
 	assert_eq(warnings, 2)
 
 func test_last_combat_tick_can_award_boss_before_timeout_cleanup() -> void:
@@ -229,12 +229,12 @@ func test_warning_slot_counts_only_nearby_warning_enemies() -> void:
 	var third := enemy("kite", Vector3(3, 0, 0))
 	var far := enemy("kite", Vector3(20, 0, 0))
 	assert_true(first.brain._warning_slot(false))
-	second.brain.state = "warning"
+	second.brain.state = EnemyBrain.State.WARNING
 	assert_true(first.brain._warning_slot(false))
-	third.brain.state = "warning"
+	third.brain.state = EnemyBrain.State.WARNING
 	assert_false(first.brain._warning_slot(false))
-	far.brain.state = "warning"
-	third.brain.state = "idle"
+	far.brain.state = EnemyBrain.State.WARNING
+	third.brain.state = EnemyBrain.State.IDLE
 	assert_true(first.brain._warning_slot(false))
 	second.dead = true
 	assert_true(first.brain._warning_slot(false))
@@ -243,7 +243,7 @@ func test_actual_hopper_uses_speed_matched_legs_during_charge() -> void:
 	var hopper := enemy("hopper", Vector3(3, 0, 0))
 	assert_not_null(hopper.ecology_motion)
 	assert_null(hopper.clockwork_motion, "The red hopper has a different rig from the horned charger")
-	hopper.brain.state = "attack"
+	hopper.brain.state = EnemyBrain.State.ATTACK
 	hopper.velocity = Vector3(6.6, 0, 0)
 	hopper._animate(.01, Vector3.RIGHT, true)
 	var motion := hopper.ecology_motion
@@ -257,9 +257,9 @@ func test_actual_hopper_uses_speed_matched_legs_during_charge() -> void:
 	hopper._animate(.04, Vector3.RIGHT, true)
 	assert_false(leg.transform.is_equal_approx(pose), "Actual imported leg pivots move")
 	hopper.velocity = Vector3.ZERO
-	hopper.brain.state = "warning"
+	hopper.brain.state = EnemyBrain.State.WARNING
 	hopper._animate(.01, Vector3.ZERO, false)
 	assert_eq(motion.current, "Attack", "Stationary windup retains the authored crouch")
-	hopper.brain.state = "idle"
+	hopper.brain.state = EnemyBrain.State.IDLE
 	hopper._animate(.01, Vector3.ZERO, false)
 	assert_eq(motion.current, "Idle")

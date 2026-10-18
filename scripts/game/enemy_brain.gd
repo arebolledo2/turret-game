@@ -5,12 +5,13 @@ extends RefCounted
 var actor: CombatActor
 var kind: String
 var clock: float = 0.0
-var state: String = "idle":
+enum State {IDLE, WAKE, WANDER, CHASE, WARNING, ATTACK, RELOAD, RECOVER, STUNNED, TRANSITION}
+var state: State = State.IDLE:
 	set(value):
 		state = value
 		if is_instance_valid(actor) and is_instance_valid(actor.world):
-			actor.world.mark_warning(actor, value == "warning")
-		if value == "warning":
+			actor.world.mark_warning(actor, value == State.WARNING)
+		if value == State.WARNING:
 			warn_total = 0.0
 var destination: Vector3
 var locked_target: Vector3
@@ -52,13 +53,13 @@ func _init(owner_actor: CombatActor) -> void:
 func disturbed() -> void:
 	if kind == "drowse" and not awake:
 		awake = true
-		state = "wake"
+		state = State.WAKE
 		clock = .4
 
 func contact_allowed() -> bool:
 	if expansion: return expansion.contact_allowed()
 	if kind == "drowse":
-		return awake and state != "wake"
+		return awake and state != State.WAKE
 	if pounce:
 		return pounce.phase == ChargeController3D.Phase.DASH
 	return kind in ["skitter", "puppet", "grand_marionettist"]
@@ -81,7 +82,7 @@ func move(delta: float, speed: float) -> Vector3:
 	actor.chasing_hero = EnemyEcology.hero_only(kind)
 	if expansion:
 		return expansion.move(delta, hero, speed)
-	if state == "warning" and not pounce:
+	if state == State.WARNING and not pounce:
 		var aim := WorldGeometry.planar(locked_target - actor.position)
 		if not aim.is_zero_approx(): actor.visual.rotation.y = atan2(-aim.x, -aim.z)
 	match kind:
@@ -92,13 +93,13 @@ func move(delta: float, speed: float) -> Vector3:
 			if not is_instance_valid(summon_parent) or summon_parent.dead:
 				_expire()
 				return Vector3.ZERO
-			if summon_parent.brain.state in ["warning", "attack", "stunned"]:
-				state = "idle"
+			if summon_parent.brain.state in [State.WARNING, State.ATTACK, State.STUNNED]:
+				state = State.IDLE
 				clock = maxf(clock, .9)
 				_hide_warning()
 			else:
 				var shooting := _ranged(hero, 0.0, false)
-				if state == "warning": return shooting
+				if state == State.WARNING: return shooting
 			var orbit := summon_parent.position + Vector3(cos(age * .5 + get_instance_id()), 0, sin(age * .5 + get_instance_id())) * 1.7
 			return (orbit - actor.position).limit_length(speed)
 		"lobber": return _ranged(actor.world.core.position if actor.world.core else hero, speed, true)
@@ -134,26 +135,26 @@ func _drowse(delta: float, toward: Vector3, speed: float) -> Vector3:
 		lose_interest = lose_interest + delta if gap > 3.0 else 0.0
 		if lose_interest >= 2.0:
 			awake = false
-			state = "idle"
+			state = State.IDLE
 			clock = 1.0
 			lose_interest = 0.0
-		elif state == "wake":
+		elif state == State.WAKE:
 			if clock <= 0.0:
-				state = "chase"
+				state = State.CHASE
 			return Vector3.ZERO
 		else:
 			return toward.normalized() * speed
 	if clock <= 0.0:
-		if state == "wander":
-			state = "idle"
+		if state == State.WANDER:
+			state = State.IDLE
 			clock = GameRandom.gameplay.randf_range(.25, .65)
 		else:
-			state = "wander"
+			state = State.WANDER
 			clock = GameRandom.gameplay.randf_range(2.0, 4.0)
 			var angle := GameRandom.gameplay.randf() * TAU
 			destination = WorldGeometry.clamp_position(actor.position + Vector3(cos(angle), 0, sin(angle)) * 2.8, 1.0)
 	var offset := destination - actor.position
-	return offset.normalized() * speed * .7 if state == "wander" and offset.length() > .15 else Vector3.ZERO
+	return offset.normalized() * speed * .7 if state == State.WANDER and offset.length() > .15 else Vector3.ZERO
 
 func _charge(delta: float, hero: Vector3, speed: float) -> Vector3:
 	if pounce.phase == ChargeController3D.Phase.APPROACH and (not _visible() or not _warning_slot(false)):
@@ -161,12 +162,12 @@ func _charge(delta: float, hero: Vector3, speed: float) -> Vector3:
 	var previous := pounce.phase
 	var movement := pounce.advance(delta, actor.position, hero, speed)
 	if pounce.phase == ChargeController3D.Phase.WINDUP:
-		state = "warning"
+		state = State.WARNING
 		_line(pounce.origin, pounce.heading, speed * pounce.speed_multiplier * pounce.dash_duration, .25 if kind == "hopper" else .6, Telegraph.CHARGE)
 	elif pounce.phase == ChargeController3D.Phase.DASH:
-		state = "attack"
+		state = State.ATTACK
 	elif previous == ChargeController3D.Phase.DASH:
-		state = "recover"
+		state = State.RECOVER
 		_hide_warning()
 		attacks += 1
 		if kind == "brass_ram" and attacks % 2 == 0:
@@ -174,14 +175,14 @@ func _charge(delta: float, hero: Vector3, speed: float) -> Vector3:
 		if kind == "brass_ram" and actor.health < actor.max_health * .5 and attacks % 2 == 1:
 			pounce.remaining = .25
 	elif pounce.phase == ChargeController3D.Phase.APPROACH:
-		state = "idle"
+		state = State.IDLE
 	return movement
 
 func _ranged(target: Vector3, speed: float, artillery: bool) -> Vector3:
 	var low := 4.0 if artillery else 3.0
 	var high := 5.0 if artillery else 4.0
 	var toward := WorldGeometry.planar(target - actor.position)
-	if state == "warning":
+	if state == State.WARNING:
 		if not artillery and clock > .25:
 			locked_target = target
 		_line(actor.position, (locked_target - actor.position).normalized(), minf(toward.length(), 8.0), .025)
@@ -189,12 +190,12 @@ func _ranged(target: Vector3, speed: float, artillery: bool) -> Vector3:
 			if not artillery:
 				_bolt(locked_target, actor.contact_damage + 5.0)
 			_hide_warning()
-			state = "reload"
+			state = State.RELOAD
 			clock = 4.0 if artillery else 2.5
 		return Vector3.ZERO
 	if clock <= 0.0 and toward.length() <= high + .75 and _visible() and _warning_slot(artillery):
 		locked_target = target
-		state = "warning"
+		state = State.WARNING
 		clock = 1.2 if artillery else .8
 		if artillery:
 			var amount := actor.world.core_max_health() * .03 if actor.world.core else 6.0
@@ -203,18 +204,18 @@ func _ranged(target: Vector3, speed: float, artillery: bool) -> Vector3:
 	return _range_motion(toward, speed, low, high)
 
 func _tender(hero: Vector3, speed: float) -> Vector3:
-	if state == "warning":
+	if state == State.WARNING:
 		if clock <= 0.0:
 			for index in 2:
 				if children.size() < 4 and actor.world.waves.active_count("skitter") < 8:
 					_summon("skitter", index * PI)
 			deployments += 1
-			state = "reload"
+			state = State.RELOAD
 			clock = 5.0
 			_hide_warning()
 		return Vector3.ZERO
 	if clock <= 0.0 and deployments < 3 and children.size() < 4 and actor.world.waves.active_count("skitter") < 8 and _visible():
-		state = "warning"
+		state = State.WARNING
 		clock = 1.0
 		_ring(.85, Telegraph.SUMMON)
 		return Vector3.ZERO
@@ -230,14 +231,14 @@ func _prism(hero: Vector3, speed: float) -> Vector3:
 		_cancel_attacks()
 		_hide_warning()
 		clock = 2.0
-		state = "stunned"
-	if state == "warning":
+		state = State.STUNNED
+	if state == State.WARNING:
 		if clock <= 0.0:
 			_hide_warning()
 			if attack_mode == "volley":
 				_volley(locked_target, [-.22, 0.0, .22], 7.0)
 				clock = 2.5
-				state = "reload"
+				state = State.RELOAD
 			else:
 				# Begin at the warned left boundary and sweep the marked sector.
 				var heading := (locked_target - actor.position).normalized().rotated(Vector3.UP, -.45)
@@ -247,24 +248,24 @@ func _prism(hero: Vector3, speed: float) -> Vector3:
 				beam.angular_speed = .45
 				actor.world.actor_root.add_child(beam)
 				clock = 2.1
-				state = "attack"
+				state = State.ATTACK
 			attacks += 1
 		return Vector3.ZERO
-	if state == "attack":
+	if state == State.ATTACK:
 		if clock <= 0.0:
-			state = "reload"
+			state = State.RELOAD
 			clock = 2.0
 		return Vector3.ZERO
-	if state == "stunned" and clock > 0.0: return Vector3.ZERO
+	if state == State.STUNNED and clock > 0.0: return Vector3.ZERO
 	if clock <= 0.0 and _visible() and _warning_slot(false):
 		locked_target = hero
 		attack_mode = "volley" if attacks % 2 == 0 else "beam"
-		state = "warning"
+		state = State.WARNING
 		clock = 1.0
 		_sector((hero - actor.position).normalized(), 7.0, .45 if attack_mode == "beam" else .22, false, Telegraph.SWEEP if attack_mode == "beam" else Telegraph.SHOT)
 		for child in children:
 			child.brain.clock = 4.0
-			child.brain.state = "idle"
+			child.brain.state = State.IDLE
 			child.brain._hide_warning()
 		return Vector3.ZERO
 	return _range_motion(hero - actor.position, speed, 3.0, 4.0)
@@ -279,17 +280,17 @@ func _marionettist(hero: Vector3, speed: float) -> Vector3:
 			if child.enemy_type == "anchor": child.brain._expire()
 		pounce.interrupt()
 		clock = 1.2
-		state = "transition"
+		state = State.TRANSITION
 		attack_mode = ""
-	if state == "transition" and clock > 0.0: return Vector3.ZERO
+	if state == State.TRANSITION and clock > 0.0: return Vector3.ZERO
 	if phase == 2 and had_anchors:
 		var anchors_left := children.any(func(child: CombatActor) -> bool: return child.enemy_type == "anchor")
 		if not anchors_left:
 			had_anchors = false
 			clock = 2.0
-			state = "stunned"
-	if state == "stunned" and clock > 0.0: return Vector3.ZERO
-	if state == "warning" and attack_mode != "charge":
+			state = State.STUNNED
+	if state == State.STUNNED and clock > 0.0: return Vector3.ZERO
+	if state == State.WARNING and attack_mode != "charge":
 		if clock <= 0.0:
 			_hide_warning()
 			if attack_mode == "volley":
@@ -315,7 +316,7 @@ func _marionettist(hero: Vector3, speed: float) -> Vector3:
 				_volley(locked_target, angles, 9.0)
 			attacks += 1
 			clock = 9.0 if attack_mode == "puppets" else 2.8
-			state = "reload"
+			state = State.RELOAD
 		return Vector3.ZERO
 	if phase == 3 and attacks % 2 == 1:
 		attack_mode = "charge"
@@ -325,7 +326,7 @@ func _marionettist(hero: Vector3, speed: float) -> Vector3:
 			clock = 1.2
 		return movement
 	if clock <= 0.0 and _visible() and _warning_slot(false):
-		state = "warning"
+		state = State.WARNING
 		locked_target = hero
 		clock = 1.2
 		attack_mode = "volley" if phase == 1 else ("puppets" if phase == 2 else "pulse")
@@ -372,7 +373,7 @@ func _warning_slot(area: bool) -> bool:
 		if not area and other.charge and other.charge.phase == ChargeController3D.Phase.WINDUP:
 			count += 1
 		if not other.brain: continue
-		if other.brain.state == "warning" and (other.enemy_type == "lobber") == area:
+		if other.brain.state == State.WARNING and (other.enemy_type == "lobber") == area:
 			count += 1
 	for gone in stale:
 		actor.world.warning_actors.erase(gone)
@@ -415,7 +416,7 @@ func _line(at: Vector3, direction: Vector3, length: float, width: float, color: 
 func warning_progress() -> float:
 	if pounce and pounce.phase == ChargeController3D.Phase.WINDUP:
 		return 1.0 - pounce.remaining / maxf(pounce.windup_duration, .001)
-	if state != "warning":
+	if state != State.WARNING:
 		return 1.0
 	warn_total = maxf(warn_total, clock)
 	return 1.0 - clampf(clock / maxf(warn_total, .001), 0.0, 1.0)

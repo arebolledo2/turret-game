@@ -56,7 +56,7 @@ func test_airship_salvo_is_warned_and_locks_target() -> void:
 	var ship := boss("broadside_baron")
 	world.player.position = Vector3(-3, 0, 0)
 	ship.brain.move(.01, ship.speed)
-	assert_eq(ship.brain.state, "warning")
+	assert_eq(ship.brain.state, EnemyBrain.State.WARNING)
 	assert_gt(ship.brain.expansion.salvo.size(), 0)
 	assert_eq(get_tree().get_nodes_in_group("hostile_ordnance").size(), 0)
 	var locked := ship.brain.locked_target
@@ -73,7 +73,7 @@ func test_airship_salvo_is_warned_and_locks_target() -> void:
 func test_bomber_commits_to_pass_and_drops_warned_bombs() -> void:
 	var bomber := boss("skyfall_kestrel")
 	bomber.brain.move(.01, bomber.speed)
-	assert_eq(bomber.brain.state, "warning")
+	assert_eq(bomber.brain.state, EnemyBrain.State.WARNING)
 	var heading := bomber.brain.expansion.heading
 	world.player.position = Vector3(0, 0, 5)
 	bomber.brain.move(1.1, bomber.speed)
@@ -98,7 +98,7 @@ func test_yeti_crab_regent_warn_hero_only_and_enrage() -> void:
 		actor.health = actor.max_health * .4
 		actor.brain.move(.01, actor.speed)
 		assert_eq(actor.brain.phase, 2)
-		assert_eq(actor.brain.state, "warning")
+		assert_eq(actor.brain.state, EnemyBrain.State.WARNING)
 		assert_false(actor.brain.contact_allowed())
 		var shots := get_tree().get_nodes_in_group("hostile_ordnance")
 		assert_gt(shots.size(), 0)
@@ -114,7 +114,7 @@ func test_wheel_contact_only_during_committed_roll() -> void:
 	var wheel := boss("crownwheel_colossus")
 	assert_false(wheel.brain.contact_allowed())
 	wheel.brain.move(.01, wheel.speed)
-	assert_eq(wheel.brain.state, "warning")
+	assert_eq(wheel.brain.state, EnemyBrain.State.WARNING)
 	assert_false(wheel.brain.contact_allowed())
 	wheel.brain.move(1.3, wheel.speed)
 	assert_true(wheel.brain.contact_allowed())

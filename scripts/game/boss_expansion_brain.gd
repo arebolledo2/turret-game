@@ -19,10 +19,10 @@ func _init(owner_brain: EnemyBrain) -> void:
 	actor = brain.actor
 
 func contact_allowed() -> bool:
-	return brain.kind == "crownwheel_colossus" and brain.state == "attack"
+	return brain.kind == "crownwheel_colossus" and brain.state == EnemyBrain.State.ATTACK
 
 func pose() -> void:
-	if brain.kind != "broadside_baron" or brain.state != "warning": return
+	if brain.kind != "broadside_baron" or brain.state != EnemyBrain.State.WARNING: return
 	for shot in salvo:
 		var pivot := actor.visual.find_child("Cannon_" + str(shot.corner), true, false) as Node3D
 		if pivot:
@@ -47,13 +47,13 @@ func _lock(hero: Vector3, duration: float) -> void:
 	brain.locked_target = WorldGeometry.planar(hero)
 	heading = WorldGeometry.planar(hero - actor.position).normalized()
 	if heading.is_zero_approx(): heading = Vector3.FORWARD
-	brain.state = "warning"
+	brain.state = EnemyBrain.State.WARNING
 	brain.clock = duration
 	actor.world.audio.play_cue("warning", actor.position)
 
 func _recover(duration: float) -> void:
 	brain._hide_warning()
-	brain.state = "reload"
+	brain.state = EnemyBrain.State.RELOAD
 	brain.clock = duration
 	brain.attacks += 1
 
@@ -65,7 +65,7 @@ static func within_cannon_arc(outward: Vector3, target_direction: Vector3) -> bo
 	return not target_direction.is_zero_approx() and WorldGeometry.planar(outward).normalized().dot(WorldGeometry.planar(target_direction).normalized()) >= cos(PI / 3.0)
 
 func _airship(hero: Vector3, speed: float) -> Vector3:
-	if brain.state == "warning":
+	if brain.state == EnemyBrain.State.WARNING:
 		for line in salvo_lines: Telegraph.set_progress(line, brain.warning_progress())
 		if brain.clock <= 0.0:
 			for shot in salvo:
@@ -100,7 +100,7 @@ func _airship(hero: Vector3, speed: float) -> Vector3:
 	return brain._range_motion(hero - actor.position, speed, 3.5, 5.0)
 
 func _yeti(hero: Vector3, speed: float) -> Vector3:
-	if brain.state == "warning":
+	if brain.state == EnemyBrain.State.WARNING:
 		if brain.clock <= 0.0: _recover(1.4)
 		return Vector3.ZERO
 	if _ready_attack() and actor.position.distance_to(hero) < 3.4:
@@ -114,15 +114,15 @@ func _yeti(hero: Vector3, speed: float) -> Vector3:
 	return brain._range_motion(hero - actor.position, speed, 1.2, 2.0)
 
 func _bomber(delta: float, hero: Vector3, speed: float) -> Vector3:
-	if brain.state == "warning":
+	if brain.state == EnemyBrain.State.WARNING:
 		if brain.clock <= 0.0:
 			brain._hide_warning()
-			brain.state = "attack"
+			brain.state = EnemyBrain.State.ATTACK
 			brain.clock = 2.0
 			drop_clock = 0.0
 			drops = 0
 		return Vector3.ZERO
-	if brain.state == "attack":
+	if brain.state == EnemyBrain.State.ATTACK:
 		drop_clock -= delta
 		if drop_clock <= 0.0 and drops < (5 if brain.phase == 2 else 4):
 			brain._area(WorldGeometry.clamp_position(actor.position + heading * .45), .8, 1.1, 8.0)
@@ -139,12 +139,12 @@ func _bomber(delta: float, hero: Vector3, speed: float) -> Vector3:
 	return brain._range_motion(hero - actor.position, speed, 4.0, 5.5)
 
 func _crab(hero: Vector3, speed: float) -> Vector3:
-	if brain.state == "warning":
+	if brain.state == EnemyBrain.State.WARNING:
 		if brain.clock <= 0.0:
 			if brain.attack_mode == "furnace": _sweep(4.5, .55, 6.0, 1.6)
 			else: _recover(2.0)
 		return Vector3.ZERO
-	if brain.state == "attack":
+	if brain.state == EnemyBrain.State.ATTACK:
 		if brain.clock <= 0.0: _recover(2.2)
 		return Vector3.ZERO
 	if _ready_attack() and actor.position.distance_to(hero) < 5.0:
@@ -161,12 +161,12 @@ func _crab(hero: Vector3, speed: float) -> Vector3:
 	return brain._range_motion(hero - actor.position, speed, 2.5, 3.8)
 
 func _regent(hero: Vector3, speed: float) -> Vector3:
-	if brain.state == "warning":
+	if brain.state == EnemyBrain.State.WARNING:
 		if brain.clock <= 0.0:
 			if brain.attack_mode == "pendulum": _sweep(5.0, .8, 8.0, 1.8)
 			else: _recover(1.8)
 		return Vector3.ZERO
-	if brain.state == "attack":
+	if brain.state == EnemyBrain.State.ATTACK:
 		if brain.clock <= 0.0: _recover(1.8)
 		return Vector3.ZERO
 	if _ready_attack() and actor.position.distance_to(hero) < 5.5:
@@ -188,15 +188,15 @@ func _sweep(length: float, half_angle: float, damage: float, duration: float) ->
 	beam.lifetime = duration
 	beam.angular_speed = half_angle * 2.0 / duration
 	actor.world.actor_root.add_child(beam)
-	brain.state = "attack"
+	brain.state = EnemyBrain.State.ATTACK
 	brain.clock = duration + .1
 
 func _wheel(hero: Vector3, speed: float) -> Vector3:
-	if brain.state == "warning":
+	if brain.state == EnemyBrain.State.WARNING:
 		if brain.clock <= 0.0:
 			brain._hide_warning()
 			if brain.attack_mode == "roll":
-				brain.state = "attack"
+				brain.state = EnemyBrain.State.ATTACK
 				brain.clock = 1.25
 			else:
 				# The hero-facing gap shown in the warning remains safe.
@@ -205,7 +205,7 @@ func _wheel(hero: Vector3, speed: float) -> Vector3:
 				brain._volley(brain.locked_target, angles, 8.0)
 				_recover(1.6)
 		return Vector3.ZERO
-	if brain.state == "attack":
+	if brain.state == EnemyBrain.State.ATTACK:
 		if brain.clock <= 0.0:
 			_recover(1.5)
 			return Vector3.ZERO

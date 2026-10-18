@@ -221,7 +221,7 @@ func _steer_enemy(delta: float) -> Vector3:
 	var effective_speed := speed * speed_factor
 	if brain:
 		var movement := brain.move(delta, effective_speed)
-		if (not brain.pounce or brain.pounce.phase == ChargeController3D.Phase.APPROACH) and not (brain.expansion and brain.state in ["warning", "attack"]):
+		if (not brain.pounce or brain.pounce.phase == ChargeController3D.Phase.APPROACH) and not (brain.expansion and brain.state in [EnemyBrain.State.WARNING, EnemyBrain.State.ATTACK]):
 			movement += world.crowd.separation(self)
 		velocity = movement + knockback_velocity
 		knockback_velocity *= exp(-GameConstants.KNOCKBACK_DECAY_RATE * delta)
@@ -293,7 +293,7 @@ func _animate(delta: float, direction: Vector3, reduced_motion: bool) -> void:
 		visual.rotation.y = lerp_angle(visual.rotation.y, atan2(-direction.x, -direction.z), minf(delta * 14.0, 1.0))
 	if ecology_motion:
 		visual.position.y = 0.0
-		ecology_motion.tick(delta, velocity.length_squared() > .01, brain.state in ["warning", "attack"], reduced_motion, velocity.length() if enemy_type == "hopper" else -1.0)
+		ecology_motion.tick(delta, velocity.length_squared() > .01, brain.state in [EnemyBrain.State.WARNING, EnemyBrain.State.ATTACK], reduced_motion, velocity.length() if enemy_type == "hopper" else -1.0)
 		if brain.expansion: brain.expansion.pose()
 		return
 	if clockwork_motion:
