@@ -55,9 +55,9 @@ New turret branches (levels 5 / 10 / 15; full mechanics are in the artifact):
 
 | Form | Level | Damage | Rate | Range | Slow | Behaviour |
 |---|---|---|---|---|---|---|
-| Focused Lance | 5 | 16 | .75 | 300 | 30% / .8 s | single bolt |
-| Thunder Pin | 10 | 24 | .80 | 340 | 90% / 1.6 s | near-stop pin |
-| Thunder Spear | 15 | 36 | .85 | 400 | 90% / 2.0 s | also hits every enemy in a 1.2 m lane behind the target (`LANCE_LANE_HALF_WIDTH`) |
+| Focused Lance | 5 | 24 | .75 | 300 | 30% / .8 s | single bolt |
+| Thunder Pin | 10 | 36 | .80 | 340 | 90% / 1.6 s | near-stop pin |
+| Thunder Spear | 15 | 48 | .85 | 400 | 90% / 2.0 s | also hits every enemy in a 1.2 m lane behind the target (`LANCE_LANE_HALF_WIDTH`) |
 
 To swap in real models: add `lance`/`thunder_pin`/`thunder_spear` keys to `ClockworkModels.KEYS`, return them from `TurretEvolution.model_key`, keep a `Muzzle` node, and add `res://assets/ui/turrets/lance_{1,2,3}.png` portraits. Stats and numbers are untuned; no showcase run yet.
 

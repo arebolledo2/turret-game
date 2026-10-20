@@ -527,6 +527,28 @@
       "meshes": 5,
       "materials": 1,
       "iteration": 5
+    },
+    {
+      "id": "focused_lance",
+      "source": "art-source/clockwork-pop/focused_lance/build_cp_focused_lance.py",
+      "model": "assets/models/clockwork/cp_focused_lance.glb",
+      "reference": "art-source/clockwork-pop/references/focused_lance.png",
+      "sha256": "bdc6e8ffa6ccc7c95faac7b8cfed8fd5a3bc6177367ad3b87eb8ee4f6fec5150",
+      "triangles": 10764,
+      "meshes": 14,
+      "materials": 8,
+      "iteration": 3
+    },
+    {
+      "id": "resonator",
+      "source": "art-source/clockwork-pop/resonator/build_cp_resonator.py",
+      "model": "assets/models/clockwork/cp_resonator.glb",
+      "reference": "art-source/clockwork-pop/references/resonator.png",
+      "sha256": "2c7121e87362905a855d53acad4e23b7a3b27e0470681c3fff81a22d6e58ca83",
+      "triangles": 6626,
+      "meshes": 13,
+      "materials": 8,
+      "iteration": 2
     }
   ]
 }

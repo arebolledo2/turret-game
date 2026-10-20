@@ -389,6 +389,20 @@
       "status": "review",
       "preview": "previews/storm_network.png",
       "metrics": "118,208 triangles \u00c2\u00b7 5 meshes \u00c2\u00b7 1 materials"
+    },
+    {
+      "key": "focused_lance",
+      "name": "Focused Lance",
+      "status": "review",
+      "preview": "previews/focused_lance.png",
+      "metrics": "10,764 triangles \u00c2\u00b7 14 meshes \u00c2\u00b7 8 materials"
+    },
+    {
+      "key": "resonator",
+      "name": "Resonator",
+      "status": "review",
+      "preview": "previews/resonator.png",
+      "metrics": "6,626 triangles \u00c2\u00b7 13 meshes \u00c2\u00b7 8 materials"
     }
   ],
   "events": [
@@ -679,6 +693,14 @@
     {
       "stage": "Export: storm_network",
       "text": "Reviewed harness iteration 5; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: focused_lance",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: resonator",
+      "text": "Reviewed harness iteration 2; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
     }
   ],
   "checks": {

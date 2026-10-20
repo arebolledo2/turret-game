@@ -55,10 +55,10 @@ static func model_key(base_type: String, branch: String, stage: int) -> String:
 		"scatter": return "crossfire" if stage >= 2 else "scatter"
 		"saber", "gunblade": return branch
 		"siege", "mortar": return "siege"
-		"resonator": return "resonance_engine" if stage >= 3 else "shock"
+		"resonator": return "resonance_engine" if stage >= 3 else "resonator"
 		"relay": return "storm_network" if stage >= 3 else "tesla"
 		"capacitor": return "thunderhead" if stage >= 3 else "tesla"
-		"lance": return ["shock", "thunder_pin", "thunder_spear"][clampi(stage - 1, 0, 2)] if stage > 0 else "shock"
+		"lance": return ["focused_lance", "thunder_pin", "thunder_spear"][clampi(stage - 1, 0, 2)] if stage > 0 else "shock"
 		"repeater_bow", "greatbow": return "bow"
 		"wide_flame", "focused_jet": return "flamethrower"
 		"heavy_roller", "bank_shot": return "bowling"
@@ -123,10 +123,10 @@ static func base_stats(base_type: String, branch: String, stage: int) -> Diction
 			stats.rotation_rate = [300.0, 330.0, 360.0][stage - 1]
 			stats.range = [150.0, 160.0, 170.0][stage - 1]
 		"resonator":
-			stats.damage = [4.0, 4.5, 5.0][stage - 1]
+			stats.damage = [5.0, 5.0, 5.0][stage - 1]
 			stats.range = [240.0, 276.0, 276.0][stage - 1]
 		"lance":
-			stats.damage = [16.0, 24.0, 36.0][stage - 1]
+			stats.damage = [24.0, 36.0, 48.0][stage - 1]
 			stats.fire_rate = [.75, .8, .85][stage - 1]
 			stats.range = [300.0, 340.0, 400.0][stage - 1]
 			stats.slow_intensity = [.3, .9, .9][stage - 1]

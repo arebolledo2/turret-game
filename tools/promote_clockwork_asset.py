@@ -13,7 +13,7 @@ from pathlib import Path
 game = Path(__file__).resolve().parents[1]
 repo = game.parent
 parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('key', choices=['broadside_baron', 'frostforge_yeti', 'skyfall_kestrel', 'crucible_crab', 'pendulum_regent', 'crownwheel_colossus', 'ion','plasma','tesla','shock','melee','basic','fast','tank','charger','hero','dropbox','exploder','machine_gun','scatter','saber','gatling','crossfire','siege','bow','flamethrower','bowling','gunblade','arrow','bowling_ball','drowse','hopper','kite','lobber','tender','brass_ram','prism_conductor','grand_marionettist','skitter','lens','anchor','puppet','thunder_pin','thunder_spear','resonance_engine','storm_network','thunderhead'])
+parser.add_argument('key', choices=['broadside_baron', 'frostforge_yeti', 'skyfall_kestrel', 'crucible_crab', 'pendulum_regent', 'crownwheel_colossus', 'ion','plasma','tesla','shock','melee','basic','fast','tank','charger','hero','dropbox','exploder','machine_gun','scatter','saber','gatling','crossfire','siege','bow','flamethrower','bowling','gunblade','arrow','bowling_ball','drowse','hopper','kite','lobber','tender','brass_ram','prism_conductor','grand_marionettist','skitter','lens','anchor','puppet','focused_lance', 'resonator', 'thunder_pin','thunder_spear','resonance_engine','storm_network','thunderhead'])
 parser.add_argument('--iteration', required=True, type=int)
 parser.add_argument('--asset-name', help='Harness subject name, defaults to cp_<key>')
 parser.add_argument('--run-name', help='Harness run directory, defaults to <asset-name>-v1')

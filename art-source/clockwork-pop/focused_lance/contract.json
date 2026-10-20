@@ -1,0 +1,39 @@
+{
+  "name": "cp_focused_lance",
+  "ref": "ref/cp_focused_lance.png",
+  "build": "build_cp_focused_lance.py",
+  "glb": "cp_focused_lance.glb",
+  "required_nodes": [
+    "Aim",
+    "Muzzle"
+  ],
+  "limits": {
+    "height": [
+      0.9,
+      1.5
+    ],
+    "max_width": 1.5,
+    "ground_gap": [
+      -0.02,
+      0.1
+    ]
+  },
+  "targets": {
+    "max_texture_px": 1024,
+    "max_textures": 4
+  },
+  "render_background": "#152536",
+  "require_textures": true,
+  "required_animations": [],
+  "marker_nodes": [
+    "Muzzle"
+  ],
+  "nested": [
+    [
+      "Muzzle",
+      "Aim"
+    ]
+  ],
+  "muzzle_forward": true,
+  "origin_node": "Aim"
+}
