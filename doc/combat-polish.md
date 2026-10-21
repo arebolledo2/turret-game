@@ -9,7 +9,7 @@ This slice builds on the approved 3D cutover (`2917795`) on `feat/3d-combat-poli
 - Sound effects volume persists with the other settings, defaults to 70%, and mutes at zero. The generator and voice gains leave headroom; the native preview recording has a 0.207 peak and 0.025 RMS at the default volume.
 - Reusable muzzle and hit sparks make actual shots and impacts visible. Their 24-instance cap is separate from the existing 32-pulse cap. Reduced motion retains static indicators without extra movement or camera shake.
 
-The eleven WAVs are original procedural cues generated with checked-in Python; no external samples or paid generation service are involved. The older MP3 references remain untouched. This is a first sound pass; subjective balance still needs listening and playtesting. Follow the [audio workflow](../.claude/skills/game-audio/SKILL.md) to rebuild or capture cues.
+The eleven WAVs are original procedural cues generated with checked-in Python; no external samples or paid generation service are involved. This is a first sound pass; subjective balance still needs listening and playtesting. Follow the [audio workflow](../.claude/skills/game-audio/SKILL.md) to rebuild or capture cues.
 
 ## Performance
 

@@ -23,6 +23,15 @@ $env:GODOT_BIN = "C:\path\to\Godot_v4.7.1-stable_win64.exe"
 ./launch.ps1
 ```
 
+To skip the ~80 MB of Blender sources and download only the runtime models:
+
+```powershell
+$env:GIT_LFS_SKIP_SMUDGE = "1"
+git clone https://github.com/arebolledo2/turret-game.git
+cd turret-game
+git lfs pull --include="assets/models/**"
+```
+
 Or open the folder in the Godot editor and press F5. The launch and test scripts are PowerShell 7 (Windows); on other platforms, open the project in Godot directly.
 
 ## Tests
@@ -45,7 +54,7 @@ This is a solo project built with heavy AI assistance, and I would rather say so
 - **Code and docs** were written in collaboration with Claude Code. The repo includes `AGENTS.md` and project skills under `.claude/skills/` describing that workflow.
 - **2D concept art** was generated with my own orchestration tool, [image-gen-web](https://github.com/arebolledo2/image-gen-web), using image-generation models (and some ComfyUI and PixelLab for earlier sprites).
 - **3D models** are built from that concept art with scripted Blender pipelines (`tools/blender/`) and exported to GLB.
-- **Sound effects** are original and procedurally synthesized by `tools/build_game_audio.py`. Three older MP3 files in `assets/sounds/` are unused leftovers.
+- **Sound effects** are original and procedurally synthesized by `tools/build_game_audio.py`.
 - **Fonts** are open-licensed (SIL OFL); license files are in `assets/fonts/`. The [GUT](https://github.com/bitwes/Gut) test addon is MIT-licensed.
 
 ## License
