@@ -54,3 +54,6 @@ logs/
 *.blend2
 art-source/previews/
 __pycache__/
+
+# Per-user Claude Code settings
+.claude/settings.local.json

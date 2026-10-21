@@ -1,7 +1,13 @@
 name: Game tests
 on:
   push:
+    branches: [master]
+    paths-ignore: ['doc/**', '**/*.md']
   pull_request:
+    paths-ignore: ['doc/**', '**/*.md']
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
@@ -13,8 +19,16 @@ jobs:
         shell: pwsh
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # Runtime GLBs are LFS-tracked; art-source/*.blend (~80 MB) are not needed
+      # to run the game or tests, so fetch only assets/models and cache the objects.
+      - name: Restore LFS cache
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
-          lfs: true
+          path: .git/lfs
+          key: lfs-${{ hashFiles('assets/models/**/*.glb') }}
+          restore-keys: lfs-
+      - name: Fetch runtime LFS assets
+        run: git lfs pull --include="assets/models/**"
       - name: Install pinned Godot
         run: |
           $godot = ./tools/install_godot.ps1 -Destination "$env:RUNNER_TEMP/godot"
