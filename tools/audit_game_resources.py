@@ -11,7 +11,7 @@ for directory in ("scripts", "scenes", "resources", "tools"):
     sources.extend(p for p in (ROOT / directory).rglob("*") if p.suffix in (".gd", ".tscn", ".tres"))
 for source in sources:
     for relative in re.findall(r'["\']res://([^"\'\n]+)["\']', source.read_text(encoding="utf-8-sig")):
-        if relative.startswith(".test-results/") and source.is_relative_to(ROOT / "tools"):
+        if (relative == ".test-results" or relative.startswith(".test-results/")) and source.is_relative_to(ROOT / "tools"):
             continue  # Developer capture destinations are created at runtime, not shipped inputs.
         if "%" in relative or "{" in relative:
             continue  # Runtime templates are covered by import/integration tests.
