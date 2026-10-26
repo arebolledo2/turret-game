@@ -178,7 +178,7 @@ func record_all() -> Dictionary:
 		forms.append_array(TurretEvolution.options(base, 0))
 		forms.append_array(TurretEvolution.options(base, 1))
 		for form in forms:
-			if not TurretEvolution.IMPLEMENTED.has(form):
+			if not TurretEvolution.is_implemented(form):
 				continue
 			var turret := _turret(base, form)
 			var numbers := ShopViewData._actor_numbers(turret)

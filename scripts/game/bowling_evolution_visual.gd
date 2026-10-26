@@ -2,28 +2,21 @@ class_name BowlingEvolutionVisual
 extends Node3D
 
 static var materials: Dictionary = {}
-## Hydraulic brace pairs per side on each roller form, and bumper pairs per side on the Ricochet King.
-const BRACES: Dictionary = {"heavy_roller": 1, "juggernaut": 3}
-const BUMPERS: int = 3
+## Heavy Roller and Juggernaut: `braces` hydraulic brace pairs per side; Ricochet King: `bumpers` bumper pairs per side.
 var flippers: Array[Node3D] = []
 var kick_time := 0.0
 
-static func build(model: Node3D, form_id: String) -> BowlingEvolutionVisual:
+static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
 	if form_id not in ["heavy_roller", "juggernaut", "ricochet_king"]:
 		return null
 	if materials.is_empty():
-		for entry in [["brass", "dba94c", .8], ["purple", "624483", .45], ["dark", "202a33", .4]]:
-			var material := StandardMaterial3D.new()
-			material.albedo_color = Color(entry[1])
-			material.metallic = entry[2]
-			material.roughness = .3
-			materials[entry[0]] = material
+		materials = VisualPalette.build([["brass", "dba94c", .8], ["purple", "624483", .45], ["dark", "202a33", .4]])
 	var aim := model.find_child("Aim", true, false) as Node3D
 	var hardware := BowlingEvolutionVisual.new()
 	hardware.name = "BowlingEvolutionHardware"
 	aim.add_child(hardware)
 	if form_id in ["heavy_roller", "juggernaut"]:
-		var growth := TurretEvolution.ball_scale(form_id)
+		var growth := TurretEvolution.shot_scale(form_id)
 		# Widen the complete cradle and raise its launch height with the ball radius.
 		aim.scale = Vector3(growth, growth, 1.0)
 		var ball := model.find_child("LoadedBall", true, false) as Node3D
@@ -32,7 +25,7 @@ static func build(model: Node3D, form_id: String) -> BowlingEvolutionVisual:
 		plinth.scale.x *= growth
 		# Paired hydraulic braces reinforce the heavier housing at each milestone.
 		for side in [-1, 1]:
-			for i in range(int(BRACES[form_id])):
+			for i in range(int(TurretEvolution.param(form_id, "braces", 1))):
 				var z := .40 - i * .25
 				var sleeve := _cylinder(hardware, .07, .48, "dark")
 				sleeve.position = Vector3(side * .48, .48, z)
@@ -42,7 +35,7 @@ static func build(model: Node3D, form_id: String) -> BowlingEvolutionVisual:
 				cap.position = Vector3(side * .48, .71, z)
 	else:
 		for side in [-1, 1]:
-			for i in range(BUMPERS):
+			for i in range(int(TurretEvolution.param(form_id, "bumpers", 1))):
 				var z := -.50 - i * .27
 				var height := .50 - (-z - .25) * .26 + .08
 				var bumper := _cylinder(hardware, .13, .08, "brass")
@@ -64,7 +57,9 @@ static func build(model: Node3D, form_id: String) -> BowlingEvolutionVisual:
 			paddle.position.z = .13
 			pivot.add_child(paddle)
 			hardware.flippers.append(pivot)
-	return hardware
+	var handles := TurretVisualHandles.new()
+	handles.bowling_hardware = hardware
+	return handles
 
 static func _cylinder(parent: Node3D, radius: float, height: float, material: String) -> MeshInstance3D:
 	var mesh := CylinderMesh.new()

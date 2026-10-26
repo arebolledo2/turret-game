@@ -16,7 +16,7 @@ func fire_pulse(stats: TurretStats, range_metres: float, _target: CombatActor) -
 	fire(stats, range_metres)
 
 func fire(stats: TurretStats, range_metres: float) -> void:
-	var engine := form_id == "resonance_engine"
+	var engine := bool(param("alternating_rings", false))
 	var damage_scale := 1.0
 	var radius_scale := 1.0
 	if engine:
@@ -26,7 +26,8 @@ func fire(stats: TurretStats, range_metres: float) -> void:
 		radius_scale = TurretEvolution.ENGINE_OUTER_RADIUS if outer else TurretEvolution.ENGINE_INNER_RADIUS
 		_mark(range_metres * radius_scale, outer)
 	_pulse(stats, range_metres * radius_scale, damage_scale)
-	for delay: float in (TurretEvolution.ENGINE_ECHO_DELAYS if engine else TurretEvolution.RESONATOR_ECHO_DELAYS):
+	var delays: Array = param("echo_delays", [])
+	for delay: float in delays:
 		echoes.append([delay, damage_scale * TurretEvolution.RESONATOR_ECHO_DAMAGE, radius_scale])
 	actor._reset_cooldown(stats)
 

@@ -3,12 +3,12 @@ extends RefCounted
 
 ## Reuses authored coral limbs, bindings and strings; no duplicated base/support.
 const BOW_PARTS := ["BowClamps", "BowHardware", "BowLimbs", "BowString"]
-## Titan Bow: laminated limb layers (the original plus this many minus one) that scale the heavy bow and its loaded arrow.
-const TITAN_LAYERS: int = 3
 
-static func build(model: Node3D, form_id: String) -> void:
+## Repeater Bow and Arrowstorm add one rail per arrow of the volley (`volley` param); the Titan Bow grows `layers` laminated
+## limb layers that scale the heavy bow and its loaded arrow.
+static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
 	if form_id not in ["repeater_bow", "arrowstorm", "titan_bow"]:
-		return
+		return null
 	var aim := model.find_child("Aim", true, false) as Node3D
 	var receiver := model.find_child("Receiver", true, false) as Node3D
 	var muzzle := model.find_child("Muzzle", true, false) as Node3D
@@ -32,24 +32,26 @@ static func build(model: Node3D, form_id: String) -> void:
 			part.position.x -= float(count - 1) * .5 * spacing
 		receiver.scale.x = 1.0 + float(count - 1) * .55
 	else:
+		var layers := int(TurretEvolution.param(form_id, "layers", 1))
 		# A broad horizontal bow gains additional laminated limb pairs at each form.
 		var assembly := Node3D.new()
 		assembly.name = "HeavyBowLimbs"
 		aim.add_child(assembly)
 		assembly.position.y = .22
 		assembly.rotation.z = PI * .5
-		assembly.scale = Vector3.ONE * (1.0 + .16 * TITAN_LAYERS)
+		assembly.scale = Vector3.ONE * (1.0 + .16 * layers)
 		for part_name: String in BOW_PARTS:
 			var part := model.find_child(part_name, true, false) as Node3D
 			part.reparent(assembly, false)
 			part.position.y -= .22
-			for i in range(1, TITAN_LAYERS):
+			for i in range(1, layers):
 				var copy := part.duplicate() as Node3D
 				copy.name = "%sLayer%d" % [part_name, i]
 				assembly.add_child(copy)
 				copy.position.z += .10 * i
-		receiver.scale = Vector3(1.1 + .15 * TITAN_LAYERS, 1.0 + .12 * TITAN_LAYERS, 1.0)
+		receiver.scale = Vector3(1.1 + .15 * layers, 1.0 + .12 * layers, 1.0)
 		# Thicken the loaded shaft/head without pushing the exit through close targets.
-		var scale_factor := 1.0 + .3 * TITAN_LAYERS
+		var scale_factor := 1.0 + .3 * layers
 		arrow.scale *= Vector3(scale_factor, scale_factor, 1.0)
 		arrow.position.y = .22 + (arrow.position.y - .22) * scale_factor
+	return null

@@ -3,12 +3,12 @@ extends Node
 func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://assets/ui/turrets"))
 	var forms: Array[Dictionary] = []
-	for base: String in TurretEvolution.PATHS:
+	for base: String in TurretEvolution.bases():
 		forms.append({"base": base, "form": "", "stage": 0})
 		for stage in 2:
 			for option in TurretEvolution.options(base, stage):
 				# Tesla's forms are not implemented yet but share the Tesla chassis, so they still get portraits.
-				if option in TurretEvolution.IMPLEMENTED or base == "tesla":
+				if TurretEvolution.is_implemented(option) or base == "tesla":
 					forms.append({"base": base, "form": option, "stage": stage + 1})
 	for form in forms:
 		var key := ShopArt.turret_portrait_key(form.base, form.form)

@@ -1,10 +1,10 @@
 class_name CrossfireEvolutionVisual
 extends RefCounted
 
-static func build(model: Node3D, form_id: String) -> Array[Node3D]:
-	var exits: Array[Node3D] = []
+static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
 	if form_id != "omnifire":
-		return exits
+		return null
+	var exits: Array[Node3D] = []
 	for marker: String in ["Muzzle", "Muzzle_1", "Muzzle_2", "Muzzle_3"]:
 		exits.append(model.find_child(marker, true, false) as Node3D)
 	var aim := model.find_child("Aim", true, false) as Node3D
@@ -22,4 +22,6 @@ static func build(model: Node3D, form_id: String) -> Array[Node3D]:
 		var exit := exits[0].duplicate() as Node3D
 		spoke.add_child(exit)
 		exits.append(exit)
-	return exits
+	var handles := TurretVisualHandles.new()
+	handles.crossfire_muzzles = exits
+	return handles

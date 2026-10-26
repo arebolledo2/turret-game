@@ -23,9 +23,9 @@ const DEFAULT_BODY_TOP: float = 1.22
 const CRACK_ANGLES: Array[float] = [.17, 1.75, 3.32, 4.89]
 const PISTON_ANGLES: Array[float] = [2.97, .87]
 
-static func build(model: Node3D, form_id: String) -> void:
+static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
 	if form_id not in ["aftershock", "tectonic", "cataclysm"]:
-		return
+		return null
 	_ensure_materials()
 	var footprint := _footprint(model)
 	var radius: float = footprint.radius
@@ -55,6 +55,7 @@ static func build(model: Node3D, form_id: String) -> void:
 				_cylinder(model, "CataclysmPylon", .055, 1.05, "steel", Vector3(at.x, .525, at.z))
 				_cylinder(model, "CataclysmCap", .09, .07, "brass", Vector3(at.x, 1.05, at.z))
 				_sphere(model, "CataclysmBeacon", .09, "amber", Vector3(at.x, 1.12, at.z))
+	return null
 
 ## The chassis' own measurements: slab radius (half the narrower side of `Base_Stone`) and top, cube top (`Aim_Body`).
 static func _footprint(model: Node3D) -> Dictionary:
@@ -75,16 +76,7 @@ static func _polar(angle: float, radius: float) -> Vector3:
 static func _ensure_materials() -> void:
 	if not materials.is_empty():
 		return
-	for entry in [["brass", "dba94c", .8, 0.0], ["steel", "a9cfcc", .75, 0.0], ["dark", "16232b", .4, 0.0], ["teal", "6df0b0", .35, 1.6], ["amber", "ffb02e", .3, 1.8]]:
-		var material := StandardMaterial3D.new()
-		material.albedo_color = Color(entry[1])
-		material.metallic = entry[2]
-		material.roughness = .3
-		if entry[3] > 0.0:
-			material.emission_enabled = true
-			material.emission = Color(entry[1])
-			material.emission_energy_multiplier = entry[3]
-		materials[entry[0]] = material
+	materials = VisualPalette.build([["brass", "dba94c", .8], ["steel", "a9cfcc", .75], ["dark", "16232b", .4], ["teal", "6df0b0", .35, 1.6], ["amber", "ffb02e", .3, 1.8]])
 
 static func _cylinder(parent: Node3D, label: String, radius: float, height: float, material: String, at: Vector3) -> void:
 	var mesh := CylinderMesh.new()

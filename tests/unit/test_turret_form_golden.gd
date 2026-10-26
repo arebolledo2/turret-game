@@ -1244,7 +1244,7 @@ func _forms_of(base: String) -> Array[String]:
 
 func _implemented_ids() -> Array[String]:
 	var result: Array[String] = []
-	result.assign(TurretEvolution.IMPLEMENTED)
+	result.assign(TurretEvolution.implemented_forms())
 	return result
 
 func _stats(base: String, form: String) -> Dictionary:
@@ -1257,12 +1257,10 @@ func _volley(form: String) -> int:
 	return TurretEvolution.volley_size(form) if form in ["repeater_bow", "arrowstorm"] else 0
 
 func _barrel(form: String) -> Dictionary:
-	return TurretEvolution.gunblade_barrel_stats() if form == "stormblade" else {}
+	return TurretEvolution.gunblade_barrel_stats(form) if form == "stormblade" else {}
 
 func _echo_delays(form: String) -> Array:
-	if form == "resonator":
-		return TurretEvolution.RESONATOR_ECHO_DELAYS
-	return TurretEvolution.ENGINE_ECHO_DELAYS if form == "resonance_engine" else []
+	return TurretEvolution.param(form, "echo_delays", []) if form in ["resonator", "resonance_engine"] else []
 
 func _run_builder(builder: String, model: Node3D, _base: String, form: String) -> void:
 	match builder:

@@ -59,7 +59,7 @@ func _ready() -> void:
 	for spec: Array in FORMS:
 		if not only_base.is_empty() and spec[0] != only_base:
 			continue
-		var is_final: bool = not spec[1].is_empty() and spec[1] != TurretEvolution.PATHS[spec[0]].upgrade
+		var is_final: bool = not spec[1].is_empty() and spec[1] != TurretEvolution.paths()[spec[0]].upgrade
 		if level > 0 and (level < TurretProgression.EVOLUTION_LEVELS[0] or (is_final and level < TurretProgression.EVOLUTION_LEVELS[1])):
 			continue
 		rows.append(spec)
@@ -83,7 +83,7 @@ func _ready() -> void:
 		var turret := world.add_turret(Vector3(cell.x, 0, cell.y), spec[0])
 		_level_up(turret)
 		if not spec[1].is_empty():
-			var upgrade: String = TurretEvolution.PATHS[spec[0]].upgrade
+			var upgrade: String = TurretEvolution.paths()[spec[0]].upgrade
 			var path: Array = [upgrade] if spec[1] == upgrade else [upgrade, spec[1]]
 			for form: String in path:
 				if not turret.evolve(form):

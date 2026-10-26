@@ -73,8 +73,8 @@ func test_no_third_evolution_appears_after_level_10() -> void:
 	assert_false(growth.evolve("shock", "resonance_engine"))
 
 func test_every_base_has_one_upgrade_and_two_named_finals() -> void:
-	assert_eq(TurretEvolution.PATHS.size(), 10)
-	for base: String in TurretEvolution.PATHS:
+	assert_eq(TurretEvolution.bases().size(), 10)
+	for base: String in TurretEvolution.bases():
 		var upgrades := TurretEvolution.options(base, 0)
 		var finals := TurretEvolution.options(base, 1)
 		assert_eq(upgrades.size(), 1, "%s has one level-5 upgrade" % base)
@@ -82,7 +82,7 @@ func test_every_base_has_one_upgrade_and_two_named_finals() -> void:
 		assert_true(TurretEvolution.options(base, 2).is_empty())
 		assert_true(TurretEvolution.options(base, -1).is_empty())
 		for form: String in upgrades + finals:
-			assert_true(TurretEvolution.FORMS.has(form), "%s is registered in FORMS" % form)
+			assert_true(TurretEvolution.has_form(form), "%s is registered in the form table" % form)
 			assert_false(TurretEvolution.form_name(form).is_empty())
 			assert_false(TurretEvolution.model_key(form).is_empty())
 	assert_true(TurretEvolution.options("missing", 0).is_empty())
@@ -91,22 +91,22 @@ func test_every_base_has_one_upgrade_and_two_named_finals() -> void:
 
 func test_every_registered_form_belongs_to_one_path() -> void:
 	var seen: Dictionary = {}
-	for base: String in TurretEvolution.PATHS:
+	for base: String in TurretEvolution.bases():
 		for form: String in TurretEvolution.options(base, 0) + TurretEvolution.options(base, 1):
 			assert_false(seen.has(form), "%s appears in two paths" % form)
 			seen[form] = base
-	for form: String in TurretEvolution.FORMS:
+	for form: String in TurretEvolution.form_ids():
 		assert_true(seen.has(form), "%s is in FORMS but no path offers it" % form)
 	assert_eq(seen.size(), 30, "10 bases x (1 upgrade + 2 finals)")
 
 func test_implemented_forms_are_the_twenty_six_with_attacks_and_stats() -> void:
-	assert_eq(TurretEvolution.IMPLEMENTED.size(), 26)
-	for form in TurretEvolution.IMPLEMENTED:
-		assert_true(TurretEvolution.FORMS.has(form), "%s is registered" % form)
+	assert_eq(TurretEvolution.implemented_forms().size(), 26)
+	for form in TurretEvolution.implemented_forms():
+		assert_true(TurretEvolution.has_form(form), "%s is registered" % form)
 		assert_false(TurretEvolution.description(form).is_empty(), "%s has a description" % form)
 	for form in ["forked_coil", "storm_network", "thunderhead", "constellation"]:
-		assert_true(TurretEvolution.FORMS.has(form))
-		assert_false(form in TurretEvolution.IMPLEMENTED, "%s is registered but gated off until built" % form)
+		assert_true(TurretEvolution.has_form(form))
+		assert_false(TurretEvolution.is_implemented(form), "%s is registered but gated off until built" % form)
 
 func test_form_stats_keep_the_authored_stage_one_and_stage_three_numbers() -> void:
 	var upgrade := TurretEvolution.base_stats("normal", "machine_gun")
@@ -130,7 +130,7 @@ func test_sniper_path_forms_tiers_and_placeholder_chassis() -> void:
 	assert_eq(TurretEvolution.form_name("horizon_piercer"), "Horizon Piercer")
 	assert_eq(TurretEvolution.form_name("overwatch"), "Overwatch")
 	for form in ["piercer_rifle", "horizon_piercer", "overwatch"]:
-		assert_true(form in TurretEvolution.IMPLEMENTED)
+		assert_true(TurretEvolution.is_implemented(form))
 		assert_eq(TurretEvolution.model_key(form), "sniper", "Every Sniper form uses the cp_sniper chassis")
 		assert_true(ClockworkModels.available(TurretEvolution.model_key(form)))
 		assert_false(TurretEvolution.description(form).is_empty())
@@ -173,7 +173,7 @@ func test_quake_path_forms_tiers_and_placeholder_chassis() -> void:
 	assert_eq(TurretEvolution.form_name("tectonic"), "Tectonic")
 	assert_eq(TurretEvolution.form_name("cataclysm"), "Cataclysm")
 	for form in ["aftershock", "tectonic", "cataclysm"]:
-		assert_true(form in TurretEvolution.IMPLEMENTED)
+		assert_true(TurretEvolution.is_implemented(form))
 		assert_eq(TurretEvolution.model_key(form), "quake", "Every Quake form uses the cp_quake chassis")
 		assert_true(ClockworkModels.available(TurretEvolution.model_key(form)))
 		assert_false(TurretEvolution.description(form).is_empty())

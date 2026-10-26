@@ -111,15 +111,7 @@ func _rebuild_model() -> void:
 	if turret_type == "tesla" and not use_clockwork:
 		EnemyVariants.tint_model(model, "turret_tesla", TESLA_TINT, .5)
 	add_child(model)
-	BowEvolutionVisual.build(model, progression.evolution_form)
-	flame_emitters = FlameEvolutionVisual.build(model, progression.evolution_form)
-	bowling_hardware = BowlingEvolutionVisual.build(model, progression.evolution_form)
-	gun_muzzles = GunbladeEvolutionVisual.build(model, progression.evolution_form)
-	SiegeEvolutionVisual.build(model, progression.evolution_form)
-	SniperEvolutionVisual.build(model, progression.evolution_form)
-	QuakeEvolutionVisual.build(model, progression.evolution_form)
-	GatlingEvolutionVisual.build(model, progression.evolution_form)
-	crossfire_muzzles = CrossfireEvolutionVisual.build(model, progression.evolution_form)
+	_build_form_visual()
 	aim = model.find_child("Aim", true, false) as Node3D
 	blade_tip = model.find_child("BladeTip", true, false) as Node3D
 	muzzle = model.find_child("Muzzle", true, false) as Node3D
@@ -149,6 +141,15 @@ func _rebuild_model() -> void:
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
 		bat_authored_reach = maxf(.001, WorldGeometry.planar((blade_tip if blade_tip else muzzle).global_position - aim.global_position).length())
 	_build_saber_arms()
+
+## Adds the hardware the form's row names (`visual`) to the chassis and keeps the nodes the attack code reads.
+func _build_form_visual() -> void:
+	var visual: Variant = TurretEvolution.visual_script(progression.evolution_form)
+	var handles: TurretVisualHandles = visual.build(model, progression.evolution_form) if visual != null else null
+	flame_emitters.assign(handles.flame_emitters if handles else [])
+	bowling_hardware = handles.bowling_hardware if handles else null
+	gun_muzzles.assign(handles.gun_muzzles if handles else [])
+	crossfire_muzzles.assign(handles.crossfire_muzzles if handles else [])
 
 ## Placeholder procedural model: a base post with a pivoting arm; `Aim` is the spin pivot, `Muzzle` the bat tip.
 func _build_melee_model() -> Node3D:
@@ -300,7 +301,7 @@ func resolve_attack_stats(secondary: bool = false, form_id: String = "") -> Dict
 		form_id = progression.evolution_form
 	var base := TurretEvolution.base_stats(turret_type, form_id)
 	if secondary:
-		base = TurretEvolution.gunblade_barrel_stats()
+		base = TurretEvolution.gunblade_barrel_stats(form_id)
 	var stats := ModifierService.get_turret_stats(turret_type, world.difficulty_config, base, "normal" if secondary else "")
 	if world.session.state.turret_progression_enabled:
 		progression.apply_stats(stats)
@@ -481,7 +482,7 @@ func available_evolutions() -> Array[String]:
 	if not world.session.state.turret_progression_enabled:
 		return result
 	for option in progression.evolution_options(turret_type):
-		if option in TurretEvolution.IMPLEMENTED and ClockworkModels.available(_model_key(option)):
+		if TurretEvolution.is_implemented(option) and ClockworkModels.available(_model_key(option)):
 			result.append(option)
 	return result
 
@@ -544,9 +545,9 @@ func _tick_bow_burst(delta: float, stats: TurretStats) -> void:
 ## Additional held blades reuse the authored arm, hand, hilt and prism geometry.
 func _build_saber_arms() -> void:
 	saber_angles.assign([0.0])
-	if progression.evolution_form != "orbit_saber":
-		return
 	var count := TurretEvolution.blade_count(progression.evolution_form)
+	if count <= 1:
+		return
 	var parts: Array[Node3D] = []
 	for part_name: String in ["Ceramic_Arm", "Ceramic_Hand", "Sword_Grip", "Sword_Guard", "Prism_Blade"]:
 		var part := model.find_child(part_name, true, false) as Node3D

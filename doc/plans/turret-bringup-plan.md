@@ -9,7 +9,7 @@ Each turret is its own branch and commit(s), in this order:
 1. **Engine pieces first.** Build the shared system(s) the turret needs (S-numbers below) with unit tests, before any turret code.
 2. **Registry entry.** `TurretRegistry` entry (stats, attack styles, damage types, price), family in `FAMILIES` where relevant, and the item-rule mapping (`get_attack_families`); utility turrets follow the no-attack rule from the handoff.
 3. **Base attack** in `TurretActor` (or a `TurretForm` subclass if it has branch-specific state).
-4. **Level-5 upgrade and the two level-10 finals** as forms: add to `TurretEvolution.PATHS`/`FORMS`, form behaviour class, `IMPLEMENTED`. Each upgrade needs a visible hardware change; finals are tuned above the upgrade.
+4. **Level-5 upgrade and the two level-10 finals** as forms: three rows in the form table (`scripts/data/turret_forms.gd`; its header lists every touch-point), each naming its behaviour class and visual builder, with `implemented` set once the attack and art exist. Paths, the implemented list, models and descriptions all come from the rows. Each upgrade needs a visible hardware change; finals are tuned above the upgrade.
 5. **Shop wiring:** stock it (shop pool, price, portrait key falling back to the base id), controller flow, inspector milestones.
 6. **Tests:** unit tests for the new logic, one integration test per form, shop gating test, portrait test passes. Run the full suite (`godot-test` skill), zero orphans.
 7. **Bench and showcase:** `tools/bench_turret_forms.gd` row per form (finals roughly 1.4 to 1.6 times the upgrade at level 10, tuned per role) and a showcase run.

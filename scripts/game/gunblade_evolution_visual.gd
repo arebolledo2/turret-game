@@ -3,22 +3,17 @@ extends RefCounted
 
 static var materials: Dictionary = {}
 
-static func build(model: Node3D, form_id: String) -> Array[Node3D]:
-	var exits: Array[Node3D] = []
+static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
 	if form_id != "stormblade":
-		return exits
+		return null
+	var exits: Array[Node3D] = []
 	var aim := model.find_child("Aim", true, false) as Node3D
 	var muzzle := model.find_child("Muzzle", true, false) as Node3D
 	exits.append(muzzle)
 	if materials.is_empty():
-		for entry in [["brass", "dba94c", .8], ["ivory", "eee7ce", .2], ["dark", "19252b", .4], ["teal", "237d82", .3]]:
-			var material := StandardMaterial3D.new()
-			material.albedo_color = Color(entry[1])
-			material.metallic = entry[2]
-			material.roughness = .28
-			materials[entry[0]] = material
+		materials = VisualPalette.build([["brass", "dba94c", .8], ["ivory", "eee7ce", .2], ["dark", "19252b", .4], ["teal", "237d82", .3]], .28)
 	# One extra barrel per follow-up round; the blade's own muzzle fires the first.
-	for i in range(TurretEvolution.STORMBLADE_BURST_SHOTS - 1):
+	for i in range(TurretEvolution.barrel_burst(form_id) - 1):
 		var barrel := Node3D.new()
 		barrel.name = "BurstBarrel%d" % (i + 1)
 		aim.add_child(barrel)
@@ -52,7 +47,9 @@ static func build(model: Node3D, form_id: String) -> Array[Node3D]:
 		exit.name = "GunMuzzle%d" % (i + 1)
 		barrel.add_child(exit)
 		exits.append(exit)
-	return exits
+	var handles := TurretVisualHandles.new()
+	handles.gun_muzzles = exits
+	return handles
 
 static func _part(parent: Node3D, mesh: Mesh, material: String, at: Vector3, along_barrel: bool) -> void:
 	var instance := MeshInstance3D.new()

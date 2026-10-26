@@ -115,7 +115,7 @@ static func _actor_numbers(actor: TurretActor, secondary: bool = false) -> Dicti
 	var pulse := TurretRegistry.get_fire_mode(actor.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] and not secondary
 	var reach := stats.range_metres * (stats.area_size if pulse else 1.0)
 	return {"damage": stats.damage, "range": reach, "fire_rate": stats.fire_rate,
-		"burst_size": TurretEvolution.STORMBLADE_BURST_SHOTS if secondary else TurretEvolution.volley_size(actor.progression.evolution_form),
+		"burst_size": TurretEvolution.barrel_burst(actor.progression.evolution_form) if secondary else TurretEvolution.volley_size(actor.progression.evolution_form),
 		"rotation_rate": float(values.get("rotation_rate", 0.0)), "area": reach if pulse else stats.aoe_radius_metres,
 		"stats": {"pierce": stats.pierce, "projectile_speed": stats.projectile_speed_metres,
 		"knockback": stats.knockback_metres, "chain_count": stats.chain_count,
@@ -146,7 +146,7 @@ static func _actor_dps(actor: TurretActor) -> float:
 		result += stats.damage * float(stats.values.get("burn_ratio", 1.6)) * minf(1.0, rate * float(stats.values.get("burn_duration", 2.0)))
 	if form_id == "stormblade":
 		var gun := TurretStats.new(actor.resolve_attack_stats(true))
-		var shots := TurretEvolution.STORMBLADE_BURST_SHOTS
+		var shots := TurretEvolution.barrel_burst(form_id)
 		result += gun.damage * float(shots) / (gun.cooldown_seconds + .065 * (shots - 1))
 	return result
 

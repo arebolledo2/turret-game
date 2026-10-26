@@ -772,7 +772,7 @@ func test_finals_are_above_the_upgrade_in_a_cluster_and_tectonic_is_stronger_in_
 	assert_gt(float(cataclysm.stagger), TurretEvolution.CATACLYSM_INTERVAL)
 	assert_gt(float(tectonic.range), float(upgrade.range), "Range 400")
 	for form in ["aftershock", "tectonic", "cataclysm"]:
-		assert_true(form in TurretEvolution.IMPLEMENTED)
+		assert_true(TurretEvolution.is_implemented(form))
 		assert_eq(TurretEvolution.model_key(form), "quake")
 		assert_true(ClockworkModels.available("quake"))
 		assert_false(TurretEvolution.description(form).is_empty())

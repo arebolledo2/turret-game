@@ -3,18 +3,13 @@ extends RefCounted
 
 static var materials: Dictionary = {}
 
-static func build(model: Node3D, form_id: String) -> void:
+static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
 	if form_id != "cyclone_gatling":
-		return
+		return null
 	var aim := model.find_child("Aim", true, false) as Node3D
 	var rotor := model.find_child("Rotor", true, false) as Node3D
 	if materials.is_empty():
-		for entry in [["brass", "dba94c", .8], ["coral", "d7695a", .25], ["mint", "72e0c4", .3]]:
-			var material := StandardMaterial3D.new()
-			material.albedo_color = Color(entry[1])
-			material.metallic = entry[2]
-			material.roughness = .3
-			materials[entry[0]] = material
+		materials = VisualPalette.build([["brass", "dba94c", .8], ["coral", "d7695a", .25], ["mint", "72e0c4", .3]])
 	for side: float in [-1.0, 1.0]:
 		var drum := Node3D.new()
 		drum.name = "CycloneDrumLeft" if side < 0 else "CycloneDrumRight"
@@ -43,6 +38,7 @@ static func build(model: Node3D, form_id: String) -> void:
 		var rail := BoxMesh.new()
 		rail.size = Vector3(.045, .065, .37)
 		_part(cage, rail, "mint", Vector3(sin(angle) * .29, cos(angle) * .29, -.395), Vector3(0, 0, -angle))
+	return null
 
 static func _part(parent: Node3D, mesh: Mesh, material: String, at: Vector3, rotation: Vector3) -> void:
 	var instance := MeshInstance3D.new()

@@ -20,18 +20,18 @@ const HORIZON_EXTENSION: float = .8
 const MAST_BASE: Vector3 = Vector3(0, .34, .5)
 const MAST_HEIGHT: float = .32
 
-static func build(model: Node3D, form_id: String) -> void:
+static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
 	if form_id not in ["piercer_rifle", "horizon_piercer", "overwatch"]:
-		return
+		return null
 	var aim := model.find_child("Aim", true, false) as Node3D
 	var muzzle := model.find_child("Muzzle", true, false) as Node3D
 	if aim == null or muzzle == null:
-		return
+		return null
 	_ensure_materials()
 	var bore := muzzle.position
 	if form_id == "overwatch":
 		_spotter(aim)
-		return
+		return null
 	var horizon := form_id == "horizon_piercer"
 	var extension := HORIZON_EXTENSION if horizon else PIERCER_EXTENSION
 	var tip := bore.z - extension
@@ -40,6 +40,7 @@ static func build(model: Node3D, form_id: String) -> void:
 	else:
 		_piercer_brake(aim, bore, tip)
 	muzzle.position = Vector3(bore.x, bore.y, tip - .02)
+	return null
 
 ## Two collars on the teal barrel, a slim barrel extension and a vented brass brake at the end.
 static func _piercer_brake(aim: Node3D, bore: Vector3, tip: float) -> void:
@@ -85,16 +86,7 @@ static func _spotter(aim: Node3D) -> void:
 static func _ensure_materials() -> void:
 	if not materials.is_empty():
 		return
-	for entry in [["brass", "dba94c", .8, 0.0], ["graphite", "56636a", .6, 0.0], ["teal", "37d8d0", .35, 1.8], ["amber", "ffb02e", .3, 1.9]]:
-		var material := StandardMaterial3D.new()
-		material.albedo_color = Color(entry[1])
-		material.metallic = entry[2]
-		material.roughness = .3
-		if entry[3] > 0.0:
-			material.emission_enabled = true
-			material.emission = Color(entry[1])
-			material.emission_energy_multiplier = entry[3]
-		materials[entry[0]] = material
+	materials = VisualPalette.build([["brass", "dba94c", .8], ["graphite", "56636a", .6], ["teal", "37d8d0", .35, 1.8], ["amber", "ffb02e", .3, 1.9]])
 
 ## A cylinder along -Z (the bore direction); `upright` keeps it vertical for the spotter mast.
 static func _cylinder(parent: Node3D, label: String, radius: float, length: float, material: String, at: Vector3, upright: bool = false) -> void:
