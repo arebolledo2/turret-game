@@ -403,6 +403,13 @@
       "status": "review",
       "preview": "previews/resonator.png",
       "metrics": "6,626 triangles \u00c2\u00b7 13 meshes \u00c2\u00b7 8 materials"
+    },
+    {
+      "key": "sniper",
+      "name": "Sniper",
+      "status": "review",
+      "preview": "previews/sniper.png",
+      "metrics": "12,128 triangles \u00c2\u00b7 13 meshes \u00c2\u00b7 11 materials"
     }
   ],
   "events": [
@@ -701,6 +708,10 @@
     {
       "stage": "Export: resonator",
       "text": "Reviewed harness iteration 2; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: sniper",
+      "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
     }
   ],
   "checks": {

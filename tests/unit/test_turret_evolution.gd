@@ -143,7 +143,7 @@ func test_sniper_path_forms_tiers_and_placeholder_chassis() -> void:
 	assert_eq(TurretEvolution.form_name("overwatch"), "Overwatch")
 	for form in ["piercer_rifle", "horizon_piercer", "overwatch"]:
 		assert_true(form in TurretEvolution.IMPLEMENTED)
-		assert_eq(TurretEvolution.model_key(form), "ion", "The Ion chassis is the placeholder until a Sniper model exists")
+		assert_eq(TurretEvolution.model_key(form), "sniper", "Every Sniper form uses the cp_sniper chassis")
 		assert_true(ClockworkModels.available(TurretEvolution.model_key(form)))
 		assert_false(TurretEvolution.description(form).is_empty())
 

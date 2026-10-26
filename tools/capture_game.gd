@@ -16,6 +16,7 @@ var combat_demo: bool = false
 var new_turrets: bool = false
 var zones_demo: bool = false
 var roster_demo: bool = false
+var sniper_demo: bool = false
 var last_tick: int = 0
 var physics_samples: Array[float] = []
 var process_samples: Array[float] = []
@@ -56,11 +57,12 @@ func setup() -> void:
 			shop_focus = int(argument.trim_prefix("--shop-focus="))
 	combat_demo = "--combat-demo" in OS.get_cmdline_user_args()
 	roster_demo = "--roster-demo" in arguments
+	sniper_demo = "--sniper-demo" in arguments
 	new_turrets = "--new-turrets" in arguments or mixed_stress
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	GameRandom.gameplay.seed = 42
-	for index in range(150 if stress else (0 if zones_demo or roster_demo else 18)):
+	for index in range(150 if stress else (0 if zones_demo or roster_demo or sniper_demo else 18)):
 		var angle := float(index) * 2.39996
 		var radius := 2.5 + float(index % 6) * .5
 		var kind: String = ["basic", "fast", "tank", "charger", "exploder"][index % 5] if mixed_stress else ("charger" if index % 4 == 0 else "basic")
@@ -79,8 +81,51 @@ func setup() -> void:
 		world.drops.spawn(Vector3(2, 0, 2)).health = 10000
 	if roster_demo:
 		stage_roster_demo()
+	if sniper_demo:
+		stage_sniper_demo()
 	last_tick = Time.get_ticks_usec()
 	started_usec = last_tick
+
+## The Sniper line in combat: base, Piercer Rifle, Horizon Piercer and Overwatch each fire once at three stationary
+## enemies in a lane (`--sniper-demo`).
+func stage_sniper_demo() -> void:
+	world.set_physics_process(false)
+	world.hud.hide()
+	world.player.set_physics_process(false)
+	world.player.position = Vector3(0, 0, 4)
+	for old in world.turrets:
+		old.visible = false
+		old.set_physics_process(false)
+	var forms: Array = ["", "piercer_rifle", "horizon_piercer", "overwatch"]
+	for index in range(forms.size()):
+		var turret := world.add_turret(Vector3(-4.5 + index * 3.0, 0, 0), "sniper")
+		turret.set_physics_process(false)
+		if not (forms[index] as String).is_empty():
+			turret.progression.evolution_form = forms[index]
+			turret.progression.evolution_stage = 1 if forms[index] == "piercer_rifle" else 2
+			turret._rebuild_model()
+			turret.invalidate_stats()
+		for lane in range(3):
+			var enemy := world.spawn_enemy(turret.position + Vector3(0, 0, -3.5 - lane * 1.3), "tank" if lane == 0 else "basic")
+			enemy.set_physics_process(false)
+			enemy.health = 100000
+			enemy.max_health = 100000
+		turret.reset_physics_interpolation()
+	world.crowd.rebuild(world.enemies)
+	world.camera_rig.set_zoom(.75)
+	world.camera_rig.snap()
+
+## Once combat has started: every visible Sniper fires one real shot (tracer, muzzle flash, hit), then effects freeze.
+func fire_sniper_demo() -> void:
+	# With no initial wave the run drifts to the shop; turrets only fire in combat.
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	world.crowd.rebuild(world.enemies)
+	for turret in world.turrets:
+		if turret.visible:
+			turret.cooldown = 0
+			turret._physics_process(.016)
+	world.effects._physics_process(.03)
+	world.effects.set_physics_process(false)
 
 ## A frozen gameplay-scale roster, used for appearance checks rather than benchmarking.
 func stage_roster_demo() -> void:
@@ -140,6 +185,8 @@ func _process(_delta: float) -> void:
 		world.finish_wave()
 	if frames == 400 and shop_focus >= 0:
 		world.hud.shop_screen.offer_buttons[shop_focus].grab_focus()
+	if frames == 180 and sniper_demo:
+		fire_sniper_demo()
 	if frames == 180 and combat_demo:
 		stage_combat_demo()
 	var finished := elapsed >= benchmark_seconds + 2.0 if benchmark_seconds > 0.0 else frames == 720
@@ -152,6 +199,8 @@ func capture() -> void:
 	var suffix := "-stress" if stress else ("-turrets" if new_turrets else "-shop" if shop else ("-combat" if combat_demo else ("-zones" if zones_demo else "")))
 	if roster_demo:
 		suffix = "-roster"
+	if sniper_demo:
+		suffix = "-sniper"
 	var output := ProjectSettings.globalize_path("res://.test-results/game%s.png" % suffix)
 	get_viewport().get_texture().get_image().save_png(output)
 	samples.sort()

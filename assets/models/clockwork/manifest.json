@@ -549,6 +549,17 @@
       "meshes": 13,
       "materials": 8,
       "iteration": 2
+    },
+    {
+      "id": "sniper",
+      "source": "art-source/clockwork-pop/sniper/build_cp_sniper.py",
+      "model": "assets/models/clockwork/cp_sniper.glb",
+      "reference": "art-source/clockwork-pop/references/sniper.png",
+      "sha256": "b1270021fa1da227211e25a3104425239477483c5309e9ba189c1e366f19c6a2",
+      "triangles": 12128,
+      "meshes": 13,
+      "materials": 11,
+      "iteration": 3
     }
   ]
 }

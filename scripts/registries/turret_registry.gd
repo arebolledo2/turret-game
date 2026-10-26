@@ -79,8 +79,7 @@ const TYPES: Dictionary = {
 		"name": "Sniper Turret",
 		"icon": "🎯",
 		"short_name": "Sniper",
-		# No sniper model yet: the Ion chassis stands in (see `TurretActor._model_key`).
-		"model_key": "ion",
+		"model_key": "sniper",
 		"fire_mode": FIRE_INSTANT,
 		"targeting": "toughest",
 		"description": "Instant long-range shot at the toughest enemy in range, bosses and crates included. Slow, heavy hits.",

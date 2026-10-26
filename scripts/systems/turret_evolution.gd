@@ -41,10 +41,10 @@ const FORMS: Dictionary = {
 	"forked_coil": {"name": "Forked Coil", "model": "tesla", "tier": 1},
 	"storm_network": {"name": "Storm Network", "model": "storm_network", "tier": 3},
 	"thunderhead": {"name": "Thunderhead", "model": "thunderhead", "tier": 3},
-	# No Sniper chassis exists yet: all three stages use the Ion chassis, and a runtime rifle attachment tells them apart.
-	"piercer_rifle": {"name": "Piercer Rifle", "model": "ion", "tier": 1},
-	"horizon_piercer": {"name": "Horizon Piercer", "model": "ion", "tier": 3},
-	"overwatch": {"name": "Overwatch", "model": "ion", "tier": 3},
+	# All three stages share the cp_sniper chassis; `SniperEvolutionVisual` adds the per-form hardware.
+	"piercer_rifle": {"name": "Piercer Rifle", "model": "sniper", "tier": 1},
+	"horizon_piercer": {"name": "Horizon Piercer", "model": "sniper", "tier": 3},
+	"overwatch": {"name": "Overwatch", "model": "sniper", "tier": 3},
 }
 
 ## Forms offered at `stage` (evolutions already taken): the upgrade at 0, the two finals at 1, nothing after.

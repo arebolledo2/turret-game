@@ -131,26 +131,44 @@ func test_sniper_milestones_offer_the_upgrade_then_both_finals() -> void:
 	assert_true(turret.available_evolutions().is_empty())
 	assert_false(turret.evolve("horizon_piercer"))
 
-func test_base_sniper_uses_the_ion_chassis_and_each_form_adds_visible_hardware() -> void:
+func test_every_sniper_form_uses_the_sniper_chassis_and_adds_visible_hardware() -> void:
 	var turret := _sniper()
-	assert_not_null(turret.model.find_child("Pepperbox_Watchman", true, false), "Ion chassis placeholder")
-	assert_null(turret.model.find_child("RifleBarrel", true, false), "The base turret has no rifle hardware")
+	assert_not_null(turret.model.find_child("CP_Sniper", true, false), "Base turret is the Sniper chassis")
+	assert_null(turret.model.find_child("Pepperbox_Watchman", true, false), "No Ion placeholder")
+	for part in ["RifleBarrel", "RifleBrake", "HorizonRail", "SpotterRing"]:
+		assert_null(turret.model.find_child(part, true, false), "The base turret has no %s" % part)
 	var base_tip := turret.muzzle.position
 	turret.progression.award(389)
 	assert_true(turret.evolve("piercer_rifle"))
-	assert_not_null(turret.model.find_child("Pepperbox_Watchman", true, false), "Still the Ion chassis")
-	for part in ["RifleBarrel", "RifleBrake", "RifleScope"]:
+	assert_not_null(turret.model.find_child("CP_Sniper", true, false), "Still the Sniper chassis")
+	for part in ["RifleBarrel", "RifleBrake", "RifleCollar"]:
 		assert_not_null(turret.model.find_child(part, true, false), part)
-	assert_lt(turret.muzzle.position.z, base_tip.z - .5, "Shots leave from the end of the new barrel")
+	assert_lt(turret.muzzle.position.z, base_tip.z - .3, "Shots leave from the end of the new barrel")
+	assert_almost_eq(turret.muzzle.position.y, base_tip.y, .001, "The extension stays on the bore axis")
 	var rifle_tip := turret.muzzle.position
 	assert_true(turret.evolve("horizon_piercer"))
+	assert_not_null(turret.model.find_child("CP_Sniper", true, false))
 	assert_not_null(turret.model.find_child("HorizonRail", true, false))
+	assert_null(turret.model.find_child("RifleBrake", true, false), "Horizon replaces the brake with its emitter")
+	assert_not_null(turret.model.find_child("HorizonEmitter", true, false))
 	assert_lt(turret.muzzle.position.z, rifle_tip.z, "The Horizon barrel is longer still")
 	var other := _sniper(["piercer_rifle", "overwatch"])
+	assert_not_null(other.model.find_child("CP_Sniper", true, false))
 	assert_not_null(other.model.find_child("SpotterRing", true, false))
+	assert_not_null(other.model.find_child("SpotterMast", true, false))
 	assert_null(other.model.find_child("HorizonRail", true, false))
+	assert_null(other.model.find_child("RifleBrake", true, false))
+	assert_almost_eq(other.muzzle.position.z, base_tip.z, .001, "Overwatch keeps the chassis barrel and muzzle")
 	assert_not_null(other.aim)
 	assert_not_null(other.muzzle)
+
+func test_shots_and_tracers_leave_from_the_extended_muzzle() -> void:
+	var turret := _sniper(["piercer_rifle"])
+	_combat()
+	var target := _enemy(Vector3(0, 0, -5), 500.0)
+	_step(turret)
+	assert_lt(turret.muzzle.global_position.z, turret.aim.global_position.z - 1.0, "The muzzle sits well ahead of the swivel")
+	assert_lt(target.health, 500.0, "The shot lands")
 
 # --- Base shot ---
 
