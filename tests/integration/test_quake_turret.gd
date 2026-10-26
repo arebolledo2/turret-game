@@ -187,28 +187,51 @@ func test_quake_milestones_offer_the_upgrade_then_both_finals() -> void:
 	assert_true(turret.available_evolutions().is_empty())
 	assert_false(turret.evolve("cataclysm"))
 
-func test_each_quake_stage_has_its_own_hardware_on_the_shock_bell() -> void:
+func test_every_quake_stage_uses_the_quake_chassis_and_adds_its_own_hardware() -> void:
 	var base := _quake()
-	assert_not_null(base.model.find_child("Bell shell", true, false), "The Shock bell is the placeholder chassis")
-	assert_not_null(base.model.find_child("QuakeFootPlate", true, false))
-	for part in ["AftershockPiston", "AftershockRing", "TectonicBlade", "TectonicSpike", "CataclysmRing", "CataclysmPylon"]:
+	for part in ["Base_Stone", "Base_Legs", "Aim_Body", "Hammer_Metal"]:
+		assert_not_null(base.model.find_child(part, true, false), "The cp_quake chassis has %s" % part)
+	assert_null(base.model.find_child("Bell shell", true, false), "No Shock bell placeholder")
+	assert_eq(TurretRegistry.get_type("quake").get("model_key"), "quake")
+	for part in ["QuakeFootPlate", "AftershockPiston", "AftershockRing", "TectonicBlade", "TectonicSpike", "CataclysmRing", "CataclysmPylon"]:
 		assert_null(base.model.find_child(part, true, false), "The base turret has no %s" % part)
 	var upgrade := _quake(["aftershock"])
-	for part in ["QuakeFootPlate", "AftershockPiston", "AftershockHammer", "AftershockRing"]:
+	for part in ["AftershockPiston", "AftershockCollar", "AftershockHammer", "AftershockRing"]:
 		assert_not_null(upgrade.model.find_child(part, true, false), part)
 	assert_null(upgrade.model.find_child("TectonicBlade", true, false))
 	var tectonic := _quake(["aftershock", "tectonic"])
-	for part in ["QuakeFootPlate", "TectonicBlade", "TectonicSpike"]:
+	for part in ["TectonicBlade", "TectonicSpike"]:
 		assert_not_null(tectonic.model.find_child(part, true, false), part)
 	assert_null(tectonic.model.find_child("AftershockPiston", true, false))
 	assert_null(tectonic.model.find_child("CataclysmRing", true, false))
 	var cataclysm := _quake(["aftershock", "cataclysm"])
-	for part in ["QuakeFootPlate", "CataclysmRing", "CataclysmPylon", "CataclysmBeacon"]:
+	for part in ["CataclysmRing", "CataclysmPylon", "CataclysmBeacon"]:
 		assert_not_null(cataclysm.model.find_child(part, true, false), part)
 	assert_null(cataclysm.model.find_child("TectonicBlade", true, false))
 	assert_null(cataclysm.model.find_child("AftershockPiston", true, false))
 	for turret in [base, upgrade, tectonic, cataclysm]:
-		assert_not_null(turret.model.find_child("Bell shell", true, false))
+		assert_not_null(turret.model.find_child("Base_Stone", true, false), "Every form keeps the stone slab chassis")
+		assert_not_null(turret.aim)
+		assert_not_null(turret.muzzle)
+
+func test_quake_hardware_stands_on_and_around_the_stone_slab() -> void:
+	var slab := (_quake().model.find_child("Base_Stone", true, false) as MeshInstance3D).mesh.get_aabb()
+	var radius := minf(slab.size.x, slab.size.z) * .5
+	var top := slab.end.y
+	var upgrade := _quake(["aftershock"])
+	for piston in upgrade.model.find_children("AftershockPiston", "MeshInstance3D", true, false):
+		var at := (piston as Node3D).position
+		assert_lt(Vector2(at.x, at.z).length(), radius, "A piston stands on the slab")
+		assert_gt(at.y, top, "A piston rises from the slab top, not from inside it")
+	var ring := upgrade.model.find_child("AftershockRing", true, false) as Node3D
+	assert_gt(ring.position.y, top, "The damper ring lies on top of the slab")
+	var tectonic := _quake(["aftershock", "tectonic"])
+	for blade in tectonic.model.find_children("TectonicBlade", "MeshInstance3D", true, false):
+		var at := (blade as Node3D).position
+		assert_gt(Vector2(at.x, at.z).length(), radius, "Fissure cracks run out of the slab, not through the legs")
+	var cataclysm := _quake(["aftershock", "cataclysm"])
+	for ripple in cataclysm.model.find_children("CataclysmRing", "MeshInstance3D", true, false):
+		assert_gt(((ripple as MeshInstance3D).mesh as TorusMesh).inner_radius, radius, "Ripple rings circle the slab")
 
 # --- Base pulse ---
 
@@ -750,7 +773,7 @@ func test_finals_are_above_the_upgrade_in_a_cluster_and_tectonic_is_stronger_in_
 	assert_gt(float(tectonic.range), float(upgrade.range), "Range 400")
 	for form in ["aftershock", "tectonic", "cataclysm"]:
 		assert_true(form in TurretEvolution.IMPLEMENTED)
-		assert_eq(TurretEvolution.model_key(form), "shock")
-		assert_true(ClockworkModels.available("shock"))
+		assert_eq(TurretEvolution.model_key(form), "quake")
+		assert_true(ClockworkModels.available("quake"))
 		assert_false(TurretEvolution.description(form).is_empty())
 		assert_eq(TurretEvolution.quake_pattern_text(form).is_empty(), false)

@@ -1,44 +1,76 @@
 class_name QuakeEvolutionVisual
 extends RefCounted
 
-## Runtime stomp hardware for the Quake line. There is no Quake chassis yet, so every stage is the Shock bell, and this
-## builder gives each stage its own silhouette at the foot of the turret:
-##   Quake      a broad steel foot plate with brass bolts.
-##   Aftershock the plate plus twin brass hammer pistons and a glowing damper ring (the second pulse's hardware).
-##   Tectonic   two crossed glowing blades laid in an X on the plate, with a drill spike at each tip (the two fissures).
-##   Cataclysm  three stacked glowing rings climbing the bell and four corner pylons (the growing repeats).
-## Parts hang off the model root, which is the turret's origin on the floor.
+## Runtime stomp hardware for the Quake line. Every stage shares the cp_quake chassis (a teal cube with a brass hammer on
+## three coral legs, standing on a cracked stone slab); the slab already is the foot of the turret, so the upgrade and the
+## finals add their own silhouette around it:
+##   Quake      the bare chassis.
+##   Aftershock twin brass hammer pistons planted on the slab and a glowing damper ring laid on it (the second pulse).
+##   Tectonic   four glowing cracks running out of the slab, each with a brass drill spike at the slab edge (the X of fissures).
+##   Cataclysm  three glowing ripple rings on the ground around the slab and four amber-tipped pylons (the growing repeats).
+## Sizes come from the model itself (`_footprint`): the slab radius and top from `Base_Stone`, the cube top from
+## `Aim_Body`, so a re-authored chassis keeps the hardware on its slab. Parts hang off the model root, which is the
+## turret's origin on the floor and the centre of the slab (the pulse ring, telegraph and fissures are driven from there).
 static var materials: Dictionary = {}
 
+## Fallbacks if the chassis meshes are missing: the cp_quake slab radius and top and the cube top, in metres.
+const DEFAULT_SLAB_RADIUS: float = .89
+const DEFAULT_SLAB_TOP: float = .2
+const DEFAULT_BODY_TOP: float = 1.22
+## Hardware angles (radians, atan2(z, x) around the turret) chosen to sit clear of the chassis: its legs stand at 110, 230 and
+## 350 degrees and its loose stone chunks lie at 60, 125 and 340 degrees. Pistons go in two of the gaps between legs; cracks and pylons
+## are spread around the slab edge.
+const CRACK_ANGLES: Array[float] = [.17, 1.75, 3.32, 4.89]
+const PISTON_ANGLES: Array[float] = [2.97, .87]
+
 static func build(model: Node3D, base_type: String, form_id: String) -> void:
-	if base_type != "quake":
+	if base_type != "quake" or form_id not in ["aftershock", "tectonic", "cataclysm"]:
 		return
 	_ensure_materials()
-	_cylinder(model, "QuakeFootPlate", .8, .07, "dark", Vector3(0, .035, 0))
-	_cylinder(model, "QuakeFootRim", .84, .035, "steel", Vector3(0, .02, 0))
-	for index in range(6):
-		var angle := TAU * float(index) / 6.0
-		_cylinder(model, "QuakeBolt", .05, .1, "brass", Vector3(cos(angle) * .7, .1, sin(angle) * .7))
+	var footprint := _footprint(model)
+	var radius: float = footprint.radius
+	var top: float = footprint.top
 	match form_id:
 		"aftershock":
-			for side: float in [-1.0, 1.0]:
-				_cylinder(model, "AftershockPiston", .075, .62, "steel", Vector3(side * .66, .42, 0))
-				_cylinder(model, "AftershockCollar", .105, .07, "brass", Vector3(side * .66, .62, 0))
-				_cylinder(model, "AftershockHammer", .17, .11, "brass", Vector3(side * .66, .13, 0))
-			_torus(model, "AftershockRing", .56, .62, "teal", Vector3(0, .13, 0))
+			for index in PISTON_ANGLES.size():
+				var at := _polar(PISTON_ANGLES[index], radius * .84)
+				_cylinder(model, "AftershockPiston", .075, .62, "steel", Vector3(at.x, top + .31, at.z))
+				_cylinder(model, "AftershockCollar", .105, .07, "brass", Vector3(at.x, top + .56, at.z))
+				_cylinder(model, "AftershockHammer", .17, .11, "brass", Vector3(at.x, top + .055, at.z))
+			_torus(model, "AftershockRing", radius * .83 - .035, radius * .83 + .035, "teal", Vector3(0, top + .012, 0))
 		"tectonic":
-			for side: float in [-1.0, 1.0]:
-				_box(model, "TectonicBlade", Vector3(2.0, .07, .2), "teal", Vector3(0, .11, 0), side * PI / 4.0)
-			for index in range(4):
-				var angle := PI / 4.0 + PI * .5 * float(index)
-				_cone(model, "TectonicSpike", .12, .42, "brass", Vector3(cos(angle) * .92, .24, sin(angle) * .92))
+			for angle in CRACK_ANGLES:
+				var inner := radius * .94
+				var length := .5
+				var middle := _polar(angle, inner + length * .5)
+				_box(model, "TectonicBlade", Vector3(length, .05, .14), "teal", Vector3(middle.x, .03, middle.z), -angle)
+				var spike := _polar(angle, radius * 1.02)
+				_cone(model, "TectonicSpike", .12, .46, "brass", Vector3(spike.x, .23, spike.z))
 		"cataclysm":
 			for index in range(3):
-				_torus(model, "CataclysmRing", .5 - .06 * float(index), .56 - .06 * float(index), "teal" if index != 1 else "amber", Vector3(0, .32 + .3 * float(index), 0))
-			for index in range(4):
-				var angle := PI / 4.0 + PI * .5 * float(index)
-				_cylinder(model, "CataclysmPylon", .055, 1.05, "steel", Vector3(cos(angle) * .7, .55, sin(angle) * .7))
-				_sphere(model, "CataclysmBeacon", .09, "amber", Vector3(cos(angle) * .7, 1.1, sin(angle) * .7))
+				var ring_radius := radius * 1.08 + .12 * float(index)
+				_torus(model, "CataclysmRing", ring_radius - .025, ring_radius + .025, "teal" if index != 1 else "amber", Vector3(0, .03, 0))
+			for angle in CRACK_ANGLES:
+				var at := _polar(angle, radius * .98)
+				_cylinder(model, "CataclysmPylon", .055, 1.05, "steel", Vector3(at.x, .525, at.z))
+				_cylinder(model, "CataclysmCap", .09, .07, "brass", Vector3(at.x, 1.05, at.z))
+				_sphere(model, "CataclysmBeacon", .09, "amber", Vector3(at.x, 1.12, at.z))
+
+## The chassis' own measurements: slab radius (half the narrower side of `Base_Stone`) and top, cube top (`Aim_Body`).
+static func _footprint(model: Node3D) -> Dictionary:
+	var result := {"radius": DEFAULT_SLAB_RADIUS, "top": DEFAULT_SLAB_TOP, "body_top": DEFAULT_BODY_TOP}
+	var slab := model.find_child("Base_Stone", true, false) as MeshInstance3D
+	if slab and slab.mesh:
+		var box := slab.mesh.get_aabb()
+		result.radius = minf(box.size.x, box.size.z) * .5
+		result.top = box.end.y
+	var body := model.find_child("Aim_Body", true, false) as MeshInstance3D
+	if body and body.mesh:
+		result.body_top = body.mesh.get_aabb().end.y
+	return result
+
+static func _polar(angle: float, radius: float) -> Vector3:
+	return Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
 
 static func _ensure_materials() -> void:
 	if not materials.is_empty():

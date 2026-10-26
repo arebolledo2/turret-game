@@ -560,6 +560,17 @@
       "meshes": 13,
       "materials": 11,
       "iteration": 3
+    },
+    {
+      "id": "quake",
+      "source": "art-source/clockwork-pop/quake/build_cp_quake.py",
+      "model": "assets/models/clockwork/cp_quake.glb",
+      "reference": "art-source/clockwork-pop/references/quake.png",
+      "sha256": "f2729e9bd3a6b6d1cb049ca4c643d30b5a90b5955c9f5b5917bbae6afc322501",
+      "triangles": 17402,
+      "meshes": 9,
+      "materials": 10,
+      "iteration": 6
     }
   ]
 }

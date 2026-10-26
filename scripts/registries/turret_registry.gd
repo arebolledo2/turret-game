@@ -98,8 +98,8 @@ const TYPES: Dictionary = {
 		"name": "Quake Turret",
 		"icon": "🌋",
 		"short_name": "Quake",
-		# No Quake chassis yet: the Shock bell stands in (see `TurretActor._model_key`).
-		"model_key": "shock",
+		# The real cp_quake chassis (see `TurretActor._model_key`); `model` is only the pre-Clockwork fallback.
+		"model_key": "quake",
 		"model": "res://assets/models/game/shock_turret.glb",
 		# A ground pulse: `QuakeForm` telegraphs it, runs a shockwave ring out from the turret and staggers what it hits.
 		"fire_mode": FIRE_PULSE,

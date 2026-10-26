@@ -189,7 +189,7 @@ func test_quake_path_forms_tiers_and_placeholder_chassis() -> void:
 	assert_eq(TurretEvolution.form_name("cataclysm"), "Cataclysm")
 	for form in ["aftershock", "tectonic", "cataclysm"]:
 		assert_true(form in TurretEvolution.IMPLEMENTED)
-		assert_eq(TurretEvolution.model_key(form), "shock", "No Quake chassis yet: every form uses the Shock bell")
+		assert_eq(TurretEvolution.model_key(form), "quake", "Every Quake form uses the cp_quake chassis")
 		assert_true(ClockworkModels.available(TurretEvolution.model_key(form)))
 		assert_false(TurretEvolution.description(form).is_empty())
 

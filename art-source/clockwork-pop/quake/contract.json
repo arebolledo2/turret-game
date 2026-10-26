@@ -1,0 +1,39 @@
+{
+  "name": "cp_quake",
+  "ref": "ref/cp_quake.png",
+  "build": "build_cp_quake.py",
+  "glb": "cp_quake.glb",
+  "required_nodes": [
+    "Aim",
+    "Muzzle"
+  ],
+  "limits": {
+    "height": [
+      0.9,
+      1.7
+    ],
+    "max_width": 2.4,
+    "ground_gap": [
+      -0.02,
+      0.1
+    ]
+  },
+  "targets": {
+    "max_triangles": 5000,
+    "max_mesh_objects": 16,
+    "max_materials": 10
+  },
+  "render_background": "#172B38",
+  "require_textures": false,
+  "required_animations": [],
+  "marker_nodes": [
+    "Muzzle"
+  ],
+  "nested": [
+    [
+      "Muzzle",
+      "Aim"
+    ]
+  ],
+  "muzzle_forward": true
+}

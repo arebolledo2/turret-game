@@ -410,6 +410,13 @@
       "status": "review",
       "preview": "previews/sniper.png",
       "metrics": "12,128 triangles \u00c2\u00b7 13 meshes \u00c2\u00b7 11 materials"
+    },
+    {
+      "key": "quake",
+      "name": "Quake",
+      "status": "review",
+      "preview": "previews/quake.png",
+      "metrics": "17,402 triangles \u00c2\u00b7 9 meshes \u00c2\u00b7 10 materials"
     }
   ],
   "events": [
@@ -712,6 +719,10 @@
     {
       "stage": "Export: sniper",
       "text": "Reviewed harness iteration 3; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: quake",
+      "text": "Reviewed harness iteration 6; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
     }
   ],
   "checks": {

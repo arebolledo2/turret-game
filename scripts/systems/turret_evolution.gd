@@ -46,10 +46,10 @@ const FORMS: Dictionary = {
 	"piercer_rifle": {"name": "Piercer Rifle", "model": "sniper", "tier": 1},
 	"horizon_piercer": {"name": "Horizon Piercer", "model": "sniper", "tier": 3},
 	"overwatch": {"name": "Overwatch", "model": "sniper", "tier": 3},
-	# No Quake chassis exists yet: all four stages use the Shock bell, and `QuakeEvolutionVisual` adds the per-form hardware.
-	"aftershock": {"name": "Aftershock", "model": "shock", "tier": 1},
-	"tectonic": {"name": "Tectonic", "model": "shock", "tier": 3},
-	"cataclysm": {"name": "Cataclysm", "model": "shock", "tier": 3},
+	# All four stages share the cp_quake chassis (cube on a stone slab); `QuakeEvolutionVisual` adds the per-form hardware.
+	"aftershock": {"name": "Aftershock", "model": "quake", "tier": 1},
+	"tectonic": {"name": "Tectonic", "model": "quake", "tier": 3},
+	"cataclysm": {"name": "Cataclysm", "model": "quake", "tier": 3},
 }
 
 ## Forms offered at `stage` (evolutions already taken): the upgrade at 0, the two finals at 1, nothing after.
