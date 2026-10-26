@@ -72,9 +72,9 @@ func test_scarcity_prices_count_acquisitions_and_preserve_item_prices() -> void:
 	EconomyService.state.turret_progression_enabled = true
 	assert_eq(EconomyService.calculate_turret_price(10, 1), 12)
 	EconomyService.state.additional_turrets_acquired = 2
-	assert_eq(EconomyService.calculate_turret_price(10, 1), 12)
+	assert_eq(EconomyService.calculate_turret_price(10, 1), 33)
 	EconomyService.turrets_purchased = 20
-	assert_eq(EconomyService.calculate_turret_price(10, 1), 12, "Paid counter alone does not set scarcity")
+	assert_eq(EconomyService.calculate_turret_price(10, 1), 33, "Paid counter alone does not set scarcity")
 	assert_eq(EconomyService.calculate_item_price(20, 4), old_item)
 	assert_eq(EconomyService.calculate_turret_price(0, 1), 1)
 
@@ -91,24 +91,21 @@ func test_purchase_penalty_reductions_can_remove_the_whole_surcharge() -> void:
 	ModifierService.add_modifiers([Item.create_modifier("turret_penalty_reduction", "add", -1.0)])
 	assert_eq(EconomyService.calculate_turret_price(10, 0), 10)
 
-func test_first_six_are_affordable_then_count_penalty_starts() -> void:
+func test_every_acquisition_raises_the_next_price() -> void:
 	EconomyService.state.turret_progression_enabled = true
-	for acquired in 5:
+	var expected := [100, 170, 280, 430, 620, 850, 1120]
+	for acquired in expected.size():
 		EconomyService.state.additional_turrets_acquired = acquired
-		assert_eq(EconomyService.calculate_turret_price(100, 0), 100)
-	EconomyService.state.additional_turrets_acquired = 5
-	assert_eq(EconomyService.calculate_turret_price(100, 0), 300)
-	EconomyService.state.additional_turrets_acquired = 6
-	assert_eq(EconomyService.calculate_turret_price(100, 0), 640)
+		assert_eq(EconomyService.calculate_turret_price(100, 0), expected[acquired])
 
 func test_late_turret_prices_accelerate_and_reductions_keep_their_proportional_value() -> void:
 	EconomyService.state.turret_progression_enabled = true
 	EconomyService.state.additional_turrets_acquired = 7
-	assert_eq(EconomyService.calculate_turret_price(100, 0), 1120)
+	assert_eq(EconomyService.calculate_turret_price(100, 0), 1430)
 	EconomyService.state.additional_turrets_acquired = 8
-	assert_eq(EconomyService.calculate_turret_price(100, 0), 1740)
+	assert_eq(EconomyService.calculate_turret_price(100, 0), 1780)
 	ModifierService.add_modifiers([Item.create_modifier("turret_penalty_reduction", "add", -.325)])
-	assert_eq(EconomyService.calculate_turret_price(100, 0), 920, "Half coefficient halves surcharge, not base cost")
+	assert_eq(EconomyService.calculate_turret_price(100, 0), 940, "Half coefficient halves surcharge, not base cost")
 
 func test_levels_reward_distinct_stats_and_milestone_burst() -> void:
 	var growth := TurretProgression.new()

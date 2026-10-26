@@ -151,7 +151,7 @@ func test_count_reduction_items_stack_beyond_former_floor_in_progression() -> vo
 		assert_lt(price, previous, "Every legal stack reduces the entire count surcharge")
 		previous = price
 	assert_almost_eq(TurretStatsService.get_turret_purchase_penalty(.65), .33, .001)
-	world.session.state.additional_turrets_acquired = 4
+	world.session.state.additional_turrets_acquired = 0
 	var discounted_early := world.turret_price("normal")
 	ModifierService.clear_modifiers()
-	assert_eq(world.turret_price("normal"), discounted_early, "No count surcharge to reduce within first six")
+	assert_eq(world.turret_price("normal"), discounted_early, "No count surcharge to reduce before the first purchase")

@@ -28,7 +28,7 @@ XP presentation uses a shared high-contrast `TurretXpBar`: compact meters in the
 
 Turret offer cards and the Turrets inspector show icon-and-text attack-family badges (Projectile, AoE, Instant, Kinetic). `AttackFamilyBadges` reads `TurretRegistry.get_attack_families`, the same overlapping families used for item eligibility. Item cards keep their effect descriptions without legacy category tags.
 
-Shop offers can be locked for free using the card lock button, controller X or keyboard L. Locks preserve the offer, slot and quoted price through rerolls and wave transitions, including turret offers. Unlocking restores current pricing. Buying consumes the lock; restarting clears stock. Reroll is disabled when every offer is locked. Unlocked stock retains normal reroll costs and pricing.
+Shop offers can be locked for free using the card lock button, controller X or keyboard L. Locks preserve the offer and quoted price (locked offers move to the front of their weapon or upgrade group) through rerolls and wave transitions, including turret offers. Unlocking restores current pricing. Buying consumes the lock; restarting clears stock. Reroll is disabled when every offer is locked. Unlocked stock retains normal reroll costs and pricing.
 
 Lock controls sit outside and below each card, display LOCK / UNLOCK and participate in controller focus: Down from an offer enters its lock button; left/right moves between locks, Up returns to the offer, and Down proceeds to the next offer row or nearest enabled footer action. Footer Up returns to the nearest available lock. Horizontal navigation stays within each visual row, and purchasing advances focus to the next available offer. A activates the lock independently of purchasing.
 

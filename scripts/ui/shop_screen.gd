@@ -98,7 +98,7 @@ func _build_tabs(column: VBoxContainer) -> void:
 	tab_hint.size_flags_horizontal = SIZE_EXPAND_FILL
 	tab_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 
-## The four offer cards; returns the row that also holds the sidebar.
+## One card per possible offer; returns the row that also holds the sidebar.
 func _build_offers(column: VBoxContainer) -> HBoxContainer:
 	var content := HBoxContainer.new()
 	offers_content = content
@@ -124,7 +124,7 @@ func _build_offers(column: VBoxContainer) -> HBoxContainer:
 		focus_margin.add_theme_constant_override("margin_" + edge, 6)
 	offers_scroll.add_child(focus_margin)
 	focus_margin.add_child(offers_grid)
-	for i in range(4):
+	for i in range(GameConstants.SHOP_OFFER_COUNT):
 		var card := OfferCard.new()
 		card.pressed.connect(_purchase.bind(i))
 		card.previewed.connect(_select.bind(i))

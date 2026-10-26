@@ -13,34 +13,44 @@ func open() -> void:
 	EconomyService.shop_reroll_count = 0
 	generate()
 
+## Weapons first, then upgrades fill the remaining slots. Locked offers stay and count toward their group.
 func generate() -> void:
-	var previous := EconomyService.current_shop_offers.duplicate()
-	EconomyService.current_shop_offers.clear()
 	var turrets := ShopCatalog.available_ids("turret")
 	var excluded := unavailable_item_ids()
-	for offer: ShopOffer in previous:
+	var kept_turrets: Array[ShopOffer] = []
+	var kept_items: Array[ShopOffer] = []
+	for offer: ShopOffer in EconomyService.current_shop_offers:
 		if offer.locked and not offer.sold:
 			if offer.kind == "turret":
 				turrets.erase(offer.asset_id)
+				kept_turrets.append(offer)
 			else:
 				excluded.append(offer.asset_id)
-	for slot in range(GameConstants.SHOP_TURRET_SLOTS + GameConstants.SHOP_ITEM_SLOTS):
-		if slot < previous.size() and previous[slot].locked and not previous[slot].sold:
-			EconomyService.current_shop_offers.append(previous[slot])
-			continue
-		if slot < GameConstants.SHOP_TURRET_SLOTS:
-			if turrets.is_empty():
-				continue
-			var selected := rng.randi_range(0, turrets.size() - 1)
-			var type_id: String = turrets.pop_at(selected)
-			EconomyService.current_shop_offers.append(ShopOffer.new("turret", type_id, world.turret_price(type_id)))
-		else:
-			var item_id := ItemRegistry.get_weighted_random_item(GameStateService.current_wave,
-				PlayerStatsService.get_player_luck(), ItemTrackingService.item_counts, excluded, rng)
-			if item_id.is_empty():
-				break
-			excluded.append(item_id)
-			EconomyService.current_shop_offers.append(ShopOffer.new("item", item_id, item_price(item_id)))
+				kept_items.append(offer)
+	EconomyService.current_shop_offers.clear()
+	var turret_count := clampi(roll_turret_count(), kept_turrets.size(), GameConstants.SHOP_OFFER_COUNT - kept_items.size())
+	EconomyService.current_shop_offers.append_array(kept_turrets)
+	for i in range(turret_count - kept_turrets.size()):
+		if turrets.is_empty():
+			break
+		var type_id: String = turrets.pop_at(rng.randi_range(0, turrets.size() - 1))
+		EconomyService.current_shop_offers.append(ShopOffer.new("turret", type_id, world.turret_price(type_id)))
+	EconomyService.current_shop_offers.append_array(kept_items)
+	for i in range(GameConstants.SHOP_OFFER_COUNT - EconomyService.current_shop_offers.size()):
+		var item_id := ItemRegistry.get_weighted_random_item(GameStateService.current_wave,
+			PlayerStatsService.get_player_luck(), ItemTrackingService.item_counts, excluded, rng)
+		if item_id.is_empty():
+			break
+		excluded.append(item_id)
+		EconomyService.current_shop_offers.append(ShopOffer.new("item", item_id, item_price(item_id)))
+
+## 0 to SHOP_TURRET_MAX weapons, each slot stocked independently (binomial, mean 1.5).
+func roll_turret_count() -> int:
+	var count := 0
+	for i in range(GameConstants.SHOP_TURRET_MAX):
+		if rng.randf() < GameConstants.SHOP_TURRET_SLOT_CHANCE:
+			count += 1
+	return count
 
 func toggle_lock(index: int) -> bool:
 	if not is_open() or index < 0 or index >= EconomyService.current_shop_offers.size():

@@ -188,10 +188,10 @@ const ZONE_LABEL_FULL_RANGE: float = 3.0 # a zone's name and effect are fully vi
 const ZONE_LABEL_FADE_RANGE: float = 9.0 # ...and have faded out completely by this distance
 const ZONE_PROP_FILL: float = .5 # a zone prop may cover at most this fraction of the zone's narrowest half-width
 const ZONE_PROP_MAX_SCALE: float = 2.0
+# 3D shop layout: SHOP_OFFER_COUNT cards; 0-SHOP_TURRET_MAX weapons, upgrades fill the rest
 const SHOP_OFFER_COUNT: int = 4
-# 3D shop layout: one weapon choice and three upgrades (SHOP_TURRET_SLOTS + SHOP_ITEM_SLOTS = SHOP_OFFER_COUNT)
-const SHOP_TURRET_SLOTS: int = 1
-const SHOP_ITEM_SLOTS: int = 3
+const SHOP_TURRET_MAX: int = 4
+const SHOP_TURRET_SLOT_CHANCE: float = .375 # each weapon slot stocks independently: averages 1.5 weapons per refresh
 const REROLL_COST_INCREMENT: int = 1
 const REROLL_WAVE_BASE_MULTIPLIER: float = 1.5 # Wave-based base cost multiplier
 const WAVE_PRICE_SCALE: float = 0.2

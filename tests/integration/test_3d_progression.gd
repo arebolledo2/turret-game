@@ -45,9 +45,11 @@ func test_catalog_generates_unique_supported_offers_at_registry_prices() -> void
 	world.finish_wave()
 	for roll in range(30):
 		world.shop.generate()
-		assert_eq(EconomyService.current_shop_offers.size(), 4)
-		assert_eq(EconomyService.current_shop_offers.filter(func(o: ShopOffer) -> bool: return o.kind == "turret").size(), GameConstants.SHOP_TURRET_SLOTS)
-		assert_eq(EconomyService.current_shop_offers.filter(func(o: ShopOffer) -> bool: return o.kind == "item").size(), GameConstants.SHOP_ITEM_SLOTS)
+		assert_eq(EconomyService.current_shop_offers.size(), GameConstants.SHOP_OFFER_COUNT)
+		var turret_count := EconomyService.current_shop_offers.filter(func(o: ShopOffer) -> bool: return o.kind == "turret").size()
+		assert_between(turret_count, 0, GameConstants.SHOP_TURRET_MAX)
+		for i in turret_count:
+			assert_eq(EconomyService.current_shop_offers[i].kind, "turret", "Weapons lead the shop")
 		var seen: Array[String] = []
 		for offer in EconomyService.current_shop_offers:
 			assert_false(offer.asset_id in seen)
@@ -60,6 +62,18 @@ func test_catalog_generates_unique_supported_offers_at_registry_prices() -> void
 				assert_eq(offer.price, world.shop.item_price(offer.asset_id))
 				assert_lte(ItemRegistry.get_rarity(offer.asset_id), GameEnums.ItemRarity.UNCOMMON)
 	assert_eq(world.shop.item_price("dense_rounds"), 21)
+
+func test_weapon_stock_ranges_zero_to_four_and_averages_one_and_a_half() -> void:
+	var counts := [0, 0, 0, 0, 0]
+	var rolls := 4000
+	var total := 0
+	for roll in rolls:
+		var count := world.shop.roll_turret_count()
+		counts[count] += 1
+		total += count
+	assert_almost_eq(float(total) / rolls, 1.5, .08)
+	for count in counts.size():
+		assert_gt(counts[count], 0, "%d weapons is a possible refresh" % count)
 
 func test_purchase_is_atomic_and_rejects_sold_unsupported_maxed_and_unaffordable() -> void:
 	world.finish_wave()
@@ -297,7 +311,7 @@ func test_hud_shows_offers_build_and_terminal_summary() -> void:
 	world.finish_wave()
 	hud._process(0)
 	assert_true(hud.shop_screen.visible)
-	assert_eq(hud.shop_screen.offer_buttons.size(), 4)
+	assert_eq(hud.shop_screen.offer_buttons.size(), GameConstants.SHOP_OFFER_COUNT)
 	assert_true(hud.shop_screen.offer_buttons[0].visible, "offers show in the shop")
 	assert_eq(hud.shop_screen.offer_buttons[0].shown_key.split(":")[1], EconomyService.current_shop_offers[0].asset_id)
 	assert_false(hud.shop_screen.turret_text.text.is_empty(), "build is populated")

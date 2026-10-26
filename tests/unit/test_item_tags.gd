@@ -23,8 +23,8 @@ func test_every_catalogued_item_has_a_known_tag() -> void:
 	for item_id in ShopCatalog.ids("item"):
 		assert_true(ItemRegistry.get_tag(item_id) in ItemRegistry.TAGS, item_id)
 
-func test_shop_slots_add_up_to_the_offer_count() -> void:
-	assert_eq(GameConstants.SHOP_TURRET_SLOTS + GameConstants.SHOP_ITEM_SLOTS, GameConstants.SHOP_OFFER_COUNT)
+func test_weapon_stock_fits_the_offer_count() -> void:
+	assert_lte(GameConstants.SHOP_TURRET_MAX, GameConstants.SHOP_OFFER_COUNT)
 
 func test_shop_text_names_effect_audience_without_category_prefixes() -> void:
 	assert_eq(ArenaShop.item_description("polished_barrels"), "Projectile damage +10%.")

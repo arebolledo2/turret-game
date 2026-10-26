@@ -63,8 +63,10 @@ func test_purchase_hides_card_and_hands_focus_to_available_offer() -> void:
 func test_controller_can_inspect_installed_items_and_return_to_deploy() -> void:
 	world.shop.apply_item("polished_barrels")
 	world.shop.apply_item("blast_charges")
+	EconomyService.current_shop_offers.assign([ShopOffer.new("turret", "plasma", 10), ShopOffer.new("item", "capacitor_bank", 10),
+		ShopOffer.new("item", "dense_rounds", 10), ShopOffer.new("item", "quick_loader", 10)])
 	hud.refresh()
-	hud.offer_buttons[-1].grab_focus()
+	hud.offer_buttons[3].grab_focus()
 	await press_direction(JOY_BUTTON_DPAD_RIGHT)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.owned_buttons[0])
 	assert_eq(hud.detail_title.text, "Polished Barrels")
@@ -203,6 +205,9 @@ func test_deploy_without_ready_evolutions_does_not_interrupt() -> void:
 	assert_false(world.shop.is_open())
 
 func test_controller_moves_between_card_lock_and_nearest_footer_action() -> void:
+	EconomyService.current_shop_offers.assign([ShopOffer.new("turret", "plasma", 10), ShopOffer.new("item", "capacitor_bank", 10),
+		ShopOffer.new("item", "dense_rounds", 10), ShopOffer.new("item", "quick_loader", 10)])
+	hud.refresh()
 	hud.offer_buttons[0].grab_focus()
 	var lock: Button = hud.offer_buttons[0].lock_button
 	assert_true(lock.get_global_rect().position.y >= hud.offer_buttons[0].get_global_rect().end.y)

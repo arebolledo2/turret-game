@@ -25,7 +25,7 @@ See [the enemy ecology guide](enemy-ecology.md) for the current twenty-wave rost
 - Plasma turrets prioritize clusters, deal splash damage, and push enemies back. Knockback interrupts charger warnings and dashes.
 - Armored chargers appear in the authored rosters from wave 11. Amber rails show their locked dash direction during a 0.9-second warning; they dash, recover, and approach again. Their direction is fixed when the warning begins, so a dodge remains reliable. Contact checks sweep the entire movement segment.
 - Shock turrets pulse electric damage around themselves and slow enemies by 25% for 0.5 seconds. Cyan rings identify slowed enemies; slowed chargers keep their locked heading but cover less distance.
-- Between waves: choose from two turret offers and two item offers, or reroll stock. The hero and core are fully healed for free at the end of every wave and again when the next wave is prepared. Remaining scrap drops are collected when the wave ends.
+- Between waves: choose from four offers, or reroll stock: 0-4 are turrets (each of four weapon slots stocks independently at 37.5%, averaging 1.5 per refresh) and items fill the rest. The hero and core are fully healed for free at the end of every wave and again when the next wave is prepared. Remaining scrap drops are collected when the wave ends.
 - Shop, pause, and end screens show the current build: turret counts/damage/fire rate/range, player stats, and purchased item stacks.
 - Defeat and victory screens, with a fresh run via the button or R.
 

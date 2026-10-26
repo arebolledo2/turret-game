@@ -1,11 +1,10 @@
 extends Node
 
-## First six frames stay accessible; modifier-adjusted scaling applies to the entire later surcharge.
+## Every acquired frame raises the next price; modifier-adjusted scaling applies to the entire surcharge.
 const PROGRESSION_BASE_MULTIPLIER: float = 1.0
-const PROGRESSION_LINEAR: float = 1.30
+const PROGRESSION_LINEAR: float = .50
 const PROGRESSION_MODIFIER_BASE: float = .65
-const PROGRESSION_AFFORDABLE_TOTAL: int = 6
-const PROGRESSION_QUADRATIC: float = .70
+const PROGRESSION_QUADRATIC: float = .20
 
 var state: RunSessionState = RunSessionState.new()
 
@@ -97,8 +96,8 @@ func calculate_turret_price(base_price: int, wave: int) -> int:
 	var base_multiplier := 1.0
 	if state.turret_progression_enabled:
 		base_multiplier = PROGRESSION_BASE_MULTIPLIER
-		# Starter + first five acquisitions have no surcharge. Buying #7 has excess=1.
-		var excess := maxi(0, state.additional_turrets_acquired - (PROGRESSION_AFFORDABLE_TOTAL - 2))
+		# The first purchase is at base price; each acquisition after it adds to the surcharge.
+		var excess := state.additional_turrets_acquired
 		var linear := TurretStatsService.get_turret_purchase_penalty(PROGRESSION_MODIFIER_BASE)
 		# Scale the entire surcharge so reduction items never hit a hidden floor.
 		penalty_multiplier = 1.0 + (PROGRESSION_LINEAR * excess + PROGRESSION_QUADRATIC * excess * excess) * (linear / PROGRESSION_MODIFIER_BASE)

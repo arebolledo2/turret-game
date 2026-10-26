@@ -19,17 +19,17 @@ func test_locked_offer_and_price_survive_rerolls_and_next_wave() -> void:
 	assert_true(world.shop.toggle_lock(1))
 	assert_eq(EconomyService.total_scrap, 1000, "Locking is free")
 	assert_true(world.shop.reroll())
-	assert_same(EconomyService.current_shop_offers[1], held)
-	assert_ne(EconomyService.current_shop_offers[2], other)
+	assert_has(EconomyService.current_shop_offers, held)
+	assert_does_not_have(EconomyService.current_shop_offers, other)
 	assert_true(world.begin_next_wave())
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 	world.finish_wave()
-	assert_same(EconomyService.current_shop_offers[1], held)
+	assert_has(EconomyService.current_shop_offers, held)
 	assert_eq(held.price, price)
 	assert_true(held.locked)
-	for i in EconomyService.current_shop_offers.size():
-		if i != 1:
-			assert_ne(EconomyService.current_shop_offers[i].asset_id, held.asset_id)
+	for offer in EconomyService.current_shop_offers:
+		if offer != held:
+			assert_ne(offer.asset_id, held.asset_id)
 
 func test_all_locked_reroll_is_noop_and_unlock_reprices() -> void:
 	for i in EconomyService.current_shop_offers.size():
@@ -42,7 +42,7 @@ func test_all_locked_reroll_is_noop_and_unlock_reprices() -> void:
 	var held := EconomyService.current_shop_offers[1]
 	assert_true(world.shop.toggle_lock(1))
 	assert_false(held.locked)
-	assert_eq(held.price, world.shop.item_price(held.asset_id))
+	assert_eq(held.price, world.turret_price(held.asset_id) if held.kind == "turret" else world.shop.item_price(held.asset_id))
 	assert_true(world.shop.can_reroll())
 
 func test_purchase_does_not_reprice_locked_stock_and_restart_clears_locks() -> void:
