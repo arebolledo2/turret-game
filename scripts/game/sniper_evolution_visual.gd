@@ -1,7 +1,7 @@
 class_name SniperEvolutionVisual
 extends RefCounted
 
-## Runtime rifle hardware for the Sniper line. Every stage shares the cp_sniper chassis (teal, coral and brass rifle on a
+## Runtime rifle hardware for the Sniper line. Every form shares the cp_sniper chassis (teal, coral and brass rifle on a
 ## tripod); the upgrade and the finals add their own silhouette on top of it:
 ## - Piercer Rifle: a longer barrel with a brass muzzle brake and two collars along the teal barrel.
 ## - Horizon Piercer: a much longer barrel, glowing teal rails down both sides and an emitter ring at the tip.
@@ -20,7 +20,7 @@ const HORIZON_EXTENSION: float = .8
 const MAST_BASE: Vector3 = Vector3(0, .34, .5)
 const MAST_HEIGHT: float = .32
 
-static func build(model: Node3D, form_id: String, _stage: int) -> void:
+static func build(model: Node3D, form_id: String) -> void:
 	if form_id not in ["piercer_rifle", "horizon_piercer", "overwatch"]:
 		return
 	var aim := model.find_child("Aim", true, false) as Node3D

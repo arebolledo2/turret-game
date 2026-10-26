@@ -2,11 +2,14 @@ class_name BowlingEvolutionVisual
 extends Node3D
 
 static var materials: Dictionary = {}
+## Hydraulic brace pairs per side on each roller form, and bumper pairs per side on the Ricochet King.
+const BRACES: Dictionary = {"heavy_roller": 1, "juggernaut": 3}
+const BUMPERS: int = 3
 var flippers: Array[Node3D] = []
 var kick_time := 0.0
 
-static func build(model: Node3D, form_id: String, stage: int) -> BowlingEvolutionVisual:
-	if stage < 1 or form_id not in ["heavy_roller", "juggernaut", "ricochet_king"]:
+static func build(model: Node3D, form_id: String) -> BowlingEvolutionVisual:
+	if form_id not in ["heavy_roller", "juggernaut", "ricochet_king"]:
 		return null
 	if materials.is_empty():
 		for entry in [["brass", "dba94c", .8], ["purple", "624483", .45], ["dark", "202a33", .4]]:
@@ -20,7 +23,7 @@ static func build(model: Node3D, form_id: String, stage: int) -> BowlingEvolutio
 	hardware.name = "BowlingEvolutionHardware"
 	aim.add_child(hardware)
 	if form_id in ["heavy_roller", "juggernaut"]:
-		var growth := 1.0 + .25 * stage
+		var growth := TurretEvolution.ball_scale(form_id)
 		# Widen the complete cradle and raise its launch height with the ball radius.
 		aim.scale = Vector3(growth, growth, 1.0)
 		var ball := model.find_child("LoadedBall", true, false) as Node3D
@@ -29,7 +32,7 @@ static func build(model: Node3D, form_id: String, stage: int) -> BowlingEvolutio
 		plinth.scale.x *= growth
 		# Paired hydraulic braces reinforce the heavier housing at each milestone.
 		for side in [-1, 1]:
-			for i in range(stage):
+			for i in range(int(BRACES[form_id])):
 				var z := .40 - i * .25
 				var sleeve := _cylinder(hardware, .07, .48, "dark")
 				sleeve.position = Vector3(side * .48, .48, z)
@@ -39,7 +42,7 @@ static func build(model: Node3D, form_id: String, stage: int) -> BowlingEvolutio
 				cap.position = Vector3(side * .48, .71, z)
 	else:
 		for side in [-1, 1]:
-			for i in range(stage):
+			for i in range(BUMPERS):
 				var z := -.50 - i * .27
 				var height := .50 - (-z - .25) * .26 + .08
 				var bumper := _cylinder(hardware, .13, .08, "brass")

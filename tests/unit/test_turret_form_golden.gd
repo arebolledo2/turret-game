@@ -1254,26 +1254,27 @@ func _shape(shot: CombatShot3D, base: String, form: String) -> void:
 	TurretEvolution.shape_shot(shot, base, form)
 
 func _volley(form: String) -> int:
-	return TurretEvolution.volley_size(TurretEvolution.legacy_stage(form)) if form in ["repeater_bow", "arrowstorm"] else 0
+	return TurretEvolution.volley_size(form) if form in ["repeater_bow", "arrowstorm"] else 0
 
 func _barrel(form: String) -> Dictionary:
-	return TurretEvolution.gunblade_barrel_stats(TurretEvolution.legacy_stage(form)) if form == "stormblade" else {}
+	return TurretEvolution.gunblade_barrel_stats() if form == "stormblade" else {}
 
 func _echo_delays(form: String) -> Array:
-	return TurretEvolution.RESONATOR_ECHO_DELAYS[TurretEvolution.legacy_stage(form) - 1] if form in ["resonator", "resonance_engine"] else []
+	if form == "resonator":
+		return TurretEvolution.RESONATOR_ECHO_DELAYS
+	return TurretEvolution.ENGINE_ECHO_DELAYS if form == "resonance_engine" else []
 
-func _run_builder(builder: String, model: Node3D, base: String, form: String) -> void:
-	var stage := TurretEvolution.legacy_stage(form)
+func _run_builder(builder: String, model: Node3D, _base: String, form: String) -> void:
 	match builder:
-		"BowEvolutionVisual": BowEvolutionVisual.build(model, form, stage)
-		"FlameEvolutionVisual": FlameEvolutionVisual.build(model, form, stage)
-		"BowlingEvolutionVisual": BowlingEvolutionVisual.build(model, form, stage)
-		"GunbladeEvolutionVisual": GunbladeEvolutionVisual.build(model, form, stage)
-		"SiegeEvolutionVisual": SiegeEvolutionVisual.build(model, form, stage)
-		"SniperEvolutionVisual": SniperEvolutionVisual.build(model, form, stage)
-		"QuakeEvolutionVisual": QuakeEvolutionVisual.build(model, base, form)
-		"GatlingEvolutionVisual": GatlingEvolutionVisual.build(model, form, stage)
-		"CrossfireEvolutionVisual": CrossfireEvolutionVisual.build(model, form, stage)
+		"BowEvolutionVisual": BowEvolutionVisual.build(model, form)
+		"FlameEvolutionVisual": FlameEvolutionVisual.build(model, form)
+		"BowlingEvolutionVisual": BowlingEvolutionVisual.build(model, form)
+		"GunbladeEvolutionVisual": GunbladeEvolutionVisual.build(model, form)
+		"SiegeEvolutionVisual": SiegeEvolutionVisual.build(model, form)
+		"SniperEvolutionVisual": SniperEvolutionVisual.build(model, form)
+		"QuakeEvolutionVisual": QuakeEvolutionVisual.build(model, form)
+		"GatlingEvolutionVisual": GatlingEvolutionVisual.build(model, form)
+		"CrossfireEvolutionVisual": CrossfireEvolutionVisual.build(model, form)
 
 ## The behaviour class the actor resolved for its form, "" for none.
 func _behaviour_of(actor: TurretActor) -> String:

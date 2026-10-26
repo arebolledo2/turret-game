@@ -102,7 +102,6 @@ func _rebuild_model() -> void:
 	var fire_mode := TurretRegistry.get_fire_mode(turret_type)
 	if not form or form.form_id != progression.evolution_form:
 		form = TurretForm.create(self, progression.evolution_form)
-	var legacy_stage := TurretEvolution.legacy_stage(progression.evolution_form)
 	var asset_key := _model_key(progression.evolution_form)
 	var use_clockwork := ClockworkModels.available(asset_key)
 	if use_clockwork:
@@ -112,15 +111,15 @@ func _rebuild_model() -> void:
 	if turret_type == "tesla" and not use_clockwork:
 		EnemyVariants.tint_model(model, "turret_tesla", TESLA_TINT, .5)
 	add_child(model)
-	BowEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
-	flame_emitters = FlameEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
-	bowling_hardware = BowlingEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
-	gun_muzzles = GunbladeEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
-	SiegeEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
-	SniperEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
-	QuakeEvolutionVisual.build(model, turret_type, progression.evolution_form)
-	GatlingEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
-	crossfire_muzzles = CrossfireEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
+	BowEvolutionVisual.build(model, progression.evolution_form)
+	flame_emitters = FlameEvolutionVisual.build(model, progression.evolution_form)
+	bowling_hardware = BowlingEvolutionVisual.build(model, progression.evolution_form)
+	gun_muzzles = GunbladeEvolutionVisual.build(model, progression.evolution_form)
+	SiegeEvolutionVisual.build(model, progression.evolution_form)
+	SniperEvolutionVisual.build(model, progression.evolution_form)
+	QuakeEvolutionVisual.build(model, progression.evolution_form)
+	GatlingEvolutionVisual.build(model, progression.evolution_form)
+	crossfire_muzzles = CrossfireEvolutionVisual.build(model, progression.evolution_form)
 	aim = model.find_child("Aim", true, false) as Node3D
 	blade_tip = model.find_child("BladeTip", true, false) as Node3D
 	muzzle = model.find_child("Muzzle", true, false) as Node3D
@@ -301,7 +300,7 @@ func resolve_attack_stats(secondary: bool = false, form_id: String = "") -> Dict
 		form_id = progression.evolution_form
 	var base := TurretEvolution.base_stats(turret_type, form_id)
 	if secondary:
-		base = TurretEvolution.gunblade_barrel_stats(TurretEvolution.legacy_stage(form_id))
+		base = TurretEvolution.gunblade_barrel_stats()
 	var stats := ModifierService.get_turret_stats(turret_type, world.difficulty_config, base, "normal" if secondary else "")
 	if world.session.state.turret_progression_enabled:
 		progression.apply_stats(stats)
@@ -547,7 +546,7 @@ func _build_saber_arms() -> void:
 	saber_angles.assign([0.0])
 	if progression.evolution_form != "orbit_saber":
 		return
-	var count := TurretEvolution.legacy_stage(progression.evolution_form)
+	var count := TurretEvolution.blade_count(progression.evolution_form)
 	var parts: Array[Node3D] = []
 	for part_name: String in ["Ceramic_Arm", "Ceramic_Hand", "Sword_Grip", "Sword_Guard", "Prism_Blade"]:
 		var part := model.find_child(part_name, true, false) as Node3D

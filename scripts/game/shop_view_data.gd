@@ -115,7 +115,7 @@ static func _actor_numbers(actor: TurretActor, secondary: bool = false) -> Dicti
 	var pulse := TurretRegistry.get_fire_mode(actor.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] and not secondary
 	var reach := stats.range_metres * (stats.area_size if pulse else 1.0)
 	return {"damage": stats.damage, "range": reach, "fire_rate": stats.fire_rate,
-		"burst_size": maxi(1, TurretEvolution.legacy_stage(actor.progression.evolution_form)) if secondary else (TurretEvolution.volley_size(TurretEvolution.legacy_stage(actor.progression.evolution_form)) if actor.progression.evolution_form in ["repeater_bow", "arrowstorm"] else 1),
+		"burst_size": TurretEvolution.STORMBLADE_BURST_SHOTS if secondary else TurretEvolution.volley_size(actor.progression.evolution_form),
 		"rotation_rate": float(values.get("rotation_rate", 0.0)), "area": reach if pulse else stats.aoe_radius_metres,
 		"stats": {"pierce": stats.pierce, "projectile_speed": stats.projectile_speed_metres,
 		"knockback": stats.knockback_metres, "chain_count": stats.chain_count,
@@ -127,12 +127,11 @@ static func _actor_dps(actor: TurretActor) -> float:
 	var stats := TurretStats.new(actor.resolve_attack_stats())
 	var rate := stats.fire_rate
 	var form_id := actor.progression.evolution_form
-	var stage := TurretEvolution.legacy_stage(form_id)
 	if actor.turret_type == "melee":
-		var blades := stage if form_id in ["saber", "orbit_saber"] else 1
+		var blades := TurretEvolution.blade_count(form_id)
 		rate = minf(stats.rotation_rate * blades / 360.0, 1.0 / maxf(.01, stats.rehit_delay))
 	elif form_id in ["repeater_bow", "arrowstorm"]:
-		var arrows := TurretEvolution.volley_size(stage)
+		var arrows := TurretEvolution.volley_size(form_id)
 		rate = float(arrows) / (stats.cooldown_seconds + .09 * (arrows - 1))
 	elif form_id == "cyclone_gatling":
 		rate *= 1.0 + actor.spool
@@ -147,7 +146,7 @@ static func _actor_dps(actor: TurretActor) -> float:
 		result += stats.damage * float(stats.values.get("burn_ratio", 1.6)) * minf(1.0, rate * float(stats.values.get("burn_duration", 2.0)))
 	if form_id == "stormblade":
 		var gun := TurretStats.new(actor.resolve_attack_stats(true))
-		var shots := maxi(1, stage)
+		var shots := TurretEvolution.STORMBLADE_BURST_SHOTS
 		result += gun.damage * float(shots) / (gun.cooldown_seconds + .065 * (shots - 1))
 	return result
 

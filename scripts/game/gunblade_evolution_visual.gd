@@ -3,15 +3,13 @@ extends RefCounted
 
 static var materials: Dictionary = {}
 
-static func build(model: Node3D, form_id: String, stage: int) -> Array[Node3D]:
+static func build(model: Node3D, form_id: String) -> Array[Node3D]:
 	var exits: Array[Node3D] = []
 	if form_id != "stormblade":
 		return exits
 	var aim := model.find_child("Aim", true, false) as Node3D
 	var muzzle := model.find_child("Muzzle", true, false) as Node3D
 	exits.append(muzzle)
-	if stage < 2:
-		return exits
 	if materials.is_empty():
 		for entry in [["brass", "dba94c", .8], ["ivory", "eee7ce", .2], ["dark", "19252b", .4], ["teal", "237d82", .3]]:
 			var material := StandardMaterial3D.new()
@@ -19,11 +17,12 @@ static func build(model: Node3D, form_id: String, stage: int) -> Array[Node3D]:
 			material.metallic = entry[2]
 			material.roughness = .28
 			materials[entry[0]] = material
-	for i in range(stage - 1):
+	# One extra barrel per follow-up round; the blade's own muzzle fires the first.
+	for i in range(TurretEvolution.STORMBLADE_BURST_SHOTS - 1):
 		var barrel := Node3D.new()
 		barrel.name = "BurstBarrel%d" % (i + 1)
 		aim.add_child(barrel)
-		barrel.position = muzzle.position + Vector3(0 if stage == 2 else -.14 if i == 0 else .14, .22, 0)
+		barrel.position = muzzle.position + Vector3(-.14 if i == 0 else .14, .22, 0)
 		var sleeve := CylinderMesh.new()
 		sleeve.top_radius = .082
 		sleeve.bottom_radius = .082

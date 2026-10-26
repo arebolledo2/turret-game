@@ -1,14 +1,12 @@
 class_name CrossfireEvolutionVisual
 extends RefCounted
 
-static func build(model: Node3D, form_id: String, stage: int) -> Array[Node3D]:
+static func build(model: Node3D, form_id: String) -> Array[Node3D]:
 	var exits: Array[Node3D] = []
-	if form_id != "omnifire" or stage < 2:
+	if form_id != "omnifire":
 		return exits
 	for marker: String in ["Muzzle", "Muzzle_1", "Muzzle_2", "Muzzle_3"]:
 		exits.append(model.find_child(marker, true, false) as Node3D)
-	if stage < 3:
-		return exits
 	var aim := model.find_child("Aim", true, false) as Node3D
 	var barrel := aim.get_node("Barrel_0") as Node3D
 	var collar := aim.get_node("Collar_0") as Node3D

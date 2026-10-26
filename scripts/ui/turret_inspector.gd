@@ -255,7 +255,7 @@ func _show_selected() -> void:
 	if growth.evolution_form == "stormblade":
 		var gun := turret.gun_stats
 		lines.append("\n[b]GUN · PROJECTILE[/b]")
-		var shots := maxi(1, TurretEvolution.legacy_stage(growth.evolution_form))
+		var shots := TurretEvolution.STORMBLADE_BURST_SHOTS
 		lines.append("Damage %.1f · Reach %.2f m · %.2f bursts/s · %d shots/burst" % [gun.damage, gun.range_metres, gun.fire_rate, shots])
 		lines.append("Fires along the rotating barrel. Kinetic bonuses affect the blade only.")
 	lines.append("\n[b]PROGRESSION & POSITION[/b]")

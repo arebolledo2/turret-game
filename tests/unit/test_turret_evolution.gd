@@ -99,15 +99,6 @@ func test_every_registered_form_belongs_to_one_path() -> void:
 		assert_true(seen.has(form), "%s is in FORMS but no path offers it" % form)
 	assert_eq(seen.size(), 30, "10 bases x (1 upgrade + 2 finals)")
 
-func test_legacy_stage_is_one_for_upgrades_and_three_for_finals() -> void:
-	for base: String in TurretEvolution.PATHS:
-		for form in TurretEvolution.options(base, 0):
-			assert_eq(TurretEvolution.legacy_stage(form), 1, "%s renders and behaves as the old stage 1" % form)
-		for form in TurretEvolution.options(base, 1):
-			assert_eq(TurretEvolution.legacy_stage(form), 3, "%s renders and behaves as the old stage 3" % form)
-	assert_eq(TurretEvolution.legacy_stage(""), 0)
-	assert_eq(TurretEvolution.legacy_stage("missing"), 0)
-
 func test_implemented_forms_are_the_twenty_six_with_attacks_and_stats() -> void:
 	assert_eq(TurretEvolution.IMPLEMENTED.size(), 26)
 	for form in TurretEvolution.IMPLEMENTED:
@@ -126,8 +117,8 @@ func test_form_stats_keep_the_authored_stage_one_and_stage_three_numbers() -> vo
 	assert_eq(final.pierce, 1)
 	assert_eq(TurretEvolution.base_stats("normal", ""), TurretRegistry.get_base_stats("normal"), "No form leaves the base stats alone")
 	assert_eq(TurretEvolution.base_stats("tesla", "storm_network"), TurretRegistry.get_base_stats("tesla"), "Unbuilt forms add no stats yet")
-	assert_eq(TurretEvolution.volley_size(TurretEvolution.legacy_stage("repeater_bow")), 2)
-	assert_eq(TurretEvolution.volley_size(TurretEvolution.legacy_stage("arrowstorm")), 5)
+	assert_eq(TurretEvolution.volley_size("repeater_bow"), 2)
+	assert_eq(TurretEvolution.volley_size("arrowstorm"), 5)
 
 func _dps(stats: Dictionary) -> float:
 	return float(stats.damage) * float(stats.fire_rate)
@@ -135,9 +126,6 @@ func _dps(stats: Dictionary) -> float:
 func test_sniper_path_forms_tiers_and_placeholder_chassis() -> void:
 	assert_eq(TurretEvolution.options("sniper", 0), ["piercer_rifle"])
 	assert_eq(TurretEvolution.options("sniper", 1), ["horizon_piercer", "overwatch"])
-	assert_eq(TurretEvolution.legacy_stage("piercer_rifle"), 1)
-	assert_eq(TurretEvolution.legacy_stage("horizon_piercer"), 3)
-	assert_eq(TurretEvolution.legacy_stage("overwatch"), 3)
 	assert_eq(TurretEvolution.form_name("piercer_rifle"), "Piercer Rifle")
 	assert_eq(TurretEvolution.form_name("horizon_piercer"), "Horizon Piercer")
 	assert_eq(TurretEvolution.form_name("overwatch"), "Overwatch")
@@ -181,9 +169,6 @@ func test_pierce_text_names_none_a_count_and_the_whole_line() -> void:
 func test_quake_path_forms_tiers_and_placeholder_chassis() -> void:
 	assert_eq(TurretEvolution.options("quake", 0), ["aftershock"])
 	assert_eq(TurretEvolution.options("quake", 1), ["tectonic", "cataclysm"])
-	assert_eq(TurretEvolution.legacy_stage("aftershock"), 1)
-	assert_eq(TurretEvolution.legacy_stage("tectonic"), 3)
-	assert_eq(TurretEvolution.legacy_stage("cataclysm"), 3)
 	assert_eq(TurretEvolution.form_name("aftershock"), "Aftershock")
 	assert_eq(TurretEvolution.form_name("tectonic"), "Tectonic")
 	assert_eq(TurretEvolution.form_name("cataclysm"), "Cataclysm")

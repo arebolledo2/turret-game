@@ -1,7 +1,7 @@
 class_name QuakeEvolutionVisual
 extends RefCounted
 
-## Runtime stomp hardware for the Quake line. Every stage shares the cp_quake chassis (a teal cube with a brass hammer on
+## Runtime stomp hardware for the Quake line. Every form shares the cp_quake chassis (a teal cube with a brass hammer on
 ## three coral legs, standing on a cracked stone slab); the slab already is the foot of the turret, so the upgrade and the
 ## finals add their own silhouette around it:
 ##   Quake      the bare chassis.
@@ -23,8 +23,8 @@ const DEFAULT_BODY_TOP: float = 1.22
 const CRACK_ANGLES: Array[float] = [.17, 1.75, 3.32, 4.89]
 const PISTON_ANGLES: Array[float] = [2.97, .87]
 
-static func build(model: Node3D, base_type: String, form_id: String) -> void:
-	if base_type != "quake" or form_id not in ["aftershock", "tectonic", "cataclysm"]:
+static func build(model: Node3D, form_id: String) -> void:
+	if form_id not in ["aftershock", "tectonic", "cataclysm"]:
 		return
 	_ensure_materials()
 	var footprint := _footprint(model)

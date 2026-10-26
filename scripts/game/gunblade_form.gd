@@ -38,7 +38,7 @@ func fire() -> void:
 			shot.critical = true
 			shot.damage = TurretStatsService.calculate_turret_crit_damage(shot.damage)
 		actor.world.fire_direction(muzzle.global_position, heading, shot)
-		burst.start(maxi(0, TurretEvolution.legacy_stage(actor.progression.evolution_form) - 1), shot, burst.interval)
+		burst.start(TurretEvolution.STORMBLADE_BURST_SHOTS - 1, shot, burst.interval)
 		actor.cooldown = gun_stats.cooldown_seconds
 		return
 

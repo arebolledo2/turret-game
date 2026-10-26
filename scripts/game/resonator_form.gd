@@ -16,17 +16,17 @@ func fire_pulse(stats: TurretStats, range_metres: float, _target: CombatActor) -
 	fire(stats, range_metres)
 
 func fire(stats: TurretStats, range_metres: float) -> void:
-	var stage := TurretEvolution.legacy_stage(actor.progression.evolution_form)
+	var engine := form_id == "resonance_engine"
 	var damage_scale := 1.0
 	var radius_scale := 1.0
-	if stage >= 3:
+	if engine:
 		var outer := outer_next
 		outer_next = not outer
 		damage_scale = 1.0 if outer else TurretEvolution.ENGINE_INNER_DAMAGE
 		radius_scale = TurretEvolution.ENGINE_OUTER_RADIUS if outer else TurretEvolution.ENGINE_INNER_RADIUS
 		_mark(range_metres * radius_scale, outer)
 	_pulse(stats, range_metres * radius_scale, damage_scale)
-	for delay: float in TurretEvolution.RESONATOR_ECHO_DELAYS[stage - 1]:
+	for delay: float in (TurretEvolution.ENGINE_ECHO_DELAYS if engine else TurretEvolution.RESONATOR_ECHO_DELAYS):
 		echoes.append([delay, damage_scale * TurretEvolution.RESONATOR_ECHO_DAMAGE, radius_scale])
 	actor._reset_cooldown(stats)
 

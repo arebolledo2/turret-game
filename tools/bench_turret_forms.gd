@@ -59,8 +59,8 @@ func _ready() -> void:
 	for spec: Array in FORMS:
 		if not only_base.is_empty() and spec[0] != only_base:
 			continue
-		var tier := TurretEvolution.legacy_stage(spec[1])
-		if level > 0 and (level < TurretProgression.EVOLUTION_LEVELS[0] or (tier >= 3 and level < TurretProgression.EVOLUTION_LEVELS[1])):
+		var is_final: bool = not spec[1].is_empty() and spec[1] != TurretEvolution.PATHS[spec[0]].upgrade
+		if level > 0 and (level < TurretProgression.EVOLUTION_LEVELS[0] or (is_final and level < TurretProgression.EVOLUTION_LEVELS[1])):
 			continue
 		rows.append(spec)
 	world = ArenaWorld.new()

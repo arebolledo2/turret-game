@@ -3,10 +3,15 @@ extends RefCounted
 
 ## Burner manifolds and pressure-lance hardware added to the authored fuel-tank chassis.
 static var materials: Dictionary = {}
+## Burner pairs on the manifold and the angle in degrees the outermost pair fans out to (Wide Flame, Inferno Crown).
+const BURNER_PAIRS: Dictionary = {"wide_flame": 1, "inferno_crown": 3}
+const BURNER_FAN_DEGREES: Dictionary = {"wide_flame": 22.0, "inferno_crown": 47.0}
+## Dragonheart: segments of the pressure lance (its length and rings grow with them).
+const LANCE_SEGMENTS: int = 3
 
-static func build(model: Node3D, form_id: String, stage: int) -> Array[Node3D]:
+static func build(model: Node3D, form_id: String) -> Array[Node3D]:
 	var emitters: Array[Node3D] = []
-	if stage < 1 or form_id not in ["wide_flame", "inferno_crown", "dragonheart"]:
+	if form_id not in ["wide_flame", "inferno_crown", "dragonheart"]:
 		return emitters
 	if materials.is_empty():
 		for entry in [["brass", "dba94c", .8], ["teal", "237d82", .35], ["dark", "16232b", .4], ["coral", "d7695a", .2]]:
@@ -23,15 +28,16 @@ static func build(model: Node3D, form_id: String, stage: int) -> Array[Node3D]:
 	hardware.position = Vector3(0, .89, -.58)
 	if form_id in ["wide_flame", "inferno_crown"]:
 		# A visible horizontal fuel manifold supports each added burner pair.
-		var manifold := _cylinder(hardware, .075, .075, .68 * stage, "brass")
+		var pairs: int = BURNER_PAIRS[form_id]
+		var manifold := _cylinder(hardware, .075, .075, .68 * pairs, "brass")
 		manifold.rotation.z = PI * .5
 		for side in [-1, 1]:
-			for index in range(1, stage + 1):
+			for index in range(1, pairs + 1):
 				var burner := Node3D.new()
 				burner.name = "Burner_%d_%d" % [side, index]
 				hardware.add_child(burner)
 				burner.position.x = side * .34 * index
-				burner.rotation.y = -side * deg_to_rad([22.0, 34.0, 47.0][stage - 1]) * float(index) / stage
+				burner.rotation.y = -side * deg_to_rad(BURNER_FAN_DEGREES[form_id]) * float(index) / pairs
 				var body := _cylinder(burner, .105, .14, .33, "teal")
 				body.rotation.x = PI * .5
 				body.position.z = -.08
@@ -46,12 +52,12 @@ static func build(model: Node3D, form_id: String, stage: int) -> Array[Node3D]:
 				burner.add_child(exit)
 				emitters.append(exit)
 	else:
-		var length := .22 + .18 * stage
+		var length := .22 + .18 * LANCE_SEGMENTS
 		var lance := _cylinder(hardware, .19, .11, length, "teal")
 		lance.rotation.x = PI * .5
 		lance.position.z = -.24 - length * .5
-		for index in range(stage + 2):
-			var fraction := float(index) / float(stage + 1)
+		for index in range(LANCE_SEGMENTS + 2):
+			var fraction := float(index) / float(LANCE_SEGMENTS + 1)
 			_ring(hardware, .10, lerpf(.21, .14, fraction), -.24 - fraction * length)
 		var bore := _cylinder(hardware, .10, .10, .018, "dark")
 		bore.rotation.x = PI * .5

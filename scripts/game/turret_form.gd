@@ -3,7 +3,7 @@ extends RefCounted
 
 ## Attack behaviour for one evolution form. `TurretActor` keeps the shared parts (stats cache, targeting,
 ## cooldown) and delegates the form-specific attack and state here, so a new form is a subclass plus a `create` entry.
-## Several forms of one lineage can share a subclass; it reads `TurretEvolution.legacy_stage(form_id)` for what differs.
+## Several forms of one lineage can share a subclass; it reads `form_id` for what differs.
 var actor: TurretActor
 var form_id: String
 

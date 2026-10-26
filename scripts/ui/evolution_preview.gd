@@ -81,7 +81,7 @@ func show_form(turret: TurretActor, form: String) -> void:
 		lines.append("Blast radius   %.2f → %.2f m" % [before.aoe_radius_metres, after.aoe_radius_metres])
 	if form == "stormblade":
 		var gun := TurretStats.new(turret.resolve_attack_stats(true, form))
-		lines.append("Gun: %.1f damage · %.2f m · %d shot(s) per burst" % [gun.damage, gun.range_metres, TurretEvolution.legacy_stage(form)])
+		lines.append("Gun: %.1f damage · %.2f m · %d shot(s) per burst" % [gun.damage, gun.range_metres, TurretEvolution.STORMBLADE_BURST_SHOTS])
 	comparison.text = "\n".join(lines)
 	reset_size()
 	popup_centered(Vector2i(760, 620))
