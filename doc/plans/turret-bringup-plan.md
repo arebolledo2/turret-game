@@ -1,0 +1,43 @@
+# New turret bring-up plan
+
+Written 26 Oct 2026. Roster and rationale: `turret-roster-handoff.md` and the roster artifact. Progression shape: `turret-progression-l5-l10-spec.md` (landed on branch `turret-l5-l10-progression`). Models are out of scope for now: bring each turret in with its base chassis or a placeholder model and swap art later.
+
+## Per-turret loop
+
+Each turret is its own branch and commit(s), in this order:
+
+1. **Engine pieces first.** Build the shared system(s) the turret needs (S-numbers below) with unit tests, before any turret code.
+2. **Registry entry.** `TurretRegistry` entry (stats, attack styles, damage types, price), family in `FAMILIES` where relevant, and the item-rule mapping (`get_attack_families`); utility turrets follow the no-attack rule from the handoff.
+3. **Base attack** in `TurretActor` (or a `TurretForm` subclass if it has branch-specific state).
+4. **Level-5 upgrade and the two level-10 finals** as forms: add to `TurretEvolution.PATHS`/`FORMS`, form behaviour class, `IMPLEMENTED`. Each upgrade needs a visible hardware change; finals are tuned above the upgrade.
+5. **Shop wiring:** stock it (shop pool, price, portrait key falling back to the base id), controller flow, inspector milestones.
+6. **Tests:** unit tests for the new logic, one integration test per form, shop gating test, portrait test passes. Run the full suite (`godot-test` skill), zero orphans.
+7. **Bench and showcase:** `tools/bench_turret_forms.gd` row per form (finals roughly 1.4 to 1.6 times the upgrade at level 10, tuned per role) and a showcase run.
+8. **Docs and handoff:** update the roster artifact status, handoff, and `doc/` pages touched.
+
+Definition of done matches the existing roster. A turret is not done until all eight steps pass.
+
+## Order and scope
+
+Order follows the roster build order (cheapest and lowest risk first, each step leaving something playable).
+
+| # | Turret | Engine pieces | Forms (L5, L10 A, L10 B) | Notes |
+|---|---|---|---|---|
+| 0 | Groundwork | S2 targeting modes (toughest, backline-first); S8 map DEPLOYABLE to an item family; `"aggro"` entry in `TurretRegistry.FAMILIES`; item rules for no-attack turrets (Focused Arsenal, Army Doctrine, Crosslink Array) | n/a | Do first; the later turrets lean on it. Exposed (S3) is already built |
+| 1 | Sniper | S2, S3 | Piercer Rifle, Horizon Piercer, Overwatch | Registry entry exists (`farthest` targeting, not stocked). Change to toughest. Overwatch's mark is a separate +25% multiplier |
+| 2 | Quake | S7 enemy-only ground zones | Aftershock, Tectonic, Cataclysm | Extends the Shock pulse. Cataclysm has no concept art yet |
+| 3 | Decoy | S1 taunt targeting and pull | Bumper Post, Pile Driver, Maelstrom | Infinite health, bosses ignore the taunt. Enemy goal selection is `CombatActor.chase_position()` |
+| 4 | Scrap Press | S5 scrap generation, direct deposit, direct XP | Coin Feeder, Treasury, Academy | No attack. Plugs into the existing salvage rules |
+| 5 | Boomerang | S6 returning projectile path | Sawblade, Perpetual Saw, Boomerang Storm | Two base finalists and two finals without art: decisions needed before art, not before code |
+| 6 | Mine Layer | S8 deployable runtime | Minefield, Dead Zone, Chain Reaction | Registry entry exists, only DEPLOYABLE style today |
+| 7 | Laser | S11 continuous beam | Focus Beam, Halo Cutter, Sunpiercer | Instant family, so Resonance Link counts it |
+| 8 | Lullaby and Discord | S4 enemy behaviour overrides | Deep Sleep, Coma, Sandman / Riot Coil, Anarchy, Civil War | After Decoy is playtested. Sleep builds on Drowse Beetle wake rules; infighting is new |
+| 9 | Beacon, Drone Bay | S9 auras and healing / S10 drone actors | Overclock Beacon, Command Spire, Aegis Field / Escort Drones, Guardian Wing, Reaper Swarm | Hold until the first batch is playtested |
+| (parallel) | Tesla and Plasma Constellation | S12 delayed ground shell | Forked Coil, Storm Network, Thunderhead / Constellation | Finish existing turrets whenever convenient; Tesla final models exist |
+
+## Open items before starting
+
+- **Shop slot count:** the roster notes assumed one weapon per visit, but `GameConstants.SHOP_TURRET_MAX` is now 4 slots at 37.5% each (mean 1.5 weapons). Re-check what that means for a 19-turret pool before stocking new turrets.
+- **Retune and cleanup of the progression change** (spec steps 4 and 5) still need doing; the retune is best done once more finals exist, but the existing 20 finals can be benched now.
+- **Unrelated bug to check:** the bench prints "axis Vector3 (0,0,0) must be normalized" from `projectile_3d.gd:209` on the bowling ball; confirm whether it predates the progression change.
+- **Art gaps (not blocking code):** Boomerang and Lullaby finalist choice; no favorites for Cataclysm, Perpetual Saw, Boomerang Storm, Civil War; no level-5 concepts exist yet for any turret.
