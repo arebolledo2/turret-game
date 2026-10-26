@@ -5,6 +5,9 @@ extends Node3D
 const MAX_PULSES: int = 32
 const MAX_SPARKS: int = 24
 const MAX_ARCS: int = 16
+const MAX_TRACERS: int = 8
+const TRACER_LIFETIME: float = .16
+const TRACER_WIDTH: float = .07
 const ARC_LIFETIME: float = .26
 ## The bolt's shape is re-rolled this often while it lives, which is what makes it crackle instead of sit still.
 const ARC_REROLL_INTERVAL: float = .05
@@ -43,6 +46,11 @@ var arc_ends: Array[PackedVector3Array] = []
 var arc_delays: Array[float] = []
 var arc_rerolls: Array[float] = []
 var arc_lights: Array[OmniLight3D] = []
+## Hit-scan tracers (Sniper): a stretched box that thins out over TRACER_LIFETIME. Age 0 means the slot is free.
+var tracers: Array[MeshInstance3D] = []
+var tracer_ages: Array[float] = []
+var tracer_lengths: Array[float] = []
+var tracer_material := WorldGeometry.material(Color(1.7, 1.55, 1.15), true)
 var arc_light_ages: Array[float] = []
 var next_arc_light: int = 0
 ## Decorative noise only: its own stream, so bolt shapes never consume the combat random stream.
@@ -198,6 +206,45 @@ func _show_spark(at: Vector3, material: Material, radius: float, lifetime: float
 	spark.scale = Vector3.ONE * radius
 	spark.visible = true
 	spark_lifetimes[index] = lifetime
+
+## A straight, brief bright line from `from` to `to` for hit-scan shots. Pooled; silently dropped when the pool is full.
+func show_tracer(from: Vector3, to: Vector3) -> void:
+	var length := from.distance_to(to)
+	if length < .01:
+		return
+	var index := tracer_ages.find(0.0)
+	if index < 0:
+		if tracers.size() >= MAX_TRACERS:
+			return
+		var tracer := MeshInstance3D.new()
+		var mesh := BoxMesh.new()
+		mesh.size = Vector3.ONE
+		tracer.mesh = mesh
+		tracer.material_override = tracer_material
+		tracer.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		tracer.visible = false
+		add_child(tracer)
+		tracers.append(tracer)
+		tracer_ages.append(0.0)
+		tracer_lengths.append(0.0)
+		index = tracers.size() - 1
+	var direction := (to - from) / length
+	var up := Vector3.RIGHT if absf(direction.dot(Vector3.UP)) > .99 else Vector3.UP
+	tracers[index].transform = Transform3D(Basis.looking_at(direction, up), (from + to) * .5)
+	tracer_lengths[index] = length
+	tracer_ages[index] = TRACER_LIFETIME
+	_pose_tracer(index)
+
+func _pose_tracer(index: int) -> void:
+	var fade := tracer_ages[index] / TRACER_LIFETIME
+	tracers[index].scale = Vector3(TRACER_WIDTH * fade, TRACER_WIDTH * fade, tracer_lengths[index])
+	tracers[index].visible = tracer_ages[index] > 0.0
+
+func _update_tracers(delta: float) -> void:
+	for index in range(tracers.size()):
+		if tracer_ages[index] > 0.0:
+			tracer_ages[index] = maxf(0.0, tracer_ages[index] - delta)
+			_pose_tracer(index)
 
 ## Queues one lightning bolt. `hop` is the chain jump number (0 = first strike); later hops light a beat after the one
 ## before so the chain visibly travels. The bolt's shape is decorative and never touches the combat random stream.
@@ -406,6 +453,7 @@ func _physics_process(delta: float) -> void:
 		sparks[index].visible = spark_lifetimes[index] > 0.0
 	_update_arcs(delta)
 	_update_arc_lights(delta)
+	_update_tracers(delta)
 	for index in range(pulses.size()):
 		if ages[index] < 0:
 			continue
@@ -520,6 +568,9 @@ func reset(preserve_damage: bool = false) -> void:
 		arc_lifetimes[index] = 0.0
 		arc_delays[index] = 0.0
 		arcs[index].visible = false
+	for index in range(tracers.size()):
+		tracer_ages[index] = 0.0
+		tracers[index].visible = false
 	for index in range(pulses.size()):
 		ages[index] = -1.0
 		pulses[index].visible = false

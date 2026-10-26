@@ -77,12 +77,24 @@ func _build_warning() -> void:
 	warning.name = "ChargeWarning"
 
 func _tick_statuses(delta: float) -> bool:
+	_tick_mark(delta)
 	if statuses.is_burning():
 		for burn_hit in statuses.advance_burn(delta):
 			world.combat.apply_hit(self, burn_hit)
 			if dead:
 				return false
 	return true
+
+## The mark timer runs here rather than in `_steer`, so stationary enemies (tech-drop crates) lose their mark too.
+func _tick_mark(delta: float) -> void:
+	if statuses.is_marked():
+		statuses.advance_mark(delta)
+	var marked := statuses.is_marked()
+	if marked and not mark_marker:
+		mark_marker = WorldGeometry.ring(self, .52 * body_scale, Color("ffb02e"))
+		mark_marker.position.y = .05
+	if mark_marker and mark_marker.visible != marked:
+		mark_marker.visible = marked
 
 ## Sets the enemy's velocity for this tick (chase, charge windup/dash, separation, knockback) and returns its heading.
 func _steer(delta: float) -> Vector3:
@@ -177,7 +189,7 @@ func chase_position() -> Vector3:
 	return world.player.position if chasing_hero else world.core.position
 
 func _scale_damage(hit: CombatHit3D) -> float:
-	return hit.damage * statuses.exposure_multiplier(hit)
+	return hit.damage * statuses.exposure_multiplier(hit) * statuses.mark_multiplier(hit)
 
 func _after_hit(hit: CombatHit3D) -> void:
 	statuses.apply(hit)

@@ -69,6 +69,50 @@ static func toughest(origin: Vector3, range_metres: float, candidates: Array[Com
 			best_distance = distance
 	return best
 
+## The `count` toughest enemies in range (highest current health first, ties to the nearest), skipping `excluded`.
+static func toughest_many(origin: Vector3, range_metres: float, candidates: Array[CombatActor], count: int, excluded: Array = []) -> Array[CombatActor]:
+	var pool: Array[CombatActor] = []
+	for candidate in candidates:
+		if _targetable(candidate, origin, range_metres) and not excluded.has(candidate):
+			pool.append(candidate)
+	pool.sort_custom(func(a: CombatActor, b: CombatActor) -> bool:
+		if a.health != b.health:
+			return a.health > b.health
+		return _distance_squared(a, origin) < _distance_squared(b, origin))
+	return pool.slice(0, maxi(count, 0))
+
+## Enemies standing on the straight lane from `origin` through `through`, nearest first along it. `through` itself is not
+## returned. A lane is `half_width` metres either side of the line (plus each body's own radius) and runs up to
+## `range_metres` from `origin`. `include_front` adds the enemies between `origin` and `through`; otherwise only those behind
+## it count. `limit` caps the result (negative means no cap).
+static func on_lane(origin: Vector3, through: CombatActor, range_metres: float, half_width: float, candidates: Array[CombatActor],
+		include_front: bool = false, limit: int = -1) -> Array[CombatActor]:
+	var result: Array[CombatActor] = []
+	var to_through := WorldGeometry.planar(through.position - origin)
+	if to_through.length_squared() < .000001:
+		return result
+	var heading := to_through.normalized()
+	var through_along := to_through.length()
+	var found: Array = []
+	for candidate in candidates:
+		if candidate == through or not is_instance_valid(candidate) or candidate.dead:
+			continue
+		var offset := WorldGeometry.planar(candidate.position - origin)
+		var along := offset.dot(heading)
+		if along <= 0.0 or along > range_metres + candidate.hurtbox_radius():
+			continue
+		if not include_front and along <= through_along:
+			continue
+		if absf(offset.cross(heading).y) > half_width + candidate.hurtbox_radius():
+			continue
+		found.append([along, candidate])
+	found.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+	for entry: Array in found:
+		if limit >= 0 and result.size() >= limit:
+			break
+		result.append(entry[1])
+	return result
+
 ## Nearest ranged or summoner enemy in range (`BACKLINE_TYPES`); the nearest enemy of any kind when none is in range.
 static func backline(origin: Vector3, range_metres: float, candidates: Array[CombatActor]) -> CombatActor:
 	var preferred: CombatActor = null

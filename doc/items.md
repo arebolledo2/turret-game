@@ -13,7 +13,7 @@ Combat modifiers use `filter.attack_family`, distinct from elemental `DamageType
 | Shock | Instant, AoE |
 | Tesla | Instant |
 | Melee | Kinetic |
-| Sniper (registry only, not stocked) | Instant |
+| Sniper | Instant |
 | Mine (registry only, not stocked) | AoE (the Deployable attack style maps to AoE) |
 
 A hybrid whose styles map to the same family twice (for example AoE plus Deployable) lists it once. One modifier matches any listed family and applies once. Separate percentage increases add: +10% Projectile and +20% AoE damage give Plasma +30%, before separate multiplicative effects. Kinetic means contact/melee, not every PHYSICAL attack.
@@ -55,7 +55,7 @@ The opaque `ShopScreen` hides the arena and combat HUD, suspends 3D drawing whil
 
 ## Gates and authoring
 
-`ShopCatalog` remains the stock/reward authority. Every catalogued item is always stocked unless its row names a flag. `mode_convoy` items additionally require Convoy mode. Sniper and Mine remain outside supported shop content; Flamethrower, Bow and Bowling are stocked. Reserve Battery additionally requires a core mode.
+`ShopCatalog` remains the stock/reward authority. Every catalogued item is always stocked unless its row names a flag. `mode_convoy` items additionally require Convoy mode. Mine remains outside supported shop content; Sniper, Flamethrower, Bow and Bowling are stocked. Reserve Battery additionally requires a core mode.
 
 To add an item, add a reviewed row to ItemCatalog, a catalog entry and supported family/capability filters. Provide a separate `assets/ui/items/<id>.svg`, a clear description and appropriate rarity/stack cap. Add tests for actual stat or combat behaviour and preview equivalence. New stats require a runtime consumer.
 

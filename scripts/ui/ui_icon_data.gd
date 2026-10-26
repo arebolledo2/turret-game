@@ -53,6 +53,7 @@ const PATHS: Dictionary = {
 	"turret_flamethrower": "<path d='M12 2c2 6-4 7-1 11 2-1 3-3 3-5 8 7 5 14-2 14S2 15 7 9c-1 4 1 5 2 5-2-6 3-7 3-12z'/>",
 	"turret_bowling": "<circle cx='12' cy='12' r='9'/><circle cx='10' cy='7' r='1'/><circle cx='14' cy='8' r='1'/><circle cx='11' cy='11' r='1'/>",
 	"turret_tesla": "<path d='M12 21V10'/><path d='M6.5 5a8 8 0 000 9M17.5 5a8 8 0 010 9'/><circle cx='12' cy='7.5' r='2'/><path d='M8 21h8'/>",
+	"turret_sniper": "<circle cx='12' cy='12' r='7'/><path d='M12 2v6M12 16v6M2 12h6M16 12h6'/><circle cx='12' cy='12' r='1.5' fill='#fff' stroke='none'/>",
 	"turret_melee": "<path d='M5 19L18 6M15 4l5 5M5 14l5 5'/>",
 	# Items
 	"item_compact_design": "<path d='M4 4l5 5M9 4.5V9H4.5M20 4l-5 5M15 4.5V9h4.5M4 20l5-5M9 19.5V15H4.5M20 20l-5-5M15 19.5V15h4.5'/>",

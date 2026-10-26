@@ -220,7 +220,7 @@ func _show_selected() -> void:
 	stat_values[1].text = "%.2f m" % (stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0))
 	stat_values[2].text = "%.0f°/s" % stats.rotation_rate if turret.turret_type == "melee" else "%.2f /s" % stats.fire_rate
 	stat_values[3].text = "%d jumps" % stats.chain_count if stats.chain_count > 0 else "%.2f m" % stats.aoe_radius_metres if stats.aoe_radius_metres > 0 else "—"
-	stat_values[4].text = str(stats.pierce) if stats.pierce > 0 else "—"
+	stat_values[4].text = TurretEvolution.pierce_text(stats.pierce) if stats.pierce > 0 else "—"
 	stat_values[5].text = "%d stacks" % turret.entrench_stacks_cached
 	var steps := PackedStringArray()
 	for milestone in TurretProgression.EVOLUTION_LEVELS:
@@ -236,6 +236,10 @@ func _show_selected() -> void:
 		lines.append("Rate  %.2f shots/s     Cooldown  %.2f s" % [stats.fire_rate, stats.cooldown_seconds])
 	if stats.projectile_speed_metres > 0:
 		lines.append("Projectile speed  %.2f m/s     Pierce  %d" % [stats.projectile_speed_metres, stats.pierce])
+	if turret.turret_type == "sniper":
+		lines.append("Instant hit on the toughest enemy in range     Pierce  %s" % TurretEvolution.pierce_text(stats.pierce))
+		if growth.evolution_form == "overwatch":
+			lines.append("Marks the %d toughest enemies for %.0f s: +%.0f%% damage from every turret" % [TurretEvolution.OVERWATCH_MARK_COUNT, TurretEvolution.OVERWATCH_MARK_SECONDS, StatusEffects3D.MARKED_BONUS * 100.0])
 	if stats.aoe_radius_metres > 0:
 		lines.append("Blast radius  %.2f m" % stats.aoe_radius_metres)
 	if stats.chain_count > 0:

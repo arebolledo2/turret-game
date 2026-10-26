@@ -17,6 +17,7 @@ static func create(owner: TurretActor, id: String) -> TurretForm:
 		"stormblade": result = GunbladeForm.new()
 		"machine_gun", "cyclone_gatling": result = MachineGunForm.new()
 		"repeater_bow", "arrowstorm": result = RepeaterBowForm.new()
+		"overwatch": result = OverwatchForm.new()
 		_: return null
 	result.actor = owner
 	result.form_id = id
@@ -52,6 +53,10 @@ func clear() -> void:
 
 ## Pulse-mode attack at `target`, the nearest enemy in range.
 func fire_pulse(_stats: TurretStats, _range_metres: float, _target: CombatActor) -> void:
+	pass
+
+## Instant-mode attack, called just before the shot resolves its target line (`range_metres` is the attack reach).
+func before_instant(_stats: TurretStats, _range_metres: float) -> void:
 	pass
 
 ## Projectile-mode attack along `heading` (toward the actor's target). Returns false to use the default single shot.

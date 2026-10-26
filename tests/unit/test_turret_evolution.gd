@@ -73,7 +73,7 @@ func test_no_third_evolution_appears_after_level_10() -> void:
 	assert_false(growth.evolve("shock", "resonance_engine"))
 
 func test_every_base_has_one_upgrade_and_two_named_finals() -> void:
-	assert_eq(TurretEvolution.PATHS.size(), 8)
+	assert_eq(TurretEvolution.PATHS.size(), 9)
 	for base: String in TurretEvolution.PATHS:
 		var upgrades := TurretEvolution.options(base, 0)
 		var finals := TurretEvolution.options(base, 1)
@@ -97,7 +97,7 @@ func test_every_registered_form_belongs_to_one_path() -> void:
 			seen[form] = base
 	for form: String in TurretEvolution.FORMS:
 		assert_true(seen.has(form), "%s is in FORMS but no path offers it" % form)
-	assert_eq(seen.size(), 24, "8 bases x (1 upgrade + 2 finals)")
+	assert_eq(seen.size(), 27, "9 bases x (1 upgrade + 2 finals)")
 
 func test_legacy_stage_is_one_for_upgrades_and_three_for_finals() -> void:
 	for base: String in TurretEvolution.PATHS:
@@ -108,8 +108,8 @@ func test_legacy_stage_is_one_for_upgrades_and_three_for_finals() -> void:
 	assert_eq(TurretEvolution.legacy_stage(""), 0)
 	assert_eq(TurretEvolution.legacy_stage("missing"), 0)
 
-func test_implemented_forms_are_the_twenty_with_attacks_and_stats() -> void:
-	assert_eq(TurretEvolution.IMPLEMENTED.size(), 20)
+func test_implemented_forms_are_the_twenty_three_with_attacks_and_stats() -> void:
+	assert_eq(TurretEvolution.IMPLEMENTED.size(), 23)
 	for form in TurretEvolution.IMPLEMENTED:
 		assert_true(TurretEvolution.FORMS.has(form), "%s is registered" % form)
 		assert_false(TurretEvolution.description(form).is_empty(), "%s has a description" % form)
@@ -128,3 +128,52 @@ func test_form_stats_keep_the_authored_stage_one_and_stage_three_numbers() -> vo
 	assert_eq(TurretEvolution.base_stats("tesla", "storm_network"), TurretRegistry.get_base_stats("tesla"), "Unbuilt forms add no stats yet")
 	assert_eq(TurretEvolution.volley_size(TurretEvolution.legacy_stage("repeater_bow")), 2)
 	assert_eq(TurretEvolution.volley_size(TurretEvolution.legacy_stage("arrowstorm")), 5)
+
+func _dps(stats: Dictionary) -> float:
+	return float(stats.damage) * float(stats.fire_rate)
+
+func test_sniper_path_forms_tiers_and_placeholder_chassis() -> void:
+	assert_eq(TurretEvolution.options("sniper", 0), ["piercer_rifle"])
+	assert_eq(TurretEvolution.options("sniper", 1), ["horizon_piercer", "overwatch"])
+	assert_eq(TurretEvolution.legacy_stage("piercer_rifle"), 1)
+	assert_eq(TurretEvolution.legacy_stage("horizon_piercer"), 3)
+	assert_eq(TurretEvolution.legacy_stage("overwatch"), 3)
+	assert_eq(TurretEvolution.form_name("piercer_rifle"), "Piercer Rifle")
+	assert_eq(TurretEvolution.form_name("horizon_piercer"), "Horizon Piercer")
+	assert_eq(TurretEvolution.form_name("overwatch"), "Overwatch")
+	for form in ["piercer_rifle", "horizon_piercer", "overwatch"]:
+		assert_true(form in TurretEvolution.IMPLEMENTED)
+		assert_eq(TurretEvolution.model_key(form), "ion", "The Ion chassis is the placeholder until a Sniper model exists")
+		assert_true(ClockworkModels.available(TurretEvolution.model_key(form)))
+		assert_false(TurretEvolution.description(form).is_empty())
+
+func test_sniper_base_stats_match_the_design() -> void:
+	var base := TurretRegistry.get_base_stats("sniper")
+	assert_eq(base.damage, 40.0)
+	assert_eq(base.fire_rate, .35)
+	assert_eq(base.range, 700.0)
+	assert_eq(TurretRegistry.get_base_price("sniper"), 18)
+	assert_eq(TurretRegistry.get_targeting("sniper"), "toughest")
+	assert_eq(TurretRegistry.get_fire_mode("sniper"), TurretRegistry.FIRE_INSTANT)
+	assert_true(TurretRegistry.has_attack_style("sniper", GameEnums.AttackStyle.INSTANT))
+	assert_eq(TurretRegistry.get_damage_type("sniper"), GameEnums.DamageType.PHYSICAL)
+	assert_eq(TurretRegistry.get_attack_families("sniper"), ["instant"] as Array[String])
+
+func test_sniper_forms_climb_in_dps_and_pierce() -> void:
+	var base := TurretEvolution.base_stats("sniper", "")
+	var rifle := TurretEvolution.base_stats("sniper", "piercer_rifle")
+	var horizon := TurretEvolution.base_stats("sniper", "horizon_piercer")
+	var overwatch := TurretEvolution.base_stats("sniper", "overwatch")
+	assert_gt(_dps(rifle), _dps(base), "The upgrade is a straight improvement")
+	assert_gt(rifle.range, base.range)
+	assert_eq(int(rifle.pierce), 2)
+	assert_eq(int(overwatch.pierce), 2, "Overwatch keeps the Piercer shot")
+	assert_gte(int(horizon.pierce), TurretEvolution.SNIPER_UNLIMITED_PIERCE)
+	assert_between(_dps(horizon) / _dps(rifle), 1.4, 1.6, "Horizon Piercer single-target DPS is 1.4 to 1.6 times the Piercer Rifle's")
+	assert_gt(_dps(overwatch), _dps(rifle), "Overwatch is above the upgrade even before its mark")
+	assert_between(_dps(overwatch) * (1.0 + StatusEffects3D.MARKED_BONUS) / _dps(rifle), 1.4, 1.6, "Against its own marked target Overwatch lands in the band")
+
+func test_pierce_text_names_none_a_count_and_the_whole_line() -> void:
+	assert_eq(TurretEvolution.pierce_text(0), "none")
+	assert_eq(TurretEvolution.pierce_text(2), "2")
+	assert_eq(TurretEvolution.pierce_text(TurretEvolution.SNIPER_UNLIMITED_PIERCE), "whole line")

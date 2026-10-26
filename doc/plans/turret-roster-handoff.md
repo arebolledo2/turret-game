@@ -47,7 +47,7 @@ Roster in the new shape (L5 upgrade, then the two L10 finals). `Built` means pla
 | Plasma | Siege Cannon | Worldbreaker | Constellation | Constellation unbuilt (needs S12) |
 | Shock | Resonator | Resonance Engine | Thunder Spear | all built, final models done |
 | Tesla | Forked Coil | Storm Network | Thunderhead | nothing playable; Storm Network and Thunderhead models exist |
-| Sniper | Piercer Rifle | Horizon Piercer | Overwatch | new |
+| Sniper | Piercer Rifle | Horizon Piercer | Overwatch | all built (Ion chassis and portrait placeholders, runtime rifle attachment) |
 | Scrap Press | Coin Feeder | Treasury | Academy | new |
 | Decoy | Bumper Post | Pile Driver | Maelstrom | new |
 | Quake | Aftershock | Tectonic | Cataclysm | new |
@@ -64,6 +64,10 @@ Stage text for each form is in the artifact. Where an old stage-2 or stage-3 tex
 Retired forms with code in `scripts/systems/turret_evolution.gd`: Gatling, Crossfire, Twin Saber, Repeater Blade and so on from `IMPLEMENTED`, plus Echo Chamber, Focused Lance and Thunder Pin. Leave them until the progression change lands, then delete.
 
 The older `doc/plans/turret-evolution.html` names Shock's first branch "Arc Pulse". The code says Resonator, and the code wins.
+
+## Sniper logic (built 26 Oct 2026, branch `turret-sniper`)
+
+`sniper` is a stocked base turret (damage 40, 0.35/s, 700, price 18, `"targeting": "toughest"`, `fire_mode: "instant"`). `TurretActor._fire_instant` re-picks the toughest enemy at fire time and strikes it plus `pierce` enemies on the lane through it (`TurretTargeting.on_lane`). Piercer Rifle pierces 2 behind; Overwatch keeps that; Horizon Piercer uses `SNIPER_UNLIMITED_PIERCE` (the whole line to full range, in front of the target too). Overwatch (`OverwatchForm`) marks the three toughest enemies before each shot; Marked is a new `StatusEffects3D` status (+25% from any turret-sourced hit, multiplies with Exposed) whose mark jumps, keeping its remaining time, when its holder dies. Starting numbers: Piercer Rifle 52 dmg at 0.40/s (20.8 DPS), Horizon Piercer 70 at 0.45 (31.5, 1.51x), Overwatch 56 at 0.42 (23.5 raw, 29.4 against its own marked target, 1.41x); bench rows and the team (+Machine Gun) rows are in `tools/bench_turret_forms.gd`. All three stages use the `ion` chassis (`FORMS` model, registry `model_key`) and Ion portraits copied to `sniper`, `piercer_rifle`, `horizon_piercer`, `overwatch`; `SniperEvolutionVisual` adds a rifle barrel, brake and scope (Piercer Rifle), glowing rails (Horizon) or a spotter ring (Overwatch). To swap in real art: add `sniper`/`piercer_rifle`/`horizon_piercer`/`overwatch` chassis keys, drop the attachment, replace the four portraits.
 
 ## Shock / Lance logic (built 17 Oct 2026)
 

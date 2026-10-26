@@ -21,14 +21,27 @@ A turret type picks its target by `TurretRegistry.get_targeting(type_id)` (a top
 | Mode | Picks |
 |---|---|
 | `farthest` | The enemy furthest from the turret |
-| `toughest` | Highest current health; ties go to the nearest |
+| `toughest` | Highest current health; ties go to the nearest (Sniper) |
 | `backline` | Nearest Needle Kite, Kiln Lobber or Brood Tender (`TurretTargeting.BACKLINE_TYPES`); nearest enemy of any kind when none is in range |
 
-`TurretTargeting.select(mode, origin, range, candidates)` dispatches by mode; `TurretActor` calls it every 0.2 s when `TurretTargeting.handles(mode)`.
+`TurretTargeting.select(mode, origin, range, candidates)` dispatches by mode; `TurretActor` calls it every 0.2 s when `TurretTargeting.handles(mode)`. Two helpers serve the Sniper line: `toughest_many(origin, range, candidates, count, excluded)` (the top-N toughest, used by Overwatch's marks) and `on_lane(origin, through, range, half_width, candidates, include_front, limit)` (enemies on the straight lane from the turret through the target, nearest first, used by piercing shots).
+
+## Instant hits
+
+`TurretRegistry.FIRE_INSTANT` (`fire_mode: "instant"`) is a hit-scan shot: `TurretActor._fire_instant` re-picks the target when the cooldown is ready (the 0.2 s target cache can be stale), then `Combat3D.impact` hits it at once, with no projectile. `stats.pierce` extra enemies on the lane through the target (half-width `TurretEvolution.SNIPER_LANE_HALF_WIDTH` plus each body's radius, up to the attack range) take the same shot: the nearest `pierce` behind the target for the Piercer Rifle and Overwatch, and every enemy on the whole line, in front of the target too, when pierce is `SNIPER_UNLIMITED_PIERCE` (Horizon Piercer). The crit is rolled once per shot. `CombatEffects3D.show_tracer` draws a pooled, brief bright line from the muzzle.
 
 ## Status, movement and queries
 
 `StatusEffects3D` reuses shared `StatusEffect` lifetime/refresh rules. Refresh keeps the strongest slow of a damage type and replaces its remaining duration. Across types, the strongest slow wins; slows do not multiply. Intensity is capped at 90%. Slow changes pursuit and dash distance, not knockback or charge timers.
+
+Two damage-taken statuses live on `StatusEffects3D`, each with its own timer and multiplier, applied in `EnemyActor._scale_damage`:
+
+| Status | Source | Bonus | Applies to |
+|---|---|---|---|
+| Exposed | Resonance Engine (a target struck by both ring kinds) | +30% for 2 s | Hits with the `instant` attack family only |
+| Marked | Overwatch (`OverwatchForm`) | +25% for 6 s | Any hit with a turret source (`source_id > 0`), burn ticks included; hero, contact and unattributed hits are not amplified |
+
+Stacking: the final hit is `damage * exposure_multiplier * mark_multiplier`, so an Exposed and Marked enemy takes 1.3 x 1.25 = 1.625 times an Instant turret's damage. A mark never stacks with itself (a second Overwatch only refreshes the timer to the longer value). The mark timer runs in `EnemyActor._tick_statuses` (not `_steer`), so stationary enemies such as tech-drop crates lose it on time. Marks end on death and wave end (`StatusEffects3D.clear`), and Overwatch drops all of its marks whenever combat is not running (pause included). A marked enemy shows an amber ground ring. When a marked enemy dies, `OverwatchForm.tick` moves the mark, with its remaining time, to the next toughest unmarked enemy in range.
 
 `ChargeController3D` locks a dash heading at the start of a 0.9-second amber warning, then dashes and recovers. Separation is suspended during warning/dash to preserve the indicated path. Knockback interrupts the charge.
 

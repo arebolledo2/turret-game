@@ -12,6 +12,7 @@ const PATHS: Dictionary = {
 	"plasma": {"upgrade": "siege", "finals": ["worldbreaker", "constellation"]},
 	"shock": {"upgrade": "resonator", "finals": ["resonance_engine", "thunder_spear"]},
 	"tesla": {"upgrade": "forked_coil", "finals": ["storm_network", "thunderhead"]},
+	"sniper": {"upgrade": "piercer_rifle", "finals": ["horizon_piercer", "overwatch"]},
 }
 
 ## `tier` is 1 for a level-5 upgrade and 3 for a level-10 final (see `legacy_stage`).
@@ -40,6 +41,10 @@ const FORMS: Dictionary = {
 	"forked_coil": {"name": "Forked Coil", "model": "tesla", "tier": 1},
 	"storm_network": {"name": "Storm Network", "model": "storm_network", "tier": 3},
 	"thunderhead": {"name": "Thunderhead", "model": "thunderhead", "tier": 3},
+	# No Sniper chassis exists yet: all three stages use the Ion chassis, and a runtime rifle attachment tells them apart.
+	"piercer_rifle": {"name": "Piercer Rifle", "model": "ion", "tier": 1},
+	"horizon_piercer": {"name": "Horizon Piercer", "model": "ion", "tier": 3},
+	"overwatch": {"name": "Overwatch", "model": "ion", "tier": 3},
 }
 
 ## Forms offered at `stage` (evolutions already taken): the upgrade at 0, the two finals at 1, nothing after.
@@ -137,10 +142,27 @@ static func base_stats(base_type: String, form_id: String) -> Dictionary:
 			stats.damage = [11.0, 12.0, 14.0][stage - 1]
 			stats.rotation_rate = [420.0, 450.0, 480.0][stage - 1]
 			stats.range = [145.0, 155.0, 170.0][stage - 1]
+		# Sniper line: single-target DPS (before level and item bonuses) is 14 base, 20.8 Piercer Rifle, 31.5 Horizon Piercer,
+		# 23.5 Overwatch. Overwatch's own shots land on a Marked target, so against its first target it deals 1.25 times that.
+		"piercer_rifle":
+			stats.damage = 52.0
+			stats.fire_rate = .40
+			stats.range = 760.0
+			stats.pierce = SNIPER_PIERCER_PIERCE
+		"horizon_piercer":
+			stats.damage = 70.0
+			stats.fire_rate = .45
+			stats.range = 820.0
+			stats.pierce = SNIPER_UNLIMITED_PIERCE
+		"overwatch":
+			stats.damage = 56.0
+			stats.fire_rate = .42
+			stats.range = 780.0
+			stats.pierce = SNIPER_PIERCER_PIERCE
 	return stats
 
 ## Forms with both a working attack and authored art in this build. Tesla's forms and Constellation are registered but not built yet.
-const IMPLEMENTED: Array[String] = ["machine_gun", "cyclone_gatling", "omnifire", "saber", "orbit_saber", "stormblade", "repeater_bow", "arrowstorm", "titan_bow", "wide_flame", "inferno_crown", "dragonheart", "heavy_roller", "juggernaut", "ricochet_king", "siege", "worldbreaker", "resonator", "resonance_engine", "thunder_spear"]
+const IMPLEMENTED: Array[String] = ["machine_gun", "cyclone_gatling", "omnifire", "saber", "orbit_saber", "stormblade", "repeater_bow", "arrowstorm", "titan_bow", "wide_flame", "inferno_crown", "dragonheart", "heavy_roller", "juggernaut", "ricochet_king", "siege", "worldbreaker", "resonator", "resonance_engine", "thunder_spear", "piercer_rifle", "horizon_piercer", "overwatch"]
 
 ## Delays in seconds and damage fractions of the Resonator's echoes, per stage.
 const RESONATOR_ECHO_DELAYS: Array = [[.5], [.4, .8], [.4, .8]]
@@ -155,6 +177,21 @@ const ENGINE_EXPOSE_DURATION: float = 2.0
 
 ## Half-width in metres of the Thunder Spear's piercing lane.
 const LANCE_LANE_HALF_WIDTH: float = .6
+
+## Sniper: half-width in metres of the lane a piercing shot travels along (each body's own radius is added), how many
+## enemies behind the target the Piercer Rifle line reaches, and the pierce value that means "the whole line".
+const SNIPER_LANE_HALF_WIDTH: float = .45
+const SNIPER_PIERCER_PIERCE: int = 2
+const SNIPER_UNLIMITED_PIERCE: int = 99
+## Overwatch marks this many of the toughest enemies in range for this many seconds on every shot.
+const OVERWATCH_MARK_COUNT: int = 3
+const OVERWATCH_MARK_SECONDS: float = 6.0
+
+## "none", a count of extra enemies, or "whole line" for the Horizon Piercer, for stat readouts.
+static func pierce_text(pierce: int) -> String:
+	if pierce <= 0:
+		return "none"
+	return "whole line" if pierce >= SNIPER_UNLIMITED_PIERCE else str(pierce)
 
 ## Arrows loosed per Repeater Bow volley, rail by rail.
 static func volley_size(stage: int) -> int:
@@ -206,4 +243,7 @@ static func description(form_id: String) -> String:
 		"resonator", "resonance_engine": return ["Each pulse echoes once half a second later at half damage, refreshing the slow.", "Two echoes follow each pulse and the pulse reaches 15% farther.", "Pulses alternate a tight, hard inner ring and a wide outer ring; enemies caught by both are Exposed, taking 30% more from Instant turrets."][stage - 1]
 		"thunder_spear": return "The bolt drives through a whole lane of enemies and pins every one."
 		"siege", "worldbreaker": return "Slow, heavy shells explode over a large area and push enemies back."
+		"piercer_rifle": return "A longer barrel and heavier rounds. The shot passes through two enemies behind its target."
+		"horizon_piercer": return "The shot runs the whole line to full range and strikes every enemy on it. Aim the toughest enemy through the crowd."
+		"overwatch": return "Keeps the Piercer shot and marks the three toughest enemies in range for 6 seconds. Marked enemies take 25% more damage from every turret, and the mark jumps to the next toughest enemy when one dies."
 	return ""

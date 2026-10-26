@@ -117,6 +117,7 @@ func _rebuild_model() -> void:
 	bowling_hardware = BowlingEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
 	gun_muzzles = GunbladeEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
 	SiegeEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
+	SniperEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
 	GatlingEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
 	crossfire_muzzles = CrossfireEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
 	aim = model.find_child("Aim", true, false) as Node3D
@@ -385,6 +386,10 @@ func _physics_process(delta: float) -> void:
 		_fire_flame(stats, range_metres, heading.normalized())
 	elif fire_mode == TurretRegistry.FIRE_CHAIN:
 		_fire_chain(stats)
+	elif fire_mode == TurretRegistry.FIRE_INSTANT:
+		_fire_instant(stats, range_metres)
+		if not FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
+			aim.position += heading.normalized() * -.06
 	else:
 		_fire_projectile(stats)
 		if not FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION):
@@ -415,6 +420,35 @@ func _fire_chain(stats: TurretStats) -> void:
 		stats.chain_range_metres, stats.chain_decay, world.enemies)
 	_reset_cooldown(stats)
 
+## Hit-scan shot at the turret's pick (re-picked now, because the target cache can be 0.2 s old and a Sniper must hit the
+## toughest enemy). `pierce` extra enemies on the line through it are struck too: those behind the target, or every enemy
+## on the line to full range when pierce is unlimited (Horizon Piercer).
+func _fire_instant(stats: TurretStats, range_metres: float) -> void:
+	var struck := TurretTargeting.select(TurretRegistry.get_targeting(turret_type), position, range_metres, world.enemies)
+	if not struck:
+		return
+	target = struck
+	var heading := WorldGeometry.planar(struck.position - position).normalized()
+	aim.rotation.y = atan2(-heading.x, -heading.z)
+	if form:
+		form.before_instant(stats, range_metres)
+	var unlimited := stats.pierce >= TurretEvolution.SNIPER_UNLIMITED_PIERCE
+	var victims: Array[CombatActor] = [struck]
+	if stats.pierce > 0:
+		victims.append_array(TurretTargeting.on_lane(position, struck, range_metres, TurretEvolution.SNIPER_LANE_HALF_WIDTH,
+			world.enemies, unlimited, -1 if unlimited else stats.pierce))
+	var reach := 0.0
+	for victim in victims:
+		reach = maxf(reach, WorldGeometry.planar(victim.position - position).dot(heading))
+	var tip := position + heading * (range_metres if unlimited else reach)
+	var shot := _new_shot(stats)
+	world.effects.show_tracer(muzzle.global_position, Vector3(tip.x, muzzle.global_position.y, tip.z))
+	world.effects.show_muzzle(muzzle.global_position, shot.damage_type)
+	world.audio.play_cue("ion", muzzle.global_position)
+	for victim in victims:
+		world.combat.impact(victim, victim.position, heading, shot.copy(), [] as Array[CombatActor])
+	_reset_cooldown(stats)
+
 func _fire_projectile(stats: TurretStats) -> void:
 	var heading := WorldGeometry.planar(target.position - muzzle.global_position).normalized()
 	if not form or not form.fire_projectile(stats, heading):
@@ -432,6 +466,9 @@ func _model_key(form_id: String) -> String:
 	var key := TurretEvolution.model_key(form_id)
 	if not key.is_empty():
 		return key
+	var own := str(TurretRegistry.get_type(turret_type).get("model_key", ""))
+	if not own.is_empty():
+		return own
 	return "ion" if turret_type == "normal" else turret_type
 
 func display_name() -> String:

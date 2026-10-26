@@ -14,6 +14,8 @@ const ROSTER := [
 	["bowling", "heavy_roller", "juggernaut", "ricochet_king"],
 	["shock", "resonator", "resonance_engine", "thunder_spear"],
 	["shock", "resonator", "thunder_spear", "resonance_engine"],
+	["sniper", "piercer_rifle", "horizon_piercer", "overwatch"],
+	["sniper", "piercer_rifle", "overwatch", "horizon_piercer"],
 ]
 var world: ArenaWorld
 var actors: Array[TurretActor] = []
@@ -54,7 +56,7 @@ func _ready() -> void:
 	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
 	for i in ROSTER.size():
 		var spec: Array = ROSTER[i]
-		var turret := world.add_turret(Vector3((i % 5 - 2) * 4.2, 0, -3.3 if i < 5 else 3.3), spec[0])
+		var turret := world.add_turret(Vector3((i % 5 - 2) * 4.2, 0, -3.3 + 6.6 * float(i / 5)), spec[0])
 		turret.progression.award(1500)
 		turret.evolve(spec[1])
 		actors.append(turret)

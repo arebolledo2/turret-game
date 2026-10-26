@@ -9,6 +9,7 @@ const FIRE_PULSE: String = "pulse" # area pulse around the turret
 const FIRE_CHAIN: String = "chain" # lightning that jumps between enemies
 const FIRE_FLAME: String = "flame" # aimed cone with burn over time
 const FIRE_SWEEP: String = "sweep" # spinning melee bat
+const FIRE_INSTANT: String = "instant" # hit-scan shot along a line (Sniper); pierce lets it strike more enemies on that line
 
 const DEFAULT_MODEL: String = "res://assets/models/game/ion_turret.glb"
 
@@ -77,15 +78,20 @@ const TYPES: Dictionary = {
 	"sniper": {
 		"name": "Sniper Turret",
 		"icon": "🎯",
-		"description": "Long-range instant-hit turret. High damage, slow fire rate.",
+		"short_name": "Sniper",
+		# No sniper model yet: the Ion chassis stands in (see `TurretActor._model_key`).
+		"model_key": "ion",
+		"fire_mode": FIRE_INSTANT,
+		"targeting": "toughest",
+		"description": "Instant long-range shot at the toughest enemy in range, bosses and crates included. Slow, heavy hits.",
 		"attack_styles": [GameEnums.AttackStyle.INSTANT],
 		"damage_types": [GameEnums.DamageType.PHYSICAL],
 		"base_stats": {
-			"damage": 18.0,
-			"fire_rate": 0.5,
-			"range": 750.0,
+			"damage": 40.0,
+			"fire_rate": 0.35,
+			"range": 700.0,
 			"rotation_speed": 0.0,
-			"targeting": "farthest",
+			"pierce": 0,
 		}
 	},
 	"fire": {
@@ -296,7 +302,7 @@ static func has_damage_type(type_id: String, dtype: GameEnums.DamageType) -> boo
 
 
 ## Targeting strategy for a turret type: "closest" (default), "farthest", "cluster", "toughest" or "backline".
-## Read from a top-level `targeting` key, falling back to `base_stats.targeting` (where Sniper and Plasma keep it today).
+## Read from a top-level `targeting` key, falling back to `base_stats.targeting` (where Plasma keeps it today; Sniper uses the top-level key).
 ## `TurretTargeting` resolves farthest, toughest and backline; `Combat3D.select_target` handles closest and cluster.
 static func get_targeting(type_id: String) -> String:
 	var definition := _definition(type_id)

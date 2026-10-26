@@ -6,6 +6,11 @@ var effects: Dictionary = {}
 ## Exposed: extra damage taken from Instant-family turrets while the timer runs.
 const EXPOSED_BONUS: float = .3
 var exposed_remaining: float = 0.0
+## Marked (Overwatch): extra damage taken from every turret while the timer runs. Independent of Exposed.
+## Stacking rule: the final hit is `damage * exposure_multiplier * mark_multiplier`, so a Marked, Exposed enemy hit by an
+## Instant turret takes 1.3 * 1.25 = 1.625 times the damage. The mark itself never stacks; refreshing keeps the longer timer.
+const MARKED_BONUS: float = .25
+var marked_remaining: float = 0.0
 const BURN_TICK: float = .25
 var burn_transferred: bool = false
 var burn_dps: float = 0.0
@@ -46,6 +51,23 @@ func expose(duration: float) -> void:
 
 func exposure_multiplier(hit: CombatHit3D) -> float:
 	return 1.0 + EXPOSED_BONUS if exposed_remaining > 0.0 and "instant" in hit.attack_families else 1.0
+
+func mark(duration: float) -> void:
+	marked_remaining = maxf(marked_remaining, duration)
+
+func unmark() -> void:
+	marked_remaining = 0.0
+
+func is_marked() -> bool:
+	return marked_remaining > 0.0
+
+## Turret hits only: the hero's weapon, enemy contact damage and blasts without a turret source are not amplified.
+func mark_multiplier(hit: CombatHit3D) -> float:
+	return 1.0 + MARKED_BONUS if marked_remaining > 0.0 and hit.source_id > 0 else 1.0
+
+## Runs every tick the enemy is alive (stationary crates included), unlike `advance`, which only runs while an enemy moves.
+func advance_mark(delta: float) -> void:
+	marked_remaining = maxf(0.0, marked_remaining - delta)
 
 func advance(delta: float) -> void:
 	exposed_remaining = maxf(0.0, exposed_remaining - delta)
@@ -100,5 +122,6 @@ func clear_burn() -> void:
 func clear() -> void:
 	effects.clear()
 	exposed_remaining = 0.0
+	marked_remaining = 0.0
 	_pending_burn_hits.clear()
 	clear_burn()
