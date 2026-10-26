@@ -57,6 +57,7 @@ var range_overlay: TurretRangeRing
 const STATS_REFRESH: float = .25
 static var _no_gun_stats := TurretStats.new()
 const TESLA_TINT := Color(.35, .9, 1.0)
+const QUAKE_TINT := Color(1.0, .78, .62)
 static var melee_materials: Dictionary = {}
 
 func _init() -> void:
@@ -111,6 +112,9 @@ func _rebuild_model() -> void:
 		model = _build_melee_model() if fire_mode == TurretRegistry.FIRE_SWEEP else load(TurretRegistry.get_model_path(turret_type)).instantiate()
 	if turret_type == "tesla" and not use_clockwork:
 		EnemyVariants.tint_model(model, "turret_tesla", TESLA_TINT, .5)
+	elif turret_type == "quake":
+		# The Shock bell stands in for the Quake: a warm bronze tint tells them apart until a real chassis exists.
+		EnemyVariants.tint_model(model, "turret_quake", QUAKE_TINT, 0.0)
 	add_child(model)
 	BowEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
 	flame_emitters = FlameEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
@@ -118,6 +122,7 @@ func _rebuild_model() -> void:
 	gun_muzzles = GunbladeEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
 	SiegeEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
 	SniperEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
+	QuakeEvolutionVisual.build(model, turret_type, progression.evolution_form)
 	GatlingEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
 	crossfire_muzzles = CrossfireEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
 	aim = model.find_child("Aim", true, false) as Node3D

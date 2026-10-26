@@ -16,6 +16,8 @@ const ROSTER := [
 	["shock", "resonator", "thunder_spear", "resonance_engine"],
 	["sniper", "piercer_rifle", "horizon_piercer", "overwatch"],
 	["sniper", "piercer_rifle", "overwatch", "horizon_piercer"],
+	["quake", "aftershock", "tectonic", "cataclysm"],
+	["quake", "aftershock", "cataclysm", "tectonic"],
 ]
 var world: ArenaWorld
 var actors: Array[TurretActor] = []

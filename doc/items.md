@@ -14,6 +14,7 @@ Combat modifiers use `filter.attack_family`, distinct from elemental `DamageType
 | Tesla | Instant |
 | Melee | Kinetic |
 | Sniper | Instant |
+| Quake | Kinetic, AoE |
 | Mine (registry only, not stocked) | AoE (the Deployable attack style maps to AoE) |
 
 A hybrid whose styles map to the same family twice (for example AoE plus Deployable) lists it once. One modifier matches any listed family and applies once. Separate percentage increases add: +10% Projectile and +20% AoE damage give Plasma +30%, before separate multiplicative effects. Kinetic means contact/melee, not every PHYSICAL attack.

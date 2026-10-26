@@ -188,6 +188,9 @@ const ZONE_LABEL_FULL_RANGE: float = 3.0 # a zone's name and effect are fully vi
 const ZONE_LABEL_FADE_RANGE: float = 9.0 # ...and have faded out completely by this distance
 const ZONE_PROP_FILL: float = .5 # a zone prop may cover at most this fraction of the zone's narrowest half-width
 const ZONE_PROP_MAX_SCALE: float = 2.0
+# Temporary enemy-only ground zones laid by turrets (GroundZones): never slow the hero, never outlast combat.
+const GROUND_ZONE_MAX: int = 16 # active zones across the whole arena; the one closest to expiring is recycled beyond it
+const GROUND_ZONE_MAX_SLOW: float = .9 # same cap as every other slow
 # 3D shop layout: SHOP_OFFER_COUNT cards; 0-SHOP_TURRET_MAX weapons, upgrades fill the rest
 const SHOP_OFFER_COUNT: int = 4
 const SHOP_TURRET_MAX: int = 4

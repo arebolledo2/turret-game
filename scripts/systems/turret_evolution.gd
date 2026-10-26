@@ -13,6 +13,7 @@ const PATHS: Dictionary = {
 	"shock": {"upgrade": "resonator", "finals": ["resonance_engine", "thunder_spear"]},
 	"tesla": {"upgrade": "forked_coil", "finals": ["storm_network", "thunderhead"]},
 	"sniper": {"upgrade": "piercer_rifle", "finals": ["horizon_piercer", "overwatch"]},
+	"quake": {"upgrade": "aftershock", "finals": ["tectonic", "cataclysm"]},
 }
 
 ## `tier` is 1 for a level-5 upgrade and 3 for a level-10 final (see `legacy_stage`).
@@ -45,6 +46,10 @@ const FORMS: Dictionary = {
 	"piercer_rifle": {"name": "Piercer Rifle", "model": "sniper", "tier": 1},
 	"horizon_piercer": {"name": "Horizon Piercer", "model": "sniper", "tier": 3},
 	"overwatch": {"name": "Overwatch", "model": "sniper", "tier": 3},
+	# No Quake chassis exists yet: all four stages use the Shock bell, and `QuakeEvolutionVisual` adds the per-form hardware.
+	"aftershock": {"name": "Aftershock", "model": "shock", "tier": 1},
+	"tectonic": {"name": "Tectonic", "model": "shock", "tier": 3},
+	"cataclysm": {"name": "Cataclysm", "model": "shock", "tier": 3},
 }
 
 ## Forms offered at `stage` (evolutions already taken): the upgrade at 0, the two finals at 1, nothing after.
@@ -159,10 +164,32 @@ static func base_stats(base_type: String, form_id: String) -> Dictionary:
 			stats.fire_rate = .42
 			stats.range = 780.0
 			stats.pierce = SNIPER_PIERCER_PIERCE
+		# Quake line, per enemy struck and before level and item bonuses. A pulse's damage is dealt once to every enemy in the
+		# ring. Per-cycle damage (a cycle runs from one trigger to the next, rate 0.45 means 2.22 s): base 16 x 1 = 16 at
+		# 0.45/s = 7.2 DPS; Aftershock 18 + 9 = 27 (12.2 DPS); Cataclysm 4 pulses of 30 = 120 per 3.2 s salvo plus a 2 s
+		# recharge (23 DPS, measured about 1.5x Aftershock in a cluster the rings reach). Tectonic hits what stands in its X (see
+		# `TECTONIC_*`), tuned to about 1.4x Aftershock on a cluster and more on a single target; its value is the 3 s rift.
+		"aftershock":
+			stats.damage = 18.0
+			stats.fire_rate = .45
+			stats.range = 270.0
+			stats.knockback_force = 200.0
+		"tectonic":
+			stats.damage = 40.0
+			stats.fire_rate = .5
+			stats.range = 400.0
+			stats.knockback_force = 150.0
+		"cataclysm":
+			stats.damage = 30.0
+			stats.fire_rate = .5
+			stats.range = 280.0
+			stats.knockback_force = 220.0
+			# Longer than the 0.9 s gap between repeats, so each pulse lands on an enemy that is still down and the stack builds.
+			stats.stagger = CATACLYSM_STAGGER
 	return stats
 
 ## Forms with both a working attack and authored art in this build. Tesla's forms and Constellation are registered but not built yet.
-const IMPLEMENTED: Array[String] = ["machine_gun", "cyclone_gatling", "omnifire", "saber", "orbit_saber", "stormblade", "repeater_bow", "arrowstorm", "titan_bow", "wide_flame", "inferno_crown", "dragonheart", "heavy_roller", "juggernaut", "ricochet_king", "siege", "worldbreaker", "resonator", "resonance_engine", "thunder_spear", "piercer_rifle", "horizon_piercer", "overwatch"]
+const IMPLEMENTED: Array[String] = ["machine_gun", "cyclone_gatling", "omnifire", "saber", "orbit_saber", "stormblade", "repeater_bow", "arrowstorm", "titan_bow", "wide_flame", "inferno_crown", "dragonheart", "heavy_roller", "juggernaut", "ricochet_king", "siege", "worldbreaker", "resonator", "resonance_engine", "thunder_spear", "piercer_rifle", "horizon_piercer", "overwatch", "aftershock", "tectonic", "cataclysm"]
 
 ## Delays in seconds and damage fractions of the Resonator's echoes, per stage.
 const RESONATOR_ECHO_DELAYS: Array = [[.5], [.4, .8], [.4, .8]]
@@ -186,6 +213,39 @@ const SNIPER_UNLIMITED_PIERCE: int = 99
 ## Overwatch marks this many of the toughest enemies in range for this many seconds on every shot.
 const OVERWATCH_MARK_COUNT: int = 3
 const OVERWATCH_MARK_SECONDS: float = 6.0
+
+## Quake line. Every pulse starts as a ground telegraph, then a ring runs out from the turret at `QUAKE_RING_SPEED`.
+const QUAKE_TELEGRAPH_SECONDS: float = .5
+const QUAKE_RING_SPEED: float = 8.0
+## Aftershock: a second pulse this long after the first releases, at this share of its damage, same radius.
+const AFTERSHOCK_DELAY: float = .6
+const AFTERSHOCK_DAMAGE: float = .5
+## Cataclysm: up to this many repeats of the pulse, this far apart, each ring this much wider than the one before it up to
+## a cap (1, 1.2, 1.4, 1.6 times the radius); a repeat only happens while an enemy is in range. Stagger stacks on every hit
+## up to `StatusEffects3D.STAGGER_CAP`.
+const CATACLYSM_REPEATS: int = 3
+const CATACLYSM_INTERVAL: float = .9
+const CATACLYSM_GROWTH: float = .2
+const CATACLYSM_MAX_RADIUS_SCALE: float = 1.6
+const CATACLYSM_STAGGER: float = 1.0
+## Tectonic: two fissures cross in an X at the densest cluster, each `TECTONIC_ANGLE` either side of the line from the
+## turret. A fissure's half length is `TECTONIC_REACH` of the turret's reach and its half width is metres (both grow with the
+## area bonus). Enemies in it are hit once when it opens; it stays `TECTONIC_SECONDS` and slows them `TECTONIC_SLOW` while
+## they stand in it. The cluster is the enemy with the most neighbours within `TECTONIC_CLUSTER_RADIUS` metres.
+const TECTONIC_ANGLE: float = PI / 4.0
+const TECTONIC_REACH: float = .65
+const TECTONIC_HALF_WIDTH: float = .45
+const TECTONIC_SECONDS: float = 3.0
+const TECTONIC_SLOW: float = .4
+const TECTONIC_CLUSTER_RADIUS: float = 1.5
+
+## One line on what a Quake form does per trigger, for the preview and the inspector.
+static func quake_pattern_text(form_id: String) -> String:
+	match form_id:
+		"aftershock": return "Pulse, then a second pulse %.1f s later at %d%% damage" % [AFTERSHOCK_DELAY, roundi(AFTERSHOCK_DAMAGE * 100.0)]
+		"tectonic": return "Two crossing fissures at the densest cluster, open for %.0f s, slowing %d%%" % [TECTONIC_SECONDS, roundi(TECTONIC_SLOW * 100.0)]
+		"cataclysm": return "Up to %d wider repeats, %.1f s apart, stagger stacks to %.1f s" % [CATACLYSM_REPEATS, CATACLYSM_INTERVAL, StatusEffects3D.STAGGER_CAP]
+	return "Ring after a %.1f s warning, running out at %.0f m/s" % [QUAKE_TELEGRAPH_SECONDS, QUAKE_RING_SPEED]
 
 ## "none", a count of extra enemies, or "whole line" for the Horizon Piercer, for stat readouts.
 static func pierce_text(pierce: int) -> String:
@@ -246,4 +306,7 @@ static func description(form_id: String) -> String:
 		"piercer_rifle": return "A longer barrel and heavier rounds. The shot passes through two enemies behind its target."
 		"horizon_piercer": return "The shot runs the whole line to full range and strikes every enemy on it. Aim the toughest enemy through the crowd."
 		"overwatch": return "Keeps the Piercer shot and marks the three toughest enemies in range for 6 seconds. Marked enemies take 25% more damage from every turret, and the mark jumps to the next toughest enemy when one dies."
+		"aftershock": return "A second pulse follows 0.6 seconds after the first at half damage and the same radius."
+		"tectonic": return "Splits the ground into two crossing fissures at the densest cluster. Enemies in them are hit when they open, then slowed 40% for 3 seconds."
+		"cataclysm": return "The pulse repeats every 0.9 seconds while enemies stay in range, each ring wider than the last (3 repeats at most). Stagger builds up on every hit, up to 1.5 seconds."
 	return ""

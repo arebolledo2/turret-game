@@ -45,6 +45,9 @@ var slow_intensity: float:
 	get: return clampf(float(values.get("slow_intensity", 0.0)), 0.0, MAX_SLOW_INTENSITY)
 var slow_duration: float:
 	get: return maxf(float(values.get("slow_duration", 0.0)), 0.0)
+## Seconds a hit staggers an enemy (Quake); 0 for turrets that do not.
+var stagger_seconds: float:
+	get: return maxf(float(values.get("stagger", 0.0)), 0.0)
 ## Melee bat spin speed in degrees per second.
 var rotation_rate: float:
 	get: return float(values.get("rotation_rate", DEFAULT_ROTATION_RATE))

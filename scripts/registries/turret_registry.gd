@@ -18,6 +18,7 @@ const BASE_PRICES: Dictionary = {
 	"bow": 16, "flamethrower": 18, "bowling": 18,
 	"normal": 8,
 	"sniper": 18,
+	"quake": 17,
 	"fire": 13,
 	"plasma": 16,
 	"shock": 14,
@@ -91,6 +92,28 @@ const TYPES: Dictionary = {
 			"range": 700.0,
 			"rotation_speed": 0.0,
 			"pierce": 0,
+		}
+	},
+	"quake": {
+		"name": "Quake Turret",
+		"icon": "🌋",
+		"short_name": "Quake",
+		# No Quake chassis yet: the Shock bell stands in (see `TurretActor._model_key`).
+		"model_key": "shock",
+		"model": "res://assets/models/game/shock_turret.glb",
+		# A ground pulse: `QuakeForm` telegraphs it, runs a shockwave ring out from the turret and staggers what it hits.
+		"fire_mode": FIRE_PULSE,
+		"description": "A slow stomp: after a short ground warning a shockwave runs out from the turret, damaging, shoving and staggering the crowd.",
+		# Kinetic (the Melee style: it moves bodies) and AoE, so both item families apply.
+		"attack_styles": [GameEnums.AttackStyle.AOE, GameEnums.AttackStyle.MELEE],
+		"damage_types": [GameEnums.DamageType.PHYSICAL],
+		"base_stats": {
+			"damage": 16.0,
+			"fire_rate": 0.45,
+			"range": 260.0,
+			"rotation_speed": 0.0,
+			"knockback_force": 200.0,
+			"stagger": 0.4,
 		}
 	},
 	"fire": {

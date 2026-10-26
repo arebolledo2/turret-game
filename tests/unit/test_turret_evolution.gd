@@ -73,7 +73,7 @@ func test_no_third_evolution_appears_after_level_10() -> void:
 	assert_false(growth.evolve("shock", "resonance_engine"))
 
 func test_every_base_has_one_upgrade_and_two_named_finals() -> void:
-	assert_eq(TurretEvolution.PATHS.size(), 9)
+	assert_eq(TurretEvolution.PATHS.size(), 10)
 	for base: String in TurretEvolution.PATHS:
 		var upgrades := TurretEvolution.options(base, 0)
 		var finals := TurretEvolution.options(base, 1)
@@ -97,7 +97,7 @@ func test_every_registered_form_belongs_to_one_path() -> void:
 			seen[form] = base
 	for form: String in TurretEvolution.FORMS:
 		assert_true(seen.has(form), "%s is in FORMS but no path offers it" % form)
-	assert_eq(seen.size(), 27, "9 bases x (1 upgrade + 2 finals)")
+	assert_eq(seen.size(), 30, "10 bases x (1 upgrade + 2 finals)")
 
 func test_legacy_stage_is_one_for_upgrades_and_three_for_finals() -> void:
 	for base: String in TurretEvolution.PATHS:
@@ -108,8 +108,8 @@ func test_legacy_stage_is_one_for_upgrades_and_three_for_finals() -> void:
 	assert_eq(TurretEvolution.legacy_stage(""), 0)
 	assert_eq(TurretEvolution.legacy_stage("missing"), 0)
 
-func test_implemented_forms_are_the_twenty_three_with_attacks_and_stats() -> void:
-	assert_eq(TurretEvolution.IMPLEMENTED.size(), 23)
+func test_implemented_forms_are_the_twenty_six_with_attacks_and_stats() -> void:
+	assert_eq(TurretEvolution.IMPLEMENTED.size(), 26)
 	for form in TurretEvolution.IMPLEMENTED:
 		assert_true(TurretEvolution.FORMS.has(form), "%s is registered" % form)
 		assert_false(TurretEvolution.description(form).is_empty(), "%s has a description" % form)
@@ -177,3 +177,46 @@ func test_pierce_text_names_none_a_count_and_the_whole_line() -> void:
 	assert_eq(TurretEvolution.pierce_text(0), "none")
 	assert_eq(TurretEvolution.pierce_text(2), "2")
 	assert_eq(TurretEvolution.pierce_text(TurretEvolution.SNIPER_UNLIMITED_PIERCE), "whole line")
+
+func test_quake_path_forms_tiers_and_placeholder_chassis() -> void:
+	assert_eq(TurretEvolution.options("quake", 0), ["aftershock"])
+	assert_eq(TurretEvolution.options("quake", 1), ["tectonic", "cataclysm"])
+	assert_eq(TurretEvolution.legacy_stage("aftershock"), 1)
+	assert_eq(TurretEvolution.legacy_stage("tectonic"), 3)
+	assert_eq(TurretEvolution.legacy_stage("cataclysm"), 3)
+	assert_eq(TurretEvolution.form_name("aftershock"), "Aftershock")
+	assert_eq(TurretEvolution.form_name("tectonic"), "Tectonic")
+	assert_eq(TurretEvolution.form_name("cataclysm"), "Cataclysm")
+	for form in ["aftershock", "tectonic", "cataclysm"]:
+		assert_true(form in TurretEvolution.IMPLEMENTED)
+		assert_eq(TurretEvolution.model_key(form), "shock", "No Quake chassis yet: every form uses the Shock bell")
+		assert_true(ClockworkModels.available(TurretEvolution.model_key(form)))
+		assert_false(TurretEvolution.description(form).is_empty())
+
+func test_quake_base_stats_match_the_design() -> void:
+	var base := TurretRegistry.get_base_stats("quake")
+	assert_eq(base.damage, 16.0)
+	assert_eq(base.fire_rate, .45)
+	assert_eq(base.range, 260.0)
+	assert_eq(base.knockback_force, 200.0)
+	assert_eq(base.stagger, .4)
+	assert_eq(base.rotation_speed, 0.0, "The stomp has no aim")
+	assert_eq(TurretRegistry.get_base_price("quake"), 17)
+	assert_eq(TurretRegistry.get_fire_mode("quake"), TurretRegistry.FIRE_PULSE)
+	assert_eq(TurretRegistry.get_damage_type("quake"), GameEnums.DamageType.PHYSICAL)
+	assert_eq(TurretRegistry.get_attack_families("quake"), ["aoe", "kinetic"] as Array[String])
+
+func test_quake_forms_hold_the_dps_ladder() -> void:
+	var base := TurretEvolution.base_stats("quake", "")
+	var aftershock := TurretEvolution.base_stats("quake", "aftershock")
+	var tectonic := TurretEvolution.base_stats("quake", "tectonic")
+	var cataclysm := TurretEvolution.base_stats("quake", "cataclysm")
+	assert_gt(aftershock.damage, base.damage, "The upgrade is a straight improvement")
+	assert_eq(tectonic.range, 400.0, "Tectonic reaches 4 m")
+	assert_eq(tectonic.stagger, .4, "Tectonic keeps the base stagger")
+	assert_eq(cataclysm.stagger, TurretEvolution.CATACLYSM_STAGGER)
+	assert_gt(cataclysm.stagger, base.stagger)
+	assert_gt(TurretEvolution.AFTERSHOCK_DELAY, 0.0)
+	assert_eq(TurretEvolution.AFTERSHOCK_DAMAGE, .5, "The second pulse is half damage")
+	assert_lte(TurretEvolution.CATACLYSM_MAX_RADIUS_SCALE, 2.0, "Cataclysm growth is capped")
+	assert_gt(TurretEvolution.TECTONIC_SECONDS, 0.0)

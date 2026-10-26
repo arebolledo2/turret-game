@@ -15,6 +15,8 @@ var splash_radius: float = 0.0
 var knockback: float = 0.0
 var slow_intensity: float = 0.0
 var slow_duration: float = 0.0
+var stagger_duration: float = 0.0
+var stagger_cap: float = 0.0
 var damage_type: GameEnums.DamageType = GameEnums.DamageType.PHYSICAL
 var source_id: int = 0
 var attack_families: Array[String] = []
@@ -33,6 +35,7 @@ static func from_stats(stats: Dictionary, type: GameEnums.DamageType = GameEnums
 	shot.damage_type = type
 	shot.slow_intensity = view.slow_intensity
 	shot.slow_duration = view.slow_duration
+	shot.stagger_duration = view.stagger_seconds
 	shot.pierce = view.pierce
 	return shot
 
@@ -50,6 +53,8 @@ func copy() -> CombatShot3D:
 	shot.damage_type = damage_type
 	shot.slow_intensity = slow_intensity
 	shot.slow_duration = slow_duration
+	shot.stagger_duration = stagger_duration
+	shot.stagger_cap = stagger_cap
 	shot.source_id = source_id
 	shot.attack_families = attack_families.duplicate()
 	shot.ricochets = ricochets

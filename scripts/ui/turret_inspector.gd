@@ -240,6 +240,8 @@ func _show_selected() -> void:
 		lines.append("Instant hit on the toughest enemy in range     Pierce  %s" % TurretEvolution.pierce_text(stats.pierce))
 		if growth.evolution_form == "overwatch":
 			lines.append("Marks the %d toughest enemies for %.0f s: +%.0f%% damage from every turret" % [TurretEvolution.OVERWATCH_MARK_COUNT, TurretEvolution.OVERWATCH_MARK_SECONDS, StatusEffects3D.MARKED_BONUS * 100.0])
+	if turret.turret_type == "quake":
+		lines.append("Stagger  %.1f s     %s" % [stats.stagger_seconds, TurretEvolution.quake_pattern_text(growth.evolution_form)])
 	if stats.aoe_radius_metres > 0:
 		lines.append("Blast radius  %.2f m" % stats.aoe_radius_metres)
 	if stats.chain_count > 0:

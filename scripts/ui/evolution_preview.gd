@@ -70,10 +70,13 @@ func show_form(turret: TurretActor, form: String) -> void:
 		lines.append("Sweep speed   %.0f → %.0f°/s" % [before.rotation_rate, after.rotation_rate])
 	else:
 		lines.append("Base firing rate   %.2f → %.2f/s" % [before.fire_rate, after.fire_rate])
-	var area := turret.turret_type in ["shock", "flamethrower"]
+	var area := TurretRegistry.get_fire_mode(turret.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME]
 	lines.append("Reach   %.2f → %.2f m" % [before.range_metres * (before.area_size if area else 1.0), after.range_metres * (after.area_size if area else 1.0)])
 	if turret.turret_type == "sniper":
 		lines.append("Pierce   %s → %s" % [TurretEvolution.pierce_text(before.pierce), TurretEvolution.pierce_text(after.pierce)])
+	if turret.turret_type == "quake":
+		lines.append("Knockback   %.2f → %.2f m     Stagger   %.1f s" % [before.knockback_metres, after.knockback_metres, after.stagger_seconds])
+		lines.append(TurretEvolution.quake_pattern_text(form))
 	if after.aoe_radius_metres > 0:
 		lines.append("Blast radius   %.2f → %.2f m" % [before.aoe_radius_metres, after.aoe_radius_metres])
 	if form == "stormblade":

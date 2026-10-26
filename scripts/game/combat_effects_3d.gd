@@ -22,6 +22,9 @@ const MAX_ARC_LIGHTS: int = 4
 const ARC_LIGHT_LIFETIME: float = .14
 const ARC_LIGHT_ENERGY: float = 3.0
 const SHOCK_MARK_SECONDS: float = .8
+const PULSE_LIFETIME: float = .3
+## Friendly Quake colour (rings, telegraphs, fissures): green-teal, distinct from the hostile orange and red telegraphs.
+const QUAKE_TINT := Color("6df0b0")
 const MAX_SHOCK_VISUALS: int = 32
 const MAX_BURSTS: int = 16
 const BURST_PARTICLES: int = 14
@@ -69,6 +72,8 @@ var hull_material := WorldGeometry.material(Color("ff675a"), true)
 var pulses: Array[MeshInstance3D] = []
 var ages: Array[float] = []
 var radii: Array[float] = []
+## Seconds each pulse slot lives (PULSE_LIFETIME unless a travelling wave asks for longer).
+var durations: Array[float] = []
 var flame_material := WorldGeometry.material(Color(2.5, .65, .08), true)
 var damage_numbers := DamageNumbers3D.new()
 var visual_time := 0.0
@@ -408,7 +413,12 @@ func show_explosion(at: Vector3, radius: float) -> void:
 func show_shock(at: Vector3, radius: float) -> void:
 	_show_pulse(at, radius, Color("55dcff"))
 
-func _show_pulse(at: Vector3, radius: float, color: Color) -> void:
+## A ring that runs from `at` out to `radius` at `speed` metres per second (the Quake's shockwave). Pooled with the other
+## pulses, so it is silently dropped when all `MAX_PULSES` are busy.
+func show_wave(at: Vector3, radius: float, speed: float, color: Color = QUAKE_TINT) -> void:
+	_show_pulse(at, radius, color, radius / maxf(speed, .1))
+
+func _show_pulse(at: Vector3, radius: float, color: Color, duration: float = PULSE_LIFETIME) -> void:
 	var index := ages.find(-1.0)
 	if index < 0:
 		if pulses.size() >= MAX_PULSES:
@@ -426,7 +436,9 @@ func _show_pulse(at: Vector3, radius: float, color: Color) -> void:
 		pulses.append(pulse)
 		ages.append(-1.0)
 		radii.append(0.0)
+		durations.append(PULSE_LIFETIME)
 	ages[index] = 0.0
+	durations[index] = maxf(duration, .05)
 	(pulses[index].material_override as ShaderMaterial).set_shader_parameter("reduced_motion", false)
 	(pulses[index].material_override as ShaderMaterial).set_shader_parameter("tint", color)
 	radii[index] = radius
@@ -458,11 +470,11 @@ func _physics_process(delta: float) -> void:
 		if ages[index] < 0:
 			continue
 		ages[index] += delta
-		if ages[index] >= .3:
+		if ages[index] >= durations[index]:
 			ages[index] = -1.0
 			pulses[index].visible = false
 		else:
-			var progress := ages[index] / .3
+			var progress := ages[index] / durations[index]
 			(pulses[index].material_override as ShaderMaterial).set_shader_parameter("age", progress)
 	_update_burns()
 	_update_shocks()

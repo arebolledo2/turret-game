@@ -16,6 +16,8 @@ var statuses := StatusEffects3D.new()
 var slow_marker: MeshInstance3D
 ## Ground ring shown while Marked (built on first use).
 var mark_marker: MeshInstance3D
+## Ground ring shown while Staggered (built on first use).
+var stagger_marker: MeshInstance3D
 var health: float = 25.0
 var max_health: float = 25.0
 var speed: float = 2.5
@@ -93,6 +95,8 @@ func clear_transients() -> void:
 		slow_marker.visible = false
 	if mark_marker:
 		mark_marker.visible = false
+	if stagger_marker:
+		stagger_marker.visible = false
 	knockback_velocity = Vector3.ZERO
 	velocity = Vector3.ZERO
 	flash_time = 0.0
@@ -191,6 +195,8 @@ func receive_hit(hit: CombatHit3D) -> float:
 			slow_marker.visible = false
 		if mark_marker:
 			mark_marker.visible = false
+		if stagger_marker:
+			stagger_marker.visible = false
 		if hurtbox:
 			hurtbox.set_deferred("collision_layer", 0)
 		if hit_flash:

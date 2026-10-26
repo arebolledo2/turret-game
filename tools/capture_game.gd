@@ -17,6 +17,8 @@ var new_turrets: bool = false
 var zones_demo: bool = false
 var roster_demo: bool = false
 var sniper_demo: bool = false
+var quake_demo: bool = false
+var quake_frame: int = 225
 var last_tick: int = 0
 var physics_samples: Array[float] = []
 var process_samples: Array[float] = []
@@ -58,11 +60,15 @@ func setup() -> void:
 	combat_demo = "--combat-demo" in OS.get_cmdline_user_args()
 	roster_demo = "--roster-demo" in arguments
 	sniper_demo = "--sniper-demo" in arguments
+	quake_demo = "--quake-demo" in arguments
+	for argument in arguments:
+		if argument.begins_with("--quake-frame="):
+			quake_frame = int(argument.trim_prefix("--quake-frame="))
 	new_turrets = "--new-turrets" in arguments or mixed_stress
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	GameRandom.gameplay.seed = 42
-	for index in range(150 if stress else (0 if zones_demo or roster_demo or sniper_demo else 18)):
+	for index in range(150 if stress else (0 if zones_demo or roster_demo or sniper_demo or quake_demo else 18)):
 		var angle := float(index) * 2.39996
 		var radius := 2.5 + float(index % 6) * .5
 		var kind: String = ["basic", "fast", "tank", "charger", "exploder"][index % 5] if mixed_stress else ("charger" if index % 4 == 0 else "basic")
@@ -83,6 +89,8 @@ func setup() -> void:
 		stage_roster_demo()
 	if sniper_demo:
 		stage_sniper_demo()
+	if quake_demo:
+		stage_quake_demo()
 	last_tick = Time.get_ticks_usec()
 	started_usec = last_tick
 
@@ -113,6 +121,37 @@ func stage_sniper_demo() -> void:
 		turret.reset_physics_interpolation()
 	world.crowd.rebuild(world.enemies)
 	world.camera_rig.set_zoom(.75)
+	world.camera_rig.snap()
+
+## The Quake line in real combat (`--quake-demo[ --quake-frame=N]`, run with `--fixed-fps 60` so a frame is a physics tick):
+## Quake, Aftershock, Tectonic and Cataclysm each face a cluster of stationary enemies. Combat starts at frame 180 and the
+## screenshot is taken at `quake_frame` (the default catches the rings and fissures opening).
+func stage_quake_demo() -> void:
+	world.hud.hide()
+	world.player.position = Vector3(0, 0, 8)
+	world.player.health = 100000
+	world.player.max_health = 100000
+	for old in world.turrets:
+		old.visible = false
+		old.set_physics_process(false)
+	world.session.state.turret_progression_enabled = true
+	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP) # evolving is a shop action
+	var forms: Array = [[], ["aftershock"], ["aftershock", "tectonic"], ["aftershock", "cataclysm"]]
+	for index in range(forms.size()):
+		var turret := world.add_turret(Vector3(-7.5 + index * 5.0, 0, 0), "quake")
+		turret.progression.award(1500)
+		for form: String in forms[index]:
+			if not turret.evolve(form):
+				push_error("Cannot evolve %s" % form)
+		for k in range(7):
+			var angle := float(k) * TAU / 7.0
+			var spread := .5 if k < 4 else 1.0
+			var enemy := world.spawn_enemy(turret.position + Vector3(cos(angle) * spread, 0, -2.4 + sin(angle) * spread), "basic")
+			enemy.stationary = true
+			enemy.health = 100000
+			enemy.max_health = 100000
+	world.crowd.rebuild(world.enemies)
+	world.camera_rig.set_zoom(.9)
 	world.camera_rig.snap()
 
 ## Once combat has started: every visible Sniper fires one real shot (tracer, muzzle flash, hit), then effects freeze.
@@ -185,11 +224,14 @@ func _process(_delta: float) -> void:
 		world.finish_wave()
 	if frames == 400 and shop_focus >= 0:
 		world.hud.shop_screen.offer_buttons[shop_focus].grab_focus()
+	if frames == 180 and quake_demo:
+		GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+		world.crowd.rebuild(world.enemies)
 	if frames == 180 and sniper_demo:
 		fire_sniper_demo()
 	if frames == 180 and combat_demo:
 		stage_combat_demo()
-	var finished := elapsed >= benchmark_seconds + 2.0 if benchmark_seconds > 0.0 else frames == 720
+	var finished := elapsed >= benchmark_seconds + 2.0 if benchmark_seconds > 0.0 else frames == (quake_frame if quake_demo else 720)
 	if finished and not capture_pending:
 		capture_pending = true
 		capture.call_deferred()
@@ -201,6 +243,8 @@ func capture() -> void:
 		suffix = "-roster"
 	if sniper_demo:
 		suffix = "-sniper"
+	if quake_demo:
+		suffix = "-quake-%d" % quake_frame
 	var output := ProjectSettings.globalize_path("res://.test-results/game%s.png" % suffix)
 	get_viewport().get_texture().get_image().save_png(output)
 	samples.sort()

@@ -69,6 +69,22 @@ func interrupt() -> void:
 		pounce.interrupt()
 		_hide_warning()
 
+## A stagger (Quake) drops whatever the brain was winding up, on top of the knockback that comes with it. A pounce is cut
+## short like a knockback does it; a warning (shot, artillery, summon) is cancelled with its telegraph and any shot already
+## in flight from it, and the brain waits `STAGGER_REARM` seconds before it may start another. Never called for bosses.
+const STAGGER_REARM: float = 1.0
+
+func stagger() -> void:
+	interrupt()
+	if pounce:
+		state = State.RECOVER
+		return
+	if state == State.WARNING:
+		_cancel_attacks()
+		_hide_warning()
+		state = State.IDLE
+		clock = maxf(clock, STAGGER_REARM)
+
 func move(delta: float, speed: float) -> Vector3:
 	step_delta = delta
 	age += delta

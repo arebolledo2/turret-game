@@ -11,6 +11,12 @@ var exposed_remaining: float = 0.0
 ## Instant turret takes 1.3 * 1.25 = 1.625 times the damage. The mark itself never stacks; refreshing keeps the longer timer.
 const MARKED_BONUS: float = .25
 var marked_remaining: float = 0.0
+## Staggered (Quake): the enemy cannot move, attack or start a charge while the timer runs (a knockback still slides it).
+## Stacking rule: `stagger` refreshes to the longer remaining time and never adds, so repeated hits cannot lock an enemy;
+## `extend_stagger` (Cataclysm) adds the hit's time to what is left, up to `STAGGER_CAP`, so a sustained barrage keeps an
+## enemy down for at most that long however many pulses land. Bosses are never staggered (see `EnemyActor`).
+const STAGGER_CAP: float = 1.5
+var staggered_remaining: float = 0.0
 const BURN_TICK: float = .25
 var burn_transferred: bool = false
 var burn_dps: float = 0.0
@@ -69,6 +75,21 @@ func mark_multiplier(hit: CombatHit3D) -> float:
 func advance_mark(delta: float) -> void:
 	marked_remaining = maxf(0.0, marked_remaining - delta)
 
+## Refreshes to the longer of the current and the new time.
+func stagger(duration: float) -> void:
+	staggered_remaining = maxf(staggered_remaining, duration)
+
+## Adds `duration` to the time left, up to `cap`; never shortens a stagger that is already longer than the cap.
+func extend_stagger(duration: float, cap: float = STAGGER_CAP) -> void:
+	staggered_remaining = maxf(staggered_remaining, minf(staggered_remaining + duration, cap))
+
+func is_staggered() -> bool:
+	return staggered_remaining > 0.0
+
+## Runs every tick the enemy is alive, like the mark timer.
+func advance_stagger(delta: float) -> void:
+	staggered_remaining = maxf(0.0, staggered_remaining - delta)
+
 func advance(delta: float) -> void:
 	exposed_remaining = maxf(0.0, exposed_remaining - delta)
 	for type in effects.keys():
@@ -123,5 +144,6 @@ func clear() -> void:
 	effects.clear()
 	exposed_remaining = 0.0
 	marked_remaining = 0.0
+	staggered_remaining = 0.0
 	_pending_burn_hits.clear()
 	clear_burn()

@@ -78,6 +78,7 @@ func _build_warning() -> void:
 
 func _tick_statuses(delta: float) -> bool:
 	_tick_mark(delta)
+	_tick_stagger(delta)
 	if statuses.is_burning():
 		for burn_hit in statuses.advance_burn(delta):
 			world.combat.apply_hit(self, burn_hit)
@@ -96,17 +97,53 @@ func _tick_mark(delta: float) -> void:
 	if mark_marker and mark_marker.visible != marked:
 		mark_marker.visible = marked
 
+## The stagger timer runs here (like the mark timer, so stationary crates tick it too) and a ground ring shows while the
+## enemy is down. The moment it goes down its pending actions are cut short, even when the stagger was applied without a hit.
+func _tick_stagger(delta: float) -> void:
+	if statuses.is_staggered():
+		statuses.advance_stagger(delta)
+	var down := statuses.is_staggered()
+	if down and not stagger_marker:
+		stagger_marker = WorldGeometry.ring(self, .6 * body_scale, Color("fff2b0"))
+		stagger_marker.position.y = .055
+		stagger_marker.visible = false # so the first frame down counts as the transition below
+	if stagger_marker and stagger_marker.visible != down:
+		stagger_marker.visible = down
+		if down:
+			_interrupt_actions()
+
+## Charges, pounces and wound-up shots end; bosses keep going (they are never staggered).
+func _interrupt_actions() -> void:
+	if brain and not EnemyEcology.is_boss(enemy_type):
+		brain.stagger()
+	if charge:
+		charge.interrupt()
+		warning.visible = false
+		world.mark_warning(self, false)
+
+## A staggered enemy stands still: no chase, charge, shot or summon (its brain is not advanced), though a knockback still
+## slides it and its slow keeps running down.
+func _stagger_steer(delta: float) -> Vector3:
+	velocity = knockback_velocity
+	knockback_velocity *= exp(-GameConstants.KNOCKBACK_DECAY_RATE * delta)
+	return Vector3.ZERO
+
 ## Sets the enemy's velocity for this tick (chase, charge windup/dash, separation, knockback) and returns its heading.
 func _steer(delta: float) -> Vector3:
 	var speed_factor := 1.0
 	if not statuses.effects.is_empty() or statuses.exposed_remaining > 0.0:
 		statuses.advance(delta)
 		speed_factor = statuses.speed_multiplier()
+	# Enemy-only ground zones (Quake fissures): the stronger slow wins, slows from different sources never multiply.
+	if world.ground_zones and world.ground_zones.has_zones():
+		speed_factor = minf(speed_factor, world.ground_zones.speed_factor_at(position, hurtbox_radius()))
 	if world.terrain:
 		speed_factor = maxf(1.0 - GameConstants.ZONE_MUD_MAX_SLOW, speed_factor * world.terrain.mud_factor_at(position))
 	var slowed := speed_factor < 1.0
 	if slow_marker.visible != slowed:
 		slow_marker.visible = slowed
+	if statuses.is_staggered():
+		return _stagger_steer(delta)
 	var effective_speed := speed * speed_factor
 	if brain:
 		var movement := brain.move(delta, effective_speed)
@@ -156,6 +193,8 @@ func _after_move(previous_position: Vector3) -> void:
 		warning.visible = false
 
 func _act(delta: float, previous_position: Vector3) -> void:
+	if statuses.is_staggered():
+		return
 	_apply_contact_damage(delta, previous_position)
 
 ## Enemy touch damage to the hero (swept along this tick's step) and, in core mode, to the core on a timer.
@@ -193,6 +232,12 @@ func _scale_damage(hit: CombatHit3D) -> float:
 
 func _after_hit(hit: CombatHit3D) -> void:
 	statuses.apply(hit)
+	# Bosses are never staggered (the same rule that keeps `EnemyBrain.interrupt` from cutting their pounces short).
+	if hit.stagger_duration > 0.0 and not stationary and not EnemyEcology.is_boss(enemy_type):
+		if hit.stagger_cap > 0.0:
+			statuses.extend_stagger(hit.stagger_duration, hit.stagger_cap)
+		else:
+			statuses.stagger(hit.stagger_duration)
 	slow_marker.visible = statuses.speed_multiplier() < 1.0
 	if not hit.impulse.is_zero_approx():
 		knockback_velocity = (knockback_velocity + hit.impulse / maxf(mass, .1)).limit_length(GameConstants.KNOCKBACK_MAX_VELOCITY * WorldGeometry.METRES_PER_PIXEL)

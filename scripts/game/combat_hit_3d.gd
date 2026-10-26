@@ -13,6 +13,10 @@ var origin: Vector3 = Vector3.ZERO
 var impulse: Vector3 = Vector3.ZERO
 var slow_intensity: float = 0.0
 var slow_duration: float = 0.0
+## Seconds of stagger this hit applies (0 for none). With a positive `stagger_cap` the time is added to what the enemy
+## already has, up to the cap (`StatusEffects3D.extend_stagger`); otherwise it only refreshes to the longer time.
+var stagger_duration: float = 0.0
+var stagger_cap: float = 0.0
 var burn_dps: float = 0.0
 var burn_duration: float = 0.0
 ## Turret that produced the hit (`TurretActor.turret_id`); 0 for the player, blasts and contact damage.

@@ -137,6 +137,12 @@ static func _actor_dps(actor: TurretActor) -> float:
 	elif form_id == "cyclone_gatling":
 		rate *= 1.0 + actor.spool
 	var result := stats.damage * rate
+	if form_id == "aftershock":
+		result *= 1.0 + TurretEvolution.AFTERSHOCK_DAMAGE
+	elif form_id == "cataclysm":
+		# A salvo of pulses (the first plus the repeats), then the recharge.
+		var pulses := 1 + TurretEvolution.CATACLYSM_REPEATS
+		result = stats.damage * pulses / (TurretEvolution.QUAKE_TELEGRAPH_SECONDS + TurretEvolution.CATACLYSM_INTERVAL * TurretEvolution.CATACLYSM_REPEATS + stats.cooldown_seconds)
 	if actor.turret_type == "flamethrower":
 		result += stats.damage * float(stats.values.get("burn_ratio", 1.6)) * minf(1.0, rate * float(stats.values.get("burn_duration", 2.0)))
 	if form_id == "stormblade":

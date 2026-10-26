@@ -10,7 +10,7 @@ extends Node
 ##   single  one enemy 1.5 m away
 ##   cluster eight enemies packed around a point 1.5 m away
 ##   lane    three enemies in a line at 1.5, 2.5 and 3.4 m (tests reach and piercing)
-## "slow" is the share of enemy-seconds spent slowed.
+## "slow" is the share of enemy-seconds spent slowed (by a status or by standing in a ground zone).
 ## [base, form(, companion form)]: a form id is reached through its base's level-5 upgrade first; "" is the unevolved base.
 ## A third entry puts an Ion turret of that form (a Machine Gun) beside it in the same cell; the row then reports the
 ## whole cell's damage, which is how a team buff such as the Overwatch mark is measured.
@@ -25,6 +25,7 @@ const FORMS := [
 	["bowling", "heavy_roller"], ["bowling", "juggernaut"], ["bowling", "ricochet_king"],
 	["sniper", ""], ["sniper", "piercer_rifle"], ["sniper", "horizon_piercer"], ["sniper", "overwatch"],
 	["sniper", "piercer_rifle", "machine_gun"], ["sniper", "horizon_piercer", "machine_gun"], ["sniper", "overwatch", "machine_gun"],
+	["quake", ""], ["quake", "aftershock"], ["quake", "tectonic"], ["quake", "cataclysm"],
 ]
 const SCENARIOS := ["single", "cluster", "lane"]
 const COLUMNS := 8
@@ -165,7 +166,7 @@ func _physics_process(_delta: float) -> void:
 			if is_instance_valid(enemy) and not enemy.dead:
 				var owner_cell := _nearest_cell(enemy.position)
 				samples[owner_cell] = int(samples.get(owner_cell, 0)) + 1
-				if enemy.statuses.speed_multiplier() < .99:
+				if enemy.statuses.speed_multiplier() < .99 or world.ground_zones.speed_factor_at(enemy.position, enemy.hurtbox_radius()) < .99:
 					slowed[owner_cell] = int(slowed.get(owner_cell, 0)) + 1
 	if ticks >= 60 + int(seconds * 60.0):
 		for i in actors.size():

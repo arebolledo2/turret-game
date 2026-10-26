@@ -18,7 +18,12 @@ static func create(owner: TurretActor, id: String) -> TurretForm:
 		"machine_gun", "cyclone_gatling": result = MachineGunForm.new()
 		"repeater_bow", "arrowstorm": result = RepeaterBowForm.new()
 		"overwatch": result = OverwatchForm.new()
+		"aftershock", "tectonic", "cataclysm": result = QuakeForm.new()
+		# The unevolved Quake pulses through the same form (no form id, so it is keyed by the turret type).
+		"": result = QuakeForm.new() if owner.turret_type == "quake" else null
 		_: return null
+	if result == null:
+		return null
 	result.actor = owner
 	result.form_id = id
 	return result

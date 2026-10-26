@@ -35,19 +35,7 @@ func impact(primary: CombatActor, at: Vector3, heading: Vector3, shot: CombatSho
 		targets.append(primary)
 	var hits: int = 0
 	for target in targets:
-		var away := WorldGeometry.planar(target.position - at).normalized()
-		if away.is_zero_approx():
-			away = WorldGeometry.planar(heading).normalized()
-		var hit := CombatHit3D.new(shot.damage, at, away * shot.knockback, shot.damage_type)
-		hit.travel_distance = shot.travel_distance
-		hit.attack_targets = shot.attack_targets
-		hit.critical = shot.critical
-		hit.slow_intensity = shot.slow_intensity
-		hit.slow_duration = shot.slow_duration
-		hit.source_id = shot.source_id
-		hit.attack_families = shot.attack_families.duplicate()
-		hit.source_area_radius = shot.splash_radius
-		if apply_hit(target, hit) > 0.0:
+		if apply_hit(target, hit_from_shot(target, at, heading, shot)) > 0.0:
 			hits += 1
 	if shot.splash_radius > 0.0:
 		if shot.damage_type == GameEnums.DamageType.ELECTRIC:
@@ -55,6 +43,26 @@ func impact(primary: CombatActor, at: Vector3, heading: Vector3, shot: CombatSho
 		else:
 			explosion.emit(WorldGeometry.planar(at), shot.splash_radius)
 	return hits
+
+## The hit `shot` deals to `target` when it lands at `at`. Knockback pushes away from `at`, or along `heading` when the
+## target sits exactly on it. Turret effects that resolve their own targets (the Quake's rings and fissures) build their
+## hits here so a shot's damage, slow, stagger, crit and attribution travel the same way as for `impact`.
+func hit_from_shot(target: CombatActor, at: Vector3, heading: Vector3, shot: CombatShot3D) -> CombatHit3D:
+	var away := WorldGeometry.planar(target.position - at).normalized()
+	if away.is_zero_approx():
+		away = WorldGeometry.planar(heading).normalized()
+	var hit := CombatHit3D.new(shot.damage, at, away * shot.knockback, shot.damage_type)
+	hit.travel_distance = shot.travel_distance
+	hit.attack_targets = shot.attack_targets
+	hit.critical = shot.critical
+	hit.slow_intensity = shot.slow_intensity
+	hit.slow_duration = shot.slow_duration
+	hit.stagger_duration = shot.stagger_duration
+	hit.stagger_cap = shot.stagger_cap
+	hit.source_id = shot.source_id
+	hit.attack_families = shot.attack_families.duplicate()
+	hit.source_area_radius = shot.splash_radius
+	return hit
 
 ## Instant chain lightning: hits `primary`, then jumps to the nearest unhit living enemy within
 ## `jump_range`, up to `jumps` more times, each hit scaled by `decay`.
