@@ -34,11 +34,12 @@ func test_thresholds_overflow_and_ordered_milestones() -> void:
 	assert_eq(growth.pending_evolutions, [5])
 	growth.award(389 - 110)
 	assert_eq(growth.level, 10)
+	assert_eq(growth.pending_evolutions, [5, 10])
 	growth.award(896 - 389 + 7)
 	assert_eq(growth.level, 15)
 	assert_eq(growth.xp, 7)
 	assert_eq(growth.total_xp, 903)
-	assert_eq(growth.pending_evolutions, [5, 10, 15])
+	assert_eq(growth.pending_evolutions, [5, 10], "Level 15 queues no third evolution")
 	assert_eq(change.after.pending_evolutions, [5], "Snapshots must not change with the live queue")
 
 func test_growth_continues_beyond_mastery_without_extra_forms_or_compounding() -> void:
@@ -49,7 +50,7 @@ func test_growth_continues_beyond_mastery_without_extra_forms_or_compounding() -
 		growth.award(TurretProgression.cost_to_next(growth.level))
 	assert_eq(growth.level, 50)
 	assert_almost_eq(growth.damage_multiplier(), 2.45, .00001)
-	assert_eq(growth.pending_evolutions, [5, 10, 15])
+	assert_eq(growth.pending_evolutions, [5, 10], "No pending evolution appears at level 15 or 20 or beyond")
 	var before := growth.snapshot()
 	growth.award(-500)
 	assert_eq(growth.snapshot(), before)
@@ -122,3 +123,8 @@ func test_levels_reward_distinct_stats_and_milestone_burst() -> void:
 	assert_almost_eq(growth.damage_multiplier(), 1.10, .001)
 	assert_almost_eq(float(growth.stat_multipliers().speed), 1.10, .001)
 	assert_almost_eq(float(growth.stat_multipliers().range), 1.13, .001)
+	growth.level = 10
+	assert_almost_eq(growth.damage_multiplier(), 1.25, .001, "The level-10 burst is a stat bump alongside the final form")
+	growth.level = 15
+	assert_almost_eq(growth.damage_multiplier(), 1.40, .001, "The level-15 burst still lands but offers no form")
+	assert_eq(TurretProgression.EVOLUTION_LEVELS, [5, 10])

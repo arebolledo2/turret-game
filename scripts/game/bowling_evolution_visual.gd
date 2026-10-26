@@ -5,8 +5,8 @@ static var materials: Dictionary = {}
 var flippers: Array[Node3D] = []
 var kick_time := 0.0
 
-static func build(model: Node3D, branch: String, stage: int) -> BowlingEvolutionVisual:
-	if stage < 1 or branch not in ["heavy_roller", "bank_shot"]:
+static func build(model: Node3D, form_id: String, stage: int) -> BowlingEvolutionVisual:
+	if stage < 1 or form_id not in ["heavy_roller", "juggernaut", "ricochet_king"]:
 		return null
 	if materials.is_empty():
 		for entry in [["brass", "dba94c", .8], ["purple", "624483", .45], ["dark", "202a33", .4]]:
@@ -19,7 +19,7 @@ static func build(model: Node3D, branch: String, stage: int) -> BowlingEvolution
 	var hardware := BowlingEvolutionVisual.new()
 	hardware.name = "BowlingEvolutionHardware"
 	aim.add_child(hardware)
-	if branch == "heavy_roller":
+	if form_id in ["heavy_roller", "juggernaut"]:
 		var growth := 1.0 + .25 * stage
 		# Widen the complete cradle and raise its launch height with the ball radius.
 		aim.scale = Vector3(growth, growth, 1.0)

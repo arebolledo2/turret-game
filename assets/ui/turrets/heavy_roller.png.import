@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://68yil4ga2dlf"
-path="res://.godot/imported/greatbow_3.png-7fd23c3c04bba683bce679570be60df0.ctex"
+uid="uid://cbmainhsf4eyc"
+path="res://.godot/imported/heavy_roller.png-357bc2606b28e98b312b01fca0e1c80b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/greatbow_3.png"
-dest_files=["res://.godot/imported/greatbow_3.png-7fd23c3c04bba683bce679570be60df0.ctex"]
+source_file="res://assets/ui/turrets/heavy_roller.png"
+dest_files=["res://.godot/imported/heavy_roller.png-357bc2606b28e98b312b01fca0e1c80b.ctex"]
 
 [params]
 

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c71tqkjry1omx"
-path="res://.godot/imported/wide_flame_1.png-67dddf2620e5ac3592bf91d194c0e6a6.ctex"
+uid="uid://cx81jn6vlqer0"
+path="res://.godot/imported/storm_network.png-78f9f611b98daf65f4a25eab63cef567.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/wide_flame_1.png"
-dest_files=["res://.godot/imported/wide_flame_1.png-67dddf2620e5ac3592bf91d194c0e6a6.ctex"]
+source_file="res://assets/ui/turrets/storm_network.png"
+dest_files=["res://.godot/imported/storm_network.png-78f9f611b98daf65f4a25eab63cef567.ctex"]
 
 [params]
 

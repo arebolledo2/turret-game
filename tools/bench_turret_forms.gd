@@ -8,17 +8,16 @@ extends Node
 ##   cluster eight enemies packed around a point 1.5 m away
 ##   lane    three enemies in a line at 1.5, 2.5 and 3.4 m (tests reach and piercing)
 ## "slow" is the share of enemy-seconds spent slowed.
+## [base, form]: a form id is reached through its base's level-5 upgrade first; "" is the unevolved base.
 const FORMS := [
-	["normal", "", 0], ["shock", "", 0], ["tesla", "", 0],
-	["shock", "resonator", 1], ["shock", "resonator", 2], ["shock", "resonator", 3],
-	["shock", "lance", 1], ["shock", "lance", 2], ["shock", "lance", 3],
-	["normal", "machine_gun", 1], ["normal", "machine_gun", 2], ["normal", "machine_gun", 3],
-	["normal", "scatter", 1], ["normal", "scatter", 2], ["normal", "scatter", 3],
-	["plasma", "siege", 1], ["plasma", "siege", 2], ["plasma", "siege", 3],
-	["melee", "saber", 1], ["melee", "saber", 2], ["melee", "saber", 3],
-	["bow", "repeater_bow", 1], ["bow", "repeater_bow", 2], ["bow", "repeater_bow", 3],
-	["flamethrower", "wide_flame", 1], ["flamethrower", "wide_flame", 2], ["flamethrower", "wide_flame", 3],
-	["bowling", "heavy_roller", 1], ["bowling", "heavy_roller", 2], ["bowling", "heavy_roller", 3],
+	["normal", ""], ["shock", ""], ["tesla", ""],
+	["shock", "resonator"], ["shock", "resonance_engine"], ["shock", "thunder_spear"],
+	["normal", "machine_gun"], ["normal", "cyclone_gatling"], ["normal", "omnifire"],
+	["plasma", "siege"], ["plasma", "worldbreaker"],
+	["melee", "saber"], ["melee", "orbit_saber"], ["melee", "stormblade"],
+	["bow", "repeater_bow"], ["bow", "arrowstorm"], ["bow", "titan_bow"],
+	["flamethrower", "wide_flame"], ["flamethrower", "inferno_crown"], ["flamethrower", "dragonheart"],
+	["bowling", "heavy_roller"], ["bowling", "juggernaut"], ["bowling", "ricochet_king"],
 ]
 const SCENARIOS := ["single", "cluster", "lane"]
 const COLUMNS := 8
@@ -58,9 +57,12 @@ func _ready() -> void:
 		var cell := _cell(i)
 		var turret := world.add_turret(Vector3(cell.x, 0, cell.y), spec[0])
 		turret.progression.award(1500)
-		for stage in range(spec[2]):
-			if not turret.evolve(spec[1]):
-				push_error("Cannot evolve %s" % spec[1])
+		if not spec[1].is_empty():
+			var upgrade: String = TurretEvolution.PATHS[spec[0]].upgrade
+			var path: Array = [upgrade] if spec[1] == upgrade else [upgrade, spec[1]]
+			for form: String in path:
+				if not turret.evolve(form):
+					push_error("Cannot evolve %s" % form)
 		actors.append(turret)
 	world.combat.hit_applied.connect(_hit)
 	_next_phase()
@@ -146,7 +148,7 @@ func _nearest_cell(position: Vector3) -> int:
 	return best
 
 func _name(index: int) -> String:
-	return "%-18s L%d" % [actors[index].display_name(), FORMS[index][2] * 5]
+	return "%-18s L%d" % [actors[index].display_name(), actors[index].progression.evolution_stage * 5]
 
 func _finish() -> void:
 	print("FORM                    | single dps slow | cluster dps slow | lane dps slow")

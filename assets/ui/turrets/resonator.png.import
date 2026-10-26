@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cwbj7mo65v35"
-path="res://.godot/imported/gunblade_3.png-ea707bdf6cfdd5a73ddc3ae714abb2a0.ctex"
+uid="uid://cp2iaxq4te1cr"
+path="res://.godot/imported/resonator.png-c124391a779cfe5a106ee4b4879dfd0b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/gunblade_3.png"
-dest_files=["res://.godot/imported/gunblade_3.png-ea707bdf6cfdd5a73ddc3ae714abb2a0.ctex"]
+source_file="res://assets/ui/turrets/resonator.png"
+dest_files=["res://.godot/imported/resonator.png-c124391a779cfe5a106ee4b4879dfd0b.ctex"]
 
 [params]
 

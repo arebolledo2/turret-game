@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bn8jpk6g0ghhy"
-path="res://.godot/imported/siege_3.png-839c3fce7570e3802281d2e46da8be11.ctex"
+uid="uid://cwbj7mo65v35"
+path="res://.godot/imported/stormblade.png-2e34ba2518f45242290c600f78c723eb.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/siege_3.png"
-dest_files=["res://.godot/imported/siege_3.png-839c3fce7570e3802281d2e46da8be11.ctex"]
+source_file="res://assets/ui/turrets/stormblade.png"
+dest_files=["res://.godot/imported/stormblade.png-2e34ba2518f45242290c600f78c723eb.ctex"]
 
 [params]
 

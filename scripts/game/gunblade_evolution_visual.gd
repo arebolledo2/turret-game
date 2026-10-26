@@ -3,9 +3,9 @@ extends RefCounted
 
 static var materials: Dictionary = {}
 
-static func build(model: Node3D, branch: String, stage: int) -> Array[Node3D]:
+static func build(model: Node3D, form_id: String, stage: int) -> Array[Node3D]:
 	var exits: Array[Node3D] = []
-	if branch != "gunblade":
+	if form_id != "stormblade":
 		return exits
 	var aim := model.find_child("Aim", true, false) as Node3D
 	var muzzle := model.find_child("Muzzle", true, false) as Node3D

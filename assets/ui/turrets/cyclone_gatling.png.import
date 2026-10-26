@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dkeb1omleshc2"
-path="res://.godot/imported/repeater_bow_3.png-2aea4f9693391ddf6ffc15ac214518a2.ctex"
+uid="uid://nb2hhwanok51"
+path="res://.godot/imported/cyclone_gatling.png-50f602ce659ea1dc4cb02206a8a58ca0.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/repeater_bow_3.png"
-dest_files=["res://.godot/imported/repeater_bow_3.png-2aea4f9693391ddf6ffc15ac214518a2.ctex"]
+source_file="res://assets/ui/turrets/cyclone_gatling.png"
+dest_files=["res://.godot/imported/cyclone_gatling.png-50f602ce659ea1dc4cb02206a8a58ca0.ctex"]
 
 [params]
 

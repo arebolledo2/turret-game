@@ -4,14 +4,14 @@ extends RefCounted
 ## Reuses authored coral limbs, bindings and strings; no duplicated base/support.
 const BOW_PARTS := ["BowClamps", "BowHardware", "BowLimbs", "BowString"]
 
-static func build(model: Node3D, branch: String, stage: int) -> void:
-	if stage < 1 or branch not in ["repeater_bow", "greatbow"]:
+static func build(model: Node3D, form_id: String, stage: int) -> void:
+	if stage < 1 or form_id not in ["repeater_bow", "arrowstorm", "titan_bow"]:
 		return
 	var aim := model.find_child("Aim", true, false) as Node3D
 	var receiver := model.find_child("Receiver", true, false) as Node3D
 	var muzzle := model.find_child("Muzzle", true, false) as Node3D
 	var arrow := model.find_child("LoadedArrow", true, false) as Node3D
-	if branch == "repeater_bow":
+	if form_id in ["repeater_bow", "arrowstorm"]:
 		var count: int = [2, 3, 5][stage - 1]
 		var spacing := .26
 		var parts: Array[Node3D] = []

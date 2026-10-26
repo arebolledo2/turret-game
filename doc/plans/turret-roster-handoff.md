@@ -1,6 +1,6 @@
 # Turret roster expansion: handoff
 
-Written 17 Oct 2026. Audience: the next agent picking this work up. Treat code as the source of truth where this doc and the repo disagree.
+Written 17 Oct 2026, updated 26 Oct 2026 for the new upgrade shape (see below). Audience: the next agent picking this work up. Treat code as the source of truth where this doc and the repo disagree.
 
 ## What this is
 
@@ -10,9 +10,21 @@ The user asked for a full turret roster plan, then moved on to 2D concept art in
 - That artifact is the most complete record: stats, all branch and stage text, the engine work table (S1-S12), build order, decisions, and embedded concept thumbnails. Read it first.
 - Its HTML source lived in a session scratchpad and may be gone. The artifact copy is authoritative.
 
+## Upgrade shape (decided 26 Oct 2026)
+
+This supersedes the old three-stage, two-branch model everywhere below.
+
+- **Level 5:** one shared upgrade per turret, no choice. It is the old stage-1 form closest to the level-1 turret, must be a straight improvement, and needs a visible hardware change.
+- **Level 10:** the final form, with two choices. These are the most interesting old stage-3 forms, tuned above the level-5 form. The existing XP curve stays (level 10 is already hard to reach), so finals tuned for level 15 need a re-bench at level 10.
+- **No level 15.** Levels continue forever as stat growth only (existing multipliers).
+- Implementation spec: `turret-progression-l5-l10-spec.md`.
+- Code impact: `TurretProgression.EVOLUTION_LEVELS` becomes `[5, 10]`; `evolution_options()` returns nothing at level 5 and the two finals at level 10; reshape `TurretEvolution.PATHS`, `base_stats`, `model_key`; update the inspector, salvage UI, dev commands and evolution tests.
+- Tesla is reworked into this shape (Relay and Capacitor are gone).
+- 19 built forms are retired (Echo Chamber, Focused Lance, Thunder Pin, Twin Saber, Repeater Blade, Gatling, Crossfire and so on).
+
 ## Result in one paragraph
 
-19 base turrets (8 in game, 5 requested, 6 proposed), each with two three-stage branches (levels 5/10/15), so 114 forms. 33 are built. 81 remain: 15 on Plasma/Shock/Tesla and 66 on new turrets. Cryo and Vortex were considered and dropped by the user.
+19 base turrets (8 in game, 5 requested, 6 proposed), each with one level-5 upgrade and two level-10 finals, so 57 forms. 20 are built (7 level-5 upgrades, 13 finals). 37 remain: Constellation and the three Tesla forms, plus 33 on the new turrets. Cryo and Vortex were considered and dropped by the user.
 
 ## Roster
 
@@ -23,33 +35,39 @@ The user asked for a full turret roster plan, then moved on to 2D concept art in
 | Proposed (6) | Mine Layer, Laser, Beacon, Drone Bay, Lullaby, Discord |
 | Aggro family (new build family) | Decoy, Lullaby, Discord: weird support turrets that change enemy behaviour. Bosses are immune. |
 
-Unbuilt branches on existing turrets (names are already in `scripts/systems/turret_evolution.gd` `PATHS` but not in `IMPLEMENTED`):
+Roster in the new shape (L5 upgrade, then the two L10 finals). `Built` means playable today.
 
-- Plasma / Mortar: Mortar, Starburst, Constellation
-- Shock / Resonator: Resonator, Echo Chamber, Resonance Engine (game logic done, see below; awaiting real models)
-- Shock / Lance: Focused Lance, Thunder Pin, Thunder Spear (game logic done, see below; awaiting real models)
-- Tesla / Relay: Forked Coil, Storm Relay, Storm Network
-- Tesla / Capacitor: Capacitor, Rail Discharge, Thunderhead
+| Turret | L5 | L10 final A | L10 final B | Status |
+|---|---|---|---|---|
+| Ion | Machine Gun | Cyclone Gatling | Omnifire | all built |
+| Melee | Saber | Orbit Saber | Stormblade | all built |
+| Bow | Repeater Bow | Arrowstorm | Titan Bow | all built |
+| Flamethrower | Wide Flame | Inferno Crown | Dragonheart | all built |
+| Bowling Launcher | Heavy Roller | Juggernaut | Ricochet King | all built |
+| Plasma | Siege Cannon | Worldbreaker | Constellation | Constellation unbuilt (needs S12) |
+| Shock | Resonator | Resonance Engine | Thunder Spear | all built, final models done |
+| Tesla | Forked Coil | Storm Network | Thunderhead | nothing playable; Storm Network and Thunderhead models exist |
+| Sniper | Piercer Rifle | Horizon Piercer | Overwatch | new |
+| Scrap Press | Coin Feeder | Treasury | Academy | new |
+| Decoy | Bumper Post | Pile Driver | Maelstrom | new |
+| Quake | Aftershock | Tectonic | Cataclysm | new |
+| Boomerang | Sawblade | Perpetual Saw | Boomerang Storm | new |
+| Mine Layer | Minefield | Dead Zone | Chain Reaction | new |
+| Laser | Focus Beam | Halo Cutter | Sunpiercer | new |
+| Beacon | Overclock Beacon | Command Spire | Aegis Field | new |
+| Drone Bay | Escort Drones | Guardian Wing | Reaper Swarm | new |
+| Lullaby | Deep Sleep | Coma | Sandman | new |
+| Discord | Riot Coil | Anarchy | Civil War | new |
+
+Stage text for each form is in the artifact. Where an old stage-2 or stage-3 text assumed earlier stages (Tesla, Overwatch, Treasury, Academy, Maelstrom, Tectonic, Chain Reaction, Aegis Field, Reaper Swarm, Sandman, Civil War), the artifact has the merged wording.
+
+Retired forms with code in `scripts/systems/turret_evolution.gd`: Gatling, Crossfire, Twin Saber, Repeater Blade and so on from `IMPLEMENTED`, plus Echo Chamber, Focused Lance and Thunder Pin. Leave them until the progression change lands, then delete.
 
 The older `doc/plans/turret-evolution.html` names Shock's first branch "Arc Pulse". The code says Resonator, and the code wins.
 
-New turret branches (levels 5 / 10 / 15; full mechanics are in the artifact):
-
-| Turret | Branch A | Branch B |
-|---|---|---|
-| Sniper | Piercer: Piercer Rifle, Skewer Rifle, Horizon Piercer | Spotter: Spotter Scope, Designator, Overwatch |
-| Scrap Press | Mint: Coin Feeder, Mint, Treasury | Salvage: Salvage Hopper, Tutor Engine, Academy |
-| Decoy | Bumper: Bumper Post, Spike Bumper, Pile Driver | Siren: Lure, Gravity Lure, Maelstrom |
-| Earthquake | Fault Line: Fault Line, Rift Hammer, Tectonic | Aftershock: Aftershock, Tremor Engine, Cataclysm |
-| Boomerang | Sawblade: Sawblade, Hover Saw, Perpetual Saw | Splinter: Splinter, Shatterwing, Boomerang Storm |
-| Mine Layer | Minefield: Minefield, Pressure Grid, Dead Zone | Limpet: Limpet Layer, Demolition Charge, Chain Reaction |
-| Laser | Sweep: Sweep Laser, Scythe Laser, Halo Cutter | Focus: Focus Beam, Burnthrough, Sunpiercer |
-| Beacon | Overclock: Overclock Beacon, Overclock Tower, Command Spire | Mender: Repair Beacon, Core Mender, Aegis Field |
-| Drone Bay | Escort: Escort Drones, Wingmen, Guardian Wing | Hunter: Hunter Drones, Stalkers, Reaper Swarm |
-| Lullaby | Deep Sleep: Deep Sleep, Heavy Sleeper, Coma | Drowse Field: Drowse Field, Dreamland, Sandman |
-| Discord | Riot: Riot Coil, Uprising, Anarchy | Mutiny: Instigator, Rabble-Rouser, Civil War |
-
 ## Shock / Lance logic (built 17 Oct 2026)
+
+Under the new shape only Thunder Spear (L10 final) survives from Lance. Focused Lance and Thunder Pin are retired. The numbers below are the old stage numbers.
 
 `lance` is in `TurretEvolution.IMPLEMENTED`. It keeps Shock's `FIRE_PULSE` mode but `TurretActor._fire_lance` replaces the pulse with a bolt at the nearest enemy (same `chain_arc` visual as Tesla). Model key falls back to `shock`, so the existing chassis and base portrait stand in until real models land.
 
@@ -63,6 +81,8 @@ To swap in real models: add `lance`/`thunder_pin`/`thunder_spear` keys to `Clock
 
 ## Shock / Resonator logic (built 17 Oct 2026)
 
+Under the new shape Resonator is the L5 upgrade and Resonance Engine an L10 final. Echo Chamber is retired.
+
 `resonator` is in `IMPLEMENTED`. `TurretActor._fire_resonator` pulses as before, then queues echoes that `_tick_resonator` fires later at 50% damage (Resonator: one at 0.5 s; Echo Chamber and Engine: 0.4 s and 0.8 s). Echo Chamber and Engine reach 15% farther (range 276). Resonance Engine alternates an inner pulse (half radius, double damage) with an outer pulse (130% radius); an enemy struck by both within 1.2 s is Exposed for 2 s. Echoes copy the ring of the pulse that spawned them but never count towards Exposed.
 
 **Exposed (S3) is built:** `StatusEffects3D.expose()`, `exposed_remaining` and `exposure_multiplier()`; `CombatActor.receive_hit` applies +30% to hits whose `attack_families` include `instant`. Sniper Spotter and Lullaby can reuse it (Spotter's mark is a different bonus, +15% from every turret, so it will need its own multiplier). There is no visual cue on Exposed enemies yet. Models and portraits follow the same swap-in steps as Lance, using `resonator_{1,2,3}`.
@@ -73,6 +93,7 @@ To swap in real models: add `lance`/`thunder_pin`/`thunder_spear` keys to `Clock
 - Sleep and infighting are **separate turrets** (Lullaby, Discord), not Decoy upgrades.
 - No-attack turrets (Scrap Press, Beacon, Lullaby, Discord) are **excluded** from the Focused Arsenal check and from the Army Doctrine and Crosslink Array counts. Add an `"aggro"` entry to `TurretRegistry.FAMILIES`.
 - Cryo and Vortex are omitted.
+- Upgrade shape: level 5 one upgrade, level 10 two finals, infinite levels after, XP curve unchanged, level-5 forms must visibly change, Tesla reworked to match (26 Oct).
 
 Still open (recommendations are in the artifact): the shop slot count with 19 bases (one weapon per visit today, `GameConstants.SHOP_OFFER_COUNT`), whether to hold Drone Bay and Beacon until the first batch is playtested, and whether Decoy ever gets health.
 
@@ -102,13 +123,13 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 
 ## Suggested order
 
-0. Targeting modes, Exposed status, DEPLOYABLE family mapping, utility-turret item rules.
-1. Finish Plasma, Shock and Tesla (15 forms, reusing chassis; only Mortar needs S12).
+0. Progression change to the L5/L10 shape (see above), then targeting modes, Exposed status (built), DEPLOYABLE family mapping, utility-turret item rules.
+1. Finish Plasma and Tesla (4 forms: Constellation needs S12; Forked Coil, Storm Network, Thunderhead). Then re-bench every existing final at level 10 against its level-5 form.
 2. Sniper, Earthquake, Decoy, Scrap Press, Boomerang.
 3. Mine Layer and Laser; Beacon and Drone Bay after a playtest.
 4. Lullaby and Discord (S4 is the largest piece).
 
-The per-turret definition of done matches the existing roster: attack, evolution at 5/10/15, a visible silhouette change per stage, Shop portrait, controller flow, showcase run and tests. Use `.claude/skills/godot-test` for tests and `.claude/skills/2d-to-3d-asset` for models.
+The per-turret definition of done matches the existing roster: attack, a level-5 upgrade and level-10 finals, a visible silhouette change per form, Shop portrait, controller flow, showcase run and tests. Use `.claude/skills/godot-test` for tests and `.claude/skills/2d-to-3d-asset` for models.
 
 ## 2D concept art (image-gen-web, local API on port 3000)
 
@@ -140,7 +161,7 @@ Favorited base concepts (image ids; use these as inputs to `2d-to-3d-asset`):
 
 Boomerang and Lullaby each have **two finalists**. The user has not picked one yet.
 
-Level 15 capstone favorites:
+Final-form concept favorites. These were generated as level-15 capstones and are now the level-10 finals (the Plasma/Mortar, Resonator, Lance, Relay and Capacitor rows map to Constellation, Resonance Engine, Thunder Spear, Storm Network and Thunderhead):
 
 | Branch | Concept | Image id |
 |---|---|---|
@@ -174,7 +195,7 @@ Level 15 capstone favorites:
 
 Four capstones have no favorite: Cataclysm, Perpetual Saw, Boomerang Storm and Civil War. Regenerate them or ask the user before building those branches.
 
-Not yet generated: level 5 and level 10 concepts. Existing turrets handled those as runtime attachments on the chassis, so only generate them for a branch if the user asks.
+Not yet generated: level 5 concepts. Existing turrets handled those as runtime attachments on the chassis, but the new rule is that the level-5 form must visibly change, so generate or sketch one per new turret before building.
 
 ### API notes
 

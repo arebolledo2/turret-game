@@ -100,9 +100,10 @@ func _rebuild_model() -> void:
 		remove_child(model)
 		model.queue_free()
 	var fire_mode := TurretRegistry.get_fire_mode(turret_type)
-	if not form or form.branch != progression.evolution_branch:
-		form = TurretForm.create(self, progression.evolution_branch)
-	var asset_key := TurretEvolution.model_key(turret_type, progression.evolution_branch, progression.evolution_stage)
+	if not form or form.form_id != progression.evolution_form:
+		form = TurretForm.create(self, progression.evolution_form)
+	var legacy_stage := TurretEvolution.legacy_stage(progression.evolution_form)
+	var asset_key := _model_key(progression.evolution_form)
 	var use_clockwork := ClockworkModels.available(asset_key)
 	if use_clockwork:
 		model = ClockworkModels.instantiate(asset_key)
@@ -111,13 +112,13 @@ func _rebuild_model() -> void:
 	if turret_type == "tesla" and not use_clockwork:
 		EnemyVariants.tint_model(model, "turret_tesla", TESLA_TINT, .5)
 	add_child(model)
-	BowEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
-	flame_emitters = FlameEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
-	bowling_hardware = BowlingEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
-	gun_muzzles = GunbladeEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
-	SiegeEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
-	GatlingEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
-	crossfire_muzzles = CrossfireEvolutionVisual.build(model, progression.evolution_branch, progression.evolution_stage)
+	BowEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
+	flame_emitters = FlameEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
+	bowling_hardware = BowlingEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
+	gun_muzzles = GunbladeEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
+	SiegeEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
+	GatlingEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
+	crossfire_muzzles = CrossfireEvolutionVisual.build(model, progression.evolution_form, legacy_stage)
 	aim = model.find_child("Aim", true, false) as Node3D
 	blade_tip = model.find_child("BladeTip", true, false) as Node3D
 	muzzle = model.find_child("Muzzle", true, false) as Node3D
@@ -292,13 +293,13 @@ func _current_stats(delta: float) -> Dictionary:
 	return cached_stats
 
 ## Fresh, side-effect-free resolution also supports shop previews without polluting combat caches.
-func resolve_attack_stats(secondary: bool = false, branch: String = "", stage: int = -1) -> Dictionary:
-	if stage < 0:
-		branch = progression.evolution_branch
-		stage = progression.evolution_stage
-	var base := TurretEvolution.base_stats(turret_type, branch, stage)
+## `form_id` previews a form the turret has not taken; empty resolves the current one.
+func resolve_attack_stats(secondary: bool = false, form_id: String = "") -> Dictionary:
+	if form_id.is_empty():
+		form_id = progression.evolution_form
+	var base := TurretEvolution.base_stats(turret_type, form_id)
 	if secondary:
-		base = TurretEvolution.gunblade_barrel_stats(stage)
+		base = TurretEvolution.gunblade_barrel_stats(TurretEvolution.legacy_stage(form_id))
 	var stats := ModifierService.get_turret_stats(turret_type, world.difficulty_config, base, "normal" if secondary else "")
 	if world.session.state.turret_progression_enabled:
 		progression.apply_stats(stats)
@@ -388,7 +389,7 @@ func _physics_process(delta: float) -> void:
 ## A shot of this turret's damage type, stamped for kill attribution, with its crit already rolled.
 func _new_shot(stats: TurretStats) -> CombatShot3D:
 	var shot := CombatShot3D.from_stats(stats.values, TurretRegistry.get_damage_type(turret_type))
-	TurretEvolution.shape_shot(shot, turret_type, progression.evolution_branch, progression.evolution_stage)
+	TurretEvolution.shape_shot(shot, turret_type, progression.evolution_form)
 	shot.source_id = turret_id
 	shot.attack_families = TurretRegistry.get_attack_families(turret_type)
 	if TurretStatsService.roll_turret_crit():
@@ -422,8 +423,15 @@ func _fire_projectile(stats: TurretStats) -> void:
 		recoil_barrel.position.z += .16
 	_reset_cooldown(stats)
 
+## The authored chassis for a form, else the base turret's own.
+func _model_key(form_id: String) -> String:
+	var key := TurretEvolution.model_key(form_id)
+	if not key.is_empty():
+		return key
+	return "ion" if turret_type == "normal" else turret_type
+
 func display_name() -> String:
-	var evolved := TurretEvolution.form_name(turret_type, progression.evolution_branch, progression.evolution_stage)
+	var evolved := TurretEvolution.form_name(progression.evolution_form)
 	return evolved if not evolved.is_empty() else TurretRegistry.get_short_name(turret_type)
 
 ## Partial roster builds expose only forms with both an authored model and a working attack.
@@ -431,16 +439,15 @@ func available_evolutions() -> Array[String]:
 	var result: Array[String] = []
 	if not world.session.state.turret_progression_enabled:
 		return result
-	for branch in progression.evolution_options(turret_type):
-		var next_stage := progression.evolution_stage + 1
-		if branch in TurretEvolution.IMPLEMENTED and ClockworkModels.available(TurretEvolution.model_key(turret_type, branch, next_stage)):
-			result.append(branch)
+	for option in progression.evolution_options(turret_type):
+		if option in TurretEvolution.IMPLEMENTED and ClockworkModels.available(_model_key(option)):
+			result.append(option)
 	return result
 
-func evolve(branch: String) -> bool:
-	if not branch in available_evolutions() or not world.shop.is_open():
+func evolve(form_id: String) -> bool:
+	if not form_id in available_evolutions() or not world.shop.is_open():
 		return false
-	if not progression.evolve(turret_type, branch):
+	if not progression.evolve(turret_type, form_id):
 		return false
 	invalidate_stats()
 	_rebuild_model()
@@ -496,9 +503,9 @@ func _tick_bow_burst(delta: float, stats: TurretStats) -> void:
 ## Additional held blades reuse the authored arm, hand, hilt and prism geometry.
 func _build_saber_arms() -> void:
 	saber_angles.assign([0.0])
-	if progression.evolution_branch != "saber" or progression.evolution_stage < 2:
+	if progression.evolution_form != "orbit_saber":
 		return
-	var count := progression.evolution_stage
+	var count := TurretEvolution.legacy_stage(progression.evolution_form)
 	var parts: Array[Node3D] = []
 	for part_name: String in ["Ceramic_Arm", "Ceramic_Hand", "Sword_Grip", "Sword_Guard", "Prism_Blade"]:
 		var part := model.find_child(part_name, true, false) as Node3D

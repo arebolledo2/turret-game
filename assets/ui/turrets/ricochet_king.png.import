@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://drm6puyspksij"
-path="res://.godot/imported/siege_1.png-97eba9abe5ab97735beeeb1c681a4c1f.ctex"
+uid="uid://r2he2bxh5mvl"
+path="res://.godot/imported/ricochet_king.png-419235f97a9aca50b77c164e3249beb3.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/siege_1.png"
-dest_files=["res://.godot/imported/siege_1.png-97eba9abe5ab97735beeeb1c681a4c1f.ctex"]
+source_file="res://assets/ui/turrets/ricochet_king.png"
+dest_files=["res://.godot/imported/ricochet_king.png-419235f97a9aca50b77c164e3249beb3.ctex"]
 
 [params]
 

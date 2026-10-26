@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://sxdikk1202d1"
-path="res://.godot/imported/scatter_3.png-0dba10122bde523d1c9d60b7c9a95bdb.ctex"
+uid="uid://68yil4ga2dlf"
+path="res://.godot/imported/titan_bow.png-d7d85fbd4c05ad474c7146d0453682bf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/scatter_3.png"
-dest_files=["res://.godot/imported/scatter_3.png-0dba10122bde523d1c9d60b7c9a95bdb.ctex"]
+source_file="res://assets/ui/turrets/titan_bow.png"
+dest_files=["res://.godot/imported/titan_bow.png-d7d85fbd4c05ad474c7146d0453682bf.ctex"]
 
 [params]
 

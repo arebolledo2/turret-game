@@ -2,12 +2,18 @@ extends Node
 
 ## Native, repeatable attack/visual review. Uses ordinary actor physics and projectiles.
 ## Durable stationary enemies keep every weapon firing without changing balance data.
+## [base, level-5 upgrade, level-10 final, level-10 final under --alternate]. Each turret is shown as the upgrade, then evolved.
 const ROSTER := [
-	["normal", "machine_gun", 1], ["normal", "machine_gun", 2],
-	["normal", "scatter", 1], ["normal", "scatter", 2],
-	["melee", "saber", 1], ["melee", "gunblade", 1],
-	["plasma", "siege", 1], ["bow", "", 0],
-	["flamethrower", "", 0], ["bowling", "", 0],
+	["normal", "machine_gun", "cyclone_gatling", "omnifire"],
+	["normal", "machine_gun", "omnifire", "cyclone_gatling"],
+	["melee", "saber", "orbit_saber", "stormblade"],
+	["melee", "saber", "stormblade", "orbit_saber"],
+	["plasma", "siege", "worldbreaker", "worldbreaker"],
+	["bow", "repeater_bow", "arrowstorm", "titan_bow"],
+	["flamethrower", "wide_flame", "inferno_crown", "dragonheart"],
+	["bowling", "heavy_roller", "juggernaut", "ricochet_king"],
+	["shock", "resonator", "resonance_engine", "thunder_spear"],
+	["shock", "resonator", "thunder_spear", "resonance_engine"],
 ]
 var world: ArenaWorld
 var actors: Array[TurretActor] = []
@@ -50,8 +56,7 @@ func _ready() -> void:
 		var spec: Array = ROSTER[i]
 		var turret := world.add_turret(Vector3((i % 5 - 2) * 4.2, 0, -3.3 if i < 5 else 3.3), spec[0])
 		turret.progression.award(1500)
-		for stage in range(spec[2]):
-			turret.evolve(spec[1])
+		turret.evolve(spec[1])
 		actors.append(turret)
 		var label := Label3D.new()
 		label.text = turret.display_name()
@@ -99,14 +104,11 @@ func _physics_process(_delta: float) -> void:
 		_record("initial")
 		GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
 		for i in actors.size():
-			var branch: String = ROSTER[i][1]
-			if branch.is_empty():
-				branch = (["greatbow", "focused_jet", "heavy_roller"] if alternate else ["repeater_bow", "wide_flame", "bank_shot"])[i - 7]
-			while actors[i].progression.evolution_stage < 3:
-				if not actors[i].evolve(branch):
-					push_error("Unavailable showcase evolution: " + branch)
-					get_tree().quit(1)
-					return
+			var last_form: String = ROSTER[i][3 if alternate else 2]
+			if not actors[i].evolve(last_form):
+				push_error("Unavailable showcase evolution: " + last_form)
+				get_tree().quit(1)
+				return
 			labels[i].text = actors[i].display_name()
 		if moving:
 			_reset_moving_targets()

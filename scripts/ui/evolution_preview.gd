@@ -1,10 +1,10 @@
 class_name EvolutionPreview
 extends ConfirmationDialog
 
-signal accepted(turret: TurretActor, branch: String)
+signal accepted(turret: TurretActor, form_id: String)
 
 var candidate: TurretActor
-var branch_id: String
+var form_id: String
 var heading: Label
 var portrait: TextureRect
 var comparison: Label
@@ -48,23 +48,22 @@ func _ready() -> void:
 	comparison.add_theme_font_size_override("font_size", 23)
 	column.add_child(comparison)
 	var note := Label.new()
-	note.text = "Free evolution. Keeps XP, position and entrenchment.\nYour chosen branch determines later forms."
+	note.text = "Free evolution. Keeps XP, position and entrenchment.\nLevel 5 grants an upgrade; at level 10 you choose a final form."
 	note.add_theme_font_size_override("font_size", 20)
 	column.add_child(note)
 	confirmed.connect(_confirm)
 
-func show_form(turret: TurretActor, branch: String) -> void:
-	if not branch in turret.available_evolutions():
+func show_form(turret: TurretActor, form: String) -> void:
+	if not form in turret.available_evolutions():
 		return
 	candidate = turret
-	branch_id = branch
-	var stage := turret.progression.evolution_stage + 1
-	title = "%s → %s" % [turret.display_name(), TurretEvolution.form_name(turret.turret_type, branch, stage)]
-	heading.text = TurretEvolution.form_name(turret.turret_type, branch, stage)
-	portrait.texture = ShopArt.turret(turret.turret_type, branch, stage)
-	description.text = TurretEvolution.description(branch, stage)
+	form_id = form
+	title = "%s → %s" % [turret.display_name(), TurretEvolution.form_name(form)]
+	heading.text = TurretEvolution.form_name(form)
+	portrait.texture = ShopArt.turret(turret.turret_type, form)
+	description.text = TurretEvolution.description(form)
 	var before := TurretStats.new(turret.resolve_attack_stats())
-	var after := TurretStats.new(turret.resolve_attack_stats(false, branch, stage))
+	var after := TurretStats.new(turret.resolve_attack_stats(false, form))
 	var lines := PackedStringArray()
 	lines.append("Damage per hit   %.1f → %.1f" % [before.damage, after.damage])
 	if turret.turret_type == "melee":
@@ -75,9 +74,9 @@ func show_form(turret: TurretActor, branch: String) -> void:
 	lines.append("Reach   %.2f → %.2f m" % [before.range_metres * (before.area_size if area else 1.0), after.range_metres * (after.area_size if area else 1.0)])
 	if after.aoe_radius_metres > 0:
 		lines.append("Blast radius   %.2f → %.2f m" % [before.aoe_radius_metres, after.aoe_radius_metres])
-	if branch == "gunblade":
-		var gun := TurretStats.new(turret.resolve_attack_stats(true, branch, stage))
-		lines.append("Gun: %.1f damage · %.2f m · %d shot(s) per burst" % [gun.damage, gun.range_metres, stage])
+	if form == "stormblade":
+		var gun := TurretStats.new(turret.resolve_attack_stats(true, form))
+		lines.append("Gun: %.1f damage · %.2f m · %d shot(s) per burst" % [gun.damage, gun.range_metres, TurretEvolution.legacy_stage(form)])
 	comparison.text = "\n".join(lines)
 	reset_size()
 	popup_centered(Vector2i(760, 620))
@@ -85,7 +84,7 @@ func show_form(turret: TurretActor, branch: String) -> void:
 
 func _confirm() -> void:
 	if is_instance_valid(candidate):
-		accepted.emit(candidate, branch_id)
+		accepted.emit(candidate, form_id)
 
 func _input(event: InputEvent) -> void:
 	if visible and event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_B:

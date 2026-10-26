@@ -1,7 +1,7 @@
 class_name GunbladeForm
 extends TurretForm
 
-## Melee / Gunblade: the spinning bat also carries a rotating barrel that shoots along its visible bore.
+## Melee / Stormblade: the spinning bat also carries a rotating barrel that shoots along its visible bore.
 ## Blade and bullet bonuses stay separate, so the barrel has its own resolved stats.
 var gun_stats := TurretStats.new()
 var burst := ShotBurst.new(.065)
@@ -38,7 +38,7 @@ func fire() -> void:
 			shot.critical = true
 			shot.damage = TurretStatsService.calculate_turret_crit_damage(shot.damage)
 		actor.world.fire_direction(muzzle.global_position, heading, shot)
-		burst.start(maxi(0, actor.progression.evolution_stage - 1), shot, burst.interval)
+		burst.start(maxi(0, TurretEvolution.legacy_stage(actor.progression.evolution_form) - 1), shot, burst.interval)
 		actor.cooldown = gun_stats.cooldown_seconds
 		return
 

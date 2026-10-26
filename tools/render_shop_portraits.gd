@@ -4,14 +4,14 @@ func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://assets/ui/turrets"))
 	var forms: Array[Dictionary] = []
 	for base: String in TurretEvolution.PATHS:
-		forms.append({"base": base, "branch": "", "stage": 0})
-		for branch: String in TurretEvolution.branches(base):
-			if branch not in ["machine_gun", "scatter", "saber", "gunblade", "siege", "repeater_bow", "greatbow", "wide_flame", "focused_jet", "heavy_roller", "bank_shot", "lance", "resonator", "capacitor", "relay"]:
-				continue
-			for level in range(1, 4):
-				forms.append({"base": base, "branch": branch, "stage": level})
+		forms.append({"base": base, "form": "", "stage": 0})
+		for stage in 2:
+			for option in TurretEvolution.options(base, stage):
+				# Tesla's forms are not implemented yet but share the Tesla chassis, so they still get portraits.
+				if option in TurretEvolution.IMPLEMENTED or base == "tesla":
+					forms.append({"base": base, "form": option, "stage": stage + 1})
 	for form in forms:
-		var key := ShopArt.turret_portrait_key(form.base, form.branch, form.stage)
+		var key := ShopArt.turret_portrait_key(form.base, form.form)
 		var viewport := SubViewport.new()
 		viewport.size = Vector2i(512, 512)
 		viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
@@ -24,7 +24,7 @@ func _ready() -> void:
 		# Use the actual actor assembly, including additional evolved saber arms.
 		var actor := TurretActor.new()
 		actor.turret_type = form.base
-		actor.progression.evolution_branch = form.branch
+		actor.progression.evolution_form = form.form
 		actor.progression.evolution_stage = form.stage
 		actor.process_mode = Node.PROCESS_MODE_DISABLED
 		stage.add_child(actor)

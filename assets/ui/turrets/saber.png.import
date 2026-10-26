@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cp2iaxq4te1cr"
-path="res://.godot/imported/resonator_1.png-b3e85fdbcb68ab5d637dca14a21e6a98.ctex"
+uid="uid://cx8srypwayont"
+path="res://.godot/imported/saber.png-1baee472f1a21cc81254a2e6aacbb460.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/resonator_1.png"
-dest_files=["res://.godot/imported/resonator_1.png-b3e85fdbcb68ab5d637dca14a21e6a98.ctex"]
+source_file="res://assets/ui/turrets/saber.png"
+dest_files=["res://.godot/imported/saber.png-1baee472f1a21cc81254a2e6aacbb460.ctex"]
 
 [params]
 

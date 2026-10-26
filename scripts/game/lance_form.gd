@@ -1,14 +1,14 @@
 class_name LanceForm
 extends TurretForm
 
-## Shock / Lance: one bolt at the nearest enemy; the final form also strikes everything in line behind it.
+## Shock / Thunder Spear: one bolt at the nearest enemy that also strikes everything in line behind it.
 func fire_pulse(stats: TurretStats, range_metres: float, target: CombatActor) -> void:
 	fire(stats, range_metres, target)
 
 func fire(stats: TurretStats, range_metres: float, struck: CombatActor) -> void:
 	var world := actor.world
 	var position := actor.position
-	var stage := actor.progression.evolution_stage
+	var stage := TurretEvolution.legacy_stage(actor.progression.evolution_form)
 	var heading := WorldGeometry.planar(struck.position - position).normalized()
 	var shot := actor._new_shot(stats)
 	var victims: Array[CombatActor] = [struck]

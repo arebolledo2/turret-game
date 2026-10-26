@@ -25,8 +25,9 @@ func _ready() -> void:
 			var turret := world.add_turret(Vector3(i * 3 - 3, 0, 0), "melee")
 			turret.set_physics_process(false)
 			turret.progression.award(1500)
-			for stage in range(i + 1):
-				turret.evolve("saber")
+			var path: Array = [["saber"], ["saber", "orbit_saber"], ["saber", "stormblade"]][i]
+			for form: String in path:
+				turret.evolve(form)
 			turret.aim.rotation.y = PI * .65
 		return
 	if "--flame-preview" in OS.get_cmdline_user_args():
@@ -36,8 +37,9 @@ func _ready() -> void:
 			var turret := world.add_turret(Vector3(i * 5 - 2.5, 0, 1), "flamethrower")
 			turret.set_physics_process(false)
 			turret.progression.award(1500)
-			for stage in range(3):
-				turret.evolve(["wide_flame", "focused_jet"][i])
+			var path: Array = [["wide_flame", "inferno_crown"], ["wide_flame", "dragonheart"]][i]
+			for form: String in path:
+				turret.evolve(form)
 			var stats := turret._current_view(0)
 			turret._fire_flame(stats, stats.range_metres, Vector3.FORWARD)
 		return
@@ -59,19 +61,18 @@ func _ready() -> void:
 		return
 	var machine := world.turrets[0]
 	machine.position = Vector3(-3, 0, 0)
-	var scatter := world.add_turret(Vector3.ZERO, "normal")
+	var omnifire := world.add_turret(Vector3.ZERO, "normal")
 	var saber := world.add_turret(Vector3(3, 0, 0), "melee")
 	var gatling := world.add_turret(Vector3(-3, 0, -3), "normal")
-	var crossfire := world.add_turret(Vector3(0, 0, -3), "normal")
+	var repeater := world.add_turret(Vector3(0, 0, -3), "bow")
 	var siege := world.add_turret(Vector3(3, 0, -3), "plasma")
-	var actors: Array[TurretActor] = [machine, scatter, saber, gatling, crossfire, siege]
-	var branches := ["machine_gun", "scatter", "saber", "machine_gun", "scatter", "siege"]
+	var actors: Array[TurretActor] = [machine, omnifire, saber, gatling, repeater, siege]
+	var paths: Array = [["machine_gun"], ["machine_gun", "omnifire"], ["saber"], ["machine_gun", "cyclone_gatling"], ["repeater_bow"], ["siege"]]
 	for i in actors.size():
 		var turret := actors[i]
-		turret.progression.award(389 if i in [3, 4] else 110)
-		turret.evolve(branches[i])
-		if i in [3, 4]:
-			turret.evolve(branches[i])
+		turret.progression.award(389 if i in [1, 3] else 110)
+		for form: String in paths[i]:
+			turret.evolve(form)
 		turret.aim.rotation.y = PI - .4
 		turret.set_physics_process(false)
 		turret.reset_physics_interpolation()

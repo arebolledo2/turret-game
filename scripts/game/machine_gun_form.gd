@@ -1,17 +1,17 @@
 class_name MachineGunForm
 extends TurretForm
 
-## Normal / Machine Gun: from stage 2 the rotor spools up while tracking a target and shortens the cooldown.
+## Normal / Machine Gun and Cyclone Gatling: the Gatling's rotor spools up while tracking a target and shortens the cooldown.
 var spool: float = 0.0
 
 func rebuilt() -> void:
 	spool = 0.0
 
 func cooldown_divisor() -> float:
-	return 1.0 + spool if actor.progression.evolution_stage >= 2 else 1.0
+	return 1.0 + spool if TurretEvolution.legacy_stage(actor.progression.evolution_form) >= 2 else 1.0
 
 func tick_mechanisms(delta: float, tracking: bool) -> void:
-	var stage := actor.progression.evolution_stage
+	var stage := TurretEvolution.legacy_stage(actor.progression.evolution_form)
 	if stage < 2:
 		return
 	var ceiling := 1.5 if stage >= 3 else 1.0

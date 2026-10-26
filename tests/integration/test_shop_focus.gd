@@ -110,22 +110,29 @@ func test_controller_reaches_evolutions_and_resolves_all_earned_stages() -> void
 	assert_eq(hud.tabs[1].text, "TURRETS - 1 READY")
 	var inspector := hud.turret_inspector
 	assert_string_contains(inspector.buttons[0].text, "EVOLUTION READY")
+	assert_eq(inspector.evolution_choices.get_child_count(), 1, "Level 5 offers a single upgrade")
 	inspector.buttons[0].grab_focus()
 	await press_direction(JOY_BUTTON_DPAD_RIGHT)
 	assert_same(get_viewport().gui_get_focus_owner(), inspector.evolution_choices.get_child(0))
-	await press_direction(JOY_BUTTON_DPAD_DOWN)
-	assert_same(get_viewport().gui_get_focus_owner(), inspector.evolution_choices.get_child(1))
 	await press_direction(JOY_BUTTON_DPAD_LEFT)
 	assert_same(get_viewport().gui_get_focus_owner(), inspector.buttons[0])
-	for stage in range(1, 4):
+	var forms: Array[String] = ["machine_gun", "cyclone_gatling"]
+	for stage in range(1, 3):
 		await press_direction(JOY_BUTTON_DPAD_RIGHT)
+		if stage == 2:
+			assert_eq(inspector.evolution_choices.get_child_count(), 2, "Level 10 offers both finals")
+			await press_direction(JOY_BUTTON_DPAD_DOWN)
+			assert_same(get_viewport().gui_get_focus_owner(), inspector.evolution_choices.get_child(1))
+			await press_direction(JOY_BUTTON_DPAD_UP)
+			assert_same(get_viewport().gui_get_focus_owner(), inspector.evolution_choices.get_child(0))
 		await press_direction(JOY_BUTTON_A)
 		assert_true(inspector.evolution_preview.visible)
 		assert_eq(turret.progression.evolution_stage, stage - 1)
 		await press_direction(JOY_BUTTON_A)
 		assert_eq(turret.progression.evolution_stage, stage)
+		assert_eq(turret.progression.evolution_form, forms[stage - 1])
 		assert_same(get_viewport().gui_get_focus_owner(), inspector.buttons[0])
-		assert_same(inspector.art.texture, ShopArt.turret("normal", "machine_gun", stage))
+		assert_same(inspector.art.texture, ShopArt.turret("normal", forms[stage - 1]))
 	assert_false("EVOLUTION READY" in inspector.buttons[0].text)
 	await press_direction(JOY_BUTTON_DPAD_RIGHT)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)

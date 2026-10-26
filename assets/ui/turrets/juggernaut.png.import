@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://s8h6homa84wo"
-path="res://.godot/imported/machine_gun_1.png-975ed3d72ad682657bc36f303f3a9d65.ctex"
+uid="uid://bpwnqm85mgk05"
+path="res://.godot/imported/juggernaut.png-a34b971bf1052a06d5662682f63307e4.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/machine_gun_1.png"
-dest_files=["res://.godot/imported/machine_gun_1.png-975ed3d72ad682657bc36f303f3a9d65.ctex"]
+source_file="res://assets/ui/turrets/juggernaut.png"
+dest_files=["res://.godot/imported/juggernaut.png-a34b971bf1052a06d5662682f63307e4.ctex"]
 
 [params]
 

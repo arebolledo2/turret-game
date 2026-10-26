@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://nb2hhwanok51"
-path="res://.godot/imported/machine_gun_3.png-5d13ce4f0584aeb4513c40a923384f74.ctex"
+uid="uid://cc5gbe0smla3m"
+path="res://.godot/imported/orbit_saber.png-f55a0bb694eb92a828cbeedf8bd8191f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/machine_gun_3.png"
-dest_files=["res://.godot/imported/machine_gun_3.png-5d13ce4f0584aeb4513c40a923384f74.ctex"]
+source_file="res://assets/ui/turrets/orbit_saber.png"
+dest_files=["res://.godot/imported/orbit_saber.png-f55a0bb694eb92a828cbeedf8bd8191f.ctex"]
 
 [params]
 

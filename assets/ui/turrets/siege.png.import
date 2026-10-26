@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dfygphswqpnfs"
-path="res://.godot/imported/wide_flame_3.png-1154f30a941bef35b5c1715de4a08395.ctex"
+uid="uid://drm6puyspksij"
+path="res://.godot/imported/siege.png-a774859610f64c237839843fb5c7016a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/wide_flame_3.png"
-dest_files=["res://.godot/imported/wide_flame_3.png-1154f30a941bef35b5c1715de4a08395.ctex"]
+source_file="res://assets/ui/turrets/siege.png"
+dest_files=["res://.godot/imported/siege.png-a774859610f64c237839843fb5c7016a.ctex"]
 
 [params]
 

@@ -57,7 +57,7 @@ func level_up_turret(turret_id: int, levels: int = 1) -> bool:
 	turret.invalidate_stats()
 	return true
 
-## Levels a turret up to its next unspent evolution milestone (5/10/15), if one remains.
+## Levels a turret up to its next unspent evolution milestone (5/10), if one remains.
 func level_up_to_milestone(turret_id: int) -> bool:
 	var turret := _find_turret(turret_id)
 	if not turret:

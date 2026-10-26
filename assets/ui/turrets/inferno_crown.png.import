@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cbmainhsf4eyc"
-path="res://.godot/imported/heavy_roller_1.png-190044716b2db251889dd7b2ed3b1017.ctex"
+uid="uid://dfygphswqpnfs"
+path="res://.godot/imported/inferno_crown.png-0489c0c88143ab72359e2aa91edfd273.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/heavy_roller_1.png"
-dest_files=["res://.godot/imported/heavy_roller_1.png-190044716b2db251889dd7b2ed3b1017.ctex"]
+source_file="res://assets/ui/turrets/inferno_crown.png"
+dest_files=["res://.godot/imported/inferno_crown.png-0489c0c88143ab72359e2aa91edfd273.ctex"]
 
 [params]
 

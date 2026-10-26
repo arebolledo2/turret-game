@@ -16,7 +16,7 @@ func fire_pulse(stats: TurretStats, range_metres: float, _target: CombatActor) -
 	fire(stats, range_metres)
 
 func fire(stats: TurretStats, range_metres: float) -> void:
-	var stage := actor.progression.evolution_stage
+	var stage := TurretEvolution.legacy_stage(actor.progression.evolution_form)
 	var damage_scale := 1.0
 	var radius_scale := 1.0
 	if stage >= 3:

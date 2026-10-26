@@ -16,6 +16,18 @@ func before_each() -> void:
 		turret.set_physics_process(false)
 	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
 
+## Level 15 worth of XP: both evolution milestones are pending.
+func _award_both_milestones(turret: TurretActor) -> void:
+	var xp := 0
+	for level in range(1, 15):
+		xp += TurretProgression.cost_to_next(level)
+	turret.progression.award(xp)
+
+## Takes the level-5 upgrade, then the level-10 final.
+func _evolve_through(turret: TurretActor, upgrade: String, final: String) -> void:
+	assert_true(turret.evolve(upgrade), "%s upgrade" % upgrade)
+	assert_true(turret.evolve(final), "%s final" % final)
+
 func test_evolution_replaces_model_preserving_identity_and_investment() -> void:
 	var turret := world.turrets[0]
 	turret.progression.award(110)
@@ -25,6 +37,8 @@ func test_evolution_replaces_model_preserving_identity_and_investment() -> void:
 	var before_position := turret.position
 	var before_count := TurretStatsService.get_total_turret_count()
 	var old_model := turret.model
+	assert_eq(turret.available_evolutions(), ["machine_gun"], "Level 5 offers exactly one upgrade")
+	assert_false(turret.evolve("omnifire"), "A level-10 final cannot be taken at level 5")
 	assert_true(turret.evolve("machine_gun"))
 	assert_ne(turret.model, old_model)
 	assert_eq(turret.turret_id, before_id)
@@ -33,30 +47,46 @@ func test_evolution_replaces_model_preserving_identity_and_investment() -> void:
 	assert_eq(turret.progression.total_xp, 110)
 	assert_eq(TurretStatsService.get_total_turret_count(), before_count)
 	assert_eq(turret.turret_type, "normal")
+	assert_eq(turret.progression.evolution_form, "machine_gun")
 	assert_eq(turret.display_name(), "Machine Gun")
 	assert_gt(turret._current_view(0).fire_rate, 3.0)
-	assert_false(turret.evolve("scatter"), "Cannot spend a milestone twice")
+	assert_false(turret.evolve("machine_gun"), "Cannot spend a milestone twice")
+	assert_false(turret.evolve("cyclone_gatling"), "The level-10 milestone is not earned yet")
 
-func test_scatter_emits_three_distinct_attributed_projectiles() -> void:
+func test_final_choice_offers_both_forms_and_keeps_only_one() -> void:
 	var turret := world.turrets[0]
-	turret.progression.award(110)
-	assert_true(turret.evolve("scatter"))
-	var enemy := world.spawn_enemy(turret.position + Vector3(0, 0, -1.8))
-	enemy.set_physics_process(false)
-	turret.target = enemy
-	turret._fire_projectile(turret._current_view(0))
-	assert_eq(world.projectiles.size(), 3)
-	assert_ne(world.projectiles[0].direction, world.projectiles[1].direction)
-	assert_ne(world.projectiles[1].direction, world.projectiles[2].direction)
-	for shot in world.projectiles:
-		assert_eq(shot.shot.source_id, turret.turret_id)
-		assert_eq(shot.shot.attack_families, ["projectile"])
+	_award_both_milestones(turret)
+	assert_eq(turret.available_evolutions(), ["machine_gun"], "The upgrade comes before the finals")
+	assert_true(turret.evolve("machine_gun"))
+	assert_eq(turret.available_evolutions(), ["cyclone_gatling", "omnifire"])
+	assert_true(turret.evolve("omnifire"))
+	assert_eq(turret.progression.evolution_form, "omnifire")
+	assert_eq(turret.display_name(), "Omnifire")
+	assert_true(turret.available_evolutions().is_empty())
+	assert_false(turret.evolve("cyclone_gatling"))
+
+func test_unbuilt_forms_stay_gated_off_while_the_milestone_is_retained() -> void:
+	var tesla := world.add_turret(Vector3(6, 0, 0), "tesla")
+	tesla.set_physics_process(false)
+	_award_both_milestones(tesla)
+	assert_eq(tesla.progression.evolution_options("tesla"), ["forked_coil"], "Registered")
+	assert_true(tesla.available_evolutions().is_empty(), "Not implemented: no evolve button")
+	assert_false(tesla.evolve("forked_coil"))
+	assert_eq(tesla.progression.pending_evolutions, [5, 10], "Milestones are retained")
+	var plasma := world.add_turret(Vector3(-6, 0, 0), "plasma")
+	plasma.set_physics_process(false)
+	_award_both_milestones(plasma)
+	assert_true(plasma.evolve("siege"))
+	assert_eq(plasma.progression.evolution_options("plasma"), ["worldbreaker", "constellation"])
+	assert_eq(plasma.available_evolutions(), ["worldbreaker"], "Constellation waits until it is built")
+	assert_false(plasma.evolve("constellation"))
 
 func test_saber_reaches_and_hits_beyond_base_bat_radius() -> void:
 	var turret := world.add_turret(Vector3.ZERO, "melee")
 	turret.set_physics_process(false)
 	turret.progression.award(110)
 	assert_true(turret.evolve("saber"))
+	assert_eq(turret.saber_angles.size(), 1, "The level-5 Saber carries one blade")
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 	var enemy := world.spawn_enemy(Vector3(0, 0, -1.5))
 	enemy.set_physics_process(false)
@@ -67,38 +97,6 @@ func test_saber_reaches_and_hits_beyond_base_bat_radius() -> void:
 	assert_lt(enemy.health, 100.0)
 	assert_gt(stats.range_metres, 1.45)
 	assert_almost_eq(WorldGeometry.planar(turret.muzzle.global_position - turret.aim.global_position).length(), stats.range_metres, .001)
-
-func test_gatling_spools_and_loses_speed_without_target() -> void:
-	var turret := world.turrets[0]
-	turret.progression.award(389)
-	assert_true(turret.evolve("machine_gun"))
-	assert_true(turret.evolve("machine_gun"))
-	assert_eq(turret.display_name(), "Gatling")
-	assert_not_null(turret.rotor)
-	var view := turret._current_view(0)
-	turret._reset_cooldown(view)
-	var cold := turret.cooldown
-	turret._tick_mechanisms(1.0, true)
-	turret._reset_cooldown(view)
-	assert_almost_eq(turret.cooldown, cold / 2.0, .001)
-	turret._tick_mechanisms(.5, false)
-	assert_eq(turret.spool, 0.0)
-	assert_eq(turret.progression.pending_evolutions.size(), 0)
-
-func test_crossfire_uses_four_distinct_outward_muzzles() -> void:
-	var turret := world.turrets[0]
-	turret.progression.award(389)
-	assert_true(turret.evolve("scatter"))
-	assert_true(turret.evolve("scatter"))
-	turret.target = world.spawn_enemy(turret.position + Vector3(0, 0, -2))
-	turret.target.set_physics_process(false)
-	turret._fire_projectile(turret._current_view(0))
-	assert_eq(world.projectiles.size(), 4)
-	for i in 4:
-		var shot := world.projectiles[i]
-		assert_gt(WorldGeometry.planar(shot.position - turret.position).normalized().dot(shot.direction), .99)
-		for j in range(i + 1, 4):
-			assert_lt(shot.direction.dot(world.projectiles[j].direction), .01)
 
 func test_siege_heavy_projectile_radius_resets_when_pool_is_reused() -> void:
 	var turret := world.add_turret(Vector3.ZERO, "plasma")
@@ -116,11 +114,11 @@ func test_siege_heavy_projectile_radius_resets_when_pool_is_reused() -> void:
 	assert_same(reused, projectile)
 	assert_almost_eq((reused.sweep.shape as SphereShape3D).radius, .075, .0001)
 
-func test_gunblade_resolves_projectile_and_kinetic_upgrades_separately() -> void:
+func test_stormblade_resolves_projectile_and_kinetic_upgrades_separately() -> void:
 	var turret := world.add_turret(Vector3.ZERO, "melee")
 	turret.set_physics_process(false)
-	turret.progression.award(110)
-	assert_true(turret.evolve("gunblade"))
+	_award_both_milestones(turret)
+	_evolve_through(turret, "saber", "stormblade")
 	var blade_before := turret._current_view(0).damage
 	var gun_before := turret.gun_stats.damage
 	ModifierService.add_modifier({"id": "gun_only", "stat": "damage", "operation": "increase", "value": .2, "filter": {"attack_family": ["projectile"]}})
@@ -133,11 +131,11 @@ func test_gunblade_resolves_projectile_and_kinetic_upgrades_separately() -> void
 	assert_almost_eq(turret.gun_stats.damage, gun_before * 1.2, .001)
 	assert_eq(turret.turret_type, "melee", "Hybrid retains ownership lineage")
 
-func test_gunblade_sweeps_at_blade_tip_and_shoots_along_bore() -> void:
+func test_stormblade_sweeps_at_blade_tip_and_shoots_along_bore() -> void:
 	var turret := world.add_turret(Vector3.ZERO, "melee")
 	turret.set_physics_process(false)
-	turret.progression.award(110)
-	assert_true(turret.evolve("gunblade"))
+	_award_both_milestones(turret)
+	_evolve_through(turret, "saber", "stormblade")
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 	var close := world.spawn_enemy(Vector3(0, 0, -1.3))
 	close.set_physics_process(false)
@@ -161,26 +159,27 @@ func test_gunblade_sweeps_at_blade_tip_and_shoots_along_bore() -> void:
 	turret.form.fire()
 	assert_eq(world.projectiles.size(), 1, "Gun respects its cooldown")
 
-func test_bow_branches_consume_all_three_milestones_and_change_attacks() -> void:
-	for branch: String in ["repeater_bow", "greatbow"]:
+func test_titan_bow_and_arrowstorm_follow_the_repeater_upgrade_and_change_attacks() -> void:
+	for final: String in ["arrowstorm", "titan_bow"]:
 		var turret := world.add_turret(Vector3.ZERO, "bow")
 		turret.set_physics_process(false)
 		var xp := 0
 		for level in range(1, 15):
 			xp += TurretProgression.cost_to_next(level)
 		turret.progression.award(xp)
-		var last_damage := 0.0
-		for stage in range(1, 4):
-			assert_true(turret.evolve(branch))
-			assert_eq(turret.progression.evolution_stage, stage)
-			var stats := turret._current_view(0)
-			assert_gt(stats.damage, last_damage)
-			last_damage = stats.damage
-			if branch == "greatbow":
-				var shot := turret._new_shot(stats)
-				assert_gt(shot.visual_scale, 1.0)
-				assert_gte(shot.pierce, 3)
-				assert_gt(shot.knockback, 0.0)
+		assert_eq(turret.available_evolutions(), ["repeater_bow"])
+		assert_true(turret.evolve("repeater_bow"))
+		var upgrade_damage := turret._current_view(0).damage
+		assert_eq(turret.available_evolutions(), ["arrowstorm", "titan_bow"])
+		assert_true(turret.evolve(final))
+		assert_eq(turret.progression.evolution_stage, 2)
+		var stats := turret._current_view(0)
+		assert_gt(stats.damage, upgrade_damage, "The final out-damages the level-5 upgrade")
+		if final == "titan_bow":
+			var shot := turret._new_shot(stats)
+			assert_gt(shot.visual_scale, 1.0)
+			assert_gte(shot.pierce, 3)
+			assert_gt(shot.knockback, 0.0)
 		assert_true(turret.available_evolutions().is_empty())
 		assert_eq(turret.progression.total_xp, xp)
 
@@ -209,23 +208,22 @@ func test_repeater_burst_is_timed_attributed_and_cancelled_at_wave_end() -> void
 	turret._physics_process(.1) # Shop state cancels a pending burst.
 	assert_eq(turret.bow_burst_left, 0)
 
-func test_flame_evolutions_trade_coverage_for_reach_and_burn() -> void:
+func test_flame_finals_trade_coverage_for_reach_and_burn() -> void:
 	var wide := world.add_turret(Vector3.ZERO, "flamethrower")
 	var jet := world.add_turret(Vector3(8, 0, 0), "flamethrower")
 	for turret in [wide, jet]:
 		turret.set_physics_process(false)
-		var xp := 0
-		for level in range(1, 15):
-			xp += TurretProgression.cost_to_next(level)
-		turret.progression.award(xp)
-	for stage in range(1, 4):
-		assert_true(wide.evolve("wide_flame"))
-		assert_true(jet.evolve("focused_jet"))
-		var wide_stats := wide._current_view(0)
-		var jet_stats := jet._current_view(0)
-		assert_gt(float(wide_stats.values.cone_degrees), float(jet_stats.values.cone_degrees))
-		assert_gt(jet_stats.range_metres, wide_stats.range_metres)
-		assert_gt(float(jet_stats.values.burn_ratio), float(wide_stats.values.burn_ratio))
+		_award_both_milestones(turret)
+		assert_true(turret.evolve("wide_flame"))
+	var upgrade_stats := wide._current_view(0)
+	assert_true(wide.evolve("inferno_crown"))
+	assert_true(jet.evolve("dragonheart"))
+	var wide_stats := wide._current_view(0)
+	var jet_stats := jet._current_view(0)
+	assert_gt(float(wide_stats.values.cone_degrees), float(jet_stats.values.cone_degrees))
+	assert_gt(jet_stats.range_metres, wide_stats.range_metres)
+	assert_gt(float(jet_stats.values.burn_ratio), float(wide_stats.values.burn_ratio))
+	assert_gt(float(wide_stats.values.cone_degrees), float(upgrade_stats.values.cone_degrees), "Inferno Crown fans wider than Wide Flame")
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 	var wide_enemy := world.spawn_enemy(Vector3(1.1, 0, -1.5))
 	var jet_side := world.spawn_enemy(jet.position + Vector3(1.1, 0, -1.5))
@@ -242,35 +240,38 @@ func test_flame_evolutions_trade_coverage_for_reach_and_burn() -> void:
 	assert_eq(jet_far.statuses.burn_source_id, jet.turret_id)
 	assert_gt(jet_far.statuses.burn_dps, wide_enemy.statuses.burn_dps)
 
-func test_bowling_branches_support_all_milestones_and_distinct_shots() -> void:
-	for branch: String in ["heavy_roller", "bank_shot"]:
+func test_bowling_finals_follow_the_roller_upgrade_with_distinct_shots() -> void:
+	for final: String in ["juggernaut", "ricochet_king"]:
 		var turret := world.add_turret(Vector3.ZERO, "bowling")
 		turret.set_physics_process(false)
-		var xp := 0
-		for level in range(1, 15):
-			xp += TurretProgression.cost_to_next(level)
-		turret.progression.award(xp)
-		var previous_damage := 0.0
-		for stage in range(1, 4):
-			assert_true(turret.evolve(branch))
-			var shot := turret._new_shot(turret._current_view(0))
-			assert_gt(shot.damage, previous_damage)
-			previous_damage = shot.damage
-			assert_eq(shot.attack_families, ["projectile", "kinetic"])
-			if branch == "heavy_roller":
-				assert_gt(shot.radius, .24)
-				assert_gte(shot.pierce, 7)
-				assert_eq(shot.ricochets, 0)
-			else:
-				assert_eq(shot.ricochets, stage * 2)
-				assert_eq(shot.pierce, 0)
+		_award_both_milestones(turret)
+		assert_eq(turret.available_evolutions(), ["heavy_roller"])
+		assert_true(turret.evolve("heavy_roller"))
+		var upgrade_damage := turret._current_view(0).damage
+		var upgrade_shot := turret._new_shot(turret._current_view(0))
+		assert_eq(upgrade_shot.attack_families, ["projectile", "kinetic"])
+		assert_gt(upgrade_shot.radius, .24)
+		assert_gte(upgrade_shot.pierce, 7)
+		assert_eq(upgrade_shot.ricochets, 0)
+		assert_eq(turret.available_evolutions(), ["juggernaut", "ricochet_king"])
+		assert_true(turret.evolve(final))
+		var shot := turret._new_shot(turret._current_view(0))
+		assert_gt(turret._current_view(0).damage, upgrade_damage, "The final out-damages the level-5 upgrade")
+		assert_eq(shot.attack_families, ["projectile", "kinetic"])
+		if final == "juggernaut":
+			assert_gt(shot.radius, upgrade_shot.radius)
+			assert_gte(shot.pierce, 14)
+			assert_eq(shot.ricochets, 0)
+		else:
+			assert_eq(shot.ricochets, 6)
+			assert_eq(shot.pierce, 0)
 		assert_true(turret.available_evolutions().is_empty())
 
 func test_shop_reports_evolved_stats_and_preview_does_not_mutate_combat_cache() -> void:
 	var turret := world.add_turret(Vector3.ZERO, "melee")
 	turret.set_physics_process(false)
-	turret.progression.award(110)
-	assert_true(turret.evolve("gunblade"))
+	_award_both_milestones(turret)
+	_evolve_through(turret, "saber", "stormblade")
 	turret._current_view(0)
 	var cached := turret.cached_stats.duplicate(true)
 	var cached_gun := turret.gun_stats.values.duplicate(true)
@@ -286,7 +287,8 @@ func test_shop_reports_evolved_stats_and_preview_does_not_mutate_combat_cache() 
 		for instance: Dictionary in row.instances:
 			if instance.id == turret.turret_id:
 				after_instance = instance
-	assert_eq(before_instance.name, "Gunblade")
+	assert_eq(before_instance.name, "Stormblade")
+	assert_eq(before_instance.evolution_form, "stormblade")
 	assert_almost_eq(float(before_instance.combat.damage), turret.stats_view.damage, .001)
 	assert_almost_eq(float(before_instance.gun.damage), turret.gun_stats.damage, .001)
 	assert_almost_eq(float(after_instance.combat.damage), float(before_instance.combat.damage), .001)
@@ -306,16 +308,17 @@ func test_fresh_resolution_matches_cached_evolved_stats_with_entrenchment() -> v
 	assert_eq(data.turrets[0].instances[0].name, "Machine Gun")
 	assert_almost_eq(float(data.turrets[0].instances[0].combat.fire_rate), turret.stats_view.fire_rate, .001)
 
-func test_gunblade_later_forms_fire_attributed_bursts_from_moving_barrel() -> void:
+func test_stormblade_fires_attributed_bursts_from_moving_barrel() -> void:
 	var turret := world.add_turret(Vector3.ZERO, "melee")
 	turret.set_physics_process(false)
 	var xp := 0
 	for level in range(1, 15):
 		xp += TurretProgression.cost_to_next(level)
 	turret.progression.award(xp)
-	for stage in range(3):
-		assert_true(turret.evolve("gunblade"))
-		assert_eq(turret.gun_muzzles.size(), stage + 1, "Each burst round has a visible barrel")
+	assert_true(turret.evolve("saber"))
+	assert_eq(turret.gun_muzzles.size(), 0, "Only the Stormblade carries the barrel")
+	assert_true(turret.evolve("stormblade"))
+	assert_eq(turret.gun_muzzles.size(), 3, "Each burst round has a visible barrel")
 	assert_eq(turret.display_name(), "Stormblade")
 	assert_eq(turret.progression.total_xp, xp)
 	assert_true(turret.available_evolutions().is_empty())
@@ -352,12 +355,10 @@ func test_gunblade_later_forms_fire_attributed_bursts_from_moving_barrel() -> vo
 
 func test_cyclone_gatling_reaches_higher_spool_and_fires_piercing_rounds() -> void:
 	var turret := world.turrets[0]
-	var xp := 0
-	for level in range(1, 15):
-		xp += TurretProgression.cost_to_next(level)
-	turret.progression.award(xp)
-	for stage in range(3):
-		assert_true(turret.evolve("machine_gun"))
+	_award_both_milestones(turret)
+	assert_true(turret.evolve("machine_gun"))
+	assert_null(turret.aim.get_node_or_null("CycloneDrumLeft"), "The level-5 Machine Gun has no cyclone drums")
+	assert_true(turret.evolve("cyclone_gatling"))
 	assert_eq(turret.display_name(), "Cyclone Gatling")
 	assert_not_null(turret.aim.get_node("CycloneDrumLeft"))
 	assert_not_null(turret.aim.get_node("CycloneDrumRight"))
@@ -372,14 +373,20 @@ func test_cyclone_gatling_reaches_higher_spool_and_fires_piercing_rounds() -> vo
 	assert_eq(turret.spool, 0.0)
 	assert_true(turret.available_evolutions().is_empty())
 
+func test_machine_gun_upgrade_does_not_spool() -> void:
+	var turret := world.turrets[0]
+	turret.progression.award(110)
+	assert_true(turret.evolve("machine_gun"))
+	turret._tick_mechanisms(1.0, true)
+	assert_eq(turret.spool, 0.0)
+	var view := turret._current_view(0)
+	turret._reset_cooldown(view)
+	assert_almost_eq(turret.cooldown, view.cooldown_seconds, .001)
+
 func test_omnifire_covers_all_twelve_unique_radial_directions() -> void:
 	var turret := world.turrets[0]
-	var xp := 0
-	for level in range(1, 15):
-		xp += TurretProgression.cost_to_next(level)
-	turret.progression.award(xp)
-	for stage in range(3):
-		assert_true(turret.evolve("scatter"))
+	_award_both_milestones(turret)
+	_evolve_through(turret, "machine_gun", "omnifire")
 	assert_eq(turret.display_name(), "Omnifire")
 	assert_eq(turret.crossfire_muzzles.size(), 12)
 	turret.target = world.spawn_enemy(turret.position + Vector3(0, 0, -2))
@@ -403,13 +410,11 @@ func test_orbit_saber_has_three_visible_arms_and_three_sweep_directions() -> voi
 	ModifierService.add_modifier({"id": "no_crit_overlap_test", "stat": "turret_crit_chance", "operation": "more", "value": 0.0})
 	var turret := world.add_turret(Vector3.ZERO, "melee")
 	turret.set_physics_process(false)
-	var xp := 0
-	for level in range(1, 15):
-		xp += TurretProgression.cost_to_next(level)
-	turret.progression.award(xp)
-	for stage in range(1, 4):
-		assert_true(turret.evolve("saber"))
-		assert_eq(turret.saber_angles.size(), stage)
+	_award_both_milestones(turret)
+	assert_true(turret.evolve("saber"))
+	assert_eq(turret.saber_angles.size(), 1)
+	assert_true(turret.evolve("orbit_saber"))
+	assert_eq(turret.saber_angles.size(), 3)
 	assert_eq(turret.display_name(), "Orbit Saber")
 	for index in range(1, 3):
 		var arm := turret.aim.get_node("SaberArm%d" % index)
@@ -435,19 +440,18 @@ func test_orbit_saber_has_three_visible_arms_and_three_sweep_directions() -> voi
 	turret._spin_bat(.01, stats, stats.range_metres)
 	assert_eq(overlapping.health, health)
 
-func test_siege_evolutions_expand_shell_blast_and_knockback() -> void:
+func test_worldbreaker_expands_shell_blast_and_knockback_over_the_siege_upgrade() -> void:
 	ModifierService.add_modifier({"id": "no_crit_siege_test", "stat": "turret_crit_chance", "operation": "more", "value": 0.0})
 	var turret := world.add_turret(Vector3.ZERO, "plasma")
 	turret.set_physics_process(false)
-	var xp := 0
-	for level in range(1, 15):
-		xp += TurretProgression.cost_to_next(level)
-	turret.progression.award(xp)
+	_award_both_milestones(turret)
 	var previous: CombatShot3D
-	for stage in range(3):
-		assert_true(turret.evolve("siege"))
+	var forms: Array[String] = ["siege", "worldbreaker"]
+	var rods: Array[int] = [0, 4]
+	for step in forms.size():
+		assert_true(turret.evolve(forms[step]))
 		assert_eq(turret.muzzle.get_parent(), turret.recoil_barrel)
-		assert_eq(turret.recoil_barrel.find_children("RecoilRod*", "MeshInstance3D", true, false).size(), stage * 2)
+		assert_eq(turret.recoil_barrel.find_children("RecoilRod*", "MeshInstance3D", true, false).size(), rods[step])
 		var exit_before := turret.muzzle.global_position
 		turret.recoil_barrel.position.z += .16
 		assert_almost_eq(turret.muzzle.global_position.z - exit_before.z, .16, .001)
@@ -461,7 +465,7 @@ func test_siege_evolutions_expand_shell_blast_and_knockback() -> void:
 			assert_gt(current.knockback, previous.knockback)
 		previous = current
 	assert_eq(turret.display_name(), "Worldbreaker")
-	assert_true(turret.available_evolutions().is_empty())
+	assert_eq(turret.available_evolutions(), [] as Array[String], "Constellation is not built yet")
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 	var inside := world.spawn_enemy(Vector3(previous.splash_radius + .1, 0, 0))
 	var outside := world.spawn_enemy(Vector3(previous.splash_radius + 1.0, 0, 0))
@@ -486,21 +490,28 @@ func test_evolution_preview_matches_committed_stats_without_mutating_actor() -> 
 	var snapshot := turret.progression.snapshot()
 	var cached := turret.cached_stats.duplicate(true)
 	var model := turret.model
-	var preview := turret.resolve_attack_stats(false, "machine_gun", 1)
+	var preview := turret.resolve_attack_stats(false, "machine_gun")
 	assert_eq(turret.progression.snapshot(), snapshot)
 	assert_eq(turret.cached_stats, cached)
 	assert_same(turret.model, model)
 	assert_true(turret.evolve("machine_gun"))
 	assert_eq(turret.resolve_attack_stats(), preview)
+	var final_preview := turret.resolve_attack_stats(false, "cyclone_gatling")
+	assert_ne(final_preview, preview, "The final previews different numbers from the upgrade")
+	assert_eq(turret.resolve_attack_stats(), preview, "Previewing a final does not change the current form")
+	assert_true(turret.evolve("cyclone_gatling"))
+	assert_eq(turret.resolve_attack_stats(), final_preview)
 
 func test_repeater_visual_channels_match_projectile_origins_and_reload() -> void:
 	var turret := world.add_turret(Vector3.ZERO, "bow")
 	turret.set_physics_process(false)
 	turret.progression.award(1500)
-	for stage in range(1, 4):
-		assert_true(turret.evolve("repeater_bow"))
-		assert_eq(turret.bow_muzzles.size(), [2, 3, 5][stage - 1])
-		assert_eq(turret.bow_loaded_arrows.size(), turret.bow_muzzles.size())
+	assert_true(turret.evolve("repeater_bow"))
+	assert_eq(turret.bow_muzzles.size(), 2)
+	assert_eq(turret.bow_loaded_arrows.size(), turret.bow_muzzles.size())
+	assert_true(turret.evolve("arrowstorm"))
+	assert_eq(turret.bow_muzzles.size(), 5)
+	assert_eq(turret.bow_loaded_arrows.size(), turret.bow_muzzles.size())
 	var enemy := world.spawn_enemy(Vector3(0, 0, -4))
 	enemy.set_physics_process(false)
 	turret.target = enemy
@@ -518,37 +529,39 @@ func test_repeater_visual_channels_match_projectile_origins_and_reload() -> void
 	for arrow in turret.bow_loaded_arrows:
 		assert_true(arrow.visible)
 
-func test_greatbow_adds_horizontal_limb_layers_without_extending_muzzle() -> void:
+func test_titan_bow_adds_horizontal_limb_layers_without_extending_muzzle() -> void:
 	var turret := world.add_turret(Vector3.ZERO, "bow")
 	turret.set_physics_process(false)
 	var exit := turret.muzzle.position
 	turret.progression.award(1500)
-	for stage in range(1, 4):
-		assert_true(turret.evolve("greatbow"))
-		var limbs := turret.model.find_child("HeavyBowLimbs", true, false) as Node3D
-		assert_not_null(limbs)
-		assert_eq(limbs.get_child_count(), 4 * stage)
-		assert_almost_eq(limbs.rotation.z, PI * .5, .001)
-		assert_true(turret.muzzle.position.is_equal_approx(exit))
+	assert_true(turret.evolve("repeater_bow"))
+	assert_null(turret.model.find_child("HeavyBowLimbs", true, false), "The repeater upgrade keeps the standard limbs")
+	assert_true(turret.evolve("titan_bow"))
+	var limbs := turret.model.find_child("HeavyBowLimbs", true, false) as Node3D
+	assert_not_null(limbs)
+	assert_eq(limbs.get_child_count(), 12)
+	assert_almost_eq(limbs.rotation.z, PI * .5, .001)
+	assert_true(turret.muzzle.position.is_equal_approx(exit))
 
 func test_flame_hardware_evolves_without_multiplying_cone_damage() -> void:
-	for branch: String in ["wide_flame", "focused_jet"]:
+	for final: String in ["inferno_crown", "dragonheart"]:
 		var turret := world.add_turret(Vector3.ZERO, "flamethrower")
 		turret.set_physics_process(false)
 		turret.progression.award(1500)
-		var last_exit := turret.muzzle.position.z
-		for stage in range(1, 4):
-			assert_true(turret.evolve(branch))
-			assert_not_null(turret.model.find_child("EvolutionBurners", true, false))
-			if branch == "wide_flame":
-				assert_eq(turret.flame_emitters.size(), stage * 2)
-				for emitter in turret.flame_emitters:
-					var direction := -emitter.global_basis.z
-					assert_gt(direction.dot(Vector3.FORWARD), 0.0)
-			else:
-				assert_true(turret.flame_emitters.is_empty())
-				assert_lt(turret.muzzle.position.z, last_exit)
-				last_exit = turret.muzzle.position.z
+		var base_exit := turret.muzzle.position.z
+		assert_true(turret.evolve("wide_flame"))
+		assert_not_null(turret.model.find_child("EvolutionBurners", true, false))
+		assert_eq(turret.flame_emitters.size(), 2)
+		assert_true(turret.evolve(final))
+		assert_not_null(turret.model.find_child("EvolutionBurners", true, false))
+		if final == "inferno_crown":
+			assert_eq(turret.flame_emitters.size(), 6)
+			for emitter in turret.flame_emitters:
+				var direction := -emitter.global_basis.z
+				assert_gt(direction.dot(Vector3.FORWARD), 0.0)
+		else:
+			assert_true(turret.flame_emitters.is_empty())
+			assert_lt(turret.muzzle.position.z, base_exit)
 		var enemy := world.spawn_enemy(Vector3(0, 0, -1.5))
 		enemy.set_physics_process(false)
 		enemy.health = 1000.0
@@ -560,23 +573,24 @@ func test_flame_hardware_evolves_without_multiplying_cone_damage() -> void:
 		assert_eq(enemy.statuses.burn_source_id, turret.turret_id)
 		GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
 
-func test_bowling_hardware_matches_heavy_launch_and_animates_bank_paddles() -> void:
+func test_bowling_hardware_matches_heavy_launch_and_animates_ricochet_paddles() -> void:
 	var heavy := world.add_turret(Vector3.ZERO, "bowling")
 	var bank := world.add_turret(Vector3(4, 0, 0), "bowling")
 	for turret in [heavy, bank]:
 		turret.set_physics_process(false)
 		turret.progression.award(1500)
-	for stage in range(1, 4):
-		assert_true(heavy.evolve("heavy_roller"))
-		assert_true(bank.evolve("bank_shot"))
-		var shot := heavy._new_shot(heavy._current_view(0))
-		assert_almost_eq(heavy.muzzle.global_position.y, shot.radius, .001)
-		var scale := heavy.loaded_ball.global_basis.get_scale()
-		assert_almost_eq(scale.x, scale.y, .001)
-		assert_almost_eq(scale.y, scale.z, .001, "Loaded ball remains spherical")
-		assert_eq(heavy.bowling_hardware.get_child_count(), 6 * stage)
-		assert_eq(bank.bowling_hardware.flippers.size(), 2)
-		assert_eq(bank.bowling_hardware.get_child_count(), stage * 4 + 2)
+		assert_true(turret.evolve("heavy_roller"))
+		assert_eq(turret.bowling_hardware.get_child_count(), 6)
+	assert_true(heavy.evolve("juggernaut"))
+	assert_true(bank.evolve("ricochet_king"))
+	var shot := heavy._new_shot(heavy._current_view(0))
+	assert_almost_eq(heavy.muzzle.global_position.y, shot.radius, .001)
+	var scale := heavy.loaded_ball.global_basis.get_scale()
+	assert_almost_eq(scale.x, scale.y, .001)
+	assert_almost_eq(scale.y, scale.z, .001, "Loaded ball remains spherical")
+	assert_eq(heavy.bowling_hardware.get_child_count(), 18)
+	assert_eq(bank.bowling_hardware.flippers.size(), 2)
+	assert_eq(bank.bowling_hardware.get_child_count(), 14)
 	bank.bowling_hardware.kick()
 	bank.bowling_hardware.advance(.1, false)
 	assert_gt(absf(bank.bowling_hardware.flippers[0].rotation.y), .1)
@@ -586,12 +600,14 @@ func test_bowling_hardware_matches_heavy_launch_and_animates_bank_paddles() -> v
 	bank.bowling_hardware.advance(1, false)
 	assert_almost_eq(bank.bowling_hardware.flippers[1].rotation.y, 0, .001)
 
-func test_lance_strikes_one_target_then_spear_pierces_a_lane() -> void:
+func test_thunder_spear_pierces_a_lane_of_enemies() -> void:
 	var turret := world.add_turret(Vector3.ZERO, "shock")
 	turret.set_physics_process(false)
 	turret.progression.award(896)
-	assert_true(turret.evolve("lance"))
-	assert_eq(turret.display_name(), "Focused Lance")
+	assert_true(turret.evolve("resonator"))
+	assert_eq(turret.available_evolutions(), ["resonance_engine", "thunder_spear"])
+	assert_true(turret.evolve("thunder_spear"))
+	assert_eq(turret.display_name(), "Thunder Spear")
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 	var front := world.spawn_enemy(Vector3(0, 0, -2.0))
 	var behind := world.spawn_enemy(Vector3(0, 0, -3.0))
@@ -602,17 +618,9 @@ func test_lance_strikes_one_target_then_spear_pierces_a_lane() -> void:
 	world.crowd.rebuild(world.enemies)
 	turret.form.fire(turret._current_view(0), turret.effective_range(turret._current_view(0)), front)
 	assert_lt(front.health, 500.0)
-	assert_eq(behind.health, 500.0)
-	assert_gt(turret.cooldown, 0.0)
-	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
-	assert_true(turret.evolve("lance"))
-	assert_true(turret.evolve("lance"))
-	assert_eq(turret.display_name(), "Thunder Spear")
-	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
-	turret.cooldown = 0.0
-	turret.form.fire(turret._current_view(0), turret.effective_range(turret._current_view(0)), front)
 	assert_lt(behind.health, 500.0, "Spear drives through the lane")
 	assert_eq(beside.health, 500.0, "Enemies off the lane are spared")
+	assert_gt(turret.cooldown, 0.0)
 
 func test_resonator_echoes_after_the_pulse() -> void:
 	var turret := world.add_turret(Vector3.ZERO, "shock")
@@ -639,8 +647,7 @@ func test_resonance_engine_exposes_enemies_hit_by_both_rings() -> void:
 	var turret := world.add_turret(Vector3.ZERO, "shock")
 	turret.set_physics_process(false)
 	turret.progression.award(896)
-	for i in 3:
-		assert_true(turret.evolve("resonator"))
+	_evolve_through(turret, "resonator", "resonance_engine")
 	assert_eq(turret.display_name(), "Resonance Engine")
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 	var near := world.spawn_enemy(Vector3(0, 0, -.8))

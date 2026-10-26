@@ -43,7 +43,7 @@ func test_wave_end_awards_raw_xp_and_cash_bonus_once() -> void:
 	assert_true(leftover.collected)
 	assert_eq(world.turrets[0].progression.level, 15)
 	assert_eq(world.turrets[0].progression.xp, 7)
-	assert_eq(world.turrets[0].progression.pending_evolutions, [5, 10, 15])
+	assert_eq(world.turrets[0].progression.pending_evolutions, [5, 10])
 	assert_eq(world.salvage.last_settlement.raw_scrap, 903)
 	assert_eq(world.telemetry.total("turret_xp"), 903)
 	assert_false(world.finish_wave())

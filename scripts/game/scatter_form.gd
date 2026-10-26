@@ -1,9 +1,9 @@
 class_name ScatterForm
 extends TurretForm
 
-## Normal / Scatter: a three-way spread, then (stage 2+) one shot from every Crossfire exit.
+## Normal / Omnifire: one shot from every radial exit (the retired Scattershot's three-way spread stays as the fallback).
 func fire_projectile(stats: TurretStats, heading: Vector3) -> bool:
-	if actor.progression.evolution_stage >= 2:
+	if TurretEvolution.legacy_stage(actor.progression.evolution_form) >= 2:
 		for exit: Node3D in actor.crossfire_muzzles:
 			actor.world.fire_direction(exit.global_position, -exit.global_basis.z, actor._new_shot(stats))
 	else:

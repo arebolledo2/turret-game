@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c5ue34p7hf0qi"
-path="res://.godot/imported/capacitor_3.png-819859e917cbb92d1426e5390c7cb8a9.ctex"
+uid="uid://sxdikk1202d1"
+path="res://.godot/imported/omnifire.png-b92944416d529cc598a70d1574542ebd.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/capacitor_3.png"
-dest_files=["res://.godot/imported/capacitor_3.png-819859e917cbb92d1426e5390c7cb8a9.ctex"]
+source_file="res://assets/ui/turrets/omnifire.png"
+dest_files=["res://.godot/imported/omnifire.png-b92944416d529cc598a70d1574542ebd.ctex"]
 
 [params]
 

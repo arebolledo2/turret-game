@@ -4,9 +4,9 @@ extends RefCounted
 ## Burner manifolds and pressure-lance hardware added to the authored fuel-tank chassis.
 static var materials: Dictionary = {}
 
-static func build(model: Node3D, branch: String, stage: int) -> Array[Node3D]:
+static func build(model: Node3D, form_id: String, stage: int) -> Array[Node3D]:
 	var emitters: Array[Node3D] = []
-	if stage < 1 or branch not in ["wide_flame", "focused_jet"]:
+	if stage < 1 or form_id not in ["wide_flame", "inferno_crown", "dragonheart"]:
 		return emitters
 	if materials.is_empty():
 		for entry in [["brass", "dba94c", .8], ["teal", "237d82", .35], ["dark", "16232b", .4], ["coral", "d7695a", .2]]:
@@ -21,7 +21,7 @@ static func build(model: Node3D, branch: String, stage: int) -> Array[Node3D]:
 	hardware.name = "EvolutionBurners"
 	aim.add_child(hardware)
 	hardware.position = Vector3(0, .89, -.58)
-	if branch == "wide_flame":
+	if form_id in ["wide_flame", "inferno_crown"]:
 		# A visible horizontal fuel manifold supports each added burner pair.
 		var manifold := _cylinder(hardware, .075, .075, .68 * stage, "brass")
 		manifold.rotation.z = PI * .5

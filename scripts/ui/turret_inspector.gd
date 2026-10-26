@@ -171,7 +171,7 @@ func refresh() -> void:
 			buttons[i].text += "EVOLUTION READY"
 		buttons[i].custom_minimum_size.y = 86
 		buttons[i].visible = i / PAGE_SIZE == page
-		roster_art[i].texture = ShopArt.turret(turret.turret_type, turret.progression.evolution_branch, turret.progression.evolution_stage)
+		roster_art[i].texture = ShopArt.turret(turret.turret_type, turret.progression.evolution_form)
 		roster_bars[i].show_progress(turret.progression.level, turret.progression.xp)
 		buttons[i].set_pressed_no_signal(turret.turret_id == selected_id)
 	page_label.text = "SQUAD  %d / %d" % [page + 1, maxi(1, ceili(float(ids.size()) / PAGE_SIZE))]
@@ -208,8 +208,8 @@ func _show_selected() -> void:
 	if key == detail_key:
 		return
 	detail_key = key
-	art.texture = ShopArt.turret(turret.turret_type, growth.evolution_branch, growth.evolution_stage)
-	if growth.evolution_branch == "gunblade":
+	art.texture = ShopArt.turret(turret.turret_type, growth.evolution_form)
+	if growth.evolution_form == "stormblade":
 		family_badges.show_families(["kinetic", "projectile"])
 	else:
 		family_badges.show_turret(turret.turret_type)
@@ -246,10 +246,10 @@ func _show_selected() -> void:
 		lines.append("Flame cone %.0f degrees" % float(stats.values.get("cone_degrees", 36.0)))
 		lines.append("Burn %.1f damage/s for %.1f s" % [stats.damage * float(stats.values.get("burn_ratio", 1.6)), float(stats.values.get("burn_duration", 2.0))])
 	lines.append("Knockback  %.2f m" % stats.knockback_metres)
-	if growth.evolution_branch == "gunblade":
+	if growth.evolution_form == "stormblade":
 		var gun := turret.gun_stats
 		lines.append("\n[b]GUN · PROJECTILE[/b]")
-		var shots := maxi(1, growth.evolution_stage)
+		var shots := maxi(1, TurretEvolution.legacy_stage(growth.evolution_form))
 		lines.append("Damage %.1f · Reach %.2f m · %.2f bursts/s · %d shots/burst" % [gun.damage, gun.range_metres, gun.fire_rate, shots])
 		lines.append("Fires along the rotating barrel. Kinetic bonuses affect the blade only.")
 	lines.append("\n[b]PROGRESSION & POSITION[/b]")
@@ -268,20 +268,24 @@ func _show_selected() -> void:
 		var milestone: int = TurretProgression.EVOLUTION_LEVELS[i]
 		var state := "Not reached"
 		if growth.evolution_stage > i:
-			state = TurretEvolution.form_name(turret.turret_type, growth.evolution_branch, i + 1)
+			# Milestone 0 is the upgrade (still named once a final replaced it); milestone 1 is the chosen final.
+			var taken := growth.evolution_form
+			if i == 0 and growth.evolution_stage > 1:
+				taken = TurretEvolution.options(turret.turret_type, 0)[0]
+			state = TurretEvolution.form_name(taken)
 		elif growth.level >= milestone:
 			state = "Evolution ready" if not turret.available_evolutions().is_empty() else "Form in development — milestone retained"
 		lines.append("Level %d  ·  %s" % [milestone, state])
-	lines.append("Ordinary stat levels continue beyond level 15.")
+	lines.append("Ordinary stat levels continue beyond level 10.")
 	for child in evolution_choices.get_children():
 		evolution_choices.remove_child(child)
 		child.queue_free()
-	for branch in turret.available_evolutions():
+	for form_id in turret.available_evolutions():
 		var button := Button.new()
 		button.custom_minimum_size.y = 48
-		button.text = "EVOLVE · %s" % TurretEvolution.form_name(turret.turret_type, branch, growth.evolution_stage + 1)
-		button.tooltip_text = TurretEvolution.description(branch, growth.evolution_stage + 1)
-		button.pressed.connect(evolution_preview.show_form.bind(turret, branch))
+		button.text = "EVOLVE · %s" % TurretEvolution.form_name(form_id)
+		button.tooltip_text = TurretEvolution.description(form_id)
+		button.pressed.connect(evolution_preview.show_form.bind(turret, form_id))
 		evolution_choices.add_child(button)
 	detail.text = "\n".join(lines)
 	art.tooltip_text = detail.get_parsed_text()
@@ -328,8 +332,8 @@ func change_page(direction: int) -> void:
 	select(world.turrets[page * PAGE_SIZE].turret_id)
 	buttons[page * PAGE_SIZE].grab_focus()
 
-func _evolve_selected(turret: TurretActor, branch: String) -> void:
-	if turret.evolve(branch):
+func _evolve_selected(turret: TurretActor, form_id: String) -> void:
+	if turret.evolve(form_id):
 		detail_key = 0
 		refresh()
 		for button in buttons:

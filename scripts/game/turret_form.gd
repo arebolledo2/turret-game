@@ -1,24 +1,25 @@
 class_name TurretForm
 extends RefCounted
 
-## Attack behaviour for one evolution branch. `TurretActor` keeps the shared parts (stats cache, targeting,
-## cooldown) and delegates the branch-specific attack and state here, so a new form is a subclass plus a `create` entry.
+## Attack behaviour for one evolution form. `TurretActor` keeps the shared parts (stats cache, targeting,
+## cooldown) and delegates the form-specific attack and state here, so a new form is a subclass plus a `create` entry.
+## Several forms of one lineage can share a subclass; it reads `TurretEvolution.legacy_stage(form_id)` for what differs.
 var actor: TurretActor
-var branch: String
+var form_id: String
 
-## The form for `branch`, or null when the actor handles the branch itself.
-static func create(owner: TurretActor, branch_id: String) -> TurretForm:
+## The behaviour for `id`, or null when the actor handles the form itself.
+static func create(owner: TurretActor, id: String) -> TurretForm:
 	var result: TurretForm
-	match branch_id:
-		"resonator": result = ResonatorForm.new()
-		"lance": result = LanceForm.new()
-		"scatter": result = ScatterForm.new()
-		"gunblade": result = GunbladeForm.new()
-		"machine_gun": result = MachineGunForm.new()
-		"repeater_bow": result = RepeaterBowForm.new()
+	match id:
+		"resonator", "resonance_engine": result = ResonatorForm.new()
+		"thunder_spear": result = LanceForm.new()
+		"omnifire": result = ScatterForm.new()
+		"stormblade": result = GunbladeForm.new()
+		"machine_gun", "cyclone_gatling": result = MachineGunForm.new()
+		"repeater_bow", "arrowstorm": result = RepeaterBowForm.new()
 		_: return null
 	result.actor = owner
-	result.branch = branch_id
+	result.form_id = id
 	return result
 
 ## Called after the actor rebuilds its model (spawn or evolution); reset visual-linked state.

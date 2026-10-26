@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bpwnqm85mgk05"
-path="res://.godot/imported/heavy_roller_3.png-ce08d8e207ed24cb59745d9d6acdcedd.ctex"
+uid="uid://bxnr5gxujwqf6"
+path="res://.godot/imported/resonance_engine.png-96786e46436a2106e6e95b5ddcb311e5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/heavy_roller_3.png"
-dest_files=["res://.godot/imported/heavy_roller_3.png-ce08d8e207ed24cb59745d9d6acdcedd.ctex"]
+source_file="res://assets/ui/turrets/resonance_engine.png"
+dest_files=["res://.godot/imported/resonance_engine.png-96786e46436a2106e6e95b5ddcb311e5.ctex"]
 
 [params]
 

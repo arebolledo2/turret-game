@@ -92,7 +92,7 @@ static func build_data(world: ArenaWorld, extra_turret: String = "") -> Dictiona
 				growth["id"] = actor.turret_id
 				growth["name"] = actor.display_name()
 				growth["combat"] = _actor_numbers(actor)
-				if actor.progression.evolution_branch == "gunblade":
+				if actor.progression.evolution_form == "stormblade":
 					growth["gun"] = _actor_numbers(actor, true)
 				instances.append(growth)
 				represented += 1
@@ -115,7 +115,7 @@ static func _actor_numbers(actor: TurretActor, secondary: bool = false) -> Dicti
 	var pulse := TurretRegistry.get_fire_mode(actor.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] and not secondary
 	var reach := stats.range_metres * (stats.area_size if pulse else 1.0)
 	return {"damage": stats.damage, "range": reach, "fire_rate": stats.fire_rate,
-		"burst_size": maxi(1, actor.progression.evolution_stage) if secondary else ([2, 3, 5][actor.progression.evolution_stage - 1] if actor.progression.evolution_branch == "repeater_bow" else 1),
+		"burst_size": maxi(1, TurretEvolution.legacy_stage(actor.progression.evolution_form)) if secondary else (TurretEvolution.volley_size(TurretEvolution.legacy_stage(actor.progression.evolution_form)) if actor.progression.evolution_form in ["repeater_bow", "arrowstorm"] else 1),
 		"rotation_rate": float(values.get("rotation_rate", 0.0)), "area": reach if pulse else stats.aoe_radius_metres,
 		"stats": {"pierce": stats.pierce, "projectile_speed": stats.projectile_speed_metres,
 		"knockback": stats.knockback_metres, "chain_count": stats.chain_count,
@@ -126,20 +126,20 @@ static func _actor_numbers(actor: TurretActor, secondary: bool = false) -> Dicti
 static func _actor_dps(actor: TurretActor) -> float:
 	var stats := TurretStats.new(actor.resolve_attack_stats())
 	var rate := stats.fire_rate
-	var branch := actor.progression.evolution_branch
-	var stage := actor.progression.evolution_stage
+	var form_id := actor.progression.evolution_form
+	var stage := TurretEvolution.legacy_stage(form_id)
 	if actor.turret_type == "melee":
-		var blades := stage if branch == "saber" else 1
+		var blades := stage if form_id in ["saber", "orbit_saber"] else 1
 		rate = minf(stats.rotation_rate * blades / 360.0, 1.0 / maxf(.01, stats.rehit_delay))
-	elif branch == "repeater_bow":
-		var arrows: int = [2, 3, 5][stage - 1]
+	elif form_id in ["repeater_bow", "arrowstorm"]:
+		var arrows := TurretEvolution.volley_size(stage)
 		rate = float(arrows) / (stats.cooldown_seconds + .09 * (arrows - 1))
-	elif branch == "machine_gun" and stage >= 2:
+	elif form_id == "cyclone_gatling":
 		rate *= 1.0 + actor.spool
 	var result := stats.damage * rate
 	if actor.turret_type == "flamethrower":
 		result += stats.damage * float(stats.values.get("burn_ratio", 1.6)) * minf(1.0, rate * float(stats.values.get("burn_duration", 2.0)))
-	if branch == "gunblade":
+	if form_id == "stormblade":
 		var gun := TurretStats.new(actor.resolve_attack_stats(true))
 		var shots := maxi(1, stage)
 		result += gun.damage * float(shots) / (gun.cooldown_seconds + .065 * (shots - 1))
@@ -204,6 +204,6 @@ static func affected_turrets(world: ArenaWorld, offer: ShopOffer) -> Array[Strin
 
 static func _has_gunblade(world: ArenaWorld) -> bool:
 	for turret in world.turrets:
-		if turret.progression.evolution_branch == "gunblade":
+		if turret.progression.evolution_form == "stormblade":
 			return true
 	return false

@@ -3,8 +3,8 @@ extends RefCounted
 
 static var materials: Dictionary = {}
 
-static func build(model: Node3D, branch: String, stage: int) -> void:
-	if branch != "siege":
+static func build(model: Node3D, form_id: String, stage: int) -> void:
+	if form_id not in ["siege", "worldbreaker"]:
 		return
 	var barrel := model.find_child("Barrel", true, false) as Node3D
 	var muzzle := model.find_child("Muzzle", true, false) as Node3D

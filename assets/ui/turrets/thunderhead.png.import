@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://r2he2bxh5mvl"
-path="res://.godot/imported/bank_shot_3.png-d9fcdfb2987805c6f88f702b4f465c0f.ctex"
+uid="uid://c5ue34p7hf0qi"
+path="res://.godot/imported/thunderhead.png-afb0e8a9e1ba6e53a6711777b6917190.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/bank_shot_3.png"
-dest_files=["res://.godot/imported/bank_shot_3.png-d9fcdfb2987805c6f88f702b4f465c0f.ctex"]
+source_file="res://assets/ui/turrets/thunderhead.png"
+dest_files=["res://.godot/imported/thunderhead.png-afb0e8a9e1ba6e53a6711777b6917190.ctex"]
 
 [params]
 
