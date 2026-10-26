@@ -12,9 +12,9 @@ func apply_static_effects(turret_type: String, stats: Dictionary) -> void:
 		var damage_bonus: float = diversity * 0.12
 		stats["damage"] = stats.get("damage", 0.0) * (1.0 + damage_bonus)
 
-	# Army Doctrine: +3% attack speed per turret beyond the 3rd (max +30%)
+	# Army Doctrine: +3% attack speed per attacking turret beyond the 3rd (max +30%); no-attack turrets do not count
 	if ItemRegistry.has_special_effect("army_doctrine") and ItemTrackingService.item_counts.get("army_doctrine", 0) > 0:
-		var total_turrets: int = TurretStatsService.get_total_turret_count()
+		var total_turrets: int = TurretStatsService.get_attack_turret_count()
 		var bonus: float = min(max(0, total_turrets - 3) * 0.03, 0.30)
 		stats["attack_speed"] = stats.get("attack_speed", 1.0) * (1.0 + bonus)
 
@@ -24,7 +24,7 @@ func apply_static_effects(turret_type: String, stats: Dictionary) -> void:
 			stats["damage"] = stats.get("damage", 0.0) * 1.40
 			stats["range"] = stats.get("range", 0.0) * 1.25
 
-	# Focused Arsenal: +50% damage, +25% attack speed if all turrets share an attack family
+	# Focused Arsenal: +50% damage, +25% attack speed if all attacking turrets share an attack family (no-attack turrets are ignored)
 	if ItemRegistry.has_special_effect("mono_type_mastery") and ItemTrackingService.item_counts.get("mono_type_mastery", 0) > 0:
 		if not TurretStatsService.shared_attack_families().is_empty():
 			stats["damage"] = stats.get("damage", 0.0) * 1.5

@@ -151,6 +151,7 @@ static func reset_all_services() -> void:
 	# Player & combat
 	PlayerStatsService.reset_state()
 	TurretStatsService.reset_state()
+	TurretRegistry.clear_test_types()
 	ModifierService.clear_modifiers()
 
 	# Economy & progression

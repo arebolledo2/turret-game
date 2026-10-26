@@ -14,6 +14,18 @@ Native 3D combat is implemented in `scripts/game/`. Turrets and player auto-fire
 | Plasma | Cluster targeting, splash and knockback; interrupts charges |
 | Shock | Radial electric pulse with 25% slow for 0.5 seconds |
 
+## Targeting modes
+
+A turret type picks its target by `TurretRegistry.get_targeting(type_id)` (a top-level `targeting` key, or `base_stats.targeting`; default `closest`). `Combat3D.select_target` resolves `closest` and `cluster` (plasma, via `cluster_target`). `TurretTargeting` (`scripts/game/turret_targeting.gd`) resolves the rest, all over living enemies whose hurtbox overlaps the attack range, so bosses and tech-drop crates are valid targets:
+
+| Mode | Picks |
+|---|---|
+| `farthest` | The enemy furthest from the turret |
+| `toughest` | Highest current health; ties go to the nearest |
+| `backline` | Nearest Needle Kite, Kiln Lobber or Brood Tender (`TurretTargeting.BACKLINE_TYPES`); nearest enemy of any kind when none is in range |
+
+`TurretTargeting.select(mode, origin, range, candidates)` dispatches by mode; `TurretActor` calls it every 0.2 s when `TurretTargeting.handles(mode)`.
+
 ## Status, movement and queries
 
 `StatusEffects3D` reuses shared `StatusEffect` lifetime/refresh rules. Refresh keeps the strongest slow of a damage type and replaces its remaining duration. Across types, the strongest slow wins; slows do not multiply. Intensity is capped at 90%. Slow changes pursuit and dash distance, not knockback or charge timers.

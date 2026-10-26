@@ -76,6 +76,25 @@ func test_fast_plasma_projectile_hits_splash_and_reuses_as_plain_shot() -> void:
 	assert_eq(primary.health, 89.0)
 	assert_eq(neighbor.health, 90.0, "Normal shot must not retain plasma splash")
 
+func test_turret_actor_applies_the_registry_targeting_mode() -> void:
+	var definition: Dictionary = TurretRegistry.get_type("normal").duplicate(true)
+	definition["targeting"] = "toughest"
+	TurretRegistry.register_test_type("test_toughest", definition)
+	var turret := world.add_turret(Vector3(20, 0, 0), "test_toughest")
+	turret.set_physics_process(false)
+	var near := enemy(Vector3(21, 0, 0))
+	var tough := enemy(Vector3(22, 0, 0))
+	tough.health = 500
+	turret.target_clock = 0.0
+	turret.cooldown = 99.0
+	turret._physics_process(.01)
+	assert_same(turret.target, tough)
+	near.health = 900
+	turret.target_clock = 0.0
+	turret._physics_process(.01)
+	assert_same(turret.target, near)
+	TurretRegistry.clear_test_types()
+
 func test_cluster_targeting_prefers_group_then_nearest_tie() -> void:
 	var lone := enemy(Vector3(.5, 0, 0))
 	var cluster := enemy(Vector3(2, 0, 0))

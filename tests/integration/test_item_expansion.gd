@@ -281,3 +281,40 @@ func test_proximity_items_are_uncommon_single_copy_and_stocked() -> void:
 		var counts := ItemTrackingService.item_counts.duplicate()
 		for i in 100:
 			assert_ne(ItemRegistry.get_weighted_random_item(20, 0.0, counts, [], GameRandom.gameplay), id)
+
+func _register_beacon() -> void:
+	var definition: Dictionary = TurretRegistry.get_type("normal").duplicate(true)
+	definition["attack_styles"] = []
+	definition["no_attack"] = true
+	TurretRegistry.register_test_type("test_beacon", definition)
+
+func test_no_attack_turrets_are_not_crosslink_neighbours_or_recipients() -> void:
+	_register_beacon()
+	var turret := world.turrets[0]
+	turret.position = Vector3.ZERO
+	world.shop.apply_item("crosslink_array")
+	var base := turret.resolve_attack_stats()
+	var reach := turret.effective_range(TurretStats.new(base))
+	var beacon := world.add_turret(Vector3(.5, 0, 0), "test_beacon")
+	beacon.set_physics_process(false)
+	assert_eq(world.item_effects.neighbours(turret, reach), 0, "A utility turret in range adds nothing")
+	assert_almost_eq(float(turret.resolve_attack_stats().damage), float(base.damage), .001)
+	var attacker := world.add_turret(Vector3(-.5, 0, 0), "melee")
+	attacker.set_physics_process(false)
+	assert_eq(world.item_effects.neighbours(turret, reach), 1, "Real turrets still count")
+	assert_almost_eq(float(turret.resolve_attack_stats().damage), float(base.damage) * 1.05, .001)
+	assert_eq(world.item_effects.proximity_bonus(beacon, reach), 0.0, "Utility turrets never receive the bonus")
+	for buff: Dictionary in world.item_effects.visible_buffs(beacon.turret_id):
+		assert_ne(buff.id, "crosslink_array")
+	TurretRegistry.clear_test_types()
+
+func test_lone_sentry_ignores_no_attack_neighbours() -> void:
+	_register_beacon()
+	var turret := world.turrets[0]
+	turret.position = Vector3.ZERO
+	var base := turret.resolve_attack_stats()
+	world.shop.apply_item("lone_sentry")
+	var beacon := world.add_turret(Vector3(.5, 0, 0), "test_beacon")
+	beacon.set_physics_process(false)
+	assert_almost_eq(float(turret.resolve_attack_stats().damage), float(base.damage) * 1.2, .001)
+	TurretRegistry.clear_test_types()

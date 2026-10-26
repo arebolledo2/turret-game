@@ -19,7 +19,7 @@ func reset_state() -> void:
 ## Get turret stats with all modifiers applied
 ## Delegates to ModifierService for consistent stat calculation
 func get_turret_stats(turret_type: String, difficulty_turret_damage_mult: float) -> Dictionary:
-	if not TurretRegistry.TYPES.has(turret_type):
+	if not TurretRegistry.has_type(turret_type):
 		return {}
 
 	# Build a minimal difficulty config with the damage mult
@@ -62,6 +62,15 @@ func get_total_turret_count() -> int:
 	var total := 0
 	for count in turret_counts.values():
 		total += count
+	return total
+
+
+## Number of owned turrets that attack. Utility (no-attack) turrets are excluded so they cannot inflate Army Doctrine.
+func get_attack_turret_count() -> int:
+	var total := 0
+	for type_id: String in turret_counts:
+		if not TurretRegistry.is_no_attack(type_id):
+			total += int(turret_counts[type_id])
 	return total
 
 
@@ -110,11 +119,13 @@ func get_family_diversity() -> int:
 		best = maxi(best, count)
 	return best
 
+## Attack families every owned attacking turret has. No-attack turrets are ignored, so a Beacon beside a focused build
+## does not break Focused Arsenal; owning only no-attack turrets shares nothing.
 func shared_attack_families() -> Array[String]:
 	var shared: Array[String] = ["projectile", "aoe", "instant", "kinetic"]
 	var any_owned := false
 	for type_id: String in turret_counts:
-		if int(turret_counts[type_id]) <= 0:
+		if int(turret_counts[type_id]) <= 0 or TurretRegistry.is_no_attack(type_id):
 			continue
 		any_owned = true
 		var present := TurretRegistry.get_attack_families(type_id)

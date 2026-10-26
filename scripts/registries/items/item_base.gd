@@ -48,7 +48,7 @@ static func filter_turret_type(types: Array) -> Dictionary:
 	return {"turret_type": types}
 
 
-## Helper to create turret family filter (family ids: ion, plasma, electric, melee)
+## Helper to create turret family filter (family ids: ion, plasma, electric, melee, aggro)
 static func filter_family(families: Array) -> Dictionary:
 	return {"family": families}
 

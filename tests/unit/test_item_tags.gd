@@ -32,3 +32,54 @@ func test_shop_text_names_effect_audience_without_category_prefixes() -> void:
 		var offer := ShopOffer.new("item", id, 10)
 		assert_false(ArenaShop.offer_name(offer).begins_with("["))
 		assert_false("Tags:" in ArenaShop.offer_description(offer))
+
+func _utility_definition() -> Dictionary:
+	var definition: Dictionary = TurretRegistry.get_type("normal").duplicate(true)
+	definition["attack_styles"] = []
+	definition["no_attack"] = true
+	return definition
+
+func test_aggro_is_a_build_family_with_no_stocked_turret_yet() -> void:
+	assert_true(TurretRegistry.FAMILIES.has("aggro"))
+	assert_true(TurretRegistry.FAMILIES["aggro"].is_empty(), "Decoy, Lullaby and Discord are not registered yet")
+	for type_id: String in TurretRegistry.get_all_type_ids():
+		assert_ne(TurretRegistry.get_family(type_id), "aggro", type_id)
+	# An aggro-scoped item matches no current turret, and does not disturb the other families.
+	ModifierService.add_modifier(Item.create_increase("damage", .5, Item.filter_family(["aggro"])))
+	for type_id in ["normal", "plasma", "shock", "tesla", "melee", "mine"]:
+		assert_almost_eq(float(ModifierService.get_turret_stats(type_id, {"turret_damage_mult": 1.0})["damage"]), float(TurretRegistry.get_base_stats(type_id)["damage"]), .001, type_id)
+
+func test_every_family_lists_only_registered_turrets_and_each_turret_has_one_family() -> void:
+	var owners := {}
+	for family: String in TurretRegistry.FAMILIES:
+		for type_id: String in TurretRegistry.FAMILIES[family]:
+			assert_true(TurretRegistry.TYPES.has(type_id), "%s in %s" % [type_id, family])
+			assert_false(owners.has(type_id), "%s appears in two families" % type_id)
+			owners[type_id] = family
+
+func test_deployable_maps_to_the_aoe_family_so_aoe_items_reach_mines() -> void:
+	assert_eq(TurretRegistry.get_attack_families("mine"), ["aoe"])
+	var base := float(TurretRegistry.get_base_stats("mine")["damage"])
+	ModifierService.add_modifier({"stat": "damage", "operation": "increase", "value": .2, "filter": {"attack_family": ["aoe"]}})
+	assert_almost_eq(float(ModifierService.get_turret_stats("mine", {"turret_damage_mult": 1.0})["damage"]), base * 1.2, .001)
+	ModifierService.clear_modifiers()
+	ModifierService.add_modifier({"stat": "damage", "operation": "increase", "value": .2, "filter": {"attack_family": ["projectile"]}})
+	assert_almost_eq(float(ModifierService.get_turret_stats("mine", {"turret_damage_mult": 1.0})["damage"]), base, .001)
+
+func test_deployable_plus_aoe_style_lists_the_aoe_family_once() -> void:
+	var definition: Dictionary = TurretRegistry.get_type("mine").duplicate(true)
+	definition["attack_styles"] = [GameEnums.AttackStyle.AOE, GameEnums.AttackStyle.DEPLOYABLE]
+	TurretRegistry.register_test_type("test_hybrid_mine", definition)
+	assert_eq(TurretRegistry.get_attack_families("test_hybrid_mine"), ["aoe"])
+	TurretRegistry.clear_test_types()
+
+func test_no_attack_marker_is_a_capability_of_flagged_entries_only() -> void:
+	for type_id: String in TurretRegistry.get_all_type_ids():
+		assert_false(TurretRegistry.is_no_attack(type_id), type_id)
+		assert_false(TurretRegistry.has_capability(type_id, "no_attack"), type_id)
+	assert_false(TurretRegistry.is_no_attack("not_a_turret"))
+	TurretRegistry.register_test_type("test_beacon", _utility_definition())
+	assert_true(TurretRegistry.is_no_attack("test_beacon"))
+	assert_true(TurretRegistry.has_capability("test_beacon", "no_attack"))
+	assert_true(TurretRegistry.get_attack_families("test_beacon").is_empty())
+	TurretRegistry.clear_test_types()

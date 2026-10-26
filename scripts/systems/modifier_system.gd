@@ -85,7 +85,7 @@ func _modifier_matches_turret(modifier: StatModifier, turret_type: String) -> bo
 		if turret_type in filter["turret_type"]:
 			return true
 
-	# Check family filter (OR logic): ion, plasma, electric, melee
+	# Check family filter (OR logic): ion, plasma, electric, melee, aggro, aggro
 	if filter.has("family") and not filter["family"].is_empty():
 		if TurretRegistry.get_family(turret_type) in filter["family"]:
 			return true

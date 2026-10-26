@@ -155,3 +155,39 @@ func test_count_reduction_items_stack_beyond_former_floor_in_progression() -> vo
 	var discounted_early := world.turret_price("normal")
 	ModifierService.clear_modifiers()
 	assert_eq(world.turret_price("normal"), discounted_early, "No count surcharge to reduce before the first purchase")
+
+func _register_beacon() -> void:
+	var definition: Dictionary = TurretRegistry.get_type("normal").duplicate(true)
+	definition["attack_styles"] = []
+	definition["no_attack"] = true
+	TurretRegistry.register_test_type("test_beacon", definition)
+
+func test_no_attack_turrets_do_not_break_focused_arsenal() -> void:
+	_register_beacon()
+	TurretStatsService.turret_counts = {"plasma": 1, "shock": 1}
+	var base := float(stats("plasma")["damage"])
+	world.shop.apply_item("mono_type_mastery")
+	assert_almost_eq(float(stats("plasma")["damage"]), base * 1.5, .001)
+	TurretStatsService.turret_counts["test_beacon"] = 2
+	assert_eq(TurretStatsService.shared_attack_families(), ["aoe"])
+	assert_almost_eq(float(stats("plasma")["damage"]), base * 1.5, .001, "A utility turret beside a focused build keeps the bonus")
+	TurretStatsService.turret_counts["melee"] = 1
+	assert_almost_eq(float(stats("plasma")["damage"]), base, .001, "A real off-family turret still breaks it")
+
+func test_only_no_attack_turrets_share_no_family() -> void:
+	_register_beacon()
+	TurretStatsService.turret_counts = {"test_beacon": 3}
+	assert_true(TurretStatsService.shared_attack_families().is_empty())
+	assert_eq(TurretStatsService.get_family_diversity(), 0)
+
+func test_no_attack_turrets_do_not_count_toward_army_doctrine() -> void:
+	_register_beacon()
+	world.shop.apply_item("army_doctrine")
+	TurretStatsService.turret_counts = {"normal": 4}
+	assert_almost_eq(float(stats("normal")["attack_speed"]), 1.03, .001)
+	TurretStatsService.turret_counts["test_beacon"] = 5
+	assert_eq(TurretStatsService.get_total_turret_count(), 9, "The raw count still includes them")
+	assert_eq(TurretStatsService.get_attack_turret_count(), 4)
+	assert_almost_eq(float(stats("normal")["attack_speed"]), 1.03, .001, "Utility turrets must not inflate Army Doctrine")
+	TurretStatsService.turret_counts["normal"] = 6
+	assert_almost_eq(float(stats("normal")["attack_speed"]), 1.09, .001)

@@ -23,7 +23,7 @@ Order follows the roster build order (cheapest and lowest risk first, each step 
 
 | # | Turret | Engine pieces | Forms (L5, L10 A, L10 B) | Notes |
 |---|---|---|---|---|
-| 0 | Groundwork | S2 targeting modes (toughest, backline-first); S8 map DEPLOYABLE to an item family; `"aggro"` entry in `TurretRegistry.FAMILIES`; item rules for no-attack turrets (Focused Arsenal, Army Doctrine, Crosslink Array) | n/a | Do first; the later turrets lean on it. Exposed (S3) is already built |
+| 0 | Groundwork | S2 targeting modes (toughest, backline-first); S8 map DEPLOYABLE to an item family; `"aggro"` entry in `TurretRegistry.FAMILIES`; item rules for no-attack turrets (Focused Arsenal, Army Doctrine, Crosslink Array) | n/a | Done on branch `turret-groundwork` (see `doc/items.md` and `doc/combat.md`). Exposed (S3) is already built |
 | 1 | Sniper | S2, S3 | Piercer Rifle, Horizon Piercer, Overwatch | Registry entry exists (`farthest` targeting, not stocked). Change to toughest. Overwatch's mark is a separate +25% multiplier |
 | 2 | Quake | S7 enemy-only ground zones | Aftershock, Tectonic, Cataclysm | Extends the Shock pulse. Cataclysm has no concept art yet |
 | 3 | Decoy | S1 taunt targeting and pull | Bumper Post, Pile Driver, Maelstrom | Infinite health, bosses ignore the taunt. Enemy goal selection is `CombatActor.chase_position()` |

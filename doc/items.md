@@ -14,10 +14,23 @@ Combat modifiers use `filter.attack_family`, distinct from elemental `DamageType
 | Tesla | Instant |
 | Melee | Kinetic |
 | Sniper (registry only, not stocked) | Instant |
+| Mine (registry only, not stocked) | AoE (the Deployable attack style maps to AoE) |
 
-One modifier matches any listed family and applies once. Separate percentage increases add: +10% Projectile and +20% AoE damage give Plasma +30%, before separate multiplicative effects. Kinetic means contact/melee, not every PHYSICAL attack.
+A hybrid whose styles map to the same family twice (for example AoE plus Deployable) lists it once. One modifier matches any listed family and applies once. Separate percentage increases add: +10% Projectile and +20% AoE damage give Plasma +30%, before separate multiplicative effects. Kinetic means contact/melee, not every PHYSICAL attack.
 
 `filter.requires` adds capability checks with AND semantics. Direct-projectile piercing excludes splash shots; chain upgrades require chaining, and existing-slow upgrades require a base slow. Legacy filters retain their old matching semantics for non-stocked content. Every stocked combat item uses the new families rather than turret identities.
+
+## Build families and utility turrets
+
+Attack families (above) decide which item stats apply. Build families are the separate, player-facing tags in `TurretRegistry.FAMILIES` that a modifier's `filter.family` targets: `ion`, `plasma`, `electric`, `melee` and `aggro`. `TurretRegistry.get_family(type_id)` returns the one family a turret belongs to, or an empty string. `aggro` (Decoy, Lullaby, Discord) is declared but empty until those turrets are registered; add each type id to `FAMILIES["aggro"]` when it lands.
+
+Utility turrets (Scrap Press, Beacon, Lullaby, Discord) deal no direct damage and have no attack family. Mark such a registry entry with `"no_attack": true` (and an empty `attack_styles`). `TurretRegistry.is_no_attack(type_id)` and `has_capability(type_id, "no_attack")` read it. Item rules that count or compare owned turrets ignore them:
+
+- Focused Arsenal (`TurretStatsService.shared_attack_families`) skips no-attack turrets, so a Beacon beside a focused build keeps the bonus. Owning only no-attack turrets shares no family, so the bonus is off.
+- Army Doctrine counts `TurretStatsService.get_attack_turret_count()`, which excludes them. `get_total_turret_count()` still counts every turret (Elite Forces uses it).
+- Crosslink Array (and Lone Sentry, which shares `ItemCombatEffects.neighbours`) never counts a no-attack turret as a neighbour, and a no-attack turret never receives the proximity bonus.
+
+Unit tests cannot add entries to the constant `TYPES`, so they use `TurretRegistry.register_test_type(id, definition)` and `clear_test_types()` (the latter also runs in `TestHelpers.reset_all_services`).
 
 ## Mechanics
 
@@ -26,9 +39,9 @@ One modifier matches any listed family and applies once. Separate percentage inc
 - Reactor Overload triggers from AoE kills, including Shock, for 40% of resolved killing damage at 60% of the source area radius. Source identity/families/radius propagate; each derived damage is scaled once. Chains stop at depth 3.
 - Resonance Link (stable ID `storm_conductor`) grants +35% damage to Instant turrets within 4 m of another Instant turret.
 - Last Stand grants +40% firing/sweep speed below 30% hull.
-- Focused Arsenal (`mono_type_mastery`) requires all owned turrets to share at least one attack family; it grants +50% damage and +25% attack speed.
+- Focused Arsenal (`mono_type_mastery`) requires all owned attacking turrets to share at least one attack family (no-attack turrets are ignored); it grants +50% damage and +25% attack speed.
 - Combined Arms (`elemental_conduit`) grants +12% damage per distinct family represented by a separate owned turret, maximum +48%. One hybrid cannot occupy two slots; two owned hybrids can represent different families.
-- Army Doctrine grants +3% attack speed per turret beyond the third, capped at +30%.
+- Army Doctrine grants +3% attack speed per attacking turret beyond the third, capped at +30%. No-attack turrets do not count.
 - Return Spring (`killzone_bat`) reduces contact rehit delay. Whirlwind Frame grants a Kinetic slow and increases sweep/reach.
 - Entrench, hull, economy and Convoy items remain support upgrades. Combined purchase-penalty reductions stop at zero.
 
@@ -56,4 +69,4 @@ Convoy greed: **Heavy Hauler** slows the core by 20% and increases kill scrap by
 
 ## Turret proximity items
 
-Both are Uncommon, single-copy items (not Unique-rarity items). Lone Sentry grants +20% damage and attack speed with zero other deployed turret centres inside the recipient's final attack range. Crosslink Array grants +5% to both per neighbour, without a neighbour cap. Carried turrets are excluded as recipients and neighbours; hero/core weapons are unaffected. Each turret evaluates its own range, including progression, range items, terrain and pulse/flame area scaling. Buff icons show the active effect and Crosslink neighbour count.
+Both are Uncommon, single-copy items (not Unique-rarity items). Lone Sentry grants +20% damage and attack speed with zero other deployed turret centres inside the recipient's final attack range. Crosslink Array grants +5% to both per neighbour, without a neighbour cap. Carried and no-attack turrets are excluded as recipients and neighbours; hero/core weapons are unaffected. Each turret evaluates its own range, including progression, range items, terrain and pulse/flame area scaling. Buff icons show the active effect and Crosslink neighbour count.

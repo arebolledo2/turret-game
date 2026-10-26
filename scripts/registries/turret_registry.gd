@@ -31,6 +31,7 @@ const FAMILIES: Dictionary = {
 	"plasma": ["plasma"],
 	"electric": ["shock", "tesla"],
 	"melee": ["melee"],
+	"aggro": [], # Decoy, Lullaby and Discord join this list when they are registered.
 }
 
 const TYPES: Dictionary = {
@@ -198,12 +199,39 @@ const TYPES: Dictionary = {
 }
 
 
+## Test-only registry entries (see `register_test_type`). `TYPES` is a constant, so tests cannot add fake turrets to it.
+static var _test_types: Dictionary = {}
+
+
+## Add a fake turret definition for a unit test. Always pair with `clear_test_types()` in teardown.
+static func register_test_type(type_id: String, definition: Dictionary) -> void:
+	_test_types[type_id] = definition
+
+
+static func clear_test_types() -> void:
+	_test_types.clear()
+
+
+## True when the registry (or a test entry) defines this turret type.
+static func has_type(type_id: String) -> bool:
+	return TYPES.has(type_id) or _test_types.has(type_id)
+
+
+## Definition for `type_id`, or an empty dictionary when it is unknown.
+static func _definition(type_id: String) -> Dictionary:
+	if _test_types.has(type_id):
+		return _test_types[type_id]
+	return TYPES.get(type_id, {})
+
+
 ## Get the definition for a turret type
 static func get_type(type_id: String) -> Dictionary:
+	if _test_types.has(type_id):
+		return _test_types[type_id]
 	return TYPES.get(type_id, TYPES["normal"])
 
 
-## Family id ("ion", "plasma", "electric", "melee") a turret type belongs to, or "" if it has none.
+## Family id ("ion", "plasma", "electric", "melee", "aggro") a turret type belongs to, or "" if it has none.
 static func get_family(type_id: String) -> String:
 	for family: String in FAMILIES:
 		if type_id in FAMILIES[family]:
@@ -243,9 +271,7 @@ static func get_all_type_ids() -> Array:
 
 ## Get base stats for a turret type
 static func get_base_stats(type_id: String) -> Dictionary:
-	if not TYPES.has(type_id):
-		return TYPES["normal"]["base_stats"].duplicate(true)
-	return TYPES[type_id]["base_stats"].duplicate(true)
+	return get_type(type_id)["base_stats"].duplicate(true)
 
 
 
@@ -261,31 +287,29 @@ static func get_base_price(type_id: String) -> int:
 
 ## Check if turret has a specific attack style
 static func has_attack_style(type_id: String, style: GameEnums.AttackStyle) -> bool:
-	if not TYPES.has(type_id):
-		return false
-	return style in TYPES[type_id].get("attack_styles", [])
+	return style in _definition(type_id).get("attack_styles", [])
 
 
 ## Check if turret has a specific damage type
 static func has_damage_type(type_id: String, dtype: GameEnums.DamageType) -> bool:
-	if not TYPES.has(type_id):
-		return false
-	return dtype in TYPES[type_id].get("damage_types", [])
+	return dtype in _definition(type_id).get("damage_types", [])
 
 
-## Get targeting strategy for a turret type
+## Targeting strategy for a turret type: "closest" (default), "farthest", "cluster", "toughest" or "backline".
+## Read from a top-level `targeting` key, falling back to `base_stats.targeting` (where Sniper and Plasma keep it today).
+## `TurretTargeting` resolves farthest, toughest and backline; `Combat3D.select_target` handles closest and cluster.
 static func get_targeting(type_id: String) -> String:
-	if not TYPES.has(type_id):
-		return "closest"
-	return TYPES[type_id].get("targeting", "closest")
+	var definition := _definition(type_id)
+	return definition.get("targeting", definition.get("base_stats", {}).get("targeting", "closest"))
 
 ## Item eligibility is independent of turret identity and elemental damage.
 static func get_attack_families(type_id: String) -> Array[String]:
 	var result: Array[String] = []
 	var styles: Array = get_type(type_id).get("attack_styles", [])
 	for pair: Array in [[GameEnums.AttackStyle.PROJECTILE, "projectile"], [GameEnums.AttackStyle.AOE, "aoe"],
-			[GameEnums.AttackStyle.INSTANT, "instant"], [GameEnums.AttackStyle.MELEE, "kinetic"]]:
-		if pair[0] in styles:
+			[GameEnums.AttackStyle.INSTANT, "instant"], [GameEnums.AttackStyle.MELEE, "kinetic"],
+			[GameEnums.AttackStyle.DEPLOYABLE, "aoe"]]: # Deployables (mines) explode in an area, so AoE items apply.
+		if pair[0] in styles and not pair[1] in result:
 			result.append(pair[1])
 	return result
 
@@ -293,8 +317,16 @@ static func has_capability(type_id: String, capability: String) -> bool:
 	var families := get_attack_families(type_id)
 	var stats := get_base_stats(type_id)
 	match capability:
+		"no_attack": return is_no_attack(type_id)
 		"direct_projectile": return "projectile" in families and not "aoe" in families
 		"chain": return has_attack_style(type_id, GameEnums.AttackStyle.CHAIN)
 		"slow": return float(stats.get("slow_intensity", 0.0)) > 0.0
 		"knockback": return float(stats.get("knockback_force", 0.0)) > 0.0
 	return false
+
+
+## Utility turrets (Scrap Press, Beacon, Lullaby, Discord) set `"no_attack": true` on their registry entry. They deal no
+## direct damage and have no attack family, so item rules that count or compare turrets (Focused Arsenal, Army Doctrine,
+## Crosslink Array) ignore them. Also reachable as `has_capability(type_id, "no_attack")`.
+static func is_no_attack(type_id: String) -> bool:
+	return bool(_definition(type_id).get("no_attack", false))

@@ -367,8 +367,12 @@ func _physics_process(delta: float) -> void:
 	target_clock -= delta
 	# Cluster scans run five times per second, not for every turret every frame.
 	if target_clock <= 0.0:
-		var radius := stats.aoe_radius_metres if TurretRegistry.targets_clusters(turret_type) else 0.0
-		target = world.combat.select_target(position, range_metres, world.enemies, radius, world.crowd)
+		var mode := TurretRegistry.get_targeting(turret_type)
+		if TurretTargeting.handles(mode):
+			target = TurretTargeting.select(mode, position, range_metres, world.enemies)
+		else:
+			var radius := stats.aoe_radius_metres if TurretRegistry.targets_clusters(turret_type) else 0.0
+			target = world.combat.select_target(position, range_metres, world.enemies, radius, world.crowd)
 		target_clock = .2
 	_tick_mechanisms(delta, is_instance_valid(target) and not target.dead and target.overlaps_attack_range(position, range_metres))
 	if not is_instance_valid(target) or target.dead or not target.overlaps_attack_range(position, range_metres):
