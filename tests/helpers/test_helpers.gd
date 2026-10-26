@@ -132,6 +132,21 @@ static func reset_flags() -> void:
 	FeatureFlagService.reset_state()
 	FeatureFlagService.set_enabled(FeatureFlagService.TERRAIN_ZONES, false)
 
+## Turret crits (5% by default) roll on the shared gameplay RNG, which every test reseeds, so an exact-damage assertion
+## only passes while no earlier RNG consumer shifts the sequence. Tests that assert exact turret damage call this after
+## `start_run` (a new run clears modifiers) so the number cannot depend on the seed.
+const NO_CRITS_ID: String = "test_no_turret_crits"
+const ALWAYS_CRITS_ID: String = "test_always_turret_crits"
+
+static func disable_crits() -> void:
+	ModifierService.remove_modifier(ALWAYS_CRITS_ID)
+	ModifierService.add_modifier({"id": NO_CRITS_ID, "stat": "turret_crit_chance", "operation": "more", "value": 0.0})
+
+## Every turret roll crits: for tests that assert how a crit is applied rather than whether one happens.
+static func force_crits() -> void:
+	ModifierService.remove_modifier(NO_CRITS_ID)
+	ModifierService.add_modifier({"id": ALWAYS_CRITS_ID, "stat": "turret_crit_chance", "operation": "add", "value": 1.0})
+
 ## Reset all service states for clean testing
 ## Call this in before_each() to ensure test isolation
 static func reset_all_services() -> void:

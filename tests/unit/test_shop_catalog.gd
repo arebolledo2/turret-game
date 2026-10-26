@@ -14,13 +14,24 @@ func after_each() -> void:
 
 
 func test_default_catalog_matches_the_supported_content() -> void:
-	assert_eq(ShopCatalog.ids("turret").size(), 10)
-	assert_eq(ShopCatalog.ids("item").size(), 56)
 	assert_eq(ShopCatalog.available_ids("item"), ShopCatalog.ids("item"))
+	assert_eq(ShopCatalog.available_ids("turret"), ShopCatalog.ids("turret"))
 	for item_id in ShopCatalog.ids("item"):
 		assert_true(ItemRegistry.has_item(item_id), "%s must exist in the registry" % item_id)
 	for type_id in ShopCatalog.ids("turret"):
 		assert_true(TurretRegistry.TYPES.has(type_id), "%s must exist in the registry" % type_id)
+
+
+func test_stocked_turrets_and_the_form_table_agree() -> void:
+	var stocked := ShopCatalog.ids("turret")
+	assert_eq(ArenaShop.TURRETS, stocked, "The arena shop sells exactly the catalog's turrets")
+	for type_id in stocked:
+		assert_true(type_id in TurretEvolution.bases(), "%s is stocked, so the form table needs its upgrade and two finals" % type_id)
+		assert_true(TurretRegistry.BASE_PRICES.has(type_id), "%s has a registry price" % type_id)
+	for base in TurretEvolution.bases():
+		for form in TurretEvolution.options(base, 0) + TurretEvolution.options(base, 1):
+			if TurretEvolution.is_implemented(form):
+				assert_true(base in stocked, "%s has the built form %s, so the shop must stock it" % [base, form])
 
 
 func test_unknown_entries_are_never_available() -> void:

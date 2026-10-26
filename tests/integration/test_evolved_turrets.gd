@@ -1,20 +1,11 @@
 extends GutTest
 
+var rig: TurretTestRig
 var world: ArenaWorld
 
 func before_each() -> void:
-	TestHelpers.reset_all_services()
-	world = ArenaWorld.new()
-	world.auto_start = false
-	world.show_hud = false
-	add_child_autofree(world)
-	world.start_run()
-	world.set_physics_process(false)
-	world.player.set_physics_process(false)
-	world.session.state.turret_progression_enabled = true
-	for turret in world.turrets:
-		turret.set_physics_process(false)
-	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
+	rig = TurretTestRig.start(self)
+	world = rig.world
 
 ## Level 15 worth of XP: both evolution milestones are pending.
 func _award_both_milestones(turret: TurretActor) -> void:
@@ -66,20 +57,26 @@ func test_final_choice_offers_both_forms_and_keeps_only_one() -> void:
 	assert_false(turret.evolve("cyclone_gatling"))
 
 func test_unbuilt_forms_stay_gated_off_while_the_milestone_is_retained() -> void:
-	var tesla := world.add_turret(Vector3(6, 0, 0), "tesla")
-	tesla.set_physics_process(false)
-	_award_both_milestones(tesla)
-	assert_eq(tesla.progression.evolution_options("tesla"), ["forked_coil"], "Registered")
-	assert_true(tesla.available_evolutions().is_empty(), "Not implemented: no evolve button")
-	assert_false(tesla.evolve("forked_coil"))
-	assert_eq(tesla.progression.pending_evolutions, [5, 10], "Milestones are retained")
-	var plasma := world.add_turret(Vector3(-6, 0, 0), "plasma")
-	plasma.set_physics_process(false)
-	_award_both_milestones(plasma)
-	assert_true(plasma.evolve("siege"))
-	assert_eq(plasma.progression.evolution_options("plasma"), ["worldbreaker", "constellation"])
-	assert_eq(plasma.available_evolutions(), ["worldbreaker"], "Constellation waits until it is built")
-	assert_false(plasma.evolve("constellation"))
+	var gated := 0
+	for form in TurretEvolution.form_ids():
+		if TurretEvolution.is_implemented(form):
+			continue
+		var base: String = TurretEvolution.row(form)["base"]
+		var turret := rig.turret(base)
+		_award_both_milestones(turret)
+		var upgrade := TurretEvolution.options(base, 0)[0]
+		if form != upgrade:
+			# A final can only be reached through a built upgrade.
+			if not TurretEvolution.is_implemented(upgrade):
+				continue
+			assert_true(turret.evolve(upgrade), "%s takes its built upgrade" % base)
+		gated += 1
+		assert_has(turret.progression.evolution_options(base), form, "%s is registered and offered by the progression" % form)
+		assert_does_not_have(turret.available_evolutions(), form, "%s is not built: no evolve button" % form)
+		assert_false(turret.evolve(form), "%s cannot be taken until it is built" % form)
+		assert_false(turret.progression.pending_evolutions.is_empty(), "The milestone is retained")
+	if gated == 0:
+		pass_test("Every reachable form is built")
 
 func test_saber_reaches_and_hits_beyond_base_bat_radius() -> void:
 	var turret := world.add_turret(Vector3.ZERO, "melee")
@@ -407,7 +404,7 @@ func test_omnifire_covers_all_twelve_unique_radial_directions() -> void:
 		assert_almost_eq(gap, TAU / 12.0, .001)
 
 func test_orbit_saber_has_three_visible_arms_and_three_sweep_directions() -> void:
-	ModifierService.add_modifier({"id": "no_crit_overlap_test", "stat": "turret_crit_chance", "operation": "more", "value": 0.0})
+	TestHelpers.disable_crits()
 	var turret := world.add_turret(Vector3.ZERO, "melee")
 	turret.set_physics_process(false)
 	_award_both_milestones(turret)
@@ -441,7 +438,7 @@ func test_orbit_saber_has_three_visible_arms_and_three_sweep_directions() -> voi
 	assert_eq(overlapping.health, health)
 
 func test_worldbreaker_expands_shell_blast_and_knockback_over_the_siege_upgrade() -> void:
-	ModifierService.add_modifier({"id": "no_crit_siege_test", "stat": "turret_crit_chance", "operation": "more", "value": 0.0})
+	TestHelpers.disable_crits()
 	var turret := world.add_turret(Vector3.ZERO, "plasma")
 	turret.set_physics_process(false)
 	_award_both_milestones(turret)

@@ -217,6 +217,7 @@ func test_full_arena_rejects_purchase_without_spending_or_selling_offer() -> voi
 	assert_false(EconomyService.current_shop_offers[index].sold)
 
 func test_shock_pulse_hits_each_in_range_enemy_and_applies_slow_without_projectiles() -> void:
+	TestHelpers.disable_crits()
 	var shock := world.add_turret(Vector3.ZERO, "shock")
 	shock.set_physics_process(false)
 	var near := enemy(Vector3(1, 0, 0))
@@ -252,6 +253,7 @@ func test_slow_changes_chaser_and_dash_velocity_without_retargeting() -> void:
 			assert_eq(actor.charge.phase, ChargeController3D.Phase.DASH)
 
 func test_pause_carry_death_and_wave_end_clear_or_freeze_status_correctly() -> void:
+	TestHelpers.disable_crits()
 	var actor := enemy(Vector3.ZERO)
 	world.combat.apply_hit(actor, slow_hit())
 	world.toggle_pause()

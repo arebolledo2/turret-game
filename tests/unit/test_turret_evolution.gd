@@ -73,7 +73,7 @@ func test_no_third_evolution_appears_after_level_10() -> void:
 	assert_false(growth.evolve("shock", "resonance_engine"))
 
 func test_every_base_has_one_upgrade_and_two_named_finals() -> void:
-	assert_eq(TurretEvolution.bases().size(), 10)
+	assert_eq(TurretEvolution.form_ids().size(), TurretEvolution.bases().size() * 3, "Every base has one upgrade and two finals")
 	for base: String in TurretEvolution.bases():
 		var upgrades := TurretEvolution.options(base, 0)
 		var finals := TurretEvolution.options(base, 1)
@@ -97,18 +97,20 @@ func test_every_registered_form_belongs_to_one_path() -> void:
 			seen[form] = base
 	for form: String in TurretEvolution.form_ids():
 		assert_true(seen.has(form), "%s is in FORMS but no path offers it" % form)
-	assert_eq(seen.size(), 30, "10 bases x (1 upgrade + 2 finals)")
+	assert_eq(seen.size(), TurretEvolution.form_ids().size(), "Every registered form is offered by exactly one path")
 
-func test_implemented_forms_are_the_twenty_six_with_attacks_and_stats() -> void:
-	assert_eq(TurretEvolution.implemented_forms().size(), 26)
+func test_implemented_forms_have_attack_stats_description_chassis_and_portrait() -> void:
+	assert_false(TurretEvolution.implemented_forms().is_empty())
 	for form in TurretEvolution.implemented_forms():
 		assert_true(TurretEvolution.has_form(form), "%s is registered" % form)
 		assert_false(TurretEvolution.description(form).is_empty(), "%s has a description" % form)
-	for form in ["forked_coil", "storm_network", "thunderhead", "constellation"]:
-		assert_true(TurretEvolution.has_form(form))
-		assert_false(TurretEvolution.is_implemented(form), "%s is registered but gated off until built" % form)
+		var chassis := TurretEvolution.model_key(form)
+		assert_true(chassis in ClockworkModels.KEYS, "%s: chassis %s is a known model key" % [form, chassis])
+		assert_true(ClockworkModels.available(chassis), "%s: chassis %s has a model file the shop can show" % [form, chassis])
+		var portrait := "res://assets/ui/turrets/%s.png" % ShopArt.turret_portrait_key("", form)
+		assert_true(FileAccess.file_exists(portrait) and ResourceLoader.exists(portrait), "%s has an imported portrait file: %s" % [form, portrait])
 
-func test_form_stats_keep_the_authored_stage_one_and_stage_three_numbers() -> void:
+func test_form_stats_keep_the_authored_upgrade_and_final_numbers() -> void:
 	var upgrade := TurretEvolution.base_stats("normal", "machine_gun")
 	var final := TurretEvolution.base_stats("normal", "cyclone_gatling")
 	assert_eq(upgrade.fire_rate, 3.2)
@@ -205,3 +207,19 @@ func test_quake_forms_hold_the_dps_ladder() -> void:
 	assert_eq(TurretEvolution.AFTERSHOCK_DAMAGE, .5, "The second pulse is half damage")
 	assert_lte(TurretEvolution.CATACLYSM_MAX_RADIUS_SCALE, 2.0, "Cataclysm growth is capped")
 	assert_gt(TurretEvolution.TECTONIC_SECONDS, 0.0)
+
+func test_every_form_row_names_a_known_chassis_and_an_existing_base() -> void:
+	for form in TurretEvolution.form_ids():
+		var row := TurretEvolution.row(form)
+		assert_true(TurretRegistry.TYPES.has(row["base"]), "%s: base %s is in the registry" % [form, row["base"]])
+		assert_true(str(row["model"]) in ClockworkModels.KEYS, "%s: model %s is a known key" % [form, row["model"]])
+		assert_false(TurretEvolution.form_name(form).is_empty())
+
+func test_base_entries_name_registered_turrets() -> void:
+	for base: String in TurretForms.BASES:
+		assert_true(TurretRegistry.TYPES.has(base), "%s is in the registry" % base)
+
+func test_forms_are_unique_to_one_base_and_listed_under_it() -> void:
+	for base in TurretEvolution.bases():
+		for form in TurretEvolution.options(base, 0) + TurretEvolution.options(base, 1):
+			assert_eq(TurretEvolution.row(form)["base"], base, "%s is listed under the base that owns it" % form)

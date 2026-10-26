@@ -5,53 +5,30 @@ extends GutTest
 
 const GATE := "test_sniper_gate"
 
+var rig: TurretTestRig
 var world: ArenaWorld
 
 func before_each() -> void:
-	TestHelpers.reset_all_services()
-	world = ArenaWorld.new()
-	world.auto_start = false
-	world.show_hud = false
-	add_child_autofree(world)
-	world.start_run()
-	world.set_physics_process(false)
-	world.player.set_physics_process(false)
-	world.session.state.turret_progression_enabled = true
-	for turret in world.turrets:
-		turret.set_physics_process(false)
-	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
+	rig = TurretTestRig.start(self)
+	rig.disable_crits()
+	world = rig.world
 
 func after_each() -> void:
 	ShopCatalog.reset()
 	TestHelpers.reset_flags()
 
 func _sniper(form_path: Array[String] = []) -> TurretActor:
-	var turret := world.add_turret(Vector3(30, 0, 30), "sniper")
-	turret.set_physics_process(false)
-	turret.position = Vector3.ZERO
-	if form_path.is_empty():
-		return turret
-	turret.progression.award(389 if form_path.size() > 1 else 110)
-	for form in form_path:
-		assert_true(turret.evolve(form), "%s evolves" % form)
-	return turret
+	return rig.turret("sniper", form_path)
 
-## An inert enemy (no AI, no ticking) with a fixed health.
 func _enemy(at: Vector3, health: float = 100.0, type_id: String = "basic") -> CombatActor:
-	var result := world.spawn_enemy(at, type_id)
-	result.set_physics_process(false)
-	result.health = health
-	result.max_health = health
-	return result
+	return rig.enemy(at, health, type_id)
 
 func _combat() -> void:
-	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
-	world.crowd.rebuild(world.enemies)
+	rig.combat()
 
 ## One physics step of the real turret loop (targeting, cooldown, firing).
 func _step(turret: TurretActor) -> void:
-	world.crowd.rebuild(world.enemies)
-	turret._physics_process(.016)
+	rig.step(turret, .016)
 
 func _lost(enemy: CombatActor, start: float = 100.0) -> float:
 	return start - enemy.health
@@ -113,8 +90,8 @@ func test_shop_view_data_and_dev_tools_know_the_sniper() -> void:
 	assert_false(row.is_empty())
 	assert_eq(row.name, "Sniper")
 	assert_gt(float(data.dps), 0.0)
-	assert_not_null(ShopArt.turret("sniper"))
 	assert_true(ResourceLoader.exists("res://assets/ui/turrets/sniper.png"))
+	assert_same(ShopArt.turret("sniper"), load("res://assets/ui/turrets/sniper.png"), "The shop shows the portrait file, not the icon fallback")
 
 # --- Evolution gating, model and hardware ---
 

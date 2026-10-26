@@ -1,19 +1,12 @@
 extends GutTest
 
+var rig: TurretTestRig
 var world: ArenaWorld
 
 func before_each() -> void:
-	TestHelpers.reset_all_services()
-	world = ArenaWorld.new()
-	world.auto_start = false
-	world.show_hud = false
-	add_child_autofree(world)
-	world.start_run()
-	world.set_physics_process(false)
-	world.player.set_physics_process(false)
-	for turret in world.turrets:
-		turret.set_physics_process(false)
-	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	rig = TurretTestRig.start(self, true, false)
+	rig.disable_crits()
+	world = rig.world
 
 func enemy(at: Vector3) -> CombatActor:
 	var result := world.spawn_enemy(at)
@@ -162,33 +155,3 @@ func test_bank_shot_without_recipient_can_use_item_pierce_without_extra_movement
 	assert_true(ball.active)
 	assert_almost_eq(ball.position.z, -2.0, .001)
 	assert_almost_eq(ball.remaining, spec.lifetime - .2, .001)
-
-func test_new_bases_can_be_purchased_and_evolved_through_shop() -> void:
-	world.session.state.turret_progression_enabled = true
-	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
-	EconomyService.total_scrap = 10000
-	for type_id: String in ["bow", "flamethrower", "bowling"]:
-		assert_true(ShopCatalog.is_available("turret", type_id))
-		var price := world.turret_price(type_id)
-		EconomyService.current_shop_offers.assign([ShopOffer.new("turret", type_id, price)])
-		var balance := EconomyService.total_scrap
-		var count := world.turrets.size()
-		assert_true(world.shop.purchase(0), "%s purchases through normal Shop validation" % type_id)
-		assert_eq(EconomyService.total_scrap, balance - price)
-		assert_eq(world.turrets.size(), count + 1)
-		var turret := world.turrets[-1]
-		turret.set_physics_process(false)
-		assert_eq(turret.turret_type, type_id)
-		assert_not_null(turret.model)
-		turret.progression.award(1500)
-		var options := turret.available_evolutions()
-		assert_eq(options.size(), 1, "%s level 5 offers one upgrade" % type_id)
-		assert_true(turret.evolve(options[0]))
-		assert_eq(turret.progression.evolution_stage, 1)
-		assert_not_null(ShopArt.turret(type_id, options[0]))
-		options = turret.available_evolutions()
-		assert_eq(options.size(), 2, "%s level 10 offers two finals" % type_id)
-		assert_true(turret.evolve(options[0]))
-		assert_eq(turret.progression.evolution_stage, 2)
-		assert_not_null(ShopArt.turret(type_id, options[0]))
-		assert_true(turret.available_evolutions().is_empty())

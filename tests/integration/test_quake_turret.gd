@@ -6,21 +6,13 @@ extends GutTest
 const GATE := "test_quake_gate"
 const STEP := 1.0 / 60.0
 
+var rig: TurretTestRig
 var world: ArenaWorld
 
 func before_each() -> void:
-	TestHelpers.reset_all_services()
-	world = ArenaWorld.new()
-	world.auto_start = false
-	world.show_hud = false
-	add_child_autofree(world)
-	world.start_run()
-	world.set_physics_process(false)
-	world.player.set_physics_process(false)
-	world.session.state.turret_progression_enabled = true
-	for turret in world.turrets:
-		turret.set_physics_process(false)
-	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
+	rig = TurretTestRig.start(self)
+	rig.disable_crits()
+	world = rig.world
 
 func after_each() -> void:
 	ShopCatalog.reset()
@@ -28,36 +20,20 @@ func after_each() -> void:
 	Input.action_release("move_right")
 
 func _quake(form_path: Array[String] = []) -> TurretActor:
-	var turret := world.add_turret(Vector3(30, 0, 30), "quake")
-	turret.set_physics_process(false)
-	turret.position = Vector3.ZERO
-	if form_path.is_empty():
-		return turret
-	turret.progression.award(389 if form_path.size() > 1 else 110)
-	for form in form_path:
-		assert_true(turret.evolve(form), "%s evolves" % form)
-	return turret
+	return rig.turret("quake", form_path)
 
-## An inert enemy (no AI, no ticking) with a fixed health.
 func _enemy(at: Vector3, health: float = 1000.0, type_id: String = "basic") -> CombatActor:
-	var result := world.spawn_enemy(at, type_id)
-	result.set_physics_process(false)
-	result.health = health
-	result.max_health = health
-	return result
+	return rig.enemy(at, health, type_id)
 
 func _combat() -> void:
-	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
-	world.crowd.rebuild(world.enemies)
+	rig.combat()
 
 ## One physics step of the real turret loop.
 func _step(turret: TurretActor, delta: float = STEP) -> void:
-	world.crowd.rebuild(world.enemies)
-	turret._physics_process(delta)
+	rig.step(turret, delta)
 
 func _run(turret: TurretActor, seconds: float) -> void:
-	for step in roundi(seconds / STEP):
-		_step(turret)
+	rig.run(turret, seconds, STEP)
 
 func _lost(enemy: CombatActor, start: float = 1000.0) -> float:
 	return start - enemy.health
@@ -134,7 +110,7 @@ func test_shop_view_data_dev_tools_and_art_know_the_quake() -> void:
 	assert_false(row.is_empty())
 	assert_eq(row.name, "Quake")
 	assert_gt(float(data.dps), 0.0)
-	assert_not_null(ShopArt.turret("quake"))
+	assert_same(ShopArt.turret("quake"), load("res://assets/ui/turrets/quake.png"), "The shop shows the portrait file, not the icon fallback")
 	for form in ["quake", "aftershock", "tectonic", "cataclysm"]:
 		assert_true(ResourceLoader.exists("res://assets/ui/turrets/%s.png" % form), form)
 	assert_not_null(UiIcons.turret("quake"))
@@ -313,11 +289,13 @@ func test_the_ring_shoves_enemies_away_from_the_turret_and_staggers_them() -> vo
 	assert_lte(east.statuses.staggered_remaining, .4)
 
 func test_a_critical_pulse_crits_the_whole_ring_once() -> void:
+	TestHelpers.force_crits()
 	var turret := _quake()
 	_combat()
 	var a := _enemy(Vector3(0, 0, -1.0))
 	var b := _enemy(Vector3(1.0, 0, 0))
 	_run(turret, .9)
+	assert_gt(_lost(a), turret._current_view(0).damage, "The pulse crit")
 	assert_almost_eq(_lost(a), _lost(b), .001, "One roll per pulse, shared by every enemy it reaches")
 
 func test_nothing_fires_after_combat_stops_a_pause_or_the_wave_end() -> void:

@@ -48,6 +48,7 @@ func test_melee_visual_tip_tracks_modified_reach_without_changing_height() -> vo
 		assert_almost_eq(bat.muzzle.global_position.y, height, .001)
 
 func test_melee_bat_hits_enemy_in_swept_arc_with_outward_knockback() -> void:
+	TestHelpers.disable_crits()
 	var bat := turret("melee")
 	var target := enemy(Vector3(0, 0, -1.0))
 	tick(bat)
