@@ -35,8 +35,8 @@ func test_stacks_raise_damage_and_fire_rate() -> void:
 	var turret := await _turret()
 	var base := TurretStatsService.get_turret_stats("normal", float(world.difficulty_config["turret_damage_mult"]))
 	turret.entrench_stacks_cached = 3
-	turret.cached_stats = {}
-	var stats := turret._current_stats(0.0)
+	turret.invalidate_stats()
+	var stats := turret._current_view(0.0).values
 	assert_almost_eq(float(stats["damage"]), float(base["damage"]) * (1.0 + 3.0 * GameConstants.ENTRENCH_DAMAGE_PER_STACK), .001)
 	assert_almost_eq(float(stats["fire_rate"]), float(base["fire_rate"]) * (1.0 + 3.0 * GameConstants.ENTRENCH_FIRE_RATE_PER_STACK), .001)
 

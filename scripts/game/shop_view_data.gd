@@ -124,7 +124,7 @@ static func _actor_numbers(actor: TurretActor, secondary: bool = false) -> Dicti
 
 ## Single-target estimate; splash, chains, penetration and ricochets depend on enemy arrangement.
 static func _actor_dps(actor: TurretActor) -> float:
-	var stats := TurretStats.new(actor.resolve_attack_stats())
+	var stats := actor.resolve_attack_view()
 	var rate := stats.fire_rate
 	var form_id := actor.progression.evolution_form
 	if actor.turret_type == "melee":
@@ -145,7 +145,7 @@ static func _actor_dps(actor: TurretActor) -> float:
 	if actor.turret_type == "flamethrower":
 		result += stats.damage * float(stats.values.get("burn_ratio", 1.6)) * minf(1.0, rate * float(stats.values.get("burn_duration", 2.0)))
 	if form_id == "stormblade":
-		var gun := TurretStats.new(actor.resolve_attack_stats(true))
+		var gun := actor.resolve_attack_view(true)
 		var shots := TurretEvolution.barrel_burst(form_id)
 		result += gun.damage * float(shots) / (gun.cooldown_seconds + .065 * (shots - 1))
 	return result

@@ -96,7 +96,7 @@ A deployed turret earns one **Entrench** stack for every `ENTRENCH_STACK_SECONDS
 
 While carrying, a **placement preview** dial shows where the turret will land (teal solid arcs when clear, dashed red when blocked). Placement, range, core, route, terrain and optional actor markers share the flat, antialiased GroundDial style with build zones and entrenchment. Enemy and boss attack warnings (charge lanes, aim lines, blast circles, cone sweeps and pulses, beam lanes) use the shared `Telegraph` fill gauge (`scripts/game/telegraph.gd`, `assets/shaders/telegraph.gdshader`): a soft outline marks the exact hit footprint and the fill advances over the wind-up, landing when it reaches the edge. Colour follows the attack type (orange charge, amber shot, red blast, ember sweep); `tools/preview_telegraphs.tscn` captures every shape. Tech-drop warnings fill toward arrival without changing their footprint; combat pulses keep their existing radius and duration.
 
-Both are always on. Stacks are applied on top of the cached modifier stats in `TurretActor._current_stats`, so shop modifiers still multiply as before.
+Both are always on. Stacks are applied on top of the cached modifier stats in `TurretActor._current_view`, so shop modifiers still multiply as before.
 
 ## Protect the Core, tech drops and difficulty (Phase 5)
 
@@ -129,7 +129,7 @@ Flag `terrain_zones` (experiment). Each run gets one random layout (`ArenaLayout
 
 | Zone | Effect | Where it is applied |
 |---|---|---|
-| High ground | Turrets on it get +25% range (`ZONE_HIGH_GROUND_RANGE_BONUS`) | `TurretActor._current_stats`, refreshed with the cached stats |
+| High ground | Turrets on it get +25% range (`ZONE_HIGH_GROUND_RANGE_BONUS`) | `TurretActor._current_view`, refreshed with the cached stats |
 | Mud | Enemies **and the hero** move 45% slower, never more than 90% (`ZONE_MUD_SLOW`, `ZONE_MUD_MAX_SLOW`); stacks with shock slows within the cap | `CombatActor._physics_process` |
 | No-build | Turrets cannot be placed there (the preview ring goes red) | `TurretPlacement.valid_placement` |
 | Power node | Entrench stacks arrive 50% faster (`ZONE_POWER_NODE_ENTRENCH_BONUS`) | `TurretActor._stack_seconds` |

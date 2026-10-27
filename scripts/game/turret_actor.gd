@@ -9,7 +9,7 @@ var turret_id: int = 0
 var carried: bool = false:
 	set(value):
 		carried = value
-		cached_stats = {}
+		stats_valid = false
 		target_clock = 0.0
 		if value:
 			reset_entrench()
@@ -43,11 +43,11 @@ var swing_targets: Dictionary = {}
 var bat_authored_reach: float = 1.0
 var aim_authored_scale := Vector3.ONE
 var rehit_lockouts: Dictionary = {}
-## Modifier math is costly and static between purchases, so stats are rebuilt on change or every STATS_REFRESH seconds.
-var cached_stats: Dictionary = {}
-var stats_age: float = 0.0
-## Typed reads of `cached_stats`; rebuilt together with it.
+## Modifier math is costly and static between purchases, so the resolved stats are rebuilt after `invalidate_stats()`
+## or every STATS_REFRESH seconds. `stats_view` is the only cached form; the name-addressed dictionary lives inside it.
 var stats_view := TurretStats.new()
+var stats_valid: bool = false
+var stats_age: float = 0.0
 ## Entrench stacks, the terrain underfoot and the range ring are owned by small helpers; the forwarding
 ## properties below keep the common reads short.
 var entrench: TurretEntrench
@@ -230,7 +230,7 @@ static func sweep_overlaps_body(offset: Vector3, reach: float, start: float, swe
 	return false
 
 func invalidate_stats() -> void:
-	cached_stats = {}
+	stats_valid = false
 	entrench.invalidate()
 
 func entrench_max() -> int:
@@ -280,19 +280,19 @@ func _has_instant_neighbour() -> bool:
 
 ## Typed view of the current stats (refreshing them when stale).
 func _current_view(delta: float) -> TurretStats:
-	_current_stats(delta)
-	return stats_view
-
-func _current_stats(delta: float) -> Dictionary:
 	stats_age += delta
-	if cached_stats.is_empty() or stats_age >= STATS_REFRESH:
+	if not stats_valid or stats_age >= STATS_REFRESH:
 		terrain.refresh()
-		cached_stats = resolve_attack_stats()
+		stats_view = resolve_attack_view()
+		stats_valid = true
 		if form:
 			form.refresh_stats()
 		stats_age = 0.0
-		stats_view = TurretStats.new(cached_stats)
-	return cached_stats
+	return stats_view
+
+## Typed `resolve_attack_stats`, for readers that do not need the modifier dictionary.
+func resolve_attack_view(secondary: bool = false, form_id: String = "") -> TurretStats:
+	return TurretStats.new(resolve_attack_stats(secondary, form_id))
 
 ## Fresh, side-effect-free resolution also supports shop previews without polluting combat caches.
 ## `form_id` previews a form the turret has not taken; empty resolves the current one.

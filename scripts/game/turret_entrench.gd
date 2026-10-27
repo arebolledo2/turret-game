@@ -46,7 +46,7 @@ func reset() -> void:
 	stay_time = 0.0
 	turret.terrain.refresh()
 	stacks = 0
-	turret.cached_stats = {}
+	turret.stats_valid = false
 	update_ring()
 
 ## Fraction (0..1) toward the next stack; 1 when maxed.
@@ -64,7 +64,7 @@ func tick(delta: float) -> void:
 		if earned > stacks:
 			notice = .65
 		stacks = earned
-		turret.cached_stats = {}
+		turret.stats_valid = false
 	update_ring()
 
 func update_ring() -> void:

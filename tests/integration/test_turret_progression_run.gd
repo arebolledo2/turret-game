@@ -187,11 +187,11 @@ func test_level_damage_is_individual_and_combines_with_items_once() -> void:
 	var rookie := world.add_turret(Vector3(8, 0, 0))
 	rookie.set_physics_process(false)
 	world.shop.apply_item("dense_rounds")
-	var base_damage: float = veteran._current_stats(1.0).damage
+	var base_damage: float = veteran._current_view(1.0).damage
 	_scrap(0)
 	veteran.progression.award(110)
-	assert_almost_eq(float(veteran._current_stats(1.0).damage), base_damage * 1.10, .0001)
-	assert_almost_eq(float(rookie._current_stats(1.0).damage), base_damage, .0001)
+	assert_almost_eq(float(veteran._current_view(1.0).damage), base_damage * 1.10, .0001)
+	assert_almost_eq(float(rookie._current_view(1.0).damage), base_damage, .0001)
 	assert_true(world.dev_panel.progression_text().contains("Lv 5"))
 	assert_true(world.dev_panel.progression_text().contains("pending [5]"))
 

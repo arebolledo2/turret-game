@@ -294,8 +294,7 @@ func _refresh() -> void:
 	GroundDial.update(cursor_dial, 1.0 if has_selection else .0, not valid)
 	range_dial.visible = active and has_selection
 	if has_selection:
-		var stats := selected.resolve_attack_stats()
-		var reach := float(stats.get("range", 0)) * WorldGeometry.METRES_PER_PIXEL
+		var reach := selected.resolve_attack_view().range_metres
 		GroundDial.resize(range_dial, reach)
 		range_dial.position = selected.position + Vector3(0, .04, 0)
 		GroundDial.update(range_dial, 1.0, false, 16)

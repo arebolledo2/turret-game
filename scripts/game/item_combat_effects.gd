@@ -160,7 +160,7 @@ func visible_buffs(source: int) -> Array[Dictionary]:
 		if turret.turret_id != source:
 			continue
 		if not turret.carried and not TurretRegistry.is_no_attack(turret.turret_type) and (owns("lone_sentry") or owns("crosslink_array")):
-			var reach := turret.effective_range(TurretStats.new(turret.resolve_attack_stats()))
+			var reach := turret.effective_range(turret.resolve_attack_view())
 			var count := neighbours(turret, reach)
 			var bonus := proximity_bonus(turret, reach)
 			if bonus > 0.0:

@@ -119,8 +119,8 @@ func test_high_ground_extends_turret_range() -> void:
 	var flat := world.add_turret(Vector3(5, 0, 0), "normal")
 	var raised := world.add_turret(WorldGeometry.from_reference(Vector3(-14, 0, -8)), "normal")
 	await wait_physics_frames(2)
-	var flat_range := float(flat._current_stats(.0)["range"])
-	var raised_range := float(raised._current_stats(.0)["range"])
+	var flat_range := flat._current_view(.0).range_metres
+	var raised_range := raised._current_view(.0).range_metres
 	assert_almost_eq(raised_range, flat_range * (1.0 + GameConstants.ZONE_HIGH_GROUND_RANGE_BONUS), .01)
 
 func test_power_node_speeds_up_entrench() -> void:
@@ -129,7 +129,7 @@ func test_power_node_speeds_up_entrench() -> void:
 	var plain := world.add_turret(Vector3(5, 0, 0), "normal")
 	var node := world.add_turret(WorldGeometry.from_reference(Vector3(18, 0, -10)), "normal")
 	await wait_physics_frames(2)
-	node._current_stats(.0)
+	node._current_view(.0)
 	var stay := seconds / (1.0 + GameConstants.ZONE_POWER_NODE_ENTRENCH_BONUS) + .01
 	plain.stay_time = stay
 	node.stay_time = stay

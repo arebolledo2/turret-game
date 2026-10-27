@@ -37,7 +37,7 @@ func test_rings_are_hidden_until_toggled() -> void:
 	await wait_physics_frames(2)
 	assert_true(world.show_ranges)
 	assert_true(turret.range_ring.visible)
-	var expected := float(turret._current_stats(0.0)["range"]) * WorldGeometry.METRES_PER_PIXEL
+	var expected := turret._current_view(0.0).range_metres
 	assert_almost_eq(turret.range_ring_metres, expected, .001)
 	_press_toggle()
 	await wait_physics_frames(2)

@@ -62,21 +62,21 @@ func test_last_stand_needs_low_hull() -> void:
 	var base := float(TurretStatsService.get_turret_stats("normal", 1.0)["fire_rate"])
 	world.player.health = world.player.max_health
 	turret.invalidate_stats()
-	assert_almost_eq(float(turret._current_stats(0.0)["fire_rate"]), base, .001)
+	assert_almost_eq(turret._current_view(0.0).fire_rate, base, .001)
 	world.player.health = world.player.max_health * .2
 	turret.invalidate_stats()
-	assert_almost_eq(float(turret._current_stats(0.0)["fire_rate"]), base * 1.4, .001)
+	assert_almost_eq(turret._current_view(0.0).fire_rate, base * 1.4, .001)
 
 func test_storm_conductor_links_nearby_electric_turrets() -> void:
 	own("storm_conductor")
 	var shock := world.add_turret(Vector3(5, 0, 5), "shock")
 	var base := float(TurretStatsService.get_turret_stats("shock", 1.0)["damage"])
-	assert_almost_eq(float(shock._current_stats(0.0)["damage"]), base, .001, "alone")
+	assert_almost_eq(shock._current_view(0.0).damage, base, .001, "alone")
 	var tesla := world.add_turret(Vector3(7, 0, 5), "tesla")
 	shock.invalidate_stats()
-	assert_almost_eq(float(shock._current_stats(0.0)["damage"]), base * 1.35, .001)
+	assert_almost_eq(shock._current_view(0.0).damage, base * 1.35, .001)
 	var far := world.add_turret(Vector3(-8, 0, -5), "shock")
-	assert_almost_eq(float(far._current_stats(0.0)["damage"]), base, .001, "out of range")
+	assert_almost_eq(far._current_view(0.0).damage, base, .001, "out of range")
 	assert_not_null(tesla)
 
 func test_economy_multipliers_reach_the_world() -> void:
@@ -90,6 +90,6 @@ func test_economy_multipliers_reach_the_world() -> void:
 func test_killzone_bat_hits_sooner_and_whirlwind_slows() -> void:
 	own("whirlwind_frame")
 	var bat := world.add_turret(Vector3(4, 0, 4), "melee")
-	var stats := bat._current_stats(0.0)
+	var stats := bat._current_view(0.0).values
 	assert_almost_eq(float(stats["slow_intensity"]), .25, .001)
 	assert_almost_eq(float(stats["rotation_rate"]), 720.0, .001)

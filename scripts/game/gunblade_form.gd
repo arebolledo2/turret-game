@@ -13,7 +13,7 @@ func rebuilt() -> void:
 	burst.cancel()
 
 func refresh_stats() -> void:
-	gun_stats = TurretStats.new(actor.resolve_attack_stats(true))
+	gun_stats = actor.resolve_attack_view(true)
 
 func tick_sweep(delta: float) -> void:
 	tick_burst(delta)

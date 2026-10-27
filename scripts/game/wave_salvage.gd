@@ -70,7 +70,7 @@ func settle(wave: int) -> bool:
 		var amount := int(awards.get(turret.turret_id, 0))
 		if amount > 0:
 			ledger["changes"][turret.turret_id] = turret.progression.award(amount)
-			turret.cached_stats.clear()
+			turret.invalidate_stats()
 			ledger["xp_awarded"] += amount
 	if recipients.is_empty() and raw_scrap > 0:
 		var before := EconomyService.total_scrap

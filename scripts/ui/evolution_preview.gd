@@ -62,8 +62,8 @@ func show_form(turret: TurretActor, form: String) -> void:
 	heading.text = TurretEvolution.form_name(form)
 	portrait.texture = ShopArt.turret(turret.turret_type, form)
 	description.text = TurretEvolution.description(form)
-	var before := TurretStats.new(turret.resolve_attack_stats())
-	var after := TurretStats.new(turret.resolve_attack_stats(false, form))
+	var before := turret.resolve_attack_view()
+	var after := turret.resolve_attack_view(false, form)
 	var lines := PackedStringArray()
 	lines.append("Damage per hit   %.1f → %.1f" % [before.damage, after.damage])
 	if turret.turret_type == "melee":
@@ -80,7 +80,7 @@ func show_form(turret: TurretActor, form: String) -> void:
 	if after.aoe_radius_metres > 0:
 		lines.append("Blast radius   %.2f → %.2f m" % [before.aoe_radius_metres, after.aoe_radius_metres])
 	if form == "stormblade":
-		var gun := TurretStats.new(turret.resolve_attack_stats(true, form))
+		var gun := turret.resolve_attack_view(true, form)
 		lines.append("Gun: %.1f damage · %.2f m · %d shot(s) per burst" % [gun.damage, gun.range_metres, TurretEvolution.barrel_burst(form)])
 	comparison.text = "\n".join(lines)
 	reset_size()
