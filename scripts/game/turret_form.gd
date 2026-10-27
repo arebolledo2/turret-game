@@ -38,6 +38,31 @@ func tick_sweep(_delta: float) -> void:
 func tick_mechanisms(_delta: float, _tracking: bool) -> void:
 	pass
 
+## Single-target damage per second for the shop; splash, chains, penetration and ricochets depend on enemy arrangement.
+## A form whose numbers differ from the fire mode's override this; `TurretForm.dps_of` covers turrets with no form object.
+func estimate_dps(stats: TurretStats) -> float:
+	return base_dps(actor, stats)
+
+## True when the form carries a second weapon with its own resolved stats (the Stormblade's rotating barrel).
+func has_barrel() -> bool:
+	return false
+
+## The estimate for `owner`, from its form when it has one, else from its fire mode.
+static func dps_of(owner: TurretActor) -> float:
+	var stats := owner.resolve_attack_view()
+	return owner.form.estimate_dps(stats) if owner.form else base_dps(owner, stats)
+
+## What the fire mode alone implies: a sweeping bat is limited by its blades and rehit delay, a flame adds its burn.
+static func base_dps(owner: TurretActor, stats: TurretStats) -> float:
+	match TurretRegistry.get_fire_mode(owner.turret_type):
+		TurretRegistry.FIRE_SWEEP:
+			var blades := TurretEvolution.blade_count(owner.progression.evolution_form)
+			return stats.damage * minf(stats.rotation_rate * blades / 360.0, 1.0 / maxf(.01, stats.rehit_delay))
+		TurretRegistry.FIRE_FLAME:
+			var burn := stats.damage * float(stats.values.get("burn_ratio", 1.6)) * minf(1.0, stats.fire_rate * float(stats.values.get("burn_duration", 2.0)))
+			return stats.damage * stats.fire_rate + burn
+	return stats.damage * stats.fire_rate
+
 ## Divides the cooldown after a shot (fire-rate boosts such as a spooled rotor).
 func cooldown_divisor() -> float:
 	return 1.0

@@ -11,6 +11,9 @@ func rebuilt() -> void:
 func cooldown_divisor() -> float:
 	return 1.0 + spool if _spools() else 1.0
 
+func estimate_dps(stats: TurretStats) -> float:
+	return stats.damage * stats.fire_rate * cooldown_divisor()
+
 func tick_mechanisms(delta: float, tracking: bool) -> void:
 	if not _spools():
 		return

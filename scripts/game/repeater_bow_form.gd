@@ -2,6 +2,10 @@ class_name RepeaterBowForm
 extends TurretForm
 
 ## Bow / Repeater Bow and Arrowstorm: each draw queues a volley that leaves the rails one arrow at a time.
+func estimate_dps(stats: TurretStats) -> float:
+	var arrows := TurretEvolution.volley_size(form_id)
+	return stats.damage * float(arrows) / (stats.cooldown_seconds + actor.bow_burst.interval * (arrows - 1))
+
 func fire_projectile(stats: TurretStats, _heading: Vector3) -> bool:
 	var target := actor.target
 	var burst := actor.bow_burst

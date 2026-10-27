@@ -92,7 +92,7 @@ static func build_data(world: ArenaWorld, extra_turret: String = "") -> Dictiona
 				growth["id"] = actor.turret_id
 				growth["name"] = actor.display_name()
 				growth["combat"] = _actor_numbers(actor)
-				if actor.progression.evolution_form == "stormblade":
+				if actor.has_barrel():
 					growth["gun"] = _actor_numbers(actor, true)
 				instances.append(growth)
 				represented += 1
@@ -122,33 +122,8 @@ static func _actor_numbers(actor: TurretActor, secondary: bool = false) -> Dicti
 		"chain_decay": stats.chain_decay * 100.0, "slow": stats.slow_intensity * 100.0,
 		"slow_duration": stats.slow_duration, "rehit_delay": stats.rehit_delay if values.has("rehit_delay") else 0.0}}
 
-## Single-target estimate; splash, chains, penetration and ricochets depend on enemy arrangement.
 static func _actor_dps(actor: TurretActor) -> float:
-	var stats := actor.resolve_attack_view()
-	var rate := stats.fire_rate
-	var form_id := actor.progression.evolution_form
-	if actor.turret_type == "melee":
-		var blades := TurretEvolution.blade_count(form_id)
-		rate = minf(stats.rotation_rate * blades / 360.0, 1.0 / maxf(.01, stats.rehit_delay))
-	elif form_id in ["repeater_bow", "arrowstorm"]:
-		var arrows := TurretEvolution.volley_size(form_id)
-		rate = float(arrows) / (stats.cooldown_seconds + .09 * (arrows - 1))
-	elif form_id == "cyclone_gatling":
-		rate *= 1.0 + actor.spool
-	var result := stats.damage * rate
-	if form_id == "aftershock":
-		result *= 1.0 + TurretEvolution.AFTERSHOCK_DAMAGE
-	elif form_id == "cataclysm":
-		# A salvo of pulses (the first plus the repeats), then the recharge.
-		var pulses := 1 + TurretEvolution.CATACLYSM_REPEATS
-		result = stats.damage * pulses / (TurretEvolution.QUAKE_TELEGRAPH_SECONDS + TurretEvolution.CATACLYSM_INTERVAL * TurretEvolution.CATACLYSM_REPEATS + stats.cooldown_seconds)
-	if actor.turret_type == "flamethrower":
-		result += stats.damage * float(stats.values.get("burn_ratio", 1.6)) * minf(1.0, rate * float(stats.values.get("burn_duration", 2.0)))
-	if form_id == "stormblade":
-		var gun := actor.resolve_attack_view(true)
-		var shots := TurretEvolution.barrel_burst(form_id)
-		result += gun.damage * float(shots) / (gun.cooldown_seconds + .065 * (shots - 1))
-	return result
+	return TurretForm.dps_of(actor)
 
 ## build_data after buying `offer`. Items are measured by adding their modifiers to the real modifier
 ## system for the duration of this call and removing them again, so the numbers come from the same
@@ -209,6 +184,6 @@ static func affected_turrets(world: ArenaWorld, offer: ShopOffer) -> Array[Strin
 
 static func _has_gunblade(world: ArenaWorld) -> bool:
 	for turret in world.turrets:
-		if turret.progression.evolution_form == "stormblade":
+		if turret.has_barrel():
 			return true
 	return false

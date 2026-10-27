@@ -472,6 +472,9 @@ func _model_key(form_id: String) -> String:
 		return own
 	return "ion" if turret_type == "normal" else turret_type
 
+func has_barrel() -> bool:
+	return form != null and form.has_barrel()
+
 func display_name() -> String:
 	var evolved := TurretEvolution.form_name(progression.evolution_form)
 	return evolved if not evolved.is_empty() else TurretRegistry.get_short_name(turret_type)

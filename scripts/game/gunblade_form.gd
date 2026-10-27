@@ -6,6 +6,14 @@ extends TurretForm
 var gun_stats := TurretStats.new()
 var burst := ShotBurst.new(.065)
 
+func has_barrel() -> bool:
+	return true
+
+func estimate_dps(stats: TurretStats) -> float:
+	var gun := actor.resolve_attack_view(true)
+	var shots := TurretEvolution.barrel_burst(form_id)
+	return base_dps(actor, stats) + gun.damage * float(shots) / (gun.cooldown_seconds + burst.interval * (shots - 1))
+
 func clear() -> void:
 	burst.cancel()
 

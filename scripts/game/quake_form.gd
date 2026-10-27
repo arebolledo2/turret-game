@@ -43,6 +43,16 @@ func rebuilt() -> void:
 func busy() -> bool:
 	return not beats.is_empty() or not fissures.is_empty() or telegraph_left > 0.0
 
+func estimate_dps(stats: TurretStats) -> float:
+	match form_id:
+		"aftershock":
+			return stats.damage * stats.fire_rate * (1.0 + TurretEvolution.AFTERSHOCK_DAMAGE)
+		"cataclysm":
+			# A salvo of pulses (the first plus the repeats), then the recharge.
+			var pulses := 1 + TurretEvolution.CATACLYSM_REPEATS
+			return stats.damage * pulses / (TurretEvolution.QUAKE_TELEGRAPH_SECONDS + TurretEvolution.CATACLYSM_INTERVAL * TurretEvolution.CATACLYSM_REPEATS + stats.cooldown_seconds)
+	return super(stats)
+
 func fire_pulse(stats: TurretStats, range_metres: float, _target: CombatActor) -> void:
 	if busy():
 		return
