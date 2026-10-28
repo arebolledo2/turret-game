@@ -61,6 +61,7 @@ const BASES: Dictionary = {
 	"bowling": {"shot": {"visual_key": "bowling_ball", "radius": .24, "lifetime": 4.0}},
 	# The unevolved Quake stomps through the same behaviour as its forms.
 	"quake": {"behaviour": "QuakeForm"},
+	"melee": {"behaviour": "SweepForm"},
 }
 
 const FORMS: Dictionary = {
@@ -89,11 +90,13 @@ const FORMS: Dictionary = {
 		"base": "melee", "kind": UPGRADE, "name": "Saber", "model": "saber", "implemented": true,
 		"description": "A longer, faster energy-blade sweep.",
 		"stats": {"damage": 11.0, "rotation_rate": 420.0, "range": 145.0},
+		"behaviour": "SweepForm",
 	},
 	"orbit_saber": {
 		"base": "melee", "kind": FINAL, "name": "Orbit Saber", "model": "saber", "implemented": true,
 		"description": "Three held energy blades sweep evenly around the turret.",
 		"stats": {"damage": 14.0, "rotation_rate": 480.0, "range": 170.0},
+		"behaviour": "SweepForm",
 		"params": {"blades": 3},
 	},
 	"stormblade": {

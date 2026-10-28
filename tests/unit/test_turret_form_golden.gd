@@ -648,9 +648,9 @@ const BEHAVIOUR: Dictionary = {
 	"machine_gun": "MachineGunForm",
 	"cyclone_gatling": "MachineGunForm",
 	"omnifire": "ScatterForm",
-	"(melee)": "",
-	"saber": "",
-	"orbit_saber": "",
+	"(melee)": "SweepForm",
+	"saber": "SweepForm",
+	"orbit_saber": "SweepForm",
 	"stormblade": "GunbladeForm",
 	"(bow)": "",
 	"repeater_bow": "RepeaterBowForm",
@@ -1365,7 +1365,7 @@ func _model_record(actor: TurretActor) -> Dictionary:
 		"muzzle": "%.3f,%.3f,%.3f" % [at.x, at.y, at.z],
 		"gun_muzzles": actor.gun_muzzles.size(), "crossfire_muzzles": actor.crossfire_muzzles.size(),
 		"flame_emitters": actor.flame_emitters.size(), "bowling_hardware": actor.bowling_hardware != null,
-		"bow_muzzles": actor.bow_muzzles.size(), "saber_angles": actor.saber_angles.size(),
+		"bow_muzzles": actor.bow_muzzles.size(), "saber_angles": (actor.form.saber_angles.size() if actor.form is SweepForm else 1),
 		"digest": _signature(actor.model).sha256_text().substr(0, 16),
 	}
 

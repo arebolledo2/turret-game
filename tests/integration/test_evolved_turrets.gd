@@ -83,14 +83,14 @@ func test_saber_reaches_and_hits_beyond_base_bat_radius() -> void:
 	turret.set_physics_process(false)
 	turret.progression.award(110)
 	assert_true(turret.evolve("saber"))
-	assert_eq(turret.saber_angles.size(), 1, "The level-5 Saber carries one blade")
+	assert_eq(turret.form.saber_angles.size(), 1, "The level-5 Saber carries one blade")
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 	var enemy := world.spawn_enemy(Vector3(0, 0, -1.5))
 	enemy.set_physics_process(false)
 	enemy.health = 100
 	world.crowd.rebuild(world.enemies)
 	var stats := turret._current_view(0)
-	turret._spin_bat(.1, stats, stats.range_metres)
+	turret.form.spin(.1, stats, stats.range_metres)
 	assert_lt(enemy.health, 100.0)
 	assert_gt(stats.range_metres, 1.45)
 	assert_almost_eq(WorldGeometry.planar(turret.muzzle.global_position - turret.aim.global_position).length(), stats.range_metres, .001)
@@ -139,10 +139,10 @@ func test_stormblade_sweeps_at_blade_tip_and_shoots_along_bore() -> void:
 	close.health = 100.0
 	world.crowd.rebuild(world.enemies)
 	var stats := turret._current_view(0)
-	turret._spin_bat(.01, stats, stats.range_metres)
+	turret.form.spin(.01, stats, stats.range_metres)
 	assert_lt(close.health, 100.0)
-	assert_not_null(turret.blade_tip)
-	assert_almost_eq(WorldGeometry.planar(turret.blade_tip.global_position - turret.aim.global_position).length(), stats.range_metres, .001)
+	assert_not_null(turret.form.blade_tip)
+	assert_almost_eq(WorldGeometry.planar(turret.form.blade_tip.global_position - turret.aim.global_position).length(), stats.range_metres, .001)
 	var heading := WorldGeometry.planar(-turret.muzzle.global_basis.z).normalized()
 	var distant := world.spawn_enemy(heading * 2.8)
 	distant.set_physics_process(false)
@@ -409,9 +409,9 @@ func test_orbit_saber_has_three_visible_arms_and_three_sweep_directions() -> voi
 	turret.set_physics_process(false)
 	_award_both_milestones(turret)
 	assert_true(turret.evolve("saber"))
-	assert_eq(turret.saber_angles.size(), 1)
+	assert_eq(turret.form.saber_angles.size(), 1)
 	assert_true(turret.evolve("orbit_saber"))
-	assert_eq(turret.saber_angles.size(), 3)
+	assert_eq(turret.form.saber_angles.size(), 3)
 	assert_eq(turret.display_name(), "Orbit Saber")
 	for index in range(1, 3):
 		var arm := turret.aim.get_node("SaberArm%d" % index)
@@ -419,7 +419,7 @@ func test_orbit_saber_has_three_visible_arms_and_three_sweep_directions() -> voi
 		assert_not_null(arm.get_node("Ceramic_Hand"))
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 	var targets: Array[CombatActor] = []
-	for angle in turret.saber_angles:
+	for angle in turret.form.saber_angles:
 		var enemy := world.spawn_enemy(Vector3.FORWARD.rotated(Vector3.UP, angle) * 1.4)
 		enemy.set_physics_process(false)
 		enemy.health = 1000.0
@@ -429,12 +429,12 @@ func test_orbit_saber_has_three_visible_arms_and_three_sweep_directions() -> voi
 	overlapping.health = 1000.0
 	world.crowd.rebuild(world.enemies)
 	var stats := turret._current_view(0)
-	turret._spin_bat(.01, stats, stats.range_metres)
+	turret.form.spin(.01, stats, stats.range_metres)
 	for enemy in targets:
 		assert_lt(enemy.health, 1000.0, "Each blade direction deals damage")
 	assert_almost_eq(overlapping.health, 1000.0 - stats.damage, .001, "Overlapping blades share a rehit lockout")
 	var health := overlapping.health
-	turret._spin_bat(.01, stats, stats.range_metres)
+	turret.form.spin(.01, stats, stats.range_metres)
 	assert_eq(overlapping.health, health)
 
 func test_worldbreaker_expands_shell_blast_and_knockback_over_the_siege_upgrade() -> void:

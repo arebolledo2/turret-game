@@ -326,10 +326,10 @@ func test_grid_includes_large_bodies_across_cell_boundaries() -> void:
 	assert_false(world.crowd.query_radius(Vector3.ZERO, 2.0, true).has(large))
 
 func test_melee_sweep_hits_body_edge_but_not_empty_corner() -> void:
-	assert_true(TurretActor.sweep_overlaps_body(Vector3(0, 0, -2.7), 2.0, 0.0, .1, .72))
-	assert_false(TurretActor.sweep_overlaps_body(Vector3(0, 0, -2.73), 2.0, 0.0, .1, .72))
-	assert_true(TurretActor.sweep_overlaps_body(Vector3(.3, 0, -1.5), 2.0, 0.0, .1, .36))
-	assert_false(TurretActor.sweep_overlaps_body(Vector3(.35, 0, -2.3), 2.0, 0.0, .1, .36))
+	assert_true(SweepForm.sweep_overlaps_body(Vector3(0, 0, -2.7), 2.0, 0.0, .1, .72))
+	assert_false(SweepForm.sweep_overlaps_body(Vector3(0, 0, -2.73), 2.0, 0.0, .1, .72))
+	assert_true(SweepForm.sweep_overlaps_body(Vector3(.3, 0, -1.5), 2.0, 0.0, .1, .36))
+	assert_false(SweepForm.sweep_overlaps_body(Vector3(.35, 0, -2.3), 2.0, 0.0, .1, .36))
 
 func test_turret_fires_when_only_enemy_edge_is_in_range() -> void:
 	var turret := world.turrets[0]

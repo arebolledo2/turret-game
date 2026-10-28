@@ -27,8 +27,6 @@ var cooldown: float = 0.0
 var form: TurretForm
 var aim: Node3D
 var model: Node3D
-var saber_angles: Array[float] = [0.0]
-var blade_tip: Node3D
 var muzzle: Node3D
 var rotor: Node3D
 var recoil_barrel: Node3D
@@ -37,12 +35,6 @@ var muzzle_rest := Vector3.ZERO
 var aim_rest: Vector3
 var target: CombatActor
 var target_clock: float = 0.0
-var spin_angle: float = 0.0
-var swing_distance: float = 0.0
-var swing_targets: Dictionary = {}
-var bat_authored_reach: float = 1.0
-var aim_authored_scale := Vector3.ONE
-var rehit_lockouts: Dictionary = {}
 ## Modifier math is costly and static between purchases, so the resolved stats are rebuilt after `invalidate_stats()`
 ## or every STATS_REFRESH seconds. `stats_view` is the only cached form; the name-addressed dictionary lives inside it.
 var stats_view := TurretStats.new()
@@ -57,7 +49,6 @@ var range_overlay: TurretRangeRing
 const STATS_REFRESH: float = .25
 static var _no_gun_stats := TurretStats.new()
 const TESLA_TINT := Color(.35, .9, 1.0)
-static var melee_materials: Dictionary = {}
 
 func _init() -> void:
 	entrench = TurretEntrench.new(self)
@@ -107,13 +98,12 @@ func _rebuild_model() -> void:
 	if use_clockwork:
 		model = ClockworkModels.instantiate(asset_key)
 	else:
-		model = _build_melee_model() if fire_mode == TurretRegistry.FIRE_SWEEP else load(TurretRegistry.get_model_path(turret_type)).instantiate()
+		model = SweepForm.placeholder_model() if fire_mode == TurretRegistry.FIRE_SWEEP else load(TurretRegistry.get_model_path(turret_type)).instantiate()
 	if turret_type == "tesla" and not use_clockwork:
 		EnemyVariants.tint_model(model, "turret_tesla", TESLA_TINT, .5)
 	add_child(model)
 	_build_form_visual()
 	aim = model.find_child("Aim", true, false) as Node3D
-	blade_tip = model.find_child("BladeTip", true, false) as Node3D
 	muzzle = model.find_child("Muzzle", true, false) as Node3D
 	rotor = model.find_child("Rotor", true, false) as Node3D
 	recoil_barrel = model.find_child("Barrel", true, false) as Node3D
@@ -137,10 +127,6 @@ func _rebuild_model() -> void:
 				bow_loaded_arrows.append(model.find_child("LoadedArrow%d" % i, true, false) as Node3D)
 
 	aim_rest = aim.position
-	aim_authored_scale = aim.scale
-	if fire_mode == TurretRegistry.FIRE_SWEEP:
-		bat_authored_reach = maxf(.001, WorldGeometry.planar((blade_tip if blade_tip else muzzle).global_position - aim.global_position).length())
-	_build_saber_arms()
 
 ## Adds the hardware the form's row names (`visual`) to the chassis and keeps the nodes the attack code reads.
 func _build_form_visual() -> void:
@@ -150,84 +136,6 @@ func _build_form_visual() -> void:
 	bowling_hardware = handles.bowling_hardware if handles else null
 	gun_muzzles.assign(handles.gun_muzzles if handles else [])
 	crossfire_muzzles.assign(handles.crossfire_muzzles if handles else [])
-
-## Placeholder procedural model: a base post with a pivoting arm; `Aim` is the spin pivot, `Muzzle` the bat tip.
-func _build_melee_model() -> Node3D:
-	if melee_materials.is_empty():
-		melee_materials["base"] = WorldGeometry.material(Color("6b6f78"))
-		melee_materials["bat"] = WorldGeometry.material(Color("c9ced6"))
-		melee_materials["head"] = WorldGeometry.material(Color("ff8d3a"), true)
-	var reach := TurretStats.new(TurretRegistry.get_base_stats("melee")).range_metres
-	var root := Node3D.new()
-	WorldGeometry.box(root, Vector3(.55, .28, .55), Vector3(0, .14, 0), melee_materials["base"])
-	WorldGeometry.box(root, Vector3(.14, .38, .14), Vector3(0, .47, 0), melee_materials["base"])
-	var pivot := Node3D.new()
-	pivot.name = "Aim"
-	pivot.position = Vector3(0, .55, 0)
-	root.add_child(pivot)
-	WorldGeometry.box(pivot, Vector3(.09, .09, reach), Vector3(0, 0, -reach / 2.0), melee_materials["bat"])
-	WorldGeometry.box(pivot, Vector3(.2, .2, .3), Vector3(0, 0, -reach + .12), melee_materials["head"])
-	var tip := Node3D.new()
-	tip.name = "Muzzle"
-	tip.position = Vector3(0, 0, -reach)
-	pivot.add_child(tip)
-	return root
-
-## Sweeps the bat through the arc covered this tick and hits each enemy once per rehit delay.
-func _spin_bat(delta: float, stats: TurretStats, reach: float) -> void:
-	# Keep the visible bat tip on the gameplay sweep radius after range upgrades.
-	var reach_scale := reach / bat_authored_reach
-	aim.scale = aim_authored_scale * Vector3(reach_scale, 1.0, reach_scale)
-	var sweep := deg_to_rad(stats.rotation_rate) * delta
-	swing_distance += sweep
-	if swing_distance >= TAU:
-		swing_distance = fmod(swing_distance, TAU)
-		swing_targets = {}
-	var previous := spin_angle
-	spin_angle = wrapf(spin_angle + sweep, -PI, PI)
-	aim.rotation.y = spin_angle
-	for key in rehit_lockouts.keys():
-		rehit_lockouts[key] = float(rehit_lockouts[key]) - delta
-		if float(rehit_lockouts[key]) <= 0.0:
-			rehit_lockouts.erase(key)
-	for enemy in world.crowd.query_radius(position, reach, true):
-		if rehit_lockouts.has(enemy.get_instance_id()):
-			continue
-		var offset := WorldGeometry.planar(enemy.position - position)
-		var touched := false
-		for angle in saber_angles:
-			if sweep_overlaps_body(offset, reach, previous + angle, sweep, enemy.hurtbox_radius()):
-				touched = true
-				break
-		if not touched:
-			continue
-		var damage := stats.damage
-		var critical := TurretStatsService.roll_turret_crit()
-		if critical:
-			damage = TurretStatsService.calculate_turret_crit_damage(damage)
-		var push := offset.normalized() * stats.knockback_metres
-		rehit_lockouts[enemy.get_instance_id()] = stats.rehit_delay
-		var bat_hit := CombatHit3D.new(damage, position, push, GameEnums.DamageType.PHYSICAL)
-		bat_hit.attack_targets = swing_targets
-		bat_hit.critical = critical
-		bat_hit.attack_families = TurretRegistry.get_attack_families(turret_type)
-		bat_hit.source_id = turret_id
-		bat_hit.slow_intensity = stats.slow_intensity
-		bat_hit.slow_duration = stats.slow_duration
-		world.combat.apply_hit(enemy, bat_hit)
-
-## Distance to the swept bat sector, including rounded contact at either end of the arc.
-static func sweep_overlaps_body(offset: Vector3, reach: float, start: float, sweep: float, radius: float) -> bool:
-	var point := WorldGeometry.planar(offset)
-	var bearing := atan2(-point.x, -point.z)
-	if sweep >= TAU or wrapf(bearing - start, 0.0, TAU) <= sweep:
-		return point.length() <= reach + radius
-	for angle: float in [start, start + sweep]:
-		var direction := Vector3(-sin(angle), 0, -cos(angle))
-		var closest := direction * clampf(point.dot(direction), 0.0, reach)
-		if point.distance_squared_to(closest) <= radius * radius + .000001:
-			return true
-	return false
 
 func invalidate_stats() -> void:
 	stats_valid = false
@@ -351,9 +259,8 @@ func _physics_process(delta: float) -> void:
 	var range_metres := effective_range(stats)
 	var fire_mode := TurretRegistry.get_fire_mode(turret_type)
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
-		_spin_bat(delta, stats, range_metres)
-		if form:
-			form.tick_sweep(delta)
+		form.spin(delta, stats, range_metres)
+		form.tick_sweep(delta)
 		return
 	if fire_mode == TurretRegistry.FIRE_PULSE:
 		if cooldown > 0.0:
@@ -498,7 +405,6 @@ func evolve(form_id: String) -> bool:
 	_rebuild_model()
 	target = null
 	target_clock = 0.0
-	rehit_lockouts.clear()
 	reset_physics_interpolation()
 	return true
 
@@ -530,7 +436,7 @@ func _fire_flame(stats: TurretStats, reach: float, heading: Vector3) -> void:
 
 static func cone_overlaps_body(offset: Vector3, heading: Vector3, reach: float, half_angle: float, radius: float) -> bool:
 	var bearing := atan2(-heading.x, -heading.z)
-	return sweep_overlaps_body(offset, reach, bearing - half_angle, 2.0 * half_angle, radius)
+	return SweepForm.sweep_overlaps_body(offset, reach, bearing - half_angle, 2.0 * half_angle, radius)
 
 func _tick_bow_burst(delta: float, stats: TurretStats) -> void:
 	aim.rotation.y = atan2(-bow_burst.heading.x, -bow_burst.heading.z)
@@ -544,24 +450,3 @@ func _tick_bow_burst(delta: float, stats: TurretStats) -> void:
 		cooldown = stats.cooldown_seconds
 	for arrow in bow_loaded_arrows:
 		arrow.visible = false
-
-## Additional held blades reuse the authored arm, hand, hilt and prism geometry.
-func _build_saber_arms() -> void:
-	saber_angles.assign([0.0])
-	var count := TurretEvolution.blade_count(progression.evolution_form)
-	if count <= 1:
-		return
-	var parts: Array[Node3D] = []
-	for part_name: String in ["Ceramic_Arm", "Ceramic_Hand", "Sword_Grip", "Sword_Guard", "Prism_Blade"]:
-		var part := model.find_child(part_name, true, false) as Node3D
-		if part:
-			parts.append(part)
-	for index in range(1, count):
-		var angle := TAU * float(index) / float(count)
-		saber_angles.append(angle)
-		var arm := Node3D.new()
-		arm.name = "SaberArm%d" % index
-		aim.add_child(arm)
-		arm.rotation.y = angle
-		for part in parts:
-			arm.add_child(part.duplicate())

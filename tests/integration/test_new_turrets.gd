@@ -42,7 +42,7 @@ func test_melee_visual_tip_tracks_modified_reach_without_changing_height() -> vo
 	var height := bat.muzzle.global_position.y
 	var view := TurretStats.new(stats("melee"))
 	for reach: float in [view.range_metres * 1.5, view.range_metres, view.range_metres * 2.0]:
-		bat._spin_bat(.1, view, reach)
+		bat.form.spin(.1, view, reach)
 		var actual := WorldGeometry.planar(bat.muzzle.global_position - bat.aim.global_position).length()
 		assert_almost_eq(actual, reach, .001, "Visible tip follows the attack radius without accumulated scaling")
 		assert_almost_eq(bat.muzzle.global_position.y, height, .001)
@@ -70,12 +70,12 @@ func test_melee_rehit_lockout_prevents_double_hits_then_expires() -> void:
 	# Park the enemy in the sweep for two ticks inside the lockout, then a full revolution later.
 	tick(bat, .05)
 	var after_first := target.health
-	bat.spin_angle = 0.0
+	bat.form.spin_angle = 0.0
 	tick(bat, .05)
 	assert_eq(target.health, after_first, "Lockout blocks an immediate second hit")
 	for step in range(12):
 		tick(bat, .05)
-	bat.spin_angle = 0.0
+	bat.form.spin_angle = 0.0
 	tick(bat, .05)
 	assert_lt(target.health, after_first, "Hit again once the lockout has expired")
 

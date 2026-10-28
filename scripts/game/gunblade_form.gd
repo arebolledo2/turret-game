@@ -1,5 +1,5 @@
 class_name GunbladeForm
-extends TurretForm
+extends SweepForm
 
 ## Melee / Stormblade: the spinning bat also carries a rotating barrel that shoots along its visible bore.
 ## Blade and bullet bonuses stay separate, so the barrel has its own resolved stats.
@@ -18,6 +18,7 @@ func clear() -> void:
 	burst.cancel()
 
 func rebuilt() -> void:
+	super()
 	burst.cancel()
 
 func refresh_stats() -> void:
