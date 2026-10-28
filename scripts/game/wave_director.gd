@@ -5,6 +5,12 @@ extends RefCounted
 ## `ArenaWorld` owns the actors and exposes this state through forwarding properties.
 const ANNOUNCEMENT_TIME: float = .8
 const FIRST_SPAWN_DELAY: float = .2
+const GROUP_INTERVAL := 3.5
+const SPAWN_WARNING := .9
+const SPAWN_CLEARANCE := .9
+const CONVOY_CORE_SPAWN_GAP := 4.0
+const CONVOY_PATH_HALF_WIDTH := 2.0
+const SURVIVE_SPAWN_EDGE_MARGIN := 1.0
 var world: ArenaWorld
 ## The run's mutable state (wave number, time survived); services only apply rules to it.
 var state: RunSessionState:
@@ -21,12 +27,6 @@ var elite_credit: float = 0.0
 var seeker_credit: float = 0.0
 var spawn_plan: Array[String] = []
 var boss_spawned: bool = false
-const GROUP_INTERVAL := 3.5
-const SPAWN_WARNING := .9
-const SPAWN_CLEARANCE := .9
-const CONVOY_CORE_SPAWN_GAP := 4.0
-const CONVOY_PATH_HALF_WIDTH := 2.0
-const SURVIVE_SPAWN_EDGE_MARGIN := 1.0
 var pending_spawns: Array[PendingSpawn] = []
 var spawn_credit := 0.0
 var arrival_time_left := 0.0

@@ -47,6 +47,15 @@ var terrain: TurretTerrain
 var range_overlay: TurretRangeRing
 
 const STATS_REFRESH: float = .25
+## Seconds between target searches.
+const RETARGET_INTERVAL: float = .2
+## Where a carried turret rides relative to the player, and how fast the aim arm settles back to rest.
+const CARRY_OFFSET := Vector3(0, 1.15, .25)
+const AIM_SETTLE_RATE: float = 16.0
+const BARREL_SETTLE_RATE: float = 10.0
+## Fraction of the cooldown (counted from the end) at which the loaded ball and arrows reappear.
+const LOADED_BALL_FRACTION: float = .3
+const LOADED_ARROW_FRACTION: float = .35
 static var _no_gun_stats := TurretStats.new()
 const TESLA_TINT := Color(.35, .9, 1.0)
 
@@ -239,20 +248,20 @@ func _physics_process(delta: float) -> void:
 		bow_burst.cancel()
 		return
 	if carried:
-		position = world.player.position + Vector3(0, 1.15, .25)
+		position = world.player.position + CARRY_OFFSET
 	else:
 		_tick_entrench(delta)
 	_update_range_ring()
 	cooldown = maxf(0.0, cooldown - delta)
 	if form:
 		form.tick(delta)
-	aim.position = aim.position.lerp(aim_rest, minf(delta * 16.0, 1.0))
+	aim.position = aim.position.lerp(aim_rest, minf(delta * AIM_SETTLE_RATE, 1.0))
 	var stats := _current_view(delta)
 	if loaded_ball:
-		loaded_ball.visible = cooldown <= stats.cooldown_seconds * .3
+		loaded_ball.visible = cooldown <= stats.cooldown_seconds * LOADED_BALL_FRACTION
 	if loaded_arrow:
 		for arrow in bow_loaded_arrows:
-			arrow.visible = cooldown <= stats.cooldown_seconds * .35 and bow_burst.left == 0
+			arrow.visible = cooldown <= stats.cooldown_seconds * LOADED_ARROW_FRACTION and bow_burst.left == 0
 	if bow_burst.left > 0:
 		_tick_bow_burst(delta, stats)
 		return
@@ -282,7 +291,7 @@ func _physics_process(delta: float) -> void:
 		else:
 			var radius := stats.aoe_radius_metres if TurretRegistry.targets_clusters(turret_type) else 0.0
 			target = world.combat.select_target(position, range_metres, world.enemies, radius, world.crowd)
-		target_clock = .2
+		target_clock = RETARGET_INTERVAL
 	_tick_mechanisms(delta, is_instance_valid(target) and not target.dead and target.overlaps_attack_range(position, range_metres))
 	if not is_instance_valid(target) or target.dead or not target.overlaps_attack_range(position, range_metres):
 		return
@@ -414,7 +423,7 @@ func _tick_mechanisms(delta: float, tracking: bool) -> void:
 	if form:
 		form.tick_mechanisms(delta, tracking)
 	if recoil_barrel:
-		recoil_barrel.position = recoil_barrel.position.lerp(barrel_rest, minf(1.0, delta * 10.0))
+		recoil_barrel.position = recoil_barrel.position.lerp(barrel_rest, minf(1.0, delta * BARREL_SETTLE_RATE))
 
 func _fire_flame(stats: TurretStats, reach: float, heading: Vector3) -> void:
 	var half_angle := deg_to_rad(float(stats.values.get("cone_degrees", 36.0))) * .5
