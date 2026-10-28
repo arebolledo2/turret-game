@@ -6,11 +6,11 @@ extends RefCounted
 var world: ArenaWorld
 
 func add_scrap(amount: int) -> bool:
-	EconomyService.total_scrap = maxi(0, EconomyService.total_scrap + amount)
+	world.session.state.total_scrap = maxi(0, world.session.state.total_scrap + amount)
 	return true
 
 func restore_hull() -> bool:
-	if not is_instance_valid(world.player) or not GameStateService.is_game_active:
+	if not is_instance_valid(world.player) or not world.session.state.is_game_active:
 		return false
 	world.player.health = world.player.max_health
 	if world.core:
@@ -18,7 +18,7 @@ func restore_hull() -> bool:
 	return true
 
 func spawn_enemy(type_id: String, count: int = 1) -> int:
-	if not is_instance_valid(world.player) or not GameStateService.is_game_active or not EnemyRegistry.TYPES.has(type_id):
+	if not is_instance_valid(world.player) or not world.session.state.is_game_active or not EnemyRegistry.TYPES.has(type_id):
 		return 0
 	for index in count:
 		world.spawn_enemy(world.waves.spawn_position(), type_id)
@@ -38,7 +38,7 @@ func kill_all_enemies() -> int:
 ## Places a free turret of a shop-stocked type beside the hero. Returns its id, or 0 if unavailable.
 ## It counts as a starter, so it leaves the purchase-price ladder alone.
 func add_turret(type_id: String) -> int:
-	if not is_instance_valid(world.player) or not GameStateService.is_game_active or not ShopCatalog.ids("turret").has(type_id):
+	if not is_instance_valid(world.player) or not world.session.state.is_game_active or not ShopCatalog.ids("turret").has(type_id):
 		return 0
 	var angle := float(world.turrets.size()) * 2.4
 	var at := world.player.position + Vector3(sin(angle), 0.0, cos(angle)) * 2.0
@@ -76,12 +76,12 @@ func _find_turret(turret_id: int) -> TurretActor:
 
 ## Lands in the shop that precedes `target_wave` (deploy to start it). Clears the field without rewards.
 func jump_to_wave(target_wave: int) -> bool:
-	if not GameStateService.is_game_active or GameStateMachine.current_state not in [GameStateMachine.GameState.PREPARATION, GameStateMachine.GameState.WAVE_ANNOUNCEMENT,
+	if not world.session.state.is_game_active or GameStateMachine.current_state not in [GameStateMachine.GameState.PREPARATION, GameStateMachine.GameState.WAVE_ANNOUNCEMENT,
 			GameStateMachine.GameState.COMBAT, GameStateMachine.GameState.SHOP]:
 		return false
 	target_wave = clampi(target_wave, 1, world.wave_limit)
 	world.clear_field(false)
-	GameStateService.current_wave = target_wave - 1
+	world.session.state.current_wave = target_wave - 1
 	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
 	world.shop.open()
 	world.message = "Dev: ready to deploy wave %d." % target_wave

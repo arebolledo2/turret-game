@@ -8,9 +8,12 @@ static var ITEMS: Array[String] = ShopCatalog.ids("item")
 const ITEM_PRICE_SCALE: float = .5
 var world: ArenaWorld
 var rng: RandomNumberGenerator = GameRandom.gameplay
+## The run's mutable state (offers, rerolls, owned items and turrets); the services below only apply rules to it.
+var state: RunSessionState:
+	get: return world.session.state
 
 func open() -> void:
-	EconomyService.shop_reroll_count = 0
+	state.shop_reroll_count = 0
 	generate()
 
 ## Weapons first, then upgrades fill the remaining slots. Locked offers stay and count toward their group.
@@ -19,7 +22,7 @@ func generate() -> void:
 	var excluded := unavailable_item_ids()
 	var kept_turrets: Array[ShopOffer] = []
 	var kept_items: Array[ShopOffer] = []
-	for offer: ShopOffer in EconomyService.current_shop_offers:
+	for offer: ShopOffer in state.current_shop_offers:
 		if offer.locked and not offer.sold:
 			if offer.kind == "turret":
 				turrets.erase(offer.asset_id)
@@ -27,22 +30,22 @@ func generate() -> void:
 			else:
 				excluded.append(offer.asset_id)
 				kept_items.append(offer)
-	EconomyService.current_shop_offers.clear()
+	state.current_shop_offers.clear()
 	var turret_count := clampi(roll_turret_count(), kept_turrets.size(), GameConstants.SHOP_OFFER_COUNT - kept_items.size())
-	EconomyService.current_shop_offers.append_array(kept_turrets)
+	state.current_shop_offers.append_array(kept_turrets)
 	for i in range(turret_count - kept_turrets.size()):
 		if turrets.is_empty():
 			break
 		var type_id: String = turrets.pop_at(rng.randi_range(0, turrets.size() - 1))
-		EconomyService.current_shop_offers.append(ShopOffer.new("turret", type_id, world.turret_price(type_id)))
-	EconomyService.current_shop_offers.append_array(kept_items)
-	for i in range(GameConstants.SHOP_OFFER_COUNT - EconomyService.current_shop_offers.size()):
-		var item_id := ItemRegistry.get_weighted_random_item(GameStateService.current_wave,
-			PlayerStatsService.get_player_luck(), ItemTrackingService.item_counts, excluded, rng)
+		state.current_shop_offers.append(ShopOffer.new("turret", type_id, world.turret_price(type_id)))
+	state.current_shop_offers.append_array(kept_items)
+	for i in range(GameConstants.SHOP_OFFER_COUNT - state.current_shop_offers.size()):
+		var item_id := ItemRegistry.get_weighted_random_item(state.current_wave,
+			PlayerStatsService.get_player_luck(), state.item_counts, excluded, rng)
 		if item_id.is_empty():
 			break
 		excluded.append(item_id)
-		EconomyService.current_shop_offers.append(ShopOffer.new("item", item_id, item_price(item_id)))
+		state.current_shop_offers.append(ShopOffer.new("item", item_id, item_price(item_id)))
 
 ## 0 to SHOP_TURRET_MAX weapons, each slot stocked independently (binomial, mean 1.5).
 func roll_turret_count() -> int:
@@ -53,9 +56,9 @@ func roll_turret_count() -> int:
 	return count
 
 func toggle_lock(index: int) -> bool:
-	if not is_open() or index < 0 or index >= EconomyService.current_shop_offers.size():
+	if not is_open() or index < 0 or index >= state.current_shop_offers.size():
 		return false
-	var offer := EconomyService.current_shop_offers[index]
+	var offer := state.current_shop_offers[index]
 	if offer.sold:
 		return false
 	offer.locked = not offer.locked
@@ -64,10 +67,10 @@ func toggle_lock(index: int) -> bool:
 	return true
 
 func can_reroll() -> bool:
-	for offer in EconomyService.current_shop_offers:
+	for offer in state.current_shop_offers:
 		if not offer.locked or offer.sold:
 			return true
-	return EconomyService.current_shop_offers.is_empty()
+	return state.current_shop_offers.is_empty()
 
 func unavailable_item_ids() -> Array:
 	var excluded: Array = []
@@ -78,36 +81,36 @@ func unavailable_item_ids() -> Array:
 
 ## One item from the shop's weighted pool (for rewards outside the shop); "" when nothing is left.
 func roll_item_reward() -> String:
-	return ItemRegistry.get_weighted_random_item(GameStateService.current_wave, PlayerStatsService.get_player_luck(),
-		ItemTrackingService.item_counts, unavailable_item_ids(), rng)
+	return ItemRegistry.get_weighted_random_item(state.current_wave, PlayerStatsService.get_player_luck(),
+		state.item_counts, unavailable_item_ids(), rng)
 
 func item_price(item_id: String) -> int:
 	var base := maxi(1, roundi(ItemRegistry.get_item_price(item_id) * ITEM_PRICE_SCALE))
-	return EconomyService.calculate_item_price(base, GameStateService.current_wave, item_id)
+	return EconomyService.calculate_item_price(base, state.current_wave, item_id)
 
 func is_open() -> bool:
-	return not world.paused and GameStateService.is_game_active and GameStateMachine.current_state == GameStateMachine.GameState.SHOP
+	return not world.paused and state.is_game_active and GameStateMachine.current_state == GameStateMachine.GameState.SHOP
 
 func reroll_cost() -> int:
-	var all_sold := not EconomyService.current_shop_offers.is_empty()
-	for offer in EconomyService.current_shop_offers:
+	var all_sold := not state.current_shop_offers.is_empty()
+	for offer in state.current_shop_offers:
 		all_sold = all_sold and offer.sold
-	return 0 if all_sold else EconomyService.get_reroll_cost(GameStateService.current_wave, ItemTrackingService.get_reroll_cost_multiplier())
+	return 0 if all_sold else EconomyService.get_reroll_cost(state.current_wave, ItemTrackingService.get_reroll_cost_multiplier())
 
 func reroll() -> bool:
 	var cost := reroll_cost()
 	if not is_open() or not can_reroll() or not EconomyService.deduct_scrap(cost):
 		return false
 	world.telemetry.record_spend("reroll", cost)
-	EconomyService.shop_reroll_count += 1
+	state.shop_reroll_count += 1
 	generate()
 	world.message = "New supplies available."
 	return true
 
 func purchase(index: int) -> bool:
-	if not is_open() or index < 0 or index >= EconomyService.current_shop_offers.size():
+	if not is_open() or index < 0 or index >= state.current_shop_offers.size():
 		return false
-	var offer := EconomyService.current_shop_offers[index]
+	var offer := state.current_shop_offers[index]
 	if offer.sold:
 		return false
 	var placement := Vector3.INF
@@ -118,7 +121,7 @@ func purchase(index: int) -> bool:
 		if placement == Vector3.INF:
 			world.message = "No room for another turret."
 			return false
-	elif not ShopCatalog.is_available("item", offer.asset_id) or ItemRegistry.is_at_max_stacks(offer.asset_id, ItemTrackingService.item_counts):
+	elif not ShopCatalog.is_available("item", offer.asset_id) or ItemRegistry.is_at_max_stacks(offer.asset_id, state.item_counts):
 		return false
 	if not EconomyService.deduct_scrap(offer.price):
 		world.message = "Need %d scrap." % offer.price
@@ -129,18 +132,18 @@ func purchase(index: int) -> bool:
 	offer.locked = false
 	if offer.kind == "turret":
 		world.add_turret(placement, offer.asset_id)
-		EconomyService.turrets_purchased += 1
+		state.turrets_purchased += 1
 	else:
 		apply_item(offer.asset_id)
-	for remaining in EconomyService.current_shop_offers:
+	for remaining in state.current_shop_offers:
 		if not remaining.sold and not remaining.locked:
 			remaining.price = world.turret_price(remaining.asset_id) if remaining.kind == "turret" else item_price(remaining.asset_id)
 	world.message = "Installed: " + offer_name(offer)
 	return true
 
 func apply_item(item_id: String) -> void:
-	ItemTrackingService.collected_items.append(item_id)
-	ItemTrackingService.item_counts[item_id] = int(ItemTrackingService.item_counts.get(item_id, 0)) + 1
+	state.collected_items.append(item_id)
+	state.item_counts[item_id] = int(state.item_counts.get(item_id, 0)) + 1
 	var additions: Array = []
 	for modifier: Dictionary in ItemRegistry.get_modifiers(item_id):
 		var entry := modifier.duplicate(true)
@@ -175,7 +178,7 @@ func convoy_preview_line() -> String:
 func build_summary() -> String:
 	var lines := PackedStringArray()
 	for type_id in TURRETS:
-		var count := int(TurretStatsService.turret_counts.get(type_id, 0))
+		var count := int(state.turret_counts.get(type_id, 0))
 		if count > 0 and type_id == "melee":
 			var bat := TurretStatsService.get_turret_stats(type_id, float(world.difficulty_config["turret_damage_mult"]))
 			lines.append("Melee ×%d   %.1f dmg · %.0f°/s · %.2fm" % [count, bat["damage"], bat["rotation_rate"], float(bat["range"]) * WorldGeometry.METRES_PER_PIXEL])
@@ -185,9 +188,9 @@ func build_summary() -> String:
 	lines.append("Hull %.0f/%.0f · Move %.2fm/s · Pickup %.2fm" % [world.player.health, world.player.max_health, PlayerStatsService.get_player_speed() * WorldGeometry.METRES_PER_PIXEL, PlayerStatsService.get_pickup_radius() * WorldGeometry.METRES_PER_PIXEL])
 	if world.convoy_mode:
 		lines.append(convoy_preview_line())
-	if ItemTrackingService.item_counts.is_empty():
+	if state.item_counts.is_empty():
 		lines.append("No upgrades installed yet.")
 
-	for item_id: String in ItemTrackingService.item_counts:
-		lines.append("%s ×%d" % [ItemRegistry.get_item_dict(item_id)["name"], ItemTrackingService.item_counts[item_id]])
+	for item_id: String in state.item_counts:
+		lines.append("%s ×%d" % [ItemRegistry.get_item_dict(item_id)["name"], state.item_counts[item_id]])
 	return "\n".join(lines)

@@ -70,9 +70,9 @@ func _process(_delta: float) -> void:
 func overlay_text() -> String:
 	var lines := PackedStringArray()
 	lines.append("DEBUG  %d fps  %.1f ms" % [Engine.get_frames_per_second(), 1000.0 * get_process_delta_time()])
-	lines.append("%s  wave %d/%d" % [GameStateMachine.get_state_name(GameStateMachine.current_state), GameStateService.current_wave, world.wave_limit])
+	lines.append("%s  wave %d/%d" % [GameStateMachine.get_state_name(GameStateMachine.current_state), world.session.state.current_wave, world.wave_limit])
 	lines.append("enemies %d  turrets %d  shots %d" % [world.enemies.size(), world.turrets.size(), _active_projectiles()])
-	lines.append("scrap %d  kills %d" % [EconomyService.total_scrap, GameStateService.total_kills])
+	lines.append("scrap %d  kills %d" % [world.session.state.total_scrap, world.session.state.total_kills])
 	if FeatureFlagService.has_pending():
 		lines.append("pending: " + ", ".join(PackedStringArray(FeatureFlagService.get_pending().keys())))
 	var enabled := PackedStringArray()
@@ -305,7 +305,7 @@ func toggle_flag(flag_id: String, enabled: bool) -> String:
 	return result
 
 func apply_preset(preset_id: String) -> void:
-	if GameStateService.is_game_active:
+	if world.session.state.is_game_active:
 		# Experiments are applied between waves so systems never change under a live wave.
 		var queued := 0
 		for flag_id in FeatureFlagService.get_flag_ids(FeatureFlagService.SCOPE_EXPERIMENT):
@@ -319,7 +319,7 @@ func apply_preset(preset_id: String) -> void:
 	refresh()
 
 func jump_waves(offset: int) -> void:
-	_close_then(world.dev.jump_to_wave(GameStateService.current_wave + offset), "Jumped")
+	_close_then(world.dev.jump_to_wave(world.session.state.current_wave + offset), "Jumped")
 
 func restart_run() -> bool:
 	world.start_run()
@@ -379,7 +379,7 @@ func refresh() -> void:
 	if is_instance_valid(world):
 		progression_label.text = progression_text()
 		god_check.set_pressed_no_signal(world.god_mode)
-		var wave := GameStateService.current_wave
+		var wave := world.session.state.current_wave
 		jump_prev_button.text = "Jump to wave %d (opens its shop)" % clampi(wave - 1, 1, world.wave_limit)
 		jump_next_button.text = "Jump to wave %d (opens its shop)" % clampi(wave + 1, 1, world.wave_limit)
 	add_turret_button.text = "Add free turret: %s" % _add_turret_type()
