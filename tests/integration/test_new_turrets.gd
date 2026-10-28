@@ -147,11 +147,11 @@ func test_tesla_turret_fires_chain_at_nearest_enemy_and_respects_cooldown() -> v
 	assert_eq(near.health, health, "Fire rate gates the next bolt")
 
 func test_arc_effects_are_pooled_and_bounded() -> void:
-	for index in range(CombatEffects3D.MAX_ARCS + 10):
+	for index in range(BoltEffects3D.MAX_ARCS + 10):
 		world.effects.show_arc(Vector3.ZERO, Vector3(index + 1, 0, 0))
-	assert_eq(world.effects.arcs.size(), CombatEffects3D.MAX_ARCS)
+	assert_eq(world.effects.bolts.arcs.size(), BoltEffects3D.MAX_ARCS)
 	world.effects.reset()
-	for arc in world.effects.arcs:
+	for arc in world.effects.bolts.arcs:
 		assert_false(arc.visible)
 
 # --- Shared plumbing ---

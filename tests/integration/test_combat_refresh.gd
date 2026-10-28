@@ -88,7 +88,7 @@ func test_effects_clear_and_do_not_consume_gameplay_rng() -> void:
 	world.effects.status.update_burns()
 	assert_eq(world.effects.status.burn_visuals.size(), 0)
 	world.effects.reset()
-	for arc in world.effects.arcs: assert_false(arc.visible)
+	for arc in world.effects.bolts.arcs: assert_false(arc.visible)
 	for pulse in world.effects.pulses: assert_false(pulse.visible)
 
 func test_hero_shop_preview_does_not_mutate_live_stats() -> void:

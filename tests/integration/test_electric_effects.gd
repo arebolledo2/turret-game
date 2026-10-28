@@ -28,8 +28,8 @@ func _enemy(at: Vector3) -> CombatActor:
 func test_arc_shape_is_jagged_and_pins_both_endpoints() -> void:
 	var from := Vector3(-2, .5, 0)
 	var to := Vector3(2, .5, 1)
-	var points := world.effects._bolt_points(from, to, CombatEffects3D.BOLT_PASSES)
-	assert_eq(points.size(), (1 << CombatEffects3D.BOLT_PASSES) + 1)
+	var points := world.effects.bolts._bolt_points(from, to, BoltEffects3D.BOLT_PASSES)
+	assert_eq(points.size(), (1 << BoltEffects3D.BOLT_PASSES) + 1)
 	assert_eq(points[0], from)
 	assert_eq(points[points.size() - 1], to)
 	var off_line := 0
@@ -42,60 +42,60 @@ func test_chain_hops_light_in_sequence() -> void:
 	world.effects.show_arc(Vector3.ZERO, Vector3(2, .5, 0), 0)
 	world.effects.show_arc(Vector3(2, .5, 0), Vector3(4, .5, 0), 1)
 	world.effects.show_arc(Vector3(4, .5, 0), Vector3(6, .5, 0), 2)
-	assert_true(world.effects.arcs[0].visible)
-	assert_false(world.effects.arcs[1].visible)
-	assert_false(world.effects.arcs[2].visible)
-	world.effects._physics_process(CombatEffects3D.ARC_HOP_DELAY + .001)
-	assert_true(world.effects.arcs[1].visible)
-	assert_false(world.effects.arcs[2].visible)
-	world.effects._physics_process(CombatEffects3D.ARC_HOP_DELAY + .001)
-	assert_true(world.effects.arcs[2].visible)
+	assert_true(world.effects.bolts.arcs[0].visible)
+	assert_false(world.effects.bolts.arcs[1].visible)
+	assert_false(world.effects.bolts.arcs[2].visible)
+	world.effects._physics_process(BoltEffects3D.ARC_HOP_DELAY + .001)
+	assert_true(world.effects.bolts.arcs[1].visible)
+	assert_false(world.effects.bolts.arcs[2].visible)
+	world.effects._physics_process(BoltEffects3D.ARC_HOP_DELAY + .001)
+	assert_true(world.effects.bolts.arcs[2].visible)
 
 func test_arcs_expire_and_slots_are_pooled() -> void:
 	world.effects.show_arc(Vector3.ZERO, Vector3(2, .5, 0))
-	var mesh := world.effects.arcs[0].mesh
+	var mesh := world.effects.bolts.arcs[0].mesh
 	for i in range(10):
 		world.effects._physics_process(.05)
-	assert_false(world.effects.arcs[0].visible)
+	assert_false(world.effects.bolts.arcs[0].visible)
 	world.effects.show_arc(Vector3.ZERO, Vector3(0, .5, 3))
-	assert_eq(world.effects.arcs.size(), 1)
-	assert_same(world.effects.arcs[0].mesh, mesh)
-	assert_true(world.effects.arcs[0].visible)
+	assert_eq(world.effects.bolts.arcs.size(), 1)
+	assert_same(world.effects.bolts.arcs[0].mesh, mesh)
+	assert_true(world.effects.bolts.arcs[0].visible)
 
 func test_arc_pool_stays_bounded_and_reset_clears_delayed_arcs() -> void:
-	for i in range(CombatEffects3D.MAX_ARCS + 8):
+	for i in range(BoltEffects3D.MAX_ARCS + 8):
 		world.effects.show_arc(Vector3.ZERO, Vector3(2, .5, i), 3)
-	assert_eq(world.effects.arcs.size(), CombatEffects3D.MAX_ARCS)
+	assert_eq(world.effects.bolts.arcs.size(), BoltEffects3D.MAX_ARCS)
 	world.effects.reset()
 	world.effects._physics_process(1.0)
-	for arc in world.effects.arcs:
+	for arc in world.effects.bolts.arcs:
 		assert_false(arc.visible)
 
 func test_arc_flash_light_decays_and_pool_is_bounded() -> void:
-	for i in range(CombatEffects3D.MAX_ARC_LIGHTS + 3):
+	for i in range(BoltEffects3D.MAX_ARC_LIGHTS + 3):
 		world.effects.show_arc(Vector3.ZERO, Vector3(2, .5, i))
-	assert_eq(world.effects.arc_lights.size(), CombatEffects3D.MAX_ARC_LIGHTS)
-	assert_true(world.effects.arc_lights[0].visible)
-	world.effects._physics_process(CombatEffects3D.ARC_LIGHT_LIFETIME + .01)
-	for light in world.effects.arc_lights:
+	assert_eq(world.effects.bolts.arc_lights.size(), BoltEffects3D.MAX_ARC_LIGHTS)
+	assert_true(world.effects.bolts.arc_lights[0].visible)
+	world.effects._physics_process(BoltEffects3D.ARC_LIGHT_LIFETIME + .01)
+	for light in world.effects.bolts.arc_lights:
 		assert_false(light.visible)
 
 func test_reduced_motion_keeps_one_static_bolt_shape() -> void:
 	FeatureFlagService.set_enabled(FeatureFlagService.REDUCED_MOTION, true)
 	world.effects.show_arc(Vector3.ZERO, Vector3(3, .5, 1))
-	var mesh := world.effects.arcs[0].mesh as ImmediateMesh
-	var material := world.effects.arcs[0].material_override as ShaderMaterial
+	var mesh := world.effects.bolts.arcs[0].mesh as ImmediateMesh
+	var material := world.effects.bolts.arcs[0].material_override as ShaderMaterial
 	assert_true(material.get_shader_parameter("reduced_motion"))
 	var before: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
-	world.effects._physics_process(CombatEffects3D.ARC_REROLL_INTERVAL * 2.0)
+	world.effects._physics_process(BoltEffects3D.ARC_REROLL_INTERVAL * 2.0)
 	var after: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
 	assert_eq(after, before)
 
 func test_full_motion_rerolls_bolt_shape_while_it_lives() -> void:
 	world.effects.show_arc(Vector3.ZERO, Vector3(3, .5, 1))
-	var mesh := world.effects.arcs[0].mesh as ImmediateMesh
+	var mesh := world.effects.bolts.arcs[0].mesh as ImmediateMesh
 	var before: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
-	world.effects._physics_process(CombatEffects3D.ARC_REROLL_INTERVAL + .001)
+	world.effects._physics_process(BoltEffects3D.ARC_REROLL_INTERVAL + .001)
 	var after: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
 	assert_ne(after, before)
 
