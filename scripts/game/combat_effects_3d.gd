@@ -21,11 +21,9 @@ const BOLT_HALF_WIDTH: float = .15
 const MAX_ARC_LIGHTS: int = 4
 const ARC_LIGHT_LIFETIME: float = .14
 const ARC_LIGHT_ENERGY: float = 3.0
-const SHOCK_MARK_SECONDS: float = .8
 const PULSE_LIFETIME: float = .3
 ## Friendly Quake colour (rings, telegraphs, fissures): green-teal, distinct from the hostile orange and red telegraphs.
 const QUAKE_TINT := Color("6df0b0")
-const MAX_SHOCK_VISUALS: int = 32
 const MAX_BURSTS: int = 16
 const BURST_PARTICLES: int = 14
 const BURST_LIFETIME: float = .5
@@ -59,11 +57,6 @@ var next_arc_light: int = 0
 ## Decorative noise only: its own stream, so bolt shapes never consume the combat random stream.
 var bolt_rng := RandomNumberGenerator.new()
 var arc_shader := preload("res://assets/shaders/lightning_bolt.gdshader")
-## Enemy -> visual_time at which its brief electric-hit mark expires; the Shocked overlay also shows while an electric slow lasts.
-var shock_marks: Dictionary = {}
-var shock_visuals: Dictionary = {}
-var shock_pool: Array[MeshInstance3D] = []
-var shock_shader := preload("res://assets/shaders/shocked_actor.gdshader")
 var sparks: Array[MeshInstance3D] = []
 var spark_lifetimes: Array[float] = []
 var spark_mesh: SphereMesh
@@ -78,6 +71,8 @@ var flame_material := WorldGeometry.material(Color(2.5, .65, .08), true)
 var damage_numbers := DamageNumbers3D.new()
 var visual_time := 0.0
 var world: ArenaWorld
+## Burning and shocked overlays on enemies.
+var status := StatusVisuals3D.new(self)
 var plasma_material := WorldGeometry.material(Color("b56cff"), true)
 var shock_material := WorldGeometry.material(Color("55dcff"), true)
 
@@ -88,7 +83,7 @@ func _ready() -> void:
 func show_hit(actor: Node3D, hit: CombatHit3D, _amount: float) -> void:
 	var enemy := (actor as CombatActor).is_enemy
 	if enemy and hit.damage_type == GameEnums.DamageType.ELECTRIC:
-		shock_marks[actor] = visual_time + SHOCK_MARK_SECONDS
+		status.mark_shocked(actor)
 	damage_numbers.show_damage(actor, _amount, not enemy, hit.critical, hit.damage_type == GameEnums.DamageType.FIRE)
 	show_burst(actor.position + Vector3(0, .5, 0), _burst_kind(hit.damage_type) if enemy else "hurt")
 	_show_spark(actor.position + Vector3(0, .45, 0), hit_material if enemy else hull_material,
@@ -476,93 +471,10 @@ func _physics_process(delta: float) -> void:
 		else:
 			var progress := ages[index] / durations[index]
 			(pulses[index].material_override as ShaderMaterial).set_shader_parameter("age", progress)
-	_update_burns()
-	_update_shocks()
-
-var burn_visuals: Dictionary = {}
-func _update_burns() -> void:
-	for actor in burn_visuals.keys():
-		if not is_instance_valid(actor) or actor.dead or actor.statuses.burn_remaining <= 0.0:
-			burn_visuals[actor].queue_free()
-			burn_visuals.erase(actor)
-	for actor in world.enemies:
-		if not is_instance_valid(actor) or actor.dead or actor.statuses.burn_remaining <= 0.0:
-			continue
-		if not burn_visuals.has(actor) and burn_visuals.size() < 32:
-			var flame := MeshInstance3D.new()
-			var quad := QuadMesh.new()
-			quad.size = Vector2(1.7, 1.9) * actor.body_scale
-			flame.mesh = quad
-			var material := ShaderMaterial.new()
-			material.shader = preload("res://assets/shaders/burning_actor.gdshader")
-			material.set_shader_parameter("motion_speed", GameConstants.REDUCED_MOTION_SPEED if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else 1.0)
-			flame.material_override = material
-			flame.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-			add_child(flame)
-			burn_visuals[actor] = flame
-		if burn_visuals.has(actor):
-			var flame: MeshInstance3D = burn_visuals[actor]
-			flame.position = actor.position + Vector3.UP * .7 * actor.body_scale
-			(flame.material_override as ShaderMaterial).set_shader_parameter("visual_time", visual_time)
-			flame.rotation.y = world.camera.global_rotation.y
-
-func _is_shocked(actor: CombatActor) -> bool:
-	return float(shock_marks.get(actor, -1.0)) > visual_time or actor.statuses.effects.has(GameEnums.DamageType.ELECTRIC)
-
-## Crackling electric shell on enemies that were just hit by electricity or are still slowed by it.
-func _update_shocks() -> void:
-	for actor in shock_marks.keys():
-		if not is_instance_valid(actor) or float(shock_marks[actor]) <= visual_time:
-			shock_marks.erase(actor)
-	for actor in shock_visuals.keys():
-		if not is_instance_valid(actor) or actor.dead or not _is_shocked(actor):
-			_release_shock_visual(actor)
-	var motion := GameConstants.REDUCED_MOTION_SPEED if FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION) else 1.0
-	for actor in world.enemies:
-		if not is_instance_valid(actor) or actor.dead or not _is_shocked(actor):
-			continue
-		if not shock_visuals.has(actor):
-			if shock_visuals.size() >= MAX_SHOCK_VISUALS:
-				continue
-			shock_visuals[actor] = _take_shock_visual(actor)
-		var overlay: MeshInstance3D = shock_visuals[actor]
-		var material := overlay.material_override as ShaderMaterial
-		material.set_shader_parameter("visual_time", visual_time)
-		material.set_shader_parameter("motion_speed", motion)
-		# Face the camera and sit just in front of the body so the model does not hide it.
-		overlay.global_basis = world.camera.global_basis
-		overlay.position = actor.position + Vector3.UP * .65 * actor.body_scale + world.camera.global_basis.z * .6 * actor.body_scale
-
-func _take_shock_visual(actor: CombatActor) -> MeshInstance3D:
-	var overlay: MeshInstance3D
-	if shock_pool.is_empty():
-		overlay = MeshInstance3D.new()
-		overlay.mesh = QuadMesh.new()
-		var material := ShaderMaterial.new()
-		material.shader = shock_shader
-		overlay.material_override = material
-		overlay.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		add_child(overlay)
-	else:
-		overlay = shock_pool.pop_back()
-	(overlay.mesh as QuadMesh).size = Vector2(1.6, 1.8) * actor.body_scale
-	(overlay.material_override as ShaderMaterial).set_shader_parameter("seed", float(actor.get_instance_id() % 97))
-	overlay.visible = true
-	return overlay
-
-func _release_shock_visual(actor: Variant) -> void:
-	var overlay: MeshInstance3D = shock_visuals[actor]
-	overlay.visible = false
-	shock_pool.append(overlay)
-	shock_visuals.erase(actor)
+	status.update()
 
 func reset(preserve_damage: bool = false) -> void:
-	for flame in burn_visuals.values():
-		flame.queue_free()
-	burn_visuals.clear()
-	for actor in shock_visuals.keys():
-		_release_shock_visual(actor)
-	shock_marks.clear()
+	status.reset()
 	for index in range(arc_lights.size()):
 		arc_light_ages[index] = -1.0
 		arc_lights[index].visible = false

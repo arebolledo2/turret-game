@@ -103,29 +103,29 @@ func test_electric_hit_marks_enemy_shocked_until_it_expires() -> void:
 	var enemy := _enemy(Vector3(3, 0, 3))
 	var hit := CombatHit3D.new(1, Vector3.ZERO, Vector3.ZERO, GameEnums.DamageType.ELECTRIC)
 	world.combat.apply_hit(enemy, hit)
-	world.effects._update_shocks()
-	assert_eq(world.effects.shock_visuals.size(), 1)
-	assert_true(world.effects.shock_visuals[enemy].visible)
-	world.effects.visual_time += CombatEffects3D.SHOCK_MARK_SECONDS + .1
-	world.effects._update_shocks()
-	assert_eq(world.effects.shock_visuals.size(), 0)
-	assert_eq(world.effects.shock_pool.size(), 1)
-	assert_false(world.effects.shock_pool[0].visible)
+	world.effects.status.update_shocks()
+	assert_eq(world.effects.status.shock_visuals.size(), 1)
+	assert_true(world.effects.status.shock_visuals[enemy].visible)
+	world.effects.visual_time += StatusVisuals3D.SHOCK_MARK_SECONDS + .1
+	world.effects.status.update_shocks()
+	assert_eq(world.effects.status.shock_visuals.size(), 0)
+	assert_eq(world.effects.status.shock_pool.size(), 1)
+	assert_false(world.effects.status.shock_pool[0].visible)
 
 func test_non_electric_hit_does_not_shock_and_overlay_is_reused() -> void:
 	var enemy := _enemy(Vector3(3, 0, 3))
 	world.combat.apply_hit(enemy, CombatHit3D.new(1))
-	world.effects._update_shocks()
-	assert_eq(world.effects.shock_visuals.size(), 0)
+	world.effects.status.update_shocks()
+	assert_eq(world.effects.status.shock_visuals.size(), 0)
 	world.combat.apply_hit(enemy, CombatHit3D.new(1, Vector3.ZERO, Vector3.ZERO, GameEnums.DamageType.ELECTRIC))
-	world.effects._update_shocks()
-	var overlay: MeshInstance3D = world.effects.shock_visuals[enemy]
+	world.effects.status.update_shocks()
+	var overlay: MeshInstance3D = world.effects.status.shock_visuals[enemy]
 	world.effects.reset()
-	assert_eq(world.effects.shock_visuals.size(), 0)
+	assert_eq(world.effects.status.shock_visuals.size(), 0)
 	var other := _enemy(Vector3(-3, 0, 3))
 	world.combat.apply_hit(other, CombatHit3D.new(1, Vector3.ZERO, Vector3.ZERO, GameEnums.DamageType.ELECTRIC))
-	world.effects._update_shocks()
-	assert_same(world.effects.shock_visuals[other], overlay)
+	world.effects.status.update_shocks()
+	assert_same(world.effects.status.shock_visuals[other], overlay)
 
 func test_electric_slow_keeps_shocked_overlay_after_mark_expires() -> void:
 	var enemy := _enemy(Vector3(3, 0, 3))
@@ -133,12 +133,12 @@ func test_electric_slow_keeps_shocked_overlay_after_mark_expires() -> void:
 	hit.slow_intensity = .3
 	hit.slow_duration = 2.0
 	world.combat.apply_hit(enemy, hit)
-	world.effects.visual_time += CombatEffects3D.SHOCK_MARK_SECONDS + .1
-	world.effects._update_shocks()
-	assert_eq(world.effects.shock_visuals.size(), 1)
+	world.effects.visual_time += StatusVisuals3D.SHOCK_MARK_SECONDS + .1
+	world.effects.status.update_shocks()
+	assert_eq(world.effects.status.shock_visuals.size(), 1)
 	enemy.statuses.clear()
-	world.effects._update_shocks()
-	assert_eq(world.effects.shock_visuals.size(), 0)
+	world.effects.status.update_shocks()
+	assert_eq(world.effects.status.shock_visuals.size(), 0)
 
 func test_electric_effects_do_not_consume_gameplay_rng() -> void:
 	var before := GameRandom.gameplay.state

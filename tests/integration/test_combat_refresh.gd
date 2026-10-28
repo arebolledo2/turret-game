@@ -82,11 +82,11 @@ func test_effects_clear_and_do_not_consume_gameplay_rng() -> void:
 	hit.burn_dps = 2
 	hit.burn_duration = 3
 	world.combat.apply_hit(enemy, hit)
-	world.effects._update_burns()
-	assert_eq(world.effects.burn_visuals.size(), 1)
+	world.effects.status.update_burns()
+	assert_eq(world.effects.status.burn_visuals.size(), 1)
 	enemy.statuses.clear()
-	world.effects._update_burns()
-	assert_eq(world.effects.burn_visuals.size(), 0)
+	world.effects.status.update_burns()
+	assert_eq(world.effects.status.burn_visuals.size(), 0)
 	world.effects.reset()
 	for arc in world.effects.arcs: assert_false(arc.visible)
 	for pulse in world.effects.pulses: assert_false(pulse.visible)
