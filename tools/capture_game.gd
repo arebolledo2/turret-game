@@ -19,6 +19,8 @@ var roster_demo: bool = false
 var sniper_demo: bool = false
 var quake_demo: bool = false
 var quake_frame: int = 225
+var decoy_demo: bool = false
+var decoy_frame: int = 480
 var last_tick: int = 0
 var physics_samples: Array[float] = []
 var process_samples: Array[float] = []
@@ -61,14 +63,17 @@ func setup() -> void:
 	roster_demo = "--roster-demo" in arguments
 	sniper_demo = "--sniper-demo" in arguments
 	quake_demo = "--quake-demo" in arguments
+	decoy_demo = "--decoy-demo" in arguments
 	for argument in arguments:
+		if argument.begins_with("--decoy-frame="):
+			decoy_frame = int(argument.trim_prefix("--decoy-frame="))
 		if argument.begins_with("--quake-frame="):
 			quake_frame = int(argument.trim_prefix("--quake-frame="))
 	new_turrets = "--new-turrets" in arguments or mixed_stress
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	GameRandom.gameplay.seed = 42
-	for index in range(150 if stress else (0 if zones_demo or roster_demo or sniper_demo or quake_demo else 18)):
+	for index in range(150 if stress else (0 if zones_demo or roster_demo or sniper_demo or quake_demo or decoy_demo else 18)):
 		var angle := float(index) * 2.39996
 		var radius := 2.5 + float(index % 6) * .5
 		var kind: String = ["basic", "fast", "tank", "charger", "exploder"][index % 5] if mixed_stress else ("charger" if index % 4 == 0 else "basic")
@@ -91,6 +96,8 @@ func setup() -> void:
 		stage_sniper_demo()
 	if quake_demo:
 		stage_quake_demo()
+	if decoy_demo:
+		stage_decoy_demo()
 	last_tick = Time.get_ticks_usec()
 	started_usec = last_tick
 
@@ -152,6 +159,38 @@ func stage_quake_demo() -> void:
 			enemy.max_health = 100000
 	world.crowd.rebuild(world.enemies)
 	world.camera_rig.set_zoom(.9)
+	world.camera_rig.snap()
+
+## The Decoy line in real combat (`--decoy-demo[ --decoy-frame=N]`, run with `--fixed-fps 60`): Decoy and Bumper Post on the near
+## row, Pile Driver and Maelstrom on the far row, each with a ring of real, moving enemies (basics, plus Kites round the
+## Maelstrom). The hero stands far off at +z. Combat starts at frame 180; the screenshot is taken at `decoy_frame` (the
+## default is about four seconds in: pulled crowds stacked round the first three, and the Maelstrom's hooks circling).
+func stage_decoy_demo() -> void:
+	world.hud.hide()
+	world.player.position = Vector3(0, 0, 8)
+	world.player.health = 100000
+	world.player.max_health = 100000
+	for old in world.turrets:
+		old.visible = false
+		old.set_physics_process(false)
+	world.session.state.turret_progression_enabled = true
+	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP) # evolving is a shop action
+	var forms: Array = [[], ["bumper_post"], ["bumper_post", "pile_driver"], ["bumper_post", "maelstrom"]]
+	var spots: Array = [Vector3(-6, 0, -4), Vector3(6, 0, -4), Vector3(-6, 0, 3), Vector3(6, 0, 3)]
+	for index in range(forms.size()):
+		var turret := world.add_turret(spots[index], "decoy")
+		turret.progression.award(1500)
+		for form: String in forms[index]:
+			if not turret.evolve(form):
+				push_error("Cannot evolve %s" % form)
+		for k in range(8):
+			var angle := float(k) * TAU / 8.0 + .4
+			var type_id := "kite" if index == 3 and k % 4 == 0 else "basic"
+			var enemy := world.spawn_enemy(turret.position + Vector3(cos(angle), 0, sin(angle)) * 3.6, type_id)
+			enemy.health = 100000
+			enemy.max_health = 100000
+	world.crowd.rebuild(world.enemies)
+	world.camera_rig.set_zoom(.85)
 	world.camera_rig.snap()
 
 ## Once combat has started: every visible Sniper fires one real shot (tracer, muzzle flash, hit), then effects freeze.
@@ -224,14 +263,14 @@ func _process(_delta: float) -> void:
 		world.finish_wave()
 	if frames == 400 and shop_focus >= 0:
 		world.hud.shop_screen.offer_buttons[shop_focus].grab_focus()
-	if frames == 180 and quake_demo:
+	if frames == 180 and (quake_demo or decoy_demo):
 		GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 		world.crowd.rebuild(world.enemies)
 	if frames == 180 and sniper_demo:
 		fire_sniper_demo()
 	if frames == 180 and combat_demo:
 		stage_combat_demo()
-	var finished := elapsed >= benchmark_seconds + 2.0 if benchmark_seconds > 0.0 else frames == (quake_frame if quake_demo else 720)
+	var finished := elapsed >= benchmark_seconds + 2.0 if benchmark_seconds > 0.0 else frames == (decoy_frame if decoy_demo else (quake_frame if quake_demo else 720))
 	if finished and not capture_pending:
 		capture_pending = true
 		capture.call_deferred()
@@ -245,6 +284,8 @@ func capture() -> void:
 		suffix = "-sniper"
 	if quake_demo:
 		suffix = "-quake-%d" % quake_frame
+	if decoy_demo:
+		suffix = "-decoy-%d" % decoy_frame
 	var output := ProjectSettings.globalize_path("res://.test-results/game%s.png" % suffix)
 	get_viewport().get_texture().get_image().save_png(output)
 	samples.sort()

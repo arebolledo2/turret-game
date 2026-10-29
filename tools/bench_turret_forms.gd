@@ -10,6 +10,8 @@ extends Node
 ##   single  one enemy 1.5 m away
 ##   cluster eight enemies packed around a point 1.5 m away
 ##   lane    three enemies in a line at 1.5, 2.5 and 3.4 m (tests reach and piercing)
+##   pull    (aggro turrets) eight real enemies 3.5 m away, walking at the hero unless taunted: how many stay held round the turret
+##   pull_far the same from 6 m, outside every taunt but the Maelstrom's
 ## "slow" is the share of enemy-seconds spent slowed (by a status or by standing in a ground zone).
 ## [base, form(, companion form)]: a form id is reached through its base's level-5 upgrade first; "" is the unevolved base.
 ## A third entry puts an Ion turret of that form (a Machine Gun) beside it in the same cell; the row then reports the
@@ -26,8 +28,15 @@ const FORMS := [
 	["sniper", ""], ["sniper", "piercer_rifle"], ["sniper", "horizon_piercer"], ["sniper", "overwatch"],
 	["sniper", "piercer_rifle", "machine_gun"], ["sniper", "horizon_piercer", "machine_gun"], ["sniper", "overwatch", "machine_gun"],
 	["quake", ""], ["quake", "aftershock"], ["quake", "tectonic"], ["quake", "cataclysm"],
+	["decoy", ""], ["decoy", "bumper_post"], ["decoy", "pile_driver"], ["decoy", "maelstrom"],
 ]
-const SCENARIOS := ["single", "cluster", "lane"]
+const SCENARIOS := ["single", "cluster", "lane", "pull", "pull_far"]
+## The pull scenarios (aggro turrets only) use real, moving enemies that would otherwise walk off toward the hero. Eight
+## enemies start in a ring this far from the turret; "held" is the share of enemy-seconds spent within `HELD_RADIUS` metres
+## of it (the hero is far away at +z, so an enemy that is not held is gone).
+const PULL_START := {"pull": 3.5, "pull_far": 6.0}
+const HELD_RADIUS: float = 3.0
+const PULL_SECONDS: float = 20.0
 const COLUMNS := 8
 const CELL := Vector2(16.0, 18.0)
 
@@ -44,6 +53,10 @@ var ticks: int = 0
 var seconds: float = 15.0
 var damage: Dictionary = {}
 var slowed: Dictionary = {}
+var held: Dictionary = {}
+## Aggro rows still to run in the current pull scenario, and the one running now.
+var pull_queue: Array[int] = []
+var pull_row: int = 0
 var samples: Dictionary = {}
 var results: Dictionary = {}
 
@@ -126,17 +139,14 @@ func _next_phase() -> void:
 	if phase >= SCENARIOS.size():
 		_finish()
 		return
-	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
-	for projectile in world.projectiles:
-		projectile.release()
-	for enemy in world.enemies:
-		enemy.queue_free()
-	world.enemies.clear()
-	for turret in actors:
-		turret.cooldown = 0.0
-	damage.clear()
-	slowed.clear()
-	samples.clear()
+	_reset_field()
+	if _is_pull():
+		pull_queue.clear()
+		for i in actors.size():
+			if _aggro(i):
+				pull_queue.append(i)
+		_start_pull_row()
+		return
 	for i in actors.size():
 		var centre := _cell(i)
 		match SCENARIOS[phase]:
@@ -154,10 +164,44 @@ func _next_phase() -> void:
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 	ticks = 0
 
+## Out of combat, nothing alive: the blank field every scenario starts from.
+func _reset_field() -> void:
+	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
+	for projectile in world.projectiles:
+		projectile.release()
+	for enemy in world.enemies:
+		enemy.queue_free()
+	world.enemies.clear()
+	for turret in actors:
+		turret.cooldown = 0.0
+	damage.clear()
+	slowed.clear()
+	held.clear()
+	samples.clear()
+
+## One aggro turret at a time, moved to the middle of the arena (real enemies are clamped to the arena, so the far cells the
+## other scenarios use are no good), with eight real enemies in a ring round it.
+func _start_pull_row() -> void:
+	_reset_field()
+	pull_row = pull_queue.pop_front()
+	actors[pull_row].position = Vector3.ZERO
+	var ring: float = PULL_START[SCENARIOS[phase]]
+	for k in 8:
+		var angle := float(k) * TAU / 8.0 + .4
+		var enemy := world.spawn_enemy(Vector3(cos(angle) * ring, 0, sin(angle) * ring))
+		enemy.health = 1000000
+		enemy.max_health = 1000000
+	world.crowd.rebuild(world.enemies)
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	ticks = 0
+
 func _physics_process(_delta: float) -> void:
 	if phase < 0 or phase >= SCENARIOS.size():
 		return
 	ticks += 1
+	if _is_pull():
+		_physics_pull()
+		return
 	if ticks == 60:
 		# One second of warm-up so charge-up, echoes and first shots do not skew the window.
 		damage.clear()
@@ -179,6 +223,33 @@ func _physics_process(_delta: float) -> void:
 			results[_name(i)][SCENARIOS[phase]] = [dps, slow]
 		_next_phase()
 
+func _is_pull() -> bool:
+	return phase >= 0 and phase < SCENARIOS.size() and PULL_START.has(SCENARIOS[phase])
+
+func _aggro(index: int) -> bool:
+	return TurretRegistry.get_family(actors[index].turret_type) == "aggro"
+
+## The pull scenarios run real enemies, so the crowd (separation, and the turret as a solid obstacle) is rebuilt every tick the
+## way `WaveDirector` does. Sampling starts at once: the point is how fast the enemies are caught.
+func _physics_pull() -> void:
+	var turret := actors[pull_row]
+	world.crowd.rebuild(world.enemies)
+	world.crowd.resolve_overlaps([{"position": turret.position, "radius": GameConstants.TURRET_BODY_RADIUS}])
+	for enemy: CombatActor in world.enemies:
+		if is_instance_valid(enemy) and not enemy.dead:
+			samples[pull_row] = int(samples.get(pull_row, 0)) + 1
+			if WorldGeometry.planar(enemy.position - turret.position).length() <= HELD_RADIUS:
+				held[pull_row] = int(held.get(pull_row, 0)) + 1
+	if ticks >= int(PULL_SECONDS * 60.0):
+		results[_name(pull_row)] = results.get(_name(pull_row), {})
+		results[_name(pull_row)][SCENARIOS[phase]] = [float(held.get(pull_row, 0)) / maxf(1.0, float(samples.get(pull_row, 1))), float(damage.get(turret.turret_id, 0.0)) / PULL_SECONDS]
+		var cell := _cell(pull_row)
+		turret.position = Vector3(cell.x, 0, cell.y)
+		if pull_queue.is_empty():
+			_next_phase()
+		else:
+			_start_pull_row()
+
 func _nearest_cell(position: Vector3) -> int:
 	var best := 0
 	var best_distance := INF
@@ -196,11 +267,21 @@ func _name(index: int) -> String:
 
 func _finish() -> void:
 	print("FORM                    | single dps slow | cluster dps slow | lane dps slow")
+	var pulled := false
 	for i in actors.size():
 		var key := _name(i)
 		var row: Dictionary = results[key]
 		var line := "%-24s|" % key
 		for scenario in SCENARIOS:
-			line += " %7.1f %4.0f%% |" % [row[scenario][0], row[scenario][1] * 100.0]
+			if not PULL_START.has(scenario):
+				line += " %7.1f %4.0f%% |" % [row[scenario][0], row[scenario][1] * 100.0]
 		print(line)
+		pulled = pulled or row.has("pull")
+	if pulled:
+		print("")
+		print("FORM                    | pull from 3.5 m: held   crowd dps | pull from 6 m: held   crowd dps   (held = share of enemy-seconds within %.0f m of the turret; crowd dps = damage dealt to the eight, %.0f s)" % [HELD_RADIUS, PULL_SECONDS])
+		for i in actors.size():
+			if _aggro(i):
+				var row: Dictionary = results[_name(i)]
+				print("%-24s| %21.0f%% %10.1f | %19.0f%% %10.1f" % [_name(i), row["pull"][0] * 100.0, row["pull"][1], row["pull_far"][0] * 100.0, row["pull_far"][1]])
 	get_tree().quit()
