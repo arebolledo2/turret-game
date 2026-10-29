@@ -571,6 +571,17 @@
       "meshes": 9,
       "materials": 10,
       "iteration": 6
+    },
+    {
+      "id": "decoy",
+      "source": "art-source/clockwork-pop/decoy/build_cp_decoy.py",
+      "model": "assets/models/clockwork/cp_decoy.glb",
+      "reference": "art-source/clockwork-pop/references/decoy.png",
+      "sha256": "01d11b6978864c89fb59006c90e96c039b1cc5ea90f402296cd2358466e07b5f",
+      "triangles": 19886,
+      "meshes": 15,
+      "materials": 10,
+      "iteration": 6
     }
   ]
 }

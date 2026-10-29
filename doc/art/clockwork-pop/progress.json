@@ -417,6 +417,13 @@
       "status": "review",
       "preview": "previews/quake.png",
       "metrics": "17,402 triangles \u00c2\u00b7 9 meshes \u00c2\u00b7 10 materials"
+    },
+    {
+      "key": "decoy",
+      "name": "Decoy",
+      "status": "review",
+      "preview": "previews/decoy.png",
+      "metrics": "19,886 triangles \u00c2\u00b7 15 meshes \u00c2\u00b7 10 materials"
     }
   ],
   "events": [
@@ -722,6 +729,10 @@
     },
     {
       "stage": "Export: quake",
+      "text": "Reviewed harness iteration 6; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: decoy",
       "text": "Reviewed harness iteration 6; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
     }
   ],
