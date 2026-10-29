@@ -120,7 +120,7 @@ func _rebuild_model() -> void:
 		EnemyVariants.tint_model(model, "turret_tesla", TESLA_TINT, .5)
 	elif turret_type == "scrap_press":
 		# The Shock bell stands in for the Scrap Press until its real chassis is wired: a brass tint tells them apart.
-		EnemyVariants.tint_model(model, "turret_scrap_press", SCRAP_PRESS_TINT, 0.0)
+		EnemyVariants.tint_model(model, "turret_scrap_press", SCRAP_PRESS_TINT, .45)
 	add_child(model)
 	_build_form_visual()
 	aim = model.find_child("Aim", true, false) as Node3D

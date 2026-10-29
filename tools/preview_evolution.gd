@@ -115,6 +115,34 @@ func _ready() -> void:
 			label.pixel_size = .005
 			world.add_child(label)
 		return
+	if "--scrap-press-preview" in OS.get_cmdline_user_args():
+		# Scrap Press, Coin Feeder, Treasury and Academy side by side; --zoom=<size> (default 8.5) closes in, --side looks level, --focus=<0-3> centres one turret.
+		var zoom := 8.5
+		for argument in OS.get_cmdline_user_args():
+			if argument.begins_with("--zoom="):
+				zoom = float(argument.trim_prefix("--zoom="))
+		world.turrets[0].visible = false
+		world.camera.position = Vector3(0, 1.1, 9.0) if "--side" in OS.get_cmdline_user_args() else Vector3(0, 5.5, 7.5)
+		for argument in OS.get_cmdline_user_args():
+			if argument.begins_with("--focus="):
+				world.camera.position.x += (float(argument.trim_prefix("--focus=")) - 1.5) * 2.8
+		world.camera.look_at(Vector3(world.camera.position.x, .8, 0))
+		world.camera.size = zoom
+		for i in range(4):
+			var turret := world.add_turret(Vector3((i - 1.5) * 2.8, 0, 0), "scrap_press")
+			turret.set_physics_process(false)
+			turret.progression.award(1500)
+			for form: String in [[], ["coin_feeder"], ["coin_feeder", "treasury"], ["coin_feeder", "academy"]][i]:
+				turret.evolve(form)
+			turret.reset_physics_interpolation()
+			var label := Label3D.new()
+			label.text = turret.display_name()
+			label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			label.position = turret.position + Vector3(0, 2.2, 0)
+			label.font_size = 44
+			label.pixel_size = .005
+			world.add_child(label)
+		return
 	if "--flame-preview" in OS.get_cmdline_user_args():
 		world.turrets[0].visible = false
 		world.effects.set_physics_process(false)
@@ -176,7 +204,7 @@ func _process(_delta: float) -> void:
 
 func capture() -> void:
 	await RenderingServer.frame_post_draw
-	var filename := "saber-preview.png" if "--saber-preview" in OS.get_cmdline_user_args() else "flame-preview.png" if "--flame-preview" in OS.get_cmdline_user_args() else "expansion-preview.png" if "--expansion-preview" in OS.get_cmdline_user_args() else "sniper-preview.png" if "--sniper-preview" in OS.get_cmdline_user_args() else "quake-preview.png" if "--quake-preview" in OS.get_cmdline_user_args() else "decoy-preview.png" if "--decoy-preview" in OS.get_cmdline_user_args() else "evolution-preview.png"
+	var filename := "saber-preview.png" if "--saber-preview" in OS.get_cmdline_user_args() else "flame-preview.png" if "--flame-preview" in OS.get_cmdline_user_args() else "expansion-preview.png" if "--expansion-preview" in OS.get_cmdline_user_args() else "sniper-preview.png" if "--sniper-preview" in OS.get_cmdline_user_args() else "quake-preview.png" if "--quake-preview" in OS.get_cmdline_user_args() else "decoy-preview.png" if "--decoy-preview" in OS.get_cmdline_user_args() else "scrap-press-preview.png" if "--scrap-press-preview" in OS.get_cmdline_user_args() else "evolution-preview.png"
 	var output := ProjectSettings.globalize_path("res://.test-results/" + filename)
 	get_viewport().get_texture().get_image().save_png(output)
 	print("EVOLUTION_PREVIEW ", output)

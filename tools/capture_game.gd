@@ -21,6 +21,8 @@ var quake_demo: bool = false
 var quake_frame: int = 225
 var decoy_demo: bool = false
 var decoy_frame: int = 480
+var press_demo: bool = false
+var press_frame: int = 600
 var last_tick: int = 0
 var physics_samples: Array[float] = []
 var process_samples: Array[float] = []
@@ -64,7 +66,10 @@ func setup() -> void:
 	sniper_demo = "--sniper-demo" in arguments
 	quake_demo = "--quake-demo" in arguments
 	decoy_demo = "--decoy-demo" in arguments
+	press_demo = "--scrap-press-demo" in arguments
 	for argument in arguments:
+		if argument.begins_with("--scrap-press-frame="):
+			press_frame = int(argument.trim_prefix("--scrap-press-frame="))
 		if argument.begins_with("--decoy-frame="):
 			decoy_frame = int(argument.trim_prefix("--decoy-frame="))
 		if argument.begins_with("--quake-frame="):
@@ -73,7 +78,7 @@ func setup() -> void:
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	GameRandom.gameplay.seed = 42
-	for index in range(150 if stress else (0 if zones_demo or roster_demo or sniper_demo or quake_demo or decoy_demo else 18)):
+	for index in range(150 if stress else (0 if zones_demo or roster_demo or sniper_demo or quake_demo or decoy_demo or press_demo else 18)):
 		var angle := float(index) * 2.39996
 		var radius := 2.5 + float(index % 6) * .5
 		var kind: String = ["basic", "fast", "tank", "charger", "exploder"][index % 5] if mixed_stress else ("charger" if index % 4 == 0 else "basic")
@@ -98,6 +103,8 @@ func setup() -> void:
 		stage_quake_demo()
 	if decoy_demo:
 		stage_decoy_demo()
+	if press_demo:
+		stage_scrap_press_demo()
 	last_tick = Time.get_ticks_usec()
 	started_usec = last_tick
 
@@ -193,6 +200,33 @@ func stage_decoy_demo() -> void:
 	world.camera_rig.set_zoom(.85)
 	world.camera_rig.snap()
 
+## The Scrap Press line in real combat (`--scrap-press-demo[ --scrap-press-frame=N]`, run with `--fixed-fps 60`): the plain press and
+## Coin Feeder on the near row, Treasury and Academy on the far row, with two Ion turrets beside the Academy (so it has turrets in
+## reach to teach) and no enemies. The hero stays far off at +z so nothing is picked up: floor scrap piles up round the first two,
+## the Treasury and Coin Feeder deposit into the wallet and the Academy rings out every few seconds. Combat starts at frame 180;
+## the screenshot is taken at `press_frame` (about seven seconds of production).
+func stage_scrap_press_demo() -> void:
+	world.hud.hide()
+	world.player.position = Vector3(0, 0, 12)
+	for old in world.turrets:
+		old.visible = false
+		old.set_physics_process(false)
+	world.session.state.turret_progression_enabled = true
+	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP) # evolving is a shop action
+	var forms: Array = [[], ["coin_feeder"], ["coin_feeder", "treasury"], ["coin_feeder", "academy"]]
+	var spots: Array = [Vector3(-6, 0, -3), Vector3(-1, 0, -3), Vector3(-6, 0, 3), Vector3(-1, 0, 3)]
+	for index in range(forms.size()):
+		var turret := world.add_turret(spots[index], "scrap_press")
+		turret.progression.award(1500)
+		for form: String in forms[index]:
+			if not turret.evolve(form):
+				push_error("Cannot evolve %s" % form)
+	for offset in [Vector3(2.4, 0, 0), Vector3(0, 0, 2.4)]:
+		var neighbour := world.add_turret(spots[3] + offset, "normal")
+		neighbour.progression.award(60)
+	world.camera_rig.set_zoom(.85)
+	world.camera_rig.snap()
+
 ## Once combat has started: every visible Sniper fires one real shot (tracer, muzzle flash, hit), then effects freeze.
 func fire_sniper_demo() -> void:
 	# With no initial wave the run drifts to the shop; turrets only fire in combat.
@@ -263,14 +297,14 @@ func _process(_delta: float) -> void:
 		world.finish_wave()
 	if frames == 400 and shop_focus >= 0:
 		world.hud.shop_screen.offer_buttons[shop_focus].grab_focus()
-	if frames == 180 and (quake_demo or decoy_demo):
+	if frames == 180 and (quake_demo or decoy_demo or press_demo):
 		GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 		world.crowd.rebuild(world.enemies)
 	if frames == 180 and sniper_demo:
 		fire_sniper_demo()
 	if frames == 180 and combat_demo:
 		stage_combat_demo()
-	var finished := elapsed >= benchmark_seconds + 2.0 if benchmark_seconds > 0.0 else frames == (decoy_frame if decoy_demo else (quake_frame if quake_demo else 720))
+	var finished := elapsed >= benchmark_seconds + 2.0 if benchmark_seconds > 0.0 else frames == (press_frame if press_demo else (decoy_frame if decoy_demo else (quake_frame if quake_demo else 720)))
 	if finished and not capture_pending:
 		capture_pending = true
 		capture.call_deferred()
@@ -286,6 +320,8 @@ func capture() -> void:
 		suffix = "-quake-%d" % quake_frame
 	if decoy_demo:
 		suffix = "-decoy-%d" % decoy_frame
+	if press_demo:
+		suffix = "-scrap-press-%d" % press_frame
 	var output := ProjectSettings.globalize_path("res://.test-results/game%s.png" % suffix)
 	get_viewport().get_texture().get_image().save_png(output)
 	samples.sort()

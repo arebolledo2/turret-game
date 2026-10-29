@@ -91,6 +91,25 @@ func _ready() -> void:
 				decoy.evolve("bumper_post")
 			world.hud.shop_screen.switch_tab(1)
 			world.hud.shop_screen.turret_inspector.evolution_preview.show_form(decoy, decoy_form)
+	# --press: the Scrap Press offer card and roster; --press-form=<coin_feeder|treasury|academy> opens that form's evolution preview.
+	var press_form := ""
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--press-form="):
+			press_form = argument.trim_prefix("--press-form=")
+	var press_mode: bool = "--press" in OS.get_cmdline_user_args() or not press_form.is_empty()
+	if press_mode:
+		var press := world.add_turret(Vector3(3, 0, 3), "scrap_press")
+		press.set_physics_process(false)
+		EconomyService.current_shop_offers.assign([ShopOffer.new("turret", "scrap_press", 14), ShopOffer.new("item", "polished_barrels", 18), ShopOffer.new("item", "blast_charges", 18), ShopOffer.new("item", "capacitor_bank", 18)])
+		world.hud._process(0)
+		world.hud.shop_screen.offer_buttons[0].grab_focus()
+		if not press_form.is_empty():
+			world.session.state.turret_progression_enabled = true
+			press.progression.award(1500)
+			if press_form != "coin_feeder":
+				press.evolve("coin_feeder")
+			world.hud.shop_screen.switch_tab(1)
+			world.hud.shop_screen.turret_inspector.evolution_preview.show_form(press, press_form)
 	if "--reminder" in OS.get_cmdline_user_args():
 		world.session.state.turret_progression_enabled = true
 		world.turrets[0].progression.award(1500)
@@ -99,6 +118,8 @@ func _ready() -> void:
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	var output := "res://.test-results/shop-%dx%d%s.png" % [get_viewport().size.x, get_viewport().size.y, "-rare" if "--rare" in OS.get_cmdline_user_args() else ("-decoy-" + decoy_form if not decoy_form.is_empty() else ("-decoy" if "--decoy" in OS.get_cmdline_user_args() else ("-sniper-" + sniper_form if not sniper_form.is_empty() else ("-sniper" if "--sniper" in OS.get_cmdline_user_args() else ("-quake-" + quake_form if not quake_form.is_empty() else ("-quake" if "--quake" in OS.get_cmdline_user_args() else ""))))))]
+	if press_mode:
+		output = "res://.test-results/shop-%dx%d-press%s.png" % [get_viewport().size.x, get_viewport().size.y, "-" + press_form if not press_form.is_empty() else ""]
 	get_viewport().get_texture().get_image().save_png(output)
 	print("SHOP_CAPTURE ", ProjectSettings.globalize_path(output))
 	get_tree().quit()

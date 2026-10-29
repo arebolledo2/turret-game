@@ -3,6 +3,7 @@ extends Node
 ## Native, repeatable attack/visual review. Uses ordinary actor physics and projectiles.
 ## Durable stationary enemies keep every weapon firing without changing balance data.
 ## [base, level-5 upgrade, level-10 final, level-10 final under --alternate]. Each turret is shown as the upgrade, then evolved.
+## A turret with no attack (the Scrap Press) is scored by the drops it makes instead of hits, and must make none while carried.
 const ROSTER := [
 	["normal", "machine_gun", "cyclone_gatling", "omnifire"],
 	["normal", "machine_gun", "omnifire", "cyclone_gatling"],
@@ -20,7 +21,11 @@ const ROSTER := [
 	["quake", "aftershock", "cataclysm", "tectonic"],
 	["decoy", "bumper_post", "pile_driver", "maelstrom"],
 	["decoy", "bumper_post", "maelstrom", "pile_driver"],
+	["scrap_press", "coin_feeder", "treasury", "academy"],
+	["scrap_press", "coin_feeder", "academy", "treasury"],
 ]
+## Seconds a phase runs before it is scored. Long enough for the slowest Scrap Press final (Academy, one drop per 6 to 8 s).
+const PHASE_TICKS: int = 540
 var world: ArenaWorld
 var actors: Array[TurretActor] = []
 var labels: Array[Label3D] = []
@@ -34,6 +39,9 @@ var ticks := 0
 var carried_index := -1
 var report: Dictionary = {}
 var paused_positions: Array[Vector3] = []
+## Scrap Press drops already counted at the last `hits.clear()`, by turret id, and at the moment the pause began.
+var drop_base: Dictionary = {}
+var paused_drops: int = 0
 
 func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://.test-results"))
@@ -104,7 +112,7 @@ func _physics_process(_delta: float) -> void:
 	ticks += 1
 	if ticks == 180 and phase in ["initial", "final"]:
 		capture.call_deferred(phase)
-	if ticks < (60 if phase == "paused" else 180 if phase == "carried" else 240):
+	if ticks < (60 if phase == "paused" else 180 if phase == "carried" else PHASE_TICKS):
 		return
 	if phase == "initial":
 		_record("initial")
@@ -126,10 +134,11 @@ func _physics_process(_delta: float) -> void:
 		_record("final")
 		phase = "paused"
 		world.toggle_pause()
+		paused_drops = _total_drops()
 		for projectile in world.projectiles:
 			paused_positions.append(projectile.position)
 	elif phase == "paused":
-		var unchanged := hits.is_empty()
+		var unchanged := hits.is_empty() and _total_drops() == paused_drops
 		for i in world.projectiles.size():
 			unchanged = unchanged and world.projectiles[i].position.is_equal_approx(paused_positions[i])
 		report["pause_stops_damage_and_projectile_motion"] = 1 if unchanged else 0
@@ -140,7 +149,10 @@ func _physics_process(_delta: float) -> void:
 		_next_carried()
 	else:
 		var turret := actors[carried_index]
-		report["carried_%d_%s" % [carried_index, turret.display_name()]] = int(hits.get(turret.turret_id, 0))
+		if _utility(turret):
+			report["carried_%d_%s_makes_nothing" % [carried_index, turret.display_name()]] = 1 if _count(turret) == 0 else 0
+		else:
+			report["carried_%d_%s" % [carried_index, turret.display_name()]] = _count(turret)
 		turret.carried = false
 		turret.set_physics_process(false)
 		if carried_index == actors.size() - 1:
@@ -148,7 +160,27 @@ func _physics_process(_delta: float) -> void:
 			return
 		_next_carried()
 	hits.clear()
+	for turret in actors:
+		drop_base[turret.turret_id] = _drops(turret)
 	ticks = 0
+
+func _utility(turret: TurretActor) -> bool:
+	return TurretRegistry.is_no_attack(turret.turret_type)
+
+func _drops(turret: TurretActor) -> int:
+	return (turret.form as ScrapPressForm).drops_made if turret.form is ScrapPressForm else 0
+
+func _total_drops() -> int:
+	var total := 0
+	for turret in actors:
+		total += _drops(turret)
+	return total
+
+## Hits dealt since the last clear, or drops made for a turret that does not attack.
+func _count(turret: TurretActor) -> int:
+	if _utility(turret):
+		return _drops(turret) - int(drop_base.get(turret.turret_id, 0))
+	return int(hits.get(turret.turret_id, 0))
 
 func _next_carried() -> void:
 	# Remove prior shots and burns so attributed hits prove new carried attacks.
@@ -168,7 +200,7 @@ func _next_carried() -> void:
 
 func _record(prefix: String) -> void:
 	for i in actors.size():
-		report["%s_%d_%s" % [prefix, i, actors[i].display_name()]] = int(hits.get(actors[i].turret_id, 0))
+		report["%s_%d_%s" % [prefix, i, actors[i].display_name()]] = _count(actors[i])
 
 func capture(suffix: String) -> void:
 	await RenderingServer.frame_post_draw

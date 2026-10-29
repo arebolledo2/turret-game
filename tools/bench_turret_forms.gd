@@ -12,6 +12,11 @@ extends Node
 ##   lane    three enemies in a line at 1.5, 2.5 and 3.4 m (tests reach and piercing)
 ##   pull    (aggro turrets) eight real enemies 3.5 m away, walking at the hero unless taunted: how many stay held round the turret
 ##   pull_far the same from 6 m, outside every taunt but the Maelstrom's
+##   income  (turrets with no attack, e.g. the Scrap Press) one press at a time at the hero-free middle of the arena, with two Ion
+##           turrets beside it (so Academy has three turrets in reach): wallet plus floor scrap per second, XP per second given,
+##           and the Treasury's interest if 50 scrap were held. `--wave=N` sets the wave (drop value). Other presses are held
+##           idle while a row runs so the 60% / 40% stacking does not mix rows. The numbers come from simulated time, so they do
+##           not depend on how busy the GPU is.
 ## "slow" is the share of enemy-seconds spent slowed (by a status or by standing in a ground zone).
 ## [base, form(, companion form)]: a form id is reached through its base's level-5 upgrade first; "" is the unevolved base.
 ## A third entry puts an Ion turret of that form (a Machine Gun) beside it in the same cell; the row then reports the
@@ -29,8 +34,9 @@ const FORMS := [
 	["sniper", "piercer_rifle", "machine_gun"], ["sniper", "horizon_piercer", "machine_gun"], ["sniper", "overwatch", "machine_gun"],
 	["quake", ""], ["quake", "aftershock"], ["quake", "tectonic"], ["quake", "cataclysm"],
 	["decoy", ""], ["decoy", "bumper_post"], ["decoy", "pile_driver"], ["decoy", "maelstrom"],
+	["scrap_press", ""], ["scrap_press", "coin_feeder"], ["scrap_press", "treasury"], ["scrap_press", "academy"],
 ]
-const SCENARIOS := ["single", "cluster", "lane", "pull", "pull_far"]
+const SCENARIOS := ["single", "cluster", "lane", "pull", "pull_far", "income"]
 ## The pull scenarios (aggro turrets only) use real, moving enemies that would otherwise walk off toward the hero. Eight
 ## enemies start in a ring this far from the turret; "held" is the share of enemy-seconds spent within `HELD_RADIUS` metres
 ## of it (the hero is far away at +z, so an enemy that is not held is gone).
@@ -57,6 +63,11 @@ var held: Dictionary = {}
 ## Aggro rows still to run in the current pull scenario, and the one running now.
 var pull_queue: Array[int] = []
 var pull_row: int = 0
+## Utility rows still to run in the income scenario, the one running now, and what the wallet and run counters stood at when it began.
+var income_queue: Array[int] = []
+var income_row: int = 0
+var income_start: Dictionary = {}
+var wave: int = 1
 var samples: Dictionary = {}
 var results: Dictionary = {}
 
@@ -68,6 +79,8 @@ func _ready() -> void:
 			level = int(argument.get_slice("=", 1))
 		elif argument.begins_with("--base="):
 			only_base = argument.get_slice("=", 1)
+		elif argument.begins_with("--wave="):
+			wave = int(argument.get_slice("=", 1))
 	seed(73021)
 	for spec: Array in FORMS:
 		if not only_base.is_empty() and spec[0] != only_base:
@@ -102,6 +115,11 @@ func _ready() -> void:
 				if not turret.evolve(form):
 					push_error("Cannot evolve %s (level %d)" % [form, turret.progression.level])
 		actors.append(turret)
+		if TurretRegistry.is_no_attack(spec[0]):
+			# Two neighbours inside Academy's reach, parked off the rows' cell middle so they never touch its drops.
+			for offset in [Vector3(2.5, 0, 0), Vector3(0, 0, 2.5)]:
+				var neighbour := world.add_turret(Vector3(cell.x, 0, cell.y) + offset, "normal")
+				_level_up(neighbour)
 		if spec.size() > 2:
 			var companion := world.add_turret(Vector3(cell.x + 1.0, 0, cell.y), "normal")
 			_level_up(companion)
@@ -140,6 +158,16 @@ func _next_phase() -> void:
 		_finish()
 		return
 	_reset_field()
+	if _is_income():
+		income_queue.clear()
+		for i in actors.size():
+			if _utility(i):
+				income_queue.append(i)
+		if income_queue.is_empty():
+			_next_phase()
+		else:
+			_start_income_row()
+		return
 	if _is_pull():
 		pull_queue.clear()
 		for i in actors.size():
@@ -199,6 +227,9 @@ func _physics_process(_delta: float) -> void:
 	if phase < 0 or phase >= SCENARIOS.size():
 		return
 	ticks += 1
+	if _is_income():
+		_physics_income()
+		return
 	if _is_pull():
 		_physics_pull()
 		return
@@ -222,6 +253,48 @@ func _physics_process(_delta: float) -> void:
 			results[_name(i)] = results.get(_name(i), {})
 			results[_name(i)][SCENARIOS[phase]] = [dps, slow]
 		_next_phase()
+
+func _is_income() -> bool:
+	return phase >= 0 and phase < SCENARIOS.size() and SCENARIOS[phase] == "income"
+
+func _utility(index: int) -> bool:
+	return TurretRegistry.is_no_attack(actors[index].turret_type)
+
+## One press at a time: the others are held (carried turrets make nothing and do not count toward the stacking rank).
+func _start_income_row() -> void:
+	_reset_field()
+	income_row = income_queue.pop_front()
+	GameStateService.current_wave = wave
+	EconomyService.total_scrap = 0
+	for pickup: ScrapPickup in world.pickup_root.get_children():
+		pickup.queue_free()
+	for i in actors.size():
+		if _utility(i):
+			actors[i].carried = i != income_row
+	actors[income_row].reset_entrench()
+	income_start = {"xp": world.scrap_income.xp_awarded}
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	ticks = 0
+
+func _physics_income() -> void:
+	if ticks < int(seconds * 60.0):
+		return
+	var turret := actors[income_row]
+	var floor_scrap := 0
+	for pickup: ScrapPickup in world.pickup_root.get_children():
+		if not pickup.is_queued_for_deletion():
+			floor_scrap += pickup.amount
+	var money := float(EconomyService.total_scrap + floor_scrap) / seconds
+	var xp := float(world.scrap_income.xp_awarded - int(income_start["xp"])) / seconds
+	results[_name(income_row)] = results.get(_name(income_row), {})
+	results[_name(income_row)]["income"] = [money, xp, turret.form.wave_end_scrap(50)]
+	for i in actors.size():
+		if _utility(i):
+			actors[i].carried = false
+	if income_queue.is_empty():
+		_next_phase()
+	else:
+		_start_income_row()
 
 func _is_pull() -> bool:
 	return phase >= 0 and phase < SCENARIOS.size() and PULL_START.has(SCENARIOS[phase])
@@ -273,7 +346,7 @@ func _finish() -> void:
 		var row: Dictionary = results[key]
 		var line := "%-24s|" % key
 		for scenario in SCENARIOS:
-			if not PULL_START.has(scenario):
+			if not PULL_START.has(scenario) and scenario != "income":
 				line += " %7.1f %4.0f%% |" % [row[scenario][0], row[scenario][1] * 100.0]
 		print(line)
 		pulled = pulled or row.has("pull")
@@ -284,4 +357,14 @@ func _finish() -> void:
 			if _aggro(i):
 				var row: Dictionary = results[_name(i)]
 				print("%-24s| %21.0f%% %10.1f | %19.0f%% %10.1f" % [_name(i), row["pull"][0] * 100.0, row["pull"][1], row["pull_far"][0] * 100.0, row["pull_far"][1]])
+	var income_rows: Array[int] = []
+	for i in actors.size():
+		if _utility(i):
+			income_rows.append(i)
+	if not income_rows.is_empty():
+		print("")
+		print("FORM                    | income, wave %d, %.0f s: wallet+floor scrap/s   XP/s (press + 2 Ion in reach)   interest if 50 held" % [wave, seconds])
+		for i in income_rows:
+			var row: Array = results[_name(i)]["income"]
+			print("%-24s| %29.3f %27.3f %21d" % [_name(i), row[0], row[1], row[2]])
 	get_tree().quit()
