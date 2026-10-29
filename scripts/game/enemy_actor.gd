@@ -278,7 +278,8 @@ func _apply_contact_damage(delta: float, previous_position: Vector3) -> void:
 ## Where an enemy is heading: a Decoy whose taunt reaches it (S1), else the hero while within aggro range, otherwise the
 ## objective. Survive mode has no objective, so the hero is the goal there.
 func chase_position() -> Vector3:
-	taunt_target = taunt_post()
+	# Without a Decoy in the run this is one empty-list check.
+	taunt_target = null if world.taunts.posts.is_empty() else taunt_post()
 	if taunt_target:
 		return taunt_target.origin()
 	if not world.core:

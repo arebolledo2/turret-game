@@ -96,6 +96,7 @@ func _publish(stats: TurretStats) -> void:
 func _apply_stats(stats: TurretStats) -> void:
 	post.radius = stats.taunt_metres
 	post.ranged = bool(param("ranged_taunt", false))
+	post.refresh()
 
 # --- Hooks ---
 

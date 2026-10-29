@@ -33,17 +33,22 @@ func post_of(owner_id: int) -> TauntPost:
 func post_for(position: Vector3, ranged_enemy: bool) -> TauntPost:
 	var best: TauntPost = null
 	var best_distance := INF
-	for index in range(posts.size() - 1, -1, -1):
-		var post := posts[index]
-		if not is_instance_valid(post.turret):
-			posts.remove_at(index)
+	var px := position.x
+	var pz := position.z
+	for post in posts:
+		if ranged_enemy and not post.ranged:
 			continue
-		if not post.is_live() or (ranged_enemy and not post.ranged):
-			continue
-		var distance := WorldGeometry.planar(position - post.turret.position).length_squared()
-		if distance <= post.radius * post.radius and distance < best_distance:
-			best = post
-			best_distance = distance
+		var dx := px - post.x
+		var dz := pz - post.z
+		var distance := dx * dx + dz * dz
+		if distance <= post.radius_squared and distance < best_distance:
+			# The turret is only touched once a post is in reach: a freed one is pruned here, a carried one is skipped.
+			if not is_instance_valid(post.turret):
+				posts.erase(post)
+				return post_for(position, ranged_enemy)
+			if not post.turret.carried:
+				best = post
+				best_distance = distance
 	return best
 
 ## The nearest live post that holds a hook on `enemy`, or null when none does (the hook is orphaned).
