@@ -1,16 +1,32 @@
 # Turret roster expansion: handoff
 
-Written 17 Oct 2026, updated 26 Oct 2026 for the new upgrade shape (see below). Audience: the next agent picking this work up. Treat code as the source of truth where this doc and the repo disagree.
+Written 17 Oct 2026, last updated 29 Oct 2026 (upgrade shape, groundwork, Sniper, Quake, form-table refactor). Audience: the next agent picking this work up. Treat code as the source of truth where this doc and the repo disagree.
 
 ## What this is
 
-The user asked for a full turret roster plan, then moved on to 2D concept art in `image-gen-web`. Design is done and agreed. 2D concept work is nearly done. **No game code or 3D asset has been written for any new turret yet.**
+The user asked for a full turret roster plan, then 2D concept art, then 3D base models, then started bringing turrets into the game one at a time. Design is agreed. **Sniper and Quake are in the game with real models.** The other nine new turrets have favorited base concepts and (for seven of them) built 3D base models in `3d-eval/`, but no game code yet.
 
 - Live design board (private Claude artifact, read it with the Artifact tool `action: "read"`): https://claude.ai/artifact/Louc8dHXV2KCMke888k3Kn
-- That artifact is the most complete record: stats, all branch and stage text, the engine work table (S1-S12), build order, decisions, and embedded concept thumbnails. Read it first.
+- That artifact is the most complete record: stats, all form text, the engine work table (S1-S12), build order, decisions, and embedded concept thumbnails. It was brought up to date on 29 Oct (version 8). Read it first.
 - Its HTML source lived in a session scratchpad and may be gone. The artifact copy is authoritative.
+- Review of the codebase before adding more turrets: `codebase-review-2026-10.md`. Per-turret loop and order: `turret-bringup-plan.md`.
 
-## Upgrade shape (decided 26 Oct 2026)
+## Where the work lives
+
+All of it is on `master` (and pushed to `origin/master`) as of 28 Oct 2026; the stacked feature branches are gone. In commit order:
+
+| Commits | Contents |
+|---|---|
+| `726171f` | Level 5 / level 10 shape, forms by form id, `evolution_form`, portraits renamed, tests; the spec |
+| `a45a86a`, `dfc8ece` | Bring-up plan; groundwork: `TurretTargeting` (toughest, backline, farthest), DEPLOYABLE-to-AoE mapping, `aggro` family, `no_attack` marker and its item rules |
+| `0df37d9`, `b6385b8` | Sniper logic, then the real `cp_sniper` model wired |
+| `87d97dc`, `8a31197` | Quake logic (S7 ground zones, stagger), then the real `cp_quake` model wired |
+| `29e7a48` to `d3ae7a0` | Codebase review; golden snapshot test; `legacy_stage` and dead stage-2 data removed; one table row per form (`scripts/data/turret_forms.gd`); roster contract tests and shared test helpers |
+| `1734dd3` to `666c7e9` (27 to 28 Oct, not written up here) | Further refactors: typed `TurretStats` cache, per-form DPS estimates and barrel checks moved onto `TurretForm`, melee sweep moved to `SweepForm`, run state read from `RunSessionState`, `CombatEffects3D` split into `StatusVisuals3D` and `BoltEffects3D`, `TurretActor` and `WaveDirector` constants named. Read `git log` and `doc/architecture.md` before relying on the "Not done" list below. |
+
+The review recommended a line-ending normalisation commit (`.gitattributes`, `.editorconfig`): check whether it has happened (many `.gd` files were CRLF and some mixed, which made agent edits produce whole-file diffs).
+
+## Upgrade shape (decided 26 Oct 2026, landed)
 
 This supersedes the old three-stage, two-branch model everywhere below.
 
@@ -18,20 +34,20 @@ This supersedes the old three-stage, two-branch model everywhere below.
 - **Level 10:** the final form, with two choices. These are the most interesting old stage-3 forms, tuned above the level-5 form. The existing XP curve stays (level 10 is already hard to reach), so finals tuned for level 15 need a re-bench at level 10.
 - **No level 15.** Levels continue forever as stat growth only (existing multipliers).
 - Implementation spec: `turret-progression-l5-l10-spec.md`.
-- Code impact: `TurretProgression.EVOLUTION_LEVELS` becomes `[5, 10]`; `evolution_options()` returns nothing at level 5 and the two finals at level 10; reshape `TurretEvolution.PATHS`, `base_stats`, `model_key`; update the inspector, salvage UI, dev commands and evolution tests.
+- Landed: `TurretProgression.EVOLUTION_LEVELS` is `[5, 10]`, `evolution_options()` offers one form at level 5 and the two finals at level 10, and forms are addressed by form id (`evolution_form`). The level-5 evolve stays a free, player-triggered shop button. The retune (finals about 1.4 to 1.6 times the upgrade at level 10) is done for Sniper and Quake; the existing 20 finals still need the bench pass.
 - Tesla is reworked into this shape (Relay and Capacitor are gone).
 - 19 built forms are retired (Echo Chamber, Focused Lance, Thunder Pin, Twin Saber, Repeater Blade, Gatling, Crossfire and so on).
 
 ## Result in one paragraph
 
-19 base turrets (8 in game, 5 requested, 6 proposed), each with one level-5 upgrade and two level-10 finals, so 57 forms. 20 are built (7 level-5 upgrades, 13 finals). 37 remain: Constellation and the three Tesla forms, plus 33 on the new turrets. Cryo and Vortex were considered and dropped by the user.
+19 base turrets (10 in game, 3 requested, 6 proposed), each with one level-5 upgrade and two level-10 finals, so 57 forms. 26 are built (7 level-5 upgrades and 13 finals on the original turrets, plus all 6 Sniper and Quake forms). 31 remain: Constellation and the three Tesla forms, plus 27 on the nine other new turrets. Cryo and Vortex were considered and dropped by the user.
 
 ## Roster
 
 | Group | Turrets |
 |---|---|
-| In game (8) | Ion, Plasma, Shock, Tesla, Melee, Bow, Flamethrower, Bowling Launcher |
-| Requested (5) | Sniper (targets toughest), Scrap Press, Decoy, Earthquake, Boomerang |
+| In game (10) | Ion, Plasma, Shock, Tesla (no evolutions yet), Melee, Bow, Flamethrower, Bowling Launcher, Sniper, Quake |
+| Requested, not built (3) | Scrap Press, Decoy, Boomerang |
 | Proposed (6) | Mine Layer, Laser, Beacon, Drone Bay, Lullaby, Discord |
 | Aggro family (new build family) | Decoy, Lullaby, Discord: weird support turrets that change enemy behaviour. Bosses are immune. |
 
@@ -61,9 +77,19 @@ Roster in the new shape (L5 upgrade, then the two L10 finals). `Built` means pla
 
 Stage text for each form is in the artifact. Where an old stage-2 or stage-3 text assumed earlier stages (Tesla, Overwatch, Treasury, Academy, Maelstrom, Tectonic, Chain Reaction, Aegis Field, Reaper Swarm, Sandman, Civil War), the artifact has the merged wording.
 
-Retired forms with code in `scripts/systems/turret_evolution.gd`: Gatling, Crossfire, Twin Saber, Repeater Blade and so on from `IMPLEMENTED`, plus Echo Chamber, Focused Lance and Thunder Pin. Leave them until the progression change lands, then delete.
+Retired forms: the dead stage-2 data is gone from `turret_evolution.gd` (refactor commit `696bc29`). Still on disk and unused: 23 old-stage portraits under `assets/ui/turrets/` and three model keys (`scatter`, `focused_lance`, `thunder_pin`) in `ClockworkModels.KEYS`. Delete them in a cleanup commit.
 
 The older `doc/plans/turret-evolution.html` names Shock's first branch "Arc Pulse". The code says Resonator, and the code wins.
+
+## The form table (refactor, 28 Oct 2026)
+
+Every form is one row in `scripts/data/turret_forms.gd` (`TurretForms.FORMS`): base turret, kind (upgrade or final), name, model, description, stat overrides, implemented flag, behaviour class and visual class (named by string). `TurretEvolution` is the accessor layer; `TurretForm.create` and `TurretActor._rebuild_model` dispatch through the row. The header comment of the table lists the remaining touch-points ("Adding a turret"). `tests/unit/test_turret_form_golden.gd` snapshots every form's stats and shape; `tests/integration/test_turret_roster_contract.gd` buys every stocked turret and takes it through every implemented form. `TestHelpers.disable_crits()` and `TurretTestRig` are the shared test helpers. About 19 touch-points remain per new turret (was about 27). As of the 26 Oct review, not done: the generic timed-status system, form hooks for the UI, and splitting `TurretActor`. Later commits (see the table above) moved per-form DPS estimates onto `TurretForm` and extracted the melee sweep, so re-check what remains.
+
+## 3D models
+
+- Nine base models were built by Sonnet agents in `3d-eval/runs/cp_<name>-v1/` and all passed the harness contract: Sniper, Scrap Press, Decoy, Quake, Mine Layer, Laser, Beacon, Drone Bay, Discord. Triangle counts are high (7k to 28k against a 5k target; Drone Bay is 28k with 29 objects). **Wired into the game: Sniper and Quake only.** The other seven are not promoted. A triangle-reduction pass was offered and not done. Setting `"origin_node": "Aim"` in the contract for long-barrel turrets (Mine Layer, Discord) would likely give better proportions than the centring workaround the agents used.
+- Boomerang and Lullaby models are not started (finalist concept not chosen).
+- Wiring a model: copy the subject JSON to the run's `contract.json`; add the key to `tools/promote_clockwork_asset.py` and `ClockworkModels.KEYS`; run `python -I turret-game/tools/promote_clockwork_asset.py <key> --iteration N --asset-name cp_<name>`; set the model in the form rows (`model` field) and the registry `model_key`; add the key to the Aim/Muzzle list in `tests/integration/test_clockwork_roster.gd`; adapt the `*EvolutionVisual` runtime hardware to the real model (read the bore from the model's `Muzzle`); render portraits with `tools/render_shop_portraits.tscn` (non-headless), `git checkout` every regenerated portrait except the new ones and delete the stray `forked_coil.png`, then re-run `--headless --import` before taking shop screenshots; commit the extracted texture PNG and `.import` with the GLB. The `3d-asset-design` skill still describes the old stage shape; the steps here are current.
 
 ## Sniper logic (built 26 Oct 2026, branch `turret-sniper`)
 
@@ -79,7 +105,7 @@ New engine pieces: **S7 `GroundZones`** (enemy-only circles and oriented lines w
 
 Under the new shape only Thunder Spear (L10 final) survives from Lance. Focused Lance and Thunder Pin are retired. The numbers below are the old stage numbers.
 
-`lance` is in `TurretEvolution.IMPLEMENTED`. It keeps Shock's `FIRE_PULSE` mode but `TurretActor._fire_lance` replaces the pulse with a bolt at the nearest enemy (same `chain_arc` visual as Tesla). Model key falls back to `shock`, so the existing chassis and base portrait stand in until real models land.
+`thunder_spear` is an implemented form. It keeps Shock's `FIRE_PULSE` mode but `TurretActor._fire_lance` replaces the pulse with a bolt at the nearest enemy (same `chain_arc` visual as Tesla). Real models and portraits are done for the surviving forms.
 
 | Form | Level | Damage | Rate | Range | Slow | Behaviour |
 |---|---|---|---|---|---|---|
@@ -87,15 +113,15 @@ Under the new shape only Thunder Spear (L10 final) survives from Lance. Focused 
 | Thunder Pin | 10 | 36 | .80 | 340 | 90% / 1.6 s | near-stop pin |
 | Thunder Spear | 15 | 48 | .85 | 400 | 90% / 2.0 s | also hits every enemy in a 1.2 m lane behind the target (`LANCE_LANE_HALF_WIDTH`) |
 
-To swap in real models: add `lance`/`thunder_pin`/`thunder_spear` keys to `ClockworkModels.KEYS`, return them from `TurretEvolution.model_key`, keep a `Muzzle` node, and add `res://assets/ui/turrets/lance_{1,2,3}.png` portraits. Stats and numbers are untuned; no showcase run yet.
+The 19 Oct headless bench numbers were taken at the old stage levels; re-bench Thunder Spear at level 10 against Resonator.
 
 ## Shock / Resonator logic (built 17 Oct 2026)
 
 Under the new shape Resonator is the L5 upgrade and Resonance Engine an L10 final. Echo Chamber is retired.
 
-`resonator` is in `IMPLEMENTED`. `TurretActor._fire_resonator` pulses as before, then queues echoes that `_tick_resonator` fires later at 50% damage (Resonator: one at 0.5 s; Echo Chamber and Engine: 0.4 s and 0.8 s). Echo Chamber and Engine reach 15% farther (range 276). Resonance Engine alternates an inner pulse (half radius, double damage) with an outer pulse (130% radius); an enemy struck by both within 1.2 s is Exposed for 2 s. Echoes copy the ring of the pulse that spawned them but never count towards Exposed.
+`resonator` and `resonance_engine` are implemented forms. `TurretActor._fire_resonator` pulses as before, then queues echoes that `_tick_resonator` fires later at 50% damage (Resonator: one at 0.5 s; Echo Chamber and Engine: 0.4 s and 0.8 s). Echo Chamber and Engine reach 15% farther (range 276). Resonance Engine alternates an inner pulse (half radius, double damage) with an outer pulse (130% radius); an enemy struck by both within 1.2 s is Exposed for 2 s. Echoes copy the ring of the pulse that spawned them but never count towards Exposed.
 
-**Exposed (S3) is built:** `StatusEffects3D.expose()`, `exposed_remaining` and `exposure_multiplier()`; `CombatActor.receive_hit` applies +30% to hits whose `attack_families` include `instant`. Sniper Spotter and Lullaby can reuse it (Spotter's mark is a different bonus, +15% from every turret, so it will need its own multiplier). There is no visual cue on Exposed enemies yet. Models and portraits follow the same swap-in steps as Lance, using `resonator_{1,2,3}`.
+**Exposed (S3) is built:** `StatusEffects3D.expose()`, `exposed_remaining` and `exposure_multiplier()`; `CombatActor.receive_hit` applies +30% to hits whose `attack_families` include `instant`. Lullaby Coma can reuse it. Overwatch's mark is a separate status (`marked_remaining`, +25% from every turret, multiplicative with Exposed). There is no visual cue on Exposed enemies yet.
 
 ## Decisions already made by the user
 
@@ -105,27 +131,30 @@ Under the new shape Resonator is the L5 upgrade and Resonance Engine an L10 fina
 - Cryo and Vortex are omitted.
 - Upgrade shape: level 5 one upgrade, level 10 two finals, infinite levels after, XP curve unchanged, level-5 forms must visibly change, Tesla reworked to match (26 Oct).
 
-Still open (recommendations are in the artifact): the shop slot count with 19 bases (one weapon per visit today, `GameConstants.SHOP_OFFER_COUNT`), whether to hold Drone Bay and Beacon until the first batch is playtested, and whether Decoy ever gets health.
+Still open (recommendations are in the artifact): the shop slot count with 19 bases (the shop now rolls up to `SHOP_TURRET_MAX` = 4 weapon slots at 37.5% each, about 1.5 weapons per visit; recheck for a 19-turret pool), whether to hold Drone Bay and Beacon until the first batch is playtested, whether Decoy ever gets health, and the Boomerang and Lullaby finalist picks.
 
-## Codebase facts worth knowing (verified 12 Oct 2026)
+## Codebase facts worth knowing (re-checked 29 Oct 2026)
 
-- Registry: `scripts/registries/turret_registry.gd`. It already has unstocked `sniper` (instant, range 750, `"farthest"` targeting), `fire` (redundant with Flamethrower; retire it) and `mine` entries. `mine` has only the DEPLOYABLE attack style, which maps to no item family in `get_attack_families()`, so no item would apply until AOE is added.
+- Registry: `scripts/registries/turret_registry.gd`. Sniper and Quake are stocked via `ShopCatalog`. `fire` is redundant with Flamethrower (retire it). `mine` is registry-only; DEPLOYABLE now maps to the `aoe` item family. An unknown turret id silently becomes Ion in `get_type`.
 - `GameEnums.DamageType` is Physical, Fire, Electric, Plasma. "Kinetic" is only an attack family.
+- Targeting: set `"targeting"` (closest, cluster, farthest, toughest, backline) at the top level of the registry entry; selection lives in `TurretTargeting`. No-attack turrets set `"no_attack": true` with empty `attack_styles`; Focused Arsenal, Army Doctrine, Crosslink Array and Lone Sentry ignore them. `FAMILIES["aggro"]` exists and is empty: Decoy, Lullaby and Discord must add their ids when registered.
 - Turrets cannot be damaged, and enemies are hard-separated from turrets. Enemy goal selection is `CombatActor.chase_position()`.
-- Status effects cover slow (90% cap) and burn only (`StatusEffects3D`). Terrain mud slows the hero as well as enemies.
-- Evolution architecture: `TurretEvolution` (paths, `base_stats`, `shape_shot`, `description`), `TurretActor` dispatch, and `*_evolution_visual.gd` for articulated runtime hardware that reuses frozen chassis models through `model_key`. Copy the Bow, Flame and Bowling visual passes in `doc/plans/turret-expansion-progress.md`.
-- Shop screens, portraits, controller flow and tests exist for the current roster; see `doc/plans/turret-expansion-audit.md`.
+- Statuses (`StatusEffects3D`): slow (90% cap), burn, Exposed, Marked, stagger. Enemy-only zones are `world.ground_zones` (S7); terrain mud still slows the hero too. Known bug: two Overwatch turrets share one mark timer, so one can clear the other's mark (`overwatch_form.gd`, `StatusEffects3D.unmark`). The planned generic timed-status system with a source owner fixes it, and should land before Decoy, Lullaby and Discord.
+- Instant-hit attacks use `FIRE_INSTANT` with `stats.pierce` and the `before_instant` form hook; pulses use `FIRE_PULSE` (Quake's `QuakeForm` and Shock). Idle pulse turrets currently scan every enemy each tick (the docs say 5 Hz), a perf item from the review.
+- Evolution architecture: the form table plus `TurretEvolution`, `TurretActor` dispatch, and `*_evolution_visual.gd` for articulated runtime hardware that reuses frozen chassis models. Copy the Sniper and Quake passes (commits `0df37d9`, `b6385b8`, `87d97dc`, `8a31197`).
+- Bench and tools: `tools/bench_turret_forms.gd` takes `--level=N`, `--base=ID` and `--seconds=120` for slow turrets (cells are 16 x 18 m so long-range turrets do not hit neighbouring cells). The bowling ball prints an "axis must be normalized" error at `projectile_3d.gd:209` that predates this work.
+- Shop screens, portraits, controller flow and tests exist for the current roster; see `doc/plans/turret-expansion-audit.md`. `doc/gameplay.md` and `doc/items.md` still contain stale text (duplicated paragraphs, the old three-stage forms, "54 items" against 56).
 
 ## Shared engine work (S1-S12; sizes are in the artifact)
 
 - S1 Taunt targeting and pull (Decoy)
-- S2 Targeting modes: toughest and backline-first (Sniper, Drone Hunters, Limpet)
-- S3 Exposed status, a damage-taken multiplier (Spotter, Resonance Engine, Lullaby)
+- S2 Targeting modes: toughest and backline-first (Sniper) **BUILT**
+- S3 Exposed status, a damage-taken multiplier (Resonance Engine, Lullaby) **BUILT**; Overwatch's Marked is a separate built status
 - S4 Enemy behaviour overrides: sleep and enemy-vs-enemy (Lullaby, Discord)
 - S5 Scrap generation, direct deposit and direct XP (Scrap Press)
 - S6 Returning projectile path (Boomerang)
-- S7 Enemy-only ground zones (Earthquake Fault Line)
-- S8 Deployable runtime (Mine Layer)
+- S7 Enemy-only ground zones (Quake Tectonic) **BUILT**
+- S8 Deployable runtime (Mine Layer); the DEPLOYABLE-to-AoE item mapping is built, the runtime is not
 - S9 Auras and healing (Beacon)
 - S10 Drone actors (Drone Bay)
 - S11 Continuous beam (Laser)
@@ -133,11 +162,12 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 
 ## Suggested order
 
-0. Progression change to the L5/L10 shape (see above), then targeting modes, Exposed status (built), DEPLOYABLE family mapping, utility-turret item rules.
-1. Finish Plasma and Tesla (4 forms: Constellation needs S12; Forked Coil, Storm Network, Thunderhead). Then re-bench every existing final at level 10 against its level-5 form.
-2. Sniper, Earthquake, Decoy, Scrap Press, Boomerang.
+0. **Done:** progression change, targeting modes, Exposed status, DEPLOYABLE family mapping, utility-turret item rules, `aggro` family, form-table refactor.
+1. Generic timed-status system with a source owner (fixes the Overwatch shared-mark bug) before Decoy, Lullaby and Discord. Finish Plasma and Tesla whenever convenient (4 forms: Constellation needs S12; Forked Coil, Storm Network, Thunderhead). Re-bench every existing final at level 10 against its level-5 form.
+2. **Sniper and Quake are done.** Next: Decoy, Scrap Press, Boomerang.
 3. Mine Layer and Laser; Beacon and Drone Bay after a playtest.
 4. Lullaby and Discord (S4 is the largest piece).
+5. Wire the remaining base models as each turret lands.
 
 The per-turret definition of done matches the existing roster: attack, a level-5 upgrade and level-10 finals, a visible silhouette change per form, Shop portrait, controller flow, showcase run and tests. Use `.claude/skills/godot-test` for tests and `.claude/skills/2d-to-3d-asset` for models.
 
@@ -151,7 +181,7 @@ Style used throughout: **Clockwork Pop** (style id `3b7b7bc4-4403-4b69-8a10-8092
 | Boomerang and Lullaby Retry - 3 Each | `e74ea1bc-beb2-4721-9913-748255d6a6a5` | 4 concepts replacing the rejected Wing Slinger and Cradle Chime |
 | Level 15 Mastery Forms - 2 Each | `5ef1997e-50d6-4d4d-99b9-77a9cdbe2712` | 27 capstones, 2 each |
 
-Favorited base concepts (image ids; use these as inputs to `2d-to-3d-asset`):
+Favorited base concepts (image ids; use these as inputs to `2d-to-3d-asset`; models for all but Boomerang and Lullaby are already built, see 3D models):
 
 | Turret | Concept | Image id |
 |---|---|---|
@@ -217,4 +247,4 @@ Not yet generated: level 5 concepts. Existing turrets handled those as runtime a
 ## Other changes made along the way
 
 - `image-gen-web/components/batch/image-gallery.tsx` and `image-gen-web/app/batches/[id]/page.tsx`: the batch gallery now groups images by subject (batch prompt), with a "Group by subject" switch and per-group favorite counts. Typecheck and lint were clean. These edits are not committed.
-- Nothing in `turret-game` changed apart from this file.
+- Everything in `turret-game` for this work is on master (see "Where the work lives").
