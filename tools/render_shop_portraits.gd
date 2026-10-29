@@ -55,7 +55,8 @@ func _ready() -> void:
 		stage.add_child(camera)
 		camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 		camera.size = maxf(bounds.size.x, maxf(bounds.size.y, bounds.size.z)) * 1.45
-		camera.position = bounds.get_center() + Vector3(-2, 1.7, -2.6).normalized() * 6.0
+		# Looks at the model's front: -z, or +z for a model the actor turned half a circle (the Scrap Press faces the game camera).
+		camera.position = bounds.get_center() + (Vector3(-2, 1.7, -2.6).normalized() * 6.0).rotated(Vector3.UP, model.rotation.y)
 		camera.look_at(bounds.get_center())
 		camera.current = true
 		for frame in range(4):
