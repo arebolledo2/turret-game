@@ -1,10 +1,10 @@
 # Turret roster expansion: handoff
 
-Written 17 Oct 2026, last updated 29 Oct 2026 (upgrade shape, groundwork, Sniper, Quake, form-table refactor). Audience: the next agent picking this work up. Treat code as the source of truth where this doc and the repo disagree.
+Written 17 Oct 2026, last updated 29 Oct 2026 (upgrade shape, groundwork, Sniper, Quake, Decoy and S1, form-table refactor). Audience: the next agent picking this work up. Treat code as the source of truth where this doc and the repo disagree.
 
 ## What this is
 
-The user asked for a full turret roster plan, then 2D concept art, then 3D base models, then started bringing turrets into the game one at a time. Design is agreed. **Sniper and Quake are in the game with real models.** The other nine new turrets have favorited base concepts and (for seven of them) built 3D base models in `3d-eval/`, but no game code yet.
+The user asked for a full turret roster plan, then 2D concept art, then 3D base models, then started bringing turrets into the game one at a time. Design is agreed. **Sniper and Quake are in the game with real models. The Decoy is in the game with logic and S1 built but a PLACEHOLDER chassis (amber-tinted Shock bell); its model wiring is pending.** The other eight new turrets have favorited base concepts and (for six of them) built 3D base models in `3d-eval/`, but no game code yet.
 
 - Live design board (private Claude artifact, read it with the Artifact tool `action: "read"`): https://claude.ai/artifact/Louc8dHXV2KCMke888k3Kn
 - That artifact is the most complete record: stats, all form text, the engine work table (S1-S12), build order, decisions, and embedded concept thumbnails. It was brought up to date on 29 Oct (version 8). Read it first.
@@ -21,6 +21,7 @@ All of it is on `master` (and pushed to `origin/master`) as of 28 Oct 2026; the 
 | `a45a86a`, `dfc8ece` | Bring-up plan; groundwork: `TurretTargeting` (toughest, backline, farthest), DEPLOYABLE-to-AoE mapping, `aggro` family, `no_attack` marker and its item rules |
 | `0df37d9`, `b6385b8` | Sniper logic, then the real `cp_sniper` model wired |
 | `87d97dc`, `8a31197` | Quake logic (S7 ground zones, stagger), then the real `cp_quake` model wired |
+| `177bb98`, `9db2e53`, `9427ac7`, `eecb26e`, then a docs commit (branch `turret-decoy`, not merged or pushed) | Decoy: S1 taunt and hooked enemies, the turret with its three forms, perf and amber placeholder tint, bench/showcase/capture tools, docs. Built on top of the owner-tagged timed statuses (`a6ce997`) |
 | `29e7a48` to `d3ae7a0` | Codebase review; golden snapshot test; `legacy_stage` and dead stage-2 data removed; one table row per form (`scripts/data/turret_forms.gd`); roster contract tests and shared test helpers |
 | `1734dd3` to `666c7e9` (27 to 28 Oct, not written up here) | Further refactors: typed `TurretStats` cache, per-form DPS estimates and barrel checks moved onto `TurretForm`, melee sweep moved to `SweepForm`, run state read from `RunSessionState`, `CombatEffects3D` split into `StatusVisuals3D` and `BoltEffects3D`, `TurretActor` and `WaveDirector` constants named. Read `git log` and `doc/architecture.md` before relying on the "Not done" list below. |
 
@@ -40,14 +41,14 @@ This supersedes the old three-stage, two-branch model everywhere below.
 
 ## Result in one paragraph
 
-19 base turrets (10 in game, 3 requested, 6 proposed), each with one level-5 upgrade and two level-10 finals, so 57 forms. 26 are built (7 level-5 upgrades and 13 finals on the original turrets, plus all 6 Sniper and Quake forms). 31 remain: Constellation and the three Tesla forms, plus 27 on the nine other new turrets. Cryo and Vortex were considered and dropped by the user.
+19 base turrets (11 in game, 2 requested, 6 proposed), each with one level-5 upgrade and two level-10 finals, so 57 forms. 29 are built (7 level-5 upgrades and 13 finals on the original turrets, plus all 6 Sniper and Quake forms and the 3 Decoy forms). 28 remain: Constellation and the three Tesla forms, plus 27 on the nine other new turrets. Cryo and Vortex were considered and dropped by the user.
 
 ## Roster
 
 | Group | Turrets |
 |---|---|
-| In game (10) | Ion, Plasma, Shock, Tesla (no evolutions yet), Melee, Bow, Flamethrower, Bowling Launcher, Sniper, Quake |
-| Requested, not built (3) | Scrap Press, Decoy, Boomerang |
+| In game (11) | Ion, Plasma, Shock, Tesla (no evolutions yet), Melee, Bow, Flamethrower, Bowling Launcher, Sniper, Quake, Decoy (placeholder chassis) |
+| Requested, not built (2) | Scrap Press, Boomerang |
 | Proposed (6) | Mine Layer, Laser, Beacon, Drone Bay, Lullaby, Discord |
 | Aggro family (new build family) | Decoy, Lullaby, Discord: weird support turrets that change enemy behaviour. Bosses are immune. |
 
@@ -65,7 +66,7 @@ Roster in the new shape (L5 upgrade, then the two L10 finals). `Built` means pla
 | Tesla | Forked Coil | Storm Network | Thunderhead | nothing playable; Storm Network and Thunderhead models exist |
 | Sniper | Piercer Rifle | Horizon Piercer | Overwatch | all built, real `cp_sniper` model and portraits, runtime hardware per form |
 | Scrap Press | Coin Feeder | Treasury | Academy | new |
-| Decoy | Bumper Post | Pile Driver | Maelstrom | new |
+| Decoy | Bumper Post | Pile Driver | Maelstrom | all built, logic only: placeholder chassis (Shock bell, amber tint, Shock portraits), runtime hardware per form; `cp_decoy-v1` not promoted |
 | Quake | Aftershock | Tectonic | Cataclysm | all built, real `cp_quake` model and portraits, runtime hardware per form |
 | Boomerang | Sawblade | Perpetual Saw | Boomerang Storm | new |
 | Mine Layer | Minefield | Dead Zone | Chain Reaction | new |
@@ -94,6 +95,26 @@ Every form is one row in `scripts/data/turret_forms.gd` (`TurretForms.FORMS`): b
 ## Sniper logic (built 26 Oct 2026, branch `turret-sniper`)
 
 `sniper` is a stocked base turret (damage 40, 0.35/s, 700, price 18, `"targeting": "toughest"`, `fire_mode: "instant"`). `TurretActor._fire_instant` re-picks the toughest enemy at fire time and strikes it plus `pierce` enemies on the lane through it (`TurretTargeting.on_lane`). Piercer Rifle pierces 2 behind; Overwatch keeps that; Horizon Piercer uses `SNIPER_UNLIMITED_PIERCE` (the whole line to full range, in front of the target too). Overwatch (`OverwatchForm`) marks the three toughest enemies before each shot; Marked is a new `StatusEffects3D` status (+25% from any turret-sourced hit, multiplies with Exposed) whose mark jumps, keeping its remaining time, when its holder dies. Starting numbers: Piercer Rifle 52 dmg at 0.40/s (20.8 DPS), Horizon Piercer 70 at 0.45 (31.5, 1.51x), Overwatch 56 at 0.42 (23.5 raw, 29.4 against its own marked target, 1.41x); bench rows and the team (+Machine Gun) rows are in `tools/bench_turret_forms.gd`. All three stages use the real `cp_sniper` chassis (model key `sniper` in `FORMS` and the registry); the model is wired and its portraits are rendered. `SniperEvolutionVisual` adds a longer barrel and muzzle brake (Piercer Rifle), a much longer barrel with glowing rails and an emitter ring (Horizon) or a spotter mast and ring (Overwatch), moving `Muzzle` so shots and tracers leave from the new tip.
+
+## Decoy logic (built 29 Oct 2026, branch `turret-decoy`, placeholder chassis)
+
+`decoy` is a stocked base turret (price 10, damage 3, 1.0/1.5 s, pulse reach 150, knockback 150, `taunt_range` 450 in 1/100 m, `FIRE_PULSE`, AoE and Kinetic families, `FAMILIES["aggro"] = ["decoy"]`, model key `shock`). One class, `DecoyForm` (`scripts/game/decoy_form.gd`), serves the base and all three forms; form rows in `scripts/data/turret_forms.gd` only change numbers and params. It publishes a `TauntPost` to `world.taunts` and fires a pulse that hand-resolves its hits (no scorch decals) with the `DECOY_TINT` wave.
+
+- **Bumper Post (L5):** damage 8, rate 1.0/1.2, knockback 225. Damage x1.10 and speed x1.10 at L5.
+- **Pile Driver (L10):** every fourth pulse is a slam (x3 damage, x1.5 reach, 0.6 s stagger). Damage 8, rate 1.0/1.2, reach 180.
+- **Maelstrom (L10):** taunt range 700 and ranged enemies answer it; hooks up to 10 enemies (scan every 0.25 s, nearest first) that circle the post on 3 lanes at `MAELSTROM_RING` 1.1 m, ignoring the hero; each hook ticks 25% of pulse damage every 0.5 s as an AoE damage-over-time hit. Damage 7.5, knockback 120.
+
+**S1 (built):** `TauntField`/`TauntPost` (`scripts/game/taunt_field.gd`, `taunt_post.gd`), `EnemyActor.chase_position()` is the single goal chooser (taunt first, then core and hero logic), `EnemyEcology.taunt_kind` (NONE for bosses, lens, anchor, puppet and tech drops; RANGED for Kite, Lobber and Tender; MELEE otherwise). Stationary enemies, `ignores_hero` core seekers and sleeping Drowse Beetles never answer. The hooked status is a generic owner-tagged timed status (`TauntField.HOOKED`), applied by `EnemyActor.hook(owner)` and dropped when no live post holds it. Two Decoys never clear each other's hooks. New `TurretForm.removed()` hook runs from `_exit_tree` and on evolve, releasing a Decoy's hooks; hooks also drop on wave end, pause and reset (and are re-applied within 0.25 s of resuming). There is no sell mechanic yet, so "sold" means removal from the tree. A carried Decoy releases its hooks.
+
+**S1 performance:** with no Decoy each enemy pays one `posts.is_empty()` check (about 0.87 us per enemy per tick); with three posts about 2.2 us (4.5 us before the cached x, z and radius-squared floats). The hook scan is 4 Hz and capped at 10.
+
+**Tuning deviations from the spec:** Pile Driver is 8 damage at 1.2 s, not 14 at 1.0 s, and Maelstrom is 7.5 damage; the spec numbers benched about 3.2x too strong. `tools/bench_turret_forms.gd` has decoy rows plus `pull` and `pull_far` scenarios (one aggro turret at a time at the origin, because real enemies are clamped to the arena). Pile Driver's reach advantage inflates the stationary-cluster bench (about 2.4x); trust the held-percentage table for the aggro role.
+
+**Placeholder visuals:** the Shock model is tinted amber in `TurretActor._rebuild_model` (`EnemyVariants.tint_model`), portraits and icon are Shock copies (`assets/ui/turrets/{decoy,bumper_post,pile_driver,maelstrom}.png`), and `DecoyEvolutionVisual` adds runtime hardware per form (bumpers and rubber ring, pistons and anvil plate, mast with hooks and lane rings). The bumper rubber colour blends with the amber bell; changing it needs the golden digests regenerated.
+
+**Not verified:** only capture and preview screenshots, no human playtest. Hook and orbit feel, and Kite or Lobber aiming at a Maelstrom, are unit-tested only. Docs note: `doc/gameplay.md` and `doc/combat.md` already contained duplicated Quake paragraphs before this work.
+
+**Model wiring still pending:** follow the steps in the 3D models section for `3d-eval/runs/cp_decoy-v1` (not promoted). Then remove the amber tint in `TurretActor._rebuild_model`, change the `shock` model fields on the decoy registry entry and the three form rows, replace the portraits and `turret_decoy` icon, and regenerate the golden digests and chassis-dependent tests.
 
 ## Quake logic (built 26 Oct 2026, branch `turret-quake`; model wired on `turret-quake-model`)
 
@@ -137,7 +158,7 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 
 - Registry: `scripts/registries/turret_registry.gd`. Sniper and Quake are stocked via `ShopCatalog`. `fire` is redundant with Flamethrower (retire it). `mine` is registry-only; DEPLOYABLE now maps to the `aoe` item family. An unknown turret id silently becomes Ion in `get_type`.
 - `GameEnums.DamageType` is Physical, Fire, Electric, Plasma. "Kinetic" is only an attack family.
-- Targeting: set `"targeting"` (closest, cluster, farthest, toughest, backline) at the top level of the registry entry; selection lives in `TurretTargeting`. No-attack turrets set `"no_attack": true` with empty `attack_styles`; Focused Arsenal, Army Doctrine, Crosslink Array and Lone Sentry ignore them. `FAMILIES["aggro"]` exists and is empty: Decoy, Lullaby and Discord must add their ids when registered.
+- Targeting: set `"targeting"` (closest, cluster, farthest, toughest, backline) at the top level of the registry entry; selection lives in `TurretTargeting`. No-attack turrets set `"no_attack": true` with empty `attack_styles`; Focused Arsenal, Army Doctrine, Crosslink Array and Lone Sentry ignore them. `FAMILIES["aggro"]` now holds the Decoy: Lullaby and Discord must add their ids when registered.
 - Turrets cannot be damaged, and enemies are hard-separated from turrets. Enemy goal selection is `CombatActor.chase_position()`.
 - Statuses (`StatusEffects3D`): slow (90% cap), burn, Exposed, Marked, stagger. Enemy-only zones are `world.ground_zones` (S7); terrain mud still slows the hero too. Known bug: two Overwatch turrets share one mark timer, so one can clear the other's mark (`overwatch_form.gd`, `StatusEffects3D.unmark`). The planned generic timed-status system with a source owner fixes it, and should land before Decoy, Lullaby and Discord.
 - Instant-hit attacks use `FIRE_INSTANT` with `stats.pierce` and the `before_instant` form hook; pulses use `FIRE_PULSE` (Quake's `QuakeForm` and Shock). Idle pulse turrets currently scan every enemy each tick (the docs say 5 Hz), a perf item from the review.
@@ -147,7 +168,7 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 
 ## Shared engine work (S1-S12; sizes are in the artifact)
 
-- S1 Taunt targeting and pull (Decoy)
+- S1 Taunt targeting and pull (Decoy) **BUILT** (Lullaby and Discord can reuse `TauntField`, the hooked status, `EnemyActor.hook()` and `clear_all_timed`)
 - S2 Targeting modes: toughest and backline-first (Sniper) **BUILT**
 - S3 Exposed status, a damage-taken multiplier (Resonance Engine, Lullaby) **BUILT**; Overwatch's Marked is a separate built status
 - S4 Enemy behaviour overrides: sleep and enemy-vs-enemy (Lullaby, Discord)
@@ -164,7 +185,7 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 
 0. **Done:** progression change, targeting modes, Exposed status, DEPLOYABLE family mapping, utility-turret item rules, `aggro` family, form-table refactor.
 1. Generic timed-status system with a source owner (fixes the Overwatch shared-mark bug) before Decoy, Lullaby and Discord. Finish Plasma and Tesla whenever convenient (4 forms: Constellation needs S12; Forked Coil, Storm Network, Thunderhead). Re-bench every existing final at level 10 against its level-5 form.
-2. **Sniper and Quake are done.** Next: Decoy, Scrap Press, Boomerang.
+2. **Sniper and Quake are done; Decoy logic is done (model wiring pending).** Next: Scrap Press, Boomerang, then the Decoy model wiring.
 3. Mine Layer and Laser; Beacon and Drone Bay after a playtest.
 4. Lullaby and Discord (S4 is the largest piece).
 5. Wire the remaining base models as each turret lands.

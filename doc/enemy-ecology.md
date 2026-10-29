@@ -14,6 +14,8 @@ The original five enemies retain their attack identities with 10% smaller bodies
 | Kiln Lobber | Holds distance and drops a warned shell. Targets the core in core modes and the hero in Survival. Core hits use 3% of maximum core HP. |
 | Brood Tender | Stays back and deploys pairs of Skitters, with three deployments per parent. Summons do not award scrap or economy kill credit. |
 
+A Decoy turret's taunt (S1, see [combat](combat.md)) overrides the hero as the target of everything that answers it: chasers, chargers, Hoppers and awake Beetles walk at the nearest Decoy whose radius covers them, and Kites, Lobbers and Tenders aim at it only when its taunt is ranged (Maelstrom). Bosses and their summons never answer, and a Maelstrom hook (a generic timed status) makes any non-boss enemy circle the Decoy and ignore the hero until it dies. Goal choice is `EnemyActor.chase_position()`.
+
 Active limits: four Kites, two Lobbers, two Tenders, eight Skitters globally (four per parent), two lenses, two anchors and four puppets. Capped normal spawns fall back to a cheaper enemy from the same wave's roster. Nearby precision/charge warnings are limited to two, artillery warnings to one. New ranged attacks and charge warnings require the attacker to be onscreen.
 
 ## Bosses
