@@ -16,6 +16,7 @@ Combat modifiers use `filter.attack_family`, distinct from elemental `DamageType
 | Sniper | Instant |
 | Quake | Kinetic, AoE |
 | Decoy | Kinetic, AoE |
+| Scrap Press | none (no-attack utility turret; no build family) |
 | Mine (registry only, not stocked) | AoE (the Deployable attack style maps to AoE) |
 
 A hybrid whose styles map to the same family twice (for example AoE plus Deployable) lists it once. One modifier matches any listed family and applies once. Separate percentage increases add: +10% Projectile and +20% AoE damage give Plasma +30%, before separate multiplicative effects. Kinetic means contact/melee, not every PHYSICAL attack.
@@ -26,7 +27,7 @@ A hybrid whose styles map to the same family twice (for example AoE plus Deploya
 
 Attack families (above) decide which item stats apply. Build families are the separate, player-facing tags in `TurretRegistry.FAMILIES` that a modifier's `filter.family` targets: `ion`, `plasma`, `electric`, `melee` and `aggro`. `TurretRegistry.get_family(type_id)` returns the one family a turret belongs to, or an empty string. `aggro` (Decoy, Lullaby, Discord) holds only the Decoy so far; Lullaby and Discord add their type ids to `FAMILIES["aggro"]` when they land.
 
-Utility turrets (Scrap Press, Beacon, Lullaby, Discord) deal no direct damage and have no attack family. Mark such a registry entry with `"no_attack": true` (and an empty `attack_styles`). `TurretRegistry.is_no_attack(type_id)` and `has_capability(type_id, "no_attack")` read it. Item rules that count or compare owned turrets ignore them:
+Utility turrets (Scrap Press, Beacon, Lullaby, Discord) deal no direct damage and have no attack family. The Scrap Press is the first registered one (`fire_mode` `FIRE_NONE`, no build family either). Mark such a registry entry with `"no_attack": true` (and an empty `attack_styles`). `TurretRegistry.is_no_attack(type_id)` and `has_capability(type_id, "no_attack")` read it. Item rules that count or compare owned turrets ignore them:
 
 - Focused Arsenal (`TurretStatsService.shared_attack_families`) skips no-attack turrets, so a Beacon beside a focused build keeps the bonus. Owning only no-attack turrets shares no family, so the bonus is off.
 - Army Doctrine counts `TurretStatsService.get_attack_turret_count()`, which excludes them. `get_total_turret_count()` still counts every turret (Elite Forces uses it).

@@ -1,10 +1,10 @@
 # Turret roster expansion: handoff
 
-Written 17 Oct 2026, last updated 29 Oct 2026 (upgrade shape, groundwork, Sniper, Quake, Decoy and S1, form-table refactor). Audience: the next agent picking this work up. Treat code as the source of truth where this doc and the repo disagree.
+Written 17 Oct 2026, last updated 29 Oct 2026 (upgrade shape, groundwork, Sniper, Quake, Decoy and S1, form-table refactor, Scrap Press and S5). Audience: the next agent picking this work up. Treat code as the source of truth where this doc and the repo disagree.
 
 ## What this is
 
-The user asked for a full turret roster plan, then 2D concept art, then 3D base models, then started bringing turrets into the game one at a time. Design is agreed. **Sniper, Quake and Decoy are in the game with real models** (the Decoy's is on branch `turret-decoy-model`). The other eight new turrets have favorited base concepts and (for six of them) built 3D base models in `3d-eval/`, but no game code yet.
+The user asked for a full turret roster plan, then 2D concept art, then 3D base models, then started bringing turrets into the game one at a time. Design is agreed. **Sniper, Quake and Decoy are in the game with real models**; the **Scrap Press is in the game with a placeholder chassis** (logic, forms and S5 built on branch `turret-scrap-press`, its model not wired). The other seven new turrets have favorited base concepts and (for five of them) built 3D base models in `3d-eval/`, but no game code yet.
 
 - Live design board (private Claude artifact, read it with the Artifact tool `action: "read"`): https://claude.ai/artifact/Louc8dHXV2KCMke888k3Kn
 - That artifact is the most complete record: stats, all form text, the engine work table (S1-S12), build order, decisions, and embedded concept thumbnails. It was brought up to date on 29 Oct (version 8). Read it first.
@@ -22,6 +22,7 @@ All of it is on `master` (and pushed to `origin/master`) as of 28 Oct 2026; the 
 | `0df37d9`, `b6385b8` | Sniper logic, then the real `cp_sniper` model wired |
 | `87d97dc`, `8a31197` | Quake logic (S7 ground zones, stagger), then the real `cp_quake` model wired |
 | `177bb98`, `9db2e53`, `9427ac7`, `eecb26e`, then a docs commit (branch `turret-decoy`, not merged or pushed) | Decoy: S1 taunt and hooked enemies, the turret with its three forms, perf and amber placeholder tint, bench/showcase/capture tools, docs. Built on top of the owner-tagged timed statuses (`a6ce997`) |
+| branch `turret-scrap-press` (not merged or pushed): `3bfac8f`, `3c8eb5d`, `30a8b6e`, then a docs commit | Scrap Press: S5 scrap income (`ScrapIncome`, direct XP in the salvage ledger, wave-end hook), the no-attack turret with Coin Feeder, Treasury and Academy on a placeholder chassis, bench/showcase/capture tools, docs |
 | `29e7a48` to `d3ae7a0` | Codebase review; golden snapshot test; `legacy_stage` and dead stage-2 data removed; one table row per form (`scripts/data/turret_forms.gd`); roster contract tests and shared test helpers |
 | `1734dd3` to `666c7e9` (27 to 28 Oct, not written up here) | Further refactors: typed `TurretStats` cache, per-form DPS estimates and barrel checks moved onto `TurretForm`, melee sweep moved to `SweepForm`, run state read from `RunSessionState`, `CombatEffects3D` split into `StatusVisuals3D` and `BoltEffects3D`, `TurretActor` and `WaveDirector` constants named. Read `git log` and `doc/architecture.md` before relying on the "Not done" list below. |
 
@@ -41,14 +42,14 @@ This supersedes the old three-stage, two-branch model everywhere below.
 
 ## Result in one paragraph
 
-19 base turrets (11 in game, 2 requested, 6 proposed), each with one level-5 upgrade and two level-10 finals, so 57 forms. 29 are built (7 level-5 upgrades and 13 finals on the original turrets, plus all 6 Sniper and Quake forms and the 3 Decoy forms). 28 remain: Constellation and the three Tesla forms, plus 27 on the nine other new turrets. Cryo and Vortex were considered and dropped by the user.
+19 base turrets (12 in game, 1 requested, 6 proposed), each with one level-5 upgrade and two level-10 finals, so 57 forms. 32 are built (7 level-5 upgrades and 13 finals on the original turrets, plus all 6 Sniper and Quake forms, the 3 Decoy forms and the 3 Scrap Press forms). 25 remain: Constellation and the three Tesla forms, plus 21 on the eight other new turrets. Cryo and Vortex were considered and dropped by the user.
 
 ## Roster
 
 | Group | Turrets |
 |---|---|
-| In game (11) | Ion, Plasma, Shock, Tesla (no evolutions yet), Melee, Bow, Flamethrower, Bowling Launcher, Sniper, Quake, Decoy |
-| Requested, not built (2) | Scrap Press, Boomerang |
+| In game (12) | Ion, Plasma, Shock, Tesla (no evolutions yet), Melee, Bow, Flamethrower, Bowling Launcher, Sniper, Quake, Decoy, Scrap Press (placeholder chassis) |
+| Requested, not built (1) | Boomerang |
 | Proposed (6) | Mine Layer, Laser, Beacon, Drone Bay, Lullaby, Discord |
 | Aggro family (new build family) | Decoy, Lullaby, Discord: weird support turrets that change enemy behaviour. Bosses are immune. |
 
@@ -65,7 +66,7 @@ Roster in the new shape (L5 upgrade, then the two L10 finals). `Built` means pla
 | Shock | Resonator | Resonance Engine | Thunder Spear | all built, final models done |
 | Tesla | Forked Coil | Storm Network | Thunderhead | nothing playable; Storm Network and Thunderhead models exist |
 | Sniper | Piercer Rifle | Horizon Piercer | Overwatch | all built, real `cp_sniper` model and portraits, runtime hardware per form |
-| Scrap Press | Coin Feeder | Treasury | Academy | new |
+| Scrap Press | Coin Feeder | Treasury | Academy | all built (logic and S5), placeholder Shock-bell chassis, model not wired |
 | Decoy | Bumper Post | Pile Driver | Maelstrom | all built: real `cp_decoy` chassis and portraits (branch `turret-decoy-model`), runtime hardware per form |
 | Quake | Aftershock | Tectonic | Cataclysm | all built, real `cp_quake` model and portraits, runtime hardware per form |
 | Boomerang | Sawblade | Perpetual Saw | Boomerang Storm | new |
@@ -88,7 +89,7 @@ Every form is one row in `scripts/data/turret_forms.gd` (`TurretForms.FORMS`): b
 
 ## 3D models
 
-- Nine base models were built by Sonnet agents in `3d-eval/runs/cp_<name>-v1/` and all passed the harness contract: Sniper, Scrap Press, Decoy, Quake, Mine Layer, Laser, Beacon, Drone Bay, Discord. Triangle counts are high (7k to 28k against a 5k target; Drone Bay is 28k with 29 objects). **Wired into the game: Sniper, Quake and Decoy.** The other six (Scrap Press, Mine Layer, Laser, Beacon, Drone Bay, Discord) are not promoted. A triangle-reduction pass was offered and not done. Setting `"origin_node": "Aim"` in the contract for long-barrel turrets (Mine Layer, Discord) would likely give better proportions than the centring workaround the agents used.
+- Nine base models were built by Sonnet agents in `3d-eval/runs/cp_<name>-v1/` and all passed the harness contract: Sniper, Scrap Press, Decoy, Quake, Mine Layer, Laser, Beacon, Drone Bay, Discord. Triangle counts are high (7k to 28k against a 5k target; Drone Bay is 28k with 29 objects). **Wired into the game: Sniper, Quake and Decoy.** The other six (Scrap Press, Mine Layer, Laser, Beacon, Drone Bay, Discord) are not promoted; the Scrap Press has game logic on a placeholder chassis and is next in line (see its section). A triangle-reduction pass was offered and not done. Setting `"origin_node": "Aim"` in the contract for long-barrel turrets (Mine Layer, Discord) would likely give better proportions than the centring workaround the agents used.
 - Boomerang and Lullaby models are not started (finalist concept not chosen).
 - Wiring a model: copy the subject JSON to the run's `contract.json`; add the key to `tools/promote_clockwork_asset.py` and `ClockworkModels.KEYS`; run `python -I turret-game/tools/promote_clockwork_asset.py <key> --iteration N --asset-name cp_<name>`; set the model in the form rows (`model` field) and the registry `model_key`; add the key to the Aim/Muzzle list in `tests/integration/test_clockwork_roster.gd`; adapt the `*EvolutionVisual` runtime hardware to the real model (read the bore from the model's `Muzzle`); render portraits with `tools/render_shop_portraits.tscn` (non-headless), `git checkout` every regenerated portrait except the new ones and delete the stray `forked_coil.png`, then re-run `--headless --import` before taking shop screenshots; commit the extracted texture PNG and `.import` with the GLB. The `3d-asset-design` skill still describes the old stage shape; the steps here are current.
 
@@ -115,6 +116,28 @@ Every form is one row in `scripts/data/turret_forms.gd` (`TurretForms.FORMS`): b
 **Not verified:** only capture and preview screenshots, no human playtest. Hook and orbit feel, and Kite or Lobber aiming at a Maelstrom, are unit-tested only. Docs note: `doc/gameplay.md` and `doc/combat.md` already contained duplicated Quake paragraphs before this work.
 
 **Model wiring: done** (branch `turret-decoy-model`). Triangle cost is 19.9k per Decoy; the per-form bench numbers were not taken on that branch because the GPU was busy (run `tools/bench_turret_forms.gd --base=decoy --level=10 --seconds=120`, and level 5, once it is free).
+
+## Scrap Press logic (built 29 Oct 2026, branch `turret-scrap-press`; placeholder chassis, model wiring pending)
+
+`scrap_press` is a stocked base turret (price 14, `FIRE_NONE`, `"no_attack": true`, no build family, `fire_rate` 0.25 drops a second, `range` 150 for how far a drop lands, `damage` 0 only because the stat pipeline multiplies it). One class, `ScrapPressForm` (`scripts/game/scrap_press_form.gd`), serves the base and all three forms; rows only change numbers and params. It does not attack, target or turn: `TurretActor` returns after `form.tick`. **S5 is built** as `ScrapIncome` (`world.scrap_income`): pickup, cash and direct-XP exits, the direct-XP tally folded into the wave's salvage ledger, a `TurretForm.wave_end_scrap` hook and `ArenaWorld.spawn_scrap_pickup`. API, ledger rules and clean-up are in `doc/combat.md` ("Scrap income and the Scrap Press (S5)").
+
+- **Scrap Press (base):** a drop every 4 s worth `1 + (wave - 1) / 5` scrap, laid as a real pickup within 1.5 m. Left at wave end it is salvaged into XP like kill scrap (and counts in the wave's drops and the abandoned share).
+- **Coin Feeder (L5):** half of each drop to the wallet (`deposit_share` 0.5; an owed fraction carries over so a one-scrap drop alternates 0 and 1), the rest on the floor. Same rate as the base. Brass hopper, chute and coin tray.
+- **Treasury (L10):** every drop deposited, rate x1.25 (0.3125), and `wave_end_scrap` pays interest after the wave bonus: 1 per 10 held, at most 5 (`ScrapIncome.pay_interest`, from `WaveDirector.finish_wave`, shown as "+N interest" in the wave message). Ingot stacks, vault dome, coin ring.
+- **Academy (L10):** no scrap; every drop is XP, in full, to each placed turret within 6 m of the press (itself included) through `WaveSalvage.award_direct` (levels land mid-wave). Rate 0.125 (one per 8 s). Mortarboard, books, halo.
+- **Stacking:** a second press keeps 60% of its output (charge rate and interest), a third and later 40%; the rank is the number of placed presses with a lower turret id, refreshed with the stats at 4 Hz, and a carried press does not count.
+
+**Decisions where the card was silent or the engine disagreed (flagged in the report):** (1) the id is `scrap_press` (the roster artifact calls it `scrap`). (2) Academy's output is halved (one drop per 8 s); the card gives no figure, and at the card's 4 s three turrets in reach would be about 3x Coin Feeder's scrap in XP, far past the 1.4 to 1.6x finals target. (3) Treasury's "output +25%" is 25% more drops (rate), not bigger drops, so values stay whole numbers. (4) The card stops at a third press at 40%; any later press also keeps 40%. (5) Drop value scales 1 more per five waves (the card says only "scales with wave"). (6) Because the output stat is `fire_rate`, level speed bonuses, Entrench (up to +20% after standing still 20 s) and attack-speed items speed the press, and the level range bonus widens where drops land. (7) Interest is computed after the wave bonus, goes through the earn multiplier and is scaled by the stacking share, rounded. (8) Academy needs turret progression; without it forms cannot be taken at all, and `award_xp` does nothing. (9) Press scrap left on the floor counts toward the abandoned share like any drop, so a parked press can raise the earn multiplier as well as feed XP; this matches the card's "choice engine" note but was not playtested.
+
+**Tuning (no bench was run):** the bench was skipped because the GPU was at 100% utilisation from other work, so there are no benched numbers. The finals are tuned from a simulated-time income check in `tests/integration/test_scrap_press_turret.gd` (`_income`, one press for a whole wave, level-10 finals against a level-5 Coin Feeder, Entrench included): over waves 1, 3, 5, 8 and 12 Treasury makes 1.89, 1.83, 1.73, 1.50 and 1.46 times Coin Feeder's money with interest counted at its 50-scrap ceiling (about 1.4 times at 30 held), and Academy with the press plus two neighbours gives 1.67, 1.50, 1.60, 1.58 and 1.58 times in XP. These are estimates of income, not measured play. `tools/bench_turret_forms.gd` has the four rows and an `income` scenario (`--base=scrap_press [--wave=N] --seconds=60`) that reports wallet plus floor scrap per second, XP per second and interest; it uses simulated time, but it was not run on this branch. Run it once to confirm the test's numbers.
+
+**Visuals:** all four use the Shock bell tinted brass with a gold glow (`TurretActor._rebuild_model`, branch on `turret_type == "scrap_press"`) and gold-recoloured Shock portraits; `ScrapPressEvolutionVisual` adds the per-form hardware and reads the bell's foundation and crown from the model like the Decoy's. The shop inspector, evolution preview and build summary show a drop interval and where drops go instead of damage and rate (`TurretRegistry.is_no_attack`, `ShopViewData` `utility` and `interval`). Tools: `capture_game --scrap-press-demo`, `preview_evolution --scrap-press-preview`, `preview_shop --press[-form=...]`, and the roster showcase (scored by drops made, must make none while carried).
+
+**Not verified:** no human playtest. Screenshots of the preview, the demo, the shop card and the evolution dialog were looked at; the showcase passed in plain, `--alternate` and `--moving` runs. Pickup placement near the arena wall, how loud the per-drop pickup cue gets with several presses, and whether Academy's XP pace feels right are untested by hand.
+
+**Model wiring (pending):** `3d-eval/runs/cp_scrap_press-v1/` has a built model (not triangle-reduced). Steps: follow the 3D models section, then set `model` on the three form rows and `model_key` in the registry (now `shock`), delete the brass tint branch and `SCRAP_PRESS_TINT` in `TurretActor`, re-read the footprint in `ScrapPressEvolutionVisual._footprint` from the real model (the bell's Foundation and Muzzle are assumed; the hopper, ingots and mortarboard are sized for the bell), re-render portraits (the four `scrap_press`, `coin_feeder`, `treasury` and `academy` PNGs are recoloured Shock images), regenerate the golden node, mesh and digest literals for the four press keys, and rerun the roster contract test.
+
+**Reuse:** the three exits in `ScrapIncome` are what any later income or XP turret needs (a Beacon that feeds XP, a Mine Layer that pays per kill); `TurretForm.wave_end_scrap` is a generic wave-end payout hook; `FIRE_NONE` plus `"no_attack": true` is the pattern for Beacon, Lullaby and Discord (they also need an aura or behaviour system, S9 and S4, and must join `FAMILIES["aggro"]` where it applies); `ScrapPressForm._rank_yield` is the pattern for "a second one of me is weaker".
 
 ## Quake logic (built 26 Oct 2026, branch `turret-quake`; model wired on `turret-quake-model`)
 
@@ -172,7 +195,7 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 - S2 Targeting modes: toughest and backline-first (Sniper) **BUILT**
 - S3 Exposed status, a damage-taken multiplier (Resonance Engine, Lullaby) **BUILT**; Overwatch's Marked is a separate built status
 - S4 Enemy behaviour overrides: sleep and enemy-vs-enemy (Lullaby, Discord)
-- S5 Scrap generation, direct deposit and direct XP (Scrap Press)
+- S5 Scrap generation, direct deposit and direct XP (Scrap Press) **BUILT** (`ScrapIncome`; other income turrets reuse it)
 - S6 Returning projectile path (Boomerang)
 - S7 Enemy-only ground zones (Quake Tectonic) **BUILT**
 - S8 Deployable runtime (Mine Layer); the DEPLOYABLE-to-AoE item mapping is built, the runtime is not
@@ -185,7 +208,7 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 
 0. **Done:** progression change, targeting modes, Exposed status, DEPLOYABLE family mapping, utility-turret item rules, `aggro` family, form-table refactor.
 1. Generic timed-status system with a source owner (fixes the Overwatch shared-mark bug) before Decoy, Lullaby and Discord. Finish Plasma and Tesla whenever convenient (4 forms: Constellation needs S12; Forked Coil, Storm Network, Thunderhead). Re-bench every existing final at level 10 against its level-5 form.
-2. **Sniper, Quake and Decoy are done (Decoy model wired on `turret-decoy-model`).** Next: Scrap Press, Boomerang, then the Decoy model wiring.
+2. **Sniper, Quake, Decoy and the Scrap Press logic are done (Decoy model wired on `turret-decoy-model`; Scrap Press on a placeholder chassis).** Next: Boomerang, then the Scrap Press model wiring.
 3. Mine Layer and Laser; Beacon and Drone Bay after a playtest.
 4. Lullaby and Discord (S4 is the largest piece).
 5. Wire the remaining base models as each turret lands.
