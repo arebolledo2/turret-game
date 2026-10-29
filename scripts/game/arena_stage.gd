@@ -100,7 +100,7 @@ func _build_lighting() -> void:
 	settings.background_mode = Environment.BG_SKY
 	settings.sky = sky
 	settings.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	settings.ambient_light_energy = .7
+	settings.ambient_light_energy = .45
 	settings.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	settings.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	settings.tonemap_white = 6.0
@@ -127,11 +127,20 @@ func _build_lighting() -> void:
 	environment.environment = settings
 	add_child(environment)
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-55, -25, 0)
+	# Lower than before so shadows stretch far enough to read from the near-top-down camera.
+	sun.rotation_degrees = Vector3(-35, -45, 0)
 	sun.light_color = Color("d0eaff")
-	sun.light_energy = 1.4
+	sun.light_energy = 1.8
 	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 45.0 # the follow camera only ever sees a small slice of the arena
+	sun.shadow_opacity = .9
+	sun.shadow_blur = 1.0
+	sun.shadow_bias = .07
+	sun.shadow_normal_bias = .6
+	# Shadows vanish when the cascade distance is cut down to the camera-to-floor distance (~22 m, measured with the
+	# orthographic camera), so keep it large and give the near cascade (0-30 m, which holds the whole playfield) its own map.
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+	sun.directional_shadow_max_distance = 200.0
+	sun.directional_shadow_split_1 = .15
 	add_child(sun)
 	# Warm back light, opposite the sun and without shadows, so silhouettes separate from the teal floor.
 	var rim := DirectionalLight3D.new()
