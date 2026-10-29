@@ -2,6 +2,21 @@ class_name EnemyActor
 extends CombatActor
 
 ## A hostile body: brain-driven or chasing, with a hurtbox, ground marker and optional charge telegraph.
+## Seconds a hook lasts: far longer than any wave, so it ends only when the enemy dies or its Decoy lets go.
+const HOOK_SECONDS: float = 3600.0
+## Hooked enemies circle their Decoy on this many lanes, `HOOK_LANE_GAP` metres apart (the Decoy sets the innermost radius),
+## walking round it at `HOOK_ORBIT_SPEED` of their speed; farther than `HOOK_LANE_TOLERANCE` metres from its lane an enemy is
+## pulled toward it first.
+const HOOK_LANES: int = 3
+const HOOK_LANE_GAP: float = .35
+const HOOK_ORBIT_SPEED: float = .75
+const HOOK_LANE_TOLERANCE: float = 1.2
+
+## Cached `EnemyEcology.taunt_kind` (-1 until first asked).
+var _taunt_kind: int = -1
+## The taunt `chase_position` last chose (null when it chose the hero or the objective).
+var taunt_target: TauntPost
+
 func _init() -> void:
 	is_enemy = true
 
@@ -79,6 +94,7 @@ func _build_warning() -> void:
 func _tick_statuses(delta: float) -> bool:
 	_tick_mark(delta)
 	_tick_stagger(delta)
+	_tick_hooked(delta)
 	if statuses.is_burning():
 		for burn_hit in statuses.advance_burn(delta):
 			world.combat.apply_hit(self, burn_hit)
@@ -111,6 +127,25 @@ func _tick_stagger(delta: float) -> void:
 		stagger_marker.visible = down
 		if down:
 			_interrupt_actions()
+
+## The Maelstrom hook (a generic timed status, one timer per Decoy) runs here like the mark, so it is ticked whenever the
+## enemy is alive. A hook whose Decoy is gone or fighting no more (no post holds a timer for this enemy) is dropped.
+func _tick_hooked(delta: float) -> void:
+	if not statuses.is_active(TauntField.HOOKED):
+		return
+	statuses.advance_timed(TauntField.HOOKED, delta)
+	if not world.taunts.hook_anchor(self):
+		statuses.clear_all_timed(TauntField.HOOKED)
+
+## Hooks this enemy for the Decoy `owner` until it dies, and drops whatever it was winding up, the way a stagger does.
+func hook(owner: int) -> void:
+	var fresh := not statuses.is_active(TauntField.HOOKED)
+	statuses.apply_timed(TauntField.HOOKED, HOOK_SECONDS, owner)
+	if fresh:
+		_interrupt_actions()
+
+func is_hooked() -> bool:
+	return statuses.is_active(TauntField.HOOKED)
 
 ## Charges, pounces and wound-up shots end; bosses keep going (they are never staggered).
 func _interrupt_actions() -> void:
@@ -145,6 +180,8 @@ func _steer(delta: float) -> Vector3:
 	if statuses.is_staggered():
 		return _stagger_steer(delta)
 	var effective_speed := speed * speed_factor
+	if statuses.is_active(TauntField.HOOKED):
+		return _hooked_steer(delta, effective_speed)
 	if brain:
 		var movement := brain.move(delta, effective_speed)
 		if (not brain.pounce or brain.pounce.phase == ChargeController3D.Phase.APPROACH) and not (brain.expansion and brain.state in [EnemyBrain.State.WARNING, EnemyBrain.State.ATTACK]):
@@ -152,10 +189,9 @@ func _steer(delta: float) -> Vector3:
 		velocity = movement + knockback_velocity
 		knockback_velocity *= exp(-GameConstants.KNOCKBACK_DECAY_RATE * delta)
 		return movement.normalized()
-	var goal: Vector3 = world.player.position
+	var goal := chase_position()
 	var at_core := false
-	if world.core:
-		goal = chase_position()
+	if world.core and not taunt_target:
 		var stop := world.core.radius + .4 * body_scale
 		at_core = not chasing_hero and WorldGeometry.planar(goal - position).length_squared() < stop * stop
 	var movement := WorldGeometry.planar(goal - position).normalized() * effective_speed
@@ -179,6 +215,25 @@ func _steer(delta: float) -> Vector3:
 		if at_core:
 			movement = Vector3.ZERO
 		movement += world.crowd.separation(self)
+	velocity = movement + knockback_velocity
+	knockback_velocity *= exp(-GameConstants.KNOCKBACK_DECAY_RATE * delta)
+	return movement.normalized()
+
+## A hooked enemy circles its Decoy: pulled onto its own lane (the post's ring radius plus a lane offset by instance), then
+## walking round it in one direction, spread by the usual crowd separation. It ignores the hero, so it neither chases nor shoots;
+## a knockback still slides it, and touching the hero still hurts the hero.
+func _hooked_steer(delta: float, effective_speed: float) -> Vector3:
+	var anchor := world.taunts.hook_anchor(self)
+	var movement := Vector3.ZERO
+	if anchor:
+		var offset := WorldGeometry.planar(position - anchor.origin())
+		var distance := offset.length()
+		var radial := offset / distance if distance > .001 else Vector3(1, 0, 0)
+		var lane := anchor.hook_ring + float(get_instance_id() % HOOK_LANES) * HOOK_LANE_GAP
+		var pull := clampf((lane - distance) / HOOK_LANE_TOLERANCE, -1.0, 1.0)
+		var tangent := Vector3(-radial.z, 0, radial.x)
+		movement = (radial * pull + tangent * HOOK_ORBIT_SPEED * (1.0 - absf(pull))).limit_length(1.0) * effective_speed
+	movement += world.crowd.separation(self)
 	velocity = movement + knockback_velocity
 	knockback_velocity *= exp(-GameConstants.KNOCKBACK_DECAY_RATE * delta)
 	return movement.normalized()
@@ -220,12 +275,28 @@ func _apply_contact_damage(delta: float, previous_position: Vector3) -> void:
 				core_clock = GameConstants.CORE_HIT_INTERVAL
 				world.damage_core(contact_damage * GameConstants.CORE_DAMAGE_FRACTION)
 
-## Where an enemy is heading when the run has an objective: the hero while within aggro range, otherwise the objective.
-## Survive mode has no objective and never calls this (the hero is always the goal).
+## Where an enemy is heading: a Decoy whose taunt reaches it (S1), else the hero while within aggro range, otherwise the
+## objective. Survive mode has no objective, so the hero is the goal there.
 func chase_position() -> Vector3:
+	taunt_target = taunt_post()
+	if taunt_target:
+		return taunt_target.origin()
+	if not world.core:
+		return world.player.position
 	var range_limit := GameConstants.CORE_DEAGGRO_RANGE if chasing_hero else GameConstants.CORE_AGGRO_RANGE
 	chasing_hero = not ignores_hero and WorldGeometry.planar(world.player.position - position).length_squared() <= range_limit * range_limit
 	return world.player.position if chasing_hero else world.core.position
+
+## The nearest Decoy whose taunt reaches this enemy (S1), or null. Cheap by design: a run without a Decoy costs one empty-list
+## check, and a run with one asks a list of a few posts. Bosses and their summons, crates and core seekers never answer.
+func taunt_post() -> TauntPost:
+	if world.taunts.posts.is_empty() or stationary or ignores_hero:
+		return null
+	if _taunt_kind < 0:
+		_taunt_kind = EnemyEcology.taunt_kind(enemy_type)
+	if _taunt_kind == EnemyEcology.Taunt.NONE:
+		return null
+	return world.taunts.post_for(position, _taunt_kind == EnemyEcology.Taunt.RANGED)
 
 func _scale_damage(hit: CombatHit3D) -> float:
 	return hit.damage * statuses.exposure_multiplier(hit) * statuses.mark_multiplier(hit)

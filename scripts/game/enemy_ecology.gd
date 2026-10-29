@@ -72,6 +72,17 @@ static func is_boss(type_id: String) -> bool:
 static func ranged_threat(type_id: String) -> bool:
 	return type_id in EXPANSION_BOSSES or type_id in ["kite", "lobber", "lens", "anchor", "tender", "prism_conductor", "grand_marionettist"]
 
+## How a Decoy's taunt (S1) moves an enemy. Bosses and their summons never answer it (every boss attacks the hero only),
+## ranged attackers answer only a taunt that says so (Maelstrom), everything else walks at the nearest Decoy in reach.
+enum Taunt {NONE, MELEE, RANGED}
+const TAUNT_IMMUNE: Array[String] = ["lens", "anchor", "puppet", "tech_drop"]
+const TAUNT_RANGED: Array[String] = ["kite", "lobber", "tender"]
+
+static func taunt_kind(type_id: String) -> Taunt:
+	if is_boss(type_id) or type_id in TAUNT_IMMUNE:
+		return Taunt.NONE
+	return Taunt.RANGED if type_id in TAUNT_RANGED else Taunt.MELEE
+
 static func hero_only(type_id: String) -> bool:
 	return TYPES.has(type_id) and type_id not in ["lobber", "drowse"]
 

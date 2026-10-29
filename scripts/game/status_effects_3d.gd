@@ -89,6 +89,11 @@ func clear_timed(status: String, owner: int = 0) -> void:
 	if _timed.has(status):
 		_timed[status].clear_owner(owner)
 
+## Removes every owner's timer for `status` (a hook whose Decoy is gone).
+func clear_all_timed(status: String) -> void:
+	if _timed.has(status):
+		_timed[status].clear()
+
 func advance_timed(status: String, delta: float) -> void:
 	if _timed.has(status):
 		_timed[status].advance(delta)

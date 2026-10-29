@@ -39,6 +39,8 @@ var buff_overlay: BuffOverlay
 var combat: Combat3D = Combat3D.new()
 var crowd: CrowdGrid3D = CrowdGrid3D.new()
 var effects: CombatEffects3D
+## The Decoy taunts enemies answer (S1); see `TauntField`.
+var taunts := TauntField.new()
 ## Temporary enemy-only floor patches laid by turrets (Quake fissures); see `GroundZones`.
 var ground_zones: GroundZones
 var audio: GameAudio
@@ -268,6 +270,7 @@ func _clear_actors() -> void:
 	placement.carried = null
 	enemies.clear()
 	turrets.clear()
+	taunts.clear()
 	projectiles.clear()
 	crowd.rebuild(enemies)
 	effects.reset()

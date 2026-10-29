@@ -93,7 +93,10 @@ func move(delta: float, speed: float) -> Vector3:
 	if not children.is_empty():
 		# Untyped parameter: a freed child cannot be passed to a CombatActor-typed lambda.
 		children.assign(children.filter(func(child: Variant) -> bool: return is_instance_valid(child) and not child.dead))
-	var hero := actor.world.player.position
+	# A Decoy's taunt (S1) replaces the hero as the target of everything that answers it. A sleeping Drowse Beetle does not:
+	# it stays asleep until something disturbs it.
+	var post: TauntPost = null if kind == "drowse" and not awake else actor.taunt_post()
+	var hero := post.origin() if post else actor.world.player.position
 	var toward := WorldGeometry.planar(hero - actor.position)
 	actor.chasing_hero = EnemyEcology.hero_only(kind)
 	if expansion:
@@ -118,7 +121,7 @@ func move(delta: float, speed: float) -> Vector3:
 				if state == State.WARNING: return shooting
 			var orbit := summon_parent.position + Vector3(cos(age * .5 + get_instance_id()), 0, sin(age * .5 + get_instance_id())) * 1.7
 			return (orbit - actor.position).limit_length(speed)
-		"lobber": return _ranged(actor.world.core.position if actor.world.core else hero, speed, true)
+		"lobber": return _ranged(hero if post or not actor.world.core else actor.world.core.position, speed, true)
 		"tender": return _tender(hero, speed)
 		"prism_conductor": return _prism(hero, speed)
 		"grand_marionettist": return _marionettist(hero, speed)

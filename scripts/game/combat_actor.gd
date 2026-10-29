@@ -52,6 +52,10 @@ var weapon_target: CombatActor
 var clockwork_motion: ClockworkMotion
 var ecology_motion: EcologyMotion
 
+## The Decoy taunt (S1) that is pulling this actor right now, or null. Only enemies answer taunts (see `EnemyActor`).
+func taunt_post() -> TauntPost:
+	return null
+
 ## Planar footprint of the same capsule used by projectile collisions.
 func hurtbox_radius() -> float:
 	if _footprint < 0.0:
