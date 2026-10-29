@@ -10,7 +10,7 @@ const TYPES := {
 	"pendulum_regent": {"name": "Pendulum Regent", "health": 260.0, "speed": 105.0, "contact_damage": 0.0, "mass": 35.0, "scale": 1.00, "cost": 0},
 	"crownwheel_colossus": {"name": "Crownwheel Colossus", "health": 260.0, "speed": 150.0, "contact_damage": 10.0, "mass": 35.0, "scale": 1.05, "cost": 0},
 
-	"drowse": {"name": "Drowse Beetle", "health": 4.8, "speed": 100.0, "contact_damage": 2.0, "mass": 1.0, "scale": .85, "cost": 1},
+	"drowse": {"name": "Drowse Beetle", "health": 4.8, "speed": 130.0, "contact_damage": 2.0, "mass": 1.0, "scale": .85, "cost": 1},
 	"hopper": {"name": "Rivet Hopper", "health": 8.0, "speed": 300.0, "contact_damage": 6.0, "mass": 1.0, "scale": .85, "cost": 2},
 	"kite": {"name": "Needle Kite", "health": 6.0, "speed": 150.0, "contact_damage": 0.0, "mass": .8, "scale": .8, "cost": 2},
 	"lobber": {"name": "Kiln Lobber", "health": 12.0, "speed": 65.0, "contact_damage": 0.0, "mass": 3.0, "scale": 1.0, "cost": 4},

@@ -43,7 +43,7 @@ func test_drowse_wakes_warns_then_loses_interest() -> void:
 	beetle.brain.move(.8, beetle.speed)
 	assert_gt(beetle.brain.move(.1, beetle.speed).length(), 0.0)
 	world.player.position = Vector3(7, 0, 0)
-	beetle.brain.move(2.1, beetle.speed)
+	beetle.brain.move(3.1, beetle.speed)
 	assert_false(beetle.brain.awake)
 	assert_false(beetle.brain.contact_allowed())
 
@@ -52,7 +52,7 @@ func test_damage_wakes_beetle_without_removing_leash() -> void:
 	world.player.position = Vector3(8, 0, 0)
 	beetle.take_damage(.1)
 	assert_true(beetle.brain.awake)
-	beetle.brain.move(2.1, beetle.speed)
+	beetle.brain.move(3.1, beetle.speed)
 	assert_false(beetle.brain.awake)
 
 func test_summons_have_no_economy_pickups() -> void:

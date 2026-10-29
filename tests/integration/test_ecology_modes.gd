@@ -112,7 +112,7 @@ func test_drowse_wakes_for_core_and_can_damage_it() -> void:
 	beetle._apply_contact_damage(1.0, beetle.position)
 	assert_lt(world.core.health, before)
 	world.core.position = Vector3(-10, 0, 0)
-	beetle.brain.move(2.1, beetle.speed)
+	beetle.brain.move(3.1, beetle.speed)
 	assert_false(beetle.brain.awake)
 
 func test_low_health_warning_channels_and_phase_gating() -> void:

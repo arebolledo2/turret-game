@@ -54,7 +54,7 @@ func disturbed() -> void:
 	if kind == "drowse" and not awake:
 		awake = true
 		state = State.WAKE
-		clock = .4
+		clock = .25
 
 func contact_allowed() -> bool:
 	if expansion: return expansion.contact_allowed()
@@ -149,7 +149,7 @@ func _drowse(delta: float, toward: Vector3, speed: float) -> Vector3:
 		disturbed()
 	if awake:
 		lose_interest = lose_interest + delta if gap > 3.0 else 0.0
-		if lose_interest >= 2.0:
+		if lose_interest >= 3.0:
 			awake = false
 			state = State.IDLE
 			clock = 1.0

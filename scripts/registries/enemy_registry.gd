@@ -10,7 +10,7 @@ const TYPES: Dictionary = {
 		"description": "Spider-like drone with sleek neon design.",
 		"base_stats": {
 			"health": 8.0,
-			"speed": 75.0,
+			"speed": 125.0,
 			"contact_damage": 8.0,
 			"scrap_value": 1,
 			"scale": 0.075, # Smaller scale for sprite clarity
@@ -23,7 +23,7 @@ const TYPES: Dictionary = {
 		"description": "Quick but fragile enemy.",
 		"base_stats": {
 			"health": 4.0,
-			"speed": 130.0,
+			"speed": 160.0,
 			"contact_damage": 5.0,
 			"scrap_value": 1,
 			# The Scout Bot source art is 1024px; normalize it to the same
@@ -38,7 +38,7 @@ const TYPES: Dictionary = {
 		"description": "Slow but very tough enemy.",
 		"base_stats": {
 			"health": 30.0,
-			"speed": 40.0,
+			"speed": 70.0,
 			"contact_damage": 13.0,
 			"scrap_value": 1,
 			# The Heavy Bot source art is also 1024px, so keep its larger body
