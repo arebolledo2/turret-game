@@ -16,6 +16,8 @@ var item_counts: Dictionary:
 func reset_state() -> void:
 	collected_items.clear()
 	item_counts.clear()
+	state.abandon_index = 0.0
+	state.wave_scrap_dropped = 0
 
 
 ## Get reroll cost multiplier (from items like Probability Matrix)
@@ -25,7 +27,12 @@ func get_reroll_cost_multiplier() -> float:
 
 ## Get scrap earn multiplier (from items like Salvage Optimizer)
 func get_scrap_earn_multiplier() -> float:
-	return ModifierService.apply_modifiers_to_stat(1.0, "scrap_earn_mult")
+	return ModifierService.apply_modifiers_to_stat(1.0, "scrap_earn_mult") * (1.0 + get_abandon_bonus())
+
+
+## Permanent earn bonus from scrap left on the floor in earlier waves (progression runs only).
+func get_abandon_bonus() -> float:
+	return minf(GameConstants.ABANDON_GAIN * state.abandon_index, GameConstants.ABANDON_BONUS_CAP)
 
 
 ## Get enemy count multiplier (from items like Combat Surplus)

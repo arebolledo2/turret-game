@@ -21,6 +21,8 @@ var glow: MeshInstance3D
 static var glow_mesh: PlaneMesh
 
 func _ready() -> void:
+	if world:
+		world.session.state.wave_scrap_dropped += amount
 	collision_layer = 0
 	collision_mask = WorldGeometry.PLAYER_LAYER
 	var shape := CollisionShape3D.new()

@@ -17,6 +17,13 @@ static func weight(from: Vector3, to: Vector3) -> float:
 	var distance_squared := WorldGeometry.planar(from - to).length_squared()
 	return .15 + 1.0 / (1.0 + distance_squared / 16.0)
 
+## Share of a wave's drops left behind, past the dead zone, rescaled to 0..1.
+static func abandon_fraction(leftover: int, dropped: int) -> float:
+	if dropped <= 0:
+		return 0.0
+	var share := clampf(float(leftover) / float(dropped), 0.0, 1.0)
+	return maxf(0.0, share - GameConstants.ABANDON_DEADZONE) / (1.0 - GameConstants.ABANDON_DEADZONE)
+
 func settle(wave: int) -> bool:
 	if not world.session.state.turret_progression_enabled or settlements.has(wave):
 		return false
@@ -76,5 +83,12 @@ func settle(wave: int) -> bool:
 		var before := EconomyService.total_scrap
 		world.collect_scrap(raw_scrap)
 		ledger["fallback_cash"] = EconomyService.total_scrap - before
+	# After the fallback cash above, so that stays at the multiplier the wave was played with.
+	var state := world.session.state
+	var abandoned := abandon_fraction(raw_scrap, state.wave_scrap_dropped)
+	state.abandon_index += abandoned
+	state.wave_scrap_dropped = 0
+	ledger["abandoned"] = abandoned
+	ledger["abandon_bonus"] = ItemTrackingService.get_abandon_bonus()
 	world.telemetry.record_salvage(ledger)
 	return true

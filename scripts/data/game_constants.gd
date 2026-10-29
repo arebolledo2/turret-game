@@ -112,6 +112,11 @@ const STARTING_SCRAP: int = 20
 const SCRAP_WAVE_BONUS_BASE: int = 0
 const SCRAP_WAVE_BONUS_PER_WAVE: int = 5 # added to the wave bonus for each wave number
 
+# Abandoned scrap (progression runs): scrap left on the floor at wave end permanently raises the scrap earn multiplier.
+const ABANDON_DEADZONE: float = .10 # fraction of a wave's drops that can be missed without counting
+const ABANDON_GAIN: float = .12 # earn multiplier bonus per fully abandoned wave
+const ABANDON_BONUS_CAP: float = 2.0 # maximum bonus (+200%)
+
 # =============================================================================
 # PROTECT THE CORE (core mode)
 # =============================================================================

@@ -399,8 +399,11 @@ func _growth_summary() -> String:
 	var levels := 0
 	for change: Dictionary in ledger["changes"].values():
 		levels += int(change["after"]["level"]) - int(change["before"]["level"])
-	return "Turret growth · +%d XP from leftover scrap · %d %s gained" % [
+	var text := "Turret growth · +%d XP from leftover scrap · %d %s gained" % [
 		ledger["xp_awarded"], levels, "level" if levels == 1 else "levels"]
+	if float(ledger.get("abandoned", 0.0)) > 0.0:
+		text += "\nAbandoned scrap · scrap earned +%d%% for the rest of the run" % roundi(float(ledger["abandon_bonus"]) * 100.0)
+	return text
 
 func _turret_numbers(was: Dictionary, turret: Dictionary) -> String:
 	var cadence_key := "rotation_rate" if turret["rotation_rate"] > 0 else "fire_rate"

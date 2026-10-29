@@ -17,6 +17,10 @@ var turrets_purchased: int = 0
 var turret_progression_enabled: bool = false
 var additional_turrets_acquired: int = 0
 var turret_progression: Dictionary = {}
+## Raw scrap dropped on the field this wave; the denominator for the abandoned fraction.
+var wave_scrap_dropped: int = 0
+## Run-long sum of each wave's effective abandoned fraction (0..1 per wave).
+var abandon_index: float = 0.0
 var player_luck: float = GameConstants.PLAYER_BASE_LUCK
 var turret_counts: Dictionary = {}
 var collected_items: Array[String] = []

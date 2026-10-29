@@ -99,6 +99,29 @@ func test_get_scrap_earn_multiplier_base():
 		"Should return 1.0 without modifiers")
 
 
+func test_abandon_fraction_dead_zone_and_scale():
+	assert_eq(WaveSalvage.abandon_fraction(0, 0), 0.0, "no drops means nothing abandoned")
+	assert_eq(WaveSalvage.abandon_fraction(10, 100), 0.0, "10% is inside the dead zone")
+	assert_almost_eq(WaveSalvage.abandon_fraction(100, 100), 1.0, .0001)
+	assert_almost_eq(WaveSalvage.abandon_fraction(55, 100), .5, .0001)
+	assert_almost_eq(WaveSalvage.abandon_fraction(200, 100), 1.0, .0001, "clamped when leftover exceeds drops")
+
+
+func test_abandon_bonus_scales_and_caps():
+	assert_eq(item_tracking_service.get_abandon_bonus(), 0.0)
+	item_tracking_service.state.abandon_index = 3.0
+	assert_almost_eq(item_tracking_service.get_abandon_bonus(), .36, .0001)
+	assert_almost_eq(item_tracking_service.get_scrap_earn_multiplier(), 1.36, .0001)
+	item_tracking_service.state.abandon_index = 1000.0
+	assert_eq(item_tracking_service.get_abandon_bonus(), GameConstants.ABANDON_BONUS_CAP)
+
+
+func test_abandon_bonus_multiplies_item_bonus():
+	modifier_service.add_modifier({"stat": "scrap_earn_mult", "operation": "increase", "value": 0.5})
+	item_tracking_service.state.abandon_index = 5.0
+	assert_almost_eq(item_tracking_service.get_scrap_earn_multiplier(), 1.5 * 1.6, .0001)
+
+
 func test_get_scrap_earn_multiplier_with_bonus():
 	modifier_service.add_modifier({
 		"stat": "scrap_earn_mult",

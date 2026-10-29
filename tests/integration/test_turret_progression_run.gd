@@ -39,7 +39,9 @@ func test_wave_end_awards_raw_xp_and_cash_bonus_once() -> void:
 	var leftover := _scrap(903)
 	var before := EconomyService.total_scrap
 	assert_true(world.finish_wave())
-	assert_eq(EconomyService.total_scrap, before + 5)
+	# Abandoning most of the wave lifts the multiplier before the +5 bonus pays out, so it may round up to 6.
+	var banked := EconomyService.total_scrap
+	assert_between(banked, before + 5, before + 6)
 	assert_true(leftover.collected)
 	assert_eq(world.turrets[0].progression.level, 15)
 	assert_eq(world.turrets[0].progression.xp, 7)
@@ -49,11 +51,29 @@ func test_wave_end_awards_raw_xp_and_cash_bonus_once() -> void:
 	assert_false(world.finish_wave())
 	assert_false(_settle_only(), "Even direct re-entry cannot settle this wave twice")
 	assert_eq(world.turrets[0].progression.total_xp, 903)
-	assert_eq(EconomyService.total_scrap, before + 5)
+	assert_eq(EconomyService.total_scrap, banked)
 	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
 	assert_true(world.begin_next_wave())
 	assert_eq(world.build_zones.bonus_slots, 0)
 	assert_eq(world.build_zones.wave_tier, 0)
+
+func test_abandoned_scrap_raises_multiplier_for_the_rest_of_the_run() -> void:
+	_scrap(50).collect()
+	_scrap(50)
+	assert_eq(world.session.state.wave_scrap_dropped, 100)
+	assert_true(_settle_only())
+	var expected_index := WaveSalvage.abandon_fraction(50, 100)
+	assert_almost_eq(world.session.state.abandon_index, expected_index, .0001)
+	assert_eq(world.session.state.wave_scrap_dropped, 0, "drop counter resets for the next wave")
+	assert_almost_eq(world.salvage.last_settlement.abandon_bonus, GameConstants.ABANDON_GAIN * expected_index, .0001)
+	assert_almost_eq(ItemTrackingService.get_scrap_earn_multiplier(), 1.0 + GameConstants.ABANDON_GAIN * expected_index, .0001)
+
+func test_collecting_everything_leaves_multiplier_untouched() -> void:
+	_scrap(40).collect()
+	_scrap(1)
+	assert_true(_settle_only())
+	assert_eq(world.session.state.abandon_index, 0.0)
+	assert_eq(ItemTrackingService.get_scrap_earn_multiplier(), 1.0)
 
 func test_carried_position_is_snapshotted_before_automatic_drop() -> void:
 	var turret := world.turrets[0]
