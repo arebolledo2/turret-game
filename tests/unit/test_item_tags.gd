@@ -39,13 +39,16 @@ func _utility_definition() -> Dictionary:
 	definition["no_attack"] = true
 	return definition
 
-func test_aggro_is_a_build_family_with_no_stocked_turret_yet() -> void:
+func test_aggro_is_a_build_family_holding_only_the_decoy_so_far() -> void:
 	assert_true(TurretRegistry.FAMILIES.has("aggro"))
-	assert_true(TurretRegistry.FAMILIES["aggro"].is_empty(), "Decoy, Lullaby and Discord are not registered yet")
+	assert_eq(TurretRegistry.FAMILIES["aggro"], ["decoy"], "Lullaby and Discord are not registered yet")
+	assert_eq(TurretRegistry.get_family("decoy"), "aggro")
 	for type_id: String in TurretRegistry.get_all_type_ids():
-		assert_ne(TurretRegistry.get_family(type_id), "aggro", type_id)
-	# An aggro-scoped item matches no current turret, and does not disturb the other families.
+		if type_id != "decoy":
+			assert_ne(TurretRegistry.get_family(type_id), "aggro", type_id)
+	# An aggro-scoped item reaches the Decoy alone, and does not disturb the other families.
 	ModifierService.add_modifier(Item.create_increase("damage", .5, Item.filter_family(["aggro"])))
+	assert_almost_eq(float(ModifierService.get_turret_stats("decoy", {"turret_damage_mult": 1.0})["damage"]), float(TurretRegistry.get_base_stats("decoy")["damage"]) * 1.5, .001, "decoy")
 	for type_id in ["normal", "plasma", "shock", "tesla", "melee", "mine"]:
 		assert_almost_eq(float(ModifierService.get_turret_stats(type_id, {"turret_damage_mult": 1.0})["damage"]), float(TurretRegistry.get_base_stats(type_id)["damage"]), .001, type_id)
 

@@ -48,6 +48,9 @@ var slow_duration: float:
 ## Seconds a hit staggers an enemy (Quake); 0 for turrets that do not.
 var stagger_seconds: float:
 	get: return maxf(float(values.get("stagger", 0.0)), 0.0)
+## Radius in metres within which a Decoy pulls enemies to itself (S1); 0 for turrets that do not taunt. Grows with the area bonus.
+var taunt_metres: float:
+	get: return maxf(_metres("taunt_range", 0.0), 0.0) * area_size
 ## Melee bat spin speed in degrees per second.
 var rotation_rate: float:
 	get: return float(values.get("rotation_rate", DEFAULT_ROTATION_RATE))

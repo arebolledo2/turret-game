@@ -242,6 +242,9 @@ func _show_selected() -> void:
 			lines.append("Marks the %d toughest enemies for %.0f s: +%.0f%% damage from every turret" % [TurretEvolution.OVERWATCH_MARK_COUNT, TurretEvolution.OVERWATCH_MARK_SECONDS, StatusEffects3D.MARKED_BONUS * 100.0])
 	if turret.turret_type == "quake":
 		lines.append("Stagger  %.1f s     %s" % [stats.stagger_seconds, TurretEvolution.quake_pattern_text(growth.evolution_form)])
+	if turret.turret_type == "decoy":
+		lines.append("Taunt radius  %.2f m     Knockback  %.2f m" % [stats.taunt_metres, stats.knockback_metres])
+		lines.append(TurretEvolution.decoy_pattern_text(growth.evolution_form))
 	if stats.aoe_radius_metres > 0:
 		lines.append("Blast radius  %.2f m" % stats.aoe_radius_metres)
 	if stats.chain_count > 0:

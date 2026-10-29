@@ -77,6 +77,9 @@ func show_form(turret: TurretActor, form: String) -> void:
 	if turret.turret_type == "quake":
 		lines.append("Knockback   %.2f → %.2f m     Stagger   %.1f s" % [before.knockback_metres, after.knockback_metres, after.stagger_seconds])
 		lines.append(TurretEvolution.quake_pattern_text(form))
+	if turret.turret_type == "decoy":
+		lines.append("Taunt radius   %.2f → %.2f m     Knockback   %.2f → %.2f m" % [before.taunt_metres, after.taunt_metres, before.knockback_metres, after.knockback_metres])
+		lines.append(TurretEvolution.decoy_pattern_text(form))
 	if after.aoe_radius_metres > 0:
 		lines.append("Blast radius   %.2f → %.2f m" % [before.aoe_radius_metres, after.aoe_radius_metres])
 	if form == "stormblade":

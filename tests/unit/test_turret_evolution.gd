@@ -223,3 +223,45 @@ func test_forms_are_unique_to_one_base_and_listed_under_it() -> void:
 	for base in TurretEvolution.bases():
 		for form in TurretEvolution.options(base, 0) + TurretEvolution.options(base, 1):
 			assert_eq(TurretEvolution.row(form)["base"], base, "%s is listed under the base that owns it" % form)
+
+func test_decoy_path_forms_tiers_and_placeholder_chassis() -> void:
+	assert_eq(TurretEvolution.options("decoy", 0), ["bumper_post"])
+	assert_eq(TurretEvolution.options("decoy", 1), ["pile_driver", "maelstrom"])
+	assert_eq(TurretEvolution.form_name("bumper_post"), "Bumper Post")
+	assert_eq(TurretEvolution.form_name("pile_driver"), "Pile Driver")
+	assert_eq(TurretEvolution.form_name("maelstrom"), "Maelstrom")
+	for form in ["bumper_post", "pile_driver", "maelstrom"]:
+		assert_true(TurretEvolution.is_implemented(form))
+		assert_eq(TurretEvolution.model_key(form), "shock", "Every Decoy form uses the Shock bell until cp_decoy is wired")
+		assert_true(ClockworkModels.available(TurretEvolution.model_key(form)))
+		assert_false(TurretEvolution.description(form).is_empty())
+	assert_true(TurretEvolution.behaviour_script("decoy", "").new() is DecoyForm, "The unevolved Decoy taunts through its form")
+
+func test_decoy_base_stats_match_the_design() -> void:
+	var base := TurretRegistry.get_base_stats("decoy")
+	assert_eq(base.damage, 3.0)
+	assert_almost_eq(float(base.fire_rate), 1.0 / 1.5, .0001)
+	assert_eq(base.range, 150.0)
+	assert_eq(base.knockback_force, 150.0)
+	assert_eq(base.taunt_range, 450.0)
+	assert_eq(TurretRegistry.get_base_price("decoy"), 10)
+	assert_eq(TurretRegistry.get_fire_mode("decoy"), TurretRegistry.FIRE_PULSE)
+
+func test_decoy_forms_climb_in_damage_reach_and_taunt() -> void:
+	var base := TurretEvolution.base_stats("decoy", "")
+	var bumper := TurretEvolution.base_stats("decoy", "bumper_post")
+	var driver := TurretEvolution.base_stats("decoy", "pile_driver")
+	var maelstrom := TurretEvolution.base_stats("decoy", "maelstrom")
+	assert_gt(bumper.damage, base.damage)
+	assert_gt(bumper.fire_rate, base.fire_rate)
+	assert_almost_eq(float(bumper.knockback_force), float(base.knockback_force) * 1.5, .001, "Knockback x1.5")
+	assert_gt(driver.range, bumper.range, "Pile Driver reaches farther")
+	assert_eq(maelstrom.taunt_range, 700.0, "Maelstrom taunts out to 7 m")
+	assert_eq(driver.taunt_range, 450.0)
+	assert_eq(TurretEvolution.param("pile_driver", "slam_every"), 4)
+	assert_eq(TurretEvolution.param("pile_driver", "slam_damage"), 3.0)
+	assert_eq(TurretEvolution.param("pile_driver", "slam_radius"), 1.5)
+	assert_eq(TurretEvolution.param("pile_driver", "slam_stagger"), .6)
+	assert_eq(TurretEvolution.param("maelstrom", "hooks"), 10)
+	assert_true(TurretEvolution.param("maelstrom", "ranged_taunt"))
+	assert_null(TurretEvolution.param("bumper_post", "ranged_taunt"), "Only the Maelstrom draws ranged enemies")

@@ -5,7 +5,7 @@ extends GutTest
 ## stats, text, shot shape, behaviour class, visual builder or built model must fail here instead of passing silently.
 ## If a number must change on purpose (a balance retune), edit the literal in the same commit and say why.
 ##
-## What is pinned, per form (all 30 registered forms, implemented or not) and per base turret with no form:
+## What is pinned, per form (all 33 registered forms, implemented or not) and per base turret with no form:
 ##   FORMS     base, kind (upgrade or final), name, model key, implemented, description
 ##   STATS     the full `TurretEvolution.base_stats(base, form)` dictionary (every key, with its type)
 ##   SHOTS     `shape_shot` on a fresh `CombatShot3D`: visual_key, visual_scale, radius, lifetime, ricochets, pierce
@@ -13,13 +13,13 @@ extends GutTest
 ##   BUILDERS  which `*EvolutionVisual` builders change the form's chassis (each is run on a fresh model)
 ##   MODELS    the model the actor builds: node and mesh counts, handles the attack code reads (muzzles, emitters, saber
 ##             arms) and a digest of every node's class, name, transform, mesh size and material
-##   MISC      volley size, pierce text, the Stormblade barrel stats, Resonator echo delays and Quake pattern text
+##   MISC      volley size, pierce text, the Stormblade barrel stats, Resonator echo delays and Quake and Decoy pattern text
 ##
 ## The collectors only call lookups (`_stats`, `_shot`, `_volley`, ...); when a refactor changes a function signature,
 ## adapt the lookup here, never the expected values.
 
-const BASES: Array[String] = ["normal", "melee", "bow", "flamethrower", "bowling", "plasma", "shock", "tesla", "sniper", "quake"]
-const BUILDERS: Array[String] = ["BowEvolutionVisual", "FlameEvolutionVisual", "BowlingEvolutionVisual", "GunbladeEvolutionVisual", "SiegeEvolutionVisual", "SniperEvolutionVisual", "QuakeEvolutionVisual", "GatlingEvolutionVisual", "CrossfireEvolutionVisual"]
+const BASES: Array[String] = ["normal", "melee", "bow", "flamethrower", "bowling", "plasma", "shock", "tesla", "sniper", "quake", "decoy"]
+const BUILDERS: Array[String] = ["BowEvolutionVisual", "FlameEvolutionVisual", "BowlingEvolutionVisual", "GunbladeEvolutionVisual", "SiegeEvolutionVisual", "SniperEvolutionVisual", "QuakeEvolutionVisual", "DecoyEvolutionVisual", "GatlingEvolutionVisual", "CrossfireEvolutionVisual"]
 
 const FORMS: Dictionary = {
 	"machine_gun": {
@@ -261,6 +261,30 @@ const FORMS: Dictionary = {
 		"model": "quake",
 		"implemented": true,
 		"description": "The pulse repeats every 0.9 seconds while enemies stay in range, each ring wider than the last (3 repeats at most). Stagger builds up on every hit, up to 1.5 seconds.",
+	},
+	"bumper_post": {
+		"base": "decoy",
+		"kind": "upgrade",
+		"name": "Bumper Post",
+		"model": "shock",
+		"implemented": true,
+		"description": "Padded bumper posts hit harder and faster: 8 damage every 1.2 seconds, and enemies are shoved back half again as far.",
+	},
+	"pile_driver": {
+		"base": "decoy",
+		"kind": "final",
+		"name": "Pile Driver",
+		"model": "shock",
+		"implemented": true,
+		"description": "Every fourth pulse is a slam: triple damage over a ring half again as wide, and the enemies it hits are staggered for 0.6 seconds.",
+	},
+	"maelstrom": {
+		"base": "decoy",
+		"kind": "final",
+		"name": "Maelstrom",
+		"model": "shock",
+		"implemented": true,
+		"description": "The taunt reaches 7 metres and draws ranged enemies too. Up to 10 enemies in reach are hooked and circle the Decoy until they die, taking a light tick of damage.",
 	},
 }
 
@@ -598,6 +622,38 @@ const STATS: Dictionary = {
 		"knockback_force": 220.0,
 		"stagger": 1.0,
 	},
+	"(decoy)": {
+		"damage": 3.0,
+		"fire_rate": 1.0 / 1.5,
+		"range": 150.0,
+		"rotation_speed": 0.0,
+		"knockback_force": 150.0,
+		"taunt_range": 450.0,
+	},
+	"bumper_post": {
+		"damage": 8.0,
+		"fire_rate": 1.0 / 1.2,
+		"range": 150.0,
+		"rotation_speed": 0.0,
+		"knockback_force": 225.0,
+		"taunt_range": 450.0,
+	},
+	"pile_driver": {
+		"damage": 8.0,
+		"fire_rate": 1.0 / 1.2,
+		"range": 180.0,
+		"rotation_speed": 0.0,
+		"knockback_force": 225.0,
+		"taunt_range": 450.0,
+	},
+	"maelstrom": {
+		"damage": 7.5,
+		"fire_rate": 1.0,
+		"range": 150.0,
+		"rotation_speed": 0.0,
+		"knockback_force": 120.0,
+		"taunt_range": 700.0,
+	},
 }
 
 const SHOTS: Dictionary = {
@@ -641,6 +697,10 @@ const SHOTS: Dictionary = {
 	"aftershock": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
 	"tectonic": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
 	"cataclysm": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"(decoy)": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"bumper_post": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"pile_driver": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"maelstrom": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
 }
 
 const BEHAVIOUR: Dictionary = {
@@ -684,6 +744,10 @@ const BEHAVIOUR: Dictionary = {
 	"aftershock": "QuakeForm",
 	"tectonic": "QuakeForm",
 	"cataclysm": "QuakeForm",
+	"(decoy)": "DecoyForm",
+	"bumper_post": "DecoyForm",
+	"pile_driver": "DecoyForm",
+	"maelstrom": "DecoyForm",
 }
 
 const BUILDERS_BY_FORM: Dictionary = {
@@ -727,6 +791,10 @@ const BUILDERS_BY_FORM: Dictionary = {
 	"aftershock": ["QuakeEvolutionVisual"],
 	"tectonic": ["QuakeEvolutionVisual"],
 	"cataclysm": ["QuakeEvolutionVisual"],
+	"(decoy)": [],
+	"bumper_post": ["DecoyEvolutionVisual"],
+	"pile_driver": ["DecoyEvolutionVisual"],
+	"maelstrom": ["DecoyEvolutionVisual"],
 }
 
 const MODELS: Dictionary = {
@@ -1210,6 +1278,54 @@ const MODELS: Dictionary = {
 		"saber_angles": 1,
 		"digest": "9f075a8897ac1af3",
 	},
+	"(decoy)": {
+		"nodes": 14,
+		"meshes": 11,
+		"muzzle": "0.000,1.010,0.000",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "f4adf0c9a1816e4a",
+	},
+	"bumper_post": {
+		"nodes": 27,
+		"meshes": 24,
+		"muzzle": "0.000,1.010,0.000",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "06c4345f255035f5",
+	},
+	"pile_driver": {
+		"nodes": 32,
+		"meshes": 29,
+		"muzzle": "0.000,1.010,0.000",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "ad17c0649fe9278d",
+	},
+	"maelstrom": {
+		"nodes": 27,
+		"meshes": 24,
+		"muzzle": "0.000,1.010,0.000",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "b312c38d8df45182",
+	},
 }
 
 const MISC: Dictionary = {
@@ -1229,9 +1345,14 @@ const MISC: Dictionary = {
 	"quake_pattern:tectonic": "Two crossing fissures at the densest cluster, open for 3 s, slowing 40%",
 	"quake_pattern:cataclysm": "Up to 3 wider repeats, 0.9 s apart, stagger stacks to 1.5 s",
 	"quake_pattern:missing": "Ring after a 0.5 s warning, running out at 8 m/s",
+	"decoy_pattern:": "Enemies in reach walk at it; bosses ignore it",
+	"decoy_pattern:bumper_post": "Enemies in reach walk at it; bosses ignore it",
+	"decoy_pattern:pile_driver": "Every fourth pulse slams: 3x damage, 1.5x reach, 0.6 s stagger",
+	"decoy_pattern:maelstrom": "Hooks up to 10 enemies in reach until they die; ranged enemies are drawn in too",
+	"decoy_pattern:missing": "Enemies in reach walk at it; bosses ignore it",
 	"ids": ["", "", "", ""],
-	"implemented": ["machine_gun", "cyclone_gatling", "omnifire", "saber", "orbit_saber", "stormblade", "repeater_bow", "arrowstorm", "titan_bow", "wide_flame", "inferno_crown", "dragonheart", "heavy_roller", "juggernaut", "ricochet_king", "siege", "worldbreaker", "resonator", "resonance_engine", "thunder_spear", "piercer_rifle", "horizon_piercer", "overwatch", "aftershock", "tectonic", "cataclysm"],
-	"order": [["machine_gun", "cyclone_gatling", "omnifire"], ["saber", "orbit_saber", "stormblade"], ["repeater_bow", "arrowstorm", "titan_bow"], ["wide_flame", "inferno_crown", "dragonheart"], ["heavy_roller", "juggernaut", "ricochet_king"], ["siege", "worldbreaker", "constellation"], ["resonator", "resonance_engine", "thunder_spear"], ["forked_coil", "storm_network", "thunderhead"], ["piercer_rifle", "horizon_piercer", "overwatch"], ["aftershock", "tectonic", "cataclysm"]],
+	"implemented": ["machine_gun", "cyclone_gatling", "omnifire", "saber", "orbit_saber", "stormblade", "repeater_bow", "arrowstorm", "titan_bow", "wide_flame", "inferno_crown", "dragonheart", "heavy_roller", "juggernaut", "ricochet_king", "siege", "worldbreaker", "resonator", "resonance_engine", "thunder_spear", "piercer_rifle", "horizon_piercer", "overwatch", "aftershock", "tectonic", "cataclysm", "bumper_post", "pile_driver", "maelstrom"],
+	"order": [["machine_gun", "cyclone_gatling", "omnifire"], ["saber", "orbit_saber", "stormblade"], ["repeater_bow", "arrowstorm", "titan_bow"], ["wide_flame", "inferno_crown", "dragonheart"], ["heavy_roller", "juggernaut", "ricochet_king"], ["siege", "worldbreaker", "constellation"], ["resonator", "resonance_engine", "thunder_spear"], ["forked_coil", "storm_network", "thunderhead"], ["piercer_rifle", "horizon_piercer", "overwatch"], ["aftershock", "tectonic", "cataclysm"], ["bumper_post", "pile_driver", "maelstrom"]],
 }
 
 # --- Lookups (adapt these when a signature changes; never the expected values) ---
@@ -1271,6 +1392,7 @@ func _run_builder(builder: String, model: Node3D, _base: String, form: String) -
 		"SiegeEvolutionVisual": SiegeEvolutionVisual.build(model, form)
 		"SniperEvolutionVisual": SniperEvolutionVisual.build(model, form)
 		"QuakeEvolutionVisual": QuakeEvolutionVisual.build(model, form)
+		"DecoyEvolutionVisual": DecoyEvolutionVisual.build(model, form)
 		"GatlingEvolutionVisual": GatlingEvolutionVisual.build(model, form)
 		"CrossfireEvolutionVisual": CrossfireEvolutionVisual.build(model, form)
 
@@ -1320,6 +1442,8 @@ func collect_all(host: Node) -> Dictionary:
 		result.misc["echo:" + form] = _echo_delays(form)
 	for form in ["", "aftershock", "tectonic", "cataclysm", "missing"]:
 		result.misc["quake_pattern:" + form] = TurretEvolution.quake_pattern_text(form)
+	for form in ["", "bumper_post", "pile_driver", "maelstrom", "missing"]:
+		result.misc["decoy_pattern:" + form] = TurretEvolution.decoy_pattern_text(form)
 	result.misc["ids"] = [TurretEvolution.form_name(""), TurretEvolution.form_name("missing"), TurretEvolution.model_key(""), TurretEvolution.description("missing")]
 	result.misc["implemented"] = implemented
 	result.misc["order"] = BASES.map(func(base: String) -> Array: return _forms_of(base))

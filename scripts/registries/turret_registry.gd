@@ -19,6 +19,7 @@ const BASE_PRICES: Dictionary = {
 	"normal": 8,
 	"sniper": 18,
 	"quake": 17,
+	"decoy": 10,
 	"fire": 13,
 	"plasma": 16,
 	"shock": 14,
@@ -33,7 +34,7 @@ const FAMILIES: Dictionary = {
 	"plasma": ["plasma"],
 	"electric": ["shock", "tesla"],
 	"melee": ["melee"],
-	"aggro": [], # Decoy, Lullaby and Discord join this list when they are registered.
+	"aggro": ["decoy"], # Lullaby and Discord join this list when they are registered.
 }
 
 const TYPES: Dictionary = {
@@ -114,6 +115,28 @@ const TYPES: Dictionary = {
 			"rotation_speed": 0.0,
 			"knockback_force": 200.0,
 			"stagger": 0.4,
+		}
+	},
+	"decoy": {
+		"name": "Decoy Turret",
+		"icon": "🎪",
+		"short_name": "Decoy",
+		# No Decoy chassis yet: the Shock bell, tinted amber, stands in (see `TurretActor._rebuild_model`).
+		"model_key": "shock",
+		"model": "res://assets/models/game/shock_turret.glb",
+		# A light pulse: `DecoyForm` runs it, and publishes the taunt (S1) that pulls enemies in reach to the turret.
+		"fire_mode": FIRE_PULSE,
+		"description": "Cannot be hurt, and enemies in reach walk at it instead of the hero. Bosses ignore it. A light pulse shoves them back.",
+		# Kinetic (it moves bodies) and AoE, like the Quake, so both item families apply.
+		"attack_styles": [GameEnums.AttackStyle.AOE, GameEnums.AttackStyle.MELEE],
+		"damage_types": [GameEnums.DamageType.PHYSICAL],
+		"base_stats": {
+			"damage": 3.0,
+			"fire_rate": 1.0 / 1.5,
+			"range": 150.0,
+			"rotation_speed": 0.0,
+			"knockback_force": 150.0,
+			"taunt_range": 450.0,
 		}
 	},
 	"fire": {

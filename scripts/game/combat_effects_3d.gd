@@ -7,6 +7,8 @@ const MAX_SPARKS: int = 24
 const PULSE_LIFETIME: float = .3
 ## Friendly Quake colour (rings, telegraphs, fissures): green-teal, distinct from the hostile orange and red telegraphs.
 const QUAKE_TINT := Color("6df0b0")
+## Friendly Decoy colour (pulse rings, hooks): amber, like its bumpers.
+const DECOY_TINT := Color("ffb02e")
 const MAX_BURSTS: int = 16
 const BURST_PARTICLES: int = 14
 const BURST_LIFETIME: float = .5

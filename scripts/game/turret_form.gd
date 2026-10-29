@@ -75,6 +75,10 @@ func tick(_delta: float) -> void:
 func clear() -> void:
 	pass
 
+## The turret left the arena or took another form: release anything the form put into the world (the Decoy's taunt and hooks).
+func removed() -> void:
+	pass
+
 ## Pulse-mode attack at `target`, the nearest enemy in range.
 func fire_pulse(_stats: TurretStats, _range_metres: float, _target: CombatActor) -> void:
 	pass

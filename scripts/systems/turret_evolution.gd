@@ -151,6 +151,25 @@ const TECTONIC_SECONDS: float = 3.0
 const TECTONIC_SLOW: float = .4
 const TECTONIC_CLUSTER_RADIUS: float = 1.5
 
+## Decoy line. Maelstrom scans for enemies to hook this often, ticks every hooked enemy this often, and its hooked enemies
+## circle at this radius (the innermost lane, in metres; it must clear the turret body and sit inside the pulse reach).
+const MAELSTROM_SCAN_SECONDS: float = .25
+const MAELSTROM_TICK_SECONDS: float = .5
+const MAELSTROM_RING: float = 1.1
+
+## One line on what a Decoy form does besides its pulse, for the preview and the inspector.
+static func decoy_pattern_text(form_id: String) -> String:
+	var every := int(param(form_id, "slam_every", 0))
+	if every > 0:
+		return "Every %s pulse slams: %.0fx damage, %.1fx reach, %.1f s stagger" % [ordinal(every), float(param(form_id, "slam_damage", 1.0)), float(param(form_id, "slam_radius", 1.0)), float(param(form_id, "slam_stagger", 0.0))]
+	var hooks := int(param(form_id, "hooks", 0))
+	if hooks > 0:
+		return "Hooks up to %d enemies in reach until they die; ranged enemies are drawn in too" % hooks
+	return "Enemies in reach walk at it; bosses ignore it"
+
+static func ordinal(count: int) -> String:
+	return {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth"}.get(count, "%dth" % count)
+
 ## One line on what a Quake form does per trigger, for the preview and the inspector.
 static func quake_pattern_text(form_id: String) -> String:
 	match form_id:
