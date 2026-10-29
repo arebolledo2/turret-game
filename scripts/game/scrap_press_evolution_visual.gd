@@ -1,87 +1,104 @@
 class_name ScrapPressEvolutionVisual
 extends RefCounted
 
-## Runtime hardware for the Scrap Press line, built on the placeholder chassis (the Shock bell on its low foundation, tinted brass
-## by `TurretActor`). Each form adds its own silhouette; the sizes come from the chassis' own parts in `_footprint`, so the real
-## model can take over later by changing what `_footprint` reads, as `QuakeEvolutionVisual` and `DecoyEvolutionVisual` do.
+## Runtime hardware for the Scrap Press line, built on the real `cp_scrap_press` chassis (a teal arch frame round a coral
+## housing and a brass piston, on a slab base with a cream coin tray at the front and a coin funnel on the -x side). The
+## sizes come from the chassis' own parts in `_footprint`. Each form adds its own silhouette:
 ##   Scrap Press  the bare chassis.
-##   Coin Feeder  a brass hopper on the crown, a chute running down to a coin tray beside the base, and a small stack of coins.
-##   Treasury     four stacks of gold ingots round the base, a gold vault dome with a glowing crest on the crown, and a coin ring.
-##   Academy      a mortarboard on the crown with a hanging tassel, three books round the base, and a teal halo above it.
-## Parts hang off the model root, which is the turret's origin on the floor. Nothing here moves.
+##   Coin Feeder  a brass hopper on legs fed by the chassis' coin funnel, a spout and a floor tray with a stack of coins.
+##   Treasury     four stacks of gold ingots at the corners of the base, a gold vault cap with a glowing crest on the piston
+##                and a gold coin ring on the floor.
+##   Academy      a mortarboard on the piston stem with a hanging tassel, books on the floor round the base and a teal halo.
+## Parts hang off the model root in the chassis' own frame (front is -z, the funnel is on -x; `ScrapPressForm.rebuilt` turns
+## the whole model so the tray faces the camera). Nothing here moves.
 static var materials: Dictionary = {}
 
-## Fallbacks if the chassis meshes are missing: foundation radius and top, crown top, in metres (the Shock bell's).
-const DEFAULT_FOUNDATION_RADIUS: float = .527
-const DEFAULT_FOUNDATION_TOP: float = .164
-const DEFAULT_CROWN_TOP: float = 1.19
-## Angles (radians, atan2(z, x) around the turret) for the ingot stacks and books: the diagonals, clear of the front.
-const STACK_ANGLES: Array[float] = [.785, 2.356, 3.927, 5.498]
-const BOOK_ANGLES: Array[float] = [.6, 2.7, 4.6]
+## Fallbacks if the chassis meshes are missing (the cp_scrap_press measurements, metres): half the feet's width and depth,
+## the top of the piston, the x of the funnel's mouth and the height of its centre.
+const DEFAULT_HALF_X: float = .57
+const DEFAULT_HALF_Z: float = .495
+const DEFAULT_CROWN_TOP: float = 1.58
+const DEFAULT_MOUTH_X: float = -.757
+const DEFAULT_MOUTH_Y: float = 1.02
+## The piston's cap disc tops out this far below the knob's top; the funnel's centre is this far below the frame's top.
+const CAP_BELOW_CROWN: float = .28
+const MOUTH_BELOW_FRAME_TOP: float = .17
 
 static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
 	if form_id not in ["coin_feeder", "treasury", "academy"]:
 		return null
 	_ensure_materials()
 	var footprint := _footprint(model)
-	var radius: float = footprint.radius
-	var top: float = footprint.top
+	var half_x: float = footprint.half_x
+	var half_z: float = footprint.half_z
 	var crown: float = footprint.crown
+	var cap: float = crown - CAP_BELOW_CROWN
 	match form_id:
 		"coin_feeder":
-			_cone(model, "Hopper", .34, .12, .36, "brass", Vector3(0, crown + .18, 0), Vector3.ZERO)
-			_torus(model, "HopperRim", .3, .36, "steel", Vector3(0, crown + .37, 0))
-			# The chute leaves the hopper toward +x and slopes down to the tray.
-			var tray := Vector3(radius + .42, top + .06, 0)
-			var start := Vector3(.12, crown + .1, 0)
-			var drop := tray + Vector3(0, .12, 0) - start
-			_cylinder_dir(model, "Chute", .05, drop.length(), "steel", start + drop * .5, Vector3(0, 0, atan2(drop.x, -drop.y)))
-			_cylinder(model, "Tray", .24, .06, "dark", tray)
-			for index in range(4):
-				_cylinder(model, "Coin", .11, .026, "gold", tray + Vector3(index * .01, .043 + float(index) * .028, 0))
+			# The hopper stands just outside the funnel's mouth, its wide top level with the mouth, on two legs beside it.
+			var hx: float = footprint.mouth_x - .27
+			var rim: float = footprint.mouth_y - .04
+			_cylinder_dir(model, "Collar", .09, .22, "steel", Vector3(footprint.mouth_x - .08, footprint.mouth_y, 0), Vector3(0, 0, PI * .5))
+			_cone(model, "Hopper", .22, .07, .36, "brass", Vector3(hx, rim - .18, 0), Vector3.ZERO)
+			_torus(model, "HopperRim", .2, .25, "steel", Vector3(hx, rim, 0))
+			for side in [-1.0, 1.0]:
+				_cylinder(model, "HopperLeg", .026, rim, "steel", Vector3(hx, rim * .5, side * .23))
+			_cylinder(model, "Spout", .05, .3, "steel", Vector3(hx, rim - .36 - .1, 0))
+			_cylinder(model, "Tray", .27, .05, "dark", Vector3(hx, .025, 0))
+			for index in range(5):
+				_cylinder(model, "Coin", .11, .026, "gold", Vector3(hx + float(index % 2) * .01, .063 + float(index) * .028, 0))
 		"treasury":
-			for angle in STACK_ANGLES:
-				var at := _polar(angle, radius * 1.05)
+			for corner in [Vector2(1, 1), Vector2(1, -1), Vector2(-1, 1), Vector2(-1, -1)]:
+				var at := Vector3(corner.x * (half_x + .22), 0, corner.y * (half_z + .1))
 				for layer in range(3):
-					_box(model, "Ingot", Vector3(.34 - float(layer) * .04, .11, .2), "gold", Vector3(at.x, top + .055 + float(layer) * .12, at.z), Vector3(0, -angle, 0))
-			_sphere_scaled(model, "VaultDome", .3, .7, "gold", Vector3(0, crown + .1, 0))
-			_cylinder(model, "VaultBand", .31, .05, "steel", Vector3(0, crown + .04, 0))
-			_sphere(model, "VaultCrest", .08, "amber", Vector3(0, crown + .36, 0))
-			_torus(model, "CoinRing", radius * .9, radius * .9 + .07, "gold", Vector3(0, top + .05, 0))
+					_box(model, "Ingot", Vector3(.2, .11, .34 - float(layer) * .04), "gold", Vector3(at.x, .055 + float(layer) * .12, at.z), Vector3(0, corner.x * corner.y * .12, 0))
+			_sphere_scaled(model, "VaultCap", .31, .45, "gold", Vector3(0, cap, 0))
+			_cylinder(model, "VaultBand", .3, .05, "steel", Vector3(0, cap - .02, 0))
+			_sphere(model, "VaultCrest", .085, "amber", Vector3(0, crown + .08, 0))
+			_torus(model, "CoinRing", .93, 1.0, "gold", Vector3(0, .035, 0))
 		"academy":
-			_cylinder(model, "CapStem", .1, .16, "dark", Vector3(0, crown + .08, 0))
-			_box(model, "CapBoard", Vector3(.78, .05, .78), "dark", Vector3(0, crown + .185, 0), Vector3(0, .785, 0))
-			_cylinder(model, "CapButton", .05, .04, "gold", Vector3(0, crown + .23, 0))
-			var corner := Vector3(.39 * 1.414, crown + .185, 0)
+			var board: float = crown + .17
+			_cylinder(model, "CapStem", .12, .16, "dark", Vector3(0, crown + .04, 0))
+			_box(model, "CapBoard", Vector3(.74, .05, .74), "dark", Vector3(0, board, 0), Vector3(0, .785, 0))
+			_cylinder(model, "CapButton", .05, .04, "gold", Vector3(0, board + .045, 0))
+			var corner := Vector3(.37 * 1.414, board, 0)
 			_cylinder(model, "TasselCord", .012, .26, "gold", corner + Vector3(0, -.13, 0))
 			_sphere(model, "TasselBob", .045, "gold", corner + Vector3(0, -.28, 0))
-			for angle in BOOK_ANGLES:
-				var at := _polar(angle, radius * 1.08)
-				_box(model, "Book", Vector3(.32, .1, .22), "teal_dark", Vector3(at.x, top + .05, at.z), Vector3(0, -angle, 0))
-				_box(model, "Pages", Vector3(.3, .04, .2), "paper", Vector3(at.x, top + .12, at.z), Vector3(0, -angle, 0))
-			_torus(model, "Halo", .34, .38, "teal", Vector3(0, crown + .52, 0))
+			# Two books side on, one stacked, and one at the back, all on the floor beside the base.
+			for spec: Array in [[Vector3(half_x + .28, 0, -.2), PI * .5], [Vector3(half_x + .28, .12, -.2), PI * .5 + .2], [Vector3(.3, 0, half_z + .22), 0.0], [Vector3(-.45, 0, half_z + .22), .15]]:
+				var at: Vector3 = spec[0]
+				var yaw: float = spec[1]
+				_box(model, "Book", Vector3(.32, .1, .22), "teal_dark", Vector3(at.x, at.y + .05, at.z), Vector3(0, yaw, 0))
+				_box(model, "Pages", Vector3(.3, .04, .2), "paper", Vector3(at.x, at.y + .12, at.z), Vector3(0, yaw, 0))
+			_torus(model, "Halo", .34, .38, "teal", Vector3(0, board + .32, 0))
 	return null
 
-## The chassis' own measurements: foundation radius and top, and the top of the crown (via the muzzle).
+## The chassis' own measurements: half the width and depth of the feet, the top of the piston, and where the coin funnel's mouth is.
 static func _footprint(model: Node3D) -> Dictionary:
-	var result := {"radius": DEFAULT_FOUNDATION_RADIUS, "top": DEFAULT_FOUNDATION_TOP, "crown": DEFAULT_CROWN_TOP}
-	var foundation := model.find_child("Foundation", true, false) as MeshInstance3D
-	if foundation and foundation.mesh:
-		var box := foundation.mesh.get_aabb()
-		result.radius = minf(box.size.x, box.size.z) * .5
-		result.top = box.end.y
-	var muzzle := model.find_child("Muzzle", true, false) as Node3D
-	if muzzle:
-		var lift := 0.0
-		var parent := muzzle.get_parent() as Node3D
-		while parent and parent != model:
-			lift += parent.position.y
-			parent = parent.get_parent() as Node3D
-		result.crown = muzzle.position.y + lift
+	var result := {"half_x": DEFAULT_HALF_X, "half_z": DEFAULT_HALF_Z, "crown": DEFAULT_CROWN_TOP, "mouth_x": DEFAULT_MOUTH_X, "mouth_y": DEFAULT_MOUTH_Y}
+	var feet := model.find_child("Feet", true, false) as MeshInstance3D
+	if feet and feet.mesh:
+		var box := feet.mesh.get_aabb()
+		result.half_x = maxf(absf(feet.position.x + box.position.x), absf(feet.position.x + box.end.x))
+		result.half_z = maxf(absf(feet.position.z + box.position.z), absf(feet.position.z + box.end.z))
+	var piston := model.find_child("PistonBrass", true, false) as MeshInstance3D
+	if piston and piston.mesh:
+		result.crown = _lift_to_model(piston, model) + piston.mesh.get_aabb().end.y
+	var frame := model.find_child("Frame", true, false) as MeshInstance3D
+	if frame and frame.mesh:
+		var box := frame.mesh.get_aabb()
+		result.mouth_x = frame.position.x + box.position.x
+		result.mouth_y = frame.position.y + box.end.y - MOUTH_BELOW_FRAME_TOP
 	return result
 
-static func _polar(angle: float, radius: float) -> Vector3:
-	return Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+## Height of `part`'s origin above the model root, summing the parents' offsets (the chassis has no rotation or scale on them).
+static func _lift_to_model(part: Node3D, model: Node3D) -> float:
+	var lift := part.position.y
+	var parent := part.get_parent() as Node3D
+	while parent and parent != model:
+		lift += parent.position.y
+		parent = parent.get_parent() as Node3D
+	return lift
 
 static func _ensure_materials() -> void:
 	if not materials.is_empty():

@@ -50,12 +50,15 @@ func deposit(amount: int) -> int:
 	cash_deposited += gained
 	return gained
 
-## Lays `amount` scrap on the floor within `reach` metres of `around`, kept inside the arena.
-func lay_pickup(around: Vector3, reach: float, amount: int) -> ScrapPickup:
+## Lays `amount` scrap on the floor within `reach` metres of `around`, kept inside the arena. `clearance` is a ring round `around`
+## that stays empty (the turret's own body); a reach inside it is stretched to just beyond it.
+func lay_pickup(around: Vector3, reach: float, amount: int, clearance: float = 0.0) -> ScrapPickup:
 	if amount <= 0:
 		return null
 	var angle := rng.randf() * TAU
-	var distance := reach * sqrt(rng.randf())
+	var outer := maxf(reach, clearance + .3)
+	# Uniform over the ring's area: lerp the squared radii.
+	var distance := sqrt(lerpf(clearance * clearance, outer * outer, rng.randf()))
 	var at := WorldGeometry.clamp_position(around + Vector3(cos(angle), 0.0, sin(angle)) * distance)
 	pickups_laid += 1
 	return world.spawn_scrap_pickup(at, amount)

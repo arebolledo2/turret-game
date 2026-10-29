@@ -58,7 +58,6 @@ const LOADED_BALL_FRACTION: float = .3
 const LOADED_ARROW_FRACTION: float = .35
 static var _no_gun_stats := TurretStats.new()
 const TESLA_TINT := Color(.35, .9, 1.0)
-const SCRAP_PRESS_TINT := Color(1.0, .82, .38)
 
 func _init() -> void:
 	entrench = TurretEntrench.new(self)
@@ -118,9 +117,6 @@ func _rebuild_model() -> void:
 		model = SweepForm.placeholder_model() if fire_mode == TurretRegistry.FIRE_SWEEP else load(TurretRegistry.get_model_path(turret_type)).instantiate()
 	if turret_type == "tesla" and not use_clockwork:
 		EnemyVariants.tint_model(model, "turret_tesla", TESLA_TINT, .5)
-	elif turret_type == "scrap_press":
-		# The Shock bell stands in for the Scrap Press until its real chassis is wired: a brass tint tells them apart.
-		EnemyVariants.tint_model(model, "turret_scrap_press", SCRAP_PRESS_TINT, .45)
 	add_child(model)
 	_build_form_visual()
 	aim = model.find_child("Aim", true, false) as Node3D

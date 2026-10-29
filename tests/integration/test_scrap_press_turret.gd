@@ -507,7 +507,7 @@ func test_finishing_the_wave_leaves_the_press_idle_and_its_floor_scrap_for_salva
 
 # --- Forms and tuning ---
 
-func test_path_forms_tiers_and_placeholder_chassis() -> void:
+func test_path_forms_tiers_and_chassis() -> void:
 	assert_eq(TurretEvolution.options("scrap_press", 0), ["coin_feeder"])
 	assert_eq(TurretEvolution.options("scrap_press", 1), ["treasury", "academy"])
 	assert_eq(TurretEvolution.form_name("coin_feeder"), "Coin Feeder")
@@ -515,7 +515,7 @@ func test_path_forms_tiers_and_placeholder_chassis() -> void:
 	assert_eq(TurretEvolution.form_name("academy"), "Academy")
 	for form in ["coin_feeder", "treasury", "academy"]:
 		assert_true(TurretEvolution.is_implemented(form))
-		assert_eq(TurretEvolution.model_key(form), "shock", "Every form uses the brass-tinted Shock bell until a Scrap Press model is wired")
+		assert_eq(TurretEvolution.model_key(form), "scrap_press", "Every form uses the real cp_scrap_press chassis")
 		assert_true(ClockworkModels.available(TurretEvolution.model_key(form)))
 		assert_false(TurretEvolution.description(form).is_empty())
 	assert_true(TurretEvolution.behaviour_script("scrap_press", "").new() is ScrapPressForm)
@@ -538,6 +538,62 @@ func test_every_form_adds_visible_hardware_to_the_chassis() -> void:
 	assert_gt(counts["treasury"], counts[""], "Treasury adds ingot stacks and a vault dome")
 	assert_gt(counts["academy"], counts[""], "Academy adds a mortarboard and books")
 	assert_ne(counts["treasury"], counts["academy"])
+
+func test_the_press_faces_the_camera_and_drops_from_its_coin_tray() -> void:
+	var press := _press()
+	assert_almost_eq(absf(press.model.rotation.y), PI, .001, "Turned half a circle so the tray faces +z, the game camera")
+	var drop := _form(press).drop_point()
+	assert_eq(drop, press.muzzle.global_position)
+	assert_gt(drop.z - press.global_position.z, .5, "The tray is on the camera side of the press")
+	assert_gt(drop.y, .3, "Above the floor, over the tray")
+	var chassis_meshes := press.model.find_children("*", "MeshInstance3D", true, false).size()
+	assert_eq(chassis_meshes, 16, "The real chassis: 16 mesh objects")
+
+func test_form_hardware_stands_clear_of_the_chassis_body() -> void:
+	# The funnel is the one chassis part the hardware attaches to (the collar and hopper rim meet it); everything else must not overlap.
+	var chassis_names: Array[String] = ["Feet", "BasePlate", "BaseBlock", "Pedestals", "CoinTray", "Coins", "PistonBrass", "PistonRam", "Housing", "Knob", "RubberDetails"]
+	var hardware_clear_of: Dictionary = {"coin_feeder": ["Hopper", "HopperRim", "HopperLeg", "Spout", "Tray", "Coin"], "treasury": ["Ingot"], "academy": ["Book", "Pages"]}
+	# The coin ring is a floor ring, so its box is not a fair test; its inner radius must clear the feet's corner instead.
+	var ring_radius := Vector2(ScrapPressEvolutionVisual.DEFAULT_HALF_X, ScrapPressEvolutionVisual.DEFAULT_HALF_Z).length()
+	assert_gt(.93, ring_radius, "The coin ring (inner radius .93) encircles the feet")
+	for form: String in hardware_clear_of:
+		var press := _press()
+		rig.level_to(press, 5)
+		assert_true(press.evolve("coin_feeder"))
+		if form != "coin_feeder":
+			rig.level_to(press, 10)
+			assert_true(press.evolve(form))
+		var chassis: Array[AABB] = []
+		for part_name in chassis_names:
+			var part := press.model.find_child(part_name, true, false) as MeshInstance3D
+			assert_not_null(part, part_name)
+			chassis.append(_model_box(part, press.model))
+		for part in press.model.get_children():
+			var mesh_part := part as MeshInstance3D
+			if not mesh_part:
+				continue
+			var base_name := String(mesh_part.name).rstrip("0123456789")
+			if base_name not in hardware_clear_of[form]:
+				continue
+			var box := _model_box(mesh_part, press.model)
+			for other in chassis:
+				assert_false(box.grow(-.005).intersects(other), "%s: %s must not clip the chassis" % [form, mesh_part.name])
+			assert_gte(box.position.y, -.001, "%s: %s does not sink under the floor" % [form, mesh_part.name])
+
+func test_the_footprint_reads_the_real_chassis() -> void:
+	var model := ClockworkModels.instantiate("scrap_press")
+	autofree(model)
+	var footprint := ScrapPressEvolutionVisual._footprint(model)
+	assert_almost_eq(float(footprint.half_x), .57, .02)
+	assert_almost_eq(float(footprint.half_z), .495, .02)
+	assert_almost_eq(float(footprint.crown), 1.58, .02)
+	assert_almost_eq(float(footprint.mouth_x), -.757, .02)
+	assert_between(float(footprint.mouth_y), .9, 1.1)
+
+## A part's box in the model's own space (the chassis meshes sit at identity rotation, the hardware at yaw only).
+func _model_box(part: MeshInstance3D, model: Node3D) -> AABB:
+	var transform := model.global_transform.affine_inverse() * part.global_transform
+	return transform * part.mesh.get_aabb()
 
 func test_the_hardware_builder_ignores_other_turrets() -> void:
 	var model := Node3D.new()

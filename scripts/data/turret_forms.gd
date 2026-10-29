@@ -321,24 +321,24 @@ const FORMS: Dictionary = {
 	# No attack: `fire_rate` is drops per second (0.25 = one every 4 s) and `range` how far from the press a drop lands (150 =
 	# 1.5 m). Each drop is worth `ScrapIncome.drop_value(wave)` scrap. A second press keeps 60% of its output, a third 40%.
 	# The forms change where the drop goes, not how big it is, except Treasury (+25% output) and Academy (half the output, but
-	# every turret in reach gets the whole drop as XP). Placeholder chassis: the Shock bell tinted brass (key `shock`);
+	# every turret in reach gets the whole drop as XP). The real cp_scrap_press chassis (key `scrap_press`);
 	# `ScrapPressEvolutionVisual` adds the per-form hardware.
 	"coin_feeder": {
-		"base": "scrap_press", "kind": UPGRADE, "name": "Coin Feeder", "model": "shock", "implemented": true,
+		"base": "scrap_press", "kind": UPGRADE, "name": "Coin Feeder", "model": "scrap_press", "implemented": true,
 		"description": "A hopper feeds half of every drop straight into your wallet, with no pickup trip. The other half still lands beside the press.",
 		"stats": {"damage": 0.0, "fire_rate": .25, "range": 150.0},
 		"behaviour": "ScrapPressForm", "visual": "ScrapPressEvolutionVisual",
 		"params": {"deposit_share": .5},
 	},
 	"treasury": {
-		"base": "scrap_press", "kind": FINAL, "name": "Treasury", "model": "shock", "implemented": true,
+		"base": "scrap_press", "kind": FINAL, "name": "Treasury", "model": "scrap_press", "implemented": true,
 		"description": "Every drop goes straight into your wallet, and the press makes 25% more. When a wave is won it pays interest: 1 scrap per 10 you hold, up to 5.",
 		"stats": {"damage": 0.0, "fire_rate": .3125, "range": 150.0},
 		"behaviour": "ScrapPressForm", "visual": "ScrapPressEvolutionVisual",
 		"params": {"deposit_share": 1.0, "interest_per": 10, "interest_cap": 5},
 	},
 	"academy": {
-		"base": "scrap_press", "kind": FINAL, "name": "Academy", "model": "shock", "implemented": true,
+		"base": "scrap_press", "kind": FINAL, "name": "Academy", "model": "scrap_press", "implemented": true,
 		"description": "Makes no scrap. Every 8 seconds each turret within 6 metres gains XP equal to a drop, in full, and no cash is paid.",
 		"stats": {"damage": 0.0, "fire_rate": .125, "range": 150.0},
 		"behaviour": "ScrapPressForm", "visual": "ScrapPressEvolutionVisual",

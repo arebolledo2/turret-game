@@ -16,6 +16,9 @@ extends TurretForm
 ## scans the world per tick. The press holds no node and no list: its only state is a charge toward the next drop and the
 ## fraction of a coin owed to the wallet, both dropped when combat stops, when the press is picked up and when it leaves.
 const BURST_HEIGHT: float = .55
+## Metres from the press's centre inside which a pickup is never laid: the base plate, feet and coin funnel of the cp_scrap_press
+## chassis reach 0.76 m, and the per-form hardware stands just outside them.
+const PICKUP_CLEARANCE: float = 1.0
 const ACADEMY_RING_SECONDS: float = .7
 
 ## Progress toward the next drop, in drops (1.0 releases one).
@@ -27,6 +30,17 @@ var drops_made: int = 0
 var scrap_made: int = 0
 var xp_given: int = 0
 var _yield: float = 1.0
+
+## The model faces -z like every chassis, which is away from the game camera (it looks from +z); the press never turns, so it
+## is turned half a circle once, putting the coin tray, the drop point, on the side the player sees.
+func rebuilt() -> void:
+	actor.model.rotation.y = PI
+
+## Where a drop leaves the press, in world space: the front edge of the coin tray (the model's `Muzzle`).
+func drop_point() -> Vector3:
+	if is_instance_valid(actor.muzzle):
+		return actor.muzzle.global_position
+	return actor.global_position + Vector3(0, BURST_HEIGHT, 0)
 
 func deposit_share() -> float:
 	return clampf(float(param("deposit_share", 0.0)), 0.0, 1.0)
@@ -82,7 +96,7 @@ func _drop(stats: TurretStats) -> void:
 		var given := income.award_xp(income.turrets_near(actor.position, xp_radius()), value)
 		xp_given += given
 		world.effects.show_wave(actor.position, xp_radius(), xp_radius() / ACADEMY_RING_SECONDS, CombatEffects3D.SCRAP_PRESS_TINT)
-		world.effects.show_burst(actor.position + Vector3(0, BURST_HEIGHT, 0), "scrap")
+		world.effects.show_burst(drop_point(), "scrap")
 		return
 	var share := deposit_share()
 	carry += float(value) * share
@@ -92,9 +106,9 @@ func _drop(stats: TurretStats) -> void:
 	scrap_made += value
 	if cash > 0:
 		income.deposit(cash)
-		world.effects.show_burst(actor.position + Vector3(0, BURST_HEIGHT, 0), "scrap")
+		world.effects.show_burst(drop_point(), "scrap")
 	if floor_scrap > 0:
-		income.lay_pickup(actor.position, stats.range_metres, floor_scrap)
+		income.lay_pickup(actor.position, stats.range_metres, floor_scrap, PICKUP_CLEARANCE)
 
 ## Treasury's interest, paid when the wave is won (see `ScrapIncome.pay_interest`).
 func wave_end_scrap(held: int) -> int:

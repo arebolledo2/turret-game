@@ -70,6 +70,15 @@ func test_a_laid_pickup_is_a_real_pickup_inside_the_arena_and_counts_as_a_drop()
 	assert_eq(world.scrap_income.pickups_laid, 1)
 	assert_null(world.scrap_income.lay_pickup(Vector3.ZERO, 1.5, 0), "Nothing to lay")
 
+func test_a_clearance_keeps_pickups_off_the_turrets_body() -> void:
+	for i in 60:
+		var pickup := world.scrap_income.lay_pickup(Vector3.ZERO, 1.5, 1, 1.0)
+		var distance := WorldGeometry.planar(pickup.position).length()
+		assert_gte(distance, 1.0 - .001, "Never inside the clearance ring")
+		assert_lte(distance, 1.5 + .001, "Still within reach")
+	var squeezed := world.scrap_income.lay_pickup(Vector3.ZERO, .5, 1, 1.0)
+	assert_gte(WorldGeometry.planar(squeezed.position).length(), 1.0 - .001, "A reach inside the clearance is stretched past it")
+
 func test_a_pickup_laid_at_the_wall_stays_in_the_arena() -> void:
 	var edge := Vector3(WorldGeometry.HALF_ARENA.x, 0, WorldGeometry.HALF_ARENA.y)
 	for i in 30:

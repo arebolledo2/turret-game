@@ -274,7 +274,7 @@ func test_scrap_press_path_forms_tiers_and_placeholder_chassis() -> void:
 	assert_eq(TurretEvolution.form_name("academy"), "Academy")
 	for form in ["coin_feeder", "treasury", "academy"]:
 		assert_true(TurretEvolution.is_implemented(form))
-		assert_eq(TurretEvolution.model_key(form), "shock", "Every Scrap Press form uses the brass-tinted Shock bell until a model is wired")
+		assert_eq(TurretEvolution.model_key(form), "scrap_press", "Every Scrap Press form uses the real cp_scrap_press chassis")
 		assert_false(TurretEvolution.description(form).is_empty())
 	assert_true(TurretEvolution.behaviour_script("scrap_press", "").new() is ScrapPressForm, "The unevolved press drops through its form")
 

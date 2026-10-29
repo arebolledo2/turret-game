@@ -145,8 +145,8 @@ const TYPES: Dictionary = {
 		"name": "Scrap Press",
 		"icon": "🪙",
 		"short_name": "Scrap Press",
-		# No Scrap Press model is wired yet: the Shock bell, tinted brass, stands in (see `TurretActor._rebuild_model`).
-		"model_key": "shock",
+		# The real cp_scrap_press chassis (see `TurretActor._model_key`); `model` is only the pre-Clockwork fallback.
+		"model_key": "scrap_press",
 		"model": "res://assets/models/game/shock_turret.glb",
 		# No attack and so no attack family, targeting or damage: `ScrapPressForm.tick` makes a drop on a timer (engine piece S5,
 		# `ScrapIncome`). `fire_rate` is its drops per second, `range` how far from it a drop lands (metres, like any reach).
