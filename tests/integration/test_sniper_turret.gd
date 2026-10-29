@@ -360,6 +360,32 @@ func test_mark_stacks_multiplicatively_with_exposed() -> void:
 	world.combat.apply_hit(enemy, hit)
 	assert_almost_eq(before - enemy.health, 16.25, .001, "10 x 1.3 x 1.25")
 
+func test_two_overwatch_turrets_keep_their_own_marks_when_one_is_removed() -> void:
+	var first_turret := _sniper(["piercer_rifle", "overwatch"])
+	var second_turret := _sniper(["piercer_rifle", "overwatch"])
+	_combat()
+	assert_ne(first_turret.turret_id, second_turret.turret_id)
+	var target := _enemy(Vector3(0, 0, -3), 800.0, "tank")
+	_step(first_turret)
+	second_turret.cooldown = 0.0
+	_step(second_turret)
+	assert_true(target.statuses.is_marked())
+	assert_gt(target.statuses.marked_remaining_for(first_turret.turret_id), 0.0)
+	assert_gt(target.statuses.marked_remaining_for(second_turret.turret_id), 0.0)
+	# Turret A leaves (wave end / pause / defeat run the same clear); B's mark must persist.
+	first_turret.form.clear()
+	assert_true(target.statuses.is_marked(), "B's mark survives A being cleaned up")
+	assert_almost_eq(target.statuses.marked_remaining_for(second_turret.turret_id), TurretEvolution.OVERWATCH_MARK_SECONDS, .001)
+	second_turret.form.tick(.016)
+	assert_true(second_turret.form.marked_enemies().has(target), "B still tracks its own mark")
+	var hit := CombatHit3D.new(10.0)
+	hit.source_id = second_turret.turret_id
+	var before := target.health
+	world.combat.apply_hit(target, hit)
+	assert_almost_eq(before - target.health, 12.5, .001, "Still takes +25%, once")
+	second_turret.form.clear()
+	assert_false(target.statuses.is_marked())
+
 func test_mark_jumps_to_the_next_toughest_unmarked_enemy_when_a_marked_one_dies() -> void:
 	var f := _overwatch_field()
 	var turret: TurretActor = f.turret

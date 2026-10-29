@@ -235,9 +235,9 @@ func _after_hit(hit: CombatHit3D) -> void:
 	# Bosses are never staggered (the same rule that keeps `EnemyBrain.interrupt` from cutting their pounces short).
 	if hit.stagger_duration > 0.0 and not stationary and not EnemyEcology.is_boss(enemy_type):
 		if hit.stagger_cap > 0.0:
-			statuses.extend_stagger(hit.stagger_duration, hit.stagger_cap)
+			statuses.extend_stagger(hit.stagger_duration, hit.stagger_cap, hit.source_id)
 		else:
-			statuses.stagger(hit.stagger_duration)
+			statuses.stagger(hit.stagger_duration, hit.source_id)
 	slow_marker.visible = statuses.speed_multiplier() < 1.0
 	if not hit.impulse.is_zero_approx():
 		knockback_velocity = (knockback_velocity + hit.impulse / maxf(mass, .1)).limit_length(GameConstants.KNOCKBACK_MAX_VELOCITY * WorldGeometry.METRES_PER_PIXEL)

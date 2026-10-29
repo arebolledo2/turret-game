@@ -51,7 +51,7 @@ func _mark(radius: float, outer: bool) -> void:
 		pair[slot] = clock
 		marks[enemy.get_instance_id()] = pair
 		if clock - pair[1 - slot] <= TurretEvolution.ENGINE_EXPOSE_WINDOW:
-			enemy.statuses.expose(TurretEvolution.ENGINE_EXPOSE_DURATION)
+			enemy.statuses.expose(TurretEvolution.ENGINE_EXPOSE_DURATION, actor.turret_id)
 
 func tick(delta: float) -> void:
 	clock += delta

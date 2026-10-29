@@ -316,7 +316,7 @@ then normalise once with `git add --renormalize .` in a single mechanical commit
 
 ## 8. Other findings
 
-- **Correctness, Overwatch with two turrets:** `OverwatchForm.before_instant` calls `statuses.unmark()` on enemies it no longer
+- **Correctness, Overwatch with two turrets (fixed on branch `status-owned-timers`, refactor R5 timed-status part done: owner-keyed `TimedStatus` timers in `StatusEffects3D`, `OverwatchForm` passes its turret id; marker/tick tables still bespoke):** `OverwatchForm.before_instant` calls `statuses.unmark()` on enemies it no longer
   wants (`overwatch_form.gd:28-29`), which zeroes the shared timer (`status_effects_3d.gd:64-65`), so a second Overwatch's mark on
   the same enemy is silently removed and its `tick` then drops the entry (`overwatch_form.gd:47-49`). Statuses need a source
   owner before Lullaby/Discord/Decoy add more shared statuses.

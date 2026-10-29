@@ -2,21 +2,36 @@ class_name StatusEffects3D
 extends RefCounted
 
 ## Uses the shared status lifetime/refresh rules without the Node2D event bus.
+##
+## Timed statuses (exposed, marked, staggered and any generic name) are `TimedStatus` timers keyed by owner id, the
+## applying turret's `source_id` (0 for ownerless). A status is active while any owner's timer runs and its remaining
+## time is the longest of them, so one turret clearing or losing its timer never removes another turret's. The named
+## methods below (`mark`, `unmark`, `stagger`, ...) take an optional `owner` (default 0) and keep their old rules.
+## Generic API for new statuses (for example a Decoy 'hooked'; no bespoke fields needed):
+##   apply_timed(name, duration, owner)  refresh that owner's timer to the longer time
+##   is_active(name) / remaining(name)   any owner active / longest time left
+##   clear_timed(name, owner)            remove only that owner's timer
+##   advance_timed(name, delta)          the caller ticks it, like `advance_mark` does for the mark
+## `clear()` drops every timer for every owner. Burn and slow are not owner-keyed.
 var effects: Dictionary = {}
 ## Exposed: extra damage taken from Instant-family turrets while the timer runs.
 const EXPOSED_BONUS: float = .3
-var exposed_remaining: float = 0.0
+var exposed_remaining: float:
+	get: return remaining("exposed")
 ## Marked (Overwatch): extra damage taken from every turret while the timer runs. Independent of Exposed.
 ## Stacking rule: the final hit is `damage * exposure_multiplier * mark_multiplier`, so a Marked, Exposed enemy hit by an
 ## Instant turret takes 1.3 * 1.25 = 1.625 times the damage. The mark itself never stacks; refreshing keeps the longer timer.
 const MARKED_BONUS: float = .25
-var marked_remaining: float = 0.0
+var marked_remaining: float:
+	get: return remaining("marked")
 ## Staggered (Quake): the enemy cannot move, attack or start a charge while the timer runs (a knockback still slides it).
 ## Stacking rule: `stagger` refreshes to the longer remaining time and never adds, so repeated hits cannot lock an enemy;
 ## `extend_stagger` (Cataclysm) adds the hit's time to what is left, up to `STAGGER_CAP`, so a sustained barrage keeps an
 ## enemy down for at most that long however many pulses land. Bosses are never staggered (see `EnemyActor`).
 const STAGGER_CAP: float = 1.5
-var staggered_remaining: float = 0.0
+var staggered_remaining: float:
+	get: return remaining("staggered")
+var _timed: Dictionary = {}
 const BURN_TICK: float = .25
 var burn_transferred: bool = false
 var burn_dps: float = 0.0
@@ -52,46 +67,79 @@ func apply(hit: CombatHit3D) -> void:
 func is_burning() -> bool:
 	return burn_remaining > 0.0 or not _pending_burn_hits.is_empty()
 
-func expose(duration: float) -> void:
-	exposed_remaining = maxf(exposed_remaining, duration)
+func expose(duration: float, owner: int = 0) -> void:
+	apply_timed("exposed", duration, owner)
+
+## Generic timed status: refreshes `owner`'s timer for `status` to the longer of its time left and `duration`.
+func apply_timed(status: String, duration: float, owner: int = 0) -> void:
+	_timer(status).refresh(duration, owner)
+
+func is_active(status: String) -> bool:
+	return _timed.has(status) and _timed[status].is_active()
+
+## Longest time left across owners (0 when inactive).
+func remaining(status: String) -> float:
+	return _timed[status].remaining() if _timed.has(status) else 0.0
+
+func remaining_for_owner(status: String, owner: int = 0) -> float:
+	return _timed[status].remaining_for(owner) if _timed.has(status) else 0.0
+
+## Removes only `owner`'s timer; other owners' timers keep the status active.
+func clear_timed(status: String, owner: int = 0) -> void:
+	if _timed.has(status):
+		_timed[status].clear_owner(owner)
+
+func advance_timed(status: String, delta: float) -> void:
+	if _timed.has(status):
+		_timed[status].advance(delta)
+
+func _timer(status: String) -> TimedStatus:
+	if not _timed.has(status):
+		_timed[status] = TimedStatus.new()
+	return _timed[status]
 
 func exposure_multiplier(hit: CombatHit3D) -> float:
-	return 1.0 + EXPOSED_BONUS if exposed_remaining > 0.0 and "instant" in hit.attack_families else 1.0
+	return 1.0 + EXPOSED_BONUS if is_active("exposed") and "instant" in hit.attack_families else 1.0
 
-func mark(duration: float) -> void:
-	marked_remaining = maxf(marked_remaining, duration)
+## Marks never stack in magnitude: `mark_multiplier` reads `is_marked()`, so any number of owners gives +25% once.
+func mark(duration: float, owner: int = 0) -> void:
+	apply_timed("marked", duration, owner)
 
-func unmark() -> void:
-	marked_remaining = 0.0
+## Removes only `owner`'s mark; a mark placed by another owner stays.
+func unmark(owner: int = 0) -> void:
+	clear_timed("marked", owner)
 
 func is_marked() -> bool:
-	return marked_remaining > 0.0
+	return is_active("marked")
+
+func marked_remaining_for(owner: int = 0) -> float:
+	return remaining_for_owner("marked", owner)
 
 ## Turret hits only: the hero's weapon, enemy contact damage and blasts without a turret source are not amplified.
 func mark_multiplier(hit: CombatHit3D) -> float:
-	return 1.0 + MARKED_BONUS if marked_remaining > 0.0 and hit.source_id > 0 else 1.0
+	return 1.0 + MARKED_BONUS if is_active("marked") and hit.source_id > 0 else 1.0
 
 ## Runs every tick the enemy is alive (stationary crates included), unlike `advance`, which only runs while an enemy moves.
 func advance_mark(delta: float) -> void:
-	marked_remaining = maxf(0.0, marked_remaining - delta)
+	advance_timed("marked", delta)
 
 ## Refreshes to the longer of the current and the new time.
-func stagger(duration: float) -> void:
-	staggered_remaining = maxf(staggered_remaining, duration)
+func stagger(duration: float, owner: int = 0) -> void:
+	apply_timed("staggered", duration, owner)
 
 ## Adds `duration` to the time left, up to `cap`; never shortens a stagger that is already longer than the cap.
-func extend_stagger(duration: float, cap: float = STAGGER_CAP) -> void:
-	staggered_remaining = maxf(staggered_remaining, minf(staggered_remaining + duration, cap))
+func extend_stagger(duration: float, cap: float = STAGGER_CAP, owner: int = 0) -> void:
+	_timer("staggered").extend(duration, cap, owner)
 
 func is_staggered() -> bool:
-	return staggered_remaining > 0.0
+	return is_active("staggered")
 
 ## Runs every tick the enemy is alive, like the mark timer.
 func advance_stagger(delta: float) -> void:
-	staggered_remaining = maxf(0.0, staggered_remaining - delta)
+	advance_timed("staggered", delta)
 
 func advance(delta: float) -> void:
-	exposed_remaining = maxf(0.0, exposed_remaining - delta)
+	advance_timed("exposed", delta)
 	for type in effects.keys():
 		var effect: StatusEffect = effects[type]
 		effect.process(delta)
@@ -142,8 +190,6 @@ func clear_burn() -> void:
 
 func clear() -> void:
 	effects.clear()
-	exposed_remaining = 0.0
-	marked_remaining = 0.0
-	staggered_remaining = 0.0
+	_timed.clear()
 	_pending_burn_hits.clear()
 	clear_burn()
