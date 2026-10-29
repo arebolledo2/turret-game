@@ -34,6 +34,10 @@ CI installs the pinned engine, verifies the test gate, audits resource links, im
 
 Current implementation directories and ownership are listed in [architecture](architecture.md). Use the [Blender asset skill](../.claude/skills/blender-assets/SKILL.md) for geometry/model edits. Historical 2D code is available at `prototype-2d-final`; preserve shared contracts, but do not maintain a second gameplay runtime.
 
+## Benchmarks and a busy GPU
+
+The dev machine's video card is often busy with other work, so GPU timing from bench and perf runs (`tools/bench_*.gd`, `capture_game.gd --benchmark`) can be noisy. Check for load before benching, prefer relative comparisons within one run (form against form, before against after), and rerun if a result looks off. Do not quote frame times taken under load as measurements.
+
 ## Arena test performance
 
 Floor texture resources are retained in `WorldGeometry` across arena teardown. Godot's resource cache does not keep otherwise unreferenced maps alive, so loading them afresh for each fixture repeatedly decompresses the 2048px maps. Materials remain per-arena so wave tints do not leak between runs. On the October 12 local check, retaining textures reduced the preparation suite from 8.9s to 1.6s; the complete suite passed 984 tests in 31.2s versus the previous 244.6s run. These are local timings, not CI time limits.
