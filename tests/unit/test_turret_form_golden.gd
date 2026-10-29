@@ -5,7 +5,7 @@ extends GutTest
 ## stats, text, shot shape, behaviour class, visual builder or built model must fail here instead of passing silently.
 ## If a number must change on purpose (a balance retune), edit the literal in the same commit and say why.
 ##
-## What is pinned, per form (all 33 registered forms, implemented or not) and per base turret with no form:
+## What is pinned, per form (all 36 registered forms, implemented or not) and per base turret with no form:
 ##   FORMS     base, kind (upgrade or final), name, model key, implemented, description
 ##   STATS     the full `TurretEvolution.base_stats(base, form)` dictionary (every key, with its type)
 ##   SHOTS     `shape_shot` on a fresh `CombatShot3D`: visual_key, visual_scale, radius, lifetime, ricochets, pierce
@@ -13,13 +13,13 @@ extends GutTest
 ##   BUILDERS  which `*EvolutionVisual` builders change the form's chassis (each is run on a fresh model)
 ##   MODELS    the model the actor builds: node and mesh counts, handles the attack code reads (muzzles, emitters, saber
 ##             arms) and a digest of every node's class, name, transform, mesh size and material
-##   MISC      volley size, pierce text, the Stormblade barrel stats, Resonator echo delays and Quake and Decoy pattern text
+##   MISC      volley size, pierce text, the Stormblade barrel stats, Resonator echo delays and Quake, Decoy and Scrap Press pattern text
 ##
 ## The collectors only call lookups (`_stats`, `_shot`, `_volley`, ...); when a refactor changes a function signature,
 ## adapt the lookup here, never the expected values.
 
-const BASES: Array[String] = ["normal", "melee", "bow", "flamethrower", "bowling", "plasma", "shock", "tesla", "sniper", "quake", "decoy"]
-const BUILDERS: Array[String] = ["BowEvolutionVisual", "FlameEvolutionVisual", "BowlingEvolutionVisual", "GunbladeEvolutionVisual", "SiegeEvolutionVisual", "SniperEvolutionVisual", "QuakeEvolutionVisual", "DecoyEvolutionVisual", "GatlingEvolutionVisual", "CrossfireEvolutionVisual"]
+const BASES: Array[String] = ["normal", "melee", "bow", "flamethrower", "bowling", "plasma", "shock", "tesla", "sniper", "quake", "decoy", "scrap_press"]
+const BUILDERS: Array[String] = ["BowEvolutionVisual", "FlameEvolutionVisual", "BowlingEvolutionVisual", "GunbladeEvolutionVisual", "SiegeEvolutionVisual", "SniperEvolutionVisual", "QuakeEvolutionVisual", "DecoyEvolutionVisual", "ScrapPressEvolutionVisual", "GatlingEvolutionVisual", "CrossfireEvolutionVisual"]
 
 const FORMS: Dictionary = {
 	"machine_gun": {
@@ -285,6 +285,30 @@ const FORMS: Dictionary = {
 		"model": "decoy",
 		"implemented": true,
 		"description": "The taunt reaches 7 metres and draws ranged enemies too. Up to 10 enemies in reach are hooked and circle the Decoy until they die, taking a light tick of damage.",
+	},
+	"coin_feeder": {
+		"base": "scrap_press",
+		"kind": "upgrade",
+		"name": "Coin Feeder",
+		"model": "shock",
+		"implemented": true,
+		"description": "A hopper feeds half of every drop straight into your wallet, with no pickup trip. The other half still lands beside the press.",
+	},
+	"treasury": {
+		"base": "scrap_press",
+		"kind": "final",
+		"name": "Treasury",
+		"model": "shock",
+		"implemented": true,
+		"description": "Every drop goes straight into your wallet, and the press makes 25% more. When a wave is won it pays interest: 1 scrap per 10 you hold, up to 5.",
+	},
+	"academy": {
+		"base": "scrap_press",
+		"kind": "final",
+		"name": "Academy",
+		"model": "shock",
+		"implemented": true,
+		"description": "Makes no scrap. Every 8 seconds each turret within 6 metres gains XP equal to a drop, in full, and no cash is paid.",
 	},
 }
 
@@ -654,6 +678,30 @@ const STATS: Dictionary = {
 		"knockback_force": 120.0,
 		"taunt_range": 700.0,
 	},
+	"(scrap_press)": {
+		"damage": 0.0,
+		"fire_rate": 0.25,
+		"range": 150.0,
+		"rotation_speed": 0.0,
+	},
+	"coin_feeder": {
+		"damage": 0.0,
+		"fire_rate": 0.25,
+		"range": 150.0,
+		"rotation_speed": 0.0,
+	},
+	"treasury": {
+		"damage": 0.0,
+		"fire_rate": 0.3125,
+		"range": 150.0,
+		"rotation_speed": 0.0,
+	},
+	"academy": {
+		"damage": 0.0,
+		"fire_rate": 0.125,
+		"range": 150.0,
+		"rotation_speed": 0.0,
+	},
 }
 
 const SHOTS: Dictionary = {
@@ -701,6 +749,10 @@ const SHOTS: Dictionary = {
 	"bumper_post": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
 	"pile_driver": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
 	"maelstrom": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"(scrap_press)": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"coin_feeder": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"treasury": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"academy": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
 }
 
 const BEHAVIOUR: Dictionary = {
@@ -748,6 +800,10 @@ const BEHAVIOUR: Dictionary = {
 	"bumper_post": "DecoyForm",
 	"pile_driver": "DecoyForm",
 	"maelstrom": "DecoyForm",
+	"(scrap_press)": "ScrapPressForm",
+	"coin_feeder": "ScrapPressForm",
+	"treasury": "ScrapPressForm",
+	"academy": "ScrapPressForm",
 }
 
 const BUILDERS_BY_FORM: Dictionary = {
@@ -795,6 +851,10 @@ const BUILDERS_BY_FORM: Dictionary = {
 	"bumper_post": ["DecoyEvolutionVisual"],
 	"pile_driver": ["DecoyEvolutionVisual"],
 	"maelstrom": ["DecoyEvolutionVisual"],
+	"(scrap_press)": [],
+	"coin_feeder": ["ScrapPressEvolutionVisual"],
+	"treasury": ["ScrapPressEvolutionVisual"],
+	"academy": ["ScrapPressEvolutionVisual"],
 }
 
 const MODELS: Dictionary = {
@@ -1326,6 +1386,54 @@ const MODELS: Dictionary = {
 		"saber_angles": 1,
 		"digest": "f6e6bb0afa81b93e",
 	},
+	"(scrap_press)": {
+		"nodes": 14,
+		"meshes": 11,
+		"muzzle": "0.000,1.010,0.000",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "f4adf0c9a1816e4a",
+	},
+	"coin_feeder": {
+		"nodes": 22,
+		"meshes": 19,
+		"muzzle": "0.000,1.010,0.000",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "d5c5a5f4fa0b18ef",
+	},
+	"treasury": {
+		"nodes": 30,
+		"meshes": 27,
+		"muzzle": "0.000,1.010,0.000",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "e51cf18db5641432",
+	},
+	"academy": {
+		"nodes": 26,
+		"meshes": 23,
+		"muzzle": "0.000,1.010,0.000",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "4cabe2ff1dd187a6",
+	},
 }
 
 const MISC: Dictionary = {
@@ -1350,9 +1458,14 @@ const MISC: Dictionary = {
 	"decoy_pattern:pile_driver": "Every fourth pulse slams: 3x damage, 1.5x reach, 0.6 s stagger",
 	"decoy_pattern:maelstrom": "Hooks up to 10 enemies in reach until they die; ranged enemies are drawn in too",
 	"decoy_pattern:missing": "Enemies in reach walk at it; bosses ignore it",
+	"scrap_press_pattern:": "Drops land beside the press; scrap left at wave end becomes XP for nearby turrets",
+	"scrap_press_pattern:coin_feeder": "50% of every drop goes to your wallet; the rest lands beside the press",
+	"scrap_press_pattern:treasury": "Every drop goes to your wallet; on a won wave +1 scrap per 10 held, up to 5",
+	"scrap_press_pattern:academy": "No scrap: each drop is XP, in full, to every turret within 6 m (this one too)",
+	"scrap_press_pattern:missing": "Drops land beside the press; scrap left at wave end becomes XP for nearby turrets",
 	"ids": ["", "", "", ""],
-	"implemented": ["machine_gun", "cyclone_gatling", "omnifire", "saber", "orbit_saber", "stormblade", "repeater_bow", "arrowstorm", "titan_bow", "wide_flame", "inferno_crown", "dragonheart", "heavy_roller", "juggernaut", "ricochet_king", "siege", "worldbreaker", "resonator", "resonance_engine", "thunder_spear", "piercer_rifle", "horizon_piercer", "overwatch", "aftershock", "tectonic", "cataclysm", "bumper_post", "pile_driver", "maelstrom"],
-	"order": [["machine_gun", "cyclone_gatling", "omnifire"], ["saber", "orbit_saber", "stormblade"], ["repeater_bow", "arrowstorm", "titan_bow"], ["wide_flame", "inferno_crown", "dragonheart"], ["heavy_roller", "juggernaut", "ricochet_king"], ["siege", "worldbreaker", "constellation"], ["resonator", "resonance_engine", "thunder_spear"], ["forked_coil", "storm_network", "thunderhead"], ["piercer_rifle", "horizon_piercer", "overwatch"], ["aftershock", "tectonic", "cataclysm"], ["bumper_post", "pile_driver", "maelstrom"]],
+	"implemented": ["machine_gun", "cyclone_gatling", "omnifire", "saber", "orbit_saber", "stormblade", "repeater_bow", "arrowstorm", "titan_bow", "wide_flame", "inferno_crown", "dragonheart", "heavy_roller", "juggernaut", "ricochet_king", "siege", "worldbreaker", "resonator", "resonance_engine", "thunder_spear", "piercer_rifle", "horizon_piercer", "overwatch", "aftershock", "tectonic", "cataclysm", "bumper_post", "pile_driver", "maelstrom", "coin_feeder", "treasury", "academy"],
+	"order": [["machine_gun", "cyclone_gatling", "omnifire"], ["saber", "orbit_saber", "stormblade"], ["repeater_bow", "arrowstorm", "titan_bow"], ["wide_flame", "inferno_crown", "dragonheart"], ["heavy_roller", "juggernaut", "ricochet_king"], ["siege", "worldbreaker", "constellation"], ["resonator", "resonance_engine", "thunder_spear"], ["forked_coil", "storm_network", "thunderhead"], ["piercer_rifle", "horizon_piercer", "overwatch"], ["aftershock", "tectonic", "cataclysm"], ["bumper_post", "pile_driver", "maelstrom"], ["coin_feeder", "treasury", "academy"]],
 }
 
 # --- Lookups (adapt these when a signature changes; never the expected values) ---
@@ -1393,6 +1506,7 @@ func _run_builder(builder: String, model: Node3D, _base: String, form: String) -
 		"SniperEvolutionVisual": SniperEvolutionVisual.build(model, form)
 		"QuakeEvolutionVisual": QuakeEvolutionVisual.build(model, form)
 		"DecoyEvolutionVisual": DecoyEvolutionVisual.build(model, form)
+		"ScrapPressEvolutionVisual": ScrapPressEvolutionVisual.build(model, form)
 		"GatlingEvolutionVisual": GatlingEvolutionVisual.build(model, form)
 		"CrossfireEvolutionVisual": CrossfireEvolutionVisual.build(model, form)
 
@@ -1444,6 +1558,8 @@ func collect_all(host: Node) -> Dictionary:
 		result.misc["quake_pattern:" + form] = TurretEvolution.quake_pattern_text(form)
 	for form in ["", "bumper_post", "pile_driver", "maelstrom", "missing"]:
 		result.misc["decoy_pattern:" + form] = TurretEvolution.decoy_pattern_text(form)
+	for form in ["", "coin_feeder", "treasury", "academy", "missing"]:
+		result.misc["scrap_press_pattern:" + form] = TurretEvolution.scrap_press_pattern_text(form)
 	result.misc["ids"] = [TurretEvolution.form_name(""), TurretEvolution.form_name("missing"), TurretEvolution.model_key(""), TurretEvolution.description("missing")]
 	result.misc["implemented"] = implemented
 	result.misc["order"] = BASES.map(func(base: String) -> Array: return _forms_of(base))

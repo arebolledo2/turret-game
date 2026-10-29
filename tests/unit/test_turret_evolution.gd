@@ -265,3 +265,38 @@ func test_decoy_forms_climb_in_damage_reach_and_taunt() -> void:
 	assert_eq(TurretEvolution.param("maelstrom", "hooks"), 10)
 	assert_true(TurretEvolution.param("maelstrom", "ranged_taunt"))
 	assert_null(TurretEvolution.param("bumper_post", "ranged_taunt"), "Only the Maelstrom draws ranged enemies")
+
+func test_scrap_press_path_forms_tiers_and_placeholder_chassis() -> void:
+	assert_eq(TurretEvolution.options("scrap_press", 0), ["coin_feeder"])
+	assert_eq(TurretEvolution.options("scrap_press", 1), ["treasury", "academy"])
+	assert_eq(TurretEvolution.form_name("coin_feeder"), "Coin Feeder")
+	assert_eq(TurretEvolution.form_name("treasury"), "Treasury")
+	assert_eq(TurretEvolution.form_name("academy"), "Academy")
+	for form in ["coin_feeder", "treasury", "academy"]:
+		assert_true(TurretEvolution.is_implemented(form))
+		assert_eq(TurretEvolution.model_key(form), "shock", "Every Scrap Press form uses the brass-tinted Shock bell until a model is wired")
+		assert_false(TurretEvolution.description(form).is_empty())
+	assert_true(TurretEvolution.behaviour_script("scrap_press", "").new() is ScrapPressForm, "The unevolved press drops through its form")
+
+func test_scrap_press_base_stats_match_the_design() -> void:
+	var base := TurretRegistry.get_base_stats("scrap_press")
+	assert_eq(base.damage, 0.0, "No attack")
+	assert_almost_eq(float(base.fire_rate), .25, .0001, "One drop every 4 s")
+	assert_eq(base.range, 150.0, "Drops land within 1.5 m")
+	assert_eq(TurretRegistry.get_base_price("scrap_press"), 14)
+	assert_eq(TurretRegistry.get_fire_mode("scrap_press"), TurretRegistry.FIRE_NONE)
+
+func test_scrap_press_forms_change_where_drops_go_and_how_often() -> void:
+	var base := TurretEvolution.base_stats("scrap_press", "")
+	var feeder := TurretEvolution.base_stats("scrap_press", "coin_feeder")
+	var treasury := TurretEvolution.base_stats("scrap_press", "treasury")
+	var academy := TurretEvolution.base_stats("scrap_press", "academy")
+	assert_eq(feeder.fire_rate, base.fire_rate, "Coin Feeder moves the drop, it does not enlarge it")
+	assert_almost_eq(float(treasury.fire_rate) / float(base.fire_rate), 1.25, .0001, "Treasury makes 25% more")
+	assert_almost_eq(float(academy.fire_rate) / float(base.fire_rate), .5, .0001, "Academy drops every 8 s")
+	assert_eq(TurretEvolution.param("coin_feeder", "deposit_share"), .5)
+	assert_eq(TurretEvolution.param("treasury", "deposit_share"), 1.0)
+	assert_eq(TurretEvolution.param("treasury", "interest_per"), 10)
+	assert_eq(TurretEvolution.param("treasury", "interest_cap"), 5)
+	assert_eq(TurretEvolution.param("academy", "xp_radius"), 6.0)
+	assert_null(TurretEvolution.param("coin_feeder", "xp_radius"))

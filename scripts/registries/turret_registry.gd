@@ -10,6 +10,7 @@ const FIRE_CHAIN: String = "chain" # lightning that jumps between enemies
 const FIRE_FLAME: String = "flame" # aimed cone with burn over time
 const FIRE_SWEEP: String = "sweep" # spinning melee bat
 const FIRE_INSTANT: String = "instant" # hit-scan shot along a line (Sniper); pierce lets it strike more enemies on that line
+const FIRE_NONE: String = "none" # no attack (utility turrets such as the Scrap Press); its `TurretForm.tick` does the work
 
 const DEFAULT_MODEL: String = "res://assets/models/game/ion_turret.glb"
 
@@ -20,6 +21,7 @@ const BASE_PRICES: Dictionary = {
 	"sniper": 18,
 	"quake": 17,
 	"decoy": 10,
+	"scrap_press": 14,
 	"fire": 13,
 	"plasma": 16,
 	"shock": 14,
@@ -137,6 +139,28 @@ const TYPES: Dictionary = {
 			"rotation_speed": 0.0,
 			"knockback_force": 150.0,
 			"taunt_range": 450.0,
+		}
+	},
+	"scrap_press": {
+		"name": "Scrap Press",
+		"icon": "🪙",
+		"short_name": "Scrap Press",
+		# No Scrap Press model is wired yet: the Shock bell, tinted brass, stands in (see `TurretActor._rebuild_model`).
+		"model_key": "shock",
+		"model": "res://assets/models/game/shock_turret.glb",
+		# No attack and so no attack family, targeting or damage: `ScrapPressForm.tick` makes a drop on a timer (engine piece S5,
+		# `ScrapIncome`). `fire_rate` is its drops per second, `range` how far from it a drop lands (metres, like any reach).
+		# The `damage` key is only there because the stat pipeline multiplies it; nothing reads it.
+		"fire_mode": FIRE_NONE,
+		"no_attack": true,
+		"description": "Does not attack. Makes a little scrap every few seconds and drops it beside itself. Scrap left on the floor at wave end becomes XP for the turrets nearby.",
+		"attack_styles": [],
+		"damage_types": [GameEnums.DamageType.PHYSICAL],
+		"base_stats": {
+			"damage": 0.0,
+			"fire_rate": 0.25,
+			"range": 150.0,
+			"rotation_speed": 0.0,
 		}
 	},
 	"fire": {

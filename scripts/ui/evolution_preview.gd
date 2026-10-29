@@ -65,13 +65,18 @@ func show_form(turret: TurretActor, form: String) -> void:
 	var before := turret.resolve_attack_view()
 	var after := turret.resolve_attack_view(false, form)
 	var lines := PackedStringArray()
-	lines.append("Damage per hit   %.1f → %.1f" % [before.damage, after.damage])
-	if turret.turret_type == "melee":
-		lines.append("Sweep speed   %.0f → %.0f°/s" % [before.rotation_rate, after.rotation_rate])
+	var utility := TurretRegistry.is_no_attack(turret.turret_type)
+	if utility:
+		lines.append("Drop every   %.1f → %.1f s     Lands within   %.2f → %.2f m" % [before.cooldown_seconds, after.cooldown_seconds, before.range_metres, after.range_metres])
+		lines.append(TurretEvolution.scrap_press_pattern_text(form))
 	else:
-		lines.append("Base firing rate   %.2f → %.2f/s" % [before.fire_rate, after.fire_rate])
-	var area := TurretRegistry.get_fire_mode(turret.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME]
-	lines.append("Reach   %.2f → %.2f m" % [before.range_metres * (before.area_size if area else 1.0), after.range_metres * (after.area_size if area else 1.0)])
+		lines.append("Damage per hit   %.1f → %.1f" % [before.damage, after.damage])
+		if turret.turret_type == "melee":
+			lines.append("Sweep speed   %.0f → %.0f°/s" % [before.rotation_rate, after.rotation_rate])
+		else:
+			lines.append("Base firing rate   %.2f → %.2f/s" % [before.fire_rate, after.fire_rate])
+		var area := TurretRegistry.get_fire_mode(turret.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME]
+		lines.append("Reach   %.2f → %.2f m" % [before.range_metres * (before.area_size if area else 1.0), after.range_metres * (after.area_size if area else 1.0)])
 	if turret.turret_type == "sniper":
 		lines.append("Pierce   %s → %s" % [TurretEvolution.pierce_text(before.pierce), TurretEvolution.pierce_text(after.pierce)])
 	if turret.turret_type == "quake":

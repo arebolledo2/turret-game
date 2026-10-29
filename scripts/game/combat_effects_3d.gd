@@ -9,6 +9,8 @@ const PULSE_LIFETIME: float = .3
 const QUAKE_TINT := Color("6df0b0")
 ## Friendly Decoy colour (pulse rings, hooks): amber, like its bumpers.
 const DECOY_TINT := Color("ffb02e")
+## Friendly Scrap Press colour (Academy's ring): brass gold.
+const SCRAP_PRESS_TINT := Color("f2c14e")
 const MAX_BURSTS: int = 16
 const BURST_PARTICLES: int = 14
 const BURST_LIFETIME: float = .5

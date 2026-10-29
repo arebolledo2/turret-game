@@ -49,6 +49,7 @@ func test_named_behaviours_and_visuals_resolve_to_the_right_kind_of_script() -> 
 	assert_null(TurretEvolution.behaviour_script("normal", ""), "A plain base turret uses the default attack")
 	assert_true(TurretEvolution.behaviour_script("quake", "").new() is QuakeForm, "The unevolved Quake pulses through its form")
 	assert_true(TurretEvolution.behaviour_script("decoy", "").new() is DecoyForm, "The unevolved Decoy taunts through its form")
+	assert_true(TurretEvolution.behaviour_script("scrap_press", "").new() is ScrapPressForm, "The unevolved Scrap Press makes its drops through its form")
 
 func test_every_visual_ignores_a_form_that_is_not_its_own() -> void:
 	var model := Node3D.new()

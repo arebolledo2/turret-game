@@ -170,6 +170,19 @@ static func decoy_pattern_text(form_id: String) -> String:
 static func ordinal(count: int) -> String:
 	return {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth"}.get(count, "%dth" % count)
 
+## One line on where a Scrap Press form sends its drops, for the preview and the inspector.
+static func scrap_press_pattern_text(form_id: String) -> String:
+	var radius := float(param(form_id, "xp_radius", 0.0))
+	if radius > 0.0:
+		return "No scrap: each drop is XP, in full, to every turret within %.0f m (this one too)" % radius
+	var per := int(param(form_id, "interest_per", 0))
+	if per > 0:
+		return "Every drop goes to your wallet; on a won wave +1 scrap per %d held, up to %d" % [per, int(param(form_id, "interest_cap", 0))]
+	var share := float(param(form_id, "deposit_share", 0.0))
+	if share > 0.0:
+		return "%.0f%% of every drop goes to your wallet; the rest lands beside the press" % (share * 100.0)
+	return "Drops land beside the press; scrap left at wave end becomes XP for nearby turrets"
+
 ## One line on what a Quake form does per trigger, for the preview and the inspector.
 static func quake_pattern_text(form_id: String) -> String:
 	match form_id:

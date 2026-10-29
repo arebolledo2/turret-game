@@ -216,7 +216,8 @@ func _show_selected() -> void:
 	title.text = "%s #%d\nLEVEL %d" % [turret.display_name(), selected_id, growth.level]
 	xp_label.text = "%d / %d XP   →   LV %d" % [growth.xp, TurretProgression.cost_to_next(growth.level), growth.level + 1]
 	xp_bar.show_progress(growth.level, growth.xp)
-	stat_values[0].text = "%.1f" % stats.damage
+	var utility := TurretRegistry.is_no_attack(turret.turret_type)
+	stat_values[0].text = "—" if utility else "%.1f" % stats.damage
 	stat_values[1].text = "%.2f m" % (stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0))
 	stat_values[2].text = "%.0f°/s" % stats.rotation_rate if turret.turret_type == "melee" else "%.2f /s" % stats.fire_rate
 	stat_values[3].text = "%d jumps" % stats.chain_count if stats.chain_count > 0 else "%.2f m" % stats.aoe_radius_metres if stats.aoe_radius_metres > 0 else "—"
@@ -229,11 +230,20 @@ func _show_selected() -> void:
 	milestones.modulate = UiPalette.TEAL_HI
 	var lines := PackedStringArray()
 	lines.append("[color=#8be0c9][b]CURRENT COMBAT STATS[/b][/color]")
-	lines.append("Damage  [b]%.1f[/b]     Reach  [b]%.2f m[/b]" % [stats.damage, stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0)])
-	if turret.turret_type == "melee":
-		lines.append("Sweep  %.0f°/s     Rehit interval  %.2f s" % [stats.rotation_rate, stats.rehit_delay])
+	var press := turret.form as ScrapPressForm
+	if utility:
+		lines.append("Does not attack     Drop lands within  [b]%.2f m[/b]" % stats.range_metres)
+		if press:
+			lines.append("Makes a drop every  [b]%.1f s[/b]     Worth  [b]%d[/b] %s now" % [press.drop_interval(), press.drop_value(), "XP" if press.makes_xp() else "scrap"])
+			if press.current_yield() < 1.0:
+				lines.append("Output stacks down with more presses: this one keeps %.0f%%" % (press.current_yield() * 100.0))
+		lines.append(TurretEvolution.scrap_press_pattern_text(growth.evolution_form))
 	else:
-		lines.append("Rate  %.2f shots/s     Cooldown  %.2f s" % [stats.fire_rate, stats.cooldown_seconds])
+		lines.append("Damage  [b]%.1f[/b]     Reach  [b]%.2f m[/b]" % [stats.damage, stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0)])
+		if turret.turret_type == "melee":
+			lines.append("Sweep  %.0f°/s     Rehit interval  %.2f s" % [stats.rotation_rate, stats.rehit_delay])
+		else:
+			lines.append("Rate  %.2f shots/s     Cooldown  %.2f s" % [stats.fire_rate, stats.cooldown_seconds])
 	if stats.projectile_speed_metres > 0:
 		lines.append("Projectile speed  %.2f m/s     Pierce  %d" % [stats.projectile_speed_metres, stats.pierce])
 	if turret.turret_type == "sniper":
@@ -254,7 +264,8 @@ func _show_selected() -> void:
 	if turret.turret_type == "flamethrower":
 		lines.append("Flame cone %.0f degrees" % float(stats.values.get("cone_degrees", 36.0)))
 		lines.append("Burn %.1f damage/s for %.1f s" % [stats.damage * float(stats.values.get("burn_ratio", 1.6)), float(stats.values.get("burn_duration", 2.0))])
-	lines.append("Knockback  %.2f m" % stats.knockback_metres)
+	if not utility:
+		lines.append("Knockback  %.2f m" % stats.knockback_metres)
 	if growth.evolution_form == "stormblade":
 		var gun := turret.gun_stats
 		lines.append("\n[b]GUN · PROJECTILE[/b]")

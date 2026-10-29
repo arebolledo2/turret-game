@@ -77,9 +77,11 @@ func test_deployable_plus_aoe_style_lists_the_aoe_family_once() -> void:
 	TurretRegistry.clear_test_types()
 
 func test_no_attack_marker_is_a_capability_of_flagged_entries_only() -> void:
+	# The Scrap Press is the one registered utility turret so far; every other entry attacks.
 	for type_id: String in TurretRegistry.get_all_type_ids():
-		assert_false(TurretRegistry.is_no_attack(type_id), type_id)
-		assert_false(TurretRegistry.has_capability(type_id, "no_attack"), type_id)
+		var utility := type_id == "scrap_press"
+		assert_eq(TurretRegistry.is_no_attack(type_id), utility, type_id)
+		assert_eq(TurretRegistry.has_capability(type_id, "no_attack"), utility, type_id)
 	assert_false(TurretRegistry.is_no_attack("not_a_turret"))
 	TurretRegistry.register_test_type("test_beacon", _utility_definition())
 	assert_true(TurretRegistry.is_no_attack("test_beacon"))
