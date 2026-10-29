@@ -19,6 +19,8 @@ var _next_turret_id: int = 1
 var shop := ArenaShop.new()
 var waves := WaveDirector.new()
 var salvage := WaveSalvage.new()
+## Scrap that does not come from a kill (S5, the Scrap Press); see `ScrapIncome`.
+var scrap_income := ScrapIncome.new()
 ## Headless tools skip presentation; tests can explicitly enable and advance it.
 var present_wave_rewards: bool = DisplayServer.get_name() != "headless"
 var chest_rewards: ChestRewardScreen
@@ -111,6 +113,7 @@ func _configure_run() -> void:
 	shop.world = self
 	waves.world = self
 	salvage.world = self
+	scrap_income.world = self
 	drops.world = self
 	build_zones.world = self
 	blasts.world = self
@@ -205,6 +208,7 @@ func start_run() -> void:
 	session.begin_run()
 	# Derive a separate stream without advancing combat/shop randomness.
 	salvage.reset(GameRandom.gameplay.state)
+	scrap_income.reset(GameRandom.gameplay.state)
 	telemetry.begin_run()
 	FeatureFlagService.clear_pending()
 	_next_turret_id = 1
@@ -298,6 +302,7 @@ func clear_field(bank_pickups: bool, return_carried: bool = true) -> void:
 	crowd.rebuild(enemies)
 	effects.reset()
 	ground_zones.clear()
+	salvage.discard_direct()
 	drops.reset()
 	build_zones.reset()
 	player.clear_transients()
@@ -412,6 +417,16 @@ func add_turret(at: Vector3, type_id: String = "normal", starting: bool = false)
 	GameStateService.turrets_spawned = turrets.size()
 	return turret
 
+## Lays a scrap pickup on the floor (kills and the Scrap Press).
+func spawn_scrap_pickup(at: Vector3, amount: int) -> ScrapPickup:
+	var pickup := ScrapPickup.new()
+	pickup.world = self
+	pickup.amount = amount
+	pickup.position = at
+	pickup_root.add_child(pickup)
+	pickup.reset_physics_interpolation()
+	return pickup
+
 func collect_scrap(amount: int) -> void:
 	var added := EconomyService.add_scrap_probabilistic(amount, ItemTrackingService.get_scrap_earn_multiplier())
 	telemetry.record_scrap_earned(added)
@@ -447,12 +462,7 @@ func _on_enemy_died(enemy: CombatActor) -> void:
 	if EnemyEcology.is_boss(enemy.enemy_type):
 		drops.reward_boss(enemy.enemy_type)
 	if enemy.scrap_value > 0:
-		var pickup := ScrapPickup.new()
-		pickup.world = self
-		pickup.amount = enemy.scrap_value
-		pickup.position = enemy.position
-		pickup_root.add_child(pickup)
-		pickup.reset_physics_interpolation()
+		spawn_scrap_pickup(enemy.position, enemy.scrap_value)
 	enemies.erase(enemy)
 	if not DeathShatter.spawn(actor_root, enemy):
 		DeathDissolve.spawn(actor_root, enemy)

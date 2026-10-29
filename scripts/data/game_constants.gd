@@ -117,6 +117,10 @@ const ABANDON_DEADZONE: float = .10 # fraction of a wave's drops that can be mis
 const ABANDON_GAIN: float = .12 # earn multiplier bonus per fully abandoned wave
 const ABANDON_BONUS_CAP: float = 2.0 # maximum bonus (+200%)
 
+# Scrap income (S5, the Scrap Press): a turret that makes scrap, deposits it or turns it into XP.
+const SCRAP_PRESS_WAVES_PER_STEP: int = 5 # a drop is worth one more scrap every this many waves (1 on waves 1-5, 2 on 6-10, ...)
+const SCRAP_PRESS_STACK_YIELD: Array[float] = [1.0, .6, .4] # output of the first, second and third (and later) press on the field
+
 # =============================================================================
 # PROTECT THE CORE (core mode)
 # =============================================================================

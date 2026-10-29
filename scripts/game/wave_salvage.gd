@@ -7,11 +7,32 @@ var world: ArenaWorld
 var rng := RandomNumberGenerator.new()
 var settlements: Dictionary = {}
 var last_settlement: Dictionary = {}
+## XP handed to turrets directly during the current wave (S5, `ScrapIncome.award_xp`), by turret id: the progression snapshot
+## taken before the wave's first award and the XP so far. `settle` folds it into the ledger so the wave-end report, the
+## inspector and telemetry show it with the salvage XP; it is cleared by `settle`, `discard_direct` and `reset`.
+var direct: Dictionary = {}
 
 func reset(run_seed: int) -> void:
 	rng.seed = run_seed ^ 0x585053414C
 	settlements.clear()
 	last_settlement = {}
+	direct.clear()
+
+## Gives `turret` `amount` XP right now (a level-up lands mid-wave) and tallies it for this wave's settlement.
+func award_direct(turret: TurretActor, amount: int) -> void:
+	if amount <= 0 or not world.session.state.turret_progression_enabled:
+		return
+	var entry: Dictionary = direct.get(turret.turret_id, {})
+	if entry.is_empty():
+		entry = {"before": turret.progression.snapshot(), "xp": 0}
+		direct[turret.turret_id] = entry
+	entry["xp"] = int(entry["xp"]) + amount
+	turret.progression.award(amount)
+	turret.invalidate_stats()
+
+## Drops the tally of a wave that will not settle (defeat, abandoned run). The XP already awarded stays awarded.
+func discard_direct() -> void:
+	direct.clear()
 
 static func weight(from: Vector3, to: Vector3) -> float:
 	var distance_squared := WorldGeometry.planar(from - to).length_squared()
@@ -75,10 +96,17 @@ func settle(wave: int) -> bool:
 		pickup.queue_free()
 	for turret in recipients:
 		var amount := int(awards.get(turret.turret_id, 0))
-		if amount > 0:
-			ledger["changes"][turret.turret_id] = turret.progression.award(amount)
+		var earlier: Dictionary = direct.get(turret.turret_id, {})
+		if amount > 0 or not earlier.is_empty():
+			var change := turret.progression.award(amount)
+			if not earlier.is_empty():
+				# Report the whole wave: from before the first direct award to after the salvage.
+				change["before"] = earlier["before"]
+				change["xp_awarded"] = amount + int(earlier["xp"])
+			ledger["changes"][turret.turret_id] = change
 			turret.invalidate_stats()
-			ledger["xp_awarded"] += amount
+			ledger["xp_awarded"] += int(change["xp_awarded"])
+	direct.clear()
 	if recipients.is_empty() and raw_scrap > 0:
 		var before := EconomyService.total_scrap
 		world.collect_scrap(raw_scrap)

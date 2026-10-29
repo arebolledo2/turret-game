@@ -75,6 +75,10 @@ func tick(_delta: float) -> void:
 func clear() -> void:
 	pass
 
+## Scrap this form pays into the wallet when the wave is won, given the scrap held then (see `ScrapIncome.pay_interest`).
+func wave_end_scrap(_held: int) -> int:
+	return 0
+
 ## The turret left the arena or took another form: release anything the form put into the world (the Decoy's taunt and hooks).
 func removed() -> void:
 	pass

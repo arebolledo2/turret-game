@@ -194,7 +194,8 @@ func finish_wave() -> bool:
 	world.clear_field(true, not show_rewards)
 	var reward := EconomyService.get_wave_scrap_base(state.current_wave)
 	world.collect_scrap(reward)
-	world.message = "Wave secured · +%d scrap bonus" % reward
+	var interest := world.scrap_income.pay_interest()
+	world.message = "Wave secured · +%d scrap bonus" % reward + (" · +%d interest" % interest if interest > 0 else "")
 	if show_rewards:
 		world.reward_presentation.begin(world.salvage.last_settlement)
 	else:
