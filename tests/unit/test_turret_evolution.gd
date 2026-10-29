@@ -224,7 +224,7 @@ func test_forms_are_unique_to_one_base_and_listed_under_it() -> void:
 		for form in TurretEvolution.options(base, 0) + TurretEvolution.options(base, 1):
 			assert_eq(TurretEvolution.row(form)["base"], base, "%s is listed under the base that owns it" % form)
 
-func test_decoy_path_forms_tiers_and_placeholder_chassis() -> void:
+func test_decoy_path_forms_tiers_and_chassis() -> void:
 	assert_eq(TurretEvolution.options("decoy", 0), ["bumper_post"])
 	assert_eq(TurretEvolution.options("decoy", 1), ["pile_driver", "maelstrom"])
 	assert_eq(TurretEvolution.form_name("bumper_post"), "Bumper Post")
@@ -232,7 +232,7 @@ func test_decoy_path_forms_tiers_and_placeholder_chassis() -> void:
 	assert_eq(TurretEvolution.form_name("maelstrom"), "Maelstrom")
 	for form in ["bumper_post", "pile_driver", "maelstrom"]:
 		assert_true(TurretEvolution.is_implemented(form))
-		assert_eq(TurretEvolution.model_key(form), "shock", "Every Decoy form uses the Shock bell until cp_decoy is wired")
+		assert_eq(TurretEvolution.model_key(form), "decoy", "Every Decoy form uses the cp_decoy chassis")
 		assert_true(ClockworkModels.available(TurretEvolution.model_key(form)))
 		assert_false(TurretEvolution.description(form).is_empty())
 	assert_true(TurretEvolution.behaviour_script("decoy", "").new() is DecoyForm, "The unevolved Decoy taunts through its form")

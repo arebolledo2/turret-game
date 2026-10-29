@@ -58,7 +58,6 @@ const LOADED_BALL_FRACTION: float = .3
 const LOADED_ARROW_FRACTION: float = .35
 static var _no_gun_stats := TurretStats.new()
 const TESLA_TINT := Color(.35, .9, 1.0)
-const DECOY_TINT := Color(1.0, .55, .18)
 
 func _init() -> void:
 	entrench = TurretEntrench.new(self)
@@ -118,9 +117,6 @@ func _rebuild_model() -> void:
 		model = SweepForm.placeholder_model() if fire_mode == TurretRegistry.FIRE_SWEEP else load(TurretRegistry.get_model_path(turret_type)).instantiate()
 	if turret_type == "tesla" and not use_clockwork:
 		EnemyVariants.tint_model(model, "turret_tesla", TESLA_TINT, .5)
-	elif turret_type == "decoy":
-		# The Shock bell stands in for the Decoy until its real chassis is wired: a warm amber tint tells them apart.
-		EnemyVariants.tint_model(model, "turret_decoy", DECOY_TINT, .7)
 	add_child(model)
 	_build_form_visual()
 	aim = model.find_child("Aim", true, false) as Node3D

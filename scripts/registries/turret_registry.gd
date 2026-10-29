@@ -121,8 +121,8 @@ const TYPES: Dictionary = {
 		"name": "Decoy Turret",
 		"icon": "🎪",
 		"short_name": "Decoy",
-		# No Decoy chassis yet: the Shock bell, tinted amber, stands in (see `TurretActor._rebuild_model`).
-		"model_key": "shock",
+		# The real cp_decoy chassis (see `TurretActor._model_key`); `model` is only the pre-Clockwork fallback.
+		"model_key": "decoy",
 		"model": "res://assets/models/game/shock_turret.glb",
 		# A light pulse: `DecoyForm` runs it, and publishes the taunt (S1) that pulls enemies in reach to the turret.
 		"fire_mode": FIRE_PULSE,

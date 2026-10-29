@@ -290,23 +290,23 @@ const FORMS: Dictionary = {
 	},
 	# --- Decoy ---
 	# The pulse hits every enemy in reach once, so the numbers are per enemy (before level and item bonuses). Taunt radius is
-	# `taunt_range` (base 450 = 4.5 m). All forms share the placeholder Shock bell (tinted amber) until the cp_decoy model is wired;
+	# `taunt_range` (base 450 = 4.5 m). All forms use the real cp_decoy chassis (key `decoy`);
 	# `DecoyEvolutionVisual` adds the per-form hardware.
 	"bumper_post": {
-		"base": "decoy", "kind": UPGRADE, "name": "Bumper Post", "model": "shock", "implemented": true,
+		"base": "decoy", "kind": UPGRADE, "name": "Bumper Post", "model": "decoy", "implemented": true,
 		"description": "Padded bumper posts hit harder and faster: 8 damage every 1.2 seconds, and enemies are shoved back half again as far.",
 		"stats": {"damage": 8.0, "fire_rate": 1.0 / 1.2, "range": 150.0, "knockback_force": 225.0},
 		"behaviour": "DecoyForm", "visual": "DecoyEvolutionVisual",
 	},
 	"pile_driver": {
-		"base": "decoy", "kind": FINAL, "name": "Pile Driver", "model": "shock", "implemented": true,
+		"base": "decoy", "kind": FINAL, "name": "Pile Driver", "model": "decoy", "implemented": true,
 		"description": "Every fourth pulse is a slam: triple damage over a ring half again as wide, and the enemies it hits are staggered for 0.6 seconds.",
 		"stats": {"damage": 8.0, "fire_rate": 1.0 / 1.2, "range": 180.0, "knockback_force": 225.0},
 		"behaviour": "DecoyForm", "visual": "DecoyEvolutionVisual",
 		"params": {"slam_every": 4, "slam_damage": 3.0, "slam_radius": 1.5, "slam_stagger": .6},
 	},
 	"maelstrom": {
-		"base": "decoy", "kind": FINAL, "name": "Maelstrom", "model": "shock", "implemented": true,
+		"base": "decoy", "kind": FINAL, "name": "Maelstrom", "model": "decoy", "implemented": true,
 		"description": "The taunt reaches 7 metres and draws ranged enemies too. Up to 10 enemies in reach are hooked and circle the Decoy until they die, taking a light tick of damage.",
 		"stats": {"damage": 7.5, "fire_rate": 1.0, "range": 150.0, "knockback_force": 120.0, "taunt_range": 700.0},
 		"behaviour": "DecoyForm", "visual": "DecoyEvolutionVisual",
