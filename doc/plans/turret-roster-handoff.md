@@ -4,7 +4,7 @@ Written 17 Oct 2026, last updated 29 Oct 2026 (upgrade shape, groundwork, Sniper
 
 ## What this is
 
-The user asked for a full turret roster plan, then 2D concept art, then 3D base models, then started bringing turrets into the game one at a time. Design is agreed. **Sniper and Quake are in the game with real models. The Decoy is in the game with logic and S1 built but a PLACEHOLDER chassis (amber-tinted Shock bell); its model wiring is pending.** The other eight new turrets have favorited base concepts and (for six of them) built 3D base models in `3d-eval/`, but no game code yet.
+The user asked for a full turret roster plan, then 2D concept art, then 3D base models, then started bringing turrets into the game one at a time. Design is agreed. **Sniper, Quake and Decoy are in the game with real models** (the Decoy's is on branch `turret-decoy-model`). The other eight new turrets have favorited base concepts and (for six of them) built 3D base models in `3d-eval/`, but no game code yet.
 
 - Live design board (private Claude artifact, read it with the Artifact tool `action: "read"`): https://claude.ai/artifact/Louc8dHXV2KCMke888k3Kn
 - That artifact is the most complete record: stats, all form text, the engine work table (S1-S12), build order, decisions, and embedded concept thumbnails. It was brought up to date on 29 Oct (version 8). Read it first.
@@ -47,7 +47,7 @@ This supersedes the old three-stage, two-branch model everywhere below.
 
 | Group | Turrets |
 |---|---|
-| In game (11) | Ion, Plasma, Shock, Tesla (no evolutions yet), Melee, Bow, Flamethrower, Bowling Launcher, Sniper, Quake, Decoy (placeholder chassis) |
+| In game (11) | Ion, Plasma, Shock, Tesla (no evolutions yet), Melee, Bow, Flamethrower, Bowling Launcher, Sniper, Quake, Decoy |
 | Requested, not built (2) | Scrap Press, Boomerang |
 | Proposed (6) | Mine Layer, Laser, Beacon, Drone Bay, Lullaby, Discord |
 | Aggro family (new build family) | Decoy, Lullaby, Discord: weird support turrets that change enemy behaviour. Bosses are immune. |
@@ -66,7 +66,7 @@ Roster in the new shape (L5 upgrade, then the two L10 finals). `Built` means pla
 | Tesla | Forked Coil | Storm Network | Thunderhead | nothing playable; Storm Network and Thunderhead models exist |
 | Sniper | Piercer Rifle | Horizon Piercer | Overwatch | all built, real `cp_sniper` model and portraits, runtime hardware per form |
 | Scrap Press | Coin Feeder | Treasury | Academy | new |
-| Decoy | Bumper Post | Pile Driver | Maelstrom | all built, logic only: placeholder chassis (Shock bell, amber tint, Shock portraits), runtime hardware per form; `cp_decoy-v1` not promoted |
+| Decoy | Bumper Post | Pile Driver | Maelstrom | all built: real `cp_decoy` chassis and portraits (branch `turret-decoy-model`), runtime hardware per form |
 | Quake | Aftershock | Tectonic | Cataclysm | all built, real `cp_quake` model and portraits, runtime hardware per form |
 | Boomerang | Sawblade | Perpetual Saw | Boomerang Storm | new |
 | Mine Layer | Minefield | Dead Zone | Chain Reaction | new |
@@ -88,7 +88,7 @@ Every form is one row in `scripts/data/turret_forms.gd` (`TurretForms.FORMS`): b
 
 ## 3D models
 
-- Nine base models were built by Sonnet agents in `3d-eval/runs/cp_<name>-v1/` and all passed the harness contract: Sniper, Scrap Press, Decoy, Quake, Mine Layer, Laser, Beacon, Drone Bay, Discord. Triangle counts are high (7k to 28k against a 5k target; Drone Bay is 28k with 29 objects). **Wired into the game: Sniper and Quake only.** The other seven are not promoted. A triangle-reduction pass was offered and not done. Setting `"origin_node": "Aim"` in the contract for long-barrel turrets (Mine Layer, Discord) would likely give better proportions than the centring workaround the agents used.
+- Nine base models were built by Sonnet agents in `3d-eval/runs/cp_<name>-v1/` and all passed the harness contract: Sniper, Scrap Press, Decoy, Quake, Mine Layer, Laser, Beacon, Drone Bay, Discord. Triangle counts are high (7k to 28k against a 5k target; Drone Bay is 28k with 29 objects). **Wired into the game: Sniper, Quake and Decoy.** The other six (Scrap Press, Mine Layer, Laser, Beacon, Drone Bay, Discord) are not promoted. A triangle-reduction pass was offered and not done. Setting `"origin_node": "Aim"` in the contract for long-barrel turrets (Mine Layer, Discord) would likely give better proportions than the centring workaround the agents used.
 - Boomerang and Lullaby models are not started (finalist concept not chosen).
 - Wiring a model: copy the subject JSON to the run's `contract.json`; add the key to `tools/promote_clockwork_asset.py` and `ClockworkModels.KEYS`; run `python -I turret-game/tools/promote_clockwork_asset.py <key> --iteration N --asset-name cp_<name>`; set the model in the form rows (`model` field) and the registry `model_key`; add the key to the Aim/Muzzle list in `tests/integration/test_clockwork_roster.gd`; adapt the `*EvolutionVisual` runtime hardware to the real model (read the bore from the model's `Muzzle`); render portraits with `tools/render_shop_portraits.tscn` (non-headless), `git checkout` every regenerated portrait except the new ones and delete the stray `forked_coil.png`, then re-run `--headless --import` before taking shop screenshots; commit the extracted texture PNG and `.import` with the GLB. The `3d-asset-design` skill still describes the old stage shape; the steps here are current.
 
@@ -96,9 +96,9 @@ Every form is one row in `scripts/data/turret_forms.gd` (`TurretForms.FORMS`): b
 
 `sniper` is a stocked base turret (damage 40, 0.35/s, 700, price 18, `"targeting": "toughest"`, `fire_mode: "instant"`). `TurretActor._fire_instant` re-picks the toughest enemy at fire time and strikes it plus `pierce` enemies on the lane through it (`TurretTargeting.on_lane`). Piercer Rifle pierces 2 behind; Overwatch keeps that; Horizon Piercer uses `SNIPER_UNLIMITED_PIERCE` (the whole line to full range, in front of the target too). Overwatch (`OverwatchForm`) marks the three toughest enemies before each shot; Marked is a new `StatusEffects3D` status (+25% from any turret-sourced hit, multiplies with Exposed) whose mark jumps, keeping its remaining time, when its holder dies. Starting numbers: Piercer Rifle 52 dmg at 0.40/s (20.8 DPS), Horizon Piercer 70 at 0.45 (31.5, 1.51x), Overwatch 56 at 0.42 (23.5 raw, 29.4 against its own marked target, 1.41x); bench rows and the team (+Machine Gun) rows are in `tools/bench_turret_forms.gd`. All three stages use the real `cp_sniper` chassis (model key `sniper` in `FORMS` and the registry); the model is wired and its portraits are rendered. `SniperEvolutionVisual` adds a longer barrel and muzzle brake (Piercer Rifle), a much longer barrel with glowing rails and an emitter ring (Horizon) or a spotter mast and ring (Overwatch), moving `Muzzle` so shots and tracers leave from the new tip.
 
-## Decoy logic (built 29 Oct 2026, branch `turret-decoy`, placeholder chassis)
+## Decoy logic (built 29 Oct 2026, branch `turret-decoy`; model wired on `turret-decoy-model`)
 
-`decoy` is a stocked base turret (price 10, damage 3, 1.0/1.5 s, pulse reach 150, knockback 150, `taunt_range` 450 in 1/100 m, `FIRE_PULSE`, AoE and Kinetic families, `FAMILIES["aggro"] = ["decoy"]`, model key `shock`). One class, `DecoyForm` (`scripts/game/decoy_form.gd`), serves the base and all three forms; form rows in `scripts/data/turret_forms.gd` only change numbers and params. It publishes a `TauntPost` to `world.taunts` and fires a pulse that hand-resolves its hits (no scorch decals) with the `DECOY_TINT` wave.
+`decoy` is a stocked base turret (price 10, damage 3, 1.0/1.5 s, pulse reach 150, knockback 150, `taunt_range` 450 in 1/100 m, `FIRE_PULSE`, AoE and Kinetic families, `FAMILIES["aggro"] = ["decoy"]`, model key `decoy`). One class, `DecoyForm` (`scripts/game/decoy_form.gd`), serves the base and all three forms; form rows in `scripts/data/turret_forms.gd` only change numbers and params. It publishes a `TauntPost` to `world.taunts` and fires a pulse that hand-resolves its hits (no scorch decals) with the `DECOY_TINT` wave.
 
 - **Bumper Post (L5):** damage 8, rate 1.0/1.2, knockback 225. Damage x1.10 and speed x1.10 at L5.
 - **Pile Driver (L10):** every fourth pulse is a slam (x3 damage, x1.5 reach, 0.6 s stagger). Damage 8, rate 1.0/1.2, reach 180.
@@ -110,11 +110,11 @@ Every form is one row in `scripts/data/turret_forms.gd` (`TurretForms.FORMS`): b
 
 **Tuning deviations from the spec:** Pile Driver is 8 damage at 1.2 s, not 14 at 1.0 s, and Maelstrom is 7.5 damage; the spec numbers benched about 3.2x too strong. `tools/bench_turret_forms.gd` has decoy rows plus `pull` and `pull_far` scenarios (one aggro turret at a time at the origin, because real enemies are clamped to the arena). Pile Driver's reach advantage inflates the stationary-cluster bench (about 2.4x); trust the held-percentage table for the aggro role.
 
-**Placeholder visuals:** the Shock model is tinted amber in `TurretActor._rebuild_model` (`EnemyVariants.tint_model`), portraits and icon are Shock copies (`assets/ui/turrets/{decoy,bumper_post,pile_driver,maelstrom}.png`), and `DecoyEvolutionVisual` adds runtime hardware per form (bumpers and rubber ring, pistons and anvil plate, mast with hooks and lane rings). The bumper rubber colour blends with the amber bell; changing it needs the golden digests regenerated.
+**Visuals:** all three forms and the base use the real `cp_decoy` chassis (model key `decoy` in `FORMS` and the registry; a teal lantern-headed post on a spring and cream base blocks, 19.9k triangles, 15 objects; `Aim` carries head, eyes, pods, bumper ring and lantern, `Muzzle` sits between the eyes) and have real portraits (the `turret_decoy` shop icon is a vector glyph, not a Shock copy). `DecoyEvolutionVisual` reads the base radius, bumper ring and lantern from the model and adds posts whose pads meet the ring and a rubber band (Bumper Post), piston columns with ram heads and a hammer head on the lantern cap (Pile Driver), a hooked mast above the lantern and two lane rings (Maelstrom). The hardware is static and does not turn with the head. Known model differences from the concept: flatter bumper ring with boxy blocks, left lens the same purple as the right, pale bulb.
 
 **Not verified:** only capture and preview screenshots, no human playtest. Hook and orbit feel, and Kite or Lobber aiming at a Maelstrom, are unit-tested only. Docs note: `doc/gameplay.md` and `doc/combat.md` already contained duplicated Quake paragraphs before this work.
 
-**Model wiring still pending:** follow the steps in the 3D models section for `3d-eval/runs/cp_decoy-v1` (not promoted). Then remove the amber tint in `TurretActor._rebuild_model`, change the `shock` model fields on the decoy registry entry and the three form rows, replace the portraits and `turret_decoy` icon, and regenerate the golden digests and chassis-dependent tests.
+**Model wiring: done** (branch `turret-decoy-model`). Triangle cost is 19.9k per Decoy; the per-form bench numbers were not taken on that branch because the GPU was busy (run `tools/bench_turret_forms.gd --base=decoy --level=10 --seconds=120`, and level 5, once it is free).
 
 ## Quake logic (built 26 Oct 2026, branch `turret-quake`; model wired on `turret-quake-model`)
 
@@ -185,7 +185,7 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 
 0. **Done:** progression change, targeting modes, Exposed status, DEPLOYABLE family mapping, utility-turret item rules, `aggro` family, form-table refactor.
 1. Generic timed-status system with a source owner (fixes the Overwatch shared-mark bug) before Decoy, Lullaby and Discord. Finish Plasma and Tesla whenever convenient (4 forms: Constellation needs S12; Forked Coil, Storm Network, Thunderhead). Re-bench every existing final at level 10 against its level-5 form.
-2. **Sniper and Quake are done; Decoy logic is done (model wiring pending).** Next: Scrap Press, Boomerang, then the Decoy model wiring.
+2. **Sniper, Quake and Decoy are done (Decoy model wired on `turret-decoy-model`).** Next: Scrap Press, Boomerang, then the Decoy model wiring.
 3. Mine Layer and Laser; Beacon and Drone Bay after a playtest.
 4. Lullaby and Discord (S4 is the largest piece).
 5. Wire the remaining base models as each turret lands.

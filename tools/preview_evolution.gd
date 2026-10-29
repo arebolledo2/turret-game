@@ -83,22 +83,34 @@ func _ready() -> void:
 			world.add_child(label)
 		return
 	if "--decoy-preview" in OS.get_cmdline_user_args():
-		# Decoy, Bumper Post, Pile Driver and Maelstrom side by side on the placeholder chassis (--low is not needed: the hardware is low).
+		# Decoy, Bumper Post, Pile Driver and Maelstrom side by side; --zoom=<size> (default 8.5) closes in, --side looks level, --focus=<0-3> centres one turret, --yaw=<degrees> turns the heads.
+		var zoom := 8.5
+		var yaw := 0.0
+		for argument in OS.get_cmdline_user_args():
+			if argument.begins_with("--zoom="):
+				zoom = float(argument.trim_prefix("--zoom="))
+			if argument.begins_with("--yaw="):
+				yaw = float(argument.trim_prefix("--yaw="))
 		world.turrets[0].visible = false
-		world.camera.position = Vector3(0, 5.5, 7.5)
-		world.camera.look_at(Vector3(0, .6, 0))
-		world.camera.size = 8.5
+		world.camera.position = Vector3(0, 1.1, 9.0) if "--side" in OS.get_cmdline_user_args() else Vector3(0, 5.5, 7.5)
+		for argument in OS.get_cmdline_user_args():
+			if argument.begins_with("--focus="):
+				world.camera.position.x += (float(argument.trim_prefix("--focus=")) - 1.5) * 2.8
+		world.camera.look_at(Vector3(world.camera.position.x, .8, 0))
+		world.camera.size = zoom
 		for i in range(4):
 			var turret := world.add_turret(Vector3((i - 1.5) * 2.8, 0, 0), "decoy")
 			turret.set_physics_process(false)
 			turret.progression.award(1500)
 			for form: String in [[], ["bumper_post"], ["bumper_post", "pile_driver"], ["bumper_post", "maelstrom"]][i]:
 				turret.evolve(form)
+			if turret.aim:
+				turret.aim.rotation.y = deg_to_rad(yaw)
 			turret.reset_physics_interpolation()
 			var label := Label3D.new()
 			label.text = turret.display_name()
 			label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-			label.position = turret.position + Vector3(0, 2.0, 0)
+			label.position = turret.position + Vector3(0, 2.6, 0)
 			label.font_size = 44
 			label.pixel_size = .005
 			world.add_child(label)

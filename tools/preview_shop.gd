@@ -73,6 +73,24 @@ func _ready() -> void:
 				quake.evolve("aftershock")
 			world.hud.shop_screen.switch_tab(1)
 			world.hud.shop_screen.turret_inspector.evolution_preview.show_form(quake, quake_form)
+	# --decoy: the Decoy turret offer card and roster; --decoy-form=<form> opens that form's evolution preview.
+	var decoy_form := ""
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--decoy-form="):
+			decoy_form = argument.trim_prefix("--decoy-form=")
+	if "--decoy" in OS.get_cmdline_user_args() or not decoy_form.is_empty():
+		var decoy := world.add_turret(Vector3(3, 0, 3), "decoy")
+		decoy.set_physics_process(false)
+		EconomyService.current_shop_offers.assign([ShopOffer.new("turret", "decoy", 10), ShopOffer.new("item", "polished_barrels", 18), ShopOffer.new("item", "blast_charges", 18), ShopOffer.new("item", "capacitor_bank", 18)])
+		world.hud._process(0)
+		world.hud.shop_screen.offer_buttons[0].grab_focus()
+		if not decoy_form.is_empty():
+			world.session.state.turret_progression_enabled = true
+			decoy.progression.award(1500)
+			if decoy_form != "bumper_post":
+				decoy.evolve("bumper_post")
+			world.hud.shop_screen.switch_tab(1)
+			world.hud.shop_screen.turret_inspector.evolution_preview.show_form(decoy, decoy_form)
 	if "--reminder" in OS.get_cmdline_user_args():
 		world.session.state.turret_progression_enabled = true
 		world.turrets[0].progression.award(1500)
@@ -80,7 +98,7 @@ func _ready() -> void:
 	for i in range(30):
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
-	var output := "res://.test-results/shop-%dx%d%s.png" % [get_viewport().size.x, get_viewport().size.y, "-rare" if "--rare" in OS.get_cmdline_user_args() else ("-sniper-" + sniper_form if not sniper_form.is_empty() else ("-sniper" if "--sniper" in OS.get_cmdline_user_args() else ("-quake-" + quake_form if not quake_form.is_empty() else ("-quake" if "--quake" in OS.get_cmdline_user_args() else ""))))]
+	var output := "res://.test-results/shop-%dx%d%s.png" % [get_viewport().size.x, get_viewport().size.y, "-rare" if "--rare" in OS.get_cmdline_user_args() else ("-decoy-" + decoy_form if not decoy_form.is_empty() else ("-decoy" if "--decoy" in OS.get_cmdline_user_args() else ("-sniper-" + sniper_form if not sniper_form.is_empty() else ("-sniper" if "--sniper" in OS.get_cmdline_user_args() else ("-quake-" + quake_form if not quake_form.is_empty() else ("-quake" if "--quake" in OS.get_cmdline_user_args() else ""))))))]
 	get_viewport().get_texture().get_image().save_png(output)
 	print("SHOP_CAPTURE ", ProjectSettings.globalize_path(output))
 	get_tree().quit()
