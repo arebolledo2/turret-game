@@ -582,6 +582,17 @@
       "meshes": 15,
       "materials": 10,
       "iteration": 6
+    },
+    {
+      "id": "scrap_press",
+      "source": "art-source/clockwork-pop/scrap_press/build_cp_scrap_press.py",
+      "model": "assets/models/clockwork/cp_scrap_press.glb",
+      "reference": "art-source/clockwork-pop/references/scrap_press.png",
+      "sha256": "2909076bf0e173c4edae9cbc2213db74892618d84391cc23e05d2087e70dca65",
+      "triangles": 12216,
+      "meshes": 16,
+      "materials": 10,
+      "iteration": 5
     }
   ]
 }

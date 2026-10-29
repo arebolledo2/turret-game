@@ -424,6 +424,13 @@
       "status": "review",
       "preview": "previews/decoy.png",
       "metrics": "19,886 triangles \u00c2\u00b7 15 meshes \u00c2\u00b7 10 materials"
+    },
+    {
+      "key": "scrap_press",
+      "name": "Scrap Press",
+      "status": "review",
+      "preview": "previews/scrap_press.png",
+      "metrics": "12,216 triangles \u00c2\u00b7 16 meshes \u00c2\u00b7 10 materials"
     }
   ],
   "events": [
@@ -734,6 +741,10 @@
     {
       "stage": "Export: decoy",
       "text": "Reviewed harness iteration 6; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: scrap_press",
+      "text": "Reviewed harness iteration 5; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
     }
   ],
   "checks": {
