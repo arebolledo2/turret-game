@@ -1,20 +1,25 @@
 class_name DecoyEvolutionVisual
 extends RefCounted
 
-## Runtime hardware for the Decoy line, built on the placeholder chassis (the Shock bell on its low foundation, tinted amber by
-## `TurretActor`). Each form adds its own silhouette around it; when the real cp_decoy model is wired the sizes are read from
-## that model's own parts in `_footprint`, the same way `QuakeEvolutionVisual` reads its slab.
+## Runtime hardware for the Decoy line, built on the real cp_decoy chassis (cream base blocks on a spring, a teal head with a
+## bumper ring and two lenses, a brass lantern on top). Each form adds its own silhouette around it; sizes are read from the model's
+## own parts in `_footprint`, the same way `QuakeEvolutionVisual` reads its slab.
 ##   Decoy        the bare chassis.
-##   Bumper Post  four padded bumper posts planted round the foundation and a rubber ring round the bell (the harder shove).
-##   Pile Driver  four heavy piston columns with ram heads, and a steel anvil plate on the crown (the slam).
-##   Maelstrom    a mast with three curled hooks above the crown, and two glowing lane rings on the ground (the hooked orbit).
-## Parts hang off the model root, which is the turret's origin on the floor.
+##   Bumper Post  four padded bumper posts planted round the base so their pads meet the model's bumper ring, and a rubber band
+##                round the base (the harder shove).
+##   Pile Driver  four heavy piston columns with ram heads, and a dark hammer head on the lantern cap (the slam).
+##   Maelstrom    a mast with three curled hooks above the lantern, and two glowing lane rings on the ground (the hooked orbit).
+## Parts hang off the model root, which is the turret's origin on the floor. They do not turn with the head (`Aim`).
 static var materials: Dictionary = {}
 
-## Fallbacks if the chassis meshes are missing: foundation radius and top, crown top, in metres (the Shock bell's).
-const DEFAULT_FOUNDATION_RADIUS: float = .527
-const DEFAULT_FOUNDATION_TOP: float = .164
-const DEFAULT_CROWN_TOP: float = 1.19
+## Fallbacks if the chassis meshes are missing (the cp_decoy measurements, in metres): base radius and top, bumper ring
+## radius and middle height, lantern collar top, crown (lantern top).
+const DEFAULT_BASE_RADIUS: float = .42
+const DEFAULT_BASE_TOP: float = .22
+const DEFAULT_RING_RADIUS: float = .386
+const DEFAULT_RING_MID: float = .46
+const DEFAULT_COLLAR_TOP: float = 1.18
+const DEFAULT_CROWN_TOP: float = 1.64
 ## Angles (radians, atan2(z, x) around the turret) for the posts and pistons: the diagonals, clear of the front.
 const POST_ANGLES: Array[float] = [.785, 2.356, 3.927, 5.498]
 const HOOK_ANGLES: Array[float] = [.52, 2.62, 4.71]
@@ -29,30 +34,37 @@ static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
 	var crown: float = footprint.crown
 	match form_id:
 		"bumper_post":
+			# Posts stand on the floor just outside the base; the pad's inner edge touches the bumper ring at its middle height.
+			var pad := .1
+			var stand: float = footprint.ring_radius + pad
+			var pad_y: float = footprint.ring_mid
 			for angle in POST_ANGLES:
-				var at := _polar(angle, radius * 1.02)
-				_cylinder(model, "BumperCore", .1, .5, "steel", Vector3(at.x, top + .25, at.z))
-				_cylinder(model, "BumperPad", .15, .26, "rubber", Vector3(at.x, top + .3, at.z))
-				_cylinder(model, "BumperCap", .17, .05, "brass", Vector3(at.x, top + .56, at.z))
-			_torus(model, "BumperRing", radius * .9, radius * .9 + .09, "rubber", Vector3(0, top + .2, 0))
+				var at := _polar(angle, stand)
+				_cylinder(model, "BumperCore", .055, pad_y + .26, "steel", Vector3(at.x, (pad_y + .26) * .5, at.z))
+				_cylinder(model, "BumperPad", pad, .22, "rubber", Vector3(at.x, pad_y, at.z))
+				_cylinder(model, "BumperCap", pad + .015, .04, "brass", Vector3(at.x, pad_y + .13, at.z))
+				_cylinder(model, "BumperFoot", .09, .04, "brass", Vector3(at.x, .02, at.z))
+			_torus(model, "BumperRing", radius * .93, radius * .93 + .07, "rubber", Vector3(0, top * .5, 0))
 		"pile_driver":
+			var column := radius + .1
+			var span: float = footprint.collar_top - .12
 			for angle in POST_ANGLES:
-				var at := _polar(angle, radius * 1.0)
-				_cylinder(model, "PistonColumn", .1, .95, "steel", Vector3(at.x, top + .475, at.z))
-				_cylinder(model, "PistonCollar", .14, .09, "brass", Vector3(at.x, top + .62, at.z))
-				_cylinder(model, "PistonRam", .2, .12, "dark", Vector3(at.x, top + 1.0, at.z))
-			_cylinder(model, "AnvilPlate", .34, .09, "steel", Vector3(0, crown + .045, 0))
-			_cylinder(model, "AnvilStem", .06, .14, "brass", Vector3(0, crown + .16, 0))
-			_cylinder(model, "AnvilHead", .2, .07, "dark", Vector3(0, crown + .26, 0))
+				var at := _polar(angle, column)
+				_cylinder(model, "PistonColumn", .075, span, "steel", Vector3(at.x, span * .5, at.z))
+				_cylinder(model, "PistonCollar", .105, .08, "brass", Vector3(at.x, span * .45, at.z))
+				_cylinder(model, "PistonRam", .15, .1, "dark", Vector3(at.x, span + .05, at.z))
+			# The hammer head rides on the lantern cap, well clear of the bulb.
+			_cylinder(model, "AnvilStem", .05, .14, "brass", Vector3(0, crown + .02, 0))
+			_cylinder(model, "AnvilHead", .22, .09, "dark", Vector3(0, crown + .11, 0))
 			for index in range(3):
-				var stud := _polar(float(index) * TAU / 3.0, .24)
-				_sphere(model, "AnvilStud", .04, "amber", Vector3(stud.x, crown + .105, stud.z))
+				var stud := _polar(float(index) * TAU / 3.0 + .5, .15)
+				_sphere(model, "AnvilStud", .035, "amber", Vector3(stud.x, crown + .155, stud.z))
 		"maelstrom":
 			var mast_base := crown
-			_cylinder(model, "HookMast", .035, .62, "steel", Vector3(0, mast_base + .31, 0))
-			_sphere(model, "HookCrown", .07, "amber", Vector3(0, mast_base + .66, 0))
+			_cylinder(model, "HookMast", .035, .52, "steel", Vector3(0, mast_base + .24, 0))
+			_sphere(model, "HookCrown", .07, "amber", Vector3(0, mast_base + .52, 0))
 			for angle in HOOK_ANGLES:
-				_hook(model, angle, Vector3(0, mast_base + .5, 0))
+				_hook(model, angle, Vector3(0, mast_base + .36, 0))
 			for lane in range(2):
 				var ring := TurretEvolution.MAELSTROM_RING + float(lane) * EnemyActor.HOOK_LANE_GAP * 1.5
 				_torus(model, "LaneRing", ring - .03, ring + .03, "amber" if lane == 0 else "teal", Vector3(0, .03, 0))
@@ -65,30 +77,45 @@ static func _hook(model: Node3D, angle: float, from: Vector3) -> void:
 	var fall := deg_to_rad(135.0)
 	var first := Vector3(out.x * sin(climb), cos(climb), out.z * sin(climb))
 	var second := Vector3(out.x * sin(fall), cos(fall), out.z * sin(fall))
-	var arm := .26
-	var tip := .2
+	var arm := .27
+	var tip := .22
 	_cylinder_dir(model, "HookArm", .028, arm, "brass", from + first * arm * .5, Vector3(0, -angle, -climb))
 	var elbow := from + first * arm
 	_sphere(model, "HookElbow", .04, "brass", elbow)
 	_cone_dir(model, "HookTip", .036, tip, "amber", elbow + second * tip * .5, Vector3(0, -angle, -fall))
 
-## The chassis' own measurements: foundation radius and top, and the top of the crown (via the muzzle).
+## The chassis' own measurements: base radius and top, bumper ring radius and middle height, lantern collar top and crown.
 static func _footprint(model: Node3D) -> Dictionary:
-	var result := {"radius": DEFAULT_FOUNDATION_RADIUS, "top": DEFAULT_FOUNDATION_TOP, "crown": DEFAULT_CROWN_TOP}
-	var foundation := model.find_child("Foundation", true, false) as MeshInstance3D
-	if foundation and foundation.mesh:
-		var box := foundation.mesh.get_aabb()
-		result.radius = minf(box.size.x, box.size.z) * .5
-		result.top = box.end.y
-	var muzzle := model.find_child("Muzzle", true, false) as Node3D
-	if muzzle:
-		var lift := 0.0
-		var parent := muzzle.get_parent() as Node3D
-		while parent and parent != model:
-			lift += parent.position.y
-			parent = parent.get_parent() as Node3D
-		result.crown = muzzle.position.y + lift
+	var result := {"radius": DEFAULT_BASE_RADIUS, "top": DEFAULT_BASE_TOP, "ring_radius": DEFAULT_RING_RADIUS, "ring_mid": DEFAULT_RING_MID, "collar_top": DEFAULT_COLLAR_TOP, "crown": DEFAULT_CROWN_TOP}
+	var base := _bounds(model, "Base_Body")
+	if base.size != Vector3.ZERO:
+		result.radius = minf(base.size.x, base.size.z) * .5
+		result.top = base.end.y
+	var ring := _bounds(model, "Bumper_Ring")
+	if ring.size != Vector3.ZERO:
+		result.ring_radius = minf(ring.size.x, ring.size.z) * .5
+		result.ring_mid = ring.position.y + ring.size.y * .5
+	var collar := _bounds(model, "Lantern_Collar")
+	if collar.size != Vector3.ZERO:
+		result.collar_top = collar.end.y
+	var cage := _bounds(model, "Lantern_Cage")
+	if cage.size != Vector3.ZERO:
+		result.crown = cage.end.y
 	return result
+
+## A mesh's box in model space (parents' offsets added; the model's nodes carry no rotation or scale), or an empty box.
+static func _bounds(model: Node3D, part: String) -> AABB:
+	var node := model.find_child(part, true, false) as MeshInstance3D
+	if node == null or node.mesh == null:
+		return AABB()
+	var box := node.mesh.get_aabb()
+	var lift := Vector3.ZERO
+	var parent: Node3D = node
+	while parent and parent != model:
+		lift += parent.position
+		parent = parent.get_parent() as Node3D
+	box.position += lift
+	return box
 
 static func _polar(angle: float, radius: float) -> Vector3:
 	return Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)

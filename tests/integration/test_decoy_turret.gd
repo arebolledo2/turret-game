@@ -148,17 +148,18 @@ func test_decoy_milestones_offer_the_upgrade_then_both_finals() -> void:
 	assert_eq(turret.turret_type, "decoy")
 	assert_true(turret.available_evolutions().is_empty())
 
-func test_every_decoy_form_adds_its_own_hardware_to_the_placeholder_chassis() -> void:
+func test_every_decoy_form_adds_its_own_hardware_to_the_cp_decoy_chassis() -> void:
 	var base := _decoy()
-	assert_not_null(base.model.find_child("Bell shell", true, false), "The Shock bell stands in for the Decoy chassis")
-	for part in ["BumperCore", "BumperRing", "PistonColumn", "AnvilPlate", "HookMast", "HookArm", "LaneRing"]:
+	assert_not_null(base.model.find_child("Lantern_Cage", true, false), "The cp_decoy chassis is the Decoy's model")
+	assert_null(base.model.find_child("Bell shell", true, false), "and not the Shock bell")
+	for part in ["BumperCore", "BumperRing", "PistonColumn", "AnvilHead", "HookMast", "HookArm", "LaneRing"]:
 		assert_null(base.model.find_child(part, true, false), "The base turret has no %s" % part)
 	var upgrade := _decoy(["bumper_post"])
 	for part in ["BumperCore", "BumperPad", "BumperCap", "BumperRing"]:
 		assert_not_null(upgrade.model.find_child(part, true, false), part)
 	assert_null(upgrade.model.find_child("PistonColumn", true, false))
 	var driver := _decoy(["bumper_post", "pile_driver"])
-	for part in ["PistonColumn", "PistonCollar", "PistonRam", "AnvilPlate", "AnvilHead"]:
+	for part in ["PistonColumn", "PistonCollar", "PistonRam", "AnvilStem", "AnvilHead"]:
 		assert_not_null(driver.model.find_child(part, true, false), part)
 	assert_null(driver.model.find_child("BumperCore", true, false))
 	var maelstrom := _maelstrom()
@@ -169,21 +170,24 @@ func test_every_decoy_form_adds_its_own_hardware_to_the_placeholder_chassis() ->
 		assert_not_null(turret.aim)
 		assert_not_null(turret.muzzle)
 
-func test_decoy_hardware_stands_clear_of_the_bell_and_on_the_foundation() -> void:
-	var foundation := (_decoy().model.find_child("Foundation", true, false) as MeshInstance3D).mesh.get_aabb()
-	var radius := minf(foundation.size.x, foundation.size.z) * .5
+func test_decoy_hardware_stands_clear_of_the_head_and_beside_the_base() -> void:
+	var base_box := (_decoy().model.find_child("Base_Body", true, false) as MeshInstance3D).mesh.get_aabb()
+	var ring_box := (_decoy().model.find_child("Bumper_Ring", true, false) as MeshInstance3D).mesh.get_aabb()
+	var radius := minf(base_box.size.x, base_box.size.z) * .5
+	var ring_radius := minf(ring_box.size.x, ring_box.size.z) * .5
 	var posts := _decoy(["bumper_post"]).model.find_children("BumperCore*", "MeshInstance3D", true, false)
 	assert_eq(posts.size(), 4)
 	for post in posts:
 		var at := (post as Node3D).position
-		assert_almost_eq(Vector2(at.x, at.z).length(), radius * 1.02, .01, "A bumper post stands at the foundation edge")
-		assert_gt(at.y, foundation.end.y, "and rises from the foundation top")
+		assert_gt(Vector2(at.x, at.z).length(), ring_radius, "A bumper post stands outside the model's bumper ring")
+		assert_lt(Vector2(at.x, at.z).length(), radius + .2, "within reach of it")
+		assert_gt(at.y + (post as MeshInstance3D).mesh.get_aabb().size.y * .5, base_box.end.y, "and rises above the base")
 	var maelstrom := _maelstrom()
 	var lanes := maelstrom.model.find_children("LaneRing*", "MeshInstance3D", true, false)
 	assert_eq(lanes.size(), 2)
 	for lane in lanes:
 		var torus := (lane as MeshInstance3D).mesh as TorusMesh
-		assert_gt(torus.inner_radius, radius, "The lane rings circle the foundation")
+		assert_gt(torus.inner_radius, radius, "The lane rings circle the base")
 		assert_lt(torus.outer_radius, maelstrom._current_view(0).range_metres, "inside the pulse reach, so the pulse hits the orbit")
 
 # --- Base pulse ---
