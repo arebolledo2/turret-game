@@ -9,7 +9,7 @@ func test_families_map_turret_types() -> void:
 	assert_eq(TurretRegistry.get_family("shock"), "electric")
 	assert_eq(TurretRegistry.get_family("tesla"), "electric")
 	assert_eq(TurretRegistry.get_family("melee"), "melee")
-	assert_eq(TurretRegistry.get_family("mine"), "")
+	assert_eq(TurretRegistry.get_family("mine_layer"), "")
 
 func test_family_filter_scopes_a_modifier() -> void:
 	ModifierService.add_modifier(Item.create_increase("damage", .25, Item.filter_family(["electric"])))
@@ -49,7 +49,7 @@ func test_aggro_is_a_build_family_holding_only_the_decoy_so_far() -> void:
 	# An aggro-scoped item reaches the Decoy alone, and does not disturb the other families.
 	ModifierService.add_modifier(Item.create_increase("damage", .5, Item.filter_family(["aggro"])))
 	assert_almost_eq(float(ModifierService.get_turret_stats("decoy", {"turret_damage_mult": 1.0})["damage"]), float(TurretRegistry.get_base_stats("decoy")["damage"]) * 1.5, .001, "decoy")
-	for type_id in ["normal", "plasma", "shock", "tesla", "melee", "mine"]:
+	for type_id in ["normal", "plasma", "shock", "tesla", "melee", "mine_layer"]:
 		assert_almost_eq(float(ModifierService.get_turret_stats(type_id, {"turret_damage_mult": 1.0})["damage"]), float(TurretRegistry.get_base_stats(type_id)["damage"]), .001, type_id)
 
 func test_every_family_lists_only_registered_turrets_and_each_turret_has_one_family() -> void:
@@ -61,16 +61,16 @@ func test_every_family_lists_only_registered_turrets_and_each_turret_has_one_fam
 			owners[type_id] = family
 
 func test_deployable_maps_to_the_aoe_family_so_aoe_items_reach_mines() -> void:
-	assert_eq(TurretRegistry.get_attack_families("mine"), ["aoe"])
-	var base := float(TurretRegistry.get_base_stats("mine")["damage"])
+	assert_eq(TurretRegistry.get_attack_families("mine_layer"), ["aoe"])
+	var base := float(TurretRegistry.get_base_stats("mine_layer")["damage"])
 	ModifierService.add_modifier({"stat": "damage", "operation": "increase", "value": .2, "filter": {"attack_family": ["aoe"]}})
-	assert_almost_eq(float(ModifierService.get_turret_stats("mine", {"turret_damage_mult": 1.0})["damage"]), base * 1.2, .001)
+	assert_almost_eq(float(ModifierService.get_turret_stats("mine_layer", {"turret_damage_mult": 1.0})["damage"]), base * 1.2, .001)
 	ModifierService.clear_modifiers()
 	ModifierService.add_modifier({"stat": "damage", "operation": "increase", "value": .2, "filter": {"attack_family": ["projectile"]}})
-	assert_almost_eq(float(ModifierService.get_turret_stats("mine", {"turret_damage_mult": 1.0})["damage"]), base, .001)
+	assert_almost_eq(float(ModifierService.get_turret_stats("mine_layer", {"turret_damage_mult": 1.0})["damage"]), base, .001)
 
 func test_deployable_plus_aoe_style_lists_the_aoe_family_once() -> void:
-	var definition: Dictionary = TurretRegistry.get_type("mine").duplicate(true)
+	var definition: Dictionary = TurretRegistry.get_type("mine_layer").duplicate(true)
 	definition["attack_styles"] = [GameEnums.AttackStyle.AOE, GameEnums.AttackStyle.DEPLOYABLE]
 	TurretRegistry.register_test_type("test_hybrid_mine", definition)
 	assert_eq(TurretRegistry.get_attack_families("test_hybrid_mine"), ["aoe"])

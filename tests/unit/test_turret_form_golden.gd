@@ -5,7 +5,7 @@ extends GutTest
 ## stats, text, shot shape, behaviour class, visual builder or built model must fail here instead of passing silently.
 ## If a number must change on purpose (a balance retune), edit the literal in the same commit and say why.
 ##
-## What is pinned, per form (all 36 registered forms, implemented or not) and per base turret with no form:
+## What is pinned, per form (all 39 registered forms, implemented or not) and per base turret with no form:
 ##   FORMS     base, kind (upgrade or final), name, model key, implemented, description
 ##   STATS     the full `TurretEvolution.base_stats(base, form)` dictionary (every key, with its type)
 ##   SHOTS     `shape_shot` on a fresh `CombatShot3D`: visual_key, visual_scale, radius, lifetime, ricochets, pierce
@@ -13,13 +13,13 @@ extends GutTest
 ##   BUILDERS  which `*EvolutionVisual` builders change the form's chassis (each is run on a fresh model)
 ##   MODELS    the model the actor builds: node and mesh counts, handles the attack code reads (muzzles, emitters, saber
 ##             arms) and a digest of every node's class, name, transform, mesh size and material
-##   MISC      volley size, pierce text, the Stormblade barrel stats, Resonator echo delays and Quake, Decoy and Scrap Press pattern text
+##   MISC      volley size, pierce text, the Stormblade barrel stats, Resonator echo delays and Quake, Decoy, Scrap Press and Mine Layer pattern text
 ##
 ## The collectors only call lookups (`_stats`, `_shot`, `_volley`, ...); when a refactor changes a function signature,
 ## adapt the lookup here, never the expected values.
 
-const BASES: Array[String] = ["normal", "melee", "bow", "flamethrower", "bowling", "plasma", "shock", "tesla", "sniper", "quake", "decoy", "scrap_press"]
-const BUILDERS: Array[String] = ["BowEvolutionVisual", "FlameEvolutionVisual", "BowlingEvolutionVisual", "GunbladeEvolutionVisual", "SiegeEvolutionVisual", "SniperEvolutionVisual", "QuakeEvolutionVisual", "DecoyEvolutionVisual", "ScrapPressEvolutionVisual", "GatlingEvolutionVisual", "CrossfireEvolutionVisual"]
+const BASES: Array[String] = ["normal", "melee", "bow", "flamethrower", "bowling", "plasma", "shock", "tesla", "sniper", "quake", "decoy", "scrap_press", "mine_layer"]
+const BUILDERS: Array[String] = ["BowEvolutionVisual", "FlameEvolutionVisual", "BowlingEvolutionVisual", "GunbladeEvolutionVisual", "SiegeEvolutionVisual", "SniperEvolutionVisual", "QuakeEvolutionVisual", "DecoyEvolutionVisual", "ScrapPressEvolutionVisual", "MineLayerEvolutionVisual", "GatlingEvolutionVisual", "CrossfireEvolutionVisual"]
 
 const FORMS: Dictionary = {
 	"machine_gun": {
@@ -309,6 +309,30 @@ const FORMS: Dictionary = {
 		"model": "scrap_press",
 		"implemented": true,
 		"description": "Makes no scrap. Every 8 seconds each turret within 6 metres gains XP equal to a drop, in full, and no cash is paid.",
+	},
+	"minefield": {
+		"base": "mine_layer",
+		"kind": "upgrade",
+		"name": "Minefield",
+		"model": "shock",
+		"implemented": true,
+		"description": "Eight smaller mines scattered across a wider range: 15 damage in a 0.55 metre blast each, laid every 1.7 seconds.",
+	},
+	"dead_zone": {
+		"base": "mine_layer",
+		"kind": "final",
+		"name": "Dead Zone",
+		"model": "shock",
+		"implemented": true,
+		"description": "Up to 14 mines that re-arm 9 seconds after they blast and never expire. A blast sets off the armed mines within 1.8 metres, and they chain on, 3 links deep.",
+	},
+	"chain_reaction": {
+		"base": "mine_layer",
+		"kind": "final",
+		"name": "Chain Reaction",
+		"model": "shock",
+		"implemented": true,
+		"description": "Launches limpet mines at the nearest large enemy (any enemy if none is large). A limpet sticks on and goes off after 1.5 seconds, or at once if its host dies, and its blast sticks a new limpet on up to two neighbours, once.",
 	},
 }
 
@@ -702,6 +726,46 @@ const STATS: Dictionary = {
 		"range": 150.0,
 		"rotation_speed": 0.0,
 	},
+	"(mine_layer)": {
+		"damage": 15.0,
+		"fire_rate": 0.33,
+		"range": 225.0,
+		"rotation_speed": 0.0,
+		"aoe_radius": 70.0,
+		"proximity_radius": 40.0,
+		"max_mines": 5,
+		"knockback_force": 150.0,
+	},
+	"minefield": {
+		"damage": 15.0,
+		"fire_rate": 0.6,
+		"range": 300.0,
+		"rotation_speed": 0.0,
+		"aoe_radius": 55.0,
+		"proximity_radius": 35.0,
+		"max_mines": 8,
+		"knockback_force": 100.0,
+	},
+	"dead_zone": {
+		"damage": 11.0,
+		"fire_rate": 0.65,
+		"range": 350.0,
+		"rotation_speed": 0.0,
+		"aoe_radius": 75.0,
+		"proximity_radius": 40.0,
+		"max_mines": 14,
+		"knockback_force": 120.0,
+	},
+	"chain_reaction": {
+		"damage": 11.0,
+		"fire_rate": 0.4,
+		"range": 500.0,
+		"rotation_speed": 0.0,
+		"aoe_radius": 100.0,
+		"proximity_radius": 40.0,
+		"max_mines": 4,
+		"knockback_force": 80.0,
+	},
 }
 
 const SHOTS: Dictionary = {
@@ -753,6 +817,10 @@ const SHOTS: Dictionary = {
 	"coin_feeder": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
 	"treasury": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
 	"academy": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"(mine_layer)": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"minefield": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"dead_zone": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"chain_reaction": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
 }
 
 const BEHAVIOUR: Dictionary = {
@@ -804,6 +872,10 @@ const BEHAVIOUR: Dictionary = {
 	"coin_feeder": "ScrapPressForm",
 	"treasury": "ScrapPressForm",
 	"academy": "ScrapPressForm",
+	"(mine_layer)": "MineLayerForm",
+	"minefield": "MineLayerForm",
+	"dead_zone": "MineLayerForm",
+	"chain_reaction": "MineLayerForm",
 }
 
 const BUILDERS_BY_FORM: Dictionary = {
@@ -855,6 +927,10 @@ const BUILDERS_BY_FORM: Dictionary = {
 	"coin_feeder": ["ScrapPressEvolutionVisual"],
 	"treasury": ["ScrapPressEvolutionVisual"],
 	"academy": ["ScrapPressEvolutionVisual"],
+	"(mine_layer)": [],
+	"minefield": ["MineLayerEvolutionVisual"],
+	"dead_zone": ["MineLayerEvolutionVisual"],
+	"chain_reaction": ["MineLayerEvolutionVisual"],
 }
 
 const MODELS: Dictionary = {
@@ -1434,6 +1510,54 @@ const MODELS: Dictionary = {
 		"saber_angles": 1,
 		"digest": "eee90e61d933042e",
 	},
+	"(mine_layer)": {
+		"nodes": 14,
+		"meshes": 11,
+		"muzzle": "0.000,1.010,0.000",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "f4adf0c9a1816e4a",
+	},
+	"minefield": {
+		"nodes": 31,
+		"meshes": 28,
+		"muzzle": "0.000,1.010,0.000",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "cc60f3dbfbfe76a3",
+	},
+	"dead_zone": {
+		"nodes": 34,
+		"meshes": 31,
+		"muzzle": "0.000,1.010,0.000",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "ff3fece1d99b7e70",
+	},
+	"chain_reaction": {
+		"nodes": 21,
+		"meshes": 18,
+		"muzzle": "0.000,1.010,0.000",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "6669373b3e6453bd",
+	},
 }
 
 const MISC: Dictionary = {
@@ -1463,9 +1587,14 @@ const MISC: Dictionary = {
 	"scrap_press_pattern:treasury": "Every drop goes to your wallet; on a won wave +1 scrap per 10 held, up to 5",
 	"scrap_press_pattern:academy": "No scrap: each drop is XP, in full, to every turret within 6 m (this one too)",
 	"scrap_press_pattern:missing": "Drops land beside the press; scrap left at wave end becomes XP for nearby turrets",
+	"mine_layer_pattern:": "Mines arm after 0.8 s and fizzle after 40 s if nothing comes near",
+	"mine_layer_pattern:minefield": "Mines arm after 0.8 s and fizzle after 40 s if nothing comes near",
+	"mine_layer_pattern:dead_zone": "Mines re-arm 9 s after a blast and never expire; a blast sets off armed mines within 1.8 m, 3 links deep",
+	"mine_layer_pattern:chain_reaction": "Launches limpets at the nearest large enemy: each goes off after 1.5 s (at once if its host dies) and sticks 2 more on neighbours, once",
+	"mine_layer_pattern:missing": "Mines arm after 0.8 s and fizzle after 40 s if nothing comes near",
 	"ids": ["", "", "", ""],
-	"implemented": ["machine_gun", "cyclone_gatling", "omnifire", "saber", "orbit_saber", "stormblade", "repeater_bow", "arrowstorm", "titan_bow", "wide_flame", "inferno_crown", "dragonheart", "heavy_roller", "juggernaut", "ricochet_king", "siege", "worldbreaker", "resonator", "resonance_engine", "thunder_spear", "piercer_rifle", "horizon_piercer", "overwatch", "aftershock", "tectonic", "cataclysm", "bumper_post", "pile_driver", "maelstrom", "coin_feeder", "treasury", "academy"],
-	"order": [["machine_gun", "cyclone_gatling", "omnifire"], ["saber", "orbit_saber", "stormblade"], ["repeater_bow", "arrowstorm", "titan_bow"], ["wide_flame", "inferno_crown", "dragonheart"], ["heavy_roller", "juggernaut", "ricochet_king"], ["siege", "worldbreaker", "constellation"], ["resonator", "resonance_engine", "thunder_spear"], ["forked_coil", "storm_network", "thunderhead"], ["piercer_rifle", "horizon_piercer", "overwatch"], ["aftershock", "tectonic", "cataclysm"], ["bumper_post", "pile_driver", "maelstrom"], ["coin_feeder", "treasury", "academy"]],
+	"implemented": ["machine_gun", "cyclone_gatling", "omnifire", "saber", "orbit_saber", "stormblade", "repeater_bow", "arrowstorm", "titan_bow", "wide_flame", "inferno_crown", "dragonheart", "heavy_roller", "juggernaut", "ricochet_king", "siege", "worldbreaker", "resonator", "resonance_engine", "thunder_spear", "piercer_rifle", "horizon_piercer", "overwatch", "aftershock", "tectonic", "cataclysm", "bumper_post", "pile_driver", "maelstrom", "coin_feeder", "treasury", "academy", "minefield", "dead_zone", "chain_reaction"],
+	"order": [["machine_gun", "cyclone_gatling", "omnifire"], ["saber", "orbit_saber", "stormblade"], ["repeater_bow", "arrowstorm", "titan_bow"], ["wide_flame", "inferno_crown", "dragonheart"], ["heavy_roller", "juggernaut", "ricochet_king"], ["siege", "worldbreaker", "constellation"], ["resonator", "resonance_engine", "thunder_spear"], ["forked_coil", "storm_network", "thunderhead"], ["piercer_rifle", "horizon_piercer", "overwatch"], ["aftershock", "tectonic", "cataclysm"], ["bumper_post", "pile_driver", "maelstrom"], ["coin_feeder", "treasury", "academy"], ["minefield", "dead_zone", "chain_reaction"]],
 }
 
 # --- Lookups (adapt these when a signature changes; never the expected values) ---
@@ -1507,6 +1636,7 @@ func _run_builder(builder: String, model: Node3D, _base: String, form: String) -
 		"QuakeEvolutionVisual": QuakeEvolutionVisual.build(model, form)
 		"DecoyEvolutionVisual": DecoyEvolutionVisual.build(model, form)
 		"ScrapPressEvolutionVisual": ScrapPressEvolutionVisual.build(model, form)
+		"MineLayerEvolutionVisual": MineLayerEvolutionVisual.build(model, form)
 		"GatlingEvolutionVisual": GatlingEvolutionVisual.build(model, form)
 		"CrossfireEvolutionVisual": CrossfireEvolutionVisual.build(model, form)
 
@@ -1560,6 +1690,8 @@ func collect_all(host: Node) -> Dictionary:
 		result.misc["decoy_pattern:" + form] = TurretEvolution.decoy_pattern_text(form)
 	for form in ["", "coin_feeder", "treasury", "academy", "missing"]:
 		result.misc["scrap_press_pattern:" + form] = TurretEvolution.scrap_press_pattern_text(form)
+	for form in ["", "minefield", "dead_zone", "chain_reaction", "missing"]:
+		result.misc["mine_layer_pattern:" + form] = TurretEvolution.mine_layer_pattern_text(form)
 	result.misc["ids"] = [TurretEvolution.form_name(""), TurretEvolution.form_name("missing"), TurretEvolution.model_key(""), TurretEvolution.description("missing")]
 	result.misc["implemented"] = implemented
 	result.misc["order"] = BASES.map(func(base: String) -> Array: return _forms_of(base))

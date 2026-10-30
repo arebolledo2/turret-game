@@ -300,3 +300,40 @@ func test_scrap_press_forms_change_where_drops_go_and_how_often() -> void:
 	assert_eq(TurretEvolution.param("treasury", "interest_cap"), 5)
 	assert_eq(TurretEvolution.param("academy", "xp_radius"), 6.0)
 	assert_null(TurretEvolution.param("coin_feeder", "xp_radius"))
+
+func test_mine_layer_path_forms_tiers_and_placeholder_chassis() -> void:
+	assert_eq(TurretEvolution.options("mine_layer", 0), ["minefield"])
+	assert_eq(TurretEvolution.options("mine_layer", 1), ["dead_zone", "chain_reaction"])
+	for form in ["minefield", "dead_zone", "chain_reaction"]:
+		assert_true(TurretEvolution.is_implemented(form))
+		assert_eq(TurretEvolution.model_key(form), "shock", "Every Mine Layer form uses the tinted Shock bell until a model is wired")
+		assert_false(TurretEvolution.description(form).is_empty())
+	assert_true(TurretEvolution.behaviour_script("mine_layer", "").new() is MineLayerForm, "The unevolved layer lays through its form")
+
+func test_mine_layer_base_stats_match_the_card() -> void:
+	var base := TurretRegistry.get_base_stats("mine_layer")
+	assert_eq(base.damage, 15.0)
+	assert_almost_eq(float(base.fire_rate), .33, .0001)
+	assert_eq(base.range, 225.0)
+	assert_eq(base.aoe_radius, 70.0)
+	assert_eq(base.max_mines, 5)
+	assert_eq(TurretRegistry.get_base_price("mine_layer"), 15)
+	assert_eq(TurretRegistry.get_fire_mode("mine_layer"), TurretRegistry.FIRE_DEPLOY)
+
+func test_mine_layer_forms_climb_in_mines_and_change_how_they_work() -> void:
+	var minefield := TurretEvolution.base_stats("mine_layer", "minefield")
+	var zone := TurretEvolution.base_stats("mine_layer", "dead_zone")
+	var reaction := TurretEvolution.base_stats("mine_layer", "chain_reaction")
+	assert_eq(minefield.max_mines, 8)
+	assert_eq(zone.max_mines, 14)
+	assert_lt(float(minefield.aoe_radius), 70.0, "Minefield's mines are smaller")
+	assert_eq(TurretEvolution.param("dead_zone", "rearm_seconds"), 9.0)
+	assert_eq(TurretEvolution.param("dead_zone", "chain_depth"), 3)
+	assert_eq(TurretEvolution.param("dead_zone", "lifetime"), 0.0, "Dead Zone mines never expire")
+	assert_true(TurretEvolution.param("chain_reaction", "limpet"))
+	assert_eq(TurretEvolution.param("chain_reaction", "fuse_seconds"), 1.5)
+	assert_eq(TurretEvolution.param("chain_reaction", "stick"), 2)
+	assert_null(TurretEvolution.param("minefield", "limpet"))
+	assert_gt(float(reaction.range), float(zone.range), "Limpets are launched from farther off than mines are laid")
+	assert_string_contains(TurretEvolution.mine_layer_pattern_text("dead_zone"), "3 links")
+	assert_string_contains(TurretEvolution.mine_layer_pattern_text("chain_reaction"), "limpets")

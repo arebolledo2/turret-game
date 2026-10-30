@@ -11,6 +11,7 @@ const FIRE_FLAME: String = "flame" # aimed cone with burn over time
 const FIRE_SWEEP: String = "sweep" # spinning melee bat
 const FIRE_INSTANT: String = "instant" # hit-scan shot along a line (Sniper); pierce lets it strike more enemies on that line
 const FIRE_NONE: String = "none" # no attack (utility turrets such as the Scrap Press); its `TurretForm.tick` does the work
+const FIRE_DEPLOY: String = "deploy" # lays mines or limpets (the Mine Layer) through engine piece S8; its `TurretForm.tick` does the work
 
 const DEFAULT_MODEL: String = "res://assets/models/game/ion_turret.glb"
 
@@ -27,7 +28,7 @@ const BASE_PRICES: Dictionary = {
 	"shock": 14,
 	"tesla": 17,
 	"melee": 12,
-	"mine": 15,
+	"mine_layer": 15,
 }
 
 ## Player-facing build families. Items target these (modifier filter `family`) so a tag reads the same on the card and on the turret.
@@ -254,10 +255,19 @@ const TYPES: Dictionary = {
 			"rehit_delay": 0.5,
 		}
 	},
-	"mine": {
-		"name": "Mine Turret",
+	"mine_layer": {
+		"name": "Mine Layer",
 		"icon": "💣",
-		"description": "Deploys proximity mines that explode when enemies approach.",
+		"short_name": "Mine Layer",
+		# No Mine Layer model is wired yet: the Shock bell, tinted, stands in (see `TurretActor._rebuild_model`).
+		"model_key": "shock",
+		"model": "res://assets/models/game/shock_turret.glb",
+		# It lays mines instead of firing: `MineLayerForm.tick` drops one every `1 / fire_rate` seconds within `range` (the
+		# placement reach) until `max_mines` are out, through engine piece S8 (`Deployables`). `damage` is one mine's blast,
+		# `aoe_radius` its radius and `proximity_radius` how close an enemy must come to set it off (all like any other reach).
+		"fire_mode": FIRE_DEPLOY,
+		"description": "Lays proximity mines around itself, up to five at a time. A mine arms after a moment, then blasts the first enemies that come near. Never hurts you or your turrets.",
+		# Deployables explode in an area, so the AoE item family applies (see `get_attack_families`).
 		"attack_styles": [GameEnums.AttackStyle.DEPLOYABLE],
 		"damage_types": [GameEnums.DamageType.PHYSICAL],
 		"base_stats": {
@@ -265,7 +275,7 @@ const TYPES: Dictionary = {
 			"fire_rate": 0.33,
 			"range": 225.0,
 			"rotation_speed": 0.0,
-			"explosive_radius": 70.0,
+			"aoe_radius": 70.0,
 			"proximity_radius": 40.0,
 			"max_mines": 5,
 			"knockback_force": 150.0,

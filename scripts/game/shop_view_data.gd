@@ -78,6 +78,7 @@ static func build_data(world: ArenaWorld, extra_turret: String = "") -> Dictiona
 		turrets.append({"id": type_id, "name": TurretRegistry.get_short_name(type_id), "count": count,
 			"damage": float(stats["damage"]), "fire_rate": rate, "rotation_rate": float(stats.get("rotation_rate", 0.0)),
 			"utility": TurretRegistry.is_no_attack(type_id), "interval": 1.0 / maxf(rate, TurretStats.MIN_FIRE_RATE),
+			"deploys": TurretRegistry.get_fire_mode(type_id) == TurretRegistry.FIRE_DEPLOY,
 			"range": reach, "stats": {"pierce": view.pierce, "projectile_speed": view.projectile_speed_metres,
 			"knockback": view.knockback_metres, "chain_count": view.chain_count,
 			"chain_decay": float(stats.get("chain_decay", 0)) * 100.0, "slow": view.slow_intensity * 100.0,
@@ -117,6 +118,7 @@ static func _actor_numbers(actor: TurretActor, secondary: bool = false) -> Dicti
 	var reach := stats.range_metres * (stats.area_size if pulse else 1.0)
 	return {"damage": stats.damage, "range": reach, "fire_rate": stats.fire_rate,
 		"utility": TurretRegistry.is_no_attack(actor.turret_type), "interval": stats.cooldown_seconds,
+		"deploys": TurretRegistry.get_fire_mode(actor.turret_type) == TurretRegistry.FIRE_DEPLOY,
 		"burst_size": TurretEvolution.barrel_burst(actor.progression.evolution_form) if secondary else TurretEvolution.volley_size(actor.progression.evolution_form),
 		"rotation_rate": float(values.get("rotation_rate", 0.0)), "area": reach if pulse else stats.aoe_radius_metres,
 		"stats": {"pierce": stats.pierce, "projectile_speed": stats.projectile_speed_metres,

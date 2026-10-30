@@ -255,6 +255,13 @@ func _show_selected() -> void:
 	if turret.turret_type == "decoy":
 		lines.append("Taunt radius  %.2f m     Knockback  %.2f m" % [stats.taunt_metres, stats.knockback_metres])
 		lines.append(TurretEvolution.decoy_pattern_text(growth.evolution_form))
+	if turret.form is MineLayerForm:
+		var layer := turret.form as MineLayerForm
+		if layer.is_limpet_layer():
+			lines.append("Launches a limpet every  [b]%.1f s[/b]     Out now  [b]%d / %d[/b]" % [stats.cooldown_seconds, layer.out_now(), layer.max_mines(stats)])
+		else:
+			lines.append("Lays a mine every  [b]%.1f s[/b]     Out now  [b]%d / %d[/b]     Set off within  [b]%.2f m[/b]" % [stats.cooldown_seconds, layer.out_now(), layer.max_mines(stats), float(stats.values.get("proximity_radius", 0.0)) * WorldGeometry.METRES_PER_PIXEL])
+		lines.append(TurretEvolution.mine_layer_pattern_text(growth.evolution_form))
 	if stats.aoe_radius_metres > 0:
 		lines.append("Blast radius  %.2f m" % stats.aoe_radius_metres)
 	if stats.chain_count > 0:

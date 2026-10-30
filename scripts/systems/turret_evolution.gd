@@ -170,6 +170,17 @@ static func decoy_pattern_text(form_id: String) -> String:
 static func ordinal(count: int) -> String:
 	return {1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth"}.get(count, "%dth" % count)
 
+## One line on what a Mine Layer form does with its mines, for the preview and the inspector.
+static func mine_layer_pattern_text(form_id: String) -> String:
+	if bool(param(form_id, "limpet", false)):
+		return "Launches limpets at the nearest large enemy: each goes off after %.1f s (at once if its host dies) and sticks %d more on neighbours, once" % [float(param(form_id, "fuse_seconds", 1.5)), int(param(form_id, "stick", 0))]
+	var rearm := float(param(form_id, "rearm_seconds", 0.0))
+	var links := int(param(form_id, "chain_depth", 0))
+	if rearm > 0.0 and links > 0:
+		return "Mines re-arm %.0f s after a blast and never expire; a blast sets off armed mines within %.1f m, %d links deep" % [rearm, float(param(form_id, "chain_reach", 0.0)), links]
+	var life := float(param(form_id, "lifetime", 40.0))
+	return "Mines arm after %.1f s and fizzle after %.0f s if nothing comes near" % [float(param(form_id, "arm_seconds", 0.8)), life]
+
 ## One line on where a Scrap Press form sends its drops, for the preview and the inspector.
 static func scrap_press_pattern_text(form_id: String) -> String:
 	var radius := float(param(form_id, "xp_radius", 0.0))

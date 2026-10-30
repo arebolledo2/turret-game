@@ -35,6 +35,13 @@ extends RefCounted
 ##                  deposit_share, interest_per, interest_cap  Scrap Press: the share of each drop sent straight to the wallet,
 ##                              and the Treasury's wave-end interest (one scrap per `interest_per` held, at most `interest_cap`)
 ##                  xp_radius   Academy: metres around the press whose turrets gain each drop's value as XP
+##                  arm_seconds, lifetime, rearm_seconds, chain_depth, chain_reach  Mine Layer mines: seconds before a mine is armed,
+##                              seconds before an unused one fizzles (0 = never), seconds a mine stays dark after a blast before it
+##                              arms again (0 = one blast), and how many links (and how many metres apart) a blast passes on to
+##                              the armed mines beside it
+##                  limpet, fuse_seconds, stick, launch_speed, large_scale  Chain Reaction: launches limpets instead of laying mines,
+##                              how long a stuck limpet burns, how many neighbours its blast sticks new limpets on, its flight
+##                              speed (m/s), and the body scale from which an enemy counts as large
 ##                  layers, burner_pairs, burner_fan, lance_segments, braces, bumpers, housing_pairs, barrel_bands
 ##                              hardware counts and angles for the visual builders
 ## `BASES` holds the same kind of facts for a base turret that has not evolved yet (and for what all its forms share).
@@ -73,6 +80,8 @@ const BASES: Dictionary = {
 	"decoy": {"behaviour": "DecoyForm"},
 	# The unevolved Scrap Press already makes its drops through the same behaviour as its forms.
 	"scrap_press": {"behaviour": "ScrapPressForm"},
+	# The unevolved Mine Layer already lays its mines through the same behaviour as its forms.
+	"mine_layer": {"behaviour": "MineLayerForm"},
 }
 
 const FORMS: Dictionary = {
@@ -343,5 +352,31 @@ const FORMS: Dictionary = {
 		"stats": {"damage": 0.0, "fire_rate": .125, "range": 150.0},
 		"behaviour": "ScrapPressForm", "visual": "ScrapPressEvolutionVisual",
 		"params": {"xp_radius": 6.0},
+	},
+	# --- Mine Layer ---
+	# It lays mines instead of firing: `fire_rate` is mines laid per second, `damage` one mine's blast, `aoe_radius` the blast's
+	# radius, `proximity_radius` how close an enemy must be to set it off, `max_mines` how many of its own are out at once and
+	# `range` how far from it they are laid (225 = 2.25 m). Mines hit enemies only. The Shock bell stands in as the chassis
+	# (tinted) until the cp_mine_layer model is wired; `MineLayerEvolutionVisual` adds the per-form hardware.
+	"minefield": {
+		"base": "mine_layer", "kind": UPGRADE, "name": "Minefield", "model": "shock", "implemented": true,
+		"description": "Eight smaller mines scattered across a wider range: 15 damage in a 0.55 metre blast each, laid every 1.7 seconds.",
+		"stats": {"damage": 15.0, "fire_rate": .6, "range": 300.0, "aoe_radius": 55.0, "proximity_radius": 35.0, "max_mines": 8, "knockback_force": 100.0},
+		"behaviour": "MineLayerForm", "visual": "MineLayerEvolutionVisual",
+		"params": {"arm_seconds": .8, "lifetime": 40.0},
+	},
+	"dead_zone": {
+		"base": "mine_layer", "kind": FINAL, "name": "Dead Zone", "model": "shock", "implemented": true,
+		"description": "Up to 14 mines that re-arm 9 seconds after they blast and never expire. A blast sets off the armed mines within 1.8 metres, and they chain on, 3 links deep.",
+		"stats": {"damage": 11.0, "fire_rate": .65, "range": 350.0, "aoe_radius": 75.0, "proximity_radius": 40.0, "max_mines": 14, "knockback_force": 120.0},
+		"behaviour": "MineLayerForm", "visual": "MineLayerEvolutionVisual",
+		"params": {"arm_seconds": .8, "lifetime": 0.0, "rearm_seconds": 9.0, "chain_depth": 3, "chain_reach": 1.8},
+	},
+	"chain_reaction": {
+		"base": "mine_layer", "kind": FINAL, "name": "Chain Reaction", "model": "shock", "implemented": true,
+		"description": "Launches limpet mines at the nearest large enemy (any enemy if none is large). A limpet sticks on and goes off after 1.5 seconds, or at once if its host dies, and its blast sticks a new limpet on up to two neighbours, once.",
+		"stats": {"damage": 11.0, "fire_rate": .4, "range": 500.0, "aoe_radius": 100.0, "proximity_radius": 40.0, "max_mines": 4, "knockback_force": 80.0},
+		"behaviour": "MineLayerForm", "visual": "MineLayerEvolutionVisual",
+		"params": {"limpet": true, "fuse_seconds": 1.5, "stick": 2, "launch_speed": 14.0, "large_scale": 1.25},
 	},
 }

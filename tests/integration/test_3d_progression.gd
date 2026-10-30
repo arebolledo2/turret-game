@@ -83,7 +83,7 @@ func test_purchase_is_atomic_and_rejects_sold_unsupported_maxed_and_unaffordable
 	assert_false(world.shop.purchase(index))
 	assert_eq(EconomyService.total_scrap, 88)
 	assert_eq(ItemTrackingService.item_counts["dense_rounds"], 1)
-	assert_false(world.shop.purchase(stock("turret", "mine", 1)), "Registry-only turrets stay unsellable")
+	assert_false(world.shop.purchase(stock("turret", "fire", 1)), "Registry-only turrets stay unsellable")
 	assert_false(world.shop.purchase(stock("item", "nanite_injector", 1)))
 	assert_false(world.shop.purchase(stock("item", "scrap_magnet", 999)))
 	ItemTrackingService.item_counts["compact_design"] = 3
