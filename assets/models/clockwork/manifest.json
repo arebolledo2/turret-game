@@ -593,6 +593,17 @@
       "meshes": 16,
       "materials": 10,
       "iteration": 5
+    },
+    {
+      "id": "mine_layer",
+      "source": "art-source/clockwork-pop/mine_layer/build_cp_mine_layer.py",
+      "model": "assets/models/clockwork/cp_mine_layer.glb",
+      "reference": "art-source/clockwork-pop/references/mine_layer.png",
+      "sha256": "a74076257403951fb8ac64b7818be56d626413a929d8aa94341276ffcda6f55a",
+      "triangles": 10348,
+      "meshes": 17,
+      "materials": 8,
+      "iteration": 6
     }
   ]
 }
