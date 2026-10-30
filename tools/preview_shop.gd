@@ -110,6 +110,25 @@ func _ready() -> void:
 				press.evolve("coin_feeder")
 			world.hud.shop_screen.switch_tab(1)
 			world.hud.shop_screen.turret_inspector.evolution_preview.show_form(press, press_form)
+	# --mines: the Mine Layer offer card and roster; --mine-form=<minefield|dead_zone|chain_reaction> opens that form's evolution preview.
+	var mine_form := ""
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--mine-form="):
+			mine_form = argument.trim_prefix("--mine-form=")
+	var mine_mode: bool = "--mines" in OS.get_cmdline_user_args() or not mine_form.is_empty()
+	if mine_mode:
+		var layer := world.add_turret(Vector3(3, 0, 3), "mine_layer")
+		layer.set_physics_process(false)
+		EconomyService.current_shop_offers.assign([ShopOffer.new("turret", "mine_layer", 15), ShopOffer.new("item", "polished_barrels", 18), ShopOffer.new("item", "blast_charges", 18), ShopOffer.new("item", "capacitor_bank", 18)])
+		world.hud._process(0)
+		world.hud.shop_screen.offer_buttons[0].grab_focus()
+		if not mine_form.is_empty():
+			world.session.state.turret_progression_enabled = true
+			layer.progression.award(1500)
+			if mine_form != "minefield":
+				layer.evolve("minefield")
+			world.hud.shop_screen.switch_tab(1)
+			world.hud.shop_screen.turret_inspector.evolution_preview.show_form(layer, mine_form)
 	if "--reminder" in OS.get_cmdline_user_args():
 		world.session.state.turret_progression_enabled = true
 		world.turrets[0].progression.award(1500)
@@ -118,6 +137,8 @@ func _ready() -> void:
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
 	var output := "res://.test-results/shop-%dx%d%s.png" % [get_viewport().size.x, get_viewport().size.y, "-rare" if "--rare" in OS.get_cmdline_user_args() else ("-decoy-" + decoy_form if not decoy_form.is_empty() else ("-decoy" if "--decoy" in OS.get_cmdline_user_args() else ("-sniper-" + sniper_form if not sniper_form.is_empty() else ("-sniper" if "--sniper" in OS.get_cmdline_user_args() else ("-quake-" + quake_form if not quake_form.is_empty() else ("-quake" if "--quake" in OS.get_cmdline_user_args() else ""))))))]
+	if mine_mode:
+		output = "res://.test-results/shop-%dx%d-mines%s.png" % [get_viewport().size.x, get_viewport().size.y, "-" + mine_form if not mine_form.is_empty() else ""]
 	if press_mode:
 		output = "res://.test-results/shop-%dx%d-press%s.png" % [get_viewport().size.x, get_viewport().size.y, "-" + press_form if not press_form.is_empty() else ""]
 	get_viewport().get_texture().get_image().save_png(output)
