@@ -209,7 +209,7 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 
 0. **Done:** progression change, targeting modes, Exposed status, DEPLOYABLE family mapping, utility-turret item rules, `aggro` family, form-table refactor.
 1. Generic timed-status system with a source owner (fixes the Overwatch shared-mark bug) before Decoy, Lullaby and Discord. Finish Plasma and Tesla whenever convenient (4 forms: Constellation needs S12; Forked Coil, Storm Network, Thunderhead). Re-bench every existing final at level 10 against its level-5 form.
-2. **Sniper, Quake, Decoy and the Scrap Press are done, with real models (Decoy model on `turret-decoy-model`, Scrap Press model on `turret-scrap-press-model`).** Next: Boomerang, then the remaining model wiring.
+2. **Sniper, Quake, Decoy and the Scrap Press are done, with real models (Decoy model on `turret-decoy-model`, Scrap Press model on `turret-scrap-press-model`).** Boomerang is **on hold** (2026-10-30; the 2D concepts keep coming out as curved blades, retry batch `a5ee55bb-4af0-480c-845a-fecd6ba380c8` unreviewed). Next: Mine Layer, then the remaining model wiring.
 3. Mine Layer and Laser; Beacon and Drone Bay after a playtest.
 4. Lullaby and Discord (S4 is the largest piece).
 5. Wire the remaining base models as each turret lands.
