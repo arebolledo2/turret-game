@@ -17,7 +17,7 @@ Combat modifiers use `filter.attack_family`, distinct from elemental `DamageType
 | Quake | Kinetic, AoE |
 | Decoy | Kinetic, AoE |
 | Scrap Press | none (no-attack utility turret; no build family) |
-| Mine (registry only, not stocked) | AoE (the Deployable attack style maps to AoE) |
+| Mine Layer | AoE (the Deployable attack style maps to AoE) |
 
 A hybrid whose styles map to the same family twice (for example AoE plus Deployable) lists it once. One modifier matches any listed family and applies once. Separate percentage increases add: +10% Projectile and +20% AoE damage give Plasma +30%, before separate multiplicative effects. Kinetic means contact/melee, not every PHYSICAL attack.
 
@@ -62,7 +62,7 @@ The opaque `ShopScreen` hides the arena and combat HUD, suspends 3D drawing whil
 
 To add an item, add a reviewed row to ItemCatalog, a catalog entry and supported family/capability filters. Provide a separate `assets/ui/items/<id>.svg`, a clear description and appropriate rarity/stack cap. Add tests for actual stat or combat behaviour and preview equivalence. New stats require a runtime consumer.
 
-Art tooling: `python tools/build_shop_art.py` rebuilds the full-colour SVG set from curated shapes and the layout-study motifs; `res://tools/render_shop_portraits.tscn` renders the five model portraits with a graphics driver. Run an editor import after regenerating. `res://tools/export_shop_catalog.tscn` writes an audit JSON under `.test-results/`.
+Art tooling: `python tools/build_shop_art.py` rebuilds the full-colour SVG set from curated shapes and the layout-study motifs; `res://tools/render_shop_portraits.tscn` renders the model portraits with a graphics driver (every form; `-- --only=key,key` renders just those keys and leaves the rest untouched). Run an editor import after regenerating. `res://tools/export_shop_catalog.tscn` writes an audit JSON under `.test-results/`.
 
 ## Situational buff display
 

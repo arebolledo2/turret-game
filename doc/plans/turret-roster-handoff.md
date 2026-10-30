@@ -49,9 +49,9 @@ This supersedes the old three-stage, two-branch model everywhere below.
 
 | Group | Turrets |
 |---|---|
-| In game (12) | Ion, Plasma, Shock, Tesla (no evolutions yet), Melee, Bow, Flamethrower, Bowling Launcher, Sniper, Quake, Decoy, Scrap Press |
+| In game (13) | Ion, Plasma, Shock, Tesla (no evolutions yet), Melee, Bow, Flamethrower, Bowling Launcher, Sniper, Quake, Decoy, Scrap Press, Mine Layer (placeholder chassis) |
 | Requested, not built (1) | Boomerang |
-| Proposed (6) | Mine Layer, Laser, Beacon, Drone Bay, Lullaby, Discord |
+| Proposed (5) | Laser, Beacon, Drone Bay, Lullaby, Discord |
 | Aggro family (new build family) | Decoy, Lullaby, Discord: weird support turrets that change enemy behaviour. Bosses are immune. |
 
 Roster in the new shape (L5 upgrade, then the two L10 finals). `Built` means playable today.
@@ -71,7 +71,7 @@ Roster in the new shape (L5 upgrade, then the two L10 finals). `Built` means pla
 | Decoy | Bumper Post | Pile Driver | Maelstrom | all built: real `cp_decoy` chassis and portraits (branch `turret-decoy-model`), runtime hardware per form |
 | Quake | Aftershock | Tectonic | Cataclysm | all built, real `cp_quake` model and portraits, runtime hardware per form |
 | Boomerang | Sawblade | Perpetual Saw | Boomerang Storm | new |
-| Mine Layer | Minefield | Dead Zone | Chain Reaction | new |
+| Mine Layer | Minefield | Dead Zone | Chain Reaction | all built (logic and S8) on a placeholder chassis (the tinted Shock bell); the `cp_mine_layer` model is not wired |
 | Laser | Focus Beam | Halo Cutter | Sunpiercer | new |
 | Beacon | Overclock Beacon | Command Spire | Aegis Field | new |
 | Drone Bay | Escort Drones | Guardian Wing | Reaper Swarm | new |
@@ -90,7 +90,7 @@ Every form is one row in `scripts/data/turret_forms.gd` (`TurretForms.FORMS`): b
 
 ## 3D models
 
-- Nine base models were built by Sonnet agents in `3d-eval/runs/cp_<name>-v1/` and all passed the harness contract: Sniper, Scrap Press, Decoy, Quake, Mine Layer, Laser, Beacon, Drone Bay, Discord. Triangle counts are high (7k to 28k against a 5k target; Drone Bay is 28k with 29 objects). **Wired into the game: Sniper, Quake, Decoy and Scrap Press.** The other five (Mine Layer, Laser, Beacon, Drone Bay, Discord) are not promoted and have no game code (the Scrap Press was wired on `turret-scrap-press-model`, see its section). A triangle-reduction pass was offered and not done. Setting `"origin_node": "Aim"` in the contract for long-barrel turrets (Mine Layer, Discord) would likely give better proportions than the centring workaround the agents used.
+- Nine base models were built by Sonnet agents in `3d-eval/runs/cp_<name>-v1/` and all passed the harness contract: Sniper, Scrap Press, Decoy, Quake, Mine Layer, Laser, Beacon, Drone Bay, Discord. Triangle counts are high (7k to 28k against a 5k target; Drone Bay is 28k with 29 objects). **Wired into the game: Sniper, Quake, Decoy and Scrap Press.** The Mine Layer is built (branch `turret-mine-layer`) but on a placeholder chassis, the Shock bell tinted gunmetal with runtime hardware per form: its `cp_mine_layer-v1` model is not promoted and wiring it is a separate step (see the Mine Layer section). The other four (Laser, Beacon, Drone Bay, Discord) are not promoted and have no game code (the Scrap Press was wired on `turret-scrap-press-model`, see its section). A triangle-reduction pass was offered and not done. Setting `"origin_node": "Aim"` in the contract for long-barrel turrets (Mine Layer, Discord) would likely give better proportions than the centring workaround the agents used.
 - Boomerang and Lullaby models are not started (finalist concept not chosen).
 - Wiring a model: copy the subject JSON to the run's `contract.json`; add the key to `tools/promote_clockwork_asset.py` and `ClockworkModels.KEYS`; run `python -I turret-game/tools/promote_clockwork_asset.py <key> --iteration N --asset-name cp_<name>`; set the model in the form rows (`model` field) and the registry `model_key`; add the key to the Aim/Muzzle list in `tests/integration/test_clockwork_roster.gd`; adapt the `*EvolutionVisual` runtime hardware to the real model (read the bore from the model's `Muzzle`); render portraits with `tools/render_shop_portraits.tscn` (non-headless), `git checkout` every regenerated portrait except the new ones and delete the stray `forked_coil.png`, then re-run `--headless --import` before taking shop screenshots; commit the extracted texture PNG and `.import` with the GLB. The `3d-asset-design` skill still describes the old stage shape; the steps here are current.
 
@@ -140,6 +140,49 @@ Every form is one row in `scripts/data/turret_forms.gd` (`TurretForms.FORMS`): b
 
 **Reuse:** the three exits in `ScrapIncome` are what any later income or XP turret needs (a Beacon that feeds XP, a Mine Layer that pays per kill); `TurretForm.wave_end_scrap` is a generic wave-end payout hook; `FIRE_NONE` plus `"no_attack": true` is the pattern for Beacon, Lullaby and Discord (they also need an aura or behaviour system, S9 and S4, and must join `FAMILIES["aggro"]` where it applies); `ScrapPressForm._rank_yield` is the pattern for "a second one of me is weaker".
 
+## Mine Layer logic (built 30 Oct 2026, branch `turret-mine-layer`; placeholder chassis, model wiring pending)
+
+`mine_layer` is a stocked base turret (price 15, `FIRE_DEPLOY`, Physical, attack style DEPLOYABLE so the `aoe` item family applies, no build family). It attacks with what it leaves on the floor. One class, `MineLayerForm` (`scripts/game/mine_layer_form.gd`), serves the base and all three forms; rows only change numbers and params. `TurretActor` returns after `form.tick`, which lays one deployable every `1 / fire_rate` seconds (so level speed, Entrench and attack-speed items quicken it) until `max_mines` of its own are out. **S8 is built** as `Deployables` (`world.deployables`) with `Deployable` (the state and numbers of one mine or limpet); the API and rules are in `doc/combat.md`. `CrowdGrid3D.any_within` is the allocation-free trigger query it added.
+
+- **Mine Layer (base):** up to 5 proximity mines within 2.25 m (`range` is the placement reach), 15 damage in a 0.7 m blast (`aoe_radius`), set off by an enemy body within 0.4 m (`proximity_radius`), armed after 0.8 s, fizzle after 40 s unused, knockback 150, one laid every 3 s (0.33/s). The card's numbers.
+- **Minefield (L5):** 8 smaller mines over 3 m: 15 damage in a 0.55 m blast each, one laid every 1.7 s (0.6/s), 0.35 m trigger. Shock bell plus a ring of eight spare mines and a hazard band.
+- **Dead Zone (L10):** up to 14 mines (11 damage, 0.75 m blast, 0.65/s, 3.5 m) that never expire and re-arm 9 s after a blast. A blast sets off the armed mines of the same layer within 1.8 m, one link shorter each time and 0.12 s apart: 3 links deep, so up to four blasts from one trigger, and each mine goes off at most once per chain. Six detonator pylons and a hazard ring on the floor.
+- **Chain Reaction (L10):** no floor mines. A limpet (11 damage, 1.0 m blast, 0.4/s, launched up to 5 m) flies at 14 m/s to the nearest large enemy (body scale 1.25 or more: tanks, bosses), sticks, and goes off after 1.5 s (at once if its host dies). Its blast sticks a new limpet on up to two of the enemies it left standing, nearest first; those stick nothing further, so a launch makes at most three blasts. No two limpets ride one enemy; at most 4 launched ones are out at a time (their children do not count). Three angled launch tubes with a limpet in each mouth.
+
+**Where a mine goes:** one scan of the enemy list per lay for the nearest enemy within the reach plus 6 m; mines go on its side, within a 0.5 rad cone, as far along as the enemy is (kept between 0.8 m, outside the chassis, and the reach); with no enemy anywhere near, any side. Best of four random spots by spacing from the layer's own mines, from a generator seeded by the turret id (deterministic). Always inside the arena.
+
+**Engine rules that matter to later turrets (all tested in `tests/integration/test_deployables.gd`):** at most `GameConstants.DEPLOYABLE_MAX` = 48 live across the arena (a layer asking for more is refused, never another's recycled); blasts go only to enemies (`Combat3D.impact` is handed the crowd's enemies), so the hero and turrets are never hit; at most 8 blasts per tick; a chain marks only armed mines of the same owner, once each, a fixed number of links deep; everything is dropped when combat stops (wave end, pause, defeat; the turret also calls `clear_owner` every idle frame), on `clear_field`, on defeat and on a run reset, and one layer's when it is removed or evolves (a layer that evolves loses its old form's mines).
+
+**Decisions where the card was silent or the engine disagreed (flagged in the report):**
+1. The id is `mine_layer`. The registry stub was `mine` (the roster artifact too); it was renamed, `explosive_radius` (read by nothing) became `aoe_radius` so the blast radius is the stat the rest of the pipeline scales, and the `mine` references in the item and shop tests moved to `mine_layer` and `fire`. DEPLOYABLE still maps to the `aoe` family.
+2. New fire mode `FIRE_DEPLOY` (the attack shape is new), next to `FIRE_NONE`: the turret attacks, so it is not `no_attack` and keeps its family.
+3. A carried layer keeps laying, as every turret keeps attacking while carried, and the mines it already laid stay. (The Scrap Press and Decoy clear on pickup; a mine trail round the walking hero is the card's "hero kites across mines".)
+4. Mines expire after 40 s unused (base and Minefield) and the Dead Zone's never do; the card gives no lifetime. Chain Reaction's limpets have no lifetime but their fuse.
+5. "Smaller" mines (Minefield) means a smaller blast; per-mine damage stays 15. The card's "scattered across the range" got a wider 3 m reach.
+6. Dead Zone: re-arm delay 9 s and chain reach 1.8 m ("adjacent") are mine; "depth 3" is read as three links past the first blast.
+7. Chain Reaction: "large" is body scale 1.25 or more, and when no large enemy is in reach it launches at the nearest enemy (otherwise it would sit idle against swarms). "Sticks a new limpet to up to two neighbours, once" is read as: the blast of a launched limpet sticks two more and those stick none. A limpet whose target dies in flight lands where it is and burns its fuse.
+8. Any enemy sets a mine off, bosses and tech-drop crates included (they are ordinary enemies in `world.enemies`).
+9. The shop's DPS estimate is the lay rate times one blast (`damage x fire_rate`): it ignores re-arming, chaining and sticking, so Dead Zone and Chain Reaction read lower in the shop than they perform against crowds (the shop figure is described as a single-target estimate).
+
+**Tuning (no bench was run):** the GPU was at 47% to 100% from other work (a Boomerang batch on ComfyUI), above the 30% limit, so `tools/bench_turret_forms.gd` was not run and there are no benched numbers. Stationary bench dummies would also flatter re-arming mines (they sit on the mines forever), so the finals are tuned from simulated game time instead: a layer at level 10 against a stream of 1e9-health enemies walking 18 m across its ground at 1.3 m/s (a large one in every four), damage credited to it, 60 s. Damage per second, rounded (the layer's own rng is seeded, so these repeat):
+
+| Scenario | Mine Layer | Minefield | Dead Zone | Chain Reaction |
+|---|---|---|---|---|
+| one lane, one enemy per 1.5 s | 24.9 | 37.1 | 46.8 (1.26x) | 64.6 (1.74x) |
+| four lanes, one enemy per second | 17.4 | 25.1 | 37.4 (1.49x) | 20.4 (0.81x) |
+| packs of four, one pack per 3 s | 25.0 | 33.7 | 60.3 (1.79x) | 53.8 (1.60x) |
+| mean | 22.4 | 32.0 | 48.2 (1.51x) | 46.3 (1.45x) |
+
+(Ratios are against Minefield.) The finals average about 1.5x the upgrade, but Chain Reaction is lumpy: it needs a large enemy in reach and does badly when they are few and spread across lanes. `test_the_finals_are_tuned_to_about_one_and_a_half_times_the_upgrade_in_simulated_traffic` pins one scenario (packs of four) between 1.2x and 1.9x. Re-run `tools/bench_turret_forms.gd --base=mine_layer --level=10` once the card is free, and expect Dead Zone to read far higher there (stationary dummies).
+
+**Visuals:** the Shock bell (`model` key `shock` in the rows and the registry) tinted gunmetal in `TurretActor._rebuild_model`, plus `MineLayerEvolutionVisual` hardware per form, and portraits rendered from that (`render_shop_portraits.gd --only=mine_layer,minefield,dead_zone,chain_reaction`). Mines are pooled flat discs (limpets small spheres) that go dark while arming or re-arming, red when armed and white-hot when fused; the blast reuses the arena's explosion ring, scorch and sound.
+
+**Not verified:** no human playtest. Looked at: the preview (`tools/preview_evolution.tscn -- --mine-layer-preview[ --mines]`), the demo (`tools/capture_game.tscn -- --mine-layer-demo`, run with `--fixed-fps 60`) and the rendered portraits; the showcase passed in plain, `--alternate` and `--moving` runs. Not looked at by hand: the shop card, the inspector text and the evolution dialog (the controller-flow test reads them), how the mines read against every floor theme, audio levels with several layers, and the feel of Chain Reaction's range and launch.
+
+**Model wiring: pending** (`3d-eval/runs/cp_mine_layer-v1`). Open points for it: the long barrel probably wants `"origin_node": "Aim"` in the contract (see the 3D models section); the muzzle is where a limpet leaves (`MineLayerForm._launch` starts from `actor.muzzle`) and the head turns toward the last mine or target (`_face`), so `Aim` and `Muzzle` must be the head and the barrel mouth; the registry and the rows' `model_key`/`model` move from `shock` to the new key; `TurretActor.MINE_LAYER_TINT` and its `elif` go; `MineLayerEvolutionVisual` is sized for the Shock bell (base radius 0.6 m) and needs the real footprint; re-record the golden digests and re-render the portraits (`--only=` keeps the other portraits untouched); add the key to the Aim/Muzzle list in `tests/integration/test_clockwork_roster.gd`.
+
+**Reuse:** `Deployables.lay(Deployable)` is generic: any later turret that leaves something on the floor sets the trigger, arming, lifetime, re-arm, chain and limpet fields it needs and a blast `CombatShot3D` (a Lullaby "sleep mine" would swap the shot for a status; S12's delayed ground shell can be a fuse-only deployable with no trigger). `clear_owner`, the cap and the crowd-grid trigger come for free. `Deployable.State.FLYING` plus `host` is a generic "thing that travels to an enemy and rides it".
+
 ## Quake logic (built 26 Oct 2026, branch `turret-quake`; model wired on `turret-quake-model`)
 
 `quake` is a stocked base turret (damage 16, 0.45/s, range 260, rotation 0, knockback 200, stagger 0.4, price 17, Physical, families Kinetic and AoE, `fire_mode: "pulse"`). `QuakeForm` (`scripts/game/quake_form.gd`) takes over `TurretActor`'s `FIRE_PULSE` branch: a 0.5 s ground telegraph, then a `ShockwaveRing` at 8 m/s that strikes each enemy once as it touches it (nearest first). Aftershock (18, 0.45/s) queues a second ring 0.6 s later at 50% damage. Tectonic (40, 0.5/s, range 400) skips the ring and opens two fissures in an X (45 degrees either side of the line from the turret) at the densest cluster (`Combat3D.select_target` with the cluster radius `TECTONIC_CLUSTER_RADIUS`, 1.5 m); each is an S7 line zone centred on that enemy (half length 65% of reach, half width 0.45 m, both growing with range and area bonuses; 3 s; 40% slow) that hits what stands in it once as it opens. Cataclysm (30, 0.5/s) repeats up to three more rings every 0.9 s while enemies stay in range, each 20% wider, capped at 1.6x the reach, and its hits `extend_stagger` (1 s each, cap 1.5 s); the cooldown starts when the salvo ends. Bench (level 10, 120 s, DPS single / cluster / lane): Aftershock 29 / 239 / 90; Tectonic 47 / 334 / 146 (1.40x on a cluster, 1.6x single: the fissure always lands on a lone target); Cataclysm 42 / 354 / 130 (1.48x cluster, 1.45x single). Level 5: Quake 14 / 113 / 28, Aftershock 23 / 195 / 49. Level 10 base Quake: 18 / 146 / 53.
@@ -180,7 +223,7 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 
 ## Codebase facts worth knowing (re-checked 29 Oct 2026)
 
-- Registry: `scripts/registries/turret_registry.gd`. Sniper and Quake are stocked via `ShopCatalog`. `fire` is redundant with Flamethrower (retire it). `mine` is registry-only; DEPLOYABLE now maps to the `aoe` item family. An unknown turret id silently becomes Ion in `get_type`.
+- Registry: `scripts/registries/turret_registry.gd`. Sniper and Quake are stocked via `ShopCatalog`. `fire` is redundant with Flamethrower (retire it). `mine_layer` (the old `mine` stub, renamed) is stocked; DEPLOYABLE maps to the `aoe` item family. An unknown turret id silently becomes Ion in `get_type`.
 - `GameEnums.DamageType` is Physical, Fire, Electric, Plasma. "Kinetic" is only an attack family.
 - Targeting: set `"targeting"` (closest, cluster, farthest, toughest, backline) at the top level of the registry entry; selection lives in `TurretTargeting`. No-attack turrets set `"no_attack": true` with empty `attack_styles`; Focused Arsenal, Army Doctrine, Crosslink Array and Lone Sentry ignore them. `FAMILIES["aggro"]` now holds the Decoy: Lullaby and Discord must add their ids when registered.
 - Turrets cannot be damaged, and enemies are hard-separated from turrets. Enemy goal selection is `CombatActor.chase_position()`.
@@ -199,7 +242,7 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 - S5 Scrap generation, direct deposit and direct XP (Scrap Press) **BUILT** (`ScrapIncome`; other income turrets reuse it)
 - S6 Returning projectile path (Boomerang)
 - S7 Enemy-only ground zones (Quake Tectonic) **BUILT**
-- S8 Deployable runtime (Mine Layer); the DEPLOYABLE-to-AoE item mapping is built, the runtime is not
+- S8 Deployable runtime (Mine Layer) **BUILT** (`Deployables`; other turrets that leave things on the floor reuse it)
 - S9 Auras and healing (Beacon)
 - S10 Drone actors (Drone Bay)
 - S11 Continuous beam (Laser)
@@ -209,8 +252,8 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 
 0. **Done:** progression change, targeting modes, Exposed status, DEPLOYABLE family mapping, utility-turret item rules, `aggro` family, form-table refactor.
 1. Generic timed-status system with a source owner (fixes the Overwatch shared-mark bug) before Decoy, Lullaby and Discord. Finish Plasma and Tesla whenever convenient (4 forms: Constellation needs S12; Forked Coil, Storm Network, Thunderhead). Re-bench every existing final at level 10 against its level-5 form.
-2. **Sniper, Quake, Decoy and the Scrap Press are done, with real models (Decoy model on `turret-decoy-model`, Scrap Press model on `turret-scrap-press-model`).** Boomerang is **on hold** (2026-10-30; the 2D concepts keep coming out as curved blades, retry batch `a5ee55bb-4af0-480c-845a-fecd6ba380c8` unreviewed). Next: Mine Layer, then the remaining model wiring.
-3. Mine Layer and Laser; Beacon and Drone Bay after a playtest.
+2. **Sniper, Quake, Decoy and the Scrap Press are done, with real models (Decoy model on `turret-decoy-model`, Scrap Press model on `turret-scrap-press-model`).** Boomerang is **on hold** (2026-10-30; the 2D concepts keep coming out as curved blades, retry batch `a5ee55bb-4af0-480c-845a-fecd6ba380c8` unreviewed). **The Mine Layer is built too** (logic and S8, branch `turret-mine-layer`, placeholder chassis; model wiring pending). Next: the remaining model wiring (Mine Layer included).
+3. Laser; Beacon and Drone Bay after a playtest.
 4. Lullaby and Discord (S4 is the largest piece).
 5. Wire the remaining base models as each turret lands.
 
