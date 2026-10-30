@@ -17,6 +17,8 @@ extends Node
 ##           and the Treasury's interest if 50 scrap were held. `--wave=N` sets the wave (drop value). Other presses are held
 ##           idle while a row runs so the 60% / 40% stacking does not mix rows. The numbers come from simulated time, so they do
 ##           not depend on how busy the GPU is.
+## Mine Layer rows: the stationary dummies sit on the mines forever, so re-arming mines (Dead Zone) and chains read far above what
+## they do against enemies that walk through; `test_mine_layer_turret.gd` tunes the finals against a walking stream in game time.
 ## "slow" is the share of enemy-seconds spent slowed (by a status or by standing in a ground zone).
 ## [base, form(, companion form)]: a form id is reached through its base's level-5 upgrade first; "" is the unevolved base.
 ## A third entry puts an Ion turret of that form (a Machine Gun) beside it in the same cell; the row then reports the
@@ -35,6 +37,7 @@ const FORMS := [
 	["quake", ""], ["quake", "aftershock"], ["quake", "tectonic"], ["quake", "cataclysm"],
 	["decoy", ""], ["decoy", "bumper_post"], ["decoy", "pile_driver"], ["decoy", "maelstrom"],
 	["scrap_press", ""], ["scrap_press", "coin_feeder"], ["scrap_press", "treasury"], ["scrap_press", "academy"],
+	["mine_layer", ""], ["mine_layer", "minefield"], ["mine_layer", "dead_zone"], ["mine_layer", "chain_reaction"],
 ]
 const SCENARIOS := ["single", "cluster", "lane", "pull", "pull_far", "income"]
 ## The pull scenarios (aggro turrets only) use real, moving enemies that would otherwise walk off toward the hero. Eight

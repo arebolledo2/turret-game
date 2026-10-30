@@ -10,8 +10,15 @@ func _ready() -> void:
 				# Tesla's forms are not implemented yet but share the Tesla chassis, so they still get portraits.
 				if TurretEvolution.is_implemented(option) or base == "tesla":
 					forms.append({"base": base, "form": option, "stage": stage + 1})
+	# --only=<key>,<key> renders just those portraits (every other portrait is left untouched).
+	var only: PackedStringArray = []
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--only="):
+			only = argument.trim_prefix("--only=").split(",")
 	for form in forms:
 		var key := ShopArt.turret_portrait_key(form.base, form.form)
+		if not only.is_empty() and key not in only:
+			continue
 		var viewport := SubViewport.new()
 		viewport.size = Vector2i(512, 512)
 		viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS

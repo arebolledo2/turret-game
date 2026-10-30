@@ -4,6 +4,7 @@ extends Node
 ## Durable stationary enemies keep every weapon firing without changing balance data.
 ## [base, level-5 upgrade, level-10 final, level-10 final under --alternate]. Each turret is shown as the upgrade, then evolved.
 ## A turret with no attack (the Scrap Press) is scored by the drops it makes instead of hits, and must make none while carried.
+## The Mine Layer is scored by the hits its blasts credit to it, like any turret, and keeps laying while carried.
 const ROSTER := [
 	["normal", "machine_gun", "cyclone_gatling", "omnifire"],
 	["normal", "machine_gun", "omnifire", "cyclone_gatling"],
@@ -23,6 +24,8 @@ const ROSTER := [
 	["decoy", "bumper_post", "maelstrom", "pile_driver"],
 	["scrap_press", "coin_feeder", "treasury", "academy"],
 	["scrap_press", "coin_feeder", "academy", "treasury"],
+	["mine_layer", "minefield", "dead_zone", "chain_reaction"],
+	["mine_layer", "minefield", "chain_reaction", "dead_zone"],
 ]
 ## Seconds a phase runs before it is scored. Long enough for the slowest Scrap Press final (Academy, one drop per 6 to 8 s).
 const PHASE_TICKS: int = 540
@@ -124,6 +127,7 @@ func _physics_process(_delta: float) -> void:
 				get_tree().quit(1)
 				return
 			labels[i].text = actors[i].display_name()
+			actors[i].cooldown = 0.0 # ready at once: moving enemies would walk out of a slow launcher's reach while it recharges
 		if moving:
 			_reset_moving_targets()
 			for turret in actors:
