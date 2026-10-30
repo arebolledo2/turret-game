@@ -58,9 +58,6 @@ const LOADED_BALL_FRACTION: float = .3
 const LOADED_ARROW_FRACTION: float = .35
 static var _no_gun_stats := TurretStats.new()
 const TESLA_TINT := Color(.35, .9, 1.0)
-## The Shock bell stands in for the Mine Layer until its chassis is wired: a gunmetal tint tells them apart (a green model
-## cannot be tinted orange by multiplying, so the hazard colours come from the per-form hardware).
-const MINE_LAYER_TINT := Color(.5, .5, .56)
 
 func _init() -> void:
 	entrench = TurretEntrench.new(self)
@@ -120,8 +117,6 @@ func _rebuild_model() -> void:
 		model = SweepForm.placeholder_model() if fire_mode == TurretRegistry.FIRE_SWEEP else load(TurretRegistry.get_model_path(turret_type)).instantiate()
 	if turret_type == "tesla" and not use_clockwork:
 		EnemyVariants.tint_model(model, "turret_tesla", TESLA_TINT, .5)
-	elif turret_type == "mine_layer":
-		EnemyVariants.tint_model(model, "turret_mine_layer", MINE_LAYER_TINT, 0.0)
 	add_child(model)
 	_build_form_visual()
 	aim = model.find_child("Aim", true, false) as Node3D

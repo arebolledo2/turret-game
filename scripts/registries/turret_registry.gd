@@ -259,8 +259,8 @@ const TYPES: Dictionary = {
 		"name": "Mine Layer",
 		"icon": "💣",
 		"short_name": "Mine Layer",
-		# No Mine Layer model is wired yet: the Shock bell, tinted, stands in (see `TurretActor._rebuild_model`).
-		"model_key": "shock",
+		# The real cp_mine_layer chassis; the old Shock bell file stays as the fallback model.
+		"model_key": "mine_layer",
 		"model": "res://assets/models/game/shock_turret.glb",
 		# It lays mines instead of firing: `MineLayerForm.tick` drops one every `1 / fire_rate` seconds within `range` (the
 		# placement reach) until `max_mines` are out, through engine piece S8 (`Deployables`). `damage` is one mine's blast,

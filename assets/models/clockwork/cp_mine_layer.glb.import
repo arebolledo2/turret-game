@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-path="res://.godot/imported/cp_mine_layer.glb-43ba66a95659d71fc5f6defa61d9d66b.scn"
+uid="uid://83uwg82dnyon"
+path="res://.godot/imported/cp_mine_layer.glb-4fc528650448b12742dd0ee8eaec93be.scn"
 
 [deps]
 
 source_file="res://assets/models/clockwork/cp_mine_layer.glb"
-dest_files=["res://.godot/imported/cp_mine_layer.glb-43ba66a95659d71fc5f6defa61d9d66b.scn"]
+dest_files=["res://.godot/imported/cp_mine_layer.glb-4fc528650448b12742dd0ee8eaec93be.scn"]
 
 [params]
 

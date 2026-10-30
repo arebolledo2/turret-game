@@ -306,7 +306,7 @@ func test_mine_layer_path_forms_tiers_and_placeholder_chassis() -> void:
 	assert_eq(TurretEvolution.options("mine_layer", 1), ["dead_zone", "chain_reaction"])
 	for form in ["minefield", "dead_zone", "chain_reaction"]:
 		assert_true(TurretEvolution.is_implemented(form))
-		assert_eq(TurretEvolution.model_key(form), "shock", "Every Mine Layer form uses the tinted Shock bell until a model is wired")
+		assert_eq(TurretEvolution.model_key(form), "mine_layer", "Every Mine Layer form uses the real cp_mine_layer chassis")
 		assert_false(TurretEvolution.description(form).is_empty())
 	assert_true(TurretEvolution.behaviour_script("mine_layer", "").new() is MineLayerForm, "The unevolved layer lays through its form")
 

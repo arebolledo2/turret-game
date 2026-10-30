@@ -21,8 +21,9 @@ extends TurretForm
 ## frame this form calls `clear`), when the layer is removed or evolves, and on a run reset. Another layer's are untouched.
 ## Like every turret it keeps working while the hero carries it, so a carried layer drops a trail of mines round the hero as it
 ## walks (mines never hurt the hero), and the mines it already laid stay where they are.
-## Metres from the turret's centre inside which no mine is laid: the chassis, and the ring enemies cannot reach.
-const CLEARANCE: float = .8
+## Metres from the turret's centre inside which no mine is laid: the chassis (0.63 m), its spare-mine dish (out to 1.1 m) and the
+## ring enemies cannot reach.
+const CLEARANCE: float = 1.1
 ## How far past the placement reach the layer looks for an enemy to lay toward (metres).
 const SCOUT_EXTRA: float = 6.0
 ## Random spots tried per mine; the one farthest from the layer's other mines is kept.
@@ -83,6 +84,9 @@ func _lay(stats: TurretStats, field: Deployables) -> void:
 	laid += 1
 	_face(item.position)
 	actor.world.effects.show_burst(item.position + Vector3(0, .1, 0), "ion")
+	# The barrel mouth puffs as the mine is dropped, so it reads as coming from the layer's own barrel.
+	if is_instance_valid(actor.muzzle):
+		actor.world.effects.show_burst(actor.muzzle.global_position, "ion")
 	actor.world.audio.play_cue("impact", item.position)
 	actor._reset_cooldown(stats)
 

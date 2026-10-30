@@ -624,7 +624,7 @@ func test_path_forms_tiers_and_chassis() -> void:
 	assert_eq(TurretEvolution.form_name("chain_reaction"), "Chain Reaction")
 	for form in ["minefield", "dead_zone", "chain_reaction"]:
 		assert_true(TurretEvolution.is_implemented(form))
-		assert_eq(TurretEvolution.model_key(form), "shock", "The tinted Shock bell stands in until a model is wired")
+		assert_eq(TurretEvolution.model_key(form), "mine_layer", "All forms use the real chassis")
 		assert_false(TurretEvolution.description(form).is_empty())
 	assert_true(TurretEvolution.behaviour_script("mine_layer", "").new() is MineLayerForm, "The unevolved layer lays through its form")
 
@@ -690,3 +690,23 @@ func test_the_finals_are_tuned_to_about_one_and_a_half_times_the_upgrade_in_simu
 	assert_gt(upgrade, 0.0)
 	assert_between(zone / upgrade, 1.2, 1.9, "Dead Zone / Minefield: %.1f / %.1f" % [zone, upgrade])
 	assert_between(reaction / upgrade, 1.2, 1.9, "Chain Reaction / Minefield: %.1f / %.1f" % [reaction, upgrade])
+
+func test_all_four_stages_use_the_real_chassis_with_the_barrel_mouth_as_muzzle() -> void:
+	for path: Array in [[], ["minefield"], ["minefield", "dead_zone"], ["minefield", "chain_reaction"]]:
+		var forms: Array[String] = []
+		forms.assign(path)
+		var turret := _layer(forms)
+		assert_eq(turret._model_key(turret.progression.evolution_form), "mine_layer")
+		assert_not_null(turret.aim, "%s has a head" % turret.display_name())
+		assert_not_null(turret.muzzle)
+		assert_lt(turret.muzzle.position.z, -.8, "The mouth is out in front of the head")
+		# Mines are laid outside the chassis, the spare-mine dish and the barrel mouth.
+		assert_gte(MineLayerForm.CLEARANCE, .91 + .1)
+
+func test_the_rotating_hardware_rides_the_head() -> void:
+	var turret := _chain_reaction()
+	assert_not_null(turret.aim.find_child("LaunchTube", false, false), "The limpet rack turns with the head")
+	assert_not_null(turret.aim.find_child("Collar", false, false))
+	var minefield := _minefield()
+	assert_not_null(minefield.aim.find_child("HazardBand", false, false))
+	assert_not_null(minefield.model.find_child("SpareMine", false, false))
