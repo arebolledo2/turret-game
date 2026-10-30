@@ -45,6 +45,8 @@ var effects: CombatEffects3D
 var taunts := TauntField.new()
 ## Temporary enemy-only floor patches laid by turrets (Quake fissures); see `GroundZones`.
 var ground_zones: GroundZones
+## Mines and limpets turrets leave on the floor (engine piece S8); see `Deployables`.
+var deployables: Deployables
 var audio: GameAudio
 var difficulty_config: Dictionary
 ## The thing enemies try to destroy in core mode; null in survive mode.
@@ -148,6 +150,10 @@ func _create_combat_presentation() -> void:
 	ground_zones.name = "GroundZones"
 	ground_zones.world = self
 	add_child(ground_zones)
+	deployables = Deployables.new()
+	deployables.name = "Deployables"
+	deployables.world = self
+	add_child(deployables)
 	audio = GameAudio.new()
 	audio.world = self
 	add_child(audio)
@@ -279,6 +285,7 @@ func _clear_actors() -> void:
 	crowd.rebuild(enemies)
 	effects.reset()
 	ground_zones.clear()
+	deployables.clear()
 	for container: Node3D in [actor_root, pickup_root]:
 		for child in container.get_children():
 			container.remove_child(child)
@@ -302,6 +309,7 @@ func clear_field(bank_pickups: bool, return_carried: bool = true) -> void:
 	crowd.rebuild(enemies)
 	effects.reset()
 	ground_zones.clear()
+	deployables.clear()
 	salvage.discard_direct()
 	drops.reset()
 	build_zones.reset()
@@ -502,6 +510,7 @@ func _end_run_in_defeat(reason: String) -> void:
 	GameStateMachine.transition_to(GameStateMachine.GameState.GAME_OVER)
 	effects.reset(true)
 	ground_zones.clear()
+	deployables.clear()
 	for enemy in enemies:
 		enemy.clear_transients()
 	for projectile in projectiles:

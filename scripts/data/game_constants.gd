@@ -200,6 +200,8 @@ const ZONE_PROP_MAX_SCALE: float = 2.0
 # Temporary enemy-only ground zones laid by turrets (GroundZones): never slow the hero, never outlast combat.
 const GROUND_ZONE_MAX: int = 16 # active zones across the whole arena; the one closest to expiring is recycled beyond it
 const GROUND_ZONE_MAX_SLOW: float = .9 # same cap as every other slow
+# Mines and limpets left by turrets (Deployables, engine piece S8).
+const DEPLOYABLE_MAX: int = 48 # live deployables across the whole arena; a layer asking for more is refused, never another's recycled
 # 3D shop layout: SHOP_OFFER_COUNT cards; 0-SHOP_TURRET_MAX weapons, upgrades fill the rest
 const SHOP_OFFER_COUNT: int = 4
 const SHOP_TURRET_MAX: int = 4

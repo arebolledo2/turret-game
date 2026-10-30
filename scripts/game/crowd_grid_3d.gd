@@ -36,6 +36,23 @@ func rebuild(actors: Array[CombatActor]) -> void:
 		cell_body[cell].append(_inverse_mass(actor))
 		positions[actor.get_instance_id()] = actor.position
 
+## True when a living actor's body overlaps the circle of `reach` metres round `centre`: `query_radius` with hurtboxes, but it
+## allocates nothing and stops at the first, so a mine can ask it every tick. Only the cells the circle touches are read, however
+## many actors the field holds.
+func any_within(centre: Vector3, reach: float) -> bool:
+	if cells.is_empty():
+		return false
+	var margin := maxf(reach, 0.0) + max_hurtbox_radius
+	var low := _cell(centre - Vector3(margin, 0.0, margin))
+	var high := _cell(centre + Vector3(margin, 0.0, margin))
+	for x in range(low.x, high.x + 1):
+		for z in range(low.y, high.y + 1):
+			var members: Array = cells.get(Vector2i(x, z), [])
+			for member: CombatActor in members:
+				if is_instance_valid(member) and not member.dead and member.overlaps_attack_range(centre, reach):
+					return true
+	return false
+
 func separation(actor: CombatActor) -> Vector3:
 	var origin: Vector3 = positions.get(actor.get_instance_id(), actor.position)
 	var ox := origin.x
