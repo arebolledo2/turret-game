@@ -202,6 +202,8 @@ const GROUND_ZONE_MAX: int = 16 # active zones across the whole arena; the one c
 const GROUND_ZONE_MAX_SLOW: float = .9 # same cap as every other slow
 # Mines and limpets left by turrets (Deployables, engine piece S8).
 const DEPLOYABLE_MAX: int = 48 # live deployables across the whole arena; a layer asking for more is refused, never another's recycled
+# Drones sent up by turrets (Drones, engine piece S10).
+const DRONE_MAX: int = 24 # live drones across the whole arena, extras included; a bay asking for more is refused, never another's recycled
 # 3D shop layout: SHOP_OFFER_COUNT cards; 0-SHOP_TURRET_MAX weapons, upgrades fill the rest
 const SHOP_OFFER_COUNT: int = 4
 const SHOP_TURRET_MAX: int = 4
