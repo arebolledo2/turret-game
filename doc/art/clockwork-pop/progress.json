@@ -37,14 +37,14 @@
     },
     {
       "key": "shock",
-      "name": "Resonance Bell",
+      "name": "Glass Dome Shock",
       "image_id": "b45251b2-295b-42c8-beb7-9e668c7774d9",
       "status": "verified",
       "reference": "../../../art-source/clockwork-pop/references/shock.png",
-      "notes": "Simple radial bell, brass hoop and amber crown. Keep pulse effects in the game rather than the mesh.",
-      "run": "cp_shock-v1",
+      "notes": "Bell-jar lamp: glass jar on a brass base, teal enamel dome, coral coil, faceted amber crystal. Replaces the Resonance Bell (cp_shock-v1). Keep pulse effects in the game rather than the mesh.",
+      "run": "cp_shock_dome3-v1",
       "preview": "previews/shock.png",
-      "metrics": "9,078 triangles \u00b7 11 meshes \u00b7 8 materials"
+      "metrics": "29,549 triangles \u00b7 18 meshes \u00b7 7 materials"
     },
     {
       "key": "melee",
@@ -778,6 +778,10 @@
     {
       "stage": "Export: drone_bay",
       "text": "Reviewed harness iteration 10; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: shock",
+      "text": "Glass Dome Shock replaces the Resonance Bell: harness iteration 4 of cp_shock_dome3-v1 passed the contract and was reviewed in Godot (showcase and game camera)."
     }
   ],
   "checks": {

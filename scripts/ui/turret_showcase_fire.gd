@@ -136,11 +136,11 @@ func _spawn_flames(at: Vector3, forward: Vector3) -> void:
 		effects.append({"node": puff, "velocity": (forward + spread).normalized() * randf_range(3.0, 6.0), "life": .45, "age": 0.0, "grow": 2.5})
 
 func _spawn_ring() -> void:
-	var ring := _emissive_mesh(_torus(.9, 1.0), _color())
+	var ring := _emissive_mesh(_torus(.955, 1.0), _color())
 	add_child(ring)
 	ring.global_position = Vector3(actor.global_position.x, floor_y + .05, actor.global_position.z)
 	ring.scale = Vector3.ONE * .2
-	effects.append({"node": ring, "velocity": Vector3.ZERO, "life": .7, "age": 0.0, "grow": reach * 2.0, "base_scale": .2})
+	effects.append({"node": ring, "velocity": Vector3.ZERO, "life": .7, "age": 0.0, "grow": reach * .75, "base_scale": .2})
 
 func _update_beam() -> void:
 	var on := clock < PERIOD * BEAM_ON_FRACTION

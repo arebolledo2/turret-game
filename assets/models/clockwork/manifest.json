@@ -34,17 +34,6 @@
       "iteration": 5
     },
     {
-      "id": "shock",
-      "source": "art-source/clockwork-pop/shock/build_cp_shock.py",
-      "model": "assets/models/clockwork/cp_shock.glb",
-      "reference": "art-source/clockwork-pop/references/shock.png",
-      "sha256": "7397fc91e549b88c78a6dd846204b77f0fc44c2e3a5b7471abc2bad9b98c2c3e",
-      "triangles": 9078,
-      "meshes": 11,
-      "materials": 8,
-      "iteration": 3
-    },
-    {
       "id": "tesla",
       "source": "art-source/clockwork-pop/tesla/build_cp_tesla.py",
       "model": "assets/models/clockwork/cp_tesla.glb",
@@ -626,6 +615,17 @@
       "meshes": 29,
       "materials": 13,
       "iteration": 10
+    },
+    {
+      "id": "shock",
+      "source": "art-source/clockwork-pop/shock/build_cp_shock_dome3.py",
+      "model": "assets/models/clockwork/cp_shock.glb",
+      "reference": "art-source/clockwork-pop/references/shock.png",
+      "sha256": "5ac0df29ee45ad5bb31ff2be98fa8c469f40f2d72a7ff674123c99f6fb3acc8f",
+      "triangles": 29549,
+      "meshes": 18,
+      "materials": 7,
+      "iteration": 4
     }
   ]
 }

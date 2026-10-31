@@ -1,8 +1,8 @@
 {
-  "name": "cp_shock",
-  "ref": "ref/cp_shock.png",
-  "build": "build_cp_shock.py",
-  "glb": "cp_shock.glb",
+  "name": "cp_shock_dome3",
+  "ref": "ref/cp_shock_dome3.png",
+  "build": "build_cp_shock_dome3.py",
+  "glb": "cp_shock_dome3.glb",
   "required_nodes": [
     "Aim",
     "Muzzle"
@@ -21,11 +21,11 @@
   "targets": {
     "max_texture_px": 1024,
     "max_textures": 4,
-    "max_triangles": 5000,
-    "max_mesh_objects": 16,
+    "max_triangles": 20000,
+    "max_mesh_objects": 24,
     "max_materials": 8
   },
-  "render_background": "#152536",
+  "render_background": "#20232b",
   "require_textures": true,
   "required_animations": [],
   "marker_nodes": [
@@ -37,5 +37,5 @@
       "Aim"
     ]
   ],
-  "muzzle_forward": false
+  "muzzle_forward": true
 }

@@ -1,44 +1,49 @@
 {
- "triangles": 9078,
- "mesh_objects": 11,
- "materials": 8,
- "loose_components": 165,
+ "triangles": 29549,
+ "mesh_objects": 18,
+ "materials": 7,
+ "loose_components": 217,
  "size_m": [
-  1.054,
-  1.054,
-  1.204
+  0.72,
+  0.736,
+  1.24
  ],
- "min_z": 0.015,
+ "min_z": 0.0,
  "centre_xy": [
   0.0,
-  0.0
+  0.008
+ ],
+ "origin_node": null,
+ "origin_xy": [
+  0.0,
+  0.008
  ],
  "missing_nodes": [],
  "empty_leg_pivots": [],
  "textures": [
   [
-   "bell_amber_fire",
+   "shock_dome_albedo",
    [
     1024,
     1024
    ]
   ],
   [
-   "bell_color_atlas",
+   "shock_dome_emissive",
    [
     1024,
     1024
    ]
   ],
   [
-   "bell_micro_normal",
+   "shock_dome_normal",
    [
     1024,
     1024
    ]
   ],
   [
-   "bell_orm_atlas",
+   "shock_dome_orm",
    [
     1024,
     1024
@@ -55,6 +60,7 @@
   "origin_xy_centred": true,
   "has_meshes": true,
   "Muzzle_under_Aim": true,
+  "muzzle_in_front_and_raised": true,
   "textures_present": true
  },
  "passed": true,
@@ -72,11 +78,11 @@
  "targets": {
   "max_texture_px": 1024,
   "max_textures": 4,
-  "max_triangles": 5000,
-  "max_mesh_objects": 16,
+  "max_triangles": 20000,
+  "max_mesh_objects": 24,
   "max_materials": 8
  },
  "target_overruns": [
-  "max_triangles: 9078 > target 5000"
+  "max_triangles: 29549 > target 20000"
  ]
 }
