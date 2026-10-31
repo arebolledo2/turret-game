@@ -615,6 +615,17 @@
       "meshes": 11,
       "materials": 8,
       "iteration": 5
+    },
+    {
+      "id": "drone_bay",
+      "source": "art-source/clockwork-pop/drone_bay/build_cp_drone_bay.py",
+      "model": "assets/models/clockwork/cp_drone_bay.glb",
+      "reference": "art-source/clockwork-pop/references/drone_bay.png",
+      "sha256": "771a8b57cc6c2168504548d0d92b6c4a0077fbf0d65232e9eaca38d4700e6bcb",
+      "triangles": 12246,
+      "meshes": 29,
+      "materials": 13,
+      "iteration": 10
     }
   ]
 }

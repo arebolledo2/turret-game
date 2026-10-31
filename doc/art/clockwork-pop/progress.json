@@ -445,6 +445,13 @@
       "status": "review",
       "preview": "previews/laser.png",
       "metrics": "6,884 triangles \u00c2\u00b7 11 meshes \u00c2\u00b7 8 materials"
+    },
+    {
+      "key": "drone_bay",
+      "name": "Drone Bay",
+      "status": "review",
+      "preview": "previews/drone_bay.png",
+      "metrics": "12,246 triangles \u00c2\u00b7 29 meshes \u00c2\u00b7 13 materials"
     }
   ],
   "events": [
@@ -767,6 +774,10 @@
     {
       "stage": "Export: laser",
       "text": "Reviewed harness iteration 5; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
+    },
+    {
+      "stage": "Export: drone_bay",
+      "text": "Reviewed harness iteration 10; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
     }
   ],
   "checks": {
