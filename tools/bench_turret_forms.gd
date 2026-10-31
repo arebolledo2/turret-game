@@ -176,7 +176,12 @@ func _next_phase() -> void:
 		for i in actors.size():
 			if _aggro(i):
 				pull_queue.append(i)
-		_start_pull_row()
+		# With no aggro turret in this run (a `--base=` of another line) there is nothing to pull: `pop_front` of an empty queue
+		# is a Nil that cannot go into the int `pull_row`.
+		if pull_queue.is_empty():
+			_next_phase()
+		else:
+			_start_pull_row()
 		return
 	for i in actors.size():
 		var centre := _cell(i)
