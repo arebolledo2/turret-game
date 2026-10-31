@@ -5,6 +5,8 @@ var arena: ArenaWorld
 var menu: CanvasLayer
 var play_button: Button
 var settings_button: Button
+var showcase_button: Button
+var showcase: TurretShowcase
 var back_button: Button
 var home: VBoxContainer
 var options: VBoxContainer
@@ -75,6 +77,7 @@ func _build_menu() -> void:
 	mode_option.add_item("Mode  Convoy  -  escort the core door to door")
 	play_button = _button(home, "PLAY", start_game, "play", true)
 	settings_button = _button(home, "SETTINGS", show_settings, "settings")
+	showcase_button = _button(home, "TURRETS", show_showcase, "turret")
 	_button(home, "QUIT", func() -> void: get_tree().quit(), "power")
 	options = VBoxContainer.new()
 	options.add_theme_constant_override("separation", 18)
@@ -222,6 +225,24 @@ func show_settings() -> void:
 	volume_slider.set_value_no_signal(SettingsService.sfx_volume * 100.0)
 	_update_volume_label()
 	fullscreen_check.grab_focus()
+
+## Opens the turret gallery over the menu; it is built on demand and freed when closed.
+func show_showcase() -> void:
+	if is_instance_valid(showcase):
+		return
+	showcase = TurretShowcase.new()
+	showcase.closed.connect(_close_showcase)
+	add_child(showcase)
+	menu.visible = false
+	showcase.open()
+
+func _close_showcase() -> void:
+	if is_instance_valid(showcase):
+		remove_child(showcase)
+		showcase.queue_free()
+	showcase = null
+	show_home()
+	showcase_button.grab_focus()
 
 func _update_volume_label() -> void:
 	volume_label.text = "SOUND EFFECTS  %d%%%s" % [roundi(SettingsService.sfx_volume * 100), " / MUTED" if SettingsService.sfx_volume <= 0 else ""]

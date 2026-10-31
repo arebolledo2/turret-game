@@ -1,6 +1,6 @@
 # User interface
 
-`GameApp` in `scripts/game/game_app.gd` builds the default start screen: wordmark, chips for the chosen waves/difficulty/mode, Play, Settings, Quit and the difficulty and mode selectors. There is no controls screen. Play receives initial focus. Keyboard arrows/Enter and controller directional input/A navigate menus; Escape or controller B returns from settings.
+`GameApp` in `scripts/game/game_app.gd` builds the default start screen: wordmark, chips for the chosen waves/difficulty/mode, Play, Settings, Quit and the difficulty and mode selectors. There is no controls screen. A Turrets button opens `TurretShowcase` (`scripts/ui/turret_showcase.gd`): a gallery of every stocked base turret and implemented form on a turntable (drag to spin) that fire on a loop via `TurretShowcaseFire` (barrel recoil, rotor spool, and stand-in bolts, streaks, flames, rings or beams per fire mode; not the real attacks), listed from `ShopCatalog` and `TurretEvolution`; Escape/B returns. Play receives initial focus. Keyboard arrows/Enter and controller directional input/A navigate menus; Escape or controller B returns from settings.
 
 ## Settings
 
