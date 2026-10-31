@@ -148,6 +148,25 @@ func _ready() -> void:
 				laser.evolve("focus_beam")
 			world.hud.shop_screen.switch_tab(1)
 			world.hud.shop_screen.turret_inspector.evolution_preview.show_form(laser, laser_form)
+	# --drone-bay: the Drone Bay offer card and roster; --drone-bay-form=<escort_drones|guardian_wing|reaper_swarm> opens that form's evolution preview.
+	var drone_form := ""
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--drone-bay-form="):
+			drone_form = argument.trim_prefix("--drone-bay-form=")
+	var drone_mode: bool = "--drone-bay" in OS.get_cmdline_user_args() or not drone_form.is_empty()
+	if drone_mode:
+		var bay := world.add_turret(Vector3(3, 0, 3), "drone_bay")
+		bay.set_physics_process(false)
+		EconomyService.current_shop_offers.assign([ShopOffer.new("turret", "drone_bay", 18), ShopOffer.new("item", "polished_barrels", 18), ShopOffer.new("item", "blast_charges", 18), ShopOffer.new("item", "capacitor_bank", 18)])
+		world.hud._process(0)
+		world.hud.shop_screen.offer_buttons[0].grab_focus()
+		if not drone_form.is_empty():
+			world.session.state.turret_progression_enabled = true
+			bay.progression.award(1500)
+			if drone_form != "escort_drones":
+				bay.evolve("escort_drones")
+			world.hud.shop_screen.switch_tab(1)
+			world.hud.shop_screen.turret_inspector.evolution_preview.show_form(bay, drone_form)
 	if "--reminder" in OS.get_cmdline_user_args():
 		world.session.state.turret_progression_enabled = true
 		world.turrets[0].progression.award(1500)
@@ -160,6 +179,8 @@ func _ready() -> void:
 		output = "res://.test-results/shop-%dx%d-mines%s.png" % [get_viewport().size.x, get_viewport().size.y, "-" + mine_form if not mine_form.is_empty() else ""]
 	if laser_mode:
 		output = "res://.test-results/shop-%dx%d-laser%s.png" % [get_viewport().size.x, get_viewport().size.y, "-" + laser_form if not laser_form.is_empty() else ""]
+	if drone_mode:
+		output = "res://.test-results/shop-%dx%d-drone-bay%s.png" % [get_viewport().size.x, get_viewport().size.y, "-" + drone_form if not drone_form.is_empty() else ""]
 	if press_mode:
 		output = "res://.test-results/shop-%dx%d-press%s.png" % [get_viewport().size.x, get_viewport().size.y, "-" + press_form if not press_form.is_empty() else ""]
 	get_viewport().get_texture().get_image().save_png(output)
