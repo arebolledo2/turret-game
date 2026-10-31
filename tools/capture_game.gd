@@ -25,6 +25,8 @@ var press_demo: bool = false
 var press_frame: int = 600
 var mine_demo: bool = false
 var mine_frame: int = 900
+var laser_demo: bool = false
+var laser_frame: int = 480
 var last_tick: int = 0
 var physics_samples: Array[float] = []
 var process_samples: Array[float] = []
@@ -70,7 +72,10 @@ func setup() -> void:
 	decoy_demo = "--decoy-demo" in arguments
 	press_demo = "--scrap-press-demo" in arguments
 	mine_demo = "--mine-layer-demo" in arguments
+	laser_demo = "--laser-demo" in arguments
 	for argument in arguments:
+		if argument.begins_with("--laser-frame="):
+			laser_frame = int(argument.trim_prefix("--laser-frame="))
 		if argument.begins_with("--mine-layer-frame="):
 			mine_frame = int(argument.trim_prefix("--mine-layer-frame="))
 		if argument.begins_with("--scrap-press-frame="):
@@ -83,7 +88,7 @@ func setup() -> void:
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	GameRandom.gameplay.seed = 42
-	for index in range(150 if stress else (0 if zones_demo or roster_demo or sniper_demo or quake_demo or decoy_demo or press_demo or mine_demo else 18)):
+	for index in range(150 if stress else (0 if zones_demo or roster_demo or sniper_demo or quake_demo or decoy_demo or press_demo or mine_demo or laser_demo else 18)):
 		var angle := float(index) * 2.39996
 		var radius := 2.5 + float(index % 6) * .5
 		var kind: String = ["basic", "fast", "tank", "charger", "exploder"][index % 5] if mixed_stress else ("charger" if index % 4 == 0 else "basic")
@@ -112,6 +117,8 @@ func setup() -> void:
 		stage_scrap_press_demo()
 	if mine_demo:
 		stage_mine_layer_demo()
+	if laser_demo:
+		stage_laser_demo()
 	last_tick = Time.get_ticks_usec()
 	started_usec = last_tick
 
@@ -261,6 +268,34 @@ func stage_mine_layer_demo() -> void:
 	world.camera_rig.set_zoom(.85)
 	world.camera_rig.snap()
 
+## The Laser line in real combat (`--laser-demo[ --laser-frame=N]`, run with `--fixed-fps 60`): the plain laser and Focus Beam on the
+## near row, Halo Cutter and Sunpiercer on the far row, each with a tank and three basic enemies standing 2 m off (durable and
+## stationary, so every beam stays on). Combat starts at frame 180; the screenshot is taken at `laser_frame` (eight seconds of
+## beam, so the ramps are full and Sunpiercer has flared). The hero stands far off at +z, out of every beam.
+func stage_laser_demo() -> void:
+	world.hud.hide()
+	world.player.position = Vector3(0, 0, 12)
+	for old in world.turrets:
+		old.visible = false
+		old.set_physics_process(false)
+	world.session.state.turret_progression_enabled = true
+	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP) # evolving is a shop action
+	var forms: Array = [[], ["focus_beam"], ["focus_beam", "halo_cutter"], ["focus_beam", "sunpiercer"]]
+	var spots: Array = [Vector3(-3, 0, -4), Vector3(4, 0, -4), Vector3(-3, 0, 3), Vector3(4, 0, 3)]
+	for index in range(forms.size()):
+		var turret := world.add_turret(spots[index], "laser")
+		turret.progression.award(1500)
+		for form: String in forms[index]:
+			if not turret.evolve(form):
+				push_error("Cannot evolve %s" % form)
+		for walker in 4:
+			var enemy := world.spawn_enemy(spots[index] + Vector3(-1.9 - float(walker) * .35, 0, float(walker) * .9 - 1.4), "tank" if walker == 0 else "basic")
+			enemy.stationary = true
+			enemy.health = 100000
+			enemy.max_health = 100000
+	world.camera_rig.set_zoom(.85)
+	world.camera_rig.snap()
+
 ## Once combat has started: every visible Sniper fires one real shot (tracer, muzzle flash, hit), then effects freeze.
 func fire_sniper_demo() -> void:
 	# With no initial wave the run drifts to the shop; turrets only fire in combat.
@@ -331,14 +366,14 @@ func _process(_delta: float) -> void:
 		world.finish_wave()
 	if frames == 400 and shop_focus >= 0:
 		world.hud.shop_screen.offer_buttons[shop_focus].grab_focus()
-	if frames == 180 and (quake_demo or decoy_demo or press_demo or mine_demo):
+	if frames == 180 and (quake_demo or decoy_demo or press_demo or mine_demo or laser_demo):
 		GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 		world.crowd.rebuild(world.enemies)
 	if frames == 180 and sniper_demo:
 		fire_sniper_demo()
 	if frames == 180 and combat_demo:
 		stage_combat_demo()
-	var finished := elapsed >= benchmark_seconds + 2.0 if benchmark_seconds > 0.0 else frames == (mine_frame if mine_demo else press_frame if press_demo else (decoy_frame if decoy_demo else (quake_frame if quake_demo else 720)))
+	var finished := elapsed >= benchmark_seconds + 2.0 if benchmark_seconds > 0.0 else frames == (laser_frame if laser_demo else mine_frame if mine_demo else press_frame if press_demo else (decoy_frame if decoy_demo else (quake_frame if quake_demo else 720)))
 	if finished and not capture_pending:
 		capture_pending = true
 		capture.call_deferred()
@@ -358,6 +393,8 @@ func capture() -> void:
 		suffix = "-scrap-press-%d" % press_frame
 	if mine_demo:
 		suffix = "-mine-layer-%d" % mine_frame
+	if laser_demo:
+		suffix = "-laser-%d" % laser_frame
 	var output := ProjectSettings.globalize_path("res://.test-results/game%s.png" % suffix)
 	get_viewport().get_texture().get_image().save_png(output)
 	samples.sort()

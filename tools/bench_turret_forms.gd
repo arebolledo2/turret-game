@@ -19,6 +19,9 @@ extends Node
 ##           not depend on how busy the GPU is.
 ## Mine Layer rows: the stationary dummies sit on the mines forever, so re-arming mines (Dead Zone) and chains read far above what
 ## they do against enemies that walk through; `test_mine_layer_turret.gd` tunes the finals against a walking stream in game time.
+## Laser rows: a beam never loses a stationary target, so single and lane read its full-ramp DPS after the 3 s to 6 s ramp (a short
+## `--seconds` favours the faster ramps; use 15 or more). Halo Cutter's cross spends only part of its time on each dummy, and the
+## walking-traffic ratios that tune the finals are in `test_laser_turret.gd`.
 ## "slow" is the share of enemy-seconds spent slowed (by a status or by standing in a ground zone).
 ## [base, form(, companion form)]: a form id is reached through its base's level-5 upgrade first; "" is the unevolved base.
 ## A third entry puts an Ion turret of that form (a Machine Gun) beside it in the same cell; the row then reports the
@@ -38,6 +41,7 @@ const FORMS := [
 	["decoy", ""], ["decoy", "bumper_post"], ["decoy", "pile_driver"], ["decoy", "maelstrom"],
 	["scrap_press", ""], ["scrap_press", "coin_feeder"], ["scrap_press", "treasury"], ["scrap_press", "academy"],
 	["mine_layer", ""], ["mine_layer", "minefield"], ["mine_layer", "dead_zone"], ["mine_layer", "chain_reaction"],
+	["laser", ""], ["laser", "focus_beam"], ["laser", "halo_cutter"], ["laser", "sunpiercer"],
 ]
 const SCENARIOS := ["single", "cluster", "lane", "pull", "pull_far", "income"]
 ## The pull scenarios (aggro turrets only) use real, moving enemies that would otherwise walk off toward the hero. Eight
@@ -48,6 +52,9 @@ const HELD_RADIUS: float = 3.0
 const PULL_SECONDS: float = 20.0
 const COLUMNS := 8
 const CELL := Vector2(16.0, 18.0)
+## Runs of at most this many rows are laid out inside the arena (half of it is about 25 m by 18 m), this far apart.
+const SHORT_RUN: int = 4
+const SHORT_RUN_SPACING: float = 14.0
 
 var world: ArenaWorld
 var actors: Array[TurretActor] = []
@@ -142,6 +149,10 @@ func _level_up(turret: TurretActor) -> void:
 	turret.progression.award(xp)
 
 func _cell(index: int) -> Vector2:
+	if rows.size() <= SHORT_RUN:
+		# A short run (one base turret's four rows) sits in one row across the middle of the arena. Things a turret leaves on the
+		# floor (mines) are clamped to the arena, so the far cells of the full grid would put them nowhere near the dummies.
+		return Vector2((float(index) - (float(rows.size()) - 1.0) * .5) * SHORT_RUN_SPACING, 0.0)
 	return Vector2((index % COLUMNS - COLUMNS / 2.0) * CELL.x, (index / COLUMNS) * CELL.y)
 
 func _hit(_target: Node3D, hit: CombatHit3D, amount: float) -> void:

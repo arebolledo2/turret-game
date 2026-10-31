@@ -5,6 +5,7 @@ extends Node
 ## [base, level-5 upgrade, level-10 final, level-10 final under --alternate]. Each turret is shown as the upgrade, then evolved.
 ## A turret with no attack (the Scrap Press) is scored by the drops it makes instead of hits, and must make none while carried.
 ## The Mine Layer is scored by the hits its blasts credit to it, like any turret, and keeps laying while carried.
+## The Laser is scored by its beam ticks, like any turret; its short reach (2.6 to 3.4 m) is why the showcase enemies stand close.
 const ROSTER := [
 	["normal", "machine_gun", "cyclone_gatling", "omnifire"],
 	["normal", "machine_gun", "omnifire", "cyclone_gatling"],
@@ -26,7 +27,13 @@ const ROSTER := [
 	["scrap_press", "coin_feeder", "academy", "treasury"],
 	["mine_layer", "minefield", "dead_zone", "chain_reaction"],
 	["mine_layer", "minefield", "chain_reaction", "dead_zone"],
+	["laser", "focus_beam", "halo_cutter", "sunpiercer"],
+	["laser", "focus_beam", "sunpiercer", "halo_cutter"],
 ]
+## Turrets stand in rows of this many, 4.2 m apart, rows 6.6 m apart. Three rows rather than four: under `--moving`, enemies spawned
+## beside a turret in a fourth row (z beyond about 16) were seen jumping 6 m to z = 8.6 in their first physics step (the cause was not
+## isolated), so a short-reach turret there never got a target.
+const COLUMNS: int = 8
 ## Seconds a phase runs before it is scored. Long enough for the slowest Scrap Press final (Academy, one drop per 6 to 8 s).
 const PHASE_TICKS: int = 540
 var world: ArenaWorld
@@ -71,7 +78,7 @@ func _ready() -> void:
 	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
 	for i in ROSTER.size():
 		var spec: Array = ROSTER[i]
-		var turret := world.add_turret(Vector3((float(i % 6) - 2.5) * 4.2, 0, -3.3 + 6.6 * float(i / 6)), spec[0])
+		var turret := world.add_turret(Vector3((float(i % COLUMNS) - (float(COLUMNS) - 1.0) * .5) * 4.2, 0, -3.3 + 6.6 * float(i / COLUMNS)), spec[0])
 		turret.progression.award(1500)
 		turret.evolve(spec[1])
 		actors.append(turret)
