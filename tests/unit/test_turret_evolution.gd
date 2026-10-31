@@ -337,3 +337,33 @@ func test_mine_layer_forms_climb_in_mines_and_change_how_they_work() -> void:
 	assert_gt(float(reaction.range), float(zone.range), "Limpets are launched from farther off than mines are laid")
 	assert_string_contains(TurretEvolution.mine_layer_pattern_text("dead_zone"), "3 links")
 	assert_string_contains(TurretEvolution.mine_layer_pattern_text("chain_reaction"), "limpets")
+
+func test_laser_path_forms_tiers_and_placeholder_chassis() -> void:
+	assert_eq(TurretEvolution.options("laser", 0), ["focus_beam"])
+	assert_eq(TurretEvolution.options("laser", 1), ["halo_cutter", "sunpiercer"])
+	for form in ["focus_beam", "halo_cutter", "sunpiercer"]:
+		assert_true(TurretEvolution.is_implemented(form))
+		assert_eq(TurretEvolution.model_key(form), "sniper", "Every Laser form uses the tinted cp_sniper rifle until a model is wired")
+		assert_false(TurretEvolution.description(form).is_empty())
+	assert_true(TurretEvolution.behaviour_script("laser", "").new() is LaserForm, "The unevolved laser holds its beam through its form")
+
+func test_laser_base_stats_match_the_card() -> void:
+	var base := TurretRegistry.get_base_stats("laser")
+	assert_eq(base.damage, 3.0)
+	assert_eq(base.fire_rate, 10.0)
+	assert_eq(base.range, 260.0)
+	assert_eq(TurretRegistry.get_base_price("laser"), 19)
+	assert_eq(TurretRegistry.get_fire_mode("laser"), TurretRegistry.FIRE_BEAM)
+	assert_eq(LaserForm.DEFAULT_RAMP_PEAK, 3.0, "x1 to x3")
+	assert_eq(LaserForm.DEFAULT_RAMP_SECONDS, 3.0, "in 3 s")
+
+func test_laser_forms_change_how_the_beam_works() -> void:
+	var focus := TurretEvolution.base_stats("laser", "focus_beam")
+	assert_gt(float(focus.damage), 3.0)
+	assert_gt(float(focus.range), 260.0)
+	assert_lt(float(TurretEvolution.param("focus_beam", "ramp_seconds")), LaserForm.DEFAULT_RAMP_SECONDS, "Focus Beam ramps faster")
+	assert_eq(TurretEvolution.param("halo_cutter", "beams"), 4)
+	assert_eq(TurretEvolution.param("halo_cutter", "ramp_peak"), 1.0, "A cross does not ramp")
+	assert_eq(TurretEvolution.param("sunpiercer", "ramp_peak"), 6.0)
+	assert_gt(float(TurretEvolution.param("sunpiercer", "flare_scale")), 0.0)
+	assert_null(TurretEvolution.param("focus_beam", "flare_scale"))

@@ -242,6 +242,11 @@ func _show_selected() -> void:
 		lines.append("Damage  [b]%.1f[/b]     Reach  [b]%.2f m[/b]" % [stats.damage, stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0)])
 		if turret.turret_type == "melee":
 			lines.append("Sweep  %.0f°/s     Rehit interval  %.2f s" % [stats.rotation_rate, stats.rehit_delay])
+		elif turret.form is LaserForm:
+			var laser := turret.form as LaserForm
+			lines.append("Rate  %.1f ticks/s     Beam now  [b]x%.1f[/b]" % [stats.fire_rate, laser.ramp_now()])
+			lines.append("About [b]%.0f DPS[/b] on average while the beam ramps, [b]%.0f DPS[/b] fully ramped" % [laser.estimate_dps(stats), stats.damage * stats.fire_rate * laser.ramp_peak()])
+			lines.append(TurretEvolution.laser_pattern_text(growth.evolution_form))
 		else:
 			lines.append("Rate  %.2f shots/s     Cooldown  %.2f s" % [stats.fire_rate, stats.cooldown_seconds])
 	if stats.projectile_speed_metres > 0:

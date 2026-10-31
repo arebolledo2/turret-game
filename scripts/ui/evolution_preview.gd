@@ -90,6 +90,9 @@ func show_form(turret: TurretActor, form: String) -> void:
 		lines.append("%s out at once   %d → %d%s" % ["Limpets" if limpets else "Mines", int(before.values.get("max_mines", 0)), int(after.values.get("max_mines", 0)),
 			"" if limpets else "     Set off within   %.2f → %.2f m" % [float(before.values.get("proximity_radius", 0.0)) * WorldGeometry.METRES_PER_PIXEL, float(after.values.get("proximity_radius", 0.0)) * WorldGeometry.METRES_PER_PIXEL]])
 		lines.append(TurretEvolution.mine_layer_pattern_text(form))
+	if turret.turret_type == "laser":
+		lines.append("Damage per tick   %.1f → %.1f     Ticks per second   %.1f → %.1f" % [before.damage, after.damage, before.fire_rate, after.fire_rate])
+		lines.append(TurretEvolution.laser_pattern_text(form))
 	if after.aoe_radius_metres > 0:
 		lines.append("Blast radius   %.2f → %.2f m" % [before.aoe_radius_metres, after.aoe_radius_metres])
 	if form == "stormblade":

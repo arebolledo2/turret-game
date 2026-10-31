@@ -410,7 +410,7 @@ func _turret_numbers(was: Dictionary, turret: Dictionary) -> String:
 		# A turret that does not attack (the Scrap Press): damage and shots per second mean nothing for it.
 		return "No attack · " + _number(was, turret, "interval", " s per drop", true) + "\n" + _number(was, turret, "range", " m drop reach")
 	var cadence_key := "rotation_rate" if turret["rotation_rate"] > 0 else "fire_rate"
-	var cadence_unit := "°/s sweep" if cadence_key == "rotation_rate" else (" mines/s" if bool(turret.get("deploys", false)) else " shots/s")
+	var cadence_unit := "°/s sweep" if cadence_key == "rotation_rate" else (" mines/s" if bool(turret.get("deploys", false)) else (" ticks/s" if bool(turret.get("beam", false)) else " shots/s"))
 	if cadence_key == "fire_rate" and int(turret.get("burst_size", 1)) > 1:
 		cadence_unit = " bursts/s (%d shots)" % int(turret["burst_size"])
 	var numbers := _number(was, turret, "damage", " damage") + " · " + _number(was, turret, cadence_key, cadence_unit)

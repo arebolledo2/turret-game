@@ -8,7 +8,7 @@ extends RefCounted
 const DEFAULT_ENTRIES: Dictionary = {
 	"turret": {
 		"normal": "", "plasma": "", "shock": "", "tesla": "", "melee": "",
-		"bow": "", "flamethrower": "", "bowling": "", "sniper": "", "quake": "", "decoy": "", "scrap_press": "", "mine_layer": "",
+		"bow": "", "flamethrower": "", "bowling": "", "sniper": "", "quake": "", "decoy": "", "scrap_press": "", "mine_layer": "", "laser": "",
 	},
 	"item": {
 		"opening_salvo": "", "return_address": "", "slipstream_fletching": "", "cinder_reserve": "", "arc_insurance": "", "follow_through": "", "counterweight": "", "victory_lap": "", "rescue_beacon": "", "reserve_battery": "", "close_partnership": "", "lone_sentry": "", "crosslink_array": "",

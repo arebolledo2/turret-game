@@ -181,6 +181,19 @@ static func mine_layer_pattern_text(form_id: String) -> String:
 	var life := float(param(form_id, "lifetime", 40.0))
 	return "Mines arm after %.1f s and fizzle after %.0f s if nothing comes near" % [float(param(form_id, "arm_seconds", 0.8)), life]
 
+## One line on how a Laser form holds its beam, for the preview and the inspector.
+static func laser_pattern_text(form_id: String) -> String:
+	var peak := float(param(form_id, "ramp_peak", LaserForm.DEFAULT_RAMP_PEAK))
+	var seconds := float(param(form_id, "ramp_seconds", LaserForm.DEFAULT_RAMP_SECONDS))
+	var arms := int(param(form_id, "beams", 1))
+	if arms > 1:
+		return "%d beams on a cross turning %.0f degrees a second cut every enemy they sweep across; no ramp" % [arms, float(param(form_id, "spin_degrees", 0.0))]
+	var text := "Beam ramps x1 to x%.0f over %.0f s on one enemy; losing the target starts it over" % [peak, seconds]
+	var flare := float(param(form_id, "flare_scale", 0.0))
+	if flare > 0.0:
+		text += ". At full ramp a flare along the whole line every %.0f s hits each enemy for %.0f full ticks" % [float(param(form_id, "flare_interval", 2.0)), flare]
+	return text
+
 ## One line on where a Scrap Press form sends its drops, for the preview and the inspector.
 static func scrap_press_pattern_text(form_id: String) -> String:
 	var radius := float(param(form_id, "xp_radius", 0.0))

@@ -12,6 +12,7 @@ const FIRE_SWEEP: String = "sweep" # spinning melee bat
 const FIRE_INSTANT: String = "instant" # hit-scan shot along a line (Sniper); pierce lets it strike more enemies on that line
 const FIRE_NONE: String = "none" # no attack (utility turrets such as the Scrap Press); its `TurretForm.tick` does the work
 const FIRE_DEPLOY: String = "deploy" # lays mines or limpets (the Mine Layer) through engine piece S8; its `TurretForm.tick` does the work
+const FIRE_BEAM: String = "beam" # holds a continuous beam on its target (the Laser) through engine piece S11; its `TurretForm.tick` does the work
 
 const DEFAULT_MODEL: String = "res://assets/models/game/ion_turret.glb"
 
@@ -29,6 +30,7 @@ const BASE_PRICES: Dictionary = {
 	"tesla": 17,
 	"melee": 12,
 	"mine_layer": 15,
+	"laser": 19,
 }
 
 ## Player-facing build families. Items target these (modifier filter `family`) so a tag reads the same on the card and on the turret.
@@ -279,6 +281,28 @@ const TYPES: Dictionary = {
 			"proximity_radius": 40.0,
 			"max_mines": 5,
 			"knockback_force": 150.0,
+		}
+	},
+	"laser": {
+		"name": "Laser",
+		"icon": "🔦",
+		"short_name": "Laser",
+		# No Laser model is wired yet: the cp_sniper rifle, tinted cyan, stands in (see `TurretActor._rebuild_model`).
+		"model_key": "sniper",
+		"model": "res://assets/models/game/shock_turret.glb",
+		# A continuous beam: `LaserForm.tick` locks the nearest enemy and holds the beam on it through engine piece S11
+		# (`ContinuousBeam`). `damage` is one tick's hit and `fire_rate` the ticks per second, so a beam deals `damage x fire_rate`
+		# per second at x1 and `ramp_peak` times that fully ramped (3 over 3 s by default; the forms set `ramp_*` params).
+		"fire_mode": FIRE_BEAM,
+		"description": "A beam that stays on one enemy and hits harder the longer it holds: three times as hard after three seconds. Losing the target starts the ramp over.",
+		# The card is "Instant" (so the Instant item family, and Resonance Link, count it) and Plasma (the damage type, cyan).
+		"attack_styles": [GameEnums.AttackStyle.INSTANT],
+		"damage_types": [GameEnums.DamageType.PLASMA],
+		"base_stats": {
+			"damage": 3.0,
+			"fire_rate": 10.0,
+			"range": 260.0,
+			"rotation_speed": 0.0,
 		}
 	},
 }

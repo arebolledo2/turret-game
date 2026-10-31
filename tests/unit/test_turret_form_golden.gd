@@ -5,7 +5,7 @@ extends GutTest
 ## stats, text, shot shape, behaviour class, visual builder or built model must fail here instead of passing silently.
 ## If a number must change on purpose (a balance retune), edit the literal in the same commit and say why.
 ##
-## What is pinned, per form (all 39 registered forms, implemented or not) and per base turret with no form:
+## What is pinned, per form (all 42 registered forms, implemented or not) and per base turret with no form:
 ##   FORMS     base, kind (upgrade or final), name, model key, implemented, description
 ##   STATS     the full `TurretEvolution.base_stats(base, form)` dictionary (every key, with its type)
 ##   SHOTS     `shape_shot` on a fresh `CombatShot3D`: visual_key, visual_scale, radius, lifetime, ricochets, pierce
@@ -13,13 +13,13 @@ extends GutTest
 ##   BUILDERS  which `*EvolutionVisual` builders change the form's chassis (each is run on a fresh model)
 ##   MODELS    the model the actor builds: node and mesh counts, handles the attack code reads (muzzles, emitters, saber
 ##             arms) and a digest of every node's class, name, transform, mesh size and material
-##   MISC      volley size, pierce text, the Stormblade barrel stats, Resonator echo delays and Quake, Decoy, Scrap Press and Mine Layer pattern text
+##   MISC      volley size, pierce text, the Stormblade barrel stats, Resonator echo delays and Quake, Decoy, Scrap Press, Mine Layer and Laser pattern text
 ##
 ## The collectors only call lookups (`_stats`, `_shot`, `_volley`, ...); when a refactor changes a function signature,
 ## adapt the lookup here, never the expected values.
 
-const BASES: Array[String] = ["normal", "melee", "bow", "flamethrower", "bowling", "plasma", "shock", "tesla", "sniper", "quake", "decoy", "scrap_press", "mine_layer"]
-const BUILDERS: Array[String] = ["BowEvolutionVisual", "FlameEvolutionVisual", "BowlingEvolutionVisual", "GunbladeEvolutionVisual", "SiegeEvolutionVisual", "SniperEvolutionVisual", "QuakeEvolutionVisual", "DecoyEvolutionVisual", "ScrapPressEvolutionVisual", "MineLayerEvolutionVisual", "GatlingEvolutionVisual", "CrossfireEvolutionVisual"]
+const BASES: Array[String] = ["normal", "melee", "bow", "flamethrower", "bowling", "plasma", "shock", "tesla", "sniper", "quake", "decoy", "scrap_press", "mine_layer", "laser"]
+const BUILDERS: Array[String] = ["BowEvolutionVisual", "FlameEvolutionVisual", "BowlingEvolutionVisual", "GunbladeEvolutionVisual", "SiegeEvolutionVisual", "SniperEvolutionVisual", "QuakeEvolutionVisual", "DecoyEvolutionVisual", "ScrapPressEvolutionVisual", "MineLayerEvolutionVisual", "LaserEvolutionVisual", "GatlingEvolutionVisual", "CrossfireEvolutionVisual"]
 
 const FORMS: Dictionary = {
 	"machine_gun": {
@@ -333,6 +333,30 @@ const FORMS: Dictionary = {
 		"model": "mine_layer",
 		"implemented": true,
 		"description": "Launches limpet mines at the nearest large enemy (any enemy if none is large). A limpet sticks on and goes off after 1.5 seconds, or at once if its host dies, and its blast sticks a new limpet on up to two neighbours, once.",
+	},
+	"focus_beam": {
+		"base": "laser",
+		"kind": "upgrade",
+		"name": "Focus Beam",
+		"model": "sniper",
+		"implemented": true,
+		"description": "A lensed emitter: 4 damage ten times a second, from farther off, reaching its x3 ramp in 2 seconds instead of 3.",
+	},
+	"halo_cutter": {
+		"base": "laser",
+		"kind": "final",
+		"name": "Halo Cutter",
+		"model": "sniper",
+		"implemented": true,
+		"description": "Four beams on a spinning cross turn 120 degrees a second and cut every enemy they sweep across: 5 damage, 8 times a second. Nothing to focus on, so no ramp.",
+	},
+	"sunpiercer": {
+		"base": "laser",
+		"kind": "final",
+		"name": "Sunpiercer",
+		"model": "sniper",
+		"implemented": true,
+		"description": "The ramp climbs to x6 over 4 seconds, from 3.2 damage a tick. At full ramp a flare runs the whole line through the target every 2 seconds, hitting every enemy on it for 6 full-strength ticks.",
 	},
 }
 
@@ -766,6 +790,30 @@ const STATS: Dictionary = {
 		"max_mines": 4,
 		"knockback_force": 80.0,
 	},
+	"(laser)": {
+		"damage": 3.0,
+		"fire_rate": 10.0,
+		"range": 260.0,
+		"rotation_speed": 0.0,
+	},
+	"focus_beam": {
+		"damage": 4.0,
+		"fire_rate": 10.0,
+		"range": 300.0,
+		"rotation_speed": 0.0,
+	},
+	"halo_cutter": {
+		"damage": 5.0,
+		"fire_rate": 8.0,
+		"range": 300.0,
+		"rotation_speed": 0.0,
+	},
+	"sunpiercer": {
+		"damage": 3.2,
+		"fire_rate": 10.0,
+		"range": 340.0,
+		"rotation_speed": 0.0,
+	},
 }
 
 const SHOTS: Dictionary = {
@@ -821,6 +869,10 @@ const SHOTS: Dictionary = {
 	"minefield": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
 	"dead_zone": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
 	"chain_reaction": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"(laser)": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"focus_beam": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"halo_cutter": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"sunpiercer": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
 }
 
 const BEHAVIOUR: Dictionary = {
@@ -876,6 +928,10 @@ const BEHAVIOUR: Dictionary = {
 	"minefield": "MineLayerForm",
 	"dead_zone": "MineLayerForm",
 	"chain_reaction": "MineLayerForm",
+	"(laser)": "LaserForm",
+	"focus_beam": "LaserForm",
+	"halo_cutter": "LaserForm",
+	"sunpiercer": "LaserForm",
 }
 
 const BUILDERS_BY_FORM: Dictionary = {
@@ -931,6 +987,10 @@ const BUILDERS_BY_FORM: Dictionary = {
 	"minefield": ["MineLayerEvolutionVisual"],
 	"dead_zone": ["MineLayerEvolutionVisual"],
 	"chain_reaction": ["MineLayerEvolutionVisual"],
+	"(laser)": [],
+	"focus_beam": ["LaserEvolutionVisual"],
+	"halo_cutter": ["LaserEvolutionVisual"],
+	"sunpiercer": ["LaserEvolutionVisual"],
 }
 
 const MODELS: Dictionary = {
@@ -1558,6 +1618,54 @@ const MODELS: Dictionary = {
 		"saber_angles": 1,
 		"digest": "968d364cb8a47453",
 	},
+	"(laser)": {
+		"nodes": 17,
+		"meshes": 13,
+		"muzzle": "0.000,0.220,-0.860",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "8da8183364b5923a",
+	},
+	"focus_beam": {
+		"nodes": 21,
+		"meshes": 17,
+		"muzzle": "0.000,0.220,-1.180",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "359ea2198a7970d7",
+	},
+	"halo_cutter": {
+		"nodes": 25,
+		"meshes": 21,
+		"muzzle": "0.000,0.220,-0.860",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "bebafeda81392b38",
+	},
+	"sunpiercer": {
+		"nodes": 23,
+		"meshes": 19,
+		"muzzle": "0.000,0.220,-1.480",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "4cb9e1ddcb050e41",
+	},
 }
 
 const MISC: Dictionary = {
@@ -1592,9 +1700,14 @@ const MISC: Dictionary = {
 	"mine_layer_pattern:dead_zone": "Mines re-arm 9 s after a blast and never expire; a blast sets off armed mines within 1.8 m, 3 links deep",
 	"mine_layer_pattern:chain_reaction": "Launches limpets at the nearest large enemy: each goes off after 1.5 s (at once if its host dies) and sticks 2 more on neighbours, once",
 	"mine_layer_pattern:missing": "Mines arm after 0.8 s and fizzle after 40 s if nothing comes near",
+	"laser_pattern:": "Beam ramps x1 to x3 over 3 s on one enemy; losing the target starts it over",
+	"laser_pattern:focus_beam": "Beam ramps x1 to x3 over 2 s on one enemy; losing the target starts it over",
+	"laser_pattern:halo_cutter": "4 beams on a cross turning 120 degrees a second cut every enemy they sweep across; no ramp",
+	"laser_pattern:sunpiercer": "Beam ramps x1 to x6 over 4 s on one enemy; losing the target starts it over. At full ramp a flare along the whole line every 2 s hits each enemy for 6 full ticks",
+	"laser_pattern:missing": "Beam ramps x1 to x3 over 3 s on one enemy; losing the target starts it over",
 	"ids": ["", "", "", ""],
-	"implemented": ["machine_gun", "cyclone_gatling", "omnifire", "saber", "orbit_saber", "stormblade", "repeater_bow", "arrowstorm", "titan_bow", "wide_flame", "inferno_crown", "dragonheart", "heavy_roller", "juggernaut", "ricochet_king", "siege", "worldbreaker", "resonator", "resonance_engine", "thunder_spear", "piercer_rifle", "horizon_piercer", "overwatch", "aftershock", "tectonic", "cataclysm", "bumper_post", "pile_driver", "maelstrom", "coin_feeder", "treasury", "academy", "minefield", "dead_zone", "chain_reaction"],
-	"order": [["machine_gun", "cyclone_gatling", "omnifire"], ["saber", "orbit_saber", "stormblade"], ["repeater_bow", "arrowstorm", "titan_bow"], ["wide_flame", "inferno_crown", "dragonheart"], ["heavy_roller", "juggernaut", "ricochet_king"], ["siege", "worldbreaker", "constellation"], ["resonator", "resonance_engine", "thunder_spear"], ["forked_coil", "storm_network", "thunderhead"], ["piercer_rifle", "horizon_piercer", "overwatch"], ["aftershock", "tectonic", "cataclysm"], ["bumper_post", "pile_driver", "maelstrom"], ["coin_feeder", "treasury", "academy"], ["minefield", "dead_zone", "chain_reaction"]],
+	"implemented": ["machine_gun", "cyclone_gatling", "omnifire", "saber", "orbit_saber", "stormblade", "repeater_bow", "arrowstorm", "titan_bow", "wide_flame", "inferno_crown", "dragonheart", "heavy_roller", "juggernaut", "ricochet_king", "siege", "worldbreaker", "resonator", "resonance_engine", "thunder_spear", "piercer_rifle", "horizon_piercer", "overwatch", "aftershock", "tectonic", "cataclysm", "bumper_post", "pile_driver", "maelstrom", "coin_feeder", "treasury", "academy", "minefield", "dead_zone", "chain_reaction", "focus_beam", "halo_cutter", "sunpiercer"],
+	"order": [["machine_gun", "cyclone_gatling", "omnifire"], ["saber", "orbit_saber", "stormblade"], ["repeater_bow", "arrowstorm", "titan_bow"], ["wide_flame", "inferno_crown", "dragonheart"], ["heavy_roller", "juggernaut", "ricochet_king"], ["siege", "worldbreaker", "constellation"], ["resonator", "resonance_engine", "thunder_spear"], ["forked_coil", "storm_network", "thunderhead"], ["piercer_rifle", "horizon_piercer", "overwatch"], ["aftershock", "tectonic", "cataclysm"], ["bumper_post", "pile_driver", "maelstrom"], ["coin_feeder", "treasury", "academy"], ["minefield", "dead_zone", "chain_reaction"], ["focus_beam", "halo_cutter", "sunpiercer"]],
 }
 
 # --- Lookups (adapt these when a signature changes; never the expected values) ---
@@ -1637,6 +1750,7 @@ func _run_builder(builder: String, model: Node3D, _base: String, form: String) -
 		"DecoyEvolutionVisual": DecoyEvolutionVisual.build(model, form)
 		"ScrapPressEvolutionVisual": ScrapPressEvolutionVisual.build(model, form)
 		"MineLayerEvolutionVisual": MineLayerEvolutionVisual.build(model, form)
+		"LaserEvolutionVisual": LaserEvolutionVisual.build(model, form)
 		"GatlingEvolutionVisual": GatlingEvolutionVisual.build(model, form)
 		"CrossfireEvolutionVisual": CrossfireEvolutionVisual.build(model, form)
 
@@ -1692,6 +1806,8 @@ func collect_all(host: Node) -> Dictionary:
 		result.misc["scrap_press_pattern:" + form] = TurretEvolution.scrap_press_pattern_text(form)
 	for form in ["", "minefield", "dead_zone", "chain_reaction", "missing"]:
 		result.misc["mine_layer_pattern:" + form] = TurretEvolution.mine_layer_pattern_text(form)
+	for form in ["", "focus_beam", "halo_cutter", "sunpiercer", "missing"]:
+		result.misc["laser_pattern:" + form] = TurretEvolution.laser_pattern_text(form)
 	result.misc["ids"] = [TurretEvolution.form_name(""), TurretEvolution.form_name("missing"), TurretEvolution.model_key(""), TurretEvolution.description("missing")]
 	result.misc["implemented"] = implemented
 	result.misc["order"] = BASES.map(func(base: String) -> Array: return _forms_of(base))

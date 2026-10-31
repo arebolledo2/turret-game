@@ -42,6 +42,11 @@ extends RefCounted
 ##                  limpet, fuse_seconds, stick, launch_speed, large_scale  Chain Reaction: launches limpets instead of laying mines,
 ##                              how long a stuck limpet burns, how many neighbours its blast sticks new limpets on, its flight
 ##                              speed (m/s), and the body scale from which an enemy counts as large
+##                  ramp_peak, ramp_seconds  Laser beams: the damage multiplier a beam reaches after staying on one enemy for
+##                              `ramp_seconds` (it climbs from x1; 1 means no ramp)
+##                  beams, spin_degrees  Halo Cutter: the arms of the cross and how fast it turns (degrees per second)
+##                  flare_scale, flare_interval  Sunpiercer: at full ramp a flare along the whole line deals `flare_scale` full-ramp
+##                              ticks to every enemy on it, every `flare_interval` seconds
 ##                  layers, burner_pairs, burner_fan, lance_segments, braces, bumpers, housing_pairs, barrel_bands
 ##                              hardware counts and angles for the visual builders
 ## `BASES` holds the same kind of facts for a base turret that has not evolved yet (and for what all its forms share).
@@ -82,6 +87,8 @@ const BASES: Dictionary = {
 	"scrap_press": {"behaviour": "ScrapPressForm"},
 	# The unevolved Mine Layer already lays its mines through the same behaviour as its forms.
 	"mine_layer": {"behaviour": "MineLayerForm"},
+	# The unevolved Laser already holds its beam through the same behaviour as its forms.
+	"laser": {"behaviour": "LaserForm"},
 }
 
 const FORMS: Dictionary = {
@@ -378,5 +385,36 @@ const FORMS: Dictionary = {
 		"stats": {"damage": 11.0, "fire_rate": .4, "range": 500.0, "aoe_radius": 100.0, "proximity_radius": 40.0, "max_mines": 4, "knockback_force": 80.0},
 		"behaviour": "MineLayerForm", "visual": "MineLayerEvolutionVisual",
 		"params": {"limpet": true, "fuse_seconds": 1.5, "stick": 2, "launch_speed": 14.0, "large_scale": 1.25},
+	},
+	# --- Laser ---
+	# A continuous beam: `damage` is one tick's hit and `fire_rate` the ticks per second, so the beam deals `damage x fire_rate` per
+	# second at x1 and `ramp_peak` times that fully ramped. `range` is its reach (260 = 2.6 m). The base laser ramps x1 to x3 over
+	# 3 s. Tuned in simulated traffic at level 10 (see `test_laser_turret.gd`, not the bench): against Focus Beam, Halo Cutter is
+	# about 1.4 to 1.6 times in a crowd (packs and rings of walkers; it is a crowd turret and far weaker on a lone target) and
+	# Sunpiercer about 1.5 to 1.9 times on a lone or long-held target (boss, lane), 1.2 to 1.3 times on short-lived targets.
+	# Single-target DPS before level and item bonuses: base 30 at x1 / 90 at x3 (60 averaged over the ramp), Focus Beam 40 / 120
+	# (80), Halo Cutter 40 per arm on a lone enemy, Sunpiercer 32 at x1 / 192 at x6 plus the flare (112 averaged over the ramp).
+	# All four use the cp_sniper rifle (tinted cyan) as a placeholder chassis until the Laser model is wired;
+	# `LaserEvolutionVisual` adds the per-form hardware.
+	"focus_beam": {
+		"base": "laser", "kind": UPGRADE, "name": "Focus Beam", "model": "sniper", "implemented": true,
+		"description": "A lensed emitter: 4 damage ten times a second, from farther off, reaching its x3 ramp in 2 seconds instead of 3.",
+		"stats": {"damage": 4.0, "fire_rate": 10.0, "range": 300.0},
+		"behaviour": "LaserForm", "visual": "LaserEvolutionVisual",
+		"params": {"ramp_peak": 3.0, "ramp_seconds": 2.0},
+	},
+	"halo_cutter": {
+		"base": "laser", "kind": FINAL, "name": "Halo Cutter", "model": "sniper", "implemented": true,
+		"description": "Four beams on a spinning cross turn 120 degrees a second and cut every enemy they sweep across: 5 damage, 8 times a second. Nothing to focus on, so no ramp.",
+		"stats": {"damage": 5.0, "fire_rate": 8.0, "range": 300.0},
+		"behaviour": "LaserForm", "visual": "LaserEvolutionVisual",
+		"params": {"beams": 4, "spin_degrees": 120.0, "ramp_peak": 1.0},
+	},
+	"sunpiercer": {
+		"base": "laser", "kind": FINAL, "name": "Sunpiercer", "model": "sniper", "implemented": true,
+		"description": "The ramp climbs to x6 over 4 seconds, from 3.2 damage a tick. At full ramp a flare runs the whole line through the target every 2 seconds, hitting every enemy on it for 6 full-strength ticks.",
+		"stats": {"damage": 3.2, "fire_rate": 10.0, "range": 340.0},
+		"behaviour": "LaserForm", "visual": "LaserEvolutionVisual",
+		"params": {"ramp_peak": 6.0, "ramp_seconds": 4.0, "flare_scale": 6.0, "flare_interval": 2.0},
 	},
 }

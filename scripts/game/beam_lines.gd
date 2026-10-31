@@ -79,10 +79,9 @@ func visible_count() -> int:
 			count += 1
 	return count
 
-## Removes the set from the tree and frees it (safe to call twice).
+## Hides the set and frees it at the end of the frame (safe to call twice). It stays a child of its turret until then, so a turret
+## that leaves the tree frees it with itself and nothing is stranded without a parent.
 func free_lines() -> void:
-	if is_queued_for_deletion():
-		return
-	if get_parent():
-		get_parent().remove_child(self)
-	queue_free()
+	hide_all()
+	if not is_queued_for_deletion():
+		queue_free()

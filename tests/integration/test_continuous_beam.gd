@@ -51,6 +51,22 @@ func test_a_new_target_resets_the_heat_and_the_same_one_keeps_it() -> void:
 	assert_null(beam.target)
 	assert_eq(beam.heat, 0.0)
 
+func test_a_beam_with_no_single_target_can_be_engaged_and_released() -> void:
+	assert_false(beam.engaged)
+	beam.engage()
+	assert_true(beam.engaged)
+	assert_null(beam.target)
+	assert_eq(beam.advance(STEP, 10.0), 1, "Its first tick is due at once")
+	beam.advance(1.0, 10.0)
+	var heat := beam.heat
+	beam.engage()
+	assert_eq(beam.heat, heat, "Engaging a running beam changes nothing")
+	beam.release()
+	assert_false(beam.engaged)
+	assert_eq(beam.heat, 0.0)
+	beam.lock(rig.enemy(Vector3(2, 0, 0)))
+	assert_true(beam.engaged, "A lock engages too")
+
 func test_holds_needs_a_living_target_in_reach() -> void:
 	var enemy := rig.enemy(Vector3(2, 0, 0))
 	assert_false(beam.holds(Vector3.ZERO, 3.0), "Nothing locked")
@@ -186,9 +202,10 @@ func test_beam_lines_never_grow_and_free_cleanly() -> void:
 	lines.set_segment(7, Vector3.ZERO, Vector3.RIGHT, .1)
 	assert_eq(lines.get_child_count(), 1, "Setting segments never adds nodes; an unknown slot is ignored")
 	assert_eq(Performance.get_monitor(Performance.OBJECT_NODE_COUNT), before)
-	var count := get_child_count()
+	lines.set_segment(0, Vector3.ZERO, Vector3.RIGHT, .1)
 	lines.free_lines()
 	lines.free_lines()
-	assert_eq(get_child_count(), count - 1, "Out of the tree at once")
+	assert_eq(lines.visible_count(), 0, "Hidden at once")
+	assert_true(lines.is_queued_for_deletion())
 	await wait_process_frames(2)
 	assert_false(is_instance_valid(lines), "and freed")
