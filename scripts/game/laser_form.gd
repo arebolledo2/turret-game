@@ -36,7 +36,7 @@ const BEAM_WIDTH_FULL: float = .16
 const FLARE_WIDTH: float = .5
 const FLARE_FLASH: float = .2
 ## Metres from the centre at which a cross arm is drawn from (the ring of emitters), and the beam's height when the chassis has no muzzle.
-const ARM_START: float = .5
+const ARM_START: float = .9
 
 var beam := ContinuousBeam.new()
 var lines: BeamLines

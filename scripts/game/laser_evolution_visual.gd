@@ -1,9 +1,10 @@
 class_name LaserEvolutionVisual
 extends RefCounted
 
-## Runtime hardware for the Laser line. All four stages use the cp_sniper rifle as a placeholder chassis (tinted cyan by
-## `TurretActor`) until the Laser model is wired; the upgrade and the finals add their own silhouette on top of it. Parts hang off
-## `Aim` around the chassis bore (read from its `Muzzle`, in Aim space), so they turn with the head:
+## Runtime hardware for the Laser line. All four stages use the real cp_laser chassis (a teal barrel with a brass bezel and a gem
+## lens, 0.88 m across at its widest, whose `Muzzle` is the nozzle tip in front of the bezel); the upgrade and the finals add their
+## own silhouette on top of it. Parts hang off `Aim` around the chassis bore (read from its `Muzzle`, in Aim space), so they turn
+## with the head:
 ##   Laser         the bare chassis.
 ##   Focus Beam    a lensed barrel extension: a graphite sleeve, two cyan collars and a glowing lens disc at the new mouth; `Muzzle`
 ##                 moves to the lens so the beam leaves from it.
@@ -14,11 +15,14 @@ extends RefCounted
 ## `LaserForm` draws the beams themselves.
 static var materials: Dictionary = {}
 
-## Metres the Focus Beam sleeve and the Sunpiercer barrel reach past the chassis muzzle.
+## Metres the Focus Beam sleeve and the Sunpiercer barrel reach past the chassis muzzle (the nozzle is 0.15 m in radius).
 const FOCUS_EXTENSION: float = .3
 const SUN_EXTENSION: float = .6
-## Radius of the Halo Cutter hoop; the beams are drawn from here (see `LaserForm.ARM_START`).
-const ARM_RADIUS: float = .5
+## Radius of the Halo Cutter hoop; the beams are drawn from here (see `LaserForm.ARM_START`). It clears the model's widest parts
+## (the side knobs at 0.64 m and the tubes at the back, 0.79 m behind the pivot).
+const ARM_RADIUS: float = .9
+## Radius of the chassis body, where the Halo spokes start.
+const BODY_RADIUS: float = .45
 
 static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
 	if form_id not in ["focus_beam", "halo_cutter", "sunpiercer"]:
@@ -32,10 +36,10 @@ static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
 	match form_id:
 		"focus_beam":
 			var tip := bore.z - FOCUS_EXTENSION
-			_cylinder(aim, "LensSleeve", .07, FOCUS_EXTENSION + .04, "graphite", Vector3(bore.x, bore.y, (bore.z + tip) * .5))
+			_cylinder(aim, "LensSleeve", .1, FOCUS_EXTENSION + .04, "graphite", Vector3(bore.x, bore.y, (bore.z + tip) * .5))
 			for z: float in [bore.z - .06, bore.z - .17]:
-				_ring(aim, "LensCollar", .078, .108, "cyan", Vector3(bore.x, bore.y, z))
-			_cylinder(aim, "LensDisc", .06, .02, "white", Vector3(bore.x, bore.y, tip - .01))
+				_ring(aim, "LensCollar", .105, .135, "cyan", Vector3(bore.x, bore.y, z))
+			_cylinder(aim, "LensDisc", .09, .02, "white", Vector3(bore.x, bore.y, tip - .01))
 			muzzle.position = Vector3(bore.x, bore.y, tip - .02)
 		"halo_cutter":
 			var hub := Vector3(bore.x, bore.y, 0.0)
@@ -43,20 +47,20 @@ static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
 			for index in 4:
 				var angle := float(index) * TAU / 4.0
 				var out := Vector3(-sin(angle), 0.0, -cos(angle))
-				_sphere(aim, "HaloLens", .07, "white", hub + out * ARM_RADIUS)
+				_sphere(aim, "HaloLens", .09, "white", hub + out * ARM_RADIUS)
 				if index > 0:
 					_spoke(aim, hub, out)
 		"sunpiercer":
 			var tip := bore.z - SUN_EXTENSION
-			_cylinder(aim, "SunBarrel", .065, SUN_EXTENSION + .04, "graphite", Vector3(bore.x, bore.y, (bore.z + tip) * .5))
+			_cylinder(aim, "SunBarrel", .09, SUN_EXTENSION + .04, "graphite", Vector3(bore.x, bore.y, (bore.z + tip) * .5))
 			for z: float in [bore.z - .18, tip + .06]:
-				_ring(aim, "SunRing", .13, .16, "cyan", Vector3(bore.x, bore.y, z))
-			_cylinder(aim, "SunLens", .055, .02, "white", Vector3(bore.x, bore.y, tip - .01))
+				_ring(aim, "SunRing", .15, .18, "cyan", Vector3(bore.x, bore.y, z))
+			_cylinder(aim, "SunLens", .08, .02, "white", Vector3(bore.x, bore.y, tip - .01))
 			muzzle.position = Vector3(bore.x, bore.y, tip - .02)
-			var spire := _cylinder(aim, "SunSpire", .09, .6, "cyan", Vector3(bore.x, .62, .3), true)
+			var spire := _cylinder(aim, "SunSpire", .1, .55, "cyan", Vector3(bore.x, 1.175, .15), true)
 			(spire.mesh as CylinderMesh).top_radius = .015
 			(spire.mesh as CylinderMesh).radial_segments = 6
-			_sphere(aim, "SunSpark", .05, "white", Vector3(bore.x, .94, .3))
+			_sphere(aim, "SunSpark", .06, "white", Vector3(bore.x, 1.48, .15))
 	return null
 
 static func _ensure_materials() -> void:
@@ -66,8 +70,8 @@ static func _ensure_materials() -> void:
 
 ## A spoke from the hub out to the hoop along the unit direction `out`.
 static func _spoke(parent: Node3D, hub: Vector3, out: Vector3) -> void:
-	var length := ARM_RADIUS - .06
-	var spoke := _box(parent, "HaloSpoke", Vector3(.04, .04, length), "graphite", hub + out * (length * .5 + .05))
+	var length := ARM_RADIUS - BODY_RADIUS - .06
+	var spoke := _box(parent, "HaloSpoke", Vector3(.05, .05, length), "graphite", hub + out * (BODY_RADIUS + length * .5 - .02))
 	spoke.basis = Basis.looking_at(out, Vector3.UP)
 
 ## A cylinder along the bore (z); `upright` keeps it standing along y instead.

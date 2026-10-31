@@ -145,7 +145,7 @@ func _ready() -> void:
 		return
 	if "--laser-preview" in OS.get_cmdline_user_args():
 		# Laser, Focus Beam, Halo Cutter and Sunpiercer side by side; --zoom=<size> (default 8.5) closes in, --side looks level,
-		# --focus=<0-3> centres one turret, --beams switches combat on and steps each laser by hand for four seconds of beam
+		# --focus=<0-3> centres one turret, --front turns each head to face the camera, --beams switches combat on and steps each laser by hand for four seconds of beam
 		# (each has a durable enemy two metres in front of it; Halo Cutter's cross turns, Sunpiercer has not flared yet).
 		var zoom := 8.5
 		for argument in OS.get_cmdline_user_args():
@@ -165,6 +165,8 @@ func _ready() -> void:
 			turret.progression.award(1500)
 			for form: String in [[], ["focus_beam"], ["focus_beam", "halo_cutter"], ["focus_beam", "sunpiercer"]][i]:
 				turret.evolve(form)
+			if "--front" in OS.get_cmdline_user_args() and turret.aim:
+				turret.aim.rotation.y = PI
 			turret.reset_physics_interpolation()
 			lasers.append(turret)
 			var label := Label3D.new()

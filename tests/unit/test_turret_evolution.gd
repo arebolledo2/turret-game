@@ -338,12 +338,12 @@ func test_mine_layer_forms_climb_in_mines_and_change_how_they_work() -> void:
 	assert_string_contains(TurretEvolution.mine_layer_pattern_text("dead_zone"), "3 links")
 	assert_string_contains(TurretEvolution.mine_layer_pattern_text("chain_reaction"), "limpets")
 
-func test_laser_path_forms_tiers_and_placeholder_chassis() -> void:
+func test_laser_path_forms_tiers_and_real_chassis() -> void:
 	assert_eq(TurretEvolution.options("laser", 0), ["focus_beam"])
 	assert_eq(TurretEvolution.options("laser", 1), ["halo_cutter", "sunpiercer"])
 	for form in ["focus_beam", "halo_cutter", "sunpiercer"]:
 		assert_true(TurretEvolution.is_implemented(form))
-		assert_eq(TurretEvolution.model_key(form), "sniper", "Every Laser form uses the tinted cp_sniper rifle until a model is wired")
+		assert_eq(TurretEvolution.model_key(form), "laser", "Every Laser form uses the cp_laser chassis")
 		assert_false(TurretEvolution.description(form).is_empty())
 	assert_true(TurretEvolution.behaviour_script("laser", "").new() is LaserForm, "The unevolved laser holds its beam through its form")
 

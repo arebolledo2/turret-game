@@ -855,10 +855,38 @@ func test_pattern_text_describes_each_beam() -> void:
 	assert_string_contains(TurretEvolution.laser_pattern_text("sunpiercer"), "x6 over 4 s")
 	assert_string_contains(TurretEvolution.laser_pattern_text("sunpiercer"), "flare")
 
-func test_rows_chain_the_path_and_use_the_placeholder_chassis() -> void:
+func test_rows_chain_the_path_and_use_the_real_chassis() -> void:
 	assert_eq(TurretEvolution.options("laser", 0), ["focus_beam"])
 	assert_eq(TurretEvolution.options("laser", 1), ["halo_cutter", "sunpiercer"])
 	for form in ["focus_beam", "halo_cutter", "sunpiercer"]:
 		assert_true(TurretEvolution.is_implemented(form))
-		assert_eq(TurretEvolution.model_key(form), "sniper")
+		assert_eq(TurretEvolution.model_key(form), "laser", "All forms use the real chassis")
 	assert_true(TurretEvolution.behaviour_script("laser", "").new() is LaserForm)
+
+## The real chassis: Aim carries the head and Muzzle is the nozzle tip in front of the bezel, where the beam starts. Each hardware
+## piece hangs off Aim so it turns with the head, and the Halo hoop stands clear of the chassis (its widest part is 0.64 m out).
+func test_all_four_stages_use_the_real_chassis_and_the_beam_leaves_the_nozzle() -> void:
+	var paths: Array[Array] = [[], ["focus_beam"], ["focus_beam", "halo_cutter"], ["focus_beam", "sunpiercer"]]
+	for path in paths:
+		var typed: Array[String] = []
+		typed.assign(path)
+		var turret := _laser(typed)
+		assert_not_null(turret.model.find_child("Aim_Crystal", true, false), "The cp_laser gem lens is there")
+		assert_not_null(turret.aim)
+		assert_not_null(turret.muzzle)
+		assert_true(turret.muzzle.position.z <= -.79 + .001, "The muzzle is at or past the nozzle tip (%s)" % turret.progression.evolution_form)
+		assert_almost_eq(turret.muzzle.position.y, .46, .001, "On the bore")
+		turret.queue_free()
+
+func test_the_hardware_rides_the_head_and_the_hoop_clears_the_chassis() -> void:
+	var halo := _halo()
+	var hoop := halo.aim.find_child("HaloHoop", true, false) as MeshInstance3D
+	assert_not_null(hoop, "The hoop hangs off Aim")
+	assert_gt((hoop.mesh as TorusMesh).inner_radius, .64 + .05, "Clear of the side knobs")
+	assert_eq(LaserForm.ARM_START, LaserEvolutionVisual.ARM_RADIUS, "Arms are drawn from the hoop")
+	var sun := _sun()
+	var barrel := sun.aim.find_child("SunBarrel", true, false) as Node3D
+	assert_not_null(barrel)
+	assert_lt(sun.muzzle.position.z, barrel.position.z, "The muzzle sits at the barrel's tip")
+	var spire := sun.aim.find_child("SunSpire", true, false) as MeshInstance3D
+	assert_gte(spire.position.y - .275, .46 + .44 - .01, "The spire stands on the barrel's top, not inside it")

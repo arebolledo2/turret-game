@@ -287,8 +287,7 @@ const TYPES: Dictionary = {
 		"name": "Laser",
 		"icon": "🔦",
 		"short_name": "Laser",
-		# No Laser model is wired yet: the cp_sniper rifle, tinted cyan, stands in (see `TurretActor._rebuild_model`).
-		"model_key": "sniper",
+		"model_key": "laser",
 		"model": "res://assets/models/game/shock_turret.glb",
 		# A continuous beam: `LaserForm.tick` locks the nearest enemy and holds the beam on it through engine piece S11
 		# (`ContinuousBeam`). `damage` is one tick's hit and `fire_rate` the ticks per second, so a beam deals `damage x fire_rate`

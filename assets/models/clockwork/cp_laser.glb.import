@@ -3,12 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-path="res://.godot/imported/cp_laser.glb-43ba66a95659d71fc5f6defa61d9d66b.scn"
+uid="uid://d8gfmodg3ohq"
+path="res://.godot/imported/cp_laser.glb-42b0a55e6173c2d6fb87e86db30c2953.scn"
 
 [deps]
 
 source_file="res://assets/models/clockwork/cp_laser.glb"
-dest_files=["res://.godot/imported/cp_laser.glb-43ba66a95659d71fc5f6defa61d9d66b.scn"]
+dest_files=["res://.godot/imported/cp_laser.glb-42b0a55e6173c2d6fb87e86db30c2953.scn"]
 
 [params]
 
