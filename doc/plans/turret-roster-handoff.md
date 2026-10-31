@@ -74,7 +74,7 @@ Roster in the new shape (L5 upgrade, then the two L10 finals). `Built` means pla
 | Mine Layer | Minefield | Dead Zone | Chain Reaction | all built (logic and S8) with the real `cp_mine_layer` model (branch `turret-mine-layer-model`) |
 | Laser | Focus Beam | Halo Cutter | Sunpiercer | all built (logic and S11, branch `turret-laser`); real `cp_laser` model wired on `turret-laser-model` |
 | Beacon | Overclock Beacon | Command Spire | Aegis Field | new |
-| Drone Bay | Escort Drones | Guardian Wing | Reaper Swarm | new |
+| Drone Bay | Escort Drones | Guardian Wing | Reaper Swarm | all built (logic and S10, branch `turret-drone-bay`) on a placeholder chassis (tinted Mine Layer model); the real `cp_drone` model is not wired |
 | Lullaby | Deep Sleep | Coma | Sandman | new |
 | Discord | Riot Coil | Anarchy | Civil War | new |
 
@@ -90,7 +90,7 @@ Every form is one row in `scripts/data/turret_forms.gd` (`TurretForms.FORMS`): b
 
 ## 3D models
 
-- Nine base models were built by Sonnet agents in `3d-eval/runs/cp_<name>-v1/` and all passed the harness contract: Sniper, Scrap Press, Decoy, Quake, Mine Layer, Laser, Beacon, Drone Bay, Discord. Triangle counts are high (7k to 28k against a 5k target; Drone Bay is 28k with 29 objects). **Wired into the game: Sniper, Quake, Decoy, Scrap Press, Mine Layer and Laser** (the Mine Layer on `turret-mine-layer-model`, iteration 6, 10.3k triangles, 17 objects; the Laser on `turret-laser-model`, iteration 5, 6.9k triangles, 11 objects; see their sections). The other three (Beacon, Drone Bay, Discord) are not promoted and have no game code. A triangle-reduction pass was offered and not done. Setting `"origin_node": "Aim"` in the contract for long-barrel turrets (Mine Layer, Discord) would likely give better proportions than the centring workaround the agents used. (The Mine Layer was wired without it: the model's bounds centre is 0.11 m off its origin and the body sits on it, which reads fine in game, so no harness rebuild was done.)
+- Nine base models were built by Sonnet agents in `3d-eval/runs/cp_<name>-v1/` and all passed the harness contract: Sniper, Scrap Press, Decoy, Quake, Mine Layer, Laser, Beacon, Drone Bay, Discord. Triangle counts are high (7k to 28k against a 5k target; Drone Bay is 28k with 29 objects). **Wired into the game: Sniper, Quake, Decoy, Scrap Press, Mine Layer and Laser** (the Mine Layer on `turret-mine-layer-model`, iteration 6, 10.3k triangles, 17 objects; the Laser on `turret-laser-model`, iteration 5, 6.9k triangles, 11 objects; see their sections). The other three (Beacon, Drone Bay, Discord) are not promoted. Beacon and Discord have no game code; the Drone Bay has its logic (branch `turret-drone-bay`) on a placeholder chassis and still needs its model wired (see its section). A triangle-reduction pass was offered and not done. Setting `"origin_node": "Aim"` in the contract for long-barrel turrets (Mine Layer, Discord) would likely give better proportions than the centring workaround the agents used. (The Mine Layer was wired without it: the model's bounds centre is 0.11 m off its origin and the body sits on it, which reads fine in game, so no harness rebuild was done.)
 - Boomerang and Lullaby models are not started (finalist concept not chosen).
 - Wiring a model: copy the subject JSON to the run's `contract.json`; add the key to `tools/promote_clockwork_asset.py` and `ClockworkModels.KEYS`; run `python -I turret-game/tools/promote_clockwork_asset.py <key> --iteration N --asset-name cp_<name>`; set the model in the form rows (`model` field) and the registry `model_key`; add the key to the Aim/Muzzle list in `tests/integration/test_clockwork_roster.gd`; adapt the `*EvolutionVisual` runtime hardware to the real model (read the bore from the model's `Muzzle`); render portraits with `tools/render_shop_portraits.tscn` (non-headless), `git checkout` every regenerated portrait except the new ones and delete the stray `forked_coil.png`, then re-run `--headless --import` before taking shop screenshots; commit the extracted texture PNG and `.import` with the GLB. The `3d-asset-design` skill still describes the old stage shape; the steps here are current.
 
@@ -225,6 +225,58 @@ Every form is one row in `scripts/data/turret_forms.gd` (`TurretForms.FORMS`): b
 
 **Reuse for later turrets:** `ContinuousBeam.nearest/touching` suit any turret that needs a line query without scanning all enemies; `BeamLines` is a pooled line drawer; `FIRE_BEAM` plus a form `tick` is the pattern for channelled effects.
 
+## Drone Bay logic (built 31 Oct 2026, branch `turret-drone-bay`; PLACEHOLDER chassis, model wiring pending)
+
+`drone_bay` is a stocked base turret (price 18, `FIRE_DRONES`, physical damage, attack style PROJECTILE so the `projectile` item family applies; Exposed and Marked do not, because the drone hits are not `instant`-family). Two pieces: S10 (`Drones`, `scripts/game/drones.gd`, on `world.drones`, and `Drone`, `scripts/game/drone.gd`) is the generic actor runtime, and `DroneBayForm` (`scripts/game/drone_bay_form.gd`) is the turret: one class for the base and all three forms, rows only change numbers and params. The chassis is a placeholder (the Mine Layer clockwork model with a cyan tint); `DroneBayEvolutionVisual` adds a dock pad per drone and hardware per form.
+
+- **Drone Bay (base):** 2 drones, 6 damage at 1.6 shots/s each, leash 5 m. They wait on the dock; with an enemy within the leash of the bay a docked drone flies out, hovers beside it and shoots, then returns after 7 s (or when nothing is left) and docks 1.2 s.
+- **Escort Drones (level 5):** 3 drones, 6.5 damage at 1.5/s, leash 2.5 m, orbiting the HERO and shooting enemies within the leash of the hero.
+- **Guardian Wing (final):** 4 drones, 6.5 damage at 1.7/s, leash 2.8 m, an escort that also shoots down hostile bolts and shells. It protects the hero and only the hero: a bolt whose path passes within 0.8 m of the hero, or a shell whose blast would reach within 0.8 m of the hero, inside 4.5 m of him. Boss ground slams, beams and anything aimed at the core are left alone. Each drone shoots down at most one in 1 s.
+- **Reaper Swarm (final):** 5 drones, 4.2 damage at 1.8/s, leash 2.5 m, an escort whose drones dive at the nearest Kite, Lobber or Tender within 6 m of the hero first, for +60% damage against them. Each kill by one of its drones launches an extra drone for 4 s, at most 2 extras at a time.
+
+**Rules (S10):** at most `GameConstants.DRONE_MAX` = 24 drones live in the arena and each bay holds at most 8 slots (plus its extras), so six Reaper Swarms fill the arena and later launches are refused; Reaper extras are capped by their own per-owner cap so they cannot grow without bound. One MultiMesh draws all drones. Drones cannot be hurt and never hit the hero or a turret: a shot is an instant hit on an enemy built through `TurretActor._new_shot` and `Combat3D.impact` (crit per hit, source credit, item multipliers). A drone leaves only when its airframe wears out (50 s, then the slot rebuilds in 3 s), combat stops, the bay is picked up, removed or evolves, or a run resets (`Drones.clear` at the three `deployables.clear` sites, `DroneBayForm.clear/removed`). Pause stops drones with the tree.
+
+**Decisions where the card was silent or ambiguous (flagged for review):**
+
+1. The card gave no fire rate, drone count or leash for the forms or the base; those numbers are mine (above).
+2. Airframe wear (50 s, then a 3 s rebuild) is my mechanism, so a drone is a short-lived cheap actor rather than a permanent one. It keeps the arena bounded and gives Reaper extras a lifetime.
+3. The escort leash is measured from the hero, not the bay. The range ring the inspector draws for an escort bay therefore shows the leash around the bay, which is the wrong place for it (cosmetic oddity left alone).
+4. Guardian Wing intercepts only bolts aimed at the hero and shells that would hit the hero's spot. It does not defend turrets or the core.
+5. Exposed and Marked do not apply (the hits are `projectile` family, not `instant`).
+6. Reaper's kill-spawned extras are capped at 2, not unbounded; an uncapped version overshot the tuning and threatened the arena cap.
+7. The shop and inspector DPS estimate is `count x damage x rate` and ignores wear, rebuild and sortie downtime.
+
+**Tuning (simulated):** the finals were tuned in `tests/integration/test_drone_bay_turret.gd` (`test_the_finals_are_tuned_against_the_upgrade_in_simulated_traffic`, mortal walkers, fixed seeds). The brief asked for 1.4 to 1.6x the level-5 upgrade as a mean; per scenario, damage per second:
+
+| Scenario | Escort Drones | Guardian Wing | Reaper Swarm |
+|---|---|---|---|
+| sparse | 54.9 | 67.2 (1.22x) | 67.9 (1.24x) |
+| stream | 55.9 | 82.8 (1.48x) | 79.3 (1.42x) |
+| packs | 54.9 | 81.9 (1.49x) | 92.4 (1.68x) |
+| harassed (backline enemies around) | 55.7 | 83.3 (1.49x) | 90.6 (1.63x) |
+| **mean** | | **1.42x** | **1.49x** |
+
+Guardian Wing's shoot-down comes on top: against sixteen bolts the hero lost 25 health with Escort Drones and none with Guardian Wing.
+
+**Bench:** `tools/bench_turret_forms.gd --base=drone_bay --level=10 --seconds=15` was run headless with `--fixed-fps 60`, the GPU at 0% immediately before. The figures are game-time damage per second against dummies that never die, not timings. Drone rows run one at a time with the hero at the arena middle and the bay 2 m off, because drones clamp to the arena and escorts need the hero.
+
+| Form | single | cluster | lane |
+|---|---|---|---|
+| Drone Bay | 30.3 | 28.4 | 27.1 |
+| Escort Drones | 51.8 | 48.9 | 46.5 |
+| Guardian Wing | 78.5 (1.52x) | 70.6 (1.44x) | 68.7 (1.48x) |
+| Reaper Swarm | 68.0 (1.31x) | 61.6 (1.26x) | 59.6 (1.28x) |
+
+Reaper Swarm sits below 1.4x in the bench because its dummies include no backline enemies, so the hunt bonus never fires; the simulated mean above includes them.
+
+**Tools:** the roster showcase has two entries (plain order and `--alternate`; four rows of six now), and all three modes (plain, `--alternate`, `--moving`) print `ROSTER_SHOWCASE PASS`; the showcase seeds targets near the hero for the escorts. `capture_game -- --drone-bay-demo[ --drone-bay-frame=N]` (run with `--fixed-fps 60`) stages four bays round a hero; `preview_evolution -- --drone-bay-preview[ --flight][ --side][ --zoom=N][ --focus=0..3]` shows the four stages (`--flight` steps combat for four seconds by hand).
+
+**Not verified:** no human playtest. Looked at by eye: the demo capture (drones circle the hero and shoot) and the preview (the four stages with dock pads, hoop, wing fins and spikes). Not looked at: the shop portraits at game scale (rendered from the tinted placeholder), audio (no drone sounds of their own), real-wave feel.
+
+**Model wiring still to do:** a `cp_drone` model exists under `3d-eval/runs/` (28k triangles, 29 objects; needs the triangle reduction pass). Steps: add it to `ClockworkModels.KEYS`, run the promote script, set a real `Aim` and `Muzzle` in the contract, fit the dock pads to the real chassis, re-record the golden model digests in `test_turret_form_golden.gd`, and re-render the four portraits (`tools/render_shop_portraits.tscn -- --only=...`).
+
+**Reuse for later turrets (Beacon, Lullaby, Discord):** `Drones.launch/destroy/clear_owner` and the `Drone` modes (DOCKED, SEEK, ORBIT, HOLD, RETURN) suit any small actor that follows a point (Beacon's buff drones, say); the per-owner cap and arena cap are shared, so a new user must pick its own `owner_cap`. The hostile-ordnance scan and `is_threat` in `DroneBayForm` are the pattern for a hero-protection effect. Lullaby and Discord change enemy behaviour (S4) and would not use drones.
+
 ## Quake logic (built 26 Oct 2026, branch `turret-quake`; model wired on `turret-quake-model`)
 
 `quake` is a stocked base turret (damage 16, 0.45/s, range 260, rotation 0, knockback 200, stagger 0.4, price 17, Physical, families Kinetic and AoE, `fire_mode: "pulse"`). `QuakeForm` (`scripts/game/quake_form.gd`) takes over `TurretActor`'s `FIRE_PULSE` branch: a 0.5 s ground telegraph, then a `ShockwaveRing` at 8 m/s that strikes each enemy once as it touches it (nearest first). Aftershock (18, 0.45/s) queues a second ring 0.6 s later at 50% damage. Tectonic (40, 0.5/s, range 400) skips the ring and opens two fissures in an X (45 degrees either side of the line from the turret) at the densest cluster (`Combat3D.select_target` with the cluster radius `TECTONIC_CLUSTER_RADIUS`, 1.5 m); each is an S7 line zone centred on that enemy (half length 65% of reach, half width 0.45 m, both growing with range and area bonuses; 3 s; 40% slow) that hits what stands in it once as it opens. Cataclysm (30, 0.5/s) repeats up to three more rings every 0.9 s while enemies stay in range, each 20% wider, capped at 1.6x the reach, and its hits `extend_stagger` (1 s each, cap 1.5 s); the cooldown starts when the salvo ends. Bench (level 10, 120 s, DPS single / cluster / lane): Aftershock 29 / 239 / 90; Tectonic 47 / 334 / 146 (1.40x on a cluster, 1.6x single: the fissure always lands on a lone target); Cataclysm 42 / 354 / 130 (1.48x cluster, 1.45x single). Level 5: Quake 14 / 113 / 28, Aftershock 23 / 195 / 49. Level 10 base Quake: 18 / 146 / 53.
@@ -286,7 +338,7 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 - S7 Enemy-only ground zones (Quake Tectonic) **BUILT**
 - S8 Deployable runtime (Mine Layer) **BUILT** (`Deployables`; other turrets that leave things on the floor reuse it)
 - S9 Auras and healing (Beacon)
-- S10 Drone actors (Drone Bay)
+- S10 Drone actors (Drone Bay) **BUILT** (`Drones`, `Drone`; Beacon, Lullaby and Discord can reuse the pooled actors, see the Drone Bay section)
 - S11 Continuous beam (Laser) **BUILT** (`ContinuousBeam`, `BeamLines`; any turret that holds a beam or a line on enemies reuses it)
 - S12 Delayed ground-target shell (Mortar)
 
@@ -295,7 +347,7 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 0. **Done:** progression change, targeting modes, Exposed status, DEPLOYABLE family mapping, utility-turret item rules, `aggro` family, form-table refactor.
 1. Generic timed-status system with a source owner (fixes the Overwatch shared-mark bug) before Decoy, Lullaby and Discord. Finish Plasma and Tesla whenever convenient (4 forms: Constellation needs S12; Forked Coil, Storm Network, Thunderhead). Re-bench every existing final at level 10 against its level-5 form.
 2. **Sniper, Quake, Decoy, the Scrap Press and the Mine Layer are done, with real models (Decoy model on `turret-decoy-model`, Scrap Press model on `turret-scrap-press-model`).** Boomerang is **on hold** (2026-10-30; the 2D concepts keep coming out as curved blades, retry batch `a5ee55bb-4af0-480c-845a-fecd6ba380c8` unreviewed). **The Mine Layer is built too** (logic and S8, branch `turret-mine-layer`; model on `turret-mine-layer-model`). Next: the remaining model wiring (Beacon, Drone Bay, Discord).
-3. **The Laser is built** (logic and S11, branch `turret-laser`; real model on `turret-laser-model`). Beacon and Drone Bay after a playtest.
+3. **The Laser is built** (logic and S11, branch `turret-laser`; real model on `turret-laser-model`). **The Drone Bay logic is built** (S10, branch `turret-drone-bay`, placeholder chassis; model wiring pending). Beacon after a playtest.
 4. Lullaby and Discord (S4 is the largest piece).
 5. Wire the remaining base models as each turret lands.
 
