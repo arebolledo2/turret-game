@@ -604,6 +604,17 @@
       "meshes": 17,
       "materials": 8,
       "iteration": 6
+    },
+    {
+      "id": "laser",
+      "source": "art-source/clockwork-pop/laser/build_cp_laser.py",
+      "model": "assets/models/clockwork/cp_laser.glb",
+      "reference": "art-source/clockwork-pop/references/laser.png",
+      "sha256": "14a21c3173d6b6ebfb2494e98f0a16f5d2e2af2a49eea30c0e611e9807a062ab",
+      "triangles": 6884,
+      "meshes": 11,
+      "materials": 8,
+      "iteration": 5
     }
   ]
 }
