@@ -221,7 +221,10 @@ func test_drones_launch_one_after_another_and_wait_on_their_docks() -> void:
 	assert_eq(swarm.count_of(bay.turret_id), 2, "Never more than the bay keeps")
 	for drone in _form(bay).live_drones():
 		assert_true(drone.is_docked(), "No enemy: they stay parked")
-		assert_almost_eq(_gap(drone.position, bay.position), DroneBayForm.DOCK_RADIUS, .01, "round the bay")
+		var dock := DroneBayForm.dock_offset(DroneBayForm.perches(bay.model), drone.slot, 2)
+		assert_almost_eq(_gap(drone.position, bay.position), Vector2(dock.x, dock.z).length(), .01, "on its parking dish")
+		assert_almost_eq(drone.height(), dock.y, .01, "at the dish's height")
+		assert_gt(dock.y, Drone.DOCK_HEIGHT + .2, "The dishes stand well above the floor")
 
 func test_an_enemy_within_the_leash_sends_a_drone_out_to_shoot_and_it_hovers_beside_it() -> void:
 	var bay := _bay()
@@ -937,12 +940,12 @@ func test_flying_and_clearing_leaks_no_nodes() -> void:
 
 # --- Looks ---
 
-func test_all_four_stages_use_the_stand_in_chassis_with_a_muzzle_and_a_head() -> void:
+func test_all_four_stages_use_the_drone_bay_chassis_with_a_muzzle_and_a_head() -> void:
 	for path: Array in [[], ["escort_drones"], ["escort_drones", "guardian_wing"], ["escort_drones", "reaper_swarm"]]:
 		var forms: Array[String] = []
 		forms.assign(path)
 		var turret := _bay(forms, Vector3(float(forms.size()) * 3.0, 0, 20))
-		assert_eq(turret._model_key(turret.progression.evolution_form), "mine_layer")
+		assert_eq(turret._model_key(turret.progression.evolution_form), "drone_bay")
 		assert_not_null(turret.aim, "%s has a head" % turret.display_name())
 		assert_not_null(turret.muzzle)
 
@@ -958,14 +961,52 @@ func test_each_form_adds_pads_for_its_drones_and_hardware_to_the_chassis() -> vo
 		if key != "[]":
 			assert_gt(int(counts[key]), base_meshes, "%s adds hardware to the chassis" % key)
 	var reaper := _reaper(Vector3(20, 0, 20))
-	assert_eq(reaper.model.find_children("DockPad*", "MeshInstance3D", true, false).size(), 5, "A pad for each of the five drones")
+	assert_eq(reaper.model.find_children("DockLight*", "MeshInstance3D", true, false).size(), 5, "A lit dock for each of the five drones")
+	assert_eq(reaper.model.find_children("DockPad*", "MeshInstance3D", true, false).size(), 3, "Two ride the chassis's dishes, the other three get floor pads")
+
+func test_the_chassis_parks_two_drones_that_the_real_ones_replace_while_they_hold_the_slots() -> void:
+	var bay := _bay()
+	assert_eq(DroneBayForm.perches(bay.model).size(), 2, "The model has two parking dishes")
+	for index in 2:
+		var parts := DroneBayForm.parked_drone(bay.model, index)
+		assert_eq(parts.size(), 4, "Body, dome, glow and propellers")
+		for node in parts:
+			assert_true(node.visible, "In the shop the parked pair shows")
+	rig.combat()
+	_run(bay, 1.0)
+	for index in 2:
+		for node in DroneBayForm.parked_drone(bay.model, index):
+			assert_false(node.visible, "A real drone holds the slot, so the parked one is hidden")
+	for label in ["Drone_Wire", "Drone_Arm"]:
+		assert_true((bay.model.find_child("%s_Brass" % label, true, false) as Node3D).visible, "The dish stays")
+	rig.shop()
+	bay._physics_process(STEP)
+	for index in 2:
+		for node in DroneBayForm.parked_drone(bay.model, index):
+			assert_true(node.visible, "Back to the parked pair when combat stops")
+
+func test_docks_past_the_dishes_are_floor_pads_in_the_front_arc_and_other_chassis_use_the_ring() -> void:
+	var dishes := DroneBayForm.perches(_bay().model)
+	var seen: Array[Vector2] = []
+	for slot in 5:
+		var dock := DroneBayForm.dock_offset(dishes, slot, 5)
+		if slot >= 2:
+			assert_almost_eq(Vector2(dock.x, dock.z).length(), DroneBayForm.PAD_RING, .001, "Floor pads sit on one ring")
+			assert_gt(dock.z, 0.3, "in front of the tower, clear of the tunnel")
+			assert_lt(dock.y, .4, "at the floor")
+		for other in seen:
+			assert_gt(Vector2(dock.x, dock.z).distance_to(other), .35, "No two docks overlap")
+		seen.append(Vector2(dock.x, dock.z))
+	for slot in 3:
+		var ring := DroneBayForm.dock_offset([], slot, 3)
+		assert_almost_eq(Vector2(ring.x, ring.z).length(), DroneBayForm.DOCK_RADIUS, .001, "No dishes: the plain ring")
 
 func test_the_rotating_hardware_rides_the_head() -> void:
 	var wing := _guardian(Vector3(0, 0, 20))
 	assert_not_null(wing.aim.find_child("ShieldHoop", false, false))
 	assert_not_null(wing.aim.find_child("WingFin", false, false))
 	var escort := _escort(Vector3(4, 0, 20))
-	assert_not_null(escort.aim.find_child("CommsMast", false, false))
+	assert_not_null(escort.aim.find_child("MastRing", false, false))
 	assert_not_null(escort.model.find_child("DockPad", false, false), "The pads stay on the floor")
 
 # --- Tuning ---

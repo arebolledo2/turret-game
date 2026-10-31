@@ -310,9 +310,9 @@ const TYPES: Dictionary = {
 		"name": "Drone Bay",
 		"icon": "🛸",
 		"short_name": "Drone Bay",
-		# No Drone Bay model is wired yet: the cp_mine_layer chassis (a hex body with a hopper that could pass for a hive dock)
-		# stands in, tinted (see `TurretActor._rebuild_model`).
-		"model_key": "mine_layer",
+		# The cp_drone_bay chassis: a hangar tunnel and a tower carrying the sensor head (Aim) and two parked drones.
+		# The head turns on `Aim` only for looks: the bay shoots through its drones, never through the head.
+		"model_key": "drone_bay",
 		"model": "res://assets/models/game/shock_turret.glb",
 		# It attacks with the drones it sends up: `DroneBayForm.tick` keeps `drone_count` of them in the air through engine piece S10
 		# (`Drones`). `damage` is one drone shot, `fire_rate` the shots per second of each drone, and `range` the leash: how far

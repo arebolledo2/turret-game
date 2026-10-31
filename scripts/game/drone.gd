@@ -61,6 +61,8 @@ var yaw: float = 0.0
 var bob_phase: float = 0.0
 ## Height above the floor now (it climbs from the dock and settles back onto it).
 var altitude: float = DOCK_HEIGHT
+## The height it rests at while docked: `DOCK_HEIGHT` on the floor, or the owner's own perch (the Drone Bay's dishes).
+var dock_height: float = DOCK_HEIGHT
 
 func is_docked() -> bool:
 	return mode == Mode.DOCKED
@@ -71,7 +73,7 @@ func has_target() -> bool:
 
 ## The height it is drawn at.
 func height() -> float:
-	return altitude + (BOB * sin(age * 3.0 + bob_phase) if altitude > DOCK_HEIGHT + .01 else 0.0)
+	return altitude + (BOB * sin(age * 3.0 + bob_phase) if altitude > dock_height + .01 else 0.0)
 
 ## Orders it to circle `centre` from `angle`.
 func orbit(centre: Vector3, angle: float = NAN) -> void:

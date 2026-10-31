@@ -368,12 +368,12 @@ func test_laser_forms_change_how_the_beam_works() -> void:
 	assert_gt(float(TurretEvolution.param("sunpiercer", "flare_scale")), 0.0)
 	assert_null(TurretEvolution.param("focus_beam", "flare_scale"))
 
-func test_drone_bay_path_forms_tiers_and_placeholder_chassis() -> void:
+func test_drone_bay_path_forms_tiers_and_chassis() -> void:
 	assert_eq(TurretEvolution.options("drone_bay", 0), ["escort_drones"])
 	assert_eq(TurretEvolution.options("drone_bay", 1), ["guardian_wing", "reaper_swarm"])
 	for form in ["escort_drones", "guardian_wing", "reaper_swarm"]:
 		assert_true(TurretEvolution.is_implemented(form))
-		assert_eq(TurretEvolution.model_key(form), "mine_layer", "Every Drone Bay form uses the tinted cp_mine_layer chassis until a model is wired")
+		assert_eq(TurretEvolution.model_key(form), "drone_bay", "Every Drone Bay form uses the cp_drone_bay chassis")
 		assert_false(TurretEvolution.description(form).is_empty())
 		assert_eq(TurretEvolution.param(form, "escort"), true, "Every form past the base bay orbits the hero")
 	assert_true(TurretEvolution.behaviour_script("drone_bay", "").new() is DroneBayForm, "The unevolved bay flies its sorties through its form")

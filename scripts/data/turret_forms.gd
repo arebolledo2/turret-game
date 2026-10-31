@@ -436,24 +436,24 @@ const FORMS: Dictionary = {
 	# wears out after `airframe_seconds` (50 by default) and its slot is refilled 3 s later. Tuned in simulated traffic at level 10
 	# (see `test_drone_bay_turret.gd`, not the bench) against Escort Drones, which is the baseline for the finals; Guardian Wing's
 	# shoot-down is value on top of its damage and is not in that figure.
-	# All four use the cp_mine_layer chassis (tinted sky blue) as a placeholder until the Drone Bay model is wired;
+	# All four use the cp_drone_bay chassis (model key drone_bay);
 	# `DroneBayEvolutionVisual` adds the per-form hardware.
 	"escort_drones": {
-		"base": "drone_bay", "kind": UPGRADE, "name": "Escort Drones", "model": "mine_layer", "implemented": true,
+		"base": "drone_bay", "kind": UPGRADE, "name": "Escort Drones", "model": "drone_bay", "implemented": true,
 		"description": "Three drones orbit you instead of the bay and shoot enemies within 2.5 m of you: 6.5 damage, 1.5 shots a second each.",
 		"stats": {"damage": 6.5, "fire_rate": 1.5, "range": 250.0, "drone_count": 3},
 		"behaviour": "DroneBayForm", "visual": "DroneBayEvolutionVisual",
 		"params": {"escort": true, "drone_speed": 9.0},
 	},
 	"guardian_wing": {
-		"base": "drone_bay", "kind": FINAL, "name": "Guardian Wing", "model": "mine_layer", "implemented": true,
+		"base": "drone_bay", "kind": FINAL, "name": "Guardian Wing", "model": "drone_bay", "implemented": true,
 		"description": "Four escort drones that also shoot down hostile bolts and shells aimed at you, within 4.5 m of you, one each per second. 6.5 damage, 1.7 shots a second each.",
 		"stats": {"damage": 6.5, "fire_rate": 1.7, "range": 280.0, "drone_count": 4},
 		"behaviour": "DroneBayForm", "visual": "DroneBayEvolutionVisual",
 		"params": {"escort": true, "drone_speed": 10.0, "intercept": true, "intercept_reach": 4.5, "intercept_cooldown": 1.0},
 	},
 	"reaper_swarm": {
-		"base": "drone_bay", "kind": FINAL, "name": "Reaper Swarm", "model": "mine_layer", "implemented": true,
+		"base": "drone_bay", "kind": FINAL, "name": "Reaper Swarm", "model": "drone_bay", "implemented": true,
 		"description": "Five escort drones dive at the nearest Kite, Lobber or Tender within 6 m of you before anything else, for 60% more damage against them. A kill launches an extra drone for 4 seconds (two at most). 4.2 damage, 1.8 shots a second each.",
 		"stats": {"damage": 4.2, "fire_rate": 1.8, "range": 250.0, "drone_count": 5},
 		"behaviour": "DroneBayForm", "visual": "DroneBayEvolutionVisual",

@@ -1,20 +1,27 @@
 class_name DroneBayEvolutionVisual
 extends RefCounted
 
-## Runtime hardware for the Drone Bay line, built on the stand-in cp_mine_layer chassis (a hex body on six feet with a hopper that
-## turns with `Aim`; see `MineLayerEvolutionVisual` for its measurements) until the Drone Bay's own chassis is wired. The unevolved
-## bay is the bare chassis. Each form puts one landing pad on the floor for every drone it keeps, at the point the drone docks
-## (`DroneBayForm.dock_point`), and marks the hopper:
-##   Escort Drones  three sky-blue pads, a comms mast with a glowing tip on the hopper and a thin band round it.
-##   Guardian Wing  four green pads, a shield hoop round the hopper and two angled wing fins on its sides.
-##   Reaper Swarm   five red pads, a crown of five spikes round the hopper and a red band.
-## The pads stay put; the mast, hoop, fins, crown and bands are children of `Aim`.
+## Runtime hardware for the Drone Bay line, built on the cp_drone_bay chassis: a round base with a hangar tunnel, a coral tower and a
+## teal sensor head on `Aim`, and two parking dishes on posts (the model's own parked drones give way to the real ones while
+## they hold the slots, see `DroneBayForm.parked_drone`; the real drones rest on the dishes). The unevolved bay is the bare chassis. Each form lights a
+## ring on every dock a drone rests on (`DroneBayForm.dock_offset`: the two dishes, then floor pads in the open front arc of the base)
+## and marks the head:
+##   Escort Drones  three sky-blue docks, a sky band round the neck collar and a glowing ring up the antenna.
+##   Guardian Wing  four green docks, a shield hoop round the head and two angled wing fins at its sides.
+##   Reaper Swarm   five red docks, a crown of five spikes round the dome and a red band round the neck collar.
+## The docks stay put; the band, ring, hoop, fins and crown are children of `Aim`, in its local space (the head sphere is centred
+## `HEAD_CENTER` above the pivot with radius `HEAD_RADIUS`, the dome's top is at `HEAD_TOP`, the neck collar at `COLLAR_Y`).
 static var materials: Dictionary = {}
 
-const DEFAULT_HOPPER_RADIUS: float = .55
-const DEFAULT_HOPPER_TOP: float = 1.52
-const AIM_HEIGHT: float = .7
-const PAD_RADIUS: float = .17
+const HEAD_CENTER: float = .27
+const HEAD_RADIUS: float = .36
+const HEAD_TOP: float = .70
+const COLLAR_Y: float = -.045
+const COLLAR_RADIUS: float = .30
+## The antenna on the head (Aim-local x, z) and its length.
+const ANTENNA := Vector2(.20, .17)
+const PAD_RADIUS: float = .2
+const LIGHT_RADIUS: float = .12
 
 static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
 	if form_id not in ["escort_drones", "guardian_wing", "reaper_swarm"]:
@@ -23,39 +30,36 @@ static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
 	var head := model.find_child("Aim", true, false) as Node3D
 	if head == null:
 		head = model
-	var head_y: float = AIM_HEIGHT if head != model else 0.0
-	var hopper_radius := DEFAULT_HOPPER_RADIUS
-	var hopper_top := DEFAULT_HOPPER_TOP
-	var hopper := model.find_child("Hopper_Teal", true, false) as MeshInstance3D
-	if hopper and hopper.mesh:
-		var box := hopper.mesh.get_aabb()
-		hopper_radius = minf(box.size.x, box.size.z) * .5
-		hopper_top = box.end.y + (head.position.y if hopper.get_parent() == head and head != model else 0.0)
 	var count := int(TurretEvolution.base_stats("drone_bay", form_id).get("drone_count", 2))
-	var pad := "sky" if form_id == "escort_drones" else ("green" if form_id == "guardian_wing" else "red")
+	var tone := "sky" if form_id == "escort_drones" else ("green" if form_id == "guardian_wing" else "red")
+	var dishes := DroneBayForm.perches(model)
 	for slot in count:
-		var angle := DroneBayForm.dock_angle(slot, count)
-		var at := Vector3(cos(angle), 0.0, sin(angle)) * DroneBayForm.DOCK_RADIUS
-		_cylinder(model, "DockPad", PAD_RADIUS, .03, "dark", Vector3(at.x, .015, at.z))
-		_cylinder(model, "DockLight", PAD_RADIUS * .55, .035, pad, Vector3(at.x, .02, at.z))
-	var top := hopper_top - head_y
+		var at := DroneBayForm.dock_offset(dishes, slot, count)
+		if slot < dishes.size():
+			# A dish: a lit ring on its top (the dish's top is just under the empty the drone's centre is lifted from).
+			_cylinder(model, "DockLight", LIGHT_RADIUS, .012, tone, Vector3(at.x, at.y - DroneBayForm.PERCH_LIFT + .008, at.z))
+		else:
+			var floor_y := at.y - DroneBayForm.PAD_LIFT if not dishes.is_empty() else 0.0
+			_cylinder(model, "DockPad", PAD_RADIUS, .024, "dark", Vector3(at.x, floor_y + .012, at.z))
+			_cylinder(model, "DockLight", LIGHT_RADIUS, .03, tone, Vector3(at.x, floor_y + .018, at.z))
 	match form_id:
 		"escort_drones":
-			_cylinder(head, "CommsMast", .025, .5, "steel", Vector3(0, top + .25, 0))
-			_sphere(head, "MastTip", .06, "sky", Vector3(0, top + .54, 0))
-			_torus(head, "Band", hopper_radius + .005, hopper_radius + .06, "sky", Vector3(0, top - .08, 0))
+			_torus(head, "Band", COLLAR_RADIUS + .015, COLLAR_RADIUS + .06, "sky", Vector3(0, COLLAR_Y - .05, 0))
+			_torus(head, "MastRing", .035, .06, "sky", Vector3(ANTENNA.x, HEAD_TOP + .0, ANTENNA.y))
 		"guardian_wing":
-			_torus(head, "ShieldHoop", hopper_radius + .12, hopper_radius + .16, "green", Vector3(0, top + .06, 0))
+			var hoop := HEAD_RADIUS + .28
+			_torus(head, "ShieldHoop", hoop - .02, hoop + .02, "green", Vector3(0, HEAD_CENTER, 0))
 			for side: float in [-1.0, 1.0]:
-				var fin := _box(head, "WingFin", Vector3(.05, .34, .5), "steel", Vector3(side * (hopper_radius + .05), top - .2, .1))
+				var fin := _box(head, "WingFin", Vector3(.03, .2, .36), "steel", Vector3(side * (hoop + .02), HEAD_CENTER + .06, .0))
 				fin.rotation = Vector3(0, 0, side * deg_to_rad(-22.0))
-				_box(head, "WingEdge", Vector3(.06, .05, .5), "green", Vector3(side * (hopper_radius + .13), top - .04, .1)).rotation = Vector3(0, 0, side * deg_to_rad(-22.0))
+				_box(head, "WingEdge", Vector3(.045, .04, .36), "green", Vector3(side * (hoop + .08), HEAD_CENTER + .16, .0)).rotation = Vector3(0, 0, side * deg_to_rad(-22.0))
 		"reaper_swarm":
 			for index in 5:
-				var angle := float(index) * TAU / 5.0
-				var spike := _cone(head, "CrownSpike", .06, .3, "red", Vector3(cos(angle) * (hopper_radius - .04), top + .12, sin(angle) * (hopper_radius - .04)))
-				spike.rotation = Vector3(0, 0, 0)
-			_torus(head, "Band", hopper_radius + .005, hopper_radius + .07, "red", Vector3(0, top - .08, 0))
+				var angle := deg_to_rad(float(index) * 72.0)
+				var out := Vector3(cos(angle), 0.0, sin(angle))
+				var spike := _cone(head, "CrownSpike", .055, .3, "red", out * .31 + Vector3(0, HEAD_TOP - .02, 0))
+				spike.rotation = Vector3(out.z * deg_to_rad(18.0), 0, -out.x * deg_to_rad(18.0))
+			_torus(head, "Band", COLLAR_RADIUS + .015, COLLAR_RADIUS + .06, "red", Vector3(0, COLLAR_Y - .05, 0))
 	return null
 
 static func _ensure_materials() -> void:

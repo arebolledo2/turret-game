@@ -33,6 +33,17 @@ const INTERCEPT_INTERVAL: float = .1
 ## Most drones one bay's slots may hold, whatever the stat says.
 const MAX_PER_BAY: int = 8
 const DOCK_RADIUS: float = .95
+## The cp_drone_bay chassis carries two parking dishes (`Drone_Wire` and `Drone_Arm`, the empties its two parked drones hang from):
+## the first two slots dock on them, at `PERCH_LIFT` above the empty, and the model's own drone body on a dish is hidden while a real
+## drone holds that slot (so the shop and the idle bay show the parked pair, and combat swaps them for the real ones). Slots past the dishes dock on floor pads in the open front arc of the base, `PAD_RING` from the centre,
+## `PAD_SPREAD` radians apart, with the drone's centre `PAD_LIFT` above the floor. Any other chassis uses the plain ring at `DOCK_RADIUS`.
+const PERCH_NODES: Array[String] = ["Drone_Wire", "Drone_Arm"]
+const PARKED_PARTS: Array[String] = ["Teal", "Cream", "Glow", "Props"]
+const PERCH_LIFT: float = .06
+const FLOOR_HEIGHT: float = .165
+const PAD_LIFT: float = .075
+const PAD_RING: float = .72
+const PAD_SPREAD: float = .9
 const DEFAULT_SPEED: float = 8.0
 const DEFAULT_HOLD: float = 1.0
 const DEFAULT_ORBIT: float = 1.1
@@ -67,6 +78,11 @@ var candidates: Array[CombatActor] = []
 ## The nearest Kite, Lobber or Tender, nearest first (Reaper Swarm only).
 var priority: Array[CombatActor] = []
 var scan_clock: float = 0.0
+## The chassis's parking dishes, looked up once per model (`rebuilt` forgets them).
+var dishes: Array[Vector3] = []
+var dishes_known: bool = false
+## The chassis's parked drone parts on each dish (see `parked_drone`).
+var parked: Array = []
 var intercept_clock: float = 0.0
 ## Drones on a shoot-down job and the hostile shot each is after.
 var guarding: Dictionary = {}
@@ -162,6 +178,7 @@ func tick(delta: float) -> void:
 	var stats := actor._current_view(0.0)
 	_fit_slots(clampi(int(stats.values.get("drone_count", 2)), 1, MAX_PER_BAY))
 	_fill_slots(delta)
+	_sync_parked()
 	_prune_extras()
 	scan_clock -= delta
 	if scan_clock <= 0.0:
@@ -187,6 +204,7 @@ func _step_drone(drone: Drone, delta: float, stats: TurretStats, anchor: Vector3
 	drone.aux_cooldown = maxf(0.0, drone.aux_cooldown - delta)
 	if not drone.temporary:
 		drone.home = dock_point(drone.slot)
+		drone.dock_height = dock_height(drone.slot)
 	if guarding.has(drone):
 		_guard(drone, stats)
 	elif is_escort():
@@ -201,13 +219,80 @@ func _anchor() -> Vector3:
 		return WorldGeometry.planar(hero.position)
 	return WorldGeometry.planar(actor.position)
 
+## Model-space positions of the parking dishes the chassis carries (their drone-centre height in `y`); empty on any other chassis.
+static func perches(model: Node3D) -> Array[Vector3]:
+	var found: Array[Vector3] = []
+	if model == null:
+		return found
+	for label in PERCH_NODES:
+		var node := model.find_child(label, true, false) as Node3D
+		if node == null:
+			continue
+		var at := Vector3.ZERO
+		var walk := node
+		while walk != null and walk != model:
+			at += walk.position
+			walk = walk.get_parent() as Node3D
+		found.append(at + Vector3(0.0, PERCH_LIFT, 0.0))
+	return found
+
+## Where slot `slot` of `count` rests, as an offset from the bay with the drone's centre height in `y`: a dish, a floor pad past the
+## dishes, or (a chassis with no dishes) the ring at `DOCK_RADIUS`.
+static func dock_offset(dishes: Array[Vector3], slot: int, count: int) -> Vector3:
+	if dishes.is_empty():
+		var ring := dock_angle(slot, count)
+		return Vector3(cos(ring) * DOCK_RADIUS, Drone.DOCK_HEIGHT, sin(ring) * DOCK_RADIUS)
+	if slot < dishes.size():
+		return dishes[maxi(slot, 0)]
+	var pads := maxi(count - dishes.size(), 1)
+	var angle := PI * .5 + (float(slot - dishes.size()) - float(pads - 1) * .5) * PAD_SPREAD
+	return Vector3(cos(angle) * PAD_RING, FLOOR_HEIGHT + PAD_LIFT, sin(angle) * PAD_RING)
+
+## The mesh nodes of the chassis's own parked drone on dish `index` (its body, dome, glow and propellers; the dish itself stays).
+static func parked_drone(model: Node3D, index: int) -> Array[Node3D]:
+	var found: Array[Node3D] = []
+	if model == null or index < 0 or index >= PERCH_NODES.size():
+		return found
+	for part in PARKED_PARTS:
+		var node := model.find_child("%s_%s" % [PERCH_NODES[index], part], true, false) as Node3D
+		if node != null:
+			found.append(node)
+	return found
+
+func rebuilt() -> void:
+	dishes_known = false
+	parked.clear()
+
+## Hides the parked drone on every dish whose slot holds a real drone, shows it on the others.
+func _sync_parked() -> void:
+	if not is_instance_valid(actor) or not is_instance_valid(actor.model):
+		return
+	var dish_count := _dishes().size()
+	while parked.size() < dish_count:
+		parked.append(parked_drone(actor.model, parked.size()))
+	for index in dish_count:
+		var shown := index >= slots.size() or slots[index] == null
+		for node: Node3D in parked[index]:
+			if is_instance_valid(node) and node.visible != shown:
+				node.visible = shown
+
+func _dishes() -> Array[Vector3]:
+	if not dishes_known:
+		dishes = perches(actor.model)
+		dishes_known = true
+	return dishes
+
 ## Where slot `slot` of `count` docks, as an angle round the bay (turned off the barrel side so a drone never rests on it).
 static func dock_angle(slot: int, count: int) -> float:
 	return (float(maxi(slot, 0)) + .5) * TAU / float(maxi(count, 1)) + .6
 
 func dock_point(slot: int) -> Vector3:
-	var angle := dock_angle(slot, slots.size())
-	return WorldGeometry.planar(actor.position) + Vector3(cos(angle), 0.0, sin(angle)) * DOCK_RADIUS
+	var offset := dock_offset(_dishes(), slot, slots.size())
+	return WorldGeometry.planar(actor.position) + Vector3(offset.x, 0.0, offset.z)
+
+## The height a drone in slot `slot` rests at on its dock.
+func dock_height(slot: int) -> float:
+	return dock_offset(_dishes(), slot, slots.size()).y
 
 ## Grows or shrinks the slot list to the stat; a drone in a slot that goes is taken down.
 func _fit_slots(count: int) -> void:
@@ -246,6 +331,8 @@ func _launch_slot(index: int) -> bool:
 	drone.slot = index
 	drone.temporary = false
 	drone.home = dock_point(index)
+	drone.dock_height = dock_height(index)
+	drone.altitude = drone.dock_height
 	drone.position = drone.home
 	drone.cooldown = .15 * float(index)
 	drone.bob_phase = float(index)
@@ -586,6 +673,7 @@ func _reset() -> void:
 	if is_instance_valid(actor) and is_instance_valid(actor.world) and actor.world.drones != null:
 		actor.world.drones.clear_owner(actor.turret_id)
 	slots.clear()
+	_sync_parked()
 	rebuild_clocks.clear()
 	extras.clear()
 	guarding.clear()

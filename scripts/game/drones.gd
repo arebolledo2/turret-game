@@ -141,7 +141,7 @@ func tick(delta: float) -> void:
 		_draw(items[slot], slot)
 
 func _fly(drone: Drone, delta: float) -> void:
-	var cruise := Drone.DOCK_HEIGHT if drone.mode == Drone.Mode.DOCKED else Drone.HEIGHT
+	var cruise := drone.dock_height if drone.mode == Drone.Mode.DOCKED else Drone.HEIGHT
 	drone.altitude = move_toward(drone.altitude, cruise, Drone.CLIMB_RATE * delta)
 	if drone.mode == Drone.Mode.DOCKED:
 		drone.position = drone.home
