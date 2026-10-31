@@ -6,6 +6,8 @@ extends Node
 ## A turret with no attack (the Scrap Press) is scored by the drops it makes instead of hits, and must make none while carried.
 ## The Mine Layer is scored by the hits its blasts credit to it, like any turret, and keeps laying while carried.
 ## The Laser is scored by its beam ticks, like any turret; its short reach (2.6 to 3.4 m) is why the showcase enemies stand close.
+## The Drone Bay is scored by the hits its drones credit to it. Its escort forms work round the HERO, not the bay, so a set of targets
+## also stands in front of the hero (`_hero_targets`); the base bay is not shown (the roster starts every turret at its upgrade).
 const ROSTER := [
 	["normal", "machine_gun", "cyclone_gatling", "omnifire"],
 	["normal", "machine_gun", "omnifire", "cyclone_gatling"],
@@ -29,6 +31,8 @@ const ROSTER := [
 	["mine_layer", "minefield", "chain_reaction", "dead_zone"],
 	["laser", "focus_beam", "halo_cutter", "sunpiercer"],
 	["laser", "focus_beam", "sunpiercer", "halo_cutter"],
+	["drone_bay", "escort_drones", "guardian_wing", "reaper_swarm"],
+	["drone_bay", "escort_drones", "reaper_swarm", "guardian_wing"],
 ]
 ## Turrets stand in rows of `COLUMNS`, `COLUMN_GAP` apart, and the rows are spread over the arena's depth (`_station`). Every
 ## turret and target must stand inside the arena (`WorldGeometry.HALF_ARENA`, about 12.7 x 8.9 m from the centre): an enemy
@@ -101,6 +105,8 @@ func _ready() -> void:
 		labels.append(label)
 		if not _targets(turret.position):
 			return
+	if not _hero_targets():
+		return
 	world.combat.hit_applied.connect(_hit)
 	world.crowd.rebuild(world.enemies)
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
@@ -113,6 +119,13 @@ func _station(index: int) -> Vector3:
 	if pitch < MIN_ROW_PITCH:
 		push_error("The showcase roster no longer fits the arena in rows of %d" % COLUMNS)
 	return Vector3((float(index % COLUMNS) - (float(COLUMNS) - 1.0) * .5) * COLUMN_GAP, 0, first + pitch * float(index / COLUMNS))
+
+## Targets in front of the hero for the drone bays' escorts, when the roster has any (the hero stands at z = 7, inside the arena).
+func _hero_targets() -> bool:
+	for spec: Array in ROSTER:
+		if TurretRegistry.get_fire_mode(spec[0]) == TurretRegistry.FIRE_DRONES:
+			return _targets(world.player.position)
+	return true
 
 ## Spawns the three durable targets in front of `center`. False (and the run quits) when one would stand outside the arena.
 func _targets(center: Vector3) -> bool:
@@ -165,6 +178,7 @@ func _physics_process(_delta: float) -> void:
 			_reset_moving_targets()
 			for turret in actors:
 				_targets(turret.position)
+			_hero_targets()
 		GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 		phase = "final"
 	elif phase == "final":

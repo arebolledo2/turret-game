@@ -27,6 +27,8 @@ var mine_demo: bool = false
 var mine_frame: int = 900
 var laser_demo: bool = false
 var laser_frame: int = 480
+var drone_demo: bool = false
+var drone_frame: int = 420
 var last_tick: int = 0
 var physics_samples: Array[float] = []
 var process_samples: Array[float] = []
@@ -73,7 +75,10 @@ func setup() -> void:
 	press_demo = "--scrap-press-demo" in arguments
 	mine_demo = "--mine-layer-demo" in arguments
 	laser_demo = "--laser-demo" in arguments
+	drone_demo = "--drone-bay-demo" in arguments
 	for argument in arguments:
+		if argument.begins_with("--drone-bay-frame="):
+			drone_frame = int(argument.trim_prefix("--drone-bay-frame="))
 		if argument.begins_with("--laser-frame="):
 			laser_frame = int(argument.trim_prefix("--laser-frame="))
 		if argument.begins_with("--mine-layer-frame="):
@@ -88,7 +93,7 @@ func setup() -> void:
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	GameRandom.gameplay.seed = 42
-	for index in range(150 if stress else (0 if zones_demo or roster_demo or sniper_demo or quake_demo or decoy_demo or press_demo or mine_demo or laser_demo else 18)):
+	for index in range(150 if stress else (0 if zones_demo or roster_demo or sniper_demo or quake_demo or decoy_demo or press_demo or mine_demo or laser_demo or drone_demo else 18)):
 		var angle := float(index) * 2.39996
 		var radius := 2.5 + float(index % 6) * .5
 		var kind: String = ["basic", "fast", "tank", "charger", "exploder"][index % 5] if mixed_stress else ("charger" if index % 4 == 0 else "basic")
@@ -119,6 +124,8 @@ func setup() -> void:
 		stage_mine_layer_demo()
 	if laser_demo:
 		stage_laser_demo()
+	if drone_demo:
+		stage_drone_bay_demo()
 	last_tick = Time.get_ticks_usec()
 	started_usec = last_tick
 
@@ -296,6 +303,45 @@ func stage_laser_demo() -> void:
 	world.camera_rig.set_zoom(.85)
 	world.camera_rig.snap()
 
+## The Drone Bay line in real combat (`--drone-bay-demo[ --drone-bay-frame=N]`, run with `--fixed-fps 60`): the plain bay at the back left
+## with three basic enemies two to three metres from it (its sorties), and Escort Drones, Guardian Wing and Reaper Swarm at the other
+## corners, whose drones all orbit the hero at the middle: four durable basic enemies stand 1.5 to 2.3 m from him and two Kites hold
+## 4.2 m out, which only the Reaper Swarm dives at. Combat starts at frame 180; the screenshot is taken at `drone_frame` (four seconds
+## of combat, drones in flight). The hero is a stand-in at the middle, out of everything's way.
+func stage_drone_bay_demo() -> void:
+	world.hud.hide()
+	world.player.position = Vector3.ZERO
+	for old in world.turrets:
+		old.visible = false
+		old.set_physics_process(false)
+	world.session.state.turret_progression_enabled = true
+	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP) # evolving is a shop action
+	var forms: Array = [[], ["escort_drones"], ["escort_drones", "guardian_wing"], ["escort_drones", "reaper_swarm"]]
+	var spots: Array = [Vector3(-7, 0, -5), Vector3(7, 0, -5), Vector3(-7, 0, 5), Vector3(7, 0, 5)]
+	for index in range(forms.size()):
+		var turret := world.add_turret(spots[index], "drone_bay")
+		turret.progression.award(1500)
+		for form: String in forms[index]:
+			if not turret.evolve(form):
+				push_error("Cannot evolve %s" % form)
+	for offset: Vector3 in [Vector3(-2.5, 0, 0), Vector3(-3.4, 0, -1.2), Vector3(-3.0, 0, 1.4)]:
+		var prey := world.spawn_enemy(spots[0] + offset + Vector3(0, 0, 0), "basic")
+		prey.stationary = true
+		prey.health = 100000
+		prey.max_health = 100000
+	for offset: Vector3 in [Vector3(-1.5, 0, -.5), Vector3(0, 0, -1.9), Vector3(1.5, 0, -.5), Vector3(.6, 0, 1.4)]:
+		var enemy := world.spawn_enemy(offset, "basic")
+		enemy.stationary = true
+		enemy.health = 100000
+		enemy.max_health = 100000
+	for offset: Vector3 in [Vector3(3.0, 0, 3.0), Vector3(-3.0, 0, 3.0)]:
+		var kite := world.spawn_enemy(offset, "kite")
+		kite.stationary = true
+		kite.health = 100000
+		kite.max_health = 100000
+	world.camera_rig.set_zoom(.85)
+	world.camera_rig.snap()
+
 ## Once combat has started: every visible Sniper fires one real shot (tracer, muzzle flash, hit), then effects freeze.
 func fire_sniper_demo() -> void:
 	# With no initial wave the run drifts to the shop; turrets only fire in combat.
@@ -366,14 +412,14 @@ func _process(_delta: float) -> void:
 		world.finish_wave()
 	if frames == 400 and shop_focus >= 0:
 		world.hud.shop_screen.offer_buttons[shop_focus].grab_focus()
-	if frames == 180 and (quake_demo or decoy_demo or press_demo or mine_demo or laser_demo):
+	if frames == 180 and (quake_demo or decoy_demo or press_demo or mine_demo or laser_demo or drone_demo):
 		GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 		world.crowd.rebuild(world.enemies)
 	if frames == 180 and sniper_demo:
 		fire_sniper_demo()
 	if frames == 180 and combat_demo:
 		stage_combat_demo()
-	var finished := elapsed >= benchmark_seconds + 2.0 if benchmark_seconds > 0.0 else frames == (laser_frame if laser_demo else mine_frame if mine_demo else press_frame if press_demo else (decoy_frame if decoy_demo else (quake_frame if quake_demo else 720)))
+	var finished := elapsed >= benchmark_seconds + 2.0 if benchmark_seconds > 0.0 else frames == (drone_frame if drone_demo else laser_frame if laser_demo else mine_frame if mine_demo else press_frame if press_demo else (decoy_frame if decoy_demo else (quake_frame if quake_demo else 720)))
 	if finished and not capture_pending:
 		capture_pending = true
 		capture.call_deferred()
@@ -395,6 +441,8 @@ func capture() -> void:
 		suffix = "-mine-layer-%d" % mine_frame
 	if laser_demo:
 		suffix = "-laser-%d" % laser_frame
+	if drone_demo:
+		suffix = "-drone-bay-%d" % drone_frame
 	var output := ProjectSettings.globalize_path("res://.test-results/game%s.png" % suffix)
 	get_viewport().get_texture().get_image().save_png(output)
 	samples.sort()

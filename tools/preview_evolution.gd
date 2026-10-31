@@ -191,6 +191,62 @@ func _ready() -> void:
 			for turret in lasers:
 				turret.set_physics_process(false)
 		return
+	if "--drone-bay-preview" in OS.get_cmdline_user_args():
+		# Drone Bay, Escort Drones, Guardian Wing and Reaper Swarm side by side; --zoom=<size> (default 8.5) closes in, --side looks level,
+		# --focus=<0-3> centres one bay, --flight switches combat on and steps each bay by hand for four seconds (the hero stands 4 m in
+		# front of the row, with durable enemies round him and two Kites 4 m beyond, so the escorts have somebody to circle and shoot).
+		var zoom := 8.5
+		for argument in OS.get_cmdline_user_args():
+			if argument.begins_with("--zoom="):
+				zoom = float(argument.trim_prefix("--zoom="))
+		world.turrets[0].visible = false
+		world.camera.position = Vector3(0, 1.1, 9.0) if "--side" in OS.get_cmdline_user_args() else Vector3(0, 7.5, 7.5)
+		for argument in OS.get_cmdline_user_args():
+			if argument.begins_with("--focus="):
+				world.camera.position.x += (float(argument.trim_prefix("--focus=")) - 1.5) * 4.5
+		world.camera.look_at(Vector3(world.camera.position.x, .3, 0))
+		world.camera.size = zoom
+		var bays: Array[TurretActor] = []
+		for i in range(4):
+			var turret := world.add_turret(Vector3((i - 1.5) * 4.5, 0, 0), "drone_bay")
+			turret.set_physics_process(false)
+			turret.progression.award(1500)
+			for form: String in [[], ["escort_drones"], ["escort_drones", "guardian_wing"], ["escort_drones", "reaper_swarm"]][i]:
+				turret.evolve(form)
+			turret.reset_physics_interpolation()
+			bays.append(turret)
+			var label := Label3D.new()
+			label.text = turret.display_name()
+			label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+			label.position = turret.position + Vector3(0, 2.2, 0)
+			label.font_size = 44
+			label.pixel_size = .005
+			world.add_child(label)
+		if "--flight" in OS.get_cmdline_user_args():
+			world.player.position = Vector3(0, 0, -4.0)
+			var spots: Array[Vector3] = [Vector3(-1.4, 0, -2.6), Vector3(1.4, 0, -2.6), Vector3(0, 0, -5.8), Vector3(-5.2, 0, -4.0), Vector3(5.2, 0, -4.0)]
+			for index in spots.size():
+				var dummy := world.spawn_enemy(spots[index], "kite" if index >= 3 else "basic")
+				dummy.stationary = true
+				dummy.set_physics_process(false)
+				dummy.health = 100000
+				dummy.max_health = 100000
+			# The unevolved bay's sortie reaches its own side: one more enemy in its leash.
+			var prey := world.spawn_enemy(bays[0].position + Vector3(-1.5, 0, -2.5), "basic")
+			prey.stationary = true
+			prey.set_physics_process(false)
+			prey.health = 100000
+			prey.max_health = 100000
+			GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+			for i in 240:
+				world.crowd.rebuild(world.enemies)
+				for turret in bays:
+					turret._physics_process(1.0 / 60.0)
+				world.drones.tick(1.0 / 60.0)
+			for turret in bays:
+				turret.set_physics_process(false)
+			world.drones.set_physics_process(false)
+		return
 	if "--mine-layer-preview" in OS.get_cmdline_user_args():
 		# Mine Layer, Minefield, Dead Zone and Chain Reaction side by side; --zoom=<size> (default 8.5) closes in, --side looks level,
 		# --focus=<0-3> centres one turret, --mines lets each lay its mines for twenty simulated seconds first.
@@ -294,7 +350,7 @@ func _process(_delta: float) -> void:
 
 func capture() -> void:
 	await RenderingServer.frame_post_draw
-	var filename := "saber-preview.png" if "--saber-preview" in OS.get_cmdline_user_args() else "flame-preview.png" if "--flame-preview" in OS.get_cmdline_user_args() else "expansion-preview.png" if "--expansion-preview" in OS.get_cmdline_user_args() else "sniper-preview.png" if "--sniper-preview" in OS.get_cmdline_user_args() else "quake-preview.png" if "--quake-preview" in OS.get_cmdline_user_args() else "decoy-preview.png" if "--decoy-preview" in OS.get_cmdline_user_args() else "scrap-press-preview.png" if "--scrap-press-preview" in OS.get_cmdline_user_args() else "mine-layer-preview.png" if "--mine-layer-preview" in OS.get_cmdline_user_args() else "laser-preview.png" if "--laser-preview" in OS.get_cmdline_user_args() else "evolution-preview.png"
+	var filename := "saber-preview.png" if "--saber-preview" in OS.get_cmdline_user_args() else "flame-preview.png" if "--flame-preview" in OS.get_cmdline_user_args() else "expansion-preview.png" if "--expansion-preview" in OS.get_cmdline_user_args() else "sniper-preview.png" if "--sniper-preview" in OS.get_cmdline_user_args() else "quake-preview.png" if "--quake-preview" in OS.get_cmdline_user_args() else "decoy-preview.png" if "--decoy-preview" in OS.get_cmdline_user_args() else "scrap-press-preview.png" if "--scrap-press-preview" in OS.get_cmdline_user_args() else "mine-layer-preview.png" if "--mine-layer-preview" in OS.get_cmdline_user_args() else "laser-preview.png" if "--laser-preview" in OS.get_cmdline_user_args() else "drone-bay-preview.png" if "--drone-bay-preview" in OS.get_cmdline_user_args() else "evolution-preview.png"
 	var output := ProjectSettings.globalize_path("res://.test-results/" + filename)
 	get_viewport().get_texture().get_image().save_png(output)
 	print("EVOLUTION_PREVIEW ", output)

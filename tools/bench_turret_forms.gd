@@ -22,6 +22,11 @@ extends Node
 ## Laser rows: a beam never loses a stationary target, so single and lane read its full-ramp DPS after the 3 s to 6 s ramp (a short
 ## `--seconds` favours the faster ramps; use 15 or more). Halo Cutter's cross spends only part of its time on each dummy, and the
 ## walking-traffic ratios that tune the finals are in `test_laser_turret.gd`.
+## Drone Bay rows (`drone_single`, `drone_cluster`, `drone_lane`: the same three shapes, one bay at a time): the escort forms orbit the HERO,
+## so each row runs alone with the hero at the middle of the arena, the bay 2 m off, and the dummies round the hero (the drones are
+## clamped to the arena, so the grid's far cells are no good for them). The dummies never die, so a Reaper Swarm's kill extras never come
+## and the sortie bay reads its steady rate; `test_drone_bay_turret.gd` tunes the finals against mortal enemies in game time, which is
+## the figure to trust. Drone rows are skipped by the three scenarios above.
 ## "slow" is the share of enemy-seconds spent slowed (by a status or by standing in a ground zone).
 ## [base, form(, companion form)]: a form id is reached through its base's level-5 upgrade first; "" is the unevolved base.
 ## A third entry puts an Ion turret of that form (a Machine Gun) beside it in the same cell; the row then reports the
@@ -42,8 +47,12 @@ const FORMS := [
 	["scrap_press", ""], ["scrap_press", "coin_feeder"], ["scrap_press", "treasury"], ["scrap_press", "academy"],
 	["mine_layer", ""], ["mine_layer", "minefield"], ["mine_layer", "dead_zone"], ["mine_layer", "chain_reaction"],
 	["laser", ""], ["laser", "focus_beam"], ["laser", "halo_cutter"], ["laser", "sunpiercer"],
+	["drone_bay", ""], ["drone_bay", "escort_drones"], ["drone_bay", "guardian_wing"], ["drone_bay", "reaper_swarm"],
 ]
-const SCENARIOS := ["single", "cluster", "lane", "pull", "pull_far", "income"]
+const SCENARIOS := ["single", "cluster", "lane", "pull", "pull_far", "income", "drone_single", "drone_cluster", "drone_lane"]
+## Where a drone row runs: the hero at the middle of the arena and the bay beside him.
+const DRONE_HERO := Vector3.ZERO
+const DRONE_BAY := Vector3(2.0, 0, 0)
 ## The pull scenarios (aggro turrets only) use real, moving enemies that would otherwise walk off toward the hero. Eight
 ## enemies start in a ring this far from the turret; "held" is the share of enemy-seconds spent within `HELD_RADIUS` metres
 ## of it (the hero is far away at +z, so an enemy that is not held is gone).
@@ -77,6 +86,9 @@ var pull_row: int = 0
 var income_queue: Array[int] = []
 var income_row: int = 0
 var income_start: Dictionary = {}
+## Drone rows still to run in the current drone scenario, and the one running now.
+var drone_queue: Array[int] = []
+var drone_row: int = 0
 var wave: int = 1
 var samples: Dictionary = {}
 var results: Dictionary = {}
@@ -125,6 +137,9 @@ func _ready() -> void:
 				if not turret.evolve(form):
 					push_error("Cannot evolve %s (level %d)" % [form, turret.progression.level])
 		actors.append(turret)
+		if TurretRegistry.get_fire_mode(spec[0]) == TurretRegistry.FIRE_DRONES:
+			# A drone bay only works in its own scenarios (see the header): it sleeps until its row comes up.
+			turret.set_physics_process(false)
 		if TurretRegistry.is_no_attack(spec[0]):
 			# Two neighbours inside Academy's reach, parked off the rows' cell middle so they never touch its drops.
 			for offset in [Vector3(2.5, 0, 0), Vector3(0, 0, 2.5)]:
@@ -194,7 +209,26 @@ func _next_phase() -> void:
 		else:
 			_start_pull_row()
 		return
+	if _is_drone_phase():
+		drone_queue.clear()
+		for i in actors.size():
+			if _drone_row(i):
+				drone_queue.append(i)
+		if drone_queue.is_empty():
+			_next_phase()
+		else:
+			_start_drone_row()
+		return
+	var every_row_is_a_bay := true
 	for i in actors.size():
+		every_row_is_a_bay = every_row_is_a_bay and _drone_row(i)
+	if every_row_is_a_bay:
+		# A `--base=drone_bay` run has nothing for the cell scenarios to measure.
+		_next_phase()
+		return
+	for i in actors.size():
+		if _drone_row(i):
+			continue
 		var centre := _cell(i)
 		match SCENARIOS[phase]:
 			"single":
@@ -226,6 +260,63 @@ func _reset_field() -> void:
 	held.clear()
 	samples.clear()
 
+func _is_drone_phase() -> bool:
+	return phase >= 0 and phase < SCENARIOS.size() and str(SCENARIOS[phase]).begins_with("drone_")
+
+func _drone_row(index: int) -> bool:
+	return TurretRegistry.get_fire_mode(actors[index].turret_type) == TurretRegistry.FIRE_DRONES
+
+## One drone bay at a time: the hero at the middle of the arena, the bay beside him, the three dummy shapes round the hero.
+func _start_drone_row() -> void:
+	_reset_field()
+	drone_row = drone_queue.pop_front()
+	var turret := actors[drone_row]
+	turret.position = DRONE_BAY
+	turret.set_physics_process(true)
+	turret.reset_entrench()
+	world.player.position = DRONE_HERO
+	match str(SCENARIOS[phase]).trim_prefix("drone_"):
+		"single":
+			_spawn_at(DRONE_HERO + Vector3(0, 0, -1.5))
+		"cluster":
+			for k in 8:
+				var angle := float(k) * TAU / 8.0
+				var ring := .45 if k < 4 else .9
+				_spawn_at(DRONE_HERO + Vector3(cos(angle) * ring, 0, -1.5 + sin(angle) * ring))
+		"lane":
+			for distance in [1.5, 2.2, 2.9]:
+				_spawn_at(DRONE_HERO + Vector3(0, 0, -distance))
+	world.crowd.rebuild(world.enemies)
+	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
+	ticks = 0
+
+func _spawn_at(at: Vector3) -> CombatActor:
+	var enemy := world.spawn_enemy(at)
+	enemy.stationary = true
+	enemy.health = 1000000
+	enemy.max_health = 1000000
+	return enemy
+
+## Same window as the other scenarios: a second of warm-up (launches, the first sortie), then `seconds` of damage.
+func _physics_drone() -> void:
+	if ticks == 60:
+		damage.clear()
+	if ticks < 60 + int(seconds * 60.0):
+		return
+	var turret := actors[drone_row]
+	results[_name(drone_row)] = results.get(_name(drone_row), {})
+	results[_name(drone_row)][SCENARIOS[phase]] = [float(damage.get(turret.turret_id, 0.0)) / seconds, 0.0]
+	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
+	world.drones.clear_owner(turret.turret_id)
+	turret.set_physics_process(false)
+	var cell := _cell(drone_row)
+	turret.position = Vector3(cell.x, 0, cell.y)
+	world.player.position = Vector3(0, 0, 60)
+	if drone_queue.is_empty():
+		_next_phase()
+	else:
+		_start_drone_row()
+
 ## One aggro turret at a time, moved to the middle of the arena (real enemies are clamped to the arena, so the far cells the
 ## other scenarios use are no good), with eight real enemies in a ring round it.
 func _start_pull_row() -> void:
@@ -252,6 +343,9 @@ func _physics_process(_delta: float) -> void:
 	if _is_pull():
 		_physics_pull()
 		return
+	if _is_drone_phase():
+		_physics_drone()
+		return
 	if ticks == 60:
 		# One second of warm-up so charge-up, echoes and first shots do not skew the window.
 		damage.clear()
@@ -264,6 +358,8 @@ func _physics_process(_delta: float) -> void:
 					slowed[owner_cell] = int(slowed.get(owner_cell, 0)) + 1
 	if ticks >= 60 + int(seconds * 60.0):
 		for i in actors.size():
+			if _drone_row(i):
+				continue
 			var total := float(damage.get(actors[i].turret_id, 0.0))
 			if companions.has(i):
 				total += float(damage.get(companions[i].turret_id, 0.0))
@@ -360,15 +456,25 @@ func _name(index: int) -> String:
 func _finish() -> void:
 	print("FORM                    | single dps slow | cluster dps slow | lane dps slow")
 	var pulled := false
+	var drone_rows: Array[int] = []
 	for i in actors.size():
+		if _drone_row(i):
+			drone_rows.append(i)
+			continue
 		var key := _name(i)
 		var row: Dictionary = results[key]
 		var line := "%-24s|" % key
 		for scenario in SCENARIOS:
-			if not PULL_START.has(scenario) and scenario != "income":
+			if not PULL_START.has(scenario) and scenario != "income" and not str(scenario).begins_with("drone_"):
 				line += " %7.1f %4.0f%% |" % [row[scenario][0], row[scenario][1] * 100.0]
 		print(line)
 		pulled = pulled or row.has("pull")
+	if not drone_rows.is_empty():
+		print("")
+		print("FORM                    | drone single dps | drone cluster dps | drone lane dps   (hero at the middle, bay 2 m off, dummies round the hero, %.0f s; dummies never die)" % seconds)
+		for i in drone_rows:
+			var row: Dictionary = results[_name(i)]
+			print("%-24s| %16.1f | %17.1f | %14.1f" % [_name(i), row["drone_single"][0], row["drone_cluster"][0], row["drone_lane"][0]])
 	if pulled:
 		print("")
 		print("FORM                    | pull from 3.5 m: held   crowd dps | pull from 6 m: held   crowd dps   (held = share of enemy-seconds within %.0f m of the turret; crowd dps = damage dealt to the eight, %.0f s)" % [HELD_RADIUS, PULL_SECONDS])
