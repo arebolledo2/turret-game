@@ -58,6 +58,7 @@ const PATHS: Dictionary = {
 	"turret_decoy": "<circle cx='12' cy='12' r='3'/><path d='M12 4v3M12 17v3M4 12h3M17 12h3'/><path d='M5.6 5.6a9 9 0 000 12.8M18.4 5.6a9 9 0 010 12.8'/>",
 	"turret_scrap_press": "<path d='M5 19h14'/><path d='M7 19v-6h10v6'/><path d='M9 13V9h6v4'/><path d='M12 3v4M9.5 5.5l2.5 2 2.5-2'/><circle cx='12' cy='16' r='1.3' fill='#fff' stroke='none'/>",
 	"turret_mine_layer": "<circle cx='12' cy='13' r='6'/><path d='M12 4v3M5.5 6.5l2.1 2.1M18.5 6.5l-2.1 2.1M4 13h2M18 13h2'/><circle cx='12' cy='13' r='1.6' fill='#fff' stroke='none'/>",
+	"turret_drone_bay": "<circle cx='12' cy='13' r='2.4'/><path d='M12 10.6V7M9.6 13H6M14.4 13H18'/><circle cx='5' cy='6' r='2'/><circle cx='19' cy='6' r='2'/><path d='M7 7.4l3.2 3.2M17 7.4l-3.2 3.2M7 20h10'/>",
 	"turret_laser": "<path d='M3 18h6'/><path d='M9 18L21 6'/><path d='M14 4v4M18 3l-1.5 3M21 10h-4'/><circle cx='9' cy='18' r='2.2'/>",
 	"turret_melee": "<path d='M5 19L18 6M15 4l5 5M5 14l5 5'/>",
 	# Items

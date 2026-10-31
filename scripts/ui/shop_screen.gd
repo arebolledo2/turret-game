@@ -413,6 +413,8 @@ func _turret_numbers(was: Dictionary, turret: Dictionary) -> String:
 	var cadence_unit := "°/s sweep" if cadence_key == "rotation_rate" else (" mines/s" if bool(turret.get("deploys", false)) else (" ticks/s" if bool(turret.get("beam", false)) else " shots/s"))
 	if cadence_key == "fire_rate" and int(turret.get("burst_size", 1)) > 1:
 		cadence_unit = " bursts/s (%d shots)" % int(turret["burst_size"])
+	if cadence_key == "fire_rate" and int(turret.get("drones", 0)) > 0:
+		cadence_unit = " shots/s each · %d drones" % int(turret["drones"])
 	var numbers := _number(was, turret, "damage", " damage") + " · " + _number(was, turret, cadence_key, cadence_unit)
 	numbers += "\n" + _number(was, turret, "range", " m reach")
 	if turret["area"] > 0:

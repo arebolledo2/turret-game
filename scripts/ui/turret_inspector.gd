@@ -247,6 +247,11 @@ func _show_selected() -> void:
 			lines.append("Rate  %.1f ticks/s     Beam now  [b]x%.1f[/b]" % [stats.fire_rate, laser.ramp_now()])
 			lines.append("About [b]%.0f DPS[/b] on average while the beam ramps, [b]%.0f DPS[/b] fully ramped" % [laser.estimate_dps(stats), stats.damage * stats.fire_rate * laser.ramp_peak()])
 			lines.append(TurretEvolution.laser_pattern_text(growth.evolution_form))
+		elif turret.form is DroneBayForm:
+			var bay := turret.form as DroneBayForm
+			lines.append("Rate  %.2f shots/s each     Drones  [b]%d[/b] (%d in the air)" % [stats.fire_rate, bay.drone_count(), bay.live_drones().size()])
+			lines.append("Up to [b]%.0f DPS[/b] with every drone shooting; less while they fly out, return and dock" % bay.estimate_dps(stats))
+			lines.append(TurretEvolution.drone_bay_pattern_text(growth.evolution_form))
 		else:
 			lines.append("Rate  %.2f shots/s     Cooldown  %.2f s" % [stats.fire_rate, stats.cooldown_seconds])
 	if stats.projectile_speed_metres > 0:

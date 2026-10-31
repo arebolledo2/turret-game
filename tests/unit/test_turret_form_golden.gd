@@ -5,7 +5,7 @@ extends GutTest
 ## stats, text, shot shape, behaviour class, visual builder or built model must fail here instead of passing silently.
 ## If a number must change on purpose (a balance retune), edit the literal in the same commit and say why.
 ##
-## What is pinned, per form (all 42 registered forms, implemented or not) and per base turret with no form:
+## What is pinned, per form (all 45 registered forms, implemented or not) and per base turret with no form:
 ##   FORMS     base, kind (upgrade or final), name, model key, implemented, description
 ##   STATS     the full `TurretEvolution.base_stats(base, form)` dictionary (every key, with its type)
 ##   SHOTS     `shape_shot` on a fresh `CombatShot3D`: visual_key, visual_scale, radius, lifetime, ricochets, pierce
@@ -13,13 +13,13 @@ extends GutTest
 ##   BUILDERS  which `*EvolutionVisual` builders change the form's chassis (each is run on a fresh model)
 ##   MODELS    the model the actor builds: node and mesh counts, handles the attack code reads (muzzles, emitters, saber
 ##             arms) and a digest of every node's class, name, transform, mesh size and material
-##   MISC      volley size, pierce text, the Stormblade barrel stats, Resonator echo delays and Quake, Decoy, Scrap Press, Mine Layer and Laser pattern text
+##   MISC      volley size, pierce text, the Stormblade barrel stats, Resonator echo delays and Quake, Decoy, Scrap Press, Mine Layer, Laser and Drone Bay pattern text
 ##
 ## The collectors only call lookups (`_stats`, `_shot`, `_volley`, ...); when a refactor changes a function signature,
 ## adapt the lookup here, never the expected values.
 
-const BASES: Array[String] = ["normal", "melee", "bow", "flamethrower", "bowling", "plasma", "shock", "tesla", "sniper", "quake", "decoy", "scrap_press", "mine_layer", "laser"]
-const BUILDERS: Array[String] = ["BowEvolutionVisual", "FlameEvolutionVisual", "BowlingEvolutionVisual", "GunbladeEvolutionVisual", "SiegeEvolutionVisual", "SniperEvolutionVisual", "QuakeEvolutionVisual", "DecoyEvolutionVisual", "ScrapPressEvolutionVisual", "MineLayerEvolutionVisual", "LaserEvolutionVisual", "GatlingEvolutionVisual", "CrossfireEvolutionVisual"]
+const BASES: Array[String] = ["normal", "melee", "bow", "flamethrower", "bowling", "plasma", "shock", "tesla", "sniper", "quake", "decoy", "scrap_press", "mine_layer", "laser", "drone_bay"]
+const BUILDERS: Array[String] = ["BowEvolutionVisual", "FlameEvolutionVisual", "BowlingEvolutionVisual", "GunbladeEvolutionVisual", "SiegeEvolutionVisual", "SniperEvolutionVisual", "QuakeEvolutionVisual", "DecoyEvolutionVisual", "ScrapPressEvolutionVisual", "MineLayerEvolutionVisual", "LaserEvolutionVisual", "DroneBayEvolutionVisual", "GatlingEvolutionVisual", "CrossfireEvolutionVisual"]
 
 const FORMS: Dictionary = {
 	"machine_gun": {
@@ -357,6 +357,30 @@ const FORMS: Dictionary = {
 		"model": "laser",
 		"implemented": true,
 		"description": "The ramp climbs to x6 over 4 seconds, from 2.8 damage a tick. At full ramp a flare runs the whole line through the target every 2 seconds, hitting every enemy on it for 6 full-strength ticks.",
+	},
+	"escort_drones": {
+		"base": "drone_bay",
+		"kind": "upgrade",
+		"name": "Escort Drones",
+		"model": "mine_layer",
+		"implemented": true,
+		"description": "Three drones orbit you instead of the bay and shoot enemies within 2.5 m of you: 6.5 damage, 1.5 shots a second each.",
+	},
+	"guardian_wing": {
+		"base": "drone_bay",
+		"kind": "final",
+		"name": "Guardian Wing",
+		"model": "mine_layer",
+		"implemented": true,
+		"description": "Four escort drones that also shoot down hostile bolts and shells aimed at you, within 4.5 m of you, one each per second. 6.5 damage, 1.7 shots a second each.",
+	},
+	"reaper_swarm": {
+		"base": "drone_bay",
+		"kind": "final",
+		"name": "Reaper Swarm",
+		"model": "mine_layer",
+		"implemented": true,
+		"description": "Five escort drones dive at the nearest Kite, Lobber or Tender within 6 m of you before anything else, for 60% more damage against them. A kill launches an extra drone for 4 seconds (two at most). 4.2 damage, 1.8 shots a second each.",
 	},
 }
 
@@ -814,6 +838,34 @@ const STATS: Dictionary = {
 		"range": 340.0,
 		"rotation_speed": 0.0,
 	},
+	"(drone_bay)": {
+		"damage": 6.0,
+		"fire_rate": 1.6,
+		"range": 500.0,
+		"rotation_speed": 0.0,
+		"drone_count": 2,
+	},
+	"escort_drones": {
+		"damage": 6.5,
+		"fire_rate": 1.5,
+		"range": 250.0,
+		"rotation_speed": 0.0,
+		"drone_count": 3,
+	},
+	"guardian_wing": {
+		"damage": 6.5,
+		"fire_rate": 1.7,
+		"range": 280.0,
+		"rotation_speed": 0.0,
+		"drone_count": 4,
+	},
+	"reaper_swarm": {
+		"damage": 4.2,
+		"fire_rate": 1.8,
+		"range": 250.0,
+		"rotation_speed": 0.0,
+		"drone_count": 5,
+	},
 }
 
 const SHOTS: Dictionary = {
@@ -873,6 +925,10 @@ const SHOTS: Dictionary = {
 	"focus_beam": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
 	"halo_cutter": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
 	"sunpiercer": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"(drone_bay)": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"escort_drones": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"guardian_wing": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
+	"reaper_swarm": {"visual_key": "", "visual_scale": 1.0, "radius": 0.075, "lifetime": 3.0, "ricochets": 0, "pierce": 0},
 }
 
 const BEHAVIOUR: Dictionary = {
@@ -932,6 +988,10 @@ const BEHAVIOUR: Dictionary = {
 	"focus_beam": "LaserForm",
 	"halo_cutter": "LaserForm",
 	"sunpiercer": "LaserForm",
+	"(drone_bay)": "DroneBayForm",
+	"escort_drones": "DroneBayForm",
+	"guardian_wing": "DroneBayForm",
+	"reaper_swarm": "DroneBayForm",
 }
 
 const BUILDERS_BY_FORM: Dictionary = {
@@ -991,6 +1051,10 @@ const BUILDERS_BY_FORM: Dictionary = {
 	"focus_beam": ["LaserEvolutionVisual"],
 	"halo_cutter": ["LaserEvolutionVisual"],
 	"sunpiercer": ["LaserEvolutionVisual"],
+	"(drone_bay)": [],
+	"escort_drones": ["DroneBayEvolutionVisual"],
+	"guardian_wing": ["DroneBayEvolutionVisual"],
+	"reaper_swarm": ["DroneBayEvolutionVisual"],
 }
 
 const MODELS: Dictionary = {
@@ -1666,6 +1730,54 @@ const MODELS: Dictionary = {
 		"saber_angles": 1,
 		"digest": "df0feed5f211179b",
 	},
+	"(drone_bay)": {
+		"nodes": 21,
+		"meshes": 17,
+		"muzzle": "0.000,-0.200,-0.910",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "1a97b71829d74436",
+	},
+	"escort_drones": {
+		"nodes": 30,
+		"meshes": 26,
+		"muzzle": "0.000,-0.200,-0.910",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "9c52ef3ebef8bdc6",
+	},
+	"guardian_wing": {
+		"nodes": 34,
+		"meshes": 30,
+		"muzzle": "0.000,-0.200,-0.910",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "e1f3dd3fbba979e1",
+	},
+	"reaper_swarm": {
+		"nodes": 37,
+		"meshes": 33,
+		"muzzle": "0.000,-0.200,-0.910",
+		"gun_muzzles": 0,
+		"crossfire_muzzles": 0,
+		"flame_emitters": 0,
+		"bowling_hardware": false,
+		"bow_muzzles": 0,
+		"saber_angles": 1,
+		"digest": "4658a358ad79a2fb",
+	},
 }
 
 const MISC: Dictionary = {
@@ -1706,8 +1818,13 @@ const MISC: Dictionary = {
 	"laser_pattern:sunpiercer": "Beam ramps x1 to x6 over 4 s on one enemy; losing the target starts it over. At full ramp a flare along the whole line every 2 s hits each enemy for 6 full ticks",
 	"laser_pattern:missing": "Beam ramps x1 to x3 over 3 s on one enemy; losing the target starts it over",
 	"ids": ["", "", "", ""],
-	"implemented": ["machine_gun", "cyclone_gatling", "omnifire", "saber", "orbit_saber", "stormblade", "repeater_bow", "arrowstorm", "titan_bow", "wide_flame", "inferno_crown", "dragonheart", "heavy_roller", "juggernaut", "ricochet_king", "siege", "worldbreaker", "resonator", "resonance_engine", "thunder_spear", "piercer_rifle", "horizon_piercer", "overwatch", "aftershock", "tectonic", "cataclysm", "bumper_post", "pile_driver", "maelstrom", "coin_feeder", "treasury", "academy", "minefield", "dead_zone", "chain_reaction", "focus_beam", "halo_cutter", "sunpiercer"],
-	"order": [["machine_gun", "cyclone_gatling", "omnifire"], ["saber", "orbit_saber", "stormblade"], ["repeater_bow", "arrowstorm", "titan_bow"], ["wide_flame", "inferno_crown", "dragonheart"], ["heavy_roller", "juggernaut", "ricochet_king"], ["siege", "worldbreaker", "constellation"], ["resonator", "resonance_engine", "thunder_spear"], ["forked_coil", "storm_network", "thunderhead"], ["piercer_rifle", "horizon_piercer", "overwatch"], ["aftershock", "tectonic", "cataclysm"], ["bumper_post", "pile_driver", "maelstrom"], ["coin_feeder", "treasury", "academy"], ["minefield", "dead_zone", "chain_reaction"], ["focus_beam", "halo_cutter", "sunpiercer"]],
+	"implemented": ["machine_gun", "cyclone_gatling", "omnifire", "saber", "orbit_saber", "stormblade", "repeater_bow", "arrowstorm", "titan_bow", "wide_flame", "inferno_crown", "dragonheart", "heavy_roller", "juggernaut", "ricochet_king", "siege", "worldbreaker", "resonator", "resonance_engine", "thunder_spear", "piercer_rifle", "horizon_piercer", "overwatch", "aftershock", "tectonic", "cataclysm", "bumper_post", "pile_driver", "maelstrom", "coin_feeder", "treasury", "academy", "minefield", "dead_zone", "chain_reaction", "focus_beam", "halo_cutter", "sunpiercer", "escort_drones", "guardian_wing", "reaper_swarm"],
+	"order": [["machine_gun", "cyclone_gatling", "omnifire"], ["saber", "orbit_saber", "stormblade"], ["repeater_bow", "arrowstorm", "titan_bow"], ["wide_flame", "inferno_crown", "dragonheart"], ["heavy_roller", "juggernaut", "ricochet_king"], ["siege", "worldbreaker", "constellation"], ["resonator", "resonance_engine", "thunder_spear"], ["forked_coil", "storm_network", "thunderhead"], ["piercer_rifle", "horizon_piercer", "overwatch"], ["aftershock", "tectonic", "cataclysm"], ["bumper_post", "pile_driver", "maelstrom"], ["coin_feeder", "treasury", "academy"], ["minefield", "dead_zone", "chain_reaction"], ["focus_beam", "halo_cutter", "sunpiercer"], ["escort_drones", "guardian_wing", "reaper_swarm"]],
+	"drone_bay_pattern:": "Drones fly out from the bay to enemies within its reach, then dock between sorties",
+	"drone_bay_pattern:escort_drones": "Drones orbit you and shoot enemies within reach of you",
+	"drone_bay_pattern:guardian_wing": "Drones orbit you and shoot enemies within reach of you. They shoot down hostile bolts and shells aimed at you, within 4.5 m of you",
+	"drone_bay_pattern:reaper_swarm": "Drones orbit you and shoot enemies within reach of you. They dive at Kites, Lobbers and Tenders first (+60% damage); a kill launches an extra drone for 4 s, 2 at most",
+	"drone_bay_pattern:missing": "Drones fly out from the bay to enemies within its reach, then dock between sorties",
 }
 
 # --- Lookups (adapt these when a signature changes; never the expected values) ---
@@ -1751,6 +1868,7 @@ func _run_builder(builder: String, model: Node3D, _base: String, form: String) -
 		"ScrapPressEvolutionVisual": ScrapPressEvolutionVisual.build(model, form)
 		"MineLayerEvolutionVisual": MineLayerEvolutionVisual.build(model, form)
 		"LaserEvolutionVisual": LaserEvolutionVisual.build(model, form)
+		"DroneBayEvolutionVisual": DroneBayEvolutionVisual.build(model, form)
 		"GatlingEvolutionVisual": GatlingEvolutionVisual.build(model, form)
 		"CrossfireEvolutionVisual": CrossfireEvolutionVisual.build(model, form)
 
@@ -1808,6 +1926,8 @@ func collect_all(host: Node) -> Dictionary:
 		result.misc["mine_layer_pattern:" + form] = TurretEvolution.mine_layer_pattern_text(form)
 	for form in ["", "focus_beam", "halo_cutter", "sunpiercer", "missing"]:
 		result.misc["laser_pattern:" + form] = TurretEvolution.laser_pattern_text(form)
+	for form in ["", "escort_drones", "guardian_wing", "reaper_swarm", "missing"]:
+		result.misc["drone_bay_pattern:" + form] = TurretEvolution.drone_bay_pattern_text(form)
 	result.misc["ids"] = [TurretEvolution.form_name(""), TurretEvolution.form_name("missing"), TurretEvolution.model_key(""), TurretEvolution.description("missing")]
 	result.misc["implemented"] = implemented
 	result.misc["order"] = BASES.map(func(base: String) -> Array: return _forms_of(base))

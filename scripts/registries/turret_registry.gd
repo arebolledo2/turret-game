@@ -13,6 +13,7 @@ const FIRE_INSTANT: String = "instant" # hit-scan shot along a line (Sniper); pi
 const FIRE_NONE: String = "none" # no attack (utility turrets such as the Scrap Press); its `TurretForm.tick` does the work
 const FIRE_DEPLOY: String = "deploy" # lays mines or limpets (the Mine Layer) through engine piece S8; its `TurretForm.tick` does the work
 const FIRE_BEAM: String = "beam" # holds a continuous beam on its target (the Laser) through engine piece S11; its `TurretForm.tick` does the work
+const FIRE_DRONES: String = "drones" # sends up drones (the Drone Bay) through engine piece S10; its `TurretForm.tick` does the work
 
 const DEFAULT_MODEL: String = "res://assets/models/game/ion_turret.glb"
 
@@ -31,6 +32,7 @@ const BASE_PRICES: Dictionary = {
 	"melee": 12,
 	"mine_layer": 15,
 	"laser": 19,
+	"drone_bay": 18,
 }
 
 ## Player-facing build families. Items target these (modifier filter `family`) so a tag reads the same on the card and on the turret.
@@ -302,6 +304,30 @@ const TYPES: Dictionary = {
 			"fire_rate": 10.0,
 			"range": 260.0,
 			"rotation_speed": 0.0,
+		}
+	},
+	"drone_bay": {
+		"name": "Drone Bay",
+		"icon": "🛸",
+		"short_name": "Drone Bay",
+		# No Drone Bay model is wired yet: the cp_mine_layer chassis (a hex body with a hopper that could pass for a hive dock)
+		# stands in, tinted (see `TurretActor._rebuild_model`).
+		"model_key": "mine_layer",
+		"model": "res://assets/models/game/shock_turret.glb",
+		# It attacks with the drones it sends up: `DroneBayForm.tick` keeps `drone_count` of them in the air through engine piece S10
+		# (`Drones`). `damage` is one drone shot, `fire_rate` the shots per second of each drone, and `range` the leash: how far
+		# from the bay (from the hero, for the escort forms) a drone will go after an enemy.
+		"fire_mode": FIRE_DRONES,
+		"description": "Launches two drones that fly out to enemies within five metres of the bay, shoot them, and return to dock. The drones cannot be hurt and never hit you or your turrets.",
+		# Drone shots are bullets ("Projectile, Physical" on the card), delivered as hit-scan so a swarm stays cheap.
+		"attack_styles": [GameEnums.AttackStyle.PROJECTILE],
+		"damage_types": [GameEnums.DamageType.PHYSICAL],
+		"base_stats": {
+			"damage": 6.0,
+			"fire_rate": 1.6,
+			"range": 500.0,
+			"rotation_speed": 0.0,
+			"drone_count": 2,
 		}
 	},
 }

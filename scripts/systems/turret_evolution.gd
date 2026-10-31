@@ -194,6 +194,19 @@ static func laser_pattern_text(form_id: String) -> String:
 		text += ". At full ramp a flare along the whole line every %.0f s hits each enemy for %.0f full ticks" % [float(param(form_id, "flare_interval", 2.0)), flare]
 	return text
 
+## One line on how a Drone Bay form flies its drones, for the preview and the inspector.
+static func drone_bay_pattern_text(form_id: String) -> String:
+	var text := "Drones fly out from the bay to enemies within its reach, then dock between sorties"
+	if bool(param(form_id, "escort", false)):
+		text = "Drones orbit you and shoot enemies within reach of you"
+	if bool(param(form_id, "intercept", false)):
+		text += ". They shoot down hostile bolts and shells aimed at you, within %.1f m of you" % float(param(form_id, "intercept_reach", DroneBayForm.DEFAULT_INTERCEPT_REACH))
+	var bonus := float(param(form_id, "hunt_bonus", 0.0))
+	if bonus > 0.0:
+		text += ". They dive at Kites, Lobbers and Tenders first (+%.0f%% damage); a kill launches an extra drone for %.0f s, %d at most" % [
+			bonus * 100.0, float(param(form_id, "kill_drone_seconds", 0.0)), int(param(form_id, "max_extra", 0))]
+	return text
+
 ## One line on where a Scrap Press form sends its drops, for the preview and the inspector.
 static func scrap_press_pattern_text(form_id: String) -> String:
 	var radius := float(param(form_id, "xp_radius", 0.0))

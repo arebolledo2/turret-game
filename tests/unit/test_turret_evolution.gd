@@ -367,3 +367,35 @@ func test_laser_forms_change_how_the_beam_works() -> void:
 	assert_eq(TurretEvolution.param("sunpiercer", "ramp_peak"), 6.0)
 	assert_gt(float(TurretEvolution.param("sunpiercer", "flare_scale")), 0.0)
 	assert_null(TurretEvolution.param("focus_beam", "flare_scale"))
+
+func test_drone_bay_path_forms_tiers_and_placeholder_chassis() -> void:
+	assert_eq(TurretEvolution.options("drone_bay", 0), ["escort_drones"])
+	assert_eq(TurretEvolution.options("drone_bay", 1), ["guardian_wing", "reaper_swarm"])
+	for form in ["escort_drones", "guardian_wing", "reaper_swarm"]:
+		assert_true(TurretEvolution.is_implemented(form))
+		assert_eq(TurretEvolution.model_key(form), "mine_layer", "Every Drone Bay form uses the tinted cp_mine_layer chassis until a model is wired")
+		assert_false(TurretEvolution.description(form).is_empty())
+		assert_eq(TurretEvolution.param(form, "escort"), true, "Every form past the base bay orbits the hero")
+	assert_true(TurretEvolution.behaviour_script("drone_bay", "").new() is DroneBayForm, "The unevolved bay flies its sorties through its form")
+
+func test_drone_bay_base_stats_match_the_card() -> void:
+	var base := TurretRegistry.get_base_stats("drone_bay")
+	assert_eq(base.damage, 6.0)
+	assert_eq(base.drone_count, 2)
+	assert_eq(base.range, 500.0)
+	assert_eq(TurretRegistry.get_base_price("drone_bay"), 18)
+	assert_eq(TurretRegistry.get_fire_mode("drone_bay"), TurretRegistry.FIRE_DRONES)
+
+func test_drone_bay_forms_change_how_the_drones_work() -> void:
+	var escort := TurretEvolution.base_stats("drone_bay", "escort_drones")
+	var wing := TurretEvolution.base_stats("drone_bay", "guardian_wing")
+	var reaper := TurretEvolution.base_stats("drone_bay", "reaper_swarm")
+	assert_lt(float(escort.range), 500.0, "Escorts work within 2.5 m of the hero, not 5 m of the bay")
+	assert_eq(int(escort.drone_count), 3)
+	assert_eq(int(wing.drone_count), 4)
+	assert_eq(int(reaper.drone_count), 5, "The card's five drones")
+	assert_eq(TurretEvolution.param("guardian_wing", "intercept"), true)
+	assert_null(TurretEvolution.param("reaper_swarm", "intercept"))
+	assert_eq(TurretEvolution.param("reaper_swarm", "hunt_bonus"), .6, "+60% against ranged and summoner enemies")
+	assert_eq(TurretEvolution.param("reaper_swarm", "kill_drone_seconds"), 4.0)
+	assert_null(TurretEvolution.param("escort_drones", "hunt_bonus"))

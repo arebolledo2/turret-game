@@ -80,6 +80,7 @@ static func build_data(world: ArenaWorld, extra_turret: String = "") -> Dictiona
 			"utility": TurretRegistry.is_no_attack(type_id), "interval": 1.0 / maxf(rate, TurretStats.MIN_FIRE_RATE),
 			"deploys": TurretRegistry.get_fire_mode(type_id) == TurretRegistry.FIRE_DEPLOY,
 			"beam": TurretRegistry.get_fire_mode(type_id) == TurretRegistry.FIRE_BEAM,
+			"drones": _drone_count(type_id, stats),
 			"range": reach, "stats": {"pierce": view.pierce, "projectile_speed": view.projectile_speed_metres,
 			"knockback": view.knockback_metres, "chain_count": view.chain_count,
 			"chain_decay": float(stats.get("chain_decay", 0)) * 100.0, "slow": view.slow_intensity * 100.0,
@@ -101,7 +102,7 @@ static func build_data(world: ArenaWorld, extra_turret: String = "") -> Dictiona
 				represented += 1
 				dps += _actor_dps(actor)
 		turrets.back()["instances"] = instances
-		dps += maxi(0, count - represented) * float(stats["damage"]) * rate
+		dps += maxi(0, count - represented) * float(stats["damage"]) * rate * float(maxi(_drone_count(type_id, stats), 1))
 	var max_hull := PlayerStatsService.get_player_max_health(float(world.difficulty_config["player_health_mult"]))
 	var items: Array[Dictionary] = []
 	for item_id: String in ItemTrackingService.item_counts:
@@ -121,12 +122,19 @@ static func _actor_numbers(actor: TurretActor, secondary: bool = false) -> Dicti
 		"utility": TurretRegistry.is_no_attack(actor.turret_type), "interval": stats.cooldown_seconds,
 		"deploys": TurretRegistry.get_fire_mode(actor.turret_type) == TurretRegistry.FIRE_DEPLOY,
 		"beam": TurretRegistry.get_fire_mode(actor.turret_type) == TurretRegistry.FIRE_BEAM,
+		"drones": _drone_count(actor.turret_type, values),
 		"burst_size": TurretEvolution.barrel_burst(actor.progression.evolution_form) if secondary else TurretEvolution.volley_size(actor.progression.evolution_form),
 		"rotation_rate": float(values.get("rotation_rate", 0.0)), "area": reach if pulse else stats.aoe_radius_metres,
 		"stats": {"pierce": stats.pierce, "projectile_speed": stats.projectile_speed_metres,
 		"knockback": stats.knockback_metres, "chain_count": stats.chain_count,
 		"chain_decay": stats.chain_decay * 100.0, "slow": stats.slow_intensity * 100.0,
 		"slow_duration": stats.slow_duration, "rehit_delay": stats.rehit_delay if values.has("rehit_delay") else 0.0}}
+
+## How many drones a Drone Bay's stats keep up (0 for every other turret): the shop shows it beside the per-drone damage and rate.
+static func _drone_count(type_id: String, stats: Dictionary) -> int:
+	if TurretRegistry.get_fire_mode(type_id) != TurretRegistry.FIRE_DRONES:
+		return 0
+	return clampi(int(stats.get("drone_count", 2)), 1, DroneBayForm.MAX_PER_BAY)
 
 static func _actor_dps(actor: TurretActor) -> float:
 	return TurretForm.dps_of(actor)

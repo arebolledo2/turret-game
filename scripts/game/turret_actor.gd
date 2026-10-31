@@ -58,6 +58,8 @@ const LOADED_BALL_FRACTION: float = .3
 const LOADED_ARROW_FRACTION: float = .35
 static var _no_gun_stats := TurretStats.new()
 const TESLA_TINT := Color(.35, .9, 1.0)
+## The cp_mine_layer hex body stands in for the Drone Bay until its own chassis is wired: a sky-blue tint tells them apart.
+const DRONE_BAY_TINT := Color(.55, .8, 1.0)
 
 func _init() -> void:
 	entrench = TurretEntrench.new(self)
@@ -117,6 +119,8 @@ func _rebuild_model() -> void:
 		model = SweepForm.placeholder_model() if fire_mode == TurretRegistry.FIRE_SWEEP else load(TurretRegistry.get_model_path(turret_type)).instantiate()
 	if turret_type == "tesla" and not use_clockwork:
 		EnemyVariants.tint_model(model, "turret_tesla", TESLA_TINT, .5)
+	elif turret_type == "drone_bay":
+		EnemyVariants.tint_model(model, "turret_drone_bay", DRONE_BAY_TINT, .2)
 	add_child(model)
 	_build_form_visual()
 	aim = model.find_child("Aim", true, false) as Node3D
@@ -274,8 +278,8 @@ func _physics_process(delta: float) -> void:
 		return
 	var range_metres := effective_range(stats)
 	var fire_mode := TurretRegistry.get_fire_mode(turret_type)
-	if fire_mode == TurretRegistry.FIRE_NONE or fire_mode == TurretRegistry.FIRE_DEPLOY or fire_mode == TurretRegistry.FIRE_BEAM:
-		# A utility, deploying or beam turret: its form's `tick` (already run above) is all it does.
+	if fire_mode in [TurretRegistry.FIRE_NONE, TurretRegistry.FIRE_DEPLOY, TurretRegistry.FIRE_BEAM, TurretRegistry.FIRE_DRONES]:
+		# A utility, deploying, beam or drone turret: its form's `tick` (already run above) is all it does.
 		return
 	if fire_mode == TurretRegistry.FIRE_SWEEP:
 		form.spin(delta, stats, range_metres)

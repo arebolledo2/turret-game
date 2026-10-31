@@ -93,6 +93,9 @@ func show_form(turret: TurretActor, form: String) -> void:
 	if turret.turret_type == "laser":
 		lines.append("Damage per tick   %.1f → %.1f     Ticks per second   %.1f → %.1f" % [before.damage, after.damage, before.fire_rate, after.fire_rate])
 		lines.append(TurretEvolution.laser_pattern_text(form))
+	if turret.turret_type == "drone_bay":
+		lines.append("Drones   %d → %d     Shots per second each   %.1f → %.1f" % [int(before.values.get("drone_count", 2)), int(after.values.get("drone_count", 2)), before.fire_rate, after.fire_rate])
+		lines.append(TurretEvolution.drone_bay_pattern_text(form))
 	if after.aoe_radius_metres > 0:
 		lines.append("Blast radius   %.2f → %.2f m" % [before.aoe_radius_metres, after.aoe_radius_metres])
 	if form == "stormblade":

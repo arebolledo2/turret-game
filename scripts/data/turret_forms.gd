@@ -47,6 +47,17 @@ extends RefCounted
 ##                  beams, spin_degrees  Halo Cutter: the arms of the cross and how fast it turns (degrees per second)
 ##                  flare_scale, flare_interval  Sunpiercer: at full ramp a flare along the whole line deals `flare_scale` full-ramp
 ##                              ticks to every enemy on it, every `flare_interval` seconds
+##                  escort, orbit_radius, drone_speed, hold  Drone Bay: the drones orbit the hero (not the bay) and work within the
+##                              leash of the hero, the metres of that orbit, the drones' top speed (m/s) and how close one hovers to
+##                              its enemy
+##                  airframe_seconds, rebuild_seconds, sortie_seconds, dock_seconds  Drone Bay: seconds a drone flies before its
+##                              airframe wears out (0 = never), before a lost drone's slot is refilled, a sortie lasts, and a drone
+##                              rests on the dock between sorties
+##                  intercept, intercept_reach, intercept_cooldown  Guardian Wing: the drones shoot down hostile bolts and shells
+##                              aimed at the hero, within `intercept_reach` metres of the hero, one per drone per cooldown (s)
+##                  hunt_bonus, hunt_reach, kill_drone_seconds, max_extra  Reaper Swarm: extra damage (0.6 = +60%) to Kites, Lobbers
+##                              and Tenders, the metres from the hero within which the drones dive at them, and the seconds and
+##                              the most (at a time) of the extra drones a kill launches
 ##                  layers, burner_pairs, burner_fan, lance_segments, braces, bumpers, housing_pairs, barrel_bands
 ##                              hardware counts and angles for the visual builders
 ## `BASES` holds the same kind of facts for a base turret that has not evolved yet (and for what all its forms share).
@@ -89,6 +100,8 @@ const BASES: Dictionary = {
 	"mine_layer": {"behaviour": "MineLayerForm"},
 	# The unevolved Laser already holds its beam through the same behaviour as its forms.
 	"laser": {"behaviour": "LaserForm"},
+	# The unevolved Drone Bay already flies its sorties through the same behaviour as its forms.
+	"drone_bay": {"behaviour": "DroneBayForm"},
 }
 
 const FORMS: Dictionary = {
@@ -415,5 +428,35 @@ const FORMS: Dictionary = {
 		"stats": {"damage": 2.8, "fire_rate": 10.0, "range": 340.0},
 		"behaviour": "LaserForm", "visual": "LaserEvolutionVisual",
 		"params": {"ramp_peak": 6.0, "ramp_seconds": 4.0, "flare_scale": 6.0, "flare_interval": 2.0},
+	},
+	# --- Drone Bay ---
+	# `damage` is one drone shot, `fire_rate` the shots per second of each drone, `drone_count` the drones kept in the air and
+	# `range` the leash (500 = 5 m from the bay for the base bay; 250 = 2.5 m from the HERO for the escort forms, whose drones
+	# orbit the hero). The base bay's drones fly sorties from the bay and dock between them. Drones cannot be hurt; an airframe
+	# wears out after `airframe_seconds` (50 by default) and its slot is refilled 3 s later. Tuned in simulated traffic at level 10
+	# (see `test_drone_bay_turret.gd`, not the bench) against Escort Drones, which is the baseline for the finals; Guardian Wing's
+	# shoot-down is value on top of its damage and is not in that figure.
+	# All four use the cp_mine_layer chassis (tinted sky blue) as a placeholder until the Drone Bay model is wired;
+	# `DroneBayEvolutionVisual` adds the per-form hardware.
+	"escort_drones": {
+		"base": "drone_bay", "kind": UPGRADE, "name": "Escort Drones", "model": "mine_layer", "implemented": true,
+		"description": "Three drones orbit you instead of the bay and shoot enemies within 2.5 m of you: 6.5 damage, 1.5 shots a second each.",
+		"stats": {"damage": 6.5, "fire_rate": 1.5, "range": 250.0, "drone_count": 3},
+		"behaviour": "DroneBayForm", "visual": "DroneBayEvolutionVisual",
+		"params": {"escort": true, "drone_speed": 9.0},
+	},
+	"guardian_wing": {
+		"base": "drone_bay", "kind": FINAL, "name": "Guardian Wing", "model": "mine_layer", "implemented": true,
+		"description": "Four escort drones that also shoot down hostile bolts and shells aimed at you, within 4.5 m of you, one each per second. 6.5 damage, 1.7 shots a second each.",
+		"stats": {"damage": 6.5, "fire_rate": 1.7, "range": 280.0, "drone_count": 4},
+		"behaviour": "DroneBayForm", "visual": "DroneBayEvolutionVisual",
+		"params": {"escort": true, "drone_speed": 10.0, "intercept": true, "intercept_reach": 4.5, "intercept_cooldown": 1.0},
+	},
+	"reaper_swarm": {
+		"base": "drone_bay", "kind": FINAL, "name": "Reaper Swarm", "model": "mine_layer", "implemented": true,
+		"description": "Five escort drones dive at the nearest Kite, Lobber or Tender within 6 m of you before anything else, for 60% more damage against them. A kill launches an extra drone for 4 seconds (two at most). 4.2 damage, 1.8 shots a second each.",
+		"stats": {"damage": 4.2, "fire_rate": 1.8, "range": 250.0, "drone_count": 5},
+		"behaviour": "DroneBayForm", "visual": "DroneBayEvolutionVisual",
+		"params": {"escort": true, "drone_speed": 11.0, "hold": .6, "hunt_bonus": .6, "hunt_reach": 6.0, "kill_drone_seconds": 4.0, "max_extra": 2},
 	},
 }
