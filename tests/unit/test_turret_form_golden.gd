@@ -348,7 +348,7 @@ const FORMS: Dictionary = {
 		"name": "Halo Cutter",
 		"model": "sniper",
 		"implemented": true,
-		"description": "Four beams on a spinning cross turn 120 degrees a second and cut every enemy they sweep across: 5 damage, 8 times a second. Nothing to focus on, so no ramp.",
+		"description": "Four beams on a spinning cross turn 120 degrees a second and cut every enemy they sweep across: 6 damage, 8 times a second. Nothing to focus on, so no ramp.",
 	},
 	"sunpiercer": {
 		"base": "laser",
@@ -356,7 +356,7 @@ const FORMS: Dictionary = {
 		"name": "Sunpiercer",
 		"model": "sniper",
 		"implemented": true,
-		"description": "The ramp climbs to x6 over 4 seconds, from 3.2 damage a tick. At full ramp a flare runs the whole line through the target every 2 seconds, hitting every enemy on it for 6 full-strength ticks.",
+		"description": "The ramp climbs to x6 over 4 seconds, from 2.8 damage a tick. At full ramp a flare runs the whole line through the target every 2 seconds, hitting every enemy on it for 6 full-strength ticks.",
 	},
 }
 
@@ -803,13 +803,13 @@ const STATS: Dictionary = {
 		"rotation_speed": 0.0,
 	},
 	"halo_cutter": {
-		"damage": 5.0,
+		"damage": 6.0,
 		"fire_rate": 8.0,
 		"range": 300.0,
 		"rotation_speed": 0.0,
 	},
 	"sunpiercer": {
-		"damage": 3.2,
+		"damage": 2.8,
 		"fire_rate": 10.0,
 		"range": 340.0,
 		"rotation_speed": 0.0,

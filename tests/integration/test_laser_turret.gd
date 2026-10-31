@@ -810,17 +810,17 @@ func test_halo_cutter_is_tuned_to_about_one_and_a_half_times_focus_beam_in_a_cro
 	var ring := _ratio("halo_cutter", "ring")
 	var boss := _ratio("halo_cutter", "boss")
 	gut.p("Halo Cutter against Focus Beam: packs %.2fx, ring %.2fx, lone boss %.2fx" % [packs, ring, boss])
-	assert_between(packs, 1.4, 2.4, "Packs")
-	assert_between(ring, 1.2, 1.9, "A ring of stationary enemies")
+	assert_between(packs, 1.8, 2.6, "Packs")
+	assert_between(ring, 1.5, 2.1, "A ring of stationary enemies")
 	assert_lt(boss, .3, "A cross is a poor single-target weapon, and the card says so")
 
 func test_sunpiercer_is_tuned_to_about_one_and_a_half_times_focus_beam_on_a_held_target() -> void:
 	var boss := _ratio("sunpiercer", "boss")
 	var lane := _ratio("sunpiercer", "lane")
 	gut.p("Sunpiercer against Focus Beam: boss %.2fx, lane %.2fx (mean %.2fx)" % [boss, lane, (boss + lane) * .5])
-	assert_between(boss, 1.6, 2.4, "A target held for the whole 40 seconds")
-	assert_between(lane, 1.0, 1.5, "A walker held for the few seconds it is in reach")
-	assert_between((boss + lane) * .5, 1.4, 1.9, "The two single-target cases together: about 1.5x")
+	assert_between(boss, 1.4, 2.0, "A target held for the whole 40 seconds")
+	assert_between(lane, .95, 1.4, "A walker held for the few seconds it is in reach")
+	assert_between((boss + lane) * .5, 1.25, 1.7, "The two single-target cases together: about 1.5x")
 
 # --- Existing behaviour is untouched ---
 
