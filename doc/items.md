@@ -18,6 +18,7 @@ Combat modifiers use `filter.attack_family`, distinct from elemental `DamageType
 | Decoy | Kinetic, AoE |
 | Scrap Press | none (no-attack utility turret; no build family) |
 | Mine Layer | AoE (the Deployable attack style maps to AoE) |
+| Laser | Instant |
 
 A hybrid whose styles map to the same family twice (for example AoE plus Deployable) lists it once. One modifier matches any listed family and applies once. Separate percentage increases add: +10% Projectile and +20% AoE damage give Plasma +30%, before separate multiplicative effects. Kinetic means contact/melee, not every PHYSICAL attack.
 

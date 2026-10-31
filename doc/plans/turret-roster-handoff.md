@@ -49,9 +49,9 @@ This supersedes the old three-stage, two-branch model everywhere below.
 
 | Group | Turrets |
 |---|---|
-| In game (13) | Ion, Plasma, Shock, Tesla (no evolutions yet), Melee, Bow, Flamethrower, Bowling Launcher, Sniper, Quake, Decoy, Scrap Press, Mine Layer |
+| In game (14) | Ion, Plasma, Shock, Tesla (no evolutions yet), Melee, Bow, Flamethrower, Bowling Launcher, Sniper, Quake, Decoy, Scrap Press, Mine Layer, Laser (placeholder chassis) |
 | Requested, not built (1) | Boomerang |
-| Proposed (5) | Laser, Beacon, Drone Bay, Lullaby, Discord |
+| Proposed (4) | Beacon, Drone Bay, Lullaby, Discord |
 | Aggro family (new build family) | Decoy, Lullaby, Discord: weird support turrets that change enemy behaviour. Bosses are immune. |
 
 Roster in the new shape (L5 upgrade, then the two L10 finals). `Built` means playable today.
@@ -72,7 +72,7 @@ Roster in the new shape (L5 upgrade, then the two L10 finals). `Built` means pla
 | Quake | Aftershock | Tectonic | Cataclysm | all built, real `cp_quake` model and portraits, runtime hardware per form |
 | Boomerang | Sawblade | Perpetual Saw | Boomerang Storm | new |
 | Mine Layer | Minefield | Dead Zone | Chain Reaction | all built (logic and S8) with the real `cp_mine_layer` model (branch `turret-mine-layer-model`) |
-| Laser | Focus Beam | Halo Cutter | Sunpiercer | new |
+| Laser | Focus Beam | Halo Cutter | Sunpiercer | all built (logic and S11) on a placeholder chassis; `cp_laser` not wired (branch `turret-laser`) |
 | Beacon | Overclock Beacon | Command Spire | Aegis Field | new |
 | Drone Bay | Escort Drones | Guardian Wing | Reaper Swarm | new |
 | Lullaby | Deep Sleep | Coma | Sandman | new |
@@ -185,6 +185,46 @@ Every form is one row in `scripts/data/turret_forms.gd` (`TurretForms.FORMS`): b
 
 **Reuse:** `Deployables.lay(Deployable)` is generic: any later turret that leaves something on the floor sets the trigger, arming, lifetime, re-arm, chain and limpet fields it needs and a blast `CombatShot3D` (a Lullaby "sleep mine" would swap the shot for a status; S12's delayed ground shell can be a fuse-only deployable with no trigger). `clear_owner`, the cap and the crowd-grid trigger come for free. `Deployable.State.FLYING` plus `host` is a generic "thing that travels to an enemy and rides it".
 
+## Laser logic (built 31 Oct 2026, branch `turret-laser`; placeholder chassis, `cp_laser` model NOT wired)
+
+`laser` is a stocked base turret (price 19, `FIRE_BEAM`, Plasma damage type, attack style INSTANT so the `instant` item family applies and Resonance Link counts it; Exposed +30% and Marked +25% apply as for the Sniper). One class, `LaserForm` (`scripts/game/laser_form.gd`), serves the base and all three forms; rows only change numbers and params. `TurretActor` returns after `form.tick` in `FIRE_BEAM`, so there is no projectile and no cooldown: the beam holds one enemy and deals a tick of `damage` at `fire_rate` ticks per second, times a ramp that climbs from x1 to `ramp_peak` over `ramp_seconds` of staying on the same target (a new target resets it). Crits, items, level bonuses and Entrench go through `actor._new_shot` and `Combat3D.impact` like any instant hit. **S11 is built** as `ContinuousBeam` (`scripts/game/continuous_beam.gd`, a RefCounted: lock, heat, tick clock capped at 3 ticks per step so a stall is not repaid, `nearest` and `touching` queries that read only the crowd grid and only return enemies, never the hero or turrets) and `BeamLines` (`scripts/game/beam_lines.gd`, a fixed pool of additive box meshes: segments are re-posed, never added, and `free_lines` hides and frees in place). The beam is released on pause, wave end, run reset, pick-up, removal and evolving (`TurretForm.clear` / `removed`).
+
+- **Laser (base):** 3 damage at 10 ticks/s, reach 2.6 m, ramp x1 to x3 over 3 s (30 dps at x1, 90 at x3). The card's numbers.
+- **Focus Beam (level 5):** 4 damage at 10 ticks/s, reach 3.0 m, ramp x1 to x3 over 2 s (40 / 120 dps).
+- **Halo Cutter (final):** a four-arm cross turning 120 degrees per second, 6.0 damage at 8 ticks/s per enemy touched, reach 3.0 m, no ramp (ramp peak 1). A crowd turret: weak on a lone enemy, strong in packs and rings. At most 24 victims per tick.
+- **Sunpiercer (final):** 2.8 damage at 10 ticks/s, reach 3.4 m, ramp x1 to x6 over 4 s; at full ramp a flare (6x scale, every 2 s) pierces the line behind the target.
+
+**Decisions where the card was silent or ambiguous (flagged for review):**
+
+1. Focus Beam has the base laser's ramp shape (x1 to x3), so it differs by faster ramp (2 s against 3 s), more damage and more reach. The card's reading was ambiguous.
+2. The card's damage numbers are kept, but they sit about four times above the Ion's DPS scale; the finals are tuned relative to Focus Beam (1.4 to 1.6x asked), not to the rest of the roster. A balance pass against Ion is a playtest question.
+3. Halo Cutter lands at about 1.8 to 2.2x Focus Beam in crowds and well under it on a lone enemy; Sunpiercer at about 1.7x on a held target and about 1.1x on short-lived ones. The brief's 1.4 to 1.6x is read as a mean across scenarios, not each.
+4. Ticks are instant hits (no travel), so Sniper-style `before_instant` hooks apply per tick.
+5. The cross's arms hit each enemy at most once per tick, however many arms touch it.
+6. The beam keeps working while carried (as other turrets do).
+7. The shop estimate is `damage x fire_rate x (1 + peak) / 2`, the average over the ramp.
+
+**Tuning (simulated, with one headless bench):** the finals were tuned in `tests/integration/test_laser_turret.gd` (`_simulated_dps`, durable walkers, fixed seeds). Halo Cutter went 4 damage, then 3.0 x 8, 5.5 x 8, 5.0 x 8, settling at 6.0 x 8; Sunpiercer 4, 4.4, 3.4, 3.2, settling at 2.8. The bench (`tools/bench_turret_forms.gd --base=laser --level=10 --seconds=15`) was run headless and fixed-fps once with the GPU at 26 to 28% (under the 30% limit; the numbers are simulated damage, not timings). Damage per second against stationary dummies:
+
+| Form | single | cluster | lane |
+|---|---|---|---|
+| Laser | 160.6 | 209.8 | 214.5 |
+| Focus Beam | 218.1 | 289.3 | 287.8 |
+| Halo Cutter | 36.7 | 369.7 | 102.7 |
+| Sunpiercer | 348.6 | 699.6 | 597.5 |
+
+(Dummies never die, so ramps run full; this overstates Sunpiercer against real traffic, where targets die before the ramp finishes.)
+
+**Visuals:** the placeholder chassis is the `cp_sniper` model tinted cyan (`TurretActor.LASER_TINT`), model key `sniper` in the registry and rows. `LaserEvolutionVisual` adds per-form hardware: a lens sleeve and collars (Focus Beam), a hoop, four lenses and spokes (Halo Cutter), a long barrel, rings and a hexagonal spire (Sunpiercer). The four shop portraits are renders of that placeholder.
+
+**Bench and tools:** the bench's pull scenarios crashed without an aggro turret (fixed in its own commit), and its short runs now lay out in one row so mines are not clamped away from their dummies (the old Mine Layer zeros). `showcase_turret_roster` stands turrets eight to a row. `capture_game -- --laser-demo[ --laser-frame=N]` and `preview_evolution -- --laser-preview[ --beams]` show the line. `carried_*_Dead Zone` reading 0 under the showcase's `--moving` is a pre-existing failure.
+
+**Not verified:** no human playtest. Looked at: the preview and the demo capture by eye (cross arms, beams and hoop read fine). Not looked at: the shop portraits at game scale, audio (the beam has no sound of its own), and any real-wave feel.
+
+**Open points for wiring `cp_laser`:** swap `model_key` and the rows' `model` from `sniper` to `laser`; drop `LASER_TINT` and its `elif`; `LaserEvolutionVisual` is sized for the Sniper rifle and needs the real footprint; check the model has `Aim` and `Muzzle` (add the key to the list in `tests/integration/test_clockwork_roster.gd`); re-record the golden models digest; re-render portraits with `render_shop_portraits -- --only=laser,focus_beam,halo_cutter,sunpiercer`.
+
+**Reuse for later turrets:** `ContinuousBeam.nearest/touching` suit any turret that needs a line query without scanning all enemies; `BeamLines` is a pooled line drawer; `FIRE_BEAM` plus a form `tick` is the pattern for channelled effects.
+
 ## Quake logic (built 26 Oct 2026, branch `turret-quake`; model wired on `turret-quake-model`)
 
 `quake` is a stocked base turret (damage 16, 0.45/s, range 260, rotation 0, knockback 200, stagger 0.4, price 17, Physical, families Kinetic and AoE, `fire_mode: "pulse"`). `QuakeForm` (`scripts/game/quake_form.gd`) takes over `TurretActor`'s `FIRE_PULSE` branch: a 0.5 s ground telegraph, then a `ShockwaveRing` at 8 m/s that strikes each enemy once as it touches it (nearest first). Aftershock (18, 0.45/s) queues a second ring 0.6 s later at 50% damage. Tectonic (40, 0.5/s, range 400) skips the ring and opens two fissures in an X (45 degrees either side of the line from the turret) at the densest cluster (`Combat3D.select_target` with the cluster radius `TECTONIC_CLUSTER_RADIUS`, 1.5 m); each is an S7 line zone centred on that enemy (half length 65% of reach, half width 0.45 m, both growing with range and area bonuses; 3 s; 40% slow) that hits what stands in it once as it opens. Cataclysm (30, 0.5/s) repeats up to three more rings every 0.9 s while enemies stay in range, each 20% wider, capped at 1.6x the reach, and its hits `extend_stagger` (1 s each, cap 1.5 s); the cooldown starts when the salvo ends. Bench (level 10, 120 s, DPS single / cluster / lane): Aftershock 29 / 239 / 90; Tectonic 47 / 334 / 146 (1.40x on a cluster, 1.6x single: the fissure always lands on a lone target); Cataclysm 42 / 354 / 130 (1.48x cluster, 1.45x single). Level 5: Quake 14 / 113 / 28, Aftershock 23 / 195 / 49. Level 10 base Quake: 18 / 146 / 53.
@@ -247,7 +287,7 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 - S8 Deployable runtime (Mine Layer) **BUILT** (`Deployables`; other turrets that leave things on the floor reuse it)
 - S9 Auras and healing (Beacon)
 - S10 Drone actors (Drone Bay)
-- S11 Continuous beam (Laser)
+- S11 Continuous beam (Laser) **BUILT** (`ContinuousBeam`, `BeamLines`; any turret that holds a beam or a line on enemies reuses it)
 - S12 Delayed ground-target shell (Mortar)
 
 ## Suggested order
@@ -255,7 +295,7 @@ Still open (recommendations are in the artifact): the shop slot count with 19 ba
 0. **Done:** progression change, targeting modes, Exposed status, DEPLOYABLE family mapping, utility-turret item rules, `aggro` family, form-table refactor.
 1. Generic timed-status system with a source owner (fixes the Overwatch shared-mark bug) before Decoy, Lullaby and Discord. Finish Plasma and Tesla whenever convenient (4 forms: Constellation needs S12; Forked Coil, Storm Network, Thunderhead). Re-bench every existing final at level 10 against its level-5 form.
 2. **Sniper, Quake, Decoy, the Scrap Press and the Mine Layer are done, with real models (Decoy model on `turret-decoy-model`, Scrap Press model on `turret-scrap-press-model`).** Boomerang is **on hold** (2026-10-30; the 2D concepts keep coming out as curved blades, retry batch `a5ee55bb-4af0-480c-845a-fecd6ba380c8` unreviewed). **The Mine Layer is built too** (logic and S8, branch `turret-mine-layer`; model on `turret-mine-layer-model`). Next: the remaining model wiring (Laser, Beacon, Drone Bay, Discord).
-3. Laser; Beacon and Drone Bay after a playtest.
+3. **The Laser is built** (logic and S11, branch `turret-laser`, placeholder chassis). Beacon and Drone Bay after a playtest.
 4. Lullaby and Discord (S4 is the largest piece).
 5. Wire the remaining base models as each turret lands.
 

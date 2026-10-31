@@ -1,6 +1,6 @@
 # Turret Survivor documentation
 
-Turret Survivor is a native 3D survival game in Godot 4.7.1. Move through a flat arena, reposition automated turrets, and buy upgrades between waves (20 by default). The Shop supports thirteen base turrets: Ion, Plasma, Shock, Tesla, Melee, Bow, Flamethrower, Bowling, Sniper, Quake, Decoy, Scrap Press (which does not attack) and Mine Layer (which lays mines). Each base turret has one upgrade at level 5 and a choice of two final forms at level 10 (35 playable forms today). See [the roster audit](plans/turret-expansion-audit.md) for availability and validation. The item catalog contains 52 general items, one core-only item and three Convoy-only items.
+Turret Survivor is a native 3D survival game in Godot 4.7.1. Move through a flat arena, reposition automated turrets, and buy upgrades between waves (20 by default). The Shop supports fourteen base turrets: Ion, Plasma, Shock, Tesla, Melee, Bow, Flamethrower, Bowling, Sniper, Quake, Decoy, Scrap Press (which does not attack), Mine Layer (which lays mines) and Laser (a continuous beam). Each base turret has one upgrade at level 5 and a choice of two final forms at level 10 (38 playable forms today). See [the roster audit](plans/turret-expansion-audit.md) for availability and validation. The item catalog contains 52 general items, one core-only item and three Convoy-only items.
 
 Launch with `./launch.ps1` or Godot F5. Run `./run_tests.ps1 -Import` on a fresh checkout.
 
