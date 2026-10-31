@@ -30,10 +30,19 @@ const ROSTER := [
 	["laser", "focus_beam", "halo_cutter", "sunpiercer"],
 	["laser", "focus_beam", "sunpiercer", "halo_cutter"],
 ]
-## Turrets stand in rows of this many, 4.2 m apart, rows 6.6 m apart. Three rows rather than four: under `--moving`, enemies spawned
-## beside a turret in a fourth row (z beyond about 16) were seen jumping 6 m to z = 8.6 in their first physics step (the cause was not
-## isolated), so a short-reach turret there never got a target.
-const COLUMNS: int = 8
+## Turrets stand in rows of `COLUMNS`, `COLUMN_GAP` apart, and the rows are spread over the arena's depth (`_station`). Every
+## turret and target must stand inside the arena (`WorldGeometry.HALF_ARENA`, about 12.7 x 8.9 m from the centre): an enemy
+## outside it is clamped back in on its first step (`EnemyActor._move`), which is how targets once jumped 6 m to z = 8.6 under
+## `--moving` when the grid ran past the far edge. `_targets` refuses a spot outside.
+const COLUMNS: int = 6
+const COLUMN_GAP: float = 4.2
+## Metres kept clear between the front row and the near edge (the farthest target stands 1.9 m in front of its turret, plus
+## its body and the clamp margin), and between the back row and the far edge.
+const FRONT_ROOM: float = 2.5
+const BACK_ROOM: float = 1.0
+## Rows closer than this would put one row's targets on the turrets of the row in front.
+const MIN_ROW_PITCH: float = 3.6
+const TARGET_OFFSETS: Array[Vector3] = [Vector3(-.65, 0, -1.6), Vector3(0, 0, -1.9), Vector3(.65, 0, -1.6)]
 ## Seconds a phase runs before it is scored. Long enough for the slowest Scrap Press final (Academy, one drop per 6 to 8 s).
 const PHASE_TICKS: int = 540
 var world: ArenaWorld
@@ -78,7 +87,7 @@ func _ready() -> void:
 	GameStateMachine.force_transition(GameStateMachine.GameState.SHOP)
 	for i in ROSTER.size():
 		var spec: Array = ROSTER[i]
-		var turret := world.add_turret(Vector3((float(i % COLUMNS) - (float(COLUMNS) - 1.0) * .5) * 4.2, 0, -3.3 + 6.6 * float(i / COLUMNS)), spec[0])
+		var turret := world.add_turret(_station(i), spec[0])
 		turret.progression.award(1500)
 		turret.evolve(spec[1])
 		actors.append(turret)
@@ -90,19 +99,36 @@ func _ready() -> void:
 		label.pixel_size = .006
 		world.add_child(label)
 		labels.append(label)
-		_targets(turret.position)
+		if not _targets(turret.position):
+			return
 	world.combat.hit_applied.connect(_hit)
 	world.crowd.rebuild(world.enemies)
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 
-func _targets(center: Vector3) -> void:
-	for offset in [Vector3(-.65, 0, -1.6), Vector3(0, 0, -1.9), Vector3(.65, 0, -1.6)]:
-		var enemy := world.spawn_enemy(center + offset)
+## Where roster entry `index` stands: its column across the middle, its row spread evenly from the near edge to the far one.
+func _station(index: int) -> Vector3:
+	var rows := ceili(float(ROSTER.size()) / float(COLUMNS))
+	var first := -WorldGeometry.HALF_ARENA.y + FRONT_ROOM
+	var pitch := (WorldGeometry.HALF_ARENA.y - BACK_ROOM - first) / float(maxi(rows - 1, 1))
+	if pitch < MIN_ROW_PITCH:
+		push_error("The showcase roster no longer fits the arena in rows of %d" % COLUMNS)
+	return Vector3((float(index % COLUMNS) - (float(COLUMNS) - 1.0) * .5) * COLUMN_GAP, 0, first + pitch * float(index / COLUMNS))
+
+## Spawns the three durable targets in front of `center`. False (and the run quits) when one would stand outside the arena.
+func _targets(center: Vector3) -> bool:
+	for offset in TARGET_OFFSETS:
+		var spot: Vector3 = center + offset
+		if not WorldGeometry.clamp_position(spot).is_equal_approx(spot):
+			push_error("Showcase target %s is outside the arena; it would be clamped in on its first step" % str(spot))
+			get_tree().quit(1)
+			return false
+		var enemy := world.spawn_enemy(spot)
 		enemy.stationary = not moving
 		if moving:
 			starts[enemy] = enemy.position
 		enemy.health = 100000
 		enemy.max_health = 100000
+	return true
 
 func _hit(_target: Node3D, hit: CombatHit3D, damage: float) -> void:
 	if damage > 0 and hit.source_id > 0:
