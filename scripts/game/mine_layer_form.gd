@@ -15,15 +15,20 @@ extends TurretForm
 ##                 its blast sticks a new limpet on up to `stick` neighbours, once. At most `max_mines` launched limpets are out.
 ## Where a mine goes: on the side of the nearest enemy (within `SCOUT_EXTRA` of the reach), roughly on the way to it, otherwise any
 ## side; the best of a few random spots, so a layer spreads its mines out. Never inside `CLEARANCE` of the turret (enemies cannot
-## walk there), and always inside the arena. Mines hit enemies only, never the hero or a turret.
+## walk there; see below for a carried layer), and always inside the arena. Mines hit enemies only, never the hero or a turret.
 ## Cost: placing is one scan of the enemy list per lay (every couple of seconds); the field does the rest (see `Deployables`).
 ## State: only a seeded generator and counters. Its mines belong to the field, which drops them when combat stops (and every idle
 ## frame this form calls `clear`), when the layer is removed or evolves, and on a run reset. Another layer's are untouched.
 ## Like every turret it keeps working while the hero carries it, so a carried layer drops a trail of mines round the hero as it
-## walks (mines never hurt the hero), and the mines it already laid stay where they are.
+## walks (mines never hurt the hero), and the mines it already laid stay where they are. A carried layer lays round the hero's
+## feet, not round the chassis riding above them, and only `CARRIED_CLEARANCE` from them: nothing stands on the floor there to
+## keep enemies off, and the enemies hurting the hero stand within half a metre of it.
 ## Metres from the turret's centre inside which no mine is laid: the chassis (0.63 m), its spare-mine dish (out to 1.1 m) and the
 ## ring enemies cannot reach.
 const CLEARANCE: float = 1.1
+## Metres from the hero inside which a carried layer lays no mine: inside the 0.5 m an enemy touches the hero from, so a mine
+## lands where a mob round the hero stands.
+const CARRIED_CLEARANCE: float = .3
 ## How far past the placement reach the layer looks for an enemy to lay toward (metres).
 const SCOUT_EXTRA: float = 6.0
 ## Random spots tried per mine; the one farthest from the layer's other mines is kept.
@@ -127,8 +132,9 @@ func _build(stats: TurretStats, kind: String) -> Deployable:
 
 func _pick_spot(stats: TurretStats, field: Deployables) -> Vector3:
 	_seed_once()
-	var origin := actor.position
-	var reach := maxf(stats.range_metres, CLEARANCE + .3)
+	var origin := lay_origin()
+	var clearance := lay_clearance()
+	var reach := maxf(stats.range_metres, clearance + .3)
 	var scouted := actor.world.nearest_enemy(origin, reach + SCOUT_EXTRA)
 	var mine_spots: Array[Vector3] = []
 	for other in field.of_owner(actor.turret_id):
@@ -136,7 +142,7 @@ func _pick_spot(stats: TurretStats, field: Deployables) -> Vector3:
 	var best := origin
 	var best_score := -1.0
 	for attempt in CANDIDATES:
-		var spot := _candidate(origin, reach, scouted)
+		var spot := _candidate(origin, clearance, reach, scouted)
 		var score := SPACING
 		for other_spot in mine_spots:
 			score = minf(score, WorldGeometry.planar(other_spot - spot).length())
@@ -145,16 +151,25 @@ func _pick_spot(stats: TurretStats, field: Deployables) -> Vector3:
 			best = spot
 	return best
 
-func _candidate(origin: Vector3, reach: float, scouted: CombatActor) -> Vector3:
+## The floor point mines are laid round: the chassis, or the hero's feet while the hero carries the layer.
+func lay_origin() -> Vector3:
+	var hero := actor.world.player
+	return WorldGeometry.planar(hero.position if actor.carried and is_instance_valid(hero) else actor.position)
+
+## How far from `lay_origin` the nearest mine may go.
+func lay_clearance() -> float:
+	return CARRIED_CLEARANCE if actor.carried else CLEARANCE
+
+func _candidate(origin: Vector3, clearance: float, reach: float, scouted: CombatActor) -> Vector3:
 	if scouted:
 		# On the way to the enemy: toward it, within a cone, as far along as it is (no farther than the reach).
 		var heading := WorldGeometry.planar(scouted.position - origin)
 		var angle := atan2(heading.z, heading.x) + rng.randf_range(-CONE_HALF_ANGLE, CONE_HALF_ANGLE)
-		var distance := clampf(heading.length() + rng.randf_range(-.3, .3), CLEARANCE, reach)
+		var distance := clampf(heading.length() + rng.randf_range(-.3, .3), clearance, reach)
 		return origin + Vector3(cos(angle), 0, sin(angle)) * distance
 	# Nothing to lay toward: any side, spread evenly over the ring's area.
 	var around := rng.randf() * TAU
-	var radius := sqrt(lerpf(CLEARANCE * CLEARANCE, reach * reach, rng.randf()))
+	var radius := sqrt(lerpf(clearance * clearance, reach * reach, rng.randf()))
 	return origin + Vector3(cos(around), 0, sin(around)) * radius
 
 ## The enemy a limpet goes for: the nearest large one in reach that carries no limpet yet, else the nearest such enemy.

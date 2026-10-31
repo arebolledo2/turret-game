@@ -527,6 +527,32 @@ func test_a_carried_layer_keeps_laying_round_the_hero_and_its_old_mines_stay() -
 	layer.carried = false
 	assert_eq(field.count_of(layer.turret_id), 5, "Putting it down does not lift them either")
 
+## Regression: a carried layer used to keep the chassis' 1.1 m clearance round the turret riding above the hero, so a mob
+## standing on the hero (the enemies that hurt it are within 0.5 m) never stood on a mine, and a carried Dead Zone dealt nothing.
+func test_a_carried_layer_lays_round_the_heros_feet_and_blasts_a_mob_on_the_hero() -> void:
+	var layer := _dead_zone(Vector3(-8, 0, -4))
+	var hero := Vector3(5, 0, 3)
+	world.player.position = hero
+	var mob: Array[CombatActor] = []
+	for offset in [Vector3(.15, 0, 0), Vector3(-.15, 0, .1), Vector3(0, 0, -.15)]:
+		mob.append(rig.enemy(hero + offset, 1000000.0))
+	var credited := {"damage": 0.0}
+	world.combat.hit_applied.connect(func(_t: Node3D, hit: CombatHit3D, amount: float) -> void:
+		if hit.source_id == layer.turret_id:
+			credited["damage"] += amount)
+	layer.carried = true
+	rig.combat()
+	_run(layer, 4.0)
+	assert_gt(_own(layer).size(), 0)
+	for item in _own(layer):
+		var from_hero := WorldGeometry.planar(item.position - hero).length()
+		assert_gte(from_hero, MineLayerForm.CARRIED_CLEARANCE - .001, "Not on the hero's feet")
+		assert_lte(from_hero, 3.5 + .001, "Within the Dead Zone's 3.5 m reach of the hero")
+	assert_gt(field.blasts, 0, "The mob stood on a mine")
+	assert_gt(float(credited["damage"]), 0.0, "and the blast is credited to the carried layer")
+	for enemy in mob:
+		assert_lt(enemy.health, 1000000.0, "Every enemy on the hero was in a blast")
+
 func test_a_removed_layer_leaves_no_mines_behind() -> void:
 	var layer := _layer()
 	var other := _layer([], Vector3(8, 0, 8))
