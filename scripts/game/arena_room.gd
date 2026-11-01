@@ -143,6 +143,11 @@ static func _make_glow_material() -> StandardMaterial3D:
 	result.cull_mode = BaseMaterial3D.CULL_DISABLED
 	result.albedo_texture = texture
 	result.vertex_color_use_as_albedo = true
+	hull.set_shader_parameter("accent_color", motif["accent"])
+	var brass := WorldGeometry.brass_style(theme)
+	_brass.set_shader_parameter("brass_color", brass["color"])
+	_brass.set_shader_parameter("patina_color", brass["patina"])
+	_brass.set_shader_parameter("patina_amount", float(brass["amount"]))
 	result.disable_fog = true
 	return result
 

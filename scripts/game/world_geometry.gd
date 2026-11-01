@@ -72,8 +72,10 @@ static func floor_material(area: Vector2, theme: String = DEFAULT_FLOOR_THEME) -
 	return result
 
 ## Base colour of the room's hull plating (`assets/shaders/hull_plating.gdshader`) for each floor theme.
-const HULL_COLORS := {"foundry": Color("2a3f48"), "concrete": Color("463a32"), "grating": Color("2a4a40"), "hexworks": Color("38345a"),
-	"marquetry": Color("48342a"), "orrery": Color("2e3c5c"), "mosaic": Color("2c4e4c"), "frost": Color("36505e")}
+## The ship's light is cool and blue (sun d0eaff, ambient 46568a), which cools every albedo, so the warm themes' hulls are authored
+## warmer than they should look and the cool ones greyer; check them with tools/preview_floor_theme.tscn.
+const HULL_COLORS := {"foundry": Color("36525a"), "concrete": Color("74503c"), "grating": Color("365f44"), "hexworks": Color("62436a"),
+	"marquetry": Color("6e4a30"), "orrery": Color("4a4768"), "mosaic": Color("36605a"), "frost": Color("3c5866")}
 
 static func hull_color(theme: String) -> Color:
 	return HULL_COLORS.get(theme, HULL_COLORS[DEFAULT_FLOOR_THEME])
@@ -93,6 +95,26 @@ const HULL_MOTIFS := {
 
 static func hull_motif(theme: String) -> Dictionary:
 	return HULL_MOTIFS.get(theme, HULL_MOTIFS[DEFAULT_FLOOR_THEME])
+
+## The metal of the room's copings, caps and fittings (`assets/shaders/brass_trim.gdshader`) per floor theme: `color` is its
+## reflectance at normal incidence (a saturated F0, so it reads as polished metal under the studio sky), `patina` the tint it
+## weathers to and `amount` how much of it grows (0 none).
+const BRASS_COLORS := {
+	"foundry": {"color": Color("d4ae4c"), "patina": Color("2f7a68"), "amount": 1.0},
+	"concrete": {"color": Color("bf8258"), "patina": Color("3c8a72"), "amount": 1.1},
+	"grating": {"color": Color("b09040"), "patina": Color("3a8a5a"), "amount": 1.5},
+	"hexworks": {"color": Color("d9a07c"), "patina": Color("6a5aa0"), "amount": 0.9},
+	"marquetry": {"color": Color("9a7040"), "patina": Color("5a5a34"), "amount": 0.7},
+	"orrery": {"color": Color("e0b440"), "patina": Color("3a7a78"), "amount": 0.6},
+	"mosaic": {"color": Color("c8a850"), "patina": Color("2a8a86"), "amount": 1.0},
+	"frost": {"color": Color("9fb8c8"), "patina": Color("5aa0b0"), "amount": 0.8},
+}
+
+static func brass_style(theme: String) -> Dictionary:
+	return BRASS_COLORS.get(theme, BRASS_COLORS[DEFAULT_FLOOR_THEME])
+
+static func brass_color(theme: String) -> Color:
+	return brass_style(theme)["color"]
 
 static var ring_materials: Dictionary = {}
 
