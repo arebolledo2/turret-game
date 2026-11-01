@@ -103,7 +103,7 @@ const BRASS_COLORS := {
 	"foundry": {"color": Color("d4ae4c"), "patina": Color("2f7a68"), "amount": 1.0},
 	"concrete": {"color": Color("bf8258"), "patina": Color("3c8a72"), "amount": 1.1},
 	"grating": {"color": Color("b09040"), "patina": Color("3a8a5a"), "amount": 1.5},
-	"hexworks": {"color": Color("d9a07c"), "patina": Color("6a5aa0"), "amount": 0.9},
+	"hexworks": {"color": Color("d9a07c"), "patina": Color("5e5a8c"), "amount": 0.6},
 	"marquetry": {"color": Color("9a7040"), "patina": Color("5a5a34"), "amount": 0.7},
 	"orrery": {"color": Color("e0b440"), "patina": Color("3a7a78"), "amount": 0.6},
 	"mosaic": {"color": Color("c8a850"), "patina": Color("2a8a86"), "amount": 1.0},
