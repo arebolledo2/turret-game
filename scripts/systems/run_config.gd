@@ -18,6 +18,8 @@ var core_weapon: Dictionary = HeroLoadouts.pip()
 var mode: String = MODE_SURVIVE
 ## A specific terrain layout id (`--layout=`); empty picks one at random for the run.
 var layout_id: String = ""
+## What the ship flies through outside the room (`--space=`, a `SpaceThemes` id); empty uses the layout's own.
+var space_theme: String = ""
 ## Flag preset applied when the arena starts. Empty keeps the current flags.
 var flag_preset: String = ""
 
@@ -42,6 +44,8 @@ func sanitize() -> RunConfig:
 		mode = MODE_SURVIVE
 	if layout_id != "" and layout_id not in ArenaLayouts.ids():
 		layout_id = ""
+	if space_theme != "" and not SpaceThemes.is_theme(space_theme):
+		space_theme = ""
 	return self
 
 ## Parses tool arguments: `--waves=N`, `--difficulty=easy|medium|hard|brutal`, `--mode=survive|core`, `--preset=id`.
@@ -58,6 +62,8 @@ static func from_args(args: PackedStringArray) -> RunConfig:
 				"brutal": config.difficulty = GameEnums.Difficulty.BRUTAL
 		elif arg.begins_with("--layout="):
 			config.layout_id = arg.trim_prefix("--layout=").to_lower()
+		elif arg.begins_with("--space="):
+			config.space_theme = arg.trim_prefix("--space=").to_lower()
 		elif arg.begins_with("--mode="):
 			config.mode = arg.trim_prefix("--mode=").to_lower()
 		elif arg.begins_with("--preset="):

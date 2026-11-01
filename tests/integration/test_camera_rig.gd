@@ -74,9 +74,15 @@ func test_view_never_leaves_the_arena_at_any_corner_zoom_or_aspect() -> void:
 			for corner in [Vector3(-100, 0, -100), Vector3(100, 0, -100), Vector3(-100, 0, 100), Vector3(100, 0, 100)]:
 				var focus := rig.clamp_focus(corner, zoom_value)
 				var half := rig.visible_half_extents(zoom_value)
-				var allowed := WorldGeometry.HALF_ARENA + Vector2.ONE * (GameConstants.CAMERA_EDGE_MARGIN + .001)
-				assert_true(abs(focus.x) + half.x <= allowed.x or focus.x == 0.0, "x aspect %s zoom %s" % [aspect, zoom_value])
-				assert_true(abs(focus.z) + half.y <= allowed.y or focus.z == 0.0, "z aspect %s zoom %s" % [aspect, zoom_value])
+				var allowed_x := WorldGeometry.HALF_ARENA.x + GameConstants.CAMERA_EDGE_MARGIN + .001
+				assert_true(abs(focus.x) + half.x <= allowed_x or focus.x == 0.0, "x aspect %s zoom %s" % [aspect, zoom_value])
+				var back := WorldGeometry.HALF_ARENA.y + GameConstants.CAMERA_EDGE_MARGIN_BACK
+				var front := WorldGeometry.HALF_ARENA.y + GameConstants.CAMERA_EDGE_MARGIN_FRONT
+				if half.y * 2.0 <= back + front:
+					assert_gte(focus.z - half.y, -back - .001, "back edge aspect %s zoom %s" % [aspect, zoom_value])
+					assert_lte(focus.z + half.y, front + .001, "front edge aspect %s zoom %s" % [aspect, zoom_value])
+				else:
+					assert_almost_eq(focus.z, (front - back) * 0.5, .001, "a view taller than the room centres on it")
 
 func test_camera_recentres_when_the_view_is_larger_than_the_arena() -> void:
 	rig.aspect = 64.0 / 9.0

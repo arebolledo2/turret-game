@@ -17,7 +17,9 @@ const CAMERA_ZOOM_SPEED: float = 10.0 # smoothing rate toward the target zoom
 const CAMERA_ZOOM_WHEEL_STEP: float = 1.12 # multiplier per wheel notch
 const CAMERA_ZOOM_HELD_RATE: float = 1.6 # exp rate/second while a zoom key or trigger is held
 const CAMERA_FOLLOW_SPEED: float = 8.0 # smoothing rate toward the player
-const CAMERA_EDGE_MARGIN: float = 0.5 # metres of floor rim allowed past the arena bounds
+const CAMERA_EDGE_MARGIN: float = 0.9 # metres past the arena bounds the view may show at the side walls (their coping)
+const CAMERA_EDGE_MARGIN_BACK: float = 2.4 # at the back wall, so the tall back wall shows in full above the floor edge
+const CAMERA_EDGE_MARGIN_FRONT: float = 1.5 # at the front wall: its low parapet and the hull below it
 # Enemies appear this far outside the default-zoom view, never closer than SPAWN_MIN_DISTANCE to the player.
 const ENEMY_SPAWN_MIN_DISTANCE: float = 6.0
 

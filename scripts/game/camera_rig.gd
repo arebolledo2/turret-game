@@ -52,8 +52,12 @@ func visible_half_extents(zoom_value: float) -> Vector2:
 func clamp_focus(value: Vector3, zoom_value: float) -> Vector3:
 	var half := visible_half_extents(zoom_value)
 	var limit_x := maxf(0.0, WorldGeometry.HALF_ARENA.x + GameConstants.CAMERA_EDGE_MARGIN - half.x)
-	var limit_z := maxf(0.0, WorldGeometry.HALF_ARENA.y + GameConstants.CAMERA_EDGE_MARGIN - half.y)
-	return Vector3(clampf(value.x, -limit_x, limit_x), 0.0, clampf(value.z, -limit_z, limit_z))
+	# The back wall is tall, so the view may reach further past it than past the front wall. A view larger than the room
+	# centres between the two limits.
+	var back := -(WorldGeometry.HALF_ARENA.y + GameConstants.CAMERA_EDGE_MARGIN_BACK - half.y)
+	var front := WorldGeometry.HALF_ARENA.y + GameConstants.CAMERA_EDGE_MARGIN_FRONT - half.y
+	var z := (back + front) * 0.5 if back > front else clampf(value.z, back, front)
+	return Vector3(clampf(value.x, -limit_x, limit_x), 0.0, z)
 
 func set_zoom(value: float) -> void:
 	target_zoom = clampf(value, GameConstants.CAMERA_ZOOM_MIN, GameConstants.CAMERA_ZOOM_MAX)

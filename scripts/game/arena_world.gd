@@ -247,10 +247,13 @@ func start_run() -> void:
 	if FeatureFlagService.is_enabled(FeatureFlagService.TERRAIN_ZONES):
 		var layout := ArenaLayouts.get_layout(run_config.layout_id) if run_config.layout_id != "" else ArenaLayouts.random_layout(GameRandom.gameplay)
 		stage.set_floor_theme(layout.floor_theme)
+		stage.set_space_theme(run_config.space_theme if run_config.space_theme != "" else layout.space_theme)
 		terrain = TerrainZones.new(layout)
 		terrain.build_visuals(actor_root)
 	else:
-		stage.set_floor_theme(_zoneless_floor_theme())
+		var floor_theme := _zoneless_floor_theme()
+		stage.set_floor_theme(floor_theme)
+		stage.set_space_theme(run_config.space_theme if run_config.space_theme != "" else ArenaLayouts.space_for_floor(floor_theme))
 	if convoy_mode:
 		# A dedicated seed keeps every route reproducible without disturbing the shop and spawn rolls.
 		_convoy_seed = GameRandom.gameplay.randi()

@@ -1,11 +1,13 @@
 class_name ArenaStage
 extends Node3D
 
-## Static arena scenery: floor, rim, markings, lighting and the follow camera. Built once by `ArenaWorld`.
+## Static arena scenery: floor, rim, room walls, space backdrop, lighting and the follow camera. Built once by `ArenaWorld`.
 var camera: Camera3D
 var camera_rig: CameraRig
 var floor_visual: MeshInstance3D
 var floor_decals: FloorDecals
+var room: ArenaRoom
+var backdrop: SpaceBackdrop
 var floor_theme: String = ""
 var _floor_material: StandardMaterial3D
 var _rim_material: StandardMaterial3D
@@ -28,9 +30,10 @@ func build(arena: ArenaWorld) -> void:
 	ground.collision_mask = 0
 	add_child(ground)
 	var floor_size := Vector3(half.x * 2.0 + .6, .35, half.y * 2.0 + .6)
-	# The collider is a slab; the visible surface is one textured plane on top of it (a single draw call).
+	# The collider is a slab; the visible surface is one textured plane on top of it (a single draw call). It ends under
+	# the walls: beyond them is space.
 	var floor_plane := PlaneMesh.new()
-	floor_plane.size = Vector2(floor_size.x, floor_size.z) * 4.0
+	floor_plane.size = Vector2(floor_size.x, floor_size.z)
 	floor_visual = MeshInstance3D.new()
 	floor_visual.mesh = floor_plane
 	floor_visual.layers = 1 | FloorDecals.LAYER
@@ -47,17 +50,18 @@ func build(arena: ArenaWorld) -> void:
 		WorldGeometry.box(self, Vector3(half.x * 2.0 + .3, .08, .06), Vector3(0, .02, z), _rim_material)
 	for x: float in [-half.x - .05, half.x + .05]:
 		WorldGeometry.box(self, Vector3(.06, .08, half.y * 2.0 + .1), Vector3(x, .02, 0), _rim_material)
+	room = ArenaRoom.new()
+	add_child(room)
+	room.build(_rim_material)
+	backdrop = SpaceBackdrop.new()
+	add_child(backdrop)
+	backdrop.apply_theme(SpaceThemes.DEFAULT_THEME)
 	floor_decals = FloorDecals.new()
 	floor_decals.position.y = -.02
 	add_child(floor_decals)
 	set_floor_theme(WorldGeometry.DEFAULT_FLOOR_THEME)
-	var markings := WorldGeometry.material(Color("c48c48"))
-	var stripe_transforms: Array[Transform3D] = []
-	for x: float in [-half.x + .35, half.x - .35]:
-		for z in range(-int(half.y) + 1, int(half.y)):
-			stripe_transforms.append(Transform3D(Basis(Vector3.UP, -.5), Vector3(x, 0, z)))
-	_add_multimesh(Vector3(.16, .015, .4), stripe_transforms, markings)
 	camera = Camera3D.new()
+	camera.far = 200.0 # the space backdrop sits about 60 m down the view ray
 	add_child(camera)
 	camera_rig = CameraRig.new()
 	add_child(camera_rig)
@@ -75,6 +79,12 @@ func set_floor_theme(theme: String) -> void:
 	_rim_material.albedo_color = rim_color
 	_rim_material.emission = rim_color
 	floor_decals.apply_theme(theme)
+	room.apply_theme(theme)
+
+## Picks what the ship is flying through outside the room (see `SpaceThemes`).
+func set_space_theme(theme: String) -> void:
+	if theme != backdrop.theme:
+		backdrop.apply_theme(theme)
 
 ## Warms the floor's seam lights as the waves climb; boss waves flip them to magenta. Eases over a second.
 func set_floor_wave(wave: int, is_boss: bool) -> void:
@@ -150,18 +160,3 @@ func _build_lighting() -> void:
 	rim.light_energy = .55
 	rim.shadow_enabled = false
 	add_child(rim)
-
-func _add_multimesh(size: Vector3, transforms: Array[Transform3D], mat: Material) -> void:
-	var mesh := BoxMesh.new()
-	mesh.size = size
-	var multimesh := MultiMesh.new()
-	multimesh.transform_format = MultiMesh.TRANSFORM_3D
-	multimesh.mesh = mesh
-	multimesh.instance_count = transforms.size()
-	for index in transforms.size():
-		multimesh.set_instance_transform(index, transforms[index])
-	var instance := MultiMeshInstance3D.new()
-	instance.multimesh = multimesh
-	instance.material_override = mat
-	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(instance)

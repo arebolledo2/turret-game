@@ -21,3 +21,5 @@ The arena floor is one `PlaneMesh` with `WorldGeometry.floor_material(area, them
 The 2D-era asset configuration stack (`AssetConfigService`, `CollisionProfile`, asset presets) was removed; it remains at the `prototype-2d-final` tag. Collision shapes are built in code (`CombatActor`, `WorldGeometry`).
 
 The former in-game Asset Studio, Sprite2D renderers and live-apply entity adapters were retired with the 2D runtime. Historical workflows can be retrieved from `prototype-2d-final`; they are not supported game UI. User preset files are not deleted or migrated by this change.
+
+`ArenaRoom` and `SpaceBackdrop` (walls and the view outside them) are described in [art/room-and-space.md](art/room-and-space.md).

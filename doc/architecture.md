@@ -8,7 +8,7 @@
 |---|---|
 | `GameApp` | Start screen, settings, Play, Quit, menu focus and arena lifetime |
 | `ArenaWorld` | Composition root: actor lists, firing, scrap, death handling, pause and input; delegates to the helpers below |
-| `ArenaStage` | Floor, rim, lighting and the follow camera, built once |
+| `ArenaStage` | Floor, rim, lighting, the follow camera, the `ArenaRoom` walls and the `SpaceBackdrop`, built once |
 | `WaveDirector` | Announcement, spawn schedule, wave timer and wave-end resolution |
 | `TurretPlacement` | Placement rules and the carry/place interaction |
 | `BlastEffects` | Area blasts after a kill: Reactor Overload and boom-bot explosions |
