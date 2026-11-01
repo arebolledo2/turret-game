@@ -57,3 +57,16 @@ full footprint and, at the back, the top HUD bar (`ArenaRoom.HUD_TOP_ALLOWANCE`)
 - **Backdrop**: star trails (`streak`) have a round head, a fading tail that cools towards `trail_tint`, and a length per star;
   a dark gantry layer with blinking nav lights (`hull_density`) passes between far and near stars; warp adds an engine glow
   (`engine_amount`). The nebula uses 2 to 3 noise octaves instead of 5 and is skipped when `nebula_amount` is near zero.
+
+## Backdrop pass 3
+
+- **Stars** are sized in screen pixels (from the plane's screen derivatives), not metres: dust 0.6 px (70%), common 1.0 px,
+  bright 1.6 px, hero 2.2 px with a faint four-point spike (1%); four colour classes tinted by `star_tint`; 20% twinkle.
+  Keep `star_brightness` at 1.2 or less so only hero stars bloom. `star_dust` adds faint unresolved points.
+- **Gas giant**: about 11 m, tilted (`planet_tilt`), bands in `planet_dark` / `planet_color` / `planet_light`, limb darkening,
+  a soft terminator, `planet_storm`, `planet_ring` (planet and rings shadow each other), a lit-side rim, and a phased moon
+  (`moon_radius`, `moon_position`). It holds still; its limb crosses the top strip at zoom 0.6.
+- **Sky**: nebula density ramp `nebula_a` -> `nebula_b` -> `nebula_core` with domain warp, `nebula_filaments` and `dust_lanes`
+  (which also dim the far stars); a Milky Way (`band_amount`, `band_angle`), spiral galaxies (`galaxy_amount`) and a soft
+  `hull_shadow` around the room's silhouette on the plane. Debris rocks are now solid and lit from `light_direction`.
+- Every feature uniform defaults to 0 and skips its work when off; `test_space_backdrop.gd` checks this.
