@@ -70,3 +70,13 @@ full footprint and, at the back, the top HUD bar (`ArenaRoom.HUD_TOP_ALLOWANCE`)
   (which also dim the far stars); a Milky Way (`band_amount`, `band_angle`), spiral galaxies (`galaxy_amount`) and a soft
   `hull_shadow` around the room's silhouette on the plane. Debris rocks are now solid and lit from `light_direction`.
 - Every feature uniform defaults to 0 and skips its work when off; `test_space_backdrop.gd` checks this.
+
+## Wall bays and exterior
+
+- **`RoomMeshKit`** (`scripts/game/room_mesh_kit.gd`) batches boxes, oriented boxes, cylinders, extruded profiles and glow quads per material, then `flush` emits one mesh per material (vertex colours carry the per-part tint). The room stays at 15 meshes or fewer; `test_arena_room.gd` checks it.
+- **Side walls**: the sloped face is divided by brass ribs into bays; each bay carries one of five modules (vent, panel, stencilled digits, gauge, hatch) chosen from the bay index, so no two neighbours repeat. Lamp posts with glow pools, bolts and copestone joints sit on the moulded coping, which has an enamel inlay in the theme `accent` colour (`WorldGeometry.HULL_MOTIFS`).
+- **Front hull**: quarter-round cap, ribs, five module kinds, rub-rail, pipe and clamps; it stays at or below 0.5 m so it never hides the playfield.
+- **Back wall**: bulkhead door at bay `count / 2`; lit alcoves with slowly rotating flywheels at bays 1 and `count - 2` (turned in `_process`).
+- **Floor shade**: `_build_shade()` adds multiply strips along the wall bases (child node `Shade`) so the floor darkens where the walls meet it.
+- **`ShipExterior`** (`scripts/game/ship_exterior.gd`): side decks with brass rail, port (coral) and starboard (teal) running lights, pipe bundles, and every 6.4 m a solar wing, antenna mast or radar dish; engine nacelles with exhaust glow; a back deck with vents, crates, domes and masts; a docked pod. All shadowless, built under an `Exterior` child.
+- At the default zoom only about 0.28 m of exterior shows at the sides (`CAMERA_EDGE_MARGIN` is unchanged); most of it appears when the camera is pulled back or the window is wide.
