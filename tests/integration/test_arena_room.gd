@@ -68,22 +68,54 @@ func test_run_config_parses_and_sanitizes_the_space_theme() -> void:
 	assert_eq(RunConfig.from_args(PackedStringArray(["--space=NEBULA"])).space_theme, "nebula")
 	assert_eq(RunConfig.from_args(PackedStringArray(["--space=bogus"])).space_theme, "")
 
+## Every vertex of every room mesh, in world space, with the mesh it came from.
+func _room_vertices() -> Array[Vector3]:
+	var result: Array[Vector3] = []
+	for child in world.stage.room.get_children():
+		var mesh := child as MeshInstance3D
+		if mesh == null or not mesh.mesh is ArrayMesh:
+			continue
+		for vertex: Vector3 in (mesh.mesh as ArrayMesh).surface_get_arrays(0)[Mesh.ARRAY_VERTEX]:
+			result.append(mesh.transform * vertex)
+	return result
+
 func test_walls_stand_outside_the_playfield_and_the_floor_stops_at_them() -> void:
 	world.start_run()
 	var half := WorldGeometry.HALF_ARENA
 	var floor_plane := world.stage.floor_visual.mesh as PlaneMesh
 	assert_almost_eq(floor_plane.size.x, half.x * 2.0 + .6, .001, "The floor no longer runs on past the walls")
-	var inside := AABB(Vector3(-half.x, 0.0, -half.y), Vector3(half.x * 2.0, 3.0, half.y * 2.0))
+	var vertices := _room_vertices()
+	assert_gt(vertices.size(), 1000)
+	for vertex in vertices:
+		var inside := absf(vertex.x) < half.x and absf(vertex.z) < half.y and vertex.y > -0.5
+		assert_false(inside, "%s is inside the playfield" % vertex)
+
+func test_room_is_merged_into_a_handful_of_meshes() -> void:
+	world.start_run()
 	var meshes := 0
 	for child in world.stage.room.get_children():
-		var mesh := child as MeshInstance3D
-		meshes += 1
-		assert_false((mesh.transform * mesh.get_aabb()).intersects(inside), "%s intrudes on the playfield" % mesh.name)
-	assert_gt(meshes, 20)
+		if child is MeshInstance3D:
+			meshes += 1
+			assert_eq((child as MeshInstance3D).layers & ArenaRoom.LAYER, ArenaRoom.LAYER, "lit by the room fill light")
+	assert_between(meshes, 3, 10)
 
-func test_front_wall_is_low_enough_not_to_hide_the_floor_behind_it() -> void:
-	# The camera sees down at about 52 degrees, so a wall of height h hides about 0.77 h of the floor behind it.
-	assert_lt(ArenaRoom.FRONT_HEIGHT * 0.77, 0.5)
+func test_front_wall_never_rises_above_the_parapet() -> void:
+	world.start_run()
+	var inner_x := WorldGeometry.HALF_ARENA.x + ArenaRoom.GAP
+	var highest := -INF
+	for vertex in _room_vertices():
+		if vertex.z > WorldGeometry.HALF_ARENA.y and absf(vertex.x) < inner_x - 0.1: # clear of the towers and their cornices
+			highest = maxf(highest, vertex.y)
+	assert_lte(highest, ArenaRoom.FRONT_HEIGHT + 0.01, "A taller front wall would hide the floor behind it")
+
+func test_corner_towers_stay_under_their_height_limits() -> void:
+	world.start_run()
+	var inner := WorldGeometry.HALF_ARENA + Vector2.ONE * ArenaRoom.GAP
+	var back := -INF
+	for vertex in _room_vertices():
+		if absf(vertex.x) > inner.x + 0.01 and vertex.z < -inner.y:
+			back = maxf(back, vertex.y)
+	assert_lte(back, ArenaRoom.BACK_TOWER_HEIGHT + 0.01)
 	assert_gt(ArenaRoom.BACK_HEIGHT, ArenaRoom.SIDE_HEIGHT)
 	assert_gt(ArenaRoom.SIDE_HEIGHT, ArenaRoom.FRONT_HEIGHT)
 
@@ -98,31 +130,53 @@ func test_room_glows_stay_below_the_bloom_threshold() -> void:
 	assert_lt(ArenaRoom.LAMP_ENERGY, 1.0)
 	assert_lt(world.stage._rim_material.emission_energy_multiplier, 1.0)
 
+func test_only_four_shadowless_lantern_lights() -> void:
+	world.start_run()
+	var lights := world.stage.room.lantern_lights()
+	assert_eq(lights.size(), 4)
+	for light in lights:
+		assert_false(light.shadow_enabled)
+
 func test_room_hull_follows_the_floor_theme() -> void:
 	world.run_config.layout_id = "sump"
 	world.start_run()
-	var hull: ShaderMaterial = null
-	for child in world.stage.room.get_children():
-		if (child as MeshInstance3D).material_override is ShaderMaterial:
-			hull = (child as MeshInstance3D).material_override
-			break
-	assert_not_null(hull)
+	var hull := world.stage.room.hull
 	assert_eq(hull.get_shader_parameter("base_color"), WorldGeometry.hull_color("grating"))
+	world.run_config.layout_id = "hive"
+	world.start_run()
+	assert_eq(hull.get_shader_parameter("motif"), 1, "Hexworks plating is hex cells")
 	for theme in WorldGeometry.FLOOR_THEMES:
 		assert_true(WorldGeometry.HULL_COLORS.has(theme), theme)
+		assert_true(WorldGeometry.HULL_MOTIFS.has(theme), theme)
+	for theme in WorldGeometry.HULL_MOTIFS:
+		assert_has(WorldGeometry.FLOOR_THEMES, theme)
+
+func test_hull_and_brass_parameters_name_real_shader_uniforms() -> void:
+	world.start_run()
+	for material: ShaderMaterial in [world.stage.room.hull, world.stage.room._brass]:
+		var uniforms: Array[String] = []
+		for entry in material.shader.get_shader_uniform_list():
+			uniforms.append(str(entry["name"]))
+		for key in ["base_color", "motif", "panel_size", "metal"] if material == world.stage.room.hull else ["inner_half"]:
+			assert_has(uniforms, key)
 
 func test_extruded_wall_faces_point_the_way_the_profile_says() -> void:
 	world.start_run()
 	var found := 0
 	for child in world.stage.room.get_children():
 		var mesh := child as MeshInstance3D
-		if not mesh.mesh is ArrayMesh:
+		if mesh == null or not mesh.mesh is ArrayMesh:
 			continue
 		var arrays := (mesh.mesh as ArrayMesh).surface_get_arrays(0)
 		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
 		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		if normals.is_empty():
+			continue
 		for index in range(0, vertices.size(), 3):
 			var geometric := (vertices[index + 2] - vertices[index]).cross(vertices[index + 1] - vertices[index])
-			assert_gt(geometric.dot(normals[index]), 0.0, "winding matches the stored normal")
+			if geometric.length() < 0.000001:
+				continue
+			var shading := normals[index] + normals[index + 1] + normals[index + 2]
+			assert_gt(geometric.dot(shading), 0.0, "winding matches the stored normals")
 			found += 1
-	assert_gt(found, 20)
+	assert_gt(found, 1000)

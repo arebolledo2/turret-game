@@ -21,6 +21,7 @@ const SEAM_CALM: Color = Color(1.0, 1.0, 1.0)
 const SEAM_HOT: Color = Color(1.0, 0.72, 0.5)
 const SEAM_BOSS: Color = Color(1.0, 0.45, 0.85)
 const SEAM_FULL_WAVE: int = 20
+const SKY_SHADER: Shader = preload("res://assets/shaders/arena_sky.gdshader")
 
 func build(arena: ArenaWorld) -> void:
 	_build_lighting()
@@ -100,14 +101,11 @@ func set_floor_wave(wave: int, is_boss: bool) -> void:
 
 func _build_lighting() -> void:
 	# A dark gradient sky doubles as the ambient and reflection source, so metal parts have something to mirror.
-	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = Color("0b2233")
-	sky_material.sky_horizon_color = Color("2a5a6a")
-	sky_material.ground_horizon_color = Color("2a5a6a")
-	sky_material.ground_bottom_color = Color("08151e")
-	sky_material.sky_energy_multiplier = .9
+	var sky_material := ShaderMaterial.new()
+	sky_material.shader = SKY_SHADER
 	var sky := Sky.new()
 	sky.sky_material = sky_material
+	sky.radiance_size = Sky.RADIANCE_SIZE_256
 	var settings := Environment.new()
 	settings.background_mode = Environment.BG_SKY
 	settings.sky = sky
@@ -161,3 +159,12 @@ func _build_lighting() -> void:
 	rim.light_energy = .55
 	rim.shadow_enabled = false
 	add_child(rim)
+	# The sun travels towards +x, which leaves the left-hand wall slopes in self-shadow. A cool fill that lights only the
+	# room's own render layer (ArenaRoom.LAYER) brings them up without flattening the floor or the units.
+	var fill := DirectionalLight3D.new()
+	fill.rotation_degrees = Vector3(-40, 80, 0)
+	fill.light_color = Color("7fb4c8")
+	fill.light_energy = .5
+	fill.light_cull_mask = ArenaRoom.LAYER
+	fill.shadow_enabled = false
+	add_child(fill)

@@ -78,6 +78,21 @@ const HULL_COLORS := {"foundry": Color("2a3f48"), "concrete": Color("463a32"), "
 static func hull_color(theme: String) -> Color:
 	return HULL_COLORS.get(theme, HULL_COLORS[DEFAULT_FLOOR_THEME])
 
+## Plating pattern per floor theme: `motif` (0 plates, 1 hex cells, 2 planks, 3 frosted plates), `panel` size in metres and `metal`.
+const HULL_MOTIFS := {
+	"foundry": {"motif": 0, "panel": Vector2(1.2, 0.6), "metal": 0.35},
+	"concrete": {"motif": 0, "panel": Vector2(1.5, 0.75), "metal": 0.12},
+	"grating": {"motif": 0, "panel": Vector2(1.2, 0.6), "metal": 0.4},
+	"hexworks": {"motif": 1, "panel": Vector2(0.45, 0.45), "metal": 0.35},
+	"marquetry": {"motif": 2, "panel": Vector2(2.4, 0.18), "metal": 0.0},
+	"orrery": {"motif": 0, "panel": Vector2(1.2, 0.6), "metal": 0.4},
+	"mosaic": {"motif": 0, "panel": Vector2(0.6, 0.3), "metal": 0.15},
+	"frost": {"motif": 3, "panel": Vector2(1.2, 0.6), "metal": 0.2},
+}
+
+static func hull_motif(theme: String) -> Dictionary:
+	return HULL_MOTIFS.get(theme, HULL_MOTIFS[DEFAULT_FLOOR_THEME])
+
 static var ring_materials: Dictionary = {}
 
 ## Shared, immutable floor indicators; use GroundDial.create for individually animated dials.
