@@ -133,7 +133,7 @@ func show_theme(index: int) -> void:
 		return
 	selected = index
 	var theme := themes[index]
-	floor_visual.material_override = WorldGeometry.floor_material(Vector2(PATCH_METRES, PATCH_METRES), theme)
+	floor_visual.material_override = WorldGeometry.floor_material(Vector2(PATCH_METRES, PATCH_METRES), theme, false)
 	var layout := FloorThemes.layout_name(theme)
 	kind_label.text = "ARENA  /  %s" % layout.to_upper() if layout != "" else "FLOOR THEME"
 	title_label.text = FloorThemes.display_name(theme).to_upper()

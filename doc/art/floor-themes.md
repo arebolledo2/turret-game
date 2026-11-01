@@ -33,6 +33,7 @@ Display names and notes for the main-menu **FLOORS** gallery live in `scripts/re
 - Edges are anti-aliased signed-distance shapes (`cover()` about 1.4 px wide), blotches are smooth noise ramps tens of px wide; nothing
   is hard-thresholded at pixel scale. Everything is periodic, so the tile is seamless. Fine grain is baked into the normal map.
 - The runtime adds soft stain and scorch decals (`FloorDecals`), so heavy stains are not baked into the albedo.
+- The arena floor multiplies the albedo by `WorldGeometry.FLOOR_ALBEDO_GAIN` (1.4 to 5.0 by theme) and draws `floor_overlay.gdshader` on top (tone drift, scuffs, wall apron, dash line; see `room-and-space.md`, "Floor pass"). Keep new textures dark and flat as described here and retune the theme's gain so the gameplay render lands at a median of about 50 to 56/255.
 
 ## Rerun and check
 

@@ -9,16 +9,17 @@ const MAX_SCORCH: int = 24
 const SCORCH_MIN_SPACING: float = 1.0
 const DECAL_DEPTH: float = 1.0
 
-## Per-theme tint of the blotch and stains, as (blotch, stain).
+## Per-theme tint of the blotch and stains, as (blotch, stain). A decal mixes the albedo towards its colour, so the colours must be darker
+## than the lifted floor (`WorldGeometry.FLOOR_ALBEDO_GAIN`, linear albedo about 0.03 to 0.05) to darken it rather than just recolour it.
 const TINTS := {
-	"foundry": [Color(0.0, 0.05, 0.08, 0.5), Color(0.02, 0.03, 0.04, 0.55)],
-	"concrete": [Color(0.04, 0.035, 0.02, 0.5), Color(0.05, 0.04, 0.03, 0.5)],
-	"grating": [Color(0.0, 0.05, 0.03, 0.55), Color(0.03, 0.02, 0.0, 0.6)],
-	"hexworks": [Color(0.03, 0.0, 0.08, 0.5), Color(0.02, 0.02, 0.04, 0.55)],
-	"marquetry": [Color(0.04, 0.025, 0.0, 0.5), Color(0.03, 0.02, 0.01, 0.55)],
-	"orrery": [Color(0.0, 0.02, 0.08, 0.5), Color(0.01, 0.015, 0.04, 0.55)],
-	"mosaic": [Color(0.0, 0.04, 0.05, 0.45), Color(0.02, 0.03, 0.03, 0.5)],
-	"frost": [Color(0.0, 0.04, 0.08, 0.45), Color(0.02, 0.04, 0.06, 0.45)],
+	"foundry": [Color(0.0, 0.018, 0.034, 0.8), Color(0.008, 0.012, 0.016, 0.6)],
+	"concrete": [Color(0.016, 0.014, 0.008, 0.8), Color(0.02, 0.016, 0.012, 0.6)],
+	"grating": [Color(0.0, 0.02, 0.012, 0.8), Color(0.012, 0.008, 0.0, 0.65)],
+	"hexworks": [Color(0.012, 0.0, 0.034, 0.8), Color(0.008, 0.008, 0.016, 0.6)],
+	"marquetry": [Color(0.016, 0.01, 0.0, 0.8), Color(0.012, 0.008, 0.004, 0.6)],
+	"orrery": [Color(0.0, 0.008, 0.034, 0.8), Color(0.004, 0.006, 0.016, 0.6)],
+	"mosaic": [Color(0.0, 0.016, 0.02, 0.75), Color(0.008, 0.012, 0.012, 0.55)],
+	"frost": [Color(0.0, 0.016, 0.034, 0.75), Color(0.008, 0.016, 0.024, 0.55)],
 }
 
 var _blotch: Decal

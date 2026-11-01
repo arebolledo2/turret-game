@@ -39,6 +39,29 @@ const DEFAULT_FLOOR_THEME: String = "foundry"
 ## Lower metal keeps the warm rim light from glaring across rough, wet or mineral floors.
 const FLOOR_METALLIC := {"foundry": 0.3, "concrete": 0.05, "grating": 0.15, "hexworks": 0.3, "marquetry": 0.0, "orrery": 0.25, "mosaic": 0.0, "frost": 0.05}
 const FLOOR_EMISSION_ENERGY: float = 0.9
+## Linear multiplier on the floor albedo texture, per theme. The textures are authored dark and flat (mean linear luminance
+## 0.008 to 0.026) so the units pop; the gain equalises them so every floor lands near the same on-screen value (about 55/255 under the
+## stage lighting). It is applied through `albedo_color`, so it multiplies the texture and the decals still paint over it.
+const FLOOR_ALBEDO_GAIN := {"foundry": 2.5, "concrete": 1.4, "grating": 2.65, "hexworks": 3.5, "marquetry": 3.7, "orrery": 5.0, "mosaic": 1.6, "frost": 1.4}
+## The floor finish pass (`assets/shaders/floor_overlay.gdshader`, the floor material's next_pass): the cool and warm ends of the
+## large-scale tone drift per theme. The painted dash line is the theme's hull accent (`HULL_MOTIFS`) and the wall spill is its
+## rim colour (`ArenaStage.RIM_COLORS`). Only the hue matters: the shader scales both to the lit floor's luminance (`level`).
+const FLOOR_OVERLAY := {
+	"foundry": {"tint_a": Color("2a5e9a"), "tint_b": Color("4a8a82")},
+	"concrete": {"tint_a": Color("6e6068"), "tint_b": Color("b0763e")},
+	"grating": {"tint_a": Color("2a7a78"), "tint_b": Color("66803c")},
+	"hexworks": {"tint_a": Color("3a3aa0"), "tint_b": Color("6a3e98")},
+	"marquetry": {"tint_a": Color("6a4a50"), "tint_b": Color("b06a38")},
+	"orrery": {"tint_a": Color("2a3a9a"), "tint_b": Color("3a62a0")},
+	"mosaic": {"tint_a": Color("2a7a8a"), "tint_b": Color("62805a")},
+	"frost": {"tint_a": Color("3a68b8"), "tint_b": Color("86a4c4")},
+}
+const FLOOR_OVERLAY_SHADER: Shader = preload("res://assets/shaders/floor_overlay.gdshader")
+## Linear luminance of the lit floor the overlay's tone and scuffs are scaled to (the gains above land every theme near it).
+const FLOOR_OVERLAY_LEVEL: float = 0.05
+## Lowest render priority, so the finish is drawn before every other transparent thing (zone rings, glows, telegraphs, shields) and
+## those are not tinted or darkened by it.
+const FLOOR_OVERLAY_PRIORITY: int = -128
 
 ## Keep immutable textures alive across arena teardown; the loader cache alone is weak.
 static var _floor_textures: Dictionary = {}
@@ -50,12 +73,19 @@ static func _floor_texture(theme: String, map: String) -> Texture2D:
 	return _floor_textures[path]
 
 ## Tiling floor plating for a flat floor covering `area` metres. Albedo, normal, roughness and emission come from
-## `assets/textures/floor/<theme>/`; the emission map carries the seam lines and status lights.
-static func floor_material(area: Vector2, theme: String = DEFAULT_FLOOR_THEME) -> StandardMaterial3D:
+## `assets/textures/floor/<theme>/`; the emission map carries the seam lines and status lights. With `arena` set (the playfield) the albedo
+## is lifted by `FLOOR_ALBEDO_GAIN` and the finish pass `floor_overlay_material` rides along as the next pass; the FLOORS showcase patch
+## is lit differently and has no walls, so it passes false and gets the plain textures.
+static func floor_material(area: Vector2, theme: String = DEFAULT_FLOOR_THEME, arena: bool = true) -> StandardMaterial3D:
 	if theme not in FLOOR_THEMES:
 		theme = DEFAULT_FLOOR_THEME
 	var result := StandardMaterial3D.new()
 	result.albedo_texture = _floor_texture(theme, "albedo")
+	if arena:
+		# BaseMaterial3D reads albedo_color as sRGB, so the linear gain goes through linear_to_srgb (values above 1 are kept, not clamped).
+		var gain: float = FLOOR_ALBEDO_GAIN.get(theme, 1.0)
+		result.albedo_color = Color(gain, gain, gain).linear_to_srgb()
+		result.next_pass = floor_overlay_material(theme)
 	result.roughness = 1.0
 	result.roughness_texture = _floor_texture(theme, "roughness")
 	result.metallic = FLOOR_METALLIC.get(theme, 0.3)
@@ -69,6 +99,22 @@ static func floor_material(area: Vector2, theme: String = DEFAULT_FLOOR_THEME) -
 	result.emission_energy_multiplier = FLOOR_EMISSION_ENERGY
 	result.uv1_scale = Vector3(area.x / FLOOR_TILE_METRES, area.y / FLOOR_TILE_METRES, 1.0)
 	result.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+	return result
+
+## The arena floor's finish (tone drift, scuffs, wall dash line, rim spill and wall occlusion) in one alpha pass; see floor_overlay.gdshader.
+static func floor_overlay_material(theme: String = DEFAULT_FLOOR_THEME) -> ShaderMaterial:
+	if theme not in FLOOR_THEMES:
+		theme = DEFAULT_FLOOR_THEME
+	var palette: Dictionary = FLOOR_OVERLAY[theme]
+	var result := ShaderMaterial.new()
+	result.shader = FLOOR_OVERLAY_SHADER
+	result.render_priority = FLOOR_OVERLAY_PRIORITY
+	result.set_shader_parameter("half_arena", HALF_ARENA)
+	result.set_shader_parameter("tint_a", palette["tint_a"])
+	result.set_shader_parameter("tint_b", palette["tint_b"])
+	result.set_shader_parameter("accent", hull_motif(theme)["accent"])
+	result.set_shader_parameter("rim_color", ArenaStage.RIM_COLORS.get(theme, ArenaStage.RIM_COLORS[DEFAULT_FLOOR_THEME]))
+	result.set_shader_parameter("level", FLOOR_OVERLAY_LEVEL)
 	return result
 
 ## Base colour of the room's hull plating (`assets/shaders/hull_plating.gdshader`) for each floor theme.
