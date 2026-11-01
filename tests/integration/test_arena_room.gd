@@ -10,12 +10,6 @@ func before_each() -> void:
 	world.show_hud = false
 	add_child_autofree(world)
 
-func _meshes_under(node: Node) -> Array[MeshInstance3D]:
-	var result: Array[MeshInstance3D] = []
-	for child in node.get_children():
-		if child is MeshInstance3D:
-			result.append(child)
-	return result
 
 func test_every_space_theme_has_display_data_and_shader_params() -> void:
 	assert_eq(SpaceThemes.ORDER.size(), SpaceThemes.INFO.size())
@@ -79,11 +73,13 @@ func test_walls_stand_outside_the_playfield_and_the_floor_stops_at_them() -> voi
 	var half := WorldGeometry.HALF_ARENA
 	var floor_plane := world.stage.floor_visual.mesh as PlaneMesh
 	assert_almost_eq(floor_plane.size.x, half.x * 2.0 + .6, .001, "The floor no longer runs on past the walls")
-	for mesh in _meshes_under(world.stage.room):
-		var box := (mesh.mesh as BoxMesh).size
-		var bounds := AABB(mesh.position - box * 0.5, box)
-		var inside := AABB(Vector3(-half.x, 0.0, -half.y), Vector3(half.x * 2.0, 3.0, half.y * 2.0))
-		assert_false(bounds.intersects(inside), "%s intrudes on the playfield" % mesh.name)
+	var inside := AABB(Vector3(-half.x, 0.0, -half.y), Vector3(half.x * 2.0, 3.0, half.y * 2.0))
+	var meshes := 0
+	for child in world.stage.room.get_children():
+		var mesh := child as MeshInstance3D
+		meshes += 1
+		assert_false((mesh.transform * mesh.get_aabb()).intersects(inside), "%s intrudes on the playfield" % mesh.name)
+	assert_gt(meshes, 20)
 
 func test_front_wall_is_low_enough_not_to_hide_the_floor_behind_it() -> void:
 	# The camera sees down at about 52 degrees, so a wall of height h hides about 0.77 h of the floor behind it.
@@ -91,13 +87,42 @@ func test_front_wall_is_low_enough_not_to_hide_the_floor_behind_it() -> void:
 	assert_gt(ArenaRoom.BACK_HEIGHT, ArenaRoom.SIDE_HEIGHT)
 	assert_gt(ArenaRoom.SIDE_HEIGHT, ArenaRoom.FRONT_HEIGHT)
 
-func test_camera_can_see_the_whole_back_wall() -> void:
-	# A point at height h on the back wall appears 0.765 h further up the screen than its foot.
-	var shown := ArenaRoom.GAP + ArenaRoom.BACK_HEIGHT * 0.765
-	assert_gte(GameConstants.CAMERA_EDGE_MARGIN_BACK, shown, "The view reaches past the top of the back wall")
+func test_camera_margins_show_each_wall_in_full() -> void:
+	# A point at height h appears 0.765 h further up the screen than its foot.
+	var back := ArenaRoom.GAP + ArenaRoom.BACK_HEIGHT * 0.765 + ArenaRoom.BACK_TOP_DEPTH + ArenaRoom.HUD_TOP_ALLOWANCE
+	assert_gte(GameConstants.CAMERA_EDGE_MARGIN_BACK, back, "The view reaches past the back coping and the HUD bar")
+	assert_gte(GameConstants.CAMERA_EDGE_MARGIN, ArenaRoom.GAP + ArenaRoom.SIDE_DEPTH + 0.25, "The side walls' sloped faces and coping fit")
+
+func test_room_glows_stay_below_the_bloom_threshold() -> void:
+	world.start_run()
+	assert_lt(ArenaRoom.LAMP_ENERGY, 1.0)
+	assert_lt(world.stage._rim_material.emission_energy_multiplier, 1.0)
 
 func test_room_hull_follows_the_floor_theme() -> void:
 	world.run_config.layout_id = "sump"
 	world.start_run()
-	var hull := world.stage.room._hull_meshes[0].material_override as StandardMaterial3D
-	assert_eq(hull.albedo_texture, WorldGeometry._floor_texture("grating", "albedo"))
+	var hull: ShaderMaterial = null
+	for child in world.stage.room.get_children():
+		if (child as MeshInstance3D).material_override is ShaderMaterial:
+			hull = (child as MeshInstance3D).material_override
+			break
+	assert_not_null(hull)
+	assert_eq(hull.get_shader_parameter("base_color"), WorldGeometry.hull_color("grating"))
+	for theme in WorldGeometry.FLOOR_THEMES:
+		assert_true(WorldGeometry.HULL_COLORS.has(theme), theme)
+
+func test_extruded_wall_faces_point_the_way_the_profile_says() -> void:
+	world.start_run()
+	var found := 0
+	for child in world.stage.room.get_children():
+		var mesh := child as MeshInstance3D
+		if not mesh.mesh is ArrayMesh:
+			continue
+		var arrays := (mesh.mesh as ArrayMesh).surface_get_arrays(0)
+		var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+		for index in range(0, vertices.size(), 3):
+			var geometric := (vertices[index + 2] - vertices[index]).cross(vertices[index + 1] - vertices[index])
+			assert_gt(geometric.dot(normals[index]), 0.0, "winding matches the stored normal")
+			found += 1
+	assert_gt(found, 20)

@@ -71,24 +71,12 @@ static func floor_material(area: Vector2, theme: String = DEFAULT_FLOOR_THEME) -
 	result.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	return result
 
-## Hull plating for the room's walls: the floor theme's plates, darkened and mapped in world space so every wall face tiles
-## evenly. No emission map; the walls get their glow from separate trim strips.
-static func hull_material(theme: String = DEFAULT_FLOOR_THEME) -> StandardMaterial3D:
-	if theme not in FLOOR_THEMES:
-		theme = DEFAULT_FLOOR_THEME
-	var result := StandardMaterial3D.new()
-	result.albedo_texture = _floor_texture(theme, "albedo")
-	result.albedo_color = Color(0.5, 0.55, 0.6)
-	result.roughness = 1.0
-	result.roughness_texture = _floor_texture(theme, "roughness")
-	result.metallic = FLOOR_METALLIC.get(theme, 0.3)
-	result.normal_enabled = true
-	result.normal_texture = _floor_texture(theme, "normal")
-	result.uv1_triplanar = true
-	result.uv1_world_triplanar = true
-	result.uv1_scale = Vector3.ONE / FLOOR_TILE_METRES
-	result.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
-	return result
+## Base colour of the room's hull plating (`assets/shaders/hull_plating.gdshader`) for each floor theme.
+const HULL_COLORS := {"foundry": Color("2a3f48"), "concrete": Color("463a32"), "grating": Color("2a4a40"), "hexworks": Color("38345a"),
+	"marquetry": Color("48342a"), "orrery": Color("2e3c5c"), "mosaic": Color("2c4e4c"), "frost": Color("36505e")}
+
+static func hull_color(theme: String) -> Color:
+	return HULL_COLORS.get(theme, HULL_COLORS[DEFAULT_FLOOR_THEME])
 
 static var ring_materials: Dictionary = {}
 

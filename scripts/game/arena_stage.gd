@@ -46,13 +46,14 @@ func build(arena: ArenaWorld) -> void:
 	floor_shape.position.y = -.2
 	ground.add_child(floor_shape)
 	_rim_material = WorldGeometry.material(RIM_COLORS["foundry"], true)
+	_rim_material.emission_energy_multiplier = 0.8 # the one continuous light line; kept under the bloom threshold so it stays a coloured line
 	for z: float in [-half.y - .05, half.y + .05]:
 		WorldGeometry.box(self, Vector3(half.x * 2.0 + .3, .08, .06), Vector3(0, .02, z), _rim_material)
 	for x: float in [-half.x - .05, half.x + .05]:
 		WorldGeometry.box(self, Vector3(.06, .08, half.y * 2.0 + .1), Vector3(x, .02, 0), _rim_material)
 	room = ArenaRoom.new()
 	add_child(room)
-	room.build(_rim_material)
+	room.build()
 	backdrop = SpaceBackdrop.new()
 	add_child(backdrop)
 	backdrop.apply_theme(SpaceThemes.DEFAULT_THEME)
@@ -79,7 +80,7 @@ func set_floor_theme(theme: String) -> void:
 	_rim_material.albedo_color = rim_color
 	_rim_material.emission = rim_color
 	floor_decals.apply_theme(theme)
-	room.apply_theme(theme)
+	room.apply_theme(theme, rim_color)
 
 ## Picks what the ship is flying through outside the room (see `SpaceThemes`).
 func set_space_theme(theme: String) -> void:
