@@ -31,9 +31,10 @@ const INFO := {
 			"planet_color": Color("c0672c"), "planet_glow": Color("ffa060"),
 		}},
 	"warp": {"name": "Warp Corridor", "note": "Stars stretched into long cold streaks at hyper speed.",
-		"heading": 0.0, "speed": 14.0, "params": {
+		"heading": 25.0, "speed": 10.0, "params": {
 			"base_color": Color("02030a"), "nebula_a": Color("14306a"), "nebula_b": Color("203a8a"), "nebula_amount": 0.35,
-			"star_density": 0.75, "star_brightness": 3.0, "star_tint": Color("bcd4ff"), "streak": 9.0,
+			"star_density": 0.45, "star_brightness": 2.2, "star_tint": Color("bcd4ff"), "streak": 1.0, "hull_density": 0.3,
+			"engine_amount": 0.25,
 		}},
 }
 

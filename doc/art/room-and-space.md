@@ -19,8 +19,6 @@ further up the screen than its foot.
 those walls come into frame; `CameraRig.clamp_focus` is asymmetric for that reason. A view larger than the room centres between
 the front and back limits (so the overview focus is not exactly the origin).
 
-The hull plating is `WorldGeometry.hull_material(theme)`: the floor theme's albedo, normal and roughness, world-triplanar and
-darkened. Glow strips use the stage's rim material, so they carry the floor theme's colour.
 
 ## Space themes
 
@@ -41,3 +39,21 @@ copings, kicks and caps are muted brass. Corner towers hide the joins between wa
 only continuous light line; wall lamps (pillar pips, front portholes) glow at `LAMP_ENERGY` and everything stays under the bloom
 threshold of 1.0 so nothing blooms into a white outline. Camera margins (`CAMERA_EDGE_MARGIN*`) leave room for each wall's
 full footprint and, at the back, the top HUD bar (`ArenaRoom.HUD_TOP_ALLOWANCE`).
+
+## Detail pass
+
+- **Hull shader** (`hull_plating.gdshader`): a height field (bevelled seams, rivet domes, recessed inset panels, louvre vents) is
+  differentiated into a normal; panels vary in tone, roughness and metal; seams show brass edge wear; grime pools at the base.
+  The pattern follows the floor theme (`WorldGeometry.HULL_MOTIFS`): plates, hex cells (hexworks), planks (marquetry) and rimed
+  plates (frost). The front hull uses panels twice the size so it does not read as brickwork.
+- **Brass** (`brass_trim.gdshader`): brushed along the wall, with a little patina. Copings are profiles with rounded noses and a
+  raised rail; `ArenaRoom._extrude` smooths joints gentler than 40 degrees so arcs look round.
+- **Kit pieces** in `arena_room.gd`: fluted pillars with plinths and corbelled capitals, window mullions and transoms, a dentil
+  row, lamp posts on the side copings, buttress ribs, portholes, a rub-rail and a pipe on the front hull, stepped corner towers.
+  Everything is merged into one mesh per material; only the towers carry real lights (four shadowless omni lights).
+- **Light**: lamps glow below the bloom threshold, and soft additive pools (a `Glow` child) sit on the slopes and the floor. The sun
+  leaves the left slopes in shadow, so the stage adds a cool fill light that only lights `ArenaRoom.LAYER`.
+- **Sky** (`arena_sky.gdshader`): the old gradient plus sparse stars, rendered once, so brass has something to reflect.
+- **Backdrop**: star trails (`streak`) have a round head, a fading tail that cools towards `trail_tint`, and a length per star;
+  a dark gantry layer with blinking nav lights (`hull_density`) passes between far and near stars; warp adds an engine glow
+  (`engine_amount`). The nebula uses 2 to 3 noise octaves instead of 5 and is skipped when `nebula_amount` is near zero.
