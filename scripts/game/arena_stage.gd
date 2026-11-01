@@ -108,6 +108,7 @@ func set_space_theme(theme: String) -> void:
 ## Warms the floor's seam lights as the waves climb; boss waves flip them to magenta. Eases over a second.
 func set_floor_wave(wave: int, is_boss: bool) -> void:
 	var target := SEAM_BOSS if is_boss else SEAM_CALM.lerp(SEAM_HOT, clampf(float(wave - 1) / (SEAM_FULL_WAVE - 1), 0.0, 1.0))
+	room.set_alert(target, 1.0 if is_boss else 0.0) # boss waves pulse the room's lamps in the wave colour
 	if _seam_tween:
 		_seam_tween.kill()
 	if not is_inside_tree():

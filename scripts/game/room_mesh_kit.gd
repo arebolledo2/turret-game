@@ -5,6 +5,7 @@ extends RefCounted
 ## calls. Used by `ArenaRoom` and `ShipExterior`. Every vertex carries a colour (white by default); materials that set
 ## `vertex_color_use_as_albedo` use it to paint individual pieces, others ignore it.
 const SMOOTH_DOT: float = 0.766 # profile joints sharper than 40 degrees stay creased
+const GLOW_COLUMNS: Array[float] = [-1.0, -0.5, 0.0, 0.5, 1.0] # offsets across a `glow_cone`, in half-widths
 
 var _batches: Dictionary = {}
 var _glow_surface := SurfaceTool.new()
@@ -317,3 +318,37 @@ func glow_quad(at: Vector3, axis_u: Vector3, axis_v: Vector3, half_u: float, hal
 		_glow_surface.set_uv(uvs[index])
 		_glow_surface.add_vertex(corners[index])
 		_glow_vertices += 1
+
+## A soft additive light cone for a lamp that shines along a surface: it starts at `top` (the brightest point), runs `length`
+## metres along `down` and widens from `half_top` to `half_bottom` metres either side of its axis (`side`). The alpha is set per
+## vertex: `alpha_top` on the axis at the apex, fading to nothing at the far end and towards both edges (a cosine squared across,
+## a power of 1.5 along), so the glow has no hard outline. Every vertex samples the middle of the glow texture, so only the
+## vertex alpha shapes it. `rows` is the number of steps down the cone.
+func glow_cone(top: Vector3, down: Vector3, side: Vector3, length: float, half_top: float, half_bottom: float, alpha_top: float, rows: int = 6) -> void:
+	if alpha_top <= 0.0 or length <= 0.0 or rows < 1:
+		return
+	var along := down.normalized() * length
+	var across := side.normalized()
+	var positions: Array[PackedVector3Array] = []
+	var alphas: Array[PackedFloat32Array] = []
+	for row in rows + 1:
+		var t := float(row) / rows
+		var centre := top + along * t
+		var half := lerpf(half_top, half_bottom, t)
+		var fade := alpha_top * pow(1.0 - t, 1.5)
+		var line := PackedVector3Array()
+		var line_alpha := PackedFloat32Array()
+		for column: float in GLOW_COLUMNS:
+			line.append(centre + across * half * column)
+			line_alpha.append(fade * pow(cos(column * PI * 0.5), 2.0))
+		positions.append(line)
+		alphas.append(line_alpha)
+	for row in rows:
+		for column in GLOW_COLUMNS.size() - 1:
+			var corners: Array[Vector3] = [positions[row][column], positions[row][column + 1], positions[row + 1][column + 1], positions[row + 1][column]]
+			var corner_alpha: Array[float] = [alphas[row][column], alphas[row][column + 1], alphas[row + 1][column + 1], alphas[row + 1][column]]
+			for index: int in [0, 1, 2, 0, 2, 3]:
+				_glow_surface.set_color(Color(1, 1, 1, corner_alpha[index]))
+				_glow_surface.set_uv(Vector2(0.5, 0.5))
+				_glow_surface.add_vertex(corners[index])
+				_glow_vertices += 1

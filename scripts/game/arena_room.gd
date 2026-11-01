@@ -20,6 +20,19 @@ const GAP: float = 0.12 # clear space between the arena bounds and the wall face
 const HULL_DEPTH: float = 6.0 # walls reach this far below the floor so their outer faces read as a hull
 const LAMP_ENERGY: float = 0.6 # brightness of the lantern lights
 const LAMP_VALUE: float = 0.8 # lamp colour multiplier; unlit lamps stay below the bloom threshold
+const LANTERN_ENERGY: float = 0.7 # the tower lanterns' mean light energy; they flicker by LANTERN_FLICKER either way
+const LANTERN_FLICKER: float = 0.06
+const LANTERN_WARM := Color("ffd59a") # the lantern light is its lamp colour warmed towards this
+## Alert (see `set_alert`): the lamps pulse between these brightness multipliers (the top is `LAMP_VALUE`, so a pulse never
+## outshines a calm lamp) once every `ALERT_PERIOD` seconds, and the tint eases in and out over `ALERT_FADE`.
+const ALERT_PULSE_MIN: float = 0.35
+const ALERT_PULSE_MAX: float = 0.8
+const ALERT_PERIOD: float = 2.4
+const ALERT_FADE: float = 0.8
+## Screen up on the ground plane for the fixed camera (a quad on it faces the lens); halos use it.
+const SCREEN_UP := Vector3(0.0, 0.607, -0.794)
+const BACK_CROWN: float = 0.4 # height of the cupola on the back towers (inside BACK_TOWER_HEIGHT)
+const FRONT_CROWN: float = 0.28
 
 const BACK_HEIGHT: float = 2.64 # top of the coping's raised rail
 const BACK_TOP_DEPTH: float = 0.9 # how far the coping reaches behind the inner face
@@ -60,16 +73,39 @@ var _shade := SurfaceTool.new()
 var _lanterns: Array[OmniLight3D] = []
 var _flywheels: Array[Node3D] = []
 var _exterior: ShipExterior
+## Alert state: the tint (a colour with its brightest channel at 1) and strength (0 calm to 1 full), the tween easing the
+## strength, the pulse clock (runs only while the strength is above 0) and the flicker clock.
+var _alert_color: Color = Color.WHITE
+var _alert_amount: float = 0.0
+var _alert_tween: Tween
+var _alert_clock: float = 0.0
+var _flicker_clock: float = 0.0
+## The theme's lamp colour as `apply_theme` last left it in the glow material, and what this script last wrote there. If the two
+## differ, `apply_theme` ran again, so the new colour is the base (see `_sync_base`).
+var _base_glow: Color = Color.WHITE
+var _written_glow: Color = Color.WHITE
+var _base_known: bool = false
+var _noise := FastNoiseLite.new()
 
 func _init() -> void:
 	name = "Room"
+	_noise.noise_type = FastNoiseLite.TYPE_PERLIN
+	_noise.seed = 11
+	_noise.frequency = 1.0
 
 func _process(delta: float) -> void:
 	for wheel in _flywheels:
 		wheel.rotate_z(delta * FLYWHEEL_SPEED)
+	_flicker_clock += delta
+	for index in _lanterns.size():
+		_lanterns[index].light_energy = lantern_energy(_flicker_clock, index)
+	if _alert_amount > 0.0: # the pulse only runs during an alert
+		_alert_clock += delta
+		_apply_alert()
 
 ## Builds the walls once; `apply_theme` then colours them.
 func build() -> void:
+	_clear_alert() # a rebuild starts calm: the materials below are new and know nothing of an earlier alert
 	var inner := WorldGeometry.HALF_ARENA + Vector2.ONE * GAP
 	hull = ShaderMaterial.new()
 	hull.shader = HULL_SHADER
@@ -97,7 +133,7 @@ func build() -> void:
 	_kit.flush(self, ROOM_LAYERS, _glow, [_lamp])
 	_exterior = ShipExterior.new()
 	_exterior.build(self, {"hull": hull, "brass": _brass, "frame": _frame, "paint": _paint, "glow": _glow}, inner)
-	set_process(not _flywheels.is_empty())
+	set_process(not _flywheels.is_empty() or not _lanterns.is_empty()) # flywheels, lantern flicker and (in an alert) the lamp pulse
 
 ## Re-skins the hull for a floor theme and lights the lamps and their pools in its rim colour.
 func apply_theme(theme: String, lamp_color: Color) -> void:
@@ -107,6 +143,11 @@ func apply_theme(theme: String, lamp_color: Color) -> void:
 	hull.set_shader_parameter("panel_size", motif["panel"])
 	hull.set_shader_parameter("metal", float(motif["metal"]))
 	hull.set_shader_parameter("grime", float(motif["grime"]))
+	hull.set_shader_parameter("accent_color", motif["accent"])
+	var brass := WorldGeometry.brass_style(theme)
+	_brass.set_shader_parameter("brass_color", brass["color"])
+	_brass.set_shader_parameter("patina_color", brass["patina"])
+	_brass.set_shader_parameter("patina_amount", float(brass["amount"]))
 	_enamel.albedo_color = motif["accent"]
 	_lamp.albedo_color = lamp_color * LAMP_VALUE
 	_glow.albedo_color = lamp_color
@@ -115,6 +156,81 @@ func apply_theme(theme: String, lamp_color: Color) -> void:
 
 func lantern_lights() -> Array[OmniLight3D]:
 	return _lanterns
+
+# --- Alert -----------------------------------------------------------------------------------------------------------------
+
+## Tints the lamps, their glow pools and the lantern lights towards `color` by `amount` (0 calm, 1 full alert), easing over `fade`
+## seconds (at once when it is 0 or the room is not in the tree). While the amount is above 0 the lamps also pulse slowly (see
+## `alert_pulse`); at 0 everything returns exactly to the theme's colours. `ArenaStage.set_floor_wave` calls it: boss waves
+## pass 1 in the wave colour, every other wave 0. When the amount is 0 the colour is ignored (a fade-out keeps the old one).
+func set_alert(color: Color, amount: float, fade: float = ALERT_FADE) -> void:
+	amount = clampf(amount, 0.0, 1.0)
+	_sync_base()
+	if amount > 0.0:
+		var brightest := maxf(color.r, maxf(color.g, color.b))
+		_alert_color = Color(color.r / brightest, color.g / brightest, color.b / brightest, 1.0) if brightest > 0.0 else Color.WHITE
+	if _alert_tween:
+		_alert_tween.kill()
+		_alert_tween = null
+	if fade <= 0.0 or not is_inside_tree() or is_equal_approx(_alert_amount, amount):
+		_set_alert_amount(amount)
+		return
+	_alert_tween = create_tween()
+	_alert_tween.tween_method(_set_alert_amount, _alert_amount, amount, fade)
+
+## Ends an alert at once and restores the theme's colours.
+func reset_alert() -> void:
+	set_alert(_alert_color, 0.0, 0.0)
+
+## The current alert strength, 0 (calm) to 1 (full alert).
+func alert_amount() -> float:
+	return _alert_amount
+
+## The lamp brightness multiplier at `time` seconds into an alert: it starts at `ALERT_PULSE_MAX` (a calm lamp's value) and
+## breathes down to `ALERT_PULSE_MIN` and back every `ALERT_PERIOD` seconds.
+static func alert_pulse(time: float) -> float:
+	return lerpf(ALERT_PULSE_MIN, ALERT_PULSE_MAX, 0.5 + 0.5 * cos(TAU * time / ALERT_PERIOD))
+
+## The light energy of lantern `index` at `time` seconds: `LANTERN_ENERGY` plus or minus `LANTERN_FLICKER` from smooth noise,
+## a different stretch of it for each lantern.
+func lantern_energy(time: float, index: int) -> float:
+	return LANTERN_ENERGY + LANTERN_FLICKER * clampf(_noise.get_noise_1d(time * 3.0 + index * 37.37) * 1.8, -1.0, 1.0)
+
+func _set_alert_amount(value: float) -> void:
+	_alert_amount = value
+	if value <= 0.0:
+		_alert_clock = 0.0
+	_apply_alert()
+
+func _clear_alert() -> void:
+	if _alert_tween:
+		_alert_tween.kill()
+		_alert_tween = null
+	_alert_amount = 0.0
+	_alert_clock = 0.0
+	_base_known = false
+
+## Treats the glow colour in the material as the theme's lamp colour unless it is what `_apply_alert` wrote last, in which case
+## `apply_theme` has not run since. That keeps the alert working with whatever theme code sets, without sharing state with it.
+func _sync_base() -> void:
+	if not _base_known or _glow.albedo_color != _written_glow:
+		_base_glow = _glow.albedo_color
+		_base_known = true
+
+## Writes the lamp, glow and lantern colours for the current alert amount and pulse. At amount 0 these are exactly the colours
+## `apply_theme` sets.
+func _apply_alert() -> void:
+	_sync_base()
+	var pulse := alert_pulse(_alert_clock)
+	var tint := _base_glow.lerp(_alert_color, _alert_amount)
+	var value := lerpf(LAMP_VALUE, pulse, _alert_amount)
+	var pool := lerpf(1.0, pulse / LAMP_VALUE, _alert_amount) # the glow pools breathe with the lamps
+	_lamp.albedo_color = tint * value
+	_glow.albedo_color = Color(tint.r * pool, tint.g * pool, tint.b * pool, tint.a)
+	_written_glow = _glow.albedo_color
+	var lantern_color := tint.lerp(LANTERN_WARM, 0.6 - 0.3 * _alert_amount) # less warm in an alert, so the tint shows
+	for lantern in _lanterns:
+		lantern.light_color = lantern_color
 
 ## Roughly a third of the lamps are dark and a tenth are a warm yellow, so the rows do not look stamped.
 func lamp_tone(seed_value: float) -> Color:
@@ -143,11 +259,6 @@ static func _make_glow_material() -> StandardMaterial3D:
 	result.cull_mode = BaseMaterial3D.CULL_DISABLED
 	result.albedo_texture = texture
 	result.vertex_color_use_as_albedo = true
-	hull.set_shader_parameter("accent_color", motif["accent"])
-	var brass := WorldGeometry.brass_style(theme)
-	_brass.set_shader_parameter("brass_color", brass["color"])
-	_brass.set_shader_parameter("patina_color", brass["patina"])
-	_brass.set_shader_parameter("patina_amount", float(brass["amount"]))
 	result.disable_fog = true
 	return result
 
@@ -184,11 +295,15 @@ func _build_back(inner: Vector2) -> void:
 		# Two flutes either side of the lamp.
 		for flute: float in [-0.19, 0.19]:
 			_kit.add_box(_paint, Vector3(0.06, 1.0, 0.03), Vector3(x + flute, 0.7, z_face - 0.005), DARK)
-		# Lamp: brass housing around a glass lens, with a soft pool of light on the floor below.
+		# Lamp: brass housing around a glass lens, a cone of light washing down the pillar from it, a halo round the lens and a
+		# softer pool on the floor below.
 		var tone := lamp_tone(index * 1.7 + 0.3)
 		_kit.add_box(_brass, Vector3(0.2, 0.6, 0.04), Vector3(x, 1.05, z_face - 0.01))
 		_kit.add_box(_lamp, Vector3(0.12, 0.46, 0.03), Vector3(x, 1.12, z_face + 0.015), tone)
-		_kit.glow_quad(Vector3(x, 0.012, z_face + 0.55), Vector3.RIGHT, Vector3.BACK, 0.65, 0.55, 0.18 * tone.v)
+		_kit.glow_cone(Vector3(x, 1.0, z_face + 0.075), Vector3.DOWN, Vector3.RIGHT, 0.95, 0.1, 0.6, 0.4 * tone.v)
+		_kit.glow_quad(Vector3(x, 1.12, z_face + 0.12), Vector3.RIGHT, SCREEN_UP, 0.28, 0.28, 0.3 * tone.v)
+		_kit.glow_quad(Vector3(x, 0.012, z_face + 0.55), Vector3.RIGHT, Vector3.BACK, 0.65, 0.55, 0.14 * tone.v)
+		_capital_detail(index, x, z_face)
 		if index < count:
 			_build_back_bay(index, count, x + pitch * 0.5, pitch, z_face)
 	# A dentil row under the cornice, and bolts along the raised rail.
@@ -205,6 +320,7 @@ func _build_back(inner: Vector2) -> void:
 func _build_back_bay(index: int, count: int, bay_x: float, pitch: float, z_face: float) -> void:
 	var span := pitch - PILLAR_WIDTH - 0.02
 	var open_height := LINTEL_BOTTOM - SILL_HEIGHT
+	_bay_trim(index, bay_x, span, z_face)
 	if index == count / 2:
 		_kit.add_box(hull, Vector3(span, open_height, 0.1), Vector3(bay_x, SILL_HEIGHT, z_face - 0.4))
 		for stripe in 4: # a coral and cream band across the foot of the door
@@ -213,6 +329,7 @@ func _build_back_bay(index: int, count: int, bay_x: float, pitch: float, z_face:
 		_kit.add_box(_paint, Vector3(0.18, 0.18, 0.06), Vector3(bay_x + span * 0.3, 1.26, z_face - 0.34), DARK)
 		_kit.add_box(_brass, Vector3(0.95, 0.14, 0.04), Vector3(bay_x, LINTEL_BOTTOM + 0.12, z_face + 0.005)) # sign
 		_kit.add_box(_lamp, Vector3(0.8, 0.08, 0.03), Vector3(bay_x, LINTEL_BOTTOM + 0.15, z_face + 0.03), Color("ffc080"))
+		_door_detail(bay_x, span, open_height, z_face)
 	elif index == 1 or index == count - 2:
 		_kit.add_box(_paint, Vector3(span, open_height, 0.08), Vector3(bay_x, SILL_HEIGHT, z_face - 0.55), Color("1a1410"))
 		_kit.add_box(_lamp, Vector3(span - 0.3, open_height - 0.3, 0.02), Vector3(bay_x, SILL_HEIGHT + 0.15, z_face - 0.5), Color("a8742c"))
@@ -232,6 +349,61 @@ func _build_back_bay(index: int, count: int, bay_x: float, pitch: float, z_face:
 	else:
 		_kit.add_box(_brass, Vector3(0.05, open_height, 0.05), Vector3(bay_x, SILL_HEIGHT, z_face - 0.4))
 		_kit.add_box(_brass, Vector3(span, 0.05, 0.05), Vector3(bay_x, 1.3, z_face - 0.4))
+
+## What every back bay shares: an enamel inset on the sloped sill (it rises 0.18 m over 0.4 m, so the panel leans with it, framed by
+## four rivets) and a pair of cables sagging across the lintel from pillar to pillar, in colours that stand out from the hull.
+func _bay_trim(index: int, bay_x: float, span: float, z_face: float) -> void:
+	var lean := Vector3(0.0, 0.911, 0.411) # the sill's normal
+	var run := Vector3(0.0, 0.411, -0.911) # up the sill, away from the camera
+	var panel_width := span * (0.72 + 0.06 * ((index * 7) % 3))
+	var panel_at := Vector3(bay_x, 0.49, z_face - 0.25)
+	var panel_basis := Basis(Vector3.RIGHT, lean, run)
+	_kit.add_oriented_box(_enamel, Vector3(panel_width, 0.012, 0.25), panel_at + lean * 0.006, panel_basis)
+	for end: float in [-1.0, 1.0]:
+		for rivet: float in [-1.0, 1.0]:
+			_kit.add_oriented_box(_brass, Vector3(0.045, 0.02, 0.045), panel_at + Vector3(end * (panel_width * 0.5 - 0.07), 0.0, 0.0) + run * rivet * 0.085 + lean * 0.01, panel_basis)
+	var cable_colors: Array[Color] = [CORAL, CREAM, Color("2f9a9a"), Color("c8a040")]
+	for cable in 2:
+		var points := PackedVector3Array()
+		var sag := 0.13 + 0.03 * cable
+		for step in 9:
+			var t := step / 8.0
+			points.append(Vector3(bay_x + (t - 0.5) * (span - 0.06), 2.4 - cable * 0.07 - sag * 4.0 * t * (1.0 - t), z_face + 0.04 + cable * 0.012))
+		_kit.add_tube(_paint, points, 0.016, 5, cable_colors[(index + cable * 2) % cable_colors.size()])
+	for clip: float in [-1.0, 1.0]: # a clamp where each cable pair meets the pillar
+		_kit.add_box(_brass, Vector3(0.06, 0.2, 0.05), Vector3(bay_x + clip * (span * 0.5 - 0.02), 2.2, z_face + 0.03))
+
+## Extra capital detail so the pillars do not repeat: every third one gets volutes (scrolls) at the ends, the next an enamel
+## diamond, the rest keep the plain corbels.
+func _capital_detail(index: int, x: float, z_face: float) -> void:
+	var y := LINTEL_BOTTOM - 0.29
+	match index % 3:
+		0:
+			for scroll: float in [-1.0, 1.0]:
+				_kit.add_cylinder(_brass, Vector3(x + scroll * 0.37, y, z_face + 0.07), Vector3.BACK, 0.08, 0.05, 12)
+				_kit.add_cylinder(_frame, Vector3(x + scroll * 0.37, y, z_face + 0.08), Vector3.BACK, 0.04, 0.03, 10)
+		1:
+			_kit.add_oriented_box(_enamel, Vector3(0.2, 0.2, 0.02), Vector3(x, y, z_face + 0.075), Basis(Vector3.BACK, PI * 0.25))
+			_kit.add_oriented_box(_brass, Vector3(0.09, 0.09, 0.02), Vector3(x, y, z_face + 0.088), Basis(Vector3.BACK, PI * 0.25))
+		_:
+			for tooth in 3:
+				_kit.add_box(_brass, Vector3(0.12, 0.07, 0.05), Vector3(x + (tooth - 1) * 0.2, LINTEL_BOTTOM - 0.1, z_face + 0.08))
+
+## The bulkhead door's furniture: a brass frame, a centre seam, a handwheel, hinges and a status lamp, so it reads as a door.
+func _door_detail(bay_x: float, span: float, open_height: float, z_face: float) -> void:
+	var front_z := z_face - 0.345
+	for jamb: float in [-1.0, 1.0]:
+		_kit.add_box(_brass, Vector3(0.1, open_height, 0.05), Vector3(bay_x + jamb * (span * 0.5 - 0.05), SILL_HEIGHT, z_face - 0.33))
+	_kit.add_box(_brass, Vector3(span, 0.1, 0.05), Vector3(bay_x, LINTEL_BOTTOM - 0.1, z_face - 0.33))
+	_kit.add_box(_paint, Vector3(0.03, open_height - 0.2, 0.01), Vector3(bay_x, SILL_HEIGHT + 0.1, front_z + 0.005), DARK)
+	var wheel_at := Vector3(bay_x - span * 0.16, 1.5, front_z + 0.04)
+	_kit.add_torus(_brass, wheel_at, Vector3.BACK, 0.17, 0.022, 14, 5)
+	_kit.add_cylinder(_brass, wheel_at, Vector3.BACK, 0.045, 0.06, 8)
+	for spoke in 3:
+		_kit.add_oriented_box(_brass, Vector3(0.34, 0.025, 0.025), wheel_at, Basis(Vector3.BACK, spoke * PI / 3.0))
+	for hinge: float in [0.95, 1.8]:
+		_kit.add_cylinder(_frame, Vector3(bay_x - span * 0.5 + 0.12, hinge, z_face - 0.3), Vector3.UP, 0.03, 0.2, 8)
+	_kit.add_box(_lamp, Vector3(0.07, 0.07, 0.03), Vector3(bay_x + span * 0.3, 1.62, z_face - 0.34), Color("ffc080"))
 
 # --- Side walls ------------------------------------------------------------------------------------------------------
 
@@ -268,16 +440,20 @@ func _build_sides(inner: Vector2) -> void:
 		for index in range(1, count):
 			var post_z := -inner.y + index * pitch
 			_kit.add_oriented_box(_brass, Vector3(SLOPE_LENGTH, 0.05, 0.08), slope_origin + x_axis * SLOPE_LENGTH * 0.5 + normal * 0.02 + Vector3(0, 0, post_z), slope_basis)
-			# Lamp posts on the coping, each with a pool of light on the slope below (the ends hide in the towers).
+			# Lamp posts on the coping (the ends hide in the towers). Each lamp throws a cone of light down the slope, brightest
+			# under the lamp and fading as it widens, with a small halo round the lens, so the light reads as coming from it.
 			var x := side * (inner.x + 1.31)
 			var tone := lamp_tone(index * 2.3 + side)
 			_kit.add_box(_brass, Vector3(0.08, 0.2, 0.08), Vector3(x, SIDE_HEIGHT, post_z))
 			_kit.add_box(_lamp, Vector3(0.12, 0.14, 0.12), Vector3(x, SIDE_HEIGHT + 0.2, post_z), tone)
-			var on_slope := Vector3(side * (inner.x + 0.62), 0.9, post_z)
-			_kit.glow_quad(on_slope + normal * 0.012, x_axis, Vector3.BACK, 0.55, 0.62, 0.55 * tone.v)
+			var slope_top := slope_origin + x_axis * SLOPE_LENGTH + normal * 0.012 + Vector3(0, 0, post_z)
+			_kit.glow_cone(slope_top, -x_axis, Vector3.BACK, 1.3, 0.14, 0.72, 0.95 * tone.v)
+			_kit.glow_quad(Vector3(x, SIDE_HEIGHT + 0.27, post_z), Vector3.RIGHT, SCREEN_UP, 0.28, 0.28, 0.55 * tone.v)
 		for index in count:
 			var centre := slope_origin + Vector3(0, 0, -inner.y + (index + 0.5) * pitch)
 			_side_bay(int(index * 2 + (1 if side > 0.0 else 0)) % 5, index + 1, centre, slope_basis, pitch)
+			# An enamel inset on the flat of the coping in each bay, between the nose and the rail.
+			_kit.add_box(_enamel, Vector3(0.13, 0.008, pitch * 0.74), Vector3(side * (inner.x + 1.1), 1.61, centre.z))
 
 ## One module on the sloped face, in the slope's own frame: x up the slope, y out of the surface, z along the wall.
 func _side_bay(kind: int, number: int, origin: Vector3, slope_basis: Basis, pitch: float) -> void:
@@ -382,29 +558,124 @@ func _front_module(kind: int, at: Vector3, index: int) -> void:
 func _build_towers(inner: Vector2) -> void:
 	for side: float in [-1.0, 1.0]:
 		var x := side * (inner.x + SIDE_DEPTH * 0.5)
-		_tower(Vector3(SIDE_DEPTH, BACK_TOWER_HEIGHT, 1.5), Vector2(x, -inner.y - 0.15), side)
-		_tower(Vector3(SIDE_DEPTH, FRONT_TOWER_HEIGHT, 1.05), Vector2(x, inner.y - 0.075), side)
+		_tower(Vector3(SIDE_DEPTH, BACK_TOWER_HEIGHT, 1.5), Vector2(x, -inner.y - 0.15), side, BACK_CROWN, true)
+		_tower(Vector3(SIDE_DEPTH, FRONT_TOWER_HEIGHT, 1.05), Vector2(x, inner.y - 0.075), side, FRONT_CROWN, false)
 
-## A stepped column: body, brass band, frieze, cornice and lid, with a lantern on the face the camera sees. `size.y` is its
-## total height.
-func _tower(size: Vector3, centre: Vector2, side: float) -> void:
-	var body := size.y - 0.42
-	_kit.add_box(hull, Vector3(size.x, body + HULL_DEPTH, size.z), Vector3(centre.x, -HULL_DEPTH, centre.y))
-	_kit.add_box(_brass, Vector3(size.x + 0.04, 0.1, size.z + 0.04), Vector3(centre.x, body, centre.y))
-	_kit.add_box(hull, Vector3(size.x - 0.04, 0.14, size.z - 0.04), Vector3(centre.x, body + 0.1, centre.y))
-	_kit.add_box(_brass, Vector3(size.x + 0.16, 0.08, size.z + 0.16), Vector3(centre.x, body + 0.24, centre.y))
-	_kit.add_box(_brass, Vector3(size.x - 0.2, 0.1, size.z - 0.2), Vector3(centre.x, body + 0.32, centre.y))
-	var face_z := centre.y + size.z * 0.5
-	var lantern_y := body * 0.5
-	_kit.add_box(_brass, Vector3(0.36, 0.52, 0.08), Vector3(centre.x, lantern_y - 0.26, face_z + 0.03))
-	_kit.add_box(_lamp, Vector3(0.24, 0.4, 0.06), Vector3(centre.x, lantern_y - 0.2, face_z + 0.08), Color("ffd59a"))
+## A stepped column with a cupola. The box body (with a brass band, frieze, cornice and two lid steps) still hides the joins
+## between walls of different heights; on the lid sit an enamel inset, an octagonal drum with lit slits, a brass ring, a domed cap
+## with a beacon finial and a pinnacle at each corner, so from above it reads as a turret, not a lid. The south face (the one the
+## camera sees) carries posts, a lantern, vents and an enamel stripe. `size.y` is the total height, `crown` how much of it is cupola.
+func _tower(size: Vector3, centre: Vector2, side: float, crown: float, is_back: bool) -> void:
+	var lid := size.y - 0.004 - crown # the top of the lid steps; nothing rises above `size.y`
+	var body := lid - 0.3
+	var cx := centre.x
+	var cz := centre.y
+	var hx := size.x * 0.5
+	var hz := size.z * 0.5
+	_kit.add_box(hull, Vector3(size.x, body + HULL_DEPTH, size.z), Vector3(cx, -HULL_DEPTH, cz))
+	_kit.add_box(_brass, Vector3(size.x + 0.04, 0.08, size.z + 0.04), Vector3(cx, body, cz))
+	_kit.add_box(hull, Vector3(size.x - 0.04, 0.1, size.z - 0.04), Vector3(cx, body + 0.08, cz))
+	_kit.add_box(_brass, Vector3(size.x + 0.16, 0.06, size.z + 0.16), Vector3(cx, body + 0.18, cz))
+	_kit.add_box(_brass, Vector3(size.x - 0.06, 0.03, size.z - 0.06), Vector3(cx, body + 0.24, cz))
+	_kit.add_box(_brass, Vector3(size.x - 0.3, 0.03, size.z - 0.3), Vector3(cx, body + 0.27, cz))
+	_tower_face(Vector3(cx, body, cz + hz), size, side, is_back)
+	_tower_crown(Vector3(cx, lid, cz), size, crown)
+	# The lantern light is the same as ever: `body` of the old design was `size.y - 0.42`.
 	var light := OmniLight3D.new()
 	light.omni_range = 3.5
-	light.light_energy = 0.7
+	light.light_energy = LANTERN_ENERGY
 	light.shadow_enabled = false
-	light.position = Vector3(centre.x - side * 0.9, lantern_y, face_z + 0.45)
+	light.position = Vector3(cx - side * 0.9, (size.y - 0.42) * 0.5, cz + hz + 0.45)
 	add_child(light)
 	_lanterns.append(light)
+
+## The face of a tower the camera sees, at `face` (x centre, top of the body, z of the face): corner posts, a framed lantern,
+## louvred vents and an enamel stripe under the cornice. On the back towers the side wall hides everything below about 1.1 m
+## (more towards the outer edge), so the lantern sits higher there.
+func _tower_face(face: Vector3, size: Vector3, side: float, is_back: bool) -> void:
+	var body := face.y
+	var hx := size.x * 0.5
+	for post: float in [-1.0, 1.0]:
+		_kit.add_cylinder(_brass, Vector3(face.x + post * (hx - 0.03), (body - 1.2) * 0.5, face.z), Vector3.UP, 0.075, body + 1.2, 8)
+	var lantern_height := 0.5 if is_back else 0.52
+	var lantern_bottom := 1.45 if is_back else body * 0.5 - 0.26
+	var z := face.z
+	_kit.add_box(_brass, Vector3(0.38, lantern_height, 0.08), Vector3(face.x, lantern_bottom, z + 0.03))
+	_kit.add_box(_brass, Vector3(0.46, 0.05, 0.12), Vector3(face.x, lantern_bottom + lantern_height, z + 0.03)) # roof
+	_kit.add_box(_brass, Vector3(0.46, 0.05, 0.12), Vector3(face.x, lantern_bottom - 0.05, z + 0.03)) # sill
+	_kit.add_box(_lamp, Vector3(0.24, lantern_height - 0.12, 0.06), Vector3(face.x, lantern_bottom + 0.06, z + 0.08), LANTERN_WARM)
+	_kit.add_box(_brass, Vector3(0.26, 0.025, 0.07), Vector3(face.x, lantern_bottom + lantern_height * 0.5, z + 0.085)) # glazing bar
+	_kit.add_box(_brass, Vector3(0.025, lantern_height - 0.1, 0.07), Vector3(face.x, lantern_bottom + 0.06, z + 0.085))
+	_kit.glow_quad(Vector3(face.x, lantern_bottom + lantern_height * 0.5, z + 0.12), Vector3.RIGHT, SCREEN_UP, 0.4, 0.4, 0.26)
+	# Vents either side of the lantern (the back towers show only the inner one, where the wall is lowest).
+	for vent: float in [-1.0, 1.0]:
+		if is_back and vent != -side:
+			continue
+		var vent_x := face.x + vent * 0.5
+		var vent_bottom := 0.62 if is_back else body * 0.5 - 0.2
+		_kit.add_box(_paint, Vector3(0.4, 0.3, 0.03), Vector3(vent_x, vent_bottom, z + 0.015), DARK)
+		for slat in 5:
+			_kit.add_box(_brass, Vector3(0.4, 0.025, 0.05), Vector3(vent_x, vent_bottom + 0.03 + slat * 0.055, z + 0.025))
+	_kit.add_box(_enamel, Vector3(size.x - 0.24, 0.1, 0.02), Vector3(face.x, body - 0.15, z + 0.01))
+
+## The cupola on a lid whose top centre is `at`: an enamel disc, an octagonal drum with lit slits, a brass tier and ring, a dome,
+## a finial and a glowing bead with a halo, and a pinnacle at each lid corner. Seen from above they are concentric rings, which
+## is what stops the lid reading as a flat rectangle. Everything stays within `crown` metres of the lid.
+func _tower_crown(at: Vector3, size: Vector3, crown: float) -> void:
+	var hx := size.x * 0.5
+	var hz := size.z * 0.5
+	var drum_r := minf(hx, hz) * 0.62
+	var drum_h := crown * 0.22
+	var tier_h := crown * 0.1
+	var dome_h := crown * 0.3
+	_kit.add_cylinder(_enamel, Vector3(at.x, at.y + 0.006, at.z), Vector3.UP, drum_r + 0.07, 0.012, 16)
+	var drum_y := at.y + 0.012
+	var spare := (hx - 0.15) - (drum_r + 0.07) # lid left over either side of the enamel disc (the lid steps are 0.3 m narrower than the body)
+	if spare > 0.12: # a louvred hood each side, for the long, shallow lids
+		for hood: float in [-1.0, 1.0]:
+			var hood_at := Vector3(at.x + hood * (drum_r + 0.07 + spare * 0.5), at.y, at.z)
+			_kit.add_box(_frame, Vector3(spare * 0.8, 0.05, minf(hz * 0.7, 0.4)), hood_at)
+			for slat in 4:
+				_kit.add_box(_brass, Vector3(spare * 0.8, 0.012, 0.03), hood_at + Vector3(0.0, 0.05, (slat - 1.5) * minf(hz * 0.7, 0.4) * 0.24))
+	_kit.add_cylinder(_frame, Vector3(at.x, drum_y + drum_h * 0.5, at.z), Vector3.UP, drum_r, drum_h, 8)
+	# A lit slit on each of the drum's south-facing facets (the cylinder's facets are centred on 22.5 degrees plus 45 each).
+	for facet in 8:
+		var angle := TAU * (facet + 0.5) / 8.0
+		var normal := Vector3(-sin(angle), 0.0, -cos(angle))
+		if normal.z < 0.1:
+			continue
+		var tangent := Vector3.UP.cross(normal)
+		var slit_at := Vector3(at.x, drum_y + drum_h * 0.5, at.z) + normal * (drum_r * cos(PI / 8.0) + 0.004)
+		_kit.add_oriented_box(_lamp, Vector3(drum_r * 0.4, drum_h * 0.5, 0.012), slit_at, Basis(tangent, Vector3.UP, normal))
+	var tier_y := drum_y + drum_h
+	var tier_r := drum_r * 0.86
+	_kit.add_cylinder(_brass, Vector3(at.x, tier_y + tier_h * 0.5, at.z), Vector3.UP, tier_r, tier_h, 12)
+	var ring_y := tier_y + tier_h
+	_kit.add_torus(_brass, Vector3(at.x, ring_y, at.z), Vector3.UP, tier_r - 0.02, 0.02, 12, 5)
+	var dome_r := tier_r * 0.92
+	var dome := PackedVector2Array()
+	for step in 7: # a flattened hemisphere traced from the apex out and down
+		var dome_angle := deg_to_rad(90.0 - step * 15.0)
+		dome.append(Vector2(cos(dome_angle) * dome_r, sin(dome_angle) * dome_h))
+	_kit.add_lathe(_brass, Vector3(at.x, ring_y, at.z), Vector3.UP, dome, 12)
+	var stem := crown * 0.06
+	var dome_top := ring_y + dome_h
+	var bead_r := (at.y + crown - dome_top - stem) * 0.5
+	_kit.add_cylinder(_frame, Vector3(at.x, dome_top + stem * 0.5, at.z), Vector3.UP, 0.012, stem, 6)
+	var bead_at := Vector3(at.x, dome_top + stem + bead_r, at.z)
+	_bead(bead_at, bead_r, Color.WHITE)
+	_kit.glow_quad(bead_at, Vector3.RIGHT, SCREEN_UP, 0.34, 0.34, 0.4)
+	var pinnacle_h := crown * 0.55
+	var spike := PackedVector2Array([Vector2(0.0, pinnacle_h), Vector2(0.025, pinnacle_h * 0.55), Vector2(0.045, 0.03), Vector2(0.045, 0.0)])
+	for px: float in [-1.0, 1.0]:
+		for pz: float in [-1.0, 1.0]:
+			var corner := Vector3(at.x + px * (hx - 0.2), at.y, at.z + pz * (hz - 0.2))
+			_kit.add_box(_brass, Vector3(0.1, 0.04, 0.1), corner)
+			_kit.add_lathe(_brass, corner + Vector3(0.0, 0.04, 0.0), Vector3.UP, spike, 6)
+
+## A small sphere (a lathe of a half circle) of `radius` centred on `at`.
+func _bead(at: Vector3, radius: float, color: Color) -> void:
+	_kit.add_lathe(_lamp, at, Vector3.UP, RoomMeshKit.arc(Vector2.ZERO, radius, 90.0, -90.0, 6), 10, color)
 
 # --- Floor junction --------------------------------------------------------------------------------------------------
 
