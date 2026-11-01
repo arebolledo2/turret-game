@@ -285,7 +285,10 @@ func _build_back(inner: Vector2) -> void:
 	var zc := z_face - depth * 0.5
 	for index in count + 1:
 		var x := -inner.x + index * pitch
-		_kit.add_box(_frame, Vector3(PILLAR_WIDTH, LINTEL_TOP + HULL_DEPTH, depth), Vector3(x, -HULL_DEPTH, zc))
+		# The end pillars stand half inside the corner towers, whose lids are lower than the pillar tops: build the half in the wall.
+		var shaft := PILLAR_WIDTH * 0.5 if index == 0 or index == count else PILLAR_WIDTH
+		var shaft_x := x + (PILLAR_WIDTH - shaft) * 0.5 * (1.0 if index == 0 else (-1.0 if index == count else 0.0))
+		_kit.add_box(_frame, Vector3(shaft, LINTEL_TOP + HULL_DEPTH, depth), Vector3(shaft_x, -HULL_DEPTH, zc))
 		_kit.add_box(hull, Vector3(0.78, 0.2, depth + 0.06), Vector3(x, 0.0, zc + 0.03)) # plinth step
 		_kit.add_box(_brass, Vector3(PILLAR_WIDTH + 0.08, 0.08, depth + 0.04), Vector3(x, SILL_HEIGHT - 0.08, zc + 0.02))
 		# Corbelled capital under the lintel.
