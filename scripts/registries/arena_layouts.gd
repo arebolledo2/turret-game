@@ -30,6 +30,36 @@ static func all() -> Array[Dictionary]:
 			TerrainZone.circle(N, -6, 8.5, 2.5), TerrainZone.circle(N, 6, -8.5, 2.5),
 			TerrainZone.circle(P, -22, -7, 2.2), TerrainZone.circle(P, 13, 0, 2.2),
 		]},
+		{"id": "hive", "name": "The Hive", "theme": "hexworks", "zones": [
+			TerrainZone.circle(H, -16, 9, 3.0), TerrainZone.circle(H, 17, -9, 3.0),
+			TerrainZone.circle(M, -8, -11, 3.2), TerrainZone.circle(M, 8, 11.5, 3.2), TerrainZone.circle(M, 22, 6, 2.8),
+			TerrainZone.circle(N, 13, -7, 2.8), TerrainZone.circle(N, -13, 6, 2.4),
+			TerrainZone.circle(P, -21, -8, 2.2), TerrainZone.circle(P, 4, 12.5, 2.0),
+		]},
+		{"id": "parlour", "name": "The Parlour", "theme": "marquetry", "zones": [
+			TerrainZone.rect(H, 0, -12, 4.0, 2.0), TerrainZone.circle(H, 20, 9, 2.8),
+			TerrainZone.rect(M, -17, 0, 2.0, 5.5), TerrainZone.rect(M, 17, -2, 2.0, 5.0),
+			TerrainZone.circle(N, -8, 9, 2.6), TerrainZone.circle(N, 8, 8, 2.6),
+			TerrainZone.circle(P, -23, 10, 2.0), TerrainZone.circle(P, 24, -10, 2.0),
+		]},
+		{"id": "observatory", "name": "The Observatory", "theme": "orrery", "zones": [
+			TerrainZone.circle(H, -14, -9, 3.4), TerrainZone.circle(H, 14, 9, 3.4),
+			TerrainZone.circle(M, 14, -9, 3.4), TerrainZone.circle(M, -14, 9, 3.4),
+			TerrainZone.circle(N, 0, 12, 2.4), TerrainZone.circle(N, 0, -12, 2.4),
+			TerrainZone.circle(P, -24, 0, 2.2), TerrainZone.circle(P, 24, 0, 2.2),
+		]},
+		{"id": "bathhouse", "name": "The Bathhouse", "theme": "mosaic", "zones": [
+			TerrainZone.rect(M, -14, -9, 6.0, 2.0), TerrainZone.rect(M, 14, 9, 6.0, 2.0), TerrainZone.circle(M, 0, 12.5, 3.0),
+			TerrainZone.circle(H, -21, 10, 3.0), TerrainZone.circle(H, 21, -10, 3.0),
+			TerrainZone.circle(N, 7, -9, 2.6), TerrainZone.circle(N, -7, 9, 2.6),
+			TerrainZone.circle(P, -22, -8, 2.0), TerrainZone.circle(P, 23, 9, 2.0),
+		]},
+		{"id": "glacier", "name": "The Glacier", "theme": "frost", "zones": [
+			TerrainZone.circle(H, -19, -6, 3.6), TerrainZone.circle(H, 8, 10, 3.0),
+			TerrainZone.circle(M, 14, -6, 4.0), TerrainZone.circle(M, -10, 8, 3.2), TerrainZone.circle(M, 0, -12.5, 2.8),
+			TerrainZone.circle(N, -6, -9, 2.6), TerrainZone.circle(N, 18, 8, 2.6),
+			TerrainZone.circle(P, -23, 9, 2.2), TerrainZone.circle(P, 14, 3, 2.2),
+		]},
 	]
 
 	for entry in layouts:

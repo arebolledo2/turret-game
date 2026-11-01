@@ -34,10 +34,10 @@ static func material(color: Color, emission: bool = false) -> StandardMaterial3D
 	return result
 
 const FLOOR_TILE_METRES: float = 6.4 # one repeat of the floor textures; keep in sync with tools/build_floor_textures.py
-const FLOOR_THEMES: Array[String] = ["foundry", "concrete", "grating"]
+const FLOOR_THEMES: Array[String] = ["foundry", "concrete", "grating", "hexworks", "marquetry", "orrery", "mosaic", "frost"]
 const DEFAULT_FLOOR_THEME: String = "foundry"
 ## Lower metal keeps the warm rim light from glaring across rough, wet or mineral floors.
-const FLOOR_METALLIC := {"foundry": 0.3, "concrete": 0.05, "grating": 0.15}
+const FLOOR_METALLIC := {"foundry": 0.3, "concrete": 0.05, "grating": 0.15, "hexworks": 0.3, "marquetry": 0.0, "orrery": 0.25, "mosaic": 0.0, "frost": 0.05}
 const FLOOR_EMISSION_ENERGY: float = 0.9
 
 ## Keep immutable textures alive across arena teardown; the loader cache alone is weak.

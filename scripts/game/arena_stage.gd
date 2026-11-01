@@ -12,7 +12,8 @@ var _rim_material: StandardMaterial3D
 var _seam_tween: Tween
 
 ## Rim glow per floor theme.
-const RIM_COLORS := {"foundry": Color("258e99"), "concrete": Color("a08d52"), "grating": Color("2f9a78")}
+const RIM_COLORS := {"foundry": Color("258e99"), "concrete": Color("a08d52"), "grating": Color("2f9a78"),
+	"hexworks": Color("7a72c8"), "marquetry": Color("b08a4e"), "orrery": Color("4f78c0"), "mosaic": Color("3aa6a0"), "frost": Color("7fc4dc")}
 ## Seam light colour multipliers: calm at wave 1, warming as the waves climb, and a hard shift on boss waves.
 const SEAM_CALM: Color = Color(1.0, 1.0, 1.0)
 const SEAM_HOT: Color = Color(1.0, 0.72, 0.5)

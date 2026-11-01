@@ -7,6 +7,8 @@ var play_button: Button
 var settings_button: Button
 var showcase_button: Button
 var showcase: TurretShowcase
+var floor_button: Button
+var floor_showcase: FloorShowcase
 var back_button: Button
 var home: VBoxContainer
 var options: VBoxContainer
@@ -78,6 +80,7 @@ func _build_menu() -> void:
 	play_button = _button(home, "PLAY", start_game, "play", true)
 	settings_button = _button(home, "SETTINGS", show_settings, "settings")
 	showcase_button = _button(home, "TURRETS", show_showcase, "turret")
+	floor_button = _button(home, "FLOORS", show_floor_showcase, "sector")
 	_button(home, "QUIT", func() -> void: get_tree().quit(), "power")
 	options = VBoxContainer.new()
 	options.add_theme_constant_override("separation", 18)
@@ -243,6 +246,24 @@ func _close_showcase() -> void:
 	showcase = null
 	show_home()
 	showcase_button.grab_focus()
+
+## Opens the floor gallery over the menu; built on demand and freed when closed.
+func show_floor_showcase() -> void:
+	if is_instance_valid(floor_showcase):
+		return
+	floor_showcase = FloorShowcase.new()
+	floor_showcase.closed.connect(_close_floor_showcase)
+	add_child(floor_showcase)
+	menu.visible = false
+	floor_showcase.open()
+
+func _close_floor_showcase() -> void:
+	if is_instance_valid(floor_showcase):
+		remove_child(floor_showcase)
+		floor_showcase.queue_free()
+	floor_showcase = null
+	show_home()
+	floor_button.grab_focus()
 
 func _update_volume_label() -> void:
 	volume_label.text = "SOUND EFFECTS  %d%%%s" % [roundi(SettingsService.sfx_volume * 100), " / MUTED" if SettingsService.sfx_volume <= 0 else ""]

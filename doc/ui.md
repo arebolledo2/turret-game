@@ -46,3 +46,7 @@ Offscreen pointers include ranged enemies (Needle Kite, Kiln Lobber, Prism Lens,
 The hero and core are fully healed for free at successful wave end and again at next-wave preparation. Healing never revives a defeated hero or core.
 
 Shop tabs, offer locks and salvage Continue share compact chamfered controls with teal selected/focus states. Rarity accents use muted neutral, mint, sky blue, lavender, gold and coral colours; rarity names remain visible. Zero-XP summaries use subdued text. Settings shows the actual/default or custom window dimensions even when no preset is selected.
+
+## Floor showcase
+
+The main menu's FLOORS button opens `FloorShowcase` (same shape as `TurretShowcase`): a list of every `WorldGeometry.FLOOR_THEMES` entry beside a turning patch of the real floor material with a turret for scale. Drag to turn it; Back / ui_cancel closes.

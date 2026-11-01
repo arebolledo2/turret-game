@@ -9,8 +9,8 @@ extends Node
 ##
 ## Shots: default = gameplay zoom 0.75 (about 80 px/m at 1080p), close = about 150 px/m, macro = max zoom 2.0 (about 216 px/m),
 ## top = straight down over 2 x 2 tiles for seam checks, wide = the whole arena. `--zoom=` overrides the zoom of default/close.
-const FOCI := {"foundry": Vector3(-7, 0, 0), "concrete": Vector3(-9, 0, -3), "grating": Vector3(-9, 0, 0)}
-const LAYOUTS := {"foundry": "crossroads", "concrete": "highlands", "grating": "sump"}
+const FOCI := {"foundry": Vector3(-7, 0, 0), "concrete": Vector3(-9, 0, -3), "grating": Vector3(-9, 0, 0), "hexworks": Vector3(-9, 0, 2), "marquetry": Vector3(-8, 0, 0), "orrery": Vector3(-8, 0, 0), "mosaic": Vector3(-8, 0, 0), "frost": Vector3(-8, 0, 0)}
+const LAYOUTS := {"foundry": "crossroads", "concrete": "highlands", "grating": "sump", "hexworks": "hive", "marquetry": "parlour", "orrery": "observatory", "mosaic": "bathhouse", "frost": "glacier"}
 const ZOOMS := {"default": 0.75, "close": 1.39, "macro": 2.0}
 
 var theme := "foundry"
