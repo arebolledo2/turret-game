@@ -221,7 +221,9 @@ func test_exterior_is_shadowless_and_inside_the_mesh_budget() -> void:
 		assert_eq(mesh.layers, ArenaRoom.ROOM_LAYERS)
 
 func test_exterior_triangle_count_stays_reasonable() -> void:
+	var started := Time.get_ticks_usec()
 	var exterior := _build()
+	gut.p("exterior build: %d ms" % ((Time.get_ticks_usec() - started) / 1000))
 	var triangles := 0
 	for mesh in _meshes(exterior):
 		triangles += _triangle_count(mesh)

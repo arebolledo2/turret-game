@@ -23,6 +23,7 @@ const DECK_WIDTH: float = 4.2
 const BACK_DECK_TOP: float = -2.4
 const BACK_DECK_DEPTH: float = 2.3
 const SLOTS: int = 5
+const BACK_KINDS: Array[String] = ["cargo", "vent", "comms", "exhaust", "cargo", "dome", "vent", "cargo", "exhaust", "comms", "vent", "dome", "gantry", "vent"]
 const MODULES_LEFT: Array[String] = ["wing", "radiator", "dish", "containers", "comms"]
 const MODULES_RIGHT: Array[String] = ["containers", "dish", "tank", "wing", "radiator"]
 const CONTAINER_COLOURS: Array[Color] = [Color(0.2, 0.055, 0.04), Color(0.26, 0.17, 0.04), Color(0.04, 0.15, 0.16), Color(0.2, 0.2, 0.18), Color(0.06, 0.1, 0.22)]
@@ -512,8 +513,13 @@ func _nacelle(side: float, outer_x: float, half_z: float) -> void:
 	for offset: float in [-0.9, 0.0, 0.7]:
 		_rod(_brass, Vector3(0, 0, offset), Vector3(0, 0, offset + 0.07), 0.775, 16)
 	_rod(_brass, Vector3(0, 0, 1.2), Vector3(0, 0, 1.4), 0.8, 16)
-	_rod(_paint, Vector3(0, 0, 1.4), Vector3(0, 0, 1.52), 0.62, 16, DARK)
-	_rod(_lamp, Vector3(0, 0, 1.52), Vector3(0, 0, 1.56), 0.42, 16, Color("7fb4ff"))
+	# The nozzle bell, seen from the south: a dark flare round a glowing blue throat.
+	_spin(_paint, Vector3.ZERO, Vector3.BACK, PackedVector2Array([Vector2(0.0, 1.42), Vector2(0.4, 1.42), Vector2(0.7, 1.66)]), 16,
+		Color.WHITE, PackedColorArray([Color(0.01, 0.015, 0.02), Color(0.01, 0.015, 0.02), Color(0.12, 0.1, 0.09)]))
+	_rod(_lamp, Vector3(0, 0, 1.42), Vector3(0, 0, 1.46), 0.38, 16, Color("7fb4ff"))
+	_ring(_brass, Vector3(0, 0, 1.64), Vector3.BACK, 0.7, 0.03, 16, Color.WHITE)
+	for fin: float in [-0.35, 0.0, 0.35]:
+		_block(_frame, Vector3(0.04, 0.22, 0.9), Vector3(fin, 0.72, 0.6))
 	for slat in 5:
 		_block(_paint, Vector3(0.62, 0.03, 0.06), Vector3(0.0, 0.7, -0.7 + slat * 0.18), Color(0.04, 0.05, 0.06))
 		_block(_lamp, Vector3(0.62, 0.01, 0.02), Vector3(0.0, 0.725, -0.7 + slat * 0.18 + 0.045), Color(0.55, 0.26, 0.1))
@@ -527,19 +533,21 @@ func _back_deck(outer_x: float, z_near: float, z_far: float) -> void:
 	_kit.add_box(_hull, Vector3(width, 0.3, BACK_DECK_DEPTH), Vector3(0.0, BACK_DECK_TOP - 0.3, centre_z))
 	_kit.add_box(_brass, Vector3(width, 0.08, 0.08), Vector3(0.0, BACK_DECK_TOP, z_far))
 	var span := outer_x - 1.2
-	for index in 14:
-		var x := -span + index * span * 2.0 / 13.0
-		var z := _rng.randf_range(-0.55, 0.55)
+	for index in BACK_KINDS.size():
+		var x := -span + index * span * 2.0 / (BACK_KINDS.size() - 1)
+		var z := _rng.randf_range(-0.5, 0.5)
 		_place(Vector3(x, BACK_DECK_TOP, centre_z + z))
-		match index % 7:
-			0, 4:
+		match BACK_KINDS[index]:
+			"cargo":
 				_cargo_tower()
-			1, 6:
+			"vent":
 				_vent_block()
-			2:
+			"comms":
 				_comms_tower()
-			3:
+			"exhaust":
 				_exhaust_stacks()
+			"gantry":
+				_gantry()
 			_:
 				_dome()
 	# Light masts rising behind the coping, and a docked pod beyond the deck.
@@ -551,9 +559,11 @@ func _back_deck(outer_x: float, z_near: float, z_far: float) -> void:
 		_lamp_box(0.1, Vector3(x, top, 0.0), PORT)
 	_pod(z_far)
 
+## Three or four containers high: the top one clears the back coping when seen from the game camera.
 func _cargo_tower() -> void:
 	var first := _rng.randi() % CONTAINER_COLOURS.size()
-	for level in 3:
+	var levels := 3 + _rng.randi() % 2
+	for level in levels:
 		_container(0.0, 0.0, level * 1.0, 1.7, CONTAINER_COLOURS[(first + level) % CONTAINER_COLOURS.size()])
 	_blob(Vector3(0, 0.05, 0), 1.5, 1.1, 0.5)
 
@@ -564,23 +574,24 @@ func _vent_block() -> void:
 	_blob(Vector3(0, 0.05, 0), 0.9, 0.7, 0.55)
 
 func _comms_tower() -> void:
-	var height := 4.4
+	var height := 4.8
 	for corner_x: float in [-1.0, 1.0]:
 		for corner_z: float in [-1.0, 1.0]:
 			_rod(_frame, Vector3(corner_x * 0.5, 0.0, corner_z * 0.4), Vector3(corner_x * 0.18, height, corner_z * 0.15), 0.03, 5)
-	for level in 5:
+	for level in 6:
 		var y := 0.5 + level * 0.8
 		var spread := lerpf(0.5, 0.18, y / height)
 		_rod(_frame, Vector3(-spread, y, 0.0), Vector3(spread, y, 0.0), 0.02, 4)
+		_rod(_frame, Vector3(0.0, y, -spread * 0.8), Vector3(0.0, y, spread * 0.8), 0.02, 4)
 	_rod(_frame, Vector3(0.0, height, 0.0), Vector3(0.0, height + 0.6, 0.0), 0.025, 5)
 	_lamp_box(0.1, Vector3(0.0, height + 0.6, 0.0), PORT)
-	_dish_bowl(Vector3(0.2, height - 0.5, 0.0), _to_local(Vector3(0.1, 0.6, 0.8)).normalized(), 0.4, 0.24, 12)
-	_dish_bowl(Vector3(-0.2, height - 1.5, 0.0), _to_local(Vector3(-0.3, 0.5, 0.8)).normalized(), 0.3, 0.18, 12)
+	_dish_bowl(Vector3(0.2, height - 0.5, 0.0), _to_local(Vector3(0.1, 0.6, 0.8)).normalized(), 0.45, 0.27, 14)
+	_dish_bowl(Vector3(-0.2, height - 1.6, 0.0), _to_local(Vector3(-0.3, 0.5, 0.8)).normalized(), 0.32, 0.19, 12)
 	_blob(Vector3(0, 0.05, 0), 1.0, 0.8, 0.55)
 
 func _exhaust_stacks() -> void:
 	for index in 3:
-		_stack(Vector3(-0.45 + index * 0.45, 0.0, _rng.randf_range(-0.2, 0.2)), 1.4 + 0.6 * index)
+		_stack(Vector3(-0.45 + index * 0.45, 0.0, _rng.randf_range(-0.2, 0.2)), 1.4 + 0.8 * index)
 	_blob(Vector3(0, 0.05, 0), 1.0, 0.7, 0.55)
 
 func _dome() -> void:
@@ -589,7 +600,27 @@ func _dome() -> void:
 	_lamp_box(0.12, Vector3(0, 0.6, 0), Color("ffc080"))
 	_blob(Vector3(0, 0.05, 0), 0.9, 0.9, 0.55)
 
-## A docked pod beyond the deck: a rounded hull, a canopy, brass collars and a gangway up to the deck edge.
+## A portal crane over the deck with a container hanging from its trolley: a tall silhouette that shows above the coping.
+func _gantry() -> void:
+	var half := 1.3
+	var height := 4.3
+	for leg: float in [-1.0, 1.0]:
+		_rod(_frame, Vector3(leg * half, 0.0, -0.45), Vector3(leg * half, height, -0.45), 0.07, 6)
+		_rod(_frame, Vector3(leg * half, 0.0, 0.45), Vector3(leg * half, height, 0.45), 0.07, 6)
+		_rod(_frame, Vector3(leg * half, 0.0, -0.45), Vector3(leg * half, height, 0.45), 0.025, 4)
+		_rod(_frame, Vector3(leg * half, 0.0, 0.45), Vector3(leg * half, height, -0.45), 0.025, 4)
+		_rod(_brass, Vector3(leg * half, height, -0.45), Vector3(leg * half, height, 0.45), 0.05, 6)
+	_box(_frame, Vector3(half * 2.0 + 0.4, 0.22, 0.3), Vector3(0.0, height + 0.1, 0.0))
+	_box(_paint, Vector3(0.5, 0.25, 0.4), Vector3(0.3, height - 0.1, 0.0), Color(0.3, 0.2, 0.04))
+	for cable: float in [-0.6, 0.6]:
+		_rod(_frame, Vector3(0.3 + cable * 0.3, height - 0.2, 0.0), Vector3(0.3 + cable * 0.45, 3.5, 0.0), 0.012, 4)
+	_container(0.3, 0.0, 2.5, 1.7, CONTAINER_COLOURS[_rng.randi() % CONTAINER_COLOURS.size()])
+	_lamp_box(0.1, Vector3(half, height + 0.2, 0.0), PORT)
+	_lamp_box(0.1, Vector3(-half, height + 0.2, 0.0), STARBOARD)
+	_blob(Vector3(0, 0.05, 0), 2.0, 1.2, 0.6)
+
+## A docked pod beyond the deck: a rounded hull with brass collars and ribs, a canopy, tail thrusters and fins, and a ribbed
+## gangway up to the deck edge.
 func _pod(z_far: float) -> void:
 	_place(Vector3(-6.0, -5.0, z_far - 3.0))
 	var hull_profile := RoomMeshKit.arc(Vector2(0.0, 1.0), 1.2, 90.0, 0.0, 6)
@@ -597,8 +628,22 @@ func _pod(z_far: float) -> void:
 	hull_profile.append(Vector2(1.0, -2.1))
 	hull_profile.append(Vector2(0.0, -2.1))
 	_spin(_hull, Vector3.ZERO, Vector3.RIGHT, hull_profile, 16)
-	_rod(_brass, Vector3(-1.6, 0, 0), Vector3(-1.5, 0, 0), 1.25, 16)
-	_rod(_brass, Vector3(0.7, 0, 0), Vector3(0.8, 0, 0), 1.25, 16)
+	for collar: float in [-1.6, 0.7]:
+		_rod(_brass, Vector3(collar, 0, 0), Vector3(collar + 0.1, 0, 0), 1.25, 16)
+	for rib: float in [-1.1, -0.6, -0.1, 0.35, 1.2]:
+		_rod(_frame, Vector3(rib, 0, 0), Vector3(rib + 0.03, 0, 0), 1.215, 16)
 	_rod(_lamp, Vector3(-2.1, 0, 0), Vector3(-2.15, 0, 0), 0.5, 12, Color("ffc080"))
-	_block(_paint, Vector3(1.6, 0.18, 0.7), Vector3(0.2, 1.1, 0.0), Color(0.03, 0.05, 0.08))
-	_rod(_frame, Vector3(0.4, 0.9, 1.0), Vector3(0.4, 2.45, 3.0), 0.3, 10)
+	_spin(_paint, Vector3(0.2, 1.0, 0.0), Vector3.UP, RoomMeshKit.arc(Vector2.ZERO, 0.7, 90.0, 0.0, 5), 14, Color(0.03, 0.05, 0.08))
+	for window in 4:
+		_lamp_box(0.12, Vector3(-0.5 + window * 0.4, 1.0, 0.1), Color(0.7, 0.8, 0.9))
+	for thruster: float in [-0.5, 0.5]:
+		_spin(_frame, Vector3(-2.1, 0.0, thruster), Vector3.RIGHT, PackedVector2Array([Vector2(0.3, 0.0), Vector2(0.24, 0.0), Vector2(0.12, 0.35), Vector2(0.0, 0.35)]), 10)
+	_block(_frame, Vector3(0.9, 0.5, 0.06), Vector3(-1.4, 1.1, 0.0))
+	# The gangway: a ribbed tube from the pod's flank up to the deck edge, with a brass docking ring at the top.
+	var base := Vector3(0.4, 0.9, 1.0)
+	var top := Vector3(0.4, 2.45, 3.0)
+	_rod(_frame, base, top, 0.3, 10)
+	for step in 5:
+		var point := base.lerp(top, (step + 0.5) / 5.0)
+		_rod(_brass, point - (top - base).normalized() * 0.03, point + (top - base).normalized() * 0.03, 0.34, 10)
+	_rod(_brass, top - (top - base).normalized() * 0.1, top, 0.38, 12)
