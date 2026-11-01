@@ -10,11 +10,11 @@ below are suggestions for UI/docs.
 | `foundry` | Crossroads (default) | Clockwork Stage | Dark teal-slate enamel plates in an irregular merged-plate bond, brass inlay frames (plain / tick-mark / gear-tooth borders), engraved dial rings, cog recesses and key-wound spirals, domed brass rivets, a few amber studs, a pale seam light round the tile edge. |
 | `concrete` | Highlands | Terracotta Flagstones | Warm terracotta, sandstone, warm grey and umber crazy-paving flagstones with ivory grout, fine copper wire in some joints, brass inset lines, four inlaid medallions (spoked cog, tick-ring dial), faint amber survey studs. |
 | `grating` | The Sump | Verdigris Deck | Oxidised copper deck plates (running bond) with smooth verdigris creeping in from the seams, rust bloom and damp patches, two brass bar gratings over a soft green-teal glow, a round drain, a pipe run between four brass junction boxes (cog hub, pressure dial, set-screw cap, lamp) with a toothed valve wheel, small oily puddles. |
-| `hexworks` | The Hive | Honeycomb Works | Violet-slate hexagon plates with brass rims; plain, ribbed (concentric hex grooves), domed-boss and recessed watch-jewel cells; a seventh of the rims are lit. |
-| `marquetry` | The Parlour | Walnut Chevron | Mitred 45 degree walnut planks meeting in V points, butt joints, a brass zigzag inlay on every fourth plank boundary with jewels at the peaks. |
+| `hexworks` | The Hive | Honeycomb Works | Jewel-toned enamel hexagon plates (violet, blue, teal, plum, indigo, gunmetal) with a domed centre-to-edge gradient and 6 px brass rims; plain, ribbed (deep concentric hex grooves), domed-boss and recessed watch-jewel cells. Jewel density drifts across the tile (about 5% to 40% of cells) and gems vary in colour and size; a fifth of the rims are lit. |
+| `marquetry` | The Parlour | Walnut Chevron | Mitred 45 degree varnished planks (roughness about 0.5, rougher where worn) in six warm, saturated timbers with clear per-plank tone steps and visible grain rings, meeting in V points, butt joints, a brass zigzag inlay on every fourth plank boundary with jewels at the peaks. |
 | `orrery` | The Observatory | Midnight Orrery | Four midnight-slate plates engraved as orreries: brass sun with rays, orbit grooves, astrolabe ring, glazed and brass planets with moons, star-jewels and constellation lines between plates. |
 | `mosaic` | The Bathhouse | Glazed Mosaic | 32 x 32 glazed ceramic tiles (20 cm) drifting teal, indigo, moss, plum; diagonal brass lattice crossing at lit ivory jewel tiles. |
-| `frost` | The Glacier | Frostglass | Cracked blue-ice slabs with rime, snow drifts, frozen bubbles, hairline fissures (some lit), cold seam light and brass clamp studs. |
+| `frost` | The Glacier | Frostglass | Blue-white ice slabs, pale in the middle and deepening to cyan-blue at the rim, with a frosted rime band and snow drifts (matt, roughness 0.8); the smooth faces are semi-glossy (about 0.6 to 0.7). Fissures are a dark cyan core between pale frosted flanks, about a third glow, and cyan light bleeds from the seams and fissures into the ice; plus frozen bubbles and brass clamp studs. |
 
 Display names and notes for the main-menu **FLOORS** gallery live in `scripts/registries/floor_themes.gd` (`FloorThemes`); the gallery is
 `scripts/ui/floor_showcase.gd`, with `tools/shot_floor_showcase.tscn` to screenshot it. Each theme needs an `ArenaLayouts` entry, a rim colour
@@ -24,7 +24,9 @@ Display names and notes for the main-menu **FLOORS** gallery live in `scripts/re
 
 - Darker, lower contrast and lower saturation than the units; no hazard orange or striped details (reserved for the no-build zone
   overlay), no saturated red (damage). Copper and brass are muted bronze, never bright orange.
-- Roughness stays high (mostly 0.72 to 0.95; small brass details about 0.62 to 0.7). The scene rim light is orange (ff7a45) and
+- Roughness stays high (mostly 0.72 to 0.95; small brass details about 0.62 to 0.7). Only `marquetry` (varnish, about 0.5) and `frost` (ice faces,
+  about 0.6 to 0.7) are glossier; frost at 0.42 to 0.5 paints a maroon sheen of the orange rim light over the right half of the arena, and its fine
+  surface noise must stay out of the normal map there (smooth gloss, pitted matt rime). The scene rim light is orange (ff7a45) and
   produces glare on glossy floors, so puddles are rough 0.74 with a painted highlight crescent instead of a glossy surface.
 - Emission is sparse seam, indicator and void light only; the runtime multiplies it by a per-wave tint (amber as waves climb, magenta on
   boss waves), so the maps are authored pale. A cyan map cannot become truly amber under a multiply tint.

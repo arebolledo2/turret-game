@@ -84,6 +84,14 @@ def uniform(field):
     return out.reshape(field.shape)
 
 
+def blur(field, sigma):
+    """Periodic Gaussian blur of a 2D field (sigma in px): smooth glows with no distance-field seams."""
+    fy = np.fft.fftfreq(SIZE).astype(np.float32)[:, None]
+    fx = np.fft.rfftfreq(SIZE).astype(np.float32)[None, :]
+    kernel = np.exp(-2 * np.pi ** 2 * (sigma * sigma) * (fx ** 2 + fy ** 2)).astype(np.float32)
+    return np.fft.irfft2(np.fft.rfft2(field.astype(np.float32)) * kernel, s=(SIZE, SIZE)).astype(np.float32)
+
+
 def hash01(*values):
     """Deterministic pseudo-random float in [0, 1) from integers (numpy arrays or scalars)."""
     arrays = np.broadcast_arrays(*[np.asarray(v).astype(np.uint32) for v in values])
@@ -911,7 +919,7 @@ def hex_cells(cols, rows):
         off = np.where(j % 2 == 1, px / 2, 0.0).astype(np.float32)
         cy = ((j + 0.5) * ry).astype(np.float32) + 0 * X
         i0 = np.floor((X - off) / px).astype(np.int32)
-        for di in (0, 1):
+        for di in (-1, 0, 1):  # the cell's own column plus both row neighbours (a missing left neighbour drops every left-hand edge)
             i = i0 + di
             cx = (off + (i + 0.5) * px).astype(np.float32)
             dist = np.hypot(X - cx, Y - cy)
@@ -942,8 +950,10 @@ def jewel_paint(cv, centres, radius, colour, glow, reach=None):
 # --- Theme: hexworks -- violet-slate honeycomb plates with brass rims, ribbed cells, bosses and lit jewels --------------------
 
 def build_hexworks():
-    """Honeycomb of 0.8 m hexagon plates in violet-slate enamel, each rimmed in brass. Cells are plain, ribbed with concentric hexagon
-    grooves, centred on a domed brass boss ringed with rivets, or hold a recessed watch-jewel. A seventh of the rims are powered
+    """Honeycomb of 0.8 m hexagon plates in jewel-toned enamel (violet, blue, teal, plum, indigo, gunmetal) with a domed centre-to-edge
+    gradient, each rimmed in a 6 px brass inlay between dark channels. Cells are plain, ribbed with deep concentric hexagon grooves,
+    centred on a domed brass boss ringed with rivets, or hold a recessed watch-jewel. Jewel density drifts across the tile (sparse and
+    crowded districts) and the gems vary in colour (violet, teal, cyan, jade, sapphire, rose) and size. A fifth of the rims are powered
     (pale seam light)."""
     seed = 4410
     cols, rows = 8, 10
@@ -951,56 +961,78 @@ def build_hexworks():
     lx, ly = X - p1x, Y - p1y
     r = np.hypot(lx, ly)
     th = np.arctan2(ly, lx)
-    h_kind = hash01(ids, seed)
     PLAIN, RIBBED, BOSS, JEWEL = 0, 1, 2, 3
-    kind = np.select([h_kind < 0.30, h_kind < 0.66, h_kind < 0.88], [PLAIN, RIBBED, BOSS], JEWEL)
-    powered = (hash01(ids, seed + 9) < 0.14) * 1.0
+    # Jewel districts: a slow field sampled at each cell centre sets the chance a cell is a jewel cell (about 5% to 40%).
+    region = noise(330, seed + 30)
+    cell_field = region[(p1y % SIZE).astype(np.int32), (p1x % SIZE).astype(np.int32)]
+    jewel_p = 0.05 + 0.35 * smoothstep(-0.7, 1.1, cell_field)
+    h_kind = hash01(ids, seed)
+    kind = np.select([hash01(ids, seed + 20) < jewel_p, h_kind < 0.34, h_kind < 0.80], [JEWEL, PLAIN, RIBBED], BOSS)
+    powered = (hash01(ids, seed + 9) < 0.18) * 1.0
 
-    base_a = np.array([0.100, 0.096, 0.150], np.float32)  # violet-slate
-    base_b = np.array([0.082, 0.112, 0.150], np.float32)  # blue-slate
-    mixer = hash01(ids, seed + 1)[..., None]
-    tone = 1 + (hash01(ids, seed + 2) - 0.5) * 0.26 + noise(260, seed + 3) * 0.05 + noise(80, seed + 4) * 0.025
+    # Enamel palette (sRGB-encoded like the other maps): similar value, clearly different hue so neighbouring cells separate.
+    palette = np.array([[0.112, 0.092, 0.172],   # violet-slate
+                        [0.078, 0.112, 0.176],   # blue-slate
+                        [0.062, 0.128, 0.146],   # teal-slate
+                        [0.146, 0.084, 0.138],   # plum
+                        [0.084, 0.084, 0.200],   # indigo
+                        [0.104, 0.108, 0.126]],  # gunmetal
+                       np.float32)
+    base_a = palette[0]
+    cell_col = palette[(hash01(ids, seed + 1) * len(palette)).astype(np.int32) % len(palette)]
+    tone = 1 + (hash01(ids, seed + 2) - 0.5) * 0.40 + noise(260, seed + 3) * 0.05 + noise(80, seed + 4) * 0.025
     light = 1 + 0.07 * (-lx - ly) / 128
-    cv = Canvas(0, 0.80)
-    cv.albedo[:] = (base_a + (base_b - base_a) * mixer) * (tone * light)[..., None]
-    cv.height += 3.0 * smoothstep(4, 12, border) + 1.2 * smoothstep(12, 100, border)
-    seam = cover(border - 4.0)
-    cv.paint(seam, color=[0.026, 0.026, 0.045], rough=0.95, height=-4.0)
+    dome_shade = 0.76 + 0.36 * smoothstep(150, 15, r)  # each cell is a pillow: lighter in the middle, darker at the rim (radial: no facets)
+    enamel_grain = 1 + noise(1.4, seed + 31) * 0.032 + noise(4.0, seed + 32) * 0.022  # also dithers the dark gradients so they never band
+    cv = Canvas(0, 0.78)
+    cv.albedo[:] = cell_col * (tone * light * dome_shade * enamel_grain)[..., None]
+    cv.height += 3.0 * smoothstep(5, 14, border) + 1.2 * smoothstep(14, 100, border)
+    seam = cover(border - 5.0)
+    cv.paint(seam, color=[0.020, 0.020, 0.036], rough=0.95, height=-5.0)
 
-    # Brass rim: dark channels either side of a thin inlay at 15 px; powered cells glow along it.
-    rim = cover(np.abs(border - 15) - 1.7)
-    cv.paint(cover(np.abs(border - 15) - 4.6) * (1 - rim) * (1 - seam) * 0.6, color=base_a * 0.5, rough=0.9, height_add=-0.8)
-    cv.paint(rim * (1 - seam), color=BRONZE, rough=0.64, height_add=1.5)
-    cv.emission += (rim * powered * (1 - seam))[..., None] * np.array([0.40, 0.52, 0.80], np.float32)
-    cv.paint(cover(np.abs(border - 8.2) - 0.9) * (1 - seam) * 0.5, color=base_a * 1.6)
+    # Brass rim: dark channels either side of a 6 px inlay at 15 px; powered cells glow along it.
+    rim = cover(np.abs(border - 15) - 3.0)
+    cv.paint(cover(np.abs(border - 15) - 7.0) * (1 - rim) * (1 - seam) * 0.7, color=cell_col * 0.38, rough=0.9, height_add=-1.2)
+    cv.paint(rim * (1 - seam), color=BRONZE * 0.88, rough=0.6, height_add=1.8)
+    cv.emission += (rim * powered * (1 - seam))[..., None] * np.array([0.40, 0.55, 0.85], np.float32)
+    cv.paint(cover(np.abs(border - 9.5) - 1.2) * (1 - seam) * 0.6, color=cell_col * 2.0)  # chamfer catch-light
 
-    # Ribbed cells: concentric hexagon grooves (the border distance contours of the hexagon itself).
+    # Ribbed cells: deep concentric hexagon grooves (the border distance contours of the hexagon itself), lit ridges between them.
     ribbed = (kind == RIBBED) * 1.0
-    for level in (36, 52, 68, 84):
-        groove = cover(np.abs(border - level) - 2.0)
-        cv.paint(ribbed * groove, color=base_a * 0.42, rough=0.9, height_add=-1.6)
-        cv.paint(ribbed * cover(np.abs(border - level - 4.5) - 0.8) * 0.4, color=base_a * 1.7)
+    for level in (36, 54, 72, 90):
+        groove = cover(np.abs(border - level) - 3.2)
+        cv.paint(ribbed * groove, color=cell_col * 0.30, rough=0.9, height_add=-2.6)
+        cv.paint(ribbed * cover(np.abs(border - level - 7.5) - 1.2) * 0.55, color=cell_col * 2.1)
 
     # Boss cells: domed brass boss, engraved ring and six rivets.
     boss = (kind == BOSS) * 1.0
-    cv.paint(boss * cover(np.abs(r - 58) - 1.4), color=base_a * 0.42, rough=0.9, height_add=-1.4)
-    cv.paint(boss * cover(r - 38), color=BRONZE * 0.95, rough=0.6, height_add=1.4 + dome(r, 38, 5.0))
-    cv.paint(boss * smoothstep(14, 0.5, np.hypot(lx + 12, ly + 12)) * 0.55, color=BRONZE_HI)
+    cv.paint(boss * cover(np.abs(r - 60) - 2.0), color=cell_col * 0.32, rough=0.9, height_add=-2.0)
+    cv.paint(boss * cover(r - 40), color=BRONZE * 0.82, rough=0.58, height=1.4 + dome(r, 40, 5.4))
+    cv.paint(boss * smoothstep(15, 0.5, np.hypot(lx + 12, ly + 12)) * 0.55, color=BRONZE_HI)
     pitch = TAU / 6
     arc = ((th + pitch / 2) % pitch - pitch / 2) * r
-    rivet_d = np.hypot(arc, r - 84)
-    cv.paint(boss * cover(rivet_d - 7.5), color=BRONZE, rough=0.62, height_add=1.0 + dome(rivet_d, 7.5, 3.4))
+    rivet_d = np.hypot(arc, r - 86)
+    cv.paint(boss * cover(rivet_d - 8.0), color=BRONZE, rough=0.6, height_add=1.0 + dome(rivet_d, 8.0, 3.6))
 
-    # Jewel cells: recessed dark hex, bronze bezel ring and a lit watch-jewel.
+    # Jewel cells: recessed dark hex, bronze bezel ring and a lit watch-jewel whose colour and size vary per cell.
     jewel = (kind == JEWEL) * 1.0
-    cv.paint(jewel * cover(border - 46) * 0.45, color=base_a * 0.5, rough=0.88, height_add=-1.2)
-    cv.paint(jewel * cover(np.abs(r - 44) - 1.5), color=BRONZE * 0.9, rough=0.64, height_add=1.4)
-    gem = jewel * cover(r - 32)
-    glow = 0.7 + 0.3 * np.sin(hash01(ids, seed + 5) * TAU)
-    violet_gem = np.array([0.20, 0.17, 0.46], np.float32)
-    teal_gem = np.array([0.10, 0.34, 0.42], np.float32)
-    cv.paint(gem, color=violet_gem + (teal_gem - violet_gem) * mixer, rough=0.5, height_add=1.0 + dome(r, 32, 5.5))
-    cv.emission += (gem * glow)[..., None] * np.array([0.34, 0.40, 0.72], np.float32)
+    gem_colours = np.array([[0.24, 0.18, 0.52],   # violet
+                            [0.10, 0.40, 0.46],   # teal
+                            [0.12, 0.50, 0.60],   # cyan
+                            [0.12, 0.44, 0.28],   # jade
+                            [0.16, 0.28, 0.64],   # sapphire
+                            [0.50, 0.18, 0.34]],  # rose
+                           np.float32)
+    gem_pick = (hash01(ids, seed + 6) * len(gem_colours)).astype(np.int32) % len(gem_colours)
+    gem_col = gem_colours[gem_pick]
+    gem_r = 28 + 10 * hash01(ids, seed + 7)
+    cv.paint(jewel * cover(border - 44) * 0.5, color=cell_col * 0.5, rough=0.88, height_add=-1.6)
+    cv.paint(jewel * cover(np.abs(r - (gem_r + 11)) - 2.0), color=BRONZE * 0.9, rough=0.6, height_add=1.6)
+    gem = jewel * cover(r - gem_r)
+    glow = 0.70 + 0.30 * np.sin(hash01(ids, seed + 5) * TAU)
+    cv.paint(gem, color=gem_col, rough=0.45, height_add=1.0 + dome(r, gem_r, 5.5))
+    cv.emission += (gem * glow)[..., None] * np.clip(gem_col * 1.25, 0, 1)
+    cv.emission += (jewel * smoothstep(gem_r + 34, gem_r, r) * 0.10)[..., None] * gem_col  # a little colour bleeds onto the cell
     cv.paint(smoothstep(11, 0.5, np.hypot(lx + 10, ly + 10)) * gem * 0.65, color=[0.55, 0.60, 0.72])
 
     scratch = stamp_lines(110, seed + 5, (60, 190), 1.0, direction_bias=0.5) * (1 - seam)
@@ -1013,9 +1045,10 @@ def build_hexworks():
 # --- Theme: marquetry -- walnut chevron parquet with brass zigzag inlay and jewel inserts --------------------------------------
 
 def build_marquetry():
-    """Mitred chevron parquet: 90 px planks run at 45 degrees and mirror every 0.8 m, so they meet in V points. Four walnut stains,
-    grain baked from stretched noise sampled along each plank, butt joints in some planks, and a brass inlay zigzag on every fourth
-    plank boundary that carries a few watch-jewels at the V points."""
+    """Mitred chevron parquet: 90 px planks run at 45 degrees and mirror every 0.8 m, so they meet in V points. Six warm timbers (ebony
+    brown, dark and warm walnut, mahogany, chestnut, honey oak) with clear per-plank tone steps, grain rings and cathedral streaks
+    baked from stretched noise sampled along each plank, a varnished surface (roughness about 0.5, rougher where it has worn),
+    butt joints in some planks, and a brass inlay zigzag on every fourth plank boundary that carries a few watch-jewels at the V points."""
     seed = 5520
     W, P = 256.0, 128.0
     xp = W - np.abs((X % (2 * W)) - W)                    # mirrored x: 0..W (1 x N)
@@ -1033,28 +1066,43 @@ def build_marquetry():
     sub = (has_cut & (xp > cut_x)).astype(np.int32)       # which side of a butt joint
     piece = pid * 2 + sub
 
-    stains = np.array([[0.128, 0.086, 0.060], [0.150, 0.104, 0.074], [0.112, 0.096, 0.084], [0.100, 0.066, 0.050]], np.float32)
-    stain = stains[(hash01(piece, seed + 5) * 4).astype(np.int32) % 4]
-    tone = 1 + (hash01(piece, seed + 6) - 0.5) * 0.30
+    # Timbers (sRGB-encoded): warm and saturated, spread over a wide value range so neighbouring planks separate clearly.
+    timbers = np.array([[0.098, 0.064, 0.036],    # dark walnut
+                        [0.132, 0.090, 0.046],    # warm walnut
+                        [0.146, 0.086, 0.048],    # russet
+                        [0.146, 0.104, 0.044],    # chestnut
+                        [0.170, 0.128, 0.062],    # honey oak
+                        [0.074, 0.056, 0.042]],   # ebony brown
+                       np.float32) * np.array([1.05, 1.0, 0.84], np.float32)  # push the hue warm: the cool sun and ambient pull planks towards grey
+    cumulative = np.cumsum([0.20, 0.24, 0.18, 0.16, 0.10, 0.12])
+    stain = timbers[np.minimum(np.searchsorted(cumulative, hash01(piece, seed + 5) * cumulative[-1]), len(timbers) - 1)]
+    tone = 1 + (hash01(piece, seed + 6) - 0.5) * 0.46
 
     across = (Y + xp)  # no sqrt(2): offsets must wrap at exactly SIZE so the grain tiles
     along = (xp - Y)
     g_fine = noise(1.5, seed + 7, 70)
     g_wide = noise(7.0, seed + 8, 220)
+    g_mid = noise(3.2, seed + 14, 120)
     off = (hash01(piece, seed + 9) * 1900).astype(np.int32)
     gi = (along.astype(np.int32) + off) % SIZE
     gj = (across.astype(np.int32)) % SIZE
     fine = g_fine[gi, gj]
     wide = g_wide[gi, gj]
-    grain = 1 + 0.085 * fine + 0.10 * wide
-    cv = Canvas(0, 0.74)
-    cv.albedo[:] = stain * (tone * grain)[..., None]
-    cv.rough[:] = 0.74 + 0.04 * wide - 0.03 * np.clip(fine, 0, 2)
-    cv.height += 2.2 * smoothstep(2.5, 9, d_edge) + 0.30 * fine + 0.20 * wide
+    mid = g_mid[gi, gj]
+    # Grain rings: sine bands across the plank (an integer number of cycles per tile, so they wrap), bent by the noise so they wander.
+    phase = across / SIZE * (150 * TAU) + hash01(piece, seed + 15) * TAU + wide * 2.4 + mid * 0.9
+    rings = 0.5 + 0.5 * np.sin(phase)
+    rings2 = 0.5 + 0.5 * np.sin(across / SIZE * (37 * TAU) + hash01(piece, seed + 16) * TAU + wide * 1.6)
+    grain = 1 + 0.07 * fine + 0.12 * wide + 0.09 * mid + 0.15 * (rings - 0.5) + 0.07 * (rings2 - 0.5)
+    worn = smoothstep(0.9, 1.9, noise(150, seed + 17) + 0.5 * noise(34, seed + 18))  # varnish rubbed thin: duller and rougher
+    cv = Canvas(0, 0.5)
+    cv.albedo[:] = stain * (tone * grain * (1 - 0.12 * worn))[..., None]
+    cv.rough[:] = 0.50 + 0.03 * wide + 0.05 * (1 - rings) - 0.02 * np.clip(fine, 0, 2) + 0.16 * worn
+    cv.height += 2.2 * smoothstep(2.5, 9, d_edge) + 0.30 * fine + 0.20 * wide + 0.30 * (rings - 0.5)
 
-    seam = cover(d_edge - 2.2)
-    cv.paint(seam, color=[0.030, 0.021, 0.016], rough=0.95, height=-3.4)
-    cv.paint(cover(np.abs(d_edge - 6.0) - 0.9) * (1 - seam) * 0.35, color=stain * 1.7)   # varnish catch-light on every chamfer
+    seam = cover(d_edge - 2.8)
+    cv.paint(seam, color=[0.026, 0.017, 0.012], rough=0.95, height=-3.6)
+    cv.paint(cover(np.abs(d_edge - 6.5) - 1.1) * (1 - seam) * 0.5, color=stain * 2.1, rough=0.4)   # varnish catch-light on every chamfer
 
     # Brass zigzag inlay on plank boundaries b with b % 4 == 0.
     b = np.round(s).astype(np.int32)
@@ -1062,7 +1110,7 @@ def build_marquetry():
     d_b = np.abs(s - b) * P / np.sqrt(2)
     cv.paint(cover(d_b - 6.4) * on_line * (1 - cover(d_b - 3.4)), color=stain * 0.45, rough=0.9, height_add=-1.0)
     inlay = cover(d_b - 3.4) * on_line
-    cv.paint(inlay, color=BRONZE, rough=0.62, height=1.6)
+    cv.paint(inlay, color=BRONZE, rough=0.55, height=1.6)
     cv.paint(cover(np.abs(d_b - 1.4) - 0.5) * inlay * 0.5, color=BRONZE_HI)
 
     centres = []
@@ -1238,9 +1286,11 @@ def build_mosaic():
 # --- Theme: frost -- cracked ice plates with rime, glowing fissures, bubbles and brass clamp studs ---------------------------------
 
 def build_frost():
-    """Five by five slabs of deep blue ice with frosted clouding, soft rime on the rims and snow drifts. A cold seam light runs
-    between slabs, a network of hairline fissures (some lit) crosses them, small air bubbles are frozen in, and brass clamp
-    studs pin the slab centres."""
+    """Five by five slabs of blue-white ice: pale and thick in the middle, deepening to cyan-blue towards the rim, with a frosted rime
+    band at the edge, soft frosted clouding and snow drifts. Slab faces are smooth and semi-glossy (roughness about 0.6; lower
+    and the orange rim light paints a maroon sheen on one side of the arena), rime and drifts are matt (0.8). A cold seam light runs between slabs and a network of fissures crosses them; each fissure is a dark cyan
+    core between two pale frosted flanks (so it reads as a fracture, not a black scratch), about a third glow, and all of them bleed
+    cyan into the ice around them. Small air bubbles are frozen in, and brass clamp studs pin the slab centres."""
     seed = 8120
     rng = np.random.default_rng(seed)
     cells = 5
@@ -1249,60 +1299,82 @@ def build_frost():
     border, id1, id2, (p1x, p1y), table = voronoi(wu, wv, cells, seed + 5, jitter=0.72)
     fine, fid1, fid2, _, _ = voronoi(X + noise(30, seed + 6) * 5.0, Y + noise(30, seed + 7) * 5.0, 14, seed + 8, jitter=0.95)
 
-    ice = np.array([0.058, 0.098, 0.138], np.float32)
-    frosted = np.array([0.150, 0.205, 0.245], np.float32)
-    rime = np.array([0.210, 0.265, 0.300], np.float32)
-    tone = 1 + (hash01(id1, seed) - 0.5) * 0.28 + noise(220, seed + 9) * 0.05
+    def lin(r, g, b):
+        """Colour authored as linear light, stored sRGB-encoded like the rest of the map (values here are for luminance control)."""
+        return np.array([r, g, b], np.float32) ** (1 / 2.2)
+
+    ice_edge = lin(0.0007, 0.0062, 0.0160)     # deep cyan-blue where the slab thins towards its rim
+    ice_centre = lin(0.0165, 0.0310, 0.0400)   # pale blue-white at the thick middle
+    frosted = lin(0.0230, 0.0380, 0.0470)
+    rime = lin(0.0420, 0.0640, 0.0760)         # frost: nearly white with a cold tint
+    bleed = lin(0.0040, 0.0300, 0.0420)        # cyan light leaking out of seams and fissures
+    tone = 1 + (hash01(id1, seed) - 0.5) * 0.30 + noise(220, seed + 9) * 0.05
+    hue = hash01(id1, seed + 30)[..., None] * np.array([-0.34, 0.08, 0.20], np.float32)  # neutral cyan-white to bluer slabs, never warm
     cloud = smoothstep(-0.2, 1.7, noise(120, seed + 10) + 0.55 * noise(34, seed + 11))
     drift = smoothstep(1.0, 1.9, noise(190, seed + 12) + 0.45 * noise(50, seed + 13)) * smoothstep(110, 18, border * 0.5 + 18)
-    cv = Canvas(0, 0.68)
-    albedo = ice * tone[..., None]
-    albedo = albedo + (frosted - albedo) * (cloud * 0.55)[..., None]
-    wear = smoothstep(52, 4, border)
-    albedo = albedo + (rime - albedo) * (wear * 0.55)[..., None]
-    albedo = albedo + (rime * 1.05 - albedo) * (drift * 0.7)[..., None]
-    cv.albedo[:] = albedo
-    cv.rough[:] = 0.66 + 0.2 * cloud + 0.14 * wear + 0.18 * drift + noise(9, seed + 14) * 0.02
+    grad = smoothstep(10, 175, border)  # 0 at the rim, 1 in the slab centre
+    grad = np.minimum(blur(grad, 22.0), grad * 1.1) ** 2.0  # blurred so the distance field's medial-axis creases never show, rim kept dark
+    band = smoothstep(44, 7, border) ** 1.3      # frosted rime band hugging the seam
+    grain = 1 + noise(1.4, seed + 31) * 0.03 + noise(4.0, seed + 32) * 0.02  # also dithers the dark gradients so they never band
+
+    cv = Canvas(0, 0.62)
+    albedo = ice_edge + (ice_centre * (1 + hue) - ice_edge) * grad[..., None]
+    albedo = albedo * tone[..., None]
+    albedo = albedo + (frosted - albedo) * (cloud * 0.45)[..., None]
+    albedo = albedo + (rime - albedo) * (band * 0.58)[..., None]
+    albedo = albedo + (rime * 1.05 - albedo) * (drift * 0.8)[..., None]
+    seam_bleed = np.exp(-np.maximum(border - 4, 0) / 14)
+    albedo = albedo + (bleed - albedo) * (0.30 * seam_bleed * (1 - band))[..., None]
+    cv.albedo[:] = albedo * grain[..., None]
+    matt = np.clip(band * 0.85 + drift, 0, 1)    # rime and snow are matt, the faces are the ice
+    cv.rough[:] = 0.60 + 0.04 * noise(9, seed + 14) + 0.08 * cloud + 0.03 * noise(60, seed + 33)
+    cv.rough += (0.80 - cv.rough) * matt
     gdx, gdy = wrap_delta(X, p1x), wrap_delta(Y, p1y)
     cv.height += 4.0 * smoothstep(3, 34, border) + (hash01(id1, seed + 15) - 0.5) * 2.2 * gdx / 160 + (hash01(id1, seed + 16) - 0.5) * 2.2 * gdy / 160
-    cv.height += 1.8 * drift
+    cv.height += 1.8 * drift + noise(45, seed + 23) * 0.5  # gentle facets so the glossy faces glint unevenly
 
-    # Seams between slabs, lit with a cold pale light.
-    seam = cover(border - 3.4)
-    cv.paint(seam, color=[0.018, 0.034, 0.050], rough=0.9, height=-4.0)
-    cv.emission += (cover(border - 1.5) * 0.45)[..., None] * np.array([0.42, 0.78, 0.86], np.float32)
-    cv.paint(cover(np.abs(border - 6.5) - 0.9) * (1 - seam) * 0.5, color=rime * 0.9)
+    # Seams between slabs: a deep cyan gap lit with a cold pale light that haloes into the ice.
+    seam = cover(border - 4.4)
+    cv.paint(seam, color=lin(0.0008, 0.0060, 0.0140), rough=0.9, height=-4.0)
+    cv.emission += (cover(border - 2.0) * 0.5 + np.exp(-border / 9) * 0.10)[..., None] * np.array([0.42, 0.78, 0.86], np.float32)
+    cv.paint(cover(np.abs(border - 7.0) - 1.1) * (1 - seam) * 0.6, color=rime)
 
-    # Hairline fissures along a gated share of the fine network; a few glow.
+    # Fissures along a gated share of the fine network: dark cyan core, pale frosted flanks, cyan bleed; about a third glow.
     pair = np.minimum(fid1, fid2) * 1009 + np.maximum(fid1, fid2)
-    gate = (hash01(pair, seed + 17) < 0.24) * 1.0
-    lit = (hash01(pair, seed + 18) < 0.30) * 1.0
-    crack = cover(fine - 1.1, 1.3) * gate * (1 - seam)
-    cv.paint(crack, color=[0.016, 0.030, 0.045], rough=0.85, height_add=-2.4)
-    cv.emission += (cover(fine - 0.7, 1.3) * gate * lit * (1 - seam) * 0.38)[..., None] * np.array([0.40, 0.76, 0.84], np.float32)
-    cv.paint(cover(np.abs(fine - 3.4) - 0.8) * gate * (1 - seam) * 0.35, color=rime * 0.9)
+    gate = (hash01(pair, seed + 17) < 0.28) * 1.0
+    lit = (hash01(pair, seed + 18) < 0.38) * 1.0
+    crack = cover(fine - 2.0, 1.3) * gate * (1 - seam)
+    halo = np.clip(blur(crack, 9.0) * 5.5, 0, 1) * (1 - seam)  # a blurred crack mask, so the bleed has no wedge-shaped cut-offs
+    lit_halo = np.clip(blur(crack * lit, 9.0) * 5.5, 0, 1) * (1 - seam)
+    cv.albedo += (bleed - cv.albedo) * (0.35 * halo + 0.40 * lit_halo)[..., None]
+    flank = cover(np.abs(fine - 4.2) - 1.7) * gate * (1 - seam) * (1 - crack)
+    cv.paint(flank * 0.62, color=rime, rough=0.72)
+    cv.paint(crack, color=lin(0.0020, 0.0110, 0.0210), rough=0.85, height_add=-3.0)
+    cv.emission += (cover(fine - 1.4, 1.3) * gate * lit * (1 - seam) * 0.5 + lit_halo * 0.11)[..., None] * np.array([0.40, 0.76, 0.84], np.float32)
 
     # Frozen air bubbles.
     for size, count in ((5.0, 70), (8.0, 36), (13.0, 12)):
         pts = [(float(a), float(b)) for a, b in rng.uniform(0, SIZE, (count, 2))]
         dist, ox, oy = point_field(pts, int(size + 8))
         bubble = cover(dist - size)
-        cv.paint(cover(dist - size - 1.5) * (1 - bubble) * 0.6, color=ice * 0.45, rough=0.9, height_add=-0.5)
-        cv.paint(bubble * 0.5, color=frosted * 1.1, rough=0.55, height_add=0.6 + dome(dist, size, size * 0.3))
-        cv.paint(smoothstep(size * 0.35, 0.3, np.hypot(ox + size * 0.3, oy + size * 0.3)) * bubble * 0.7, color=[0.42, 0.52, 0.58])
+        cv.paint(cover(dist - size - 1.5) * (1 - bubble) * 0.6, color=ice_edge * 0.8, rough=0.9, height_add=-0.5)
+        cv.paint(bubble * 0.55, color=frosted * 1.15, rough=0.55, height_add=0.6 + dome(dist, size, size * 0.3))
+        cv.paint(smoothstep(size * 0.35, 0.3, np.hypot(ox + size * 0.3, oy + size * 0.3)) * bubble * 0.7, color=[0.50, 0.62, 0.68])
 
     # Brass clamp studs at the slab centres.
     studs = [(float(table[j, i, 0]) % SIZE, float(table[j, i, 1]) % SIZE) for j in range(cells) for i in range(cells)]
     dist, ox, oy = point_field(studs, 20)
     stud = cover(dist - 10.5)
-    cv.paint(cover(dist - 14.5) * (1 - stud) * 0.8, color=ice * 0.35, height_add=-0.6)
+    cv.paint(cover(dist - 14.5) * (1 - stud) * 0.8, color=ice_edge * 0.6, height_add=-0.6)
     cv.paint(stud, color=BRONZE, rough=0.6, height_add=1.2 + dome(dist, 10.5, 4.6))
     cv.paint(smoothstep(5.0, 0.4, np.hypot(ox + 3.2, oy + 3.2)) * stud * 0.8, color=BRONZE_HI)
     cv.paint(cover(np.minimum(np.abs(ox), np.abs(oy)) - 1.0) * stud * 0.5, color=BRONZE_DARK, height_add=-0.5)
 
-    cv.height += (noise(1.1, seed + 19) * 0.18 + noise(2.8, seed + 20) * 0.14 + noise(12, seed + 21) * 0.14) * (1 - seam)
+    # Micro relief: smooth ice stays smooth (a glossy surface with pixel noise looks like leather), the matt rime and drifts are pitted.
+    pitted = 0.25 + 0.75 * matt
+    cv.height += (noise(1.1, seed + 19) * 0.18 + noise(2.8, seed + 20) * 0.14 + noise(12, seed + 21) * 0.14) * (1 - seam) * pitted
     scratch = stamp_lines(90, seed + 22, (50, 170), 1.0) * (1 - seam)
-    cv.paint(scratch * 0.3, color=[0.28, 0.35, 0.40], rough=0.7, height_add=-0.4)
+    cv.paint(scratch * 0.3, color=[0.36, 0.45, 0.50], rough=0.7, height_add=-0.4)
     return cv.maps(1.0)
 
 
