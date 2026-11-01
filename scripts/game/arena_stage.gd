@@ -9,6 +9,10 @@ var floor_decals: FloorDecals
 var room: ArenaRoom
 var backdrop: SpaceBackdrop
 var floor_theme: String = ""
+var world_environment: WorldEnvironment
+var sky_material: ShaderMaterial
+var sun: DirectionalLight3D
+var vignette: ArenaVignette
 var _floor_material: StandardMaterial3D
 var _rim_material: StandardMaterial3D
 var _seam_tween: Tween
@@ -22,6 +26,17 @@ const SEAM_HOT: Color = Color(1.0, 0.72, 0.5)
 const SEAM_BOSS: Color = Color(1.0, 0.45, 0.85)
 const SEAM_FULL_WAVE: int = 20
 const SKY_SHADER: Shader = preload("res://assets/shaders/arena_sky.gdshader")
+## Ambient light is a flat cool colour (the sky adds only a little), so faces away from the sun and the room's shadowed slopes keep
+## form instead of falling to black. The sun's shadows are lighter for the same reason.
+const AMBIENT_COLOR: Color = Color("46568a")
+const AMBIENT_ENERGY: float = 0.6
+const AMBIENT_SKY_CONTRIBUTION: float = 0.3
+const SUN_SHADOW_OPACITY: float = 0.72
+## Colour grade (Environment adjustments, applied after tone mapping): a little contrast and saturation plus a split-tone lookup
+## table that cools the shadows and warms the highlights. Stops are (brightness in, colour out) per channel.
+const GRADE_CONTRAST: float = 1.08
+const GRADE_SATURATION: float = 1.1
+const GRADE_STOPS: Dictionary = {0.0: Color("02050c"), 0.2: Color("30333b"), 0.5: Color("7e8084"), 0.8: Color("ceccc6"), 1.0: Color("fff7eb")}
 
 func build(arena: ArenaWorld) -> void:
 	_build_lighting()
@@ -80,6 +95,8 @@ func set_floor_theme(theme: String) -> void:
 	var rim_color: Color = RIM_COLORS.get(theme, RIM_COLORS["foundry"])
 	_rim_material.albedo_color = rim_color
 	_rim_material.emission = rim_color
+	# The floor rim lights the room from below, so brass and hull slopes reflect its colour (the sky's lower-hemisphere bounce).
+	sky_material.set_shader_parameter("bounce_color", rim_color)
 	floor_decals.apply_theme(theme)
 	room.apply_theme(theme, rim_color)
 
@@ -100,8 +117,9 @@ func set_floor_wave(wave: int, is_boss: bool) -> void:
 	_seam_tween.tween_property(_floor_material, "emission", target, 1.0)
 
 func _build_lighting() -> void:
-	# A dark gradient sky doubles as the ambient and reflection source, so metal parts have something to mirror.
-	var sky_material := ShaderMaterial.new()
+	# The sky is a small studio (see arena_sky.gdshader): metal parts mirror it, so it holds a softbox and a coloured bounce. Ambient
+	# light is a flat cool colour instead, with only a little of the sky mixed in.
+	sky_material = ShaderMaterial.new()
 	sky_material.shader = SKY_SHADER
 	var sky := Sky.new()
 	sky.sky_material = sky_material
@@ -109,8 +127,10 @@ func _build_lighting() -> void:
 	var settings := Environment.new()
 	settings.background_mode = Environment.BG_SKY
 	settings.sky = sky
-	settings.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	settings.ambient_light_energy = .45
+	settings.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	settings.ambient_light_color = AMBIENT_COLOR
+	settings.ambient_light_energy = AMBIENT_ENERGY
+	settings.ambient_light_sky_contribution = AMBIENT_SKY_CONTRIBUTION
 	settings.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	settings.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	settings.tonemap_white = 6.0
@@ -133,16 +153,22 @@ func _build_lighting() -> void:
 	settings.fog_light_color = Color("0f2a38")
 	settings.fog_density = .012
 	settings.fog_sky_affect = .4
-	var environment := WorldEnvironment.new()
-	environment.environment = settings
-	add_child(environment)
-	var sun := DirectionalLight3D.new()
+	settings.adjustment_enabled = true
+	settings.adjustment_contrast = GRADE_CONTRAST
+	settings.adjustment_saturation = GRADE_SATURATION
+	settings.adjustment_color_correction = _grade_lookup()
+	world_environment = WorldEnvironment.new()
+	world_environment.environment = settings
+	add_child(world_environment)
+	vignette = ArenaVignette.new()
+	add_child(vignette)
+	sun = DirectionalLight3D.new()
 	# Lower than before so shadows stretch far enough to read from the near-top-down camera.
 	sun.rotation_degrees = Vector3(-35, -45, 0)
 	sun.light_color = Color("d0eaff")
 	sun.light_energy = 1.8
 	sun.shadow_enabled = true
-	sun.shadow_opacity = .9
+	sun.shadow_opacity = SUN_SHADOW_OPACITY
 	sun.shadow_blur = 1.0
 	sun.shadow_bias = .07
 	sun.shadow_normal_bias = .6
@@ -168,3 +194,18 @@ func _build_lighting() -> void:
 	fill.light_cull_mask = ArenaRoom.LAYER
 	fill.shadow_enabled = false
 	add_child(fill)
+
+## The grade's lookup table: a 1D gradient the tone mapper reads per channel (identity would run black to white).
+static func _grade_lookup() -> GradientTexture1D:
+	var gradient := Gradient.new()
+	var offsets := PackedFloat32Array()
+	var colors := PackedColorArray()
+	for offset: float in GRADE_STOPS:
+		offsets.append(offset)
+		colors.append(GRADE_STOPS[offset])
+	gradient.offsets = offsets
+	gradient.colors = colors
+	var lookup := GradientTexture1D.new()
+	lookup.gradient = gradient
+	lookup.width = 256
+	return lookup
