@@ -14,6 +14,7 @@ uniform vec2 panel_size = vec2(1.2, 0.6);
 uniform int motif = 0;
 uniform float metal = 0.35;
 uniform float relief = 1.0;
+uniform float grime = 0.25;
 
 varying vec3 world_position;
 varying vec3 world_normal;
@@ -131,6 +132,10 @@ void fragment() {
 	float rough = mix(0.68, 0.9, hash21(id + 4.1));
 	float metallic = metal * mix(0.7, 1.3, hash21(id + 9.3));
 
+	// Rust and dirt run down from the panel edges and fittings, and settle in the seams.
+	float streaks = value_noise(vec2(plane.x * 6.0, plane.y * 0.4)) * smoothstep(0.35, 1.0, 1.0 - fract(plane.y * 0.5 + hash21(id) * 0.3));
+	colour = mix(colour, colour * vec3(0.62, 0.48, 0.4), streaks * grime * 1.6);
+	colour *= 1.0 - grime * 0.8 * (1.0 - smoothstep(0.0, 0.05, edge)) * 0.5;
 	// Edge wear: brass showing through where the seams are chipped.
 	float wear = step(0.55, value_noise(plane * 9.0)) * (1.0 - smoothstep(0.0, 0.06, edge));
 	colour = mix(colour, wear_color, wear * 0.8);

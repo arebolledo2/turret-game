@@ -78,16 +78,17 @@ const HULL_COLORS := {"foundry": Color("2a3f48"), "concrete": Color("463a32"), "
 static func hull_color(theme: String) -> Color:
 	return HULL_COLORS.get(theme, HULL_COLORS[DEFAULT_FLOOR_THEME])
 
-## Plating pattern per floor theme: `motif` (0 plates, 1 hex cells, 2 planks, 3 frosted plates), `panel` size in metres and `metal`.
+## Plating per floor theme: `motif` (0 plates, 1 hex cells, 2 planks, 3 frosted plates), `panel` size in metres, `metal`, `grime` (rust streaks) and the
+## enamel `accent` of the coping inlay.
 const HULL_MOTIFS := {
-	"foundry": {"motif": 0, "panel": Vector2(1.2, 0.6), "metal": 0.35},
-	"concrete": {"motif": 0, "panel": Vector2(1.5, 0.75), "metal": 0.12},
-	"grating": {"motif": 0, "panel": Vector2(1.2, 0.6), "metal": 0.4},
-	"hexworks": {"motif": 1, "panel": Vector2(0.45, 0.45), "metal": 0.35},
-	"marquetry": {"motif": 2, "panel": Vector2(2.4, 0.18), "metal": 0.0},
-	"orrery": {"motif": 0, "panel": Vector2(1.2, 0.6), "metal": 0.4},
-	"mosaic": {"motif": 0, "panel": Vector2(0.6, 0.3), "metal": 0.15},
-	"frost": {"motif": 3, "panel": Vector2(1.2, 0.6), "metal": 0.2},
+	"foundry": {"motif": 0, "panel": Vector2(1.2, 0.6), "metal": 0.35, "grime": 0.25, "accent": Color("2f9a9a")},
+	"concrete": {"motif": 0, "panel": Vector2(1.5, 0.75), "metal": 0.12, "grime": 0.35, "accent": Color("c8a040")},
+	"grating": {"motif": 0, "panel": Vector2(1.2, 0.6), "metal": 0.4, "grime": 0.4, "accent": Color("3aa67a")},
+	"hexworks": {"motif": 1, "panel": Vector2(0.45, 0.45), "metal": 0.35, "grime": 0.2, "accent": Color("7a6cc8")},
+	"marquetry": {"motif": 2, "panel": Vector2(2.4, 0.18), "metal": 0.0, "grime": 0.15, "accent": Color("b08a4e")},
+	"orrery": {"motif": 0, "panel": Vector2(1.2, 0.6), "metal": 0.4, "grime": 0.15, "accent": Color("c8a64a")},
+	"mosaic": {"motif": 0, "panel": Vector2(0.6, 0.3), "metal": 0.15, "grime": 0.2, "accent": Color("3aa6a0")},
+	"frost": {"motif": 3, "panel": Vector2(1.2, 0.6), "metal": 0.2, "grime": 0.1, "accent": Color("7fc4dc")},
 }
 
 static func hull_motif(theme: String) -> Dictionary:

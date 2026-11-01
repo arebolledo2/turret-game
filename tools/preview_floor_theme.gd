@@ -1,7 +1,7 @@
 extends Node
 
 ## Developer visual check for the floor texture themes (tools/build_floor_textures.py). Needs a rendering driver (not --headless):
-##   Godot --path . --resolution 1920x1080 res://tools/preview_floor_theme.tscn -- --theme=concrete [--imported] [--shots=default,close,macro,top]
+##   Godot --path . --resolution 1920x1080 res://tools/preview_floor_theme.tscn -- --theme=concrete [--imported] [--shots=default,close,macro,top] [--space=<id>]
 ## Runs the real arena (ArenaWorld, ArenaStage lighting, FloorDecals, zone overlays, camera rig) with a staged scene of turrets,
 ## enemies and pickups and writes .test-results/floor/<theme>_<shot>.png. The floor material is the shipping one
 ## (WorldGeometry.floor_material through ArenaStage.set_floor_theme). By default its four textures are swapped for the PNGs read
@@ -18,6 +18,7 @@ var shots: PackedStringArray = ["default", "close", "macro", "top"]
 var tag := ""
 var use_imported := false
 var zoom_override := -1.0
+var space_theme := ""
 var focus := Vector3.ZERO
 var world: ArenaWorld
 
@@ -29,6 +30,8 @@ func _ready() -> void:
 			shots = argument.trim_prefix("--shots=").split(",")
 		elif argument.begins_with("--tag="):
 			tag = argument.trim_prefix("--tag=")
+		elif argument.begins_with("--space="):
+			space_theme = argument.trim_prefix("--space=")
 		elif argument.begins_with("--zoom="):
 			zoom_override = float(argument.trim_prefix("--zoom="))
 		elif argument.begins_with("--focus="):
@@ -48,6 +51,7 @@ func run() -> void:
 	world.show_hud = false
 	world.run_config = RunConfig.new()
 	world.run_config.layout_id = LAYOUTS.get(theme, "crossroads")
+	world.run_config.space_theme = space_theme
 	add_child(world)
 	world.waves.remaining_spawns = 0
 	world.preparation.deploy()

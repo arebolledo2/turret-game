@@ -69,14 +69,27 @@ func test_run_config_parses_and_sanitizes_the_space_theme() -> void:
 	assert_eq(RunConfig.from_args(PackedStringArray(["--space=bogus"])).space_theme, "")
 
 ## Every vertex of every room mesh, in world space, with the mesh it came from.
+## The room's own meshes plus the ship exterior's.
+func _room_meshes() -> Array[MeshInstance3D]:
+	var result: Array[MeshInstance3D] = []
+	var room: Node = world.stage.room
+	for child in room.get_children():
+		if child is MeshInstance3D:
+			result.append(child)
+	var exterior := room.get_node_or_null("Exterior")
+	if exterior:
+		for child in exterior.get_children():
+			if child is MeshInstance3D:
+				result.append(child)
+	return result
+
 func _room_vertices() -> Array[Vector3]:
 	var result: Array[Vector3] = []
-	for child in world.stage.room.get_children():
-		var mesh := child as MeshInstance3D
-		if mesh == null or not mesh.mesh is ArrayMesh:
+	for mesh in _room_meshes():
+		if not mesh.mesh is ArrayMesh:
 			continue
 		for vertex: Vector3 in (mesh.mesh as ArrayMesh).surface_get_arrays(0)[Mesh.ARRAY_VERTEX]:
-			result.append(mesh.transform * vertex)
+			result.append(mesh.global_transform * vertex)
 	return result
 
 func test_walls_stand_outside_the_playfield_and_the_floor_stops_at_them() -> void:
@@ -180,3 +193,31 @@ func test_extruded_wall_faces_point_the_way_the_profile_says() -> void:
 			assert_gt(geometric.dot(shading), 0.0, "winding matches the stored normals")
 			found += 1
 	assert_gt(found, 1000)
+
+func test_front_hull_uses_a_variety_of_modules() -> void:
+	world.start_run()
+	var kinds := {}
+	for kind in world.stage.room.front_module_kinds:
+		kinds[kind] = true
+	assert_gte(kinds.size(), 3)
+
+func test_exterior_exists_and_casts_no_shadows() -> void:
+	world.start_run()
+	var exterior := world.stage.room.get_node_or_null("Exterior")
+	assert_not_null(exterior)
+	var meshes := 0
+	for child in exterior.get_children():
+		if child is MeshInstance3D:
+			meshes += 1
+			assert_eq((child as MeshInstance3D).cast_shadow, GeometryInstance3D.SHADOW_CASTING_SETTING_OFF)
+	assert_gt(meshes, 2)
+
+func test_room_and_exterior_stay_within_the_draw_call_budget() -> void:
+	world.start_run()
+	assert_lte(_room_meshes().size(), 15)
+
+func test_unlit_lamps_stay_below_the_bloom_threshold() -> void:
+	world.start_run()
+	assert_lt(ArenaRoom.LAMP_VALUE, 0.9)
+	var lamp: StandardMaterial3D = world.stage.room._lamp
+	assert_lt(maxf(lamp.albedo_color.r, maxf(lamp.albedo_color.g, lamp.albedo_color.b)), 0.9)
