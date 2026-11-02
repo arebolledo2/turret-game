@@ -34,6 +34,21 @@ func apply_stats(stats: Dictionary) -> void:
 		if stats.has(key):
 			stats[key] = float(stats[key]) * float(multipliers["speed" if key in ["fire_rate", "rotation_rate"] else key])
 
+## A turret that arrives already grown (a shop offer): `target_level` with the xp it took to get there, and the evolutions
+## below that level already taken. `form` is the form it ends in ("" below level 5).
+func start_at(target_level: int, form: String) -> void:
+	level = maxi(1, target_level)
+	total_xp = 0
+	for passed in range(1, level):
+		total_xp += cost_to_next(passed)
+	xp = 0
+	pending_evolutions.clear()
+	evolution_form = form
+	evolution_stage = 0
+	for milestone in EVOLUTION_LEVELS:
+		if level >= milestone:
+			evolution_stage += 1
+
 func award(amount: int) -> Dictionary:
 	var before := snapshot()
 	amount = maxi(0, amount)

@@ -52,6 +52,7 @@ func _ready() -> void:
 	_build_sidebar(content)
 	turret_inspector = TurretInspector.new()
 	turret_inspector.world = world
+	turret_inspector.sold.connect(refresh)
 	turret_inspector.size_flags_vertical = SIZE_EXPAND_FILL
 	column.add_child(turret_inspector)
 	_build_footer(column)
@@ -312,7 +313,7 @@ func _refresh_details() -> void:
 	if not is_instance_valid(world.player):
 		return
 	var data := ShopViewData.build_data(world)
-	var key := [data, EconomyService.current_shop_offers.map(func(o: ShopOffer) -> Array: return [o.asset_id, o.price, o.sold]), selected,
+	var key := [data, EconomyService.current_shop_offers.map(func(o: ShopOffer) -> Array: return [o.asset_id, o.price, o.sold, o.level, o.form]), selected,
 		world.core.health if world.core else -1].hash()
 	if key == details_key:
 		return
@@ -323,7 +324,7 @@ func _refresh_details() -> void:
 	var after := data
 	if selected >= 0 and selected < EconomyService.current_shop_offers.size():
 		var offer := EconomyService.current_shop_offers[selected]
-		detail_title.text = ArenaShop.offer_name(offer)
+		detail_title.text = ArenaShop.offer_name(offer) + (" · Lv %d" % offer.level if offer.kind == "turret" and offer.level > 1 else "")
 		detail_text.text = ArenaShop.offer_description(offer)
 		if not offer.sold:
 			after = ShopViewData.preview(world, offer)

@@ -214,6 +214,15 @@ const REROLL_COST_INCREMENT: int = 1
 const REROLL_WAVE_BASE_MULTIPLIER: float = 1.5 # Wave-based base cost multiplier
 const WAVE_PRICE_SCALE: float = 0.2
 const TURRET_PURCHASE_PENALTY: float = 0.5 # +50% per turret owned
+# Turrets arrive at a random level; each level up is rarer by this factor (0.45: 55% Lv 1, 4% Lv 5 or more, under 0.1% Lv 10 or more).
+const SHOP_TURRET_LEVEL_DECAY: float = .45
+const SHOP_TURRET_MAX_LEVEL: int = 12
+# The best level on offer is this many above the wave just secured (wave 2 offers up to Lv 3).
+const SHOP_TURRET_LEVEL_PER_WAVE_HEADROOM: int = 1
+# A turret is worth its level-1 price times 1 + step per level gained. Selling pays SELL_RATIO of that worth, so a fresh
+# purchase loses half and a turret sells for what it cost once it has gained (1 / SELL_RATIO - 1) / step = 3 levels.
+const TURRET_LEVEL_VALUE_STEP: float = .35
+const TURRET_SELL_RATIO: float = .5
 
 # =============================================================================
 # ITEM EFFECT RANGES (proximity-based turret item effects)

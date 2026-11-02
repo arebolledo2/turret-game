@@ -56,7 +56,10 @@ func test_catalog_generates_unique_supported_offers_at_registry_prices() -> void
 			seen.append(offer.asset_id)
 			if offer.kind == "turret":
 				assert_true(offer.asset_id in ArenaShop.TURRETS)
-				assert_eq(offer.price, world.turret_price(offer.asset_id))
+				assert_eq(offer.price, world.shop.offer_price(offer))
+				assert_between(offer.level, 1, GameConstants.SHOP_TURRET_MAX_LEVEL)
+				if offer.level == 1:
+					assert_eq(offer.price, world.turret_price(offer.asset_id), "Level 1 sells at the registry price")
 			else:
 				assert_true(offer.asset_id in ArenaShop.ITEMS)
 				assert_eq(offer.price, world.shop.item_price(offer.asset_id))

@@ -135,6 +135,8 @@ func test_controller_reaches_evolutions_and_resolves_all_earned_stages() -> void
 		assert_same(inspector.art.texture, ShopArt.turret("normal", forms[stage - 1]))
 	assert_false("EVOLUTION READY" in inspector.buttons[0].text)
 	await press_direction(JOY_BUTTON_DPAD_RIGHT)
+	assert_same(get_viewport().gui_get_focus_owner(), inspector.sell_button, "With nothing left to evolve, SELL is the next stop")
+	await press_direction(JOY_BUTTON_DPAD_RIGHT)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
 
 func test_selecting_another_turret_rebuilds_evolution_focus_links() -> void:
@@ -146,6 +148,8 @@ func test_selecting_another_turret_rebuilds_evolution_focus_links() -> void:
 	inspector.buttons[0].grab_focus()
 	await press_direction(JOY_BUTTON_DPAD_DOWN)
 	assert_same(get_viewport().gui_get_focus_owner(), inspector.buttons[1])
+	await press_direction(JOY_BUTTON_DPAD_RIGHT)
+	assert_same(get_viewport().gui_get_focus_owner(), inspector.sell_button)
 	await press_direction(JOY_BUTTON_DPAD_RIGHT)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
 	inspector.buttons[0].grab_focus()

@@ -94,7 +94,7 @@ func set_compact(value: bool) -> void:
 	_refresh_minimum()
 
 func setup(offer: ShopOffer, damage_mult: float, affordable: bool) -> void:
-	var key := "%s:%s:%d:%s:%s:%s:%s" % [offer.kind, offer.asset_id, offer.price, offer.sold, affordable, damage_mult, offer.locked]
+	var key := "%s:%s:%d:%s:%s:%s:%s:%d:%s" % [offer.kind, offer.asset_id, offer.price, offer.sold, affordable, damage_mult, offer.locked, offer.level, offer.form]
 	if key == shown_key:
 		return
 	shown_key = key
@@ -108,10 +108,15 @@ func setup(offer: ShopOffer, damage_mult: float, affordable: bool) -> void:
 	var accent := ItemRegistry.get_rarity_color(rarity) if is_item else UiPalette.INK
 	(get_theme_stylebox("normal") as StyleBoxFlat).border_color = Color(accent, .65) if is_item else Color("36505b")
 	name_label.add_theme_color_override("font_color", accent)
-	rarity_label.visible = is_item
+	var leveled := not is_item and offer.level > 1
+	rarity_label.visible = is_item or leveled
 	rarity_label.text = ItemRegistry.get_rarity_name(rarity).to_upper() if is_item else ""
+	if leveled:
+		rarity_label.text = "LEVEL %d%s" % [offer.level, " · EVOLVED" if not offer.form.is_empty() else ""]
+		accent = UiPalette.TEAL_HI
+		(get_theme_stylebox("normal") as StyleBoxFlat).border_color = Color(accent, .65)
 	rarity_label.add_theme_color_override("font_color", accent)
-	icon_rect.texture = ShopArt.turret(offer.asset_id) if offer.kind == "turret" else ShopArt.item(offer.asset_id)
+	icon_rect.texture = ShopArt.turret(offer.asset_id, offer.form) if offer.kind == "turret" else ShopArt.item(offer.asset_id)
 	name_label.text = ArenaShop.offer_name(offer)
 	family_badges.show_turret(offer.asset_id if offer.kind == "turret" else "")
 	desc_label.text = ArenaShop.offer_description(offer)

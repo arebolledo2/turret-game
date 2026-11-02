@@ -79,7 +79,7 @@ func test_shop_rolls_the_quake_among_the_weapons() -> void:
 		for offer: ShopOffer in EconomyService.current_shop_offers:
 			if offer.kind == "turret" and offer.asset_id == "quake":
 				seen = true
-				assert_eq(offer.price, world.turret_price("quake"))
+				assert_eq(offer.price, world.shop.offer_price(offer))
 	assert_true(seen, "300 refreshes stock the Quake at least once")
 
 func test_flag_gating_removes_the_quake_from_stock_and_purchase() -> void:

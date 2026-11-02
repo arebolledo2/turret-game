@@ -6,6 +6,11 @@ var turret_type: String = "normal"
 var progression := TurretProgression.new()
 ## Unique within a run (assigned by `ArenaWorld.add_turret`); stamped on shots for kill attribution.
 var turret_id: int = 0
+## What a level 1 turret of this kind cost when it joined the run (the base price for a starting turret). Its sale value
+## grows from this with level, whatever prices have done since; see `ArenaShop.sell_value`.
+var value_basis: int = 0
+## True when buying it raised shop prices (every turret but the starting one), so selling it lowers them again.
+var raised_prices: bool = false
 var carried: bool = false:
 	set(value):
 		carried = value

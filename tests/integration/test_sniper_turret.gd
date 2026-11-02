@@ -59,7 +59,7 @@ func test_shop_rolls_the_sniper_among_the_weapons() -> void:
 		for offer: ShopOffer in EconomyService.current_shop_offers:
 			if offer.kind == "turret" and offer.asset_id == "sniper":
 				seen = true
-				assert_eq(offer.price, world.turret_price("sniper"))
+				assert_eq(offer.price, world.shop.offer_price(offer))
 	assert_true(seen, "300 refreshes stock the Sniper at least once")
 
 func test_flag_gating_removes_the_sniper_from_stock_and_purchase() -> void:

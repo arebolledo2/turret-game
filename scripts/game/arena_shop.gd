@@ -37,7 +37,7 @@ func generate() -> void:
 		if turrets.is_empty():
 			break
 		var type_id: String = turrets.pop_at(rng.randi_range(0, turrets.size() - 1))
-		state.current_shop_offers.append(ShopOffer.new("turret", type_id, world.turret_price(type_id)))
+		state.current_shop_offers.append(roll_turret_offer(type_id))
 	state.current_shop_offers.append_array(kept_items)
 	for i in range(GameConstants.SHOP_OFFER_COUNT - state.current_shop_offers.size()):
 		var item_id := ItemRegistry.get_weighted_random_item(state.current_wave,
@@ -46,6 +46,91 @@ func generate() -> void:
 			break
 		excluded.append(item_id)
 		state.current_shop_offers.append(ShopOffer.new("item", item_id, item_price(item_id)))
+
+## A turret offer at a random level, in its evolved form from level 5.
+func roll_turret_offer(type_id: String) -> ShopOffer:
+	var level := roll_turret_level(type_id)
+	var offer := ShopOffer.new("turret", type_id, 0, level, roll_turret_form(type_id, level))
+	offer.price = offer_price(offer)
+	return offer
+
+## Each level is SHOP_TURRET_LEVEL_DECAY times as likely as the one below it, up to what the turret has forms for and what the wave allows.
+## Without turret growth every offer is level 1.
+func roll_turret_level(type_id: String) -> int:
+	if not state.turret_progression_enabled:
+		return 1
+	var top := mini(max_offer_level(type_id), state.current_wave + GameConstants.SHOP_TURRET_LEVEL_PER_WAVE_HEADROOM)
+	var total := 0.0
+	for level in range(1, top + 1):
+		total += pow(GameConstants.SHOP_TURRET_LEVEL_DECAY, level - 1)
+	var pick := rng.randf() * total
+	for level in range(1, top + 1):
+		pick -= pow(GameConstants.SHOP_TURRET_LEVEL_DECAY, level - 1)
+		if pick < 0.0:
+			return level
+	return top
+
+## The form a turret of `level` arrives in: none below level 5, the level 5 upgrade, and from level 10 one of the finals.
+func roll_turret_form(type_id: String, level: int) -> String:
+	var stage := 0
+	for milestone in TurretProgression.EVOLUTION_LEVELS:
+		if level >= milestone:
+			stage += 1
+	var options := obtainable_forms(type_id, stage - 1)
+	return "" if options.is_empty() else options[rng.randi_range(0, options.size() - 1)]
+
+## Forms of `type_id` that the shop can hand out for the evolution at index `stage` (0 the upgrade, 1 the finals).
+static func obtainable_forms(type_id: String, stage: int) -> Array[String]:
+	var result: Array[String] = []
+	if stage < 0:
+		return result
+	for form_id in TurretEvolution.options(type_id, stage):
+		if TurretEvolution.is_obtainable(form_id):
+			result.append(form_id)
+	return result
+
+## Highest level offered: a turret is never offered at a level that wants an evolution this build cannot give it.
+static func max_offer_level(type_id: String) -> int:
+	var milestones := TurretProgression.EVOLUTION_LEVELS
+	for stage in milestones.size():
+		if obtainable_forms(type_id, stage).is_empty():
+			return milestones[stage] - 1
+	return GameConstants.SHOP_TURRET_MAX_LEVEL
+
+## A turret is worth its level 1 price times this: one step more for every level it has gained.
+static func level_value(level: int) -> float:
+	return 1.0 + GameConstants.TURRET_LEVEL_VALUE_STEP * (level - 1)
+
+## What a turret sells for: half its worth, so a fresh purchase loses half and a turret that has gained three levels breaks even.
+static func sell_value(turret: TurretActor) -> int:
+	return floori(turret.value_basis * level_value(turret.progression.level) * GameConstants.TURRET_SELL_RATIO)
+
+func sell(turret_id: int) -> bool:
+	if not is_open():
+		return false
+	for turret in world.turrets:
+		if turret.turret_id != turret_id:
+			continue
+		var value := sell_value(turret)
+		var sold_name := turret.display_name()
+		EconomyService.total_scrap += value
+		world.remove_turret(turret)
+		refresh_prices()
+		world.audio.play_cue("purchase", world.player.position)
+		world.message = "Sold %s for %d scrap." % [sold_name, value]
+		return true
+	return false
+
+## Unlocked, unsold offers follow the current prices; locked ones keep the price they were locked at.
+func refresh_prices() -> void:
+	for offer in state.current_shop_offers:
+		if not offer.sold and not offer.locked:
+			offer.price = offer_price(offer)
+
+func offer_price(offer: ShopOffer) -> int:
+	if offer.kind == "turret":
+		return maxi(1, roundi(world.turret_price(offer.asset_id) * level_value(offer.level)))
+	return item_price(offer.asset_id)
 
 ## 0 to SHOP_TURRET_MAX weapons, each slot stocked independently (binomial, mean 1.5).
 func roll_turret_count() -> int:
@@ -63,7 +148,7 @@ func toggle_lock(index: int) -> bool:
 		return false
 	offer.locked = not offer.locked
 	if not offer.locked:
-		offer.price = world.turret_price(offer.asset_id) if offer.kind == "turret" else item_price(offer.asset_id)
+		offer.price = offer_price(offer)
 	return true
 
 func can_reroll() -> bool:
@@ -126,18 +211,18 @@ func purchase(index: int) -> bool:
 	if not EconomyService.deduct_scrap(offer.price):
 		world.message = "Need %d scrap." % offer.price
 		return false
+	# Read before the purchase raises it: the level 1 price this turret's sale value grows from.
+	var basis := world.turret_price(offer.asset_id) if offer.kind == "turret" else 0
 	world.audio.play_cue("purchase", world.player.position)
 	world.telemetry.record_spend(offer.kind, offer.price)
 	offer.sold = true
 	offer.locked = false
 	if offer.kind == "turret":
-		world.add_turret(placement, offer.asset_id)
+		world.add_turret(placement, offer.asset_id, false, offer.level, offer.form, basis)
 		state.turrets_purchased += 1
 	else:
 		apply_item(offer.asset_id)
-	for remaining in state.current_shop_offers:
-		if not remaining.sold and not remaining.locked:
-			remaining.price = world.turret_price(remaining.asset_id) if remaining.kind == "turret" else item_price(remaining.asset_id)
+	refresh_prices()
 	world.message = "Installed: " + offer_name(offer)
 	return true
 
@@ -155,11 +240,15 @@ func apply_item(item_id: String) -> void:
 
 static func offer_name(offer: ShopOffer) -> String:
 	if offer.kind == "turret":
+		if not offer.form.is_empty():
+			return TurretEvolution.form_name(offer.form)
 		return "Ion Turret" if offer.asset_id == "normal" else str(TurretRegistry.TYPES[offer.asset_id]["name"])
 	return str(ItemRegistry.get_item_dict(offer.asset_id)["name"])
 
 static func offer_description(offer: ShopOffer) -> String:
 	if offer.kind == "turret":
+		if not offer.form.is_empty():
+			return TurretEvolution.description(offer.form)
 		return TurretRegistry.get_type(offer.asset_id).get("description", "")
 	return ItemRegistry.get_item(offer.asset_id).description
 

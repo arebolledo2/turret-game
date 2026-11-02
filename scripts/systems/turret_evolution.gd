@@ -66,6 +66,10 @@ static func description(form_id: String) -> String:
 static func is_implemented(form_id: String) -> bool:
 	return bool(row(form_id).get("implemented", false))
 
+## True when a turret can be given the form outright: it works and its model is in this build (as `available_evolutions` requires).
+static func is_obtainable(form_id: String) -> bool:
+	return is_implemented(form_id) and ClockworkModels.available(model_key(form_id))
+
 static func implemented_forms() -> Array[String]:
 	var result: Array[String] = []
 	for form_id: String in TurretForms.FORMS:

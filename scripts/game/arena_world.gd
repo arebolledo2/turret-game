@@ -419,12 +419,18 @@ func fire_direction(origin: Vector3, heading: Vector3, spec: CombatShot3D) -> Pr
 	effects.show_muzzle(origin, spec.damage_type)
 	return shot
 
-func add_turret(at: Vector3, type_id: String = "normal", starting: bool = false) -> TurretActor:
+## `level` and `form` place a turret that arrives already grown (a shop purchase); `value_basis` is what its level 1 self
+## cost, or -1 for the type's base price.
+func add_turret(at: Vector3, type_id: String = "normal", starting: bool = false, level: int = 1, form: String = "", value_basis: int = -1) -> TurretActor:
 	var turret := TurretActor.new()
 	turret.world = self
 	turret.turret_type = type_id
 	turret.turret_id = _next_turret_id
 	_next_turret_id += 1
+	if level > 1:
+		turret.progression.start_at(level, form)
+	turret.value_basis = TurretRegistry.get_base_price(type_id) if value_basis < 0 else value_basis
+	turret.raised_prices = not starting
 	session.state.turret_progression[turret.turret_id] = turret.progression
 	if not starting:
 		session.state.additional_turrets_acquired += 1
@@ -435,6 +441,25 @@ func add_turret(at: Vector3, type_id: String = "normal", starting: bool = false)
 	TurretStatsService.turret_counts[type_id] = int(TurretStatsService.turret_counts.get(type_id, 0)) + 1
 	GameStateService.turrets_spawned = turrets.size()
 	return turret
+
+## Takes a turret out of the run (a sale). Leaving the tree runs the form's `removed`, which clears its mines, drones and beams.
+func remove_turret(turret: TurretActor) -> void:
+	if placement.carried == turret:
+		placement.carried = null
+	turrets.erase(turret)
+	session.state.turret_progression.erase(turret.turret_id)
+	var count := int(TurretStatsService.turret_counts.get(turret.turret_type, 0)) - 1
+	if count > 0:
+		TurretStatsService.turret_counts[turret.turret_type] = count
+	else:
+		TurretStatsService.turret_counts.erase(turret.turret_type)
+	if turret.raised_prices:
+		session.state.additional_turrets_acquired = maxi(0, session.state.additional_turrets_acquired - 1)
+	GameStateService.turrets_spawned = turrets.size()
+	deployables.clear_owner(turret.turret_id)
+	drones.clear_owner(turret.turret_id)
+	actor_root.remove_child(turret)
+	turret.queue_free()
 
 ## Lays a scrap pickup on the floor (kills and the Scrap Press).
 func spawn_scrap_pickup(at: Vector3, amount: int) -> ScrapPickup:

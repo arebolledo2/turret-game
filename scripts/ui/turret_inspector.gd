@@ -26,6 +26,11 @@ var stat_values: Array[Label] = []
 var milestones: Label
 var navigation_exit: Control
 var evolution_preview: EvolutionPreview
+var sell_button: Button
+## The turret whose SELL was pressed once; pressing it again completes the sale.
+var sell_armed_id: int = 0
+
+signal sold
 
 func _ready() -> void:
 	evolution_preview = EvolutionPreview.new()
@@ -119,6 +124,11 @@ func _ready() -> void:
 	evolution_choices = VBoxContainer.new()
 	evolution_choices.add_theme_constant_override("separation", 8)
 	column.add_child(evolution_choices)
+	sell_button = Button.new()
+	sell_button.custom_minimum_size.y = 48
+	sell_button.add_theme_color_override("font_color", UiPalette.SCRAP)
+	sell_button.pressed.connect(_sell_selected)
+	column.add_child(sell_button)
 
 func refresh() -> void:
 	page = clampi(page, 0, maxi(0, (world.turrets.size() - 1) / PAGE_SIZE))
@@ -183,9 +193,32 @@ func refresh() -> void:
 func select(id: int) -> void:
 	for i in world.turrets.size():
 		if world.turrets[i].turret_id == id: page = i / PAGE_SIZE
+	if id != selected_id:
+		sell_armed_id = 0
 	selected_id = id
 	detail_key = 0
 	refresh()
+
+func _sell_selected() -> void:
+	if sell_armed_id != selected_id:
+		sell_armed_id = selected_id
+		refresh()
+		return
+	sell_armed_id = 0
+	if world.shop.sell(selected_id):
+		detail_key = 0
+		sold.emit()
+		var remaining := visible_buttons()
+		(remaining[0] if not remaining.is_empty() else navigation_exit).grab_focus()
+
+## SELL shows what the turret fetches; the first press arms it and the second completes the sale.
+func _refresh_sell(turret: TurretActor) -> void:
+	sell_button.visible = world.shop.is_open()
+	var armed := sell_armed_id == turret.turret_id and sell_button.visible
+	if not armed:
+		sell_armed_id = 0
+	sell_button.text = "%s · +%d scrap" % ["CONFIRM SALE" if armed else "SELL", ArenaShop.sell_value(turret)]
+	sell_button.tooltip_text = "Sells this turret and its growth for half its worth. A turret that has gained three levels sells for what it cost."
 
 func _show_selected() -> void:
 	var turret: TurretActor
@@ -194,6 +227,7 @@ func _show_selected() -> void:
 			turret = candidate
 			break
 	if not turret:
+		sell_button.visible = false
 		title.text = "No turrets deployed"
 		family_badges.show_turret("")
 		art.texture = null
@@ -201,6 +235,7 @@ func _show_selected() -> void:
 		detail.text = ""
 		xp_bar.value = 0
 		return
+	_refresh_sell(turret)
 	var growth := turret.progression
 	var stats := turret._current_view(0.0)
 	var ledger := world.salvage.last_settlement
@@ -347,6 +382,8 @@ func refresh_navigation() -> void:
 		pager.focus_neighbor_right = pager.get_path_to(next_page if pager == previous_page and not next_page.disabled else selected_button)
 		pager.focus_neighbor_left = pager.get_path_to(previous_page if pager == next_page and not previous_page.disabled else selected_button)
 	var choices := evolution_choices.get_children()
+	if sell_button.visible:
+		choices.append(sell_button)
 	if choices.is_empty():
 		return
 	selected_button.focus_neighbor_right = selected_button.get_path_to(choices[0])
