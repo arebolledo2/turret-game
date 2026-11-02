@@ -3,8 +3,8 @@ extends RefCounted
 
 ## Runtime hardware for the Drone Bay line, built on the cp_drone_bay chassis: a round base with a hangar tunnel, a coral tower and a
 ## teal sensor head on `Aim`, and two parking dishes on posts (the model's own parked drones give way to the real ones while
-## they hold the slots, see `DroneBayForm.parked_drone`; the real drones rest on the dishes). The unevolved bay is the bare chassis. Each form lights a
-## ring on every dock a drone rests on (`DroneBayForm.dock_offset`: the two dishes, then floor pads in the open front arc of the base)
+## they hold the slots, see `DroneDock.parked_drone`; the real drones rest on the dishes). The unevolved bay is the bare chassis. Each form lights a
+## ring on every dock a drone rests on (`DroneDock.dock_offset`: the two dishes, then floor pads in the open front arc of the base)
 ## and marks the head:
 ##   Escort Drones  three sky-blue docks, a sky band round the neck collar and a glowing ring up the antenna.
 ##   Guardian Wing  four green docks, a shield hoop round the head and two angled wing fins at its sides.
@@ -32,14 +32,14 @@ static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
 		head = model
 	var count := int(TurretEvolution.base_stats("drone_bay", form_id).get("drone_count", 2))
 	var tone := "sky" if form_id == "escort_drones" else ("green" if form_id == "guardian_wing" else "red")
-	var dishes := DroneBayForm.perches(model)
+	var dishes := DroneDock.perches(model)
 	for slot in count:
-		var at := DroneBayForm.dock_offset(dishes, slot, count)
+		var at := DroneDock.dock_offset(dishes, slot, count)
 		if slot < dishes.size():
 			# A dish: a lit ring on its top (the dish's top is just under the empty the drone's centre is lifted from).
-			_cylinder(model, "DockLight", LIGHT_RADIUS, .012, tone, Vector3(at.x, at.y - DroneBayForm.PERCH_LIFT + .008, at.z))
+			_cylinder(model, "DockLight", LIGHT_RADIUS, .012, tone, Vector3(at.x, at.y - DroneDock.PERCH_LIFT + .008, at.z))
 		else:
-			var floor_y := at.y - DroneBayForm.PAD_LIFT if not dishes.is_empty() else 0.0
+			var floor_y := at.y - DroneDock.PAD_LIFT if not dishes.is_empty() else 0.0
 			_cylinder(model, "DockPad", PAD_RADIUS, .024, "dark", Vector3(at.x, floor_y + .012, at.z))
 			_cylinder(model, "DockLight", LIGHT_RADIUS, .03, tone, Vector3(at.x, floor_y + .018, at.z))
 	match form_id:

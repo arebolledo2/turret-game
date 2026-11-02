@@ -29,21 +29,8 @@ extends TurretForm
 ## State: the slots, their rebuild clocks, the extras and the cached candidates. All of it is dropped when combat stops (`clear`, run
 ## every idle frame), when the turret is removed or evolves (`removed`) and on a run reset (the turret leaves the tree).
 const SCAN_INTERVAL: float = .2
-const INTERCEPT_INTERVAL: float = .1
 ## Most drones one bay's slots may hold, whatever the stat says.
 const MAX_PER_BAY: int = 8
-const DOCK_RADIUS: float = .95
-## The cp_drone_bay chassis carries two parking dishes (`Drone_Wire` and `Drone_Arm`, the empties its two parked drones hang from):
-## the first two slots dock on them, at `PERCH_LIFT` above the empty, and the model's own drone body on a dish is hidden while a real
-## drone holds that slot (so the shop and the idle bay show the parked pair, and combat swaps them for the real ones). Slots past the dishes dock on floor pads in the open front arc of the base, `PAD_RING` from the centre,
-## `PAD_SPREAD` radians apart, with the drone's centre `PAD_LIFT` above the floor. Any other chassis uses the plain ring at `DOCK_RADIUS`.
-const PERCH_NODES: Array[String] = ["Drone_Wire", "Drone_Arm"]
-const PARKED_PARTS: Array[String] = ["Teal", "Cream", "Glow", "Props"]
-const PERCH_LIFT: float = .06
-const FLOOR_HEIGHT: float = .165
-const PAD_LIFT: float = .075
-const PAD_RING: float = .72
-const PAD_SPREAD: float = .9
 const DEFAULT_SPEED: float = 8.0
 const DEFAULT_HOLD: float = 1.0
 const DEFAULT_ORBIT: float = 1.1
@@ -58,12 +45,6 @@ const DEFAULT_INTERCEPT_COOLDOWN: float = 1.0
 const FIRE_SLACK: float = .9
 ## A drone drops an enemy that drifts this far past the leash.
 const LEASH_SLACK: float = 1.0
-## A drone shoots a hostile shot down from this close. A bolt counts as aimed at the hero when its path passes within `GUARD_PAD`
-## metres of the hero, and a shell when its blast would come within `GUARD_PAD` metres of the hero (the hero may step out of it).
-const FLAK_RANGE: float = 2.4
-const GUARD_PAD: float = .8
-## How far ahead along a bolt's path a drone flies to meet it, in seconds of the bolt's travel.
-const LEAD_SECONDS: float = .25
 const TINT := Color(.55, .95, 1.0)
 const REAPER_TINT := Color(1.0, .45, .4)
 const GUARD_TINT := Color(.55, 1.0, .7)
@@ -81,15 +62,17 @@ var scan_clock: float = 0.0
 ## The chassis's parking dishes, looked up once per model (`rebuilt` forgets them).
 var dishes: Array[Vector3] = []
 var dishes_known: bool = false
-## The chassis's parked drone parts on each dish (see `parked_drone`).
+## The chassis's parked drone parts on each dish (see `DroneDock.parked_drone`).
 var parked: Array = []
-var intercept_clock: float = 0.0
-## Drones on a shoot-down job and the hostile shot each is after.
-var guarding: Dictionary = {}
+## Guardian Wing's shoot-down job (idle on every other form).
+var guard := DroneBayGuard.new(self)
+## Shots shot down since the bay was made.
+var intercepts: int:
+	get:
+		return guard.intercepts
 ## What this bay has done since it was made (tests and tools read them).
 var shots: int = 0
 var kills: int = 0
-var intercepts: int = 0
 var replaced: int = 0
 var extras_launched: int = 0
 var extras_refused: int = 0
@@ -184,17 +167,14 @@ func tick(delta: float) -> void:
 	if scan_clock <= 0.0:
 		scan_clock = SCAN_INTERVAL
 		_rescan(stats)
-	var anchor := _anchor()
+	var anchor := anchor()
 	for drone in slots:
 		if drone != null:
 			_step_drone(drone, delta, stats, anchor)
 	for drone in extras:
 		_step_drone(drone, delta, stats, anchor)
 	if can_intercept():
-		intercept_clock -= delta
-		if intercept_clock <= 0.0:
-			intercept_clock = INTERCEPT_INTERVAL
-			_scan_ordnance()
+		guard.tick(delta)
 	_face_work()
 
 func _step_drone(drone: Drone, delta: float, stats: TurretStats, anchor: Vector3) -> void:
@@ -205,59 +185,19 @@ func _step_drone(drone: Drone, delta: float, stats: TurretStats, anchor: Vector3
 	if not drone.temporary:
 		drone.home = dock_point(drone.slot)
 		drone.dock_height = dock_height(drone.slot)
-	if guarding.has(drone):
-		_guard(drone, stats)
+	if guard.is_guarding(drone):
+		guard.drive(drone)
 	elif is_escort():
 		_drive_escort(drone, stats, anchor)
 	else:
 		_drive_sortie(drone, delta, stats)
 
 ## Where the hero-or-bay centre of a drone's work is: the hero for an escort (the bay when the hero is gone), else the bay.
-func _anchor() -> Vector3:
+func anchor() -> Vector3:
 	var hero := actor.world.player
 	if is_escort() and is_instance_valid(hero) and not hero.dead:
 		return WorldGeometry.planar(hero.position)
 	return WorldGeometry.planar(actor.position)
-
-## Model-space positions of the parking dishes the chassis carries (their drone-centre height in `y`); empty on any other chassis.
-static func perches(model: Node3D) -> Array[Vector3]:
-	var found: Array[Vector3] = []
-	if model == null:
-		return found
-	for label in PERCH_NODES:
-		var node := model.find_child(label, true, false) as Node3D
-		if node == null:
-			continue
-		var at := Vector3.ZERO
-		var walk := node
-		while walk != null and walk != model:
-			at += walk.position
-			walk = walk.get_parent() as Node3D
-		found.append(at + Vector3(0.0, PERCH_LIFT, 0.0))
-	return found
-
-## Where slot `slot` of `count` rests, as an offset from the bay with the drone's centre height in `y`: a dish, a floor pad past the
-## dishes, or (a chassis with no dishes) the ring at `DOCK_RADIUS`.
-static func dock_offset(dishes: Array[Vector3], slot: int, count: int) -> Vector3:
-	if dishes.is_empty():
-		var ring := dock_angle(slot, count)
-		return Vector3(cos(ring) * DOCK_RADIUS, Drone.DOCK_HEIGHT, sin(ring) * DOCK_RADIUS)
-	if slot < dishes.size():
-		return dishes[maxi(slot, 0)]
-	var pads := maxi(count - dishes.size(), 1)
-	var angle := PI * .5 + (float(slot - dishes.size()) - float(pads - 1) * .5) * PAD_SPREAD
-	return Vector3(cos(angle) * PAD_RING, FLOOR_HEIGHT + PAD_LIFT, sin(angle) * PAD_RING)
-
-## The mesh nodes of the chassis's own parked drone on dish `index` (its body, dome, glow and propellers; the dish itself stays).
-static func parked_drone(model: Node3D, index: int) -> Array[Node3D]:
-	var found: Array[Node3D] = []
-	if model == null or index < 0 or index >= PERCH_NODES.size():
-		return found
-	for part in PARKED_PARTS:
-		var node := model.find_child("%s_%s" % [PERCH_NODES[index], part], true, false) as Node3D
-		if node != null:
-			found.append(node)
-	return found
 
 func rebuilt() -> void:
 	dishes_known = false
@@ -269,7 +209,7 @@ func _sync_parked() -> void:
 		return
 	var dish_count := _dishes().size()
 	while parked.size() < dish_count:
-		parked.append(parked_drone(actor.model, parked.size()))
+		parked.append(DroneDock.parked_drone(actor.model, parked.size()))
 	for index in dish_count:
 		var shown := index >= slots.size() or slots[index] == null
 		for node: Node3D in parked[index]:
@@ -278,21 +218,17 @@ func _sync_parked() -> void:
 
 func _dishes() -> Array[Vector3]:
 	if not dishes_known:
-		dishes = perches(actor.model)
+		dishes = DroneDock.perches(actor.model)
 		dishes_known = true
 	return dishes
 
-## Where slot `slot` of `count` docks, as an angle round the bay (turned off the barrel side so a drone never rests on it).
-static func dock_angle(slot: int, count: int) -> float:
-	return (float(maxi(slot, 0)) + .5) * TAU / float(maxi(count, 1)) + .6
-
 func dock_point(slot: int) -> Vector3:
-	var offset := dock_offset(_dishes(), slot, slots.size())
+	var offset := DroneDock.dock_offset(_dishes(), slot, slots.size())
 	return WorldGeometry.planar(actor.position) + Vector3(offset.x, 0.0, offset.z)
 
 ## The height a drone in slot `slot` rests at on its dock.
 func dock_height(slot: int) -> float:
-	return dock_offset(_dishes(), slot, slots.size()).y
+	return DroneDock.dock_offset(_dishes(), slot, slots.size()).y
 
 ## Grows or shrinks the slot list to the stat; a drone in a slot that goes is taken down.
 func _fit_slots(count: int) -> void:
@@ -310,7 +246,7 @@ func _fill_slots(delta: float) -> void:
 	for index in slots.size():
 		var drone := slots[index]
 		if drone != null and drone.spent:
-			guarding.erase(drone)
+			guard.forget(drone)
 			slots[index] = null
 			rebuild_clocks[index] = rebuild_seconds()
 			replaced += 1
@@ -362,14 +298,14 @@ func _prune_extras() -> void:
 	var index := extras.size() - 1
 	while index >= 0:
 		if extras[index].spent:
-			guarding.erase(extras[index])
+			guard.forget(extras[index])
 			extras.remove_at(index)
 		index -= 1
 
 # --- Looking for work (five times a second) ---
 
 func _rescan(stats: TurretStats) -> void:
-	var anchor := _anchor()
+	var anchor := anchor()
 	var leash := stats.range_metres
 	candidates.clear()
 	priority.clear()
@@ -387,7 +323,7 @@ func _rescan(stats: TurretStats) -> void:
 		# A ranged enemy within the ordinary leash is ordinary prey too once the priority list is empty.
 	var claims := _claims()
 	for drone in live_drones():
-		if guarding.has(drone):
+		if guard.is_guarding(drone):
 			continue
 		if is_hunter() and not priority.is_empty():
 			if not (drone.mode == Drone.Mode.HOLD and drone.has_target() and drone.target.enemy_type in TurretTargeting.BACKLINE_TYPES):
@@ -537,112 +473,13 @@ func _reward_kill(killer: Drone) -> void:
 	drone.altitude = Drone.HEIGHT
 	drone.home = killer.position
 	drone.mode = Drone.Mode.ORBIT
-	drone.anchor = _anchor()
+	drone.anchor = anchor()
 	drone.orbit_angle = killer.orbit_angle + PI
 	if actor.world.drones.launch(drone):
 		extras.append(drone)
 		extras_launched += 1
 	else:
 		extras_refused += 1
-
-# --- Shooting down hostile shots (Guardian Wing) ---
-
-## Looks at the hostile shots in flight (ten times a second) and sends a ready drone at each one that is aimed at the hero.
-func _scan_ordnance() -> void:
-	var hero := actor.world.player
-	if not is_instance_valid(hero) or hero.dead:
-		return
-	var threats: Array[EnemyOrdnance] = []
-	for node in actor.get_tree().get_nodes_in_group("hostile_ordnance"):
-		var shot := node as EnemyOrdnance
-		if shot != null and is_threat(shot, hero.position):
-			threats.append(shot)
-	if threats.is_empty():
-		return
-	threats.sort_custom(func(a: EnemyOrdnance, b: EnemyOrdnance) -> bool:
-		return _hero_gap(a, hero.position) < _hero_gap(b, hero.position))
-	for shot in threats:
-		if _guarded(shot):
-			continue
-		var drone := _ready_guard(shot)
-		if drone == null:
-			break
-		guarding[drone] = shot
-
-## True when `shot` (a hostile bolt or shell) is aimed at the hero's spot, within the wing's reach of the hero.
-func is_threat(shot: EnemyOrdnance, hero_at: Vector3) -> bool:
-	if shot.world != actor.world or shot.is_queued_for_deletion() or shot.to_core:
-		return false
-	var reach := intercept_reach()
-	match shot.kind:
-		"bolt":
-			var offset := WorldGeometry.planar(hero_at - shot.position)
-			if offset.length() > reach or shot.heading.length_squared() < .000001:
-				return false
-			var along := offset.dot(shot.heading)
-			if along < -.3:
-				return false
-			var across := absf(offset.x * shot.heading.z - offset.z * shot.heading.x)
-			return across <= GUARD_PAD
-		"area":
-			if shot.ground_strike:
-				return false
-			var gap := WorldGeometry.planar(shot.target_at - hero_at).length()
-			return gap <= shot.radius + GUARD_PAD and gap <= reach
-	return false
-
-func _hero_gap(shot: EnemyOrdnance, hero_at: Vector3) -> float:
-	return WorldGeometry.planar((shot.target_at if shot.kind == "area" else shot.position) - hero_at).length()
-
-func _guarded(shot: EnemyOrdnance) -> bool:
-	for drone: Drone in guarding:
-		if guarding[drone] == shot:
-			return true
-	return false
-
-## The ready drone nearest to `shot`: not docked, not on a shoot-down, its own cooldown spent.
-func _ready_guard(shot: EnemyOrdnance) -> Drone:
-	var at := WorldGeometry.planar(shot.position)
-	var best: Drone = null
-	var best_gap := INF
-	for drone in live_drones():
-		if drone.is_docked() or drone.spent or drone.aux_cooldown > 0.0 or guarding.has(drone):
-			continue
-		var gap := WorldGeometry.planar(drone.position).distance_squared_to(at)
-		if gap < best_gap:
-			best = drone
-			best_gap = gap
-	return best
-
-## Steers a drone on a shoot-down toward its shot and fires when it is close; lets it go back to work when the shot is gone.
-func _guard(drone: Drone, _stats: TurretStats) -> void:
-	var shot := guarding[drone] as EnemyOrdnance
-	if shot == null or not is_instance_valid(shot) or shot.is_queued_for_deletion():
-		_release_guard(drone)
-		return
-	var at := WorldGeometry.planar(shot.position)
-	var gap := WorldGeometry.planar(drone.position).distance_to(at)
-	if gap <= FLAK_RANGE:
-		_shoot_down(drone, shot)
-		return
-	# Fly to where the bolt will be a moment from now (a shell stays where it is).
-	var lead := shot.heading * shot.shot_speed * LEAD_SECONDS if shot.kind == "bolt" else Vector3.ZERO
-	drone.go_to(at + lead)
-
-func _shoot_down(drone: Drone, shot: EnemyOrdnance) -> void:
-	var world := actor.world
-	var from := Vector3(drone.position.x, drone.height(), drone.position.z)
-	world.effects.show_tracer(from, shot.global_position)
-	world.effects.show_burst(shot.global_position, "ion")
-	world.audio.play_cue("shock", from)
-	shot.queue_free()
-	intercepts += 1
-	drone.aux_cooldown = intercept_cooldown()
-	_release_guard(drone)
-
-func _release_guard(drone: Drone) -> void:
-	guarding.erase(drone)
-	drone.orbit(_anchor())
 
 # --- Look ---
 
@@ -661,7 +498,7 @@ func _face_work() -> void:
 
 ## Combat stopped (wave end, pause, defeat): the drones come down and the slots start over.
 func clear() -> void:
-	if slots.is_empty() and extras.is_empty() and guarding.is_empty():
+	if slots.is_empty() and extras.is_empty() and guard.is_idle():
 		return
 	_reset()
 
@@ -676,8 +513,7 @@ func _reset() -> void:
 	_sync_parked()
 	rebuild_clocks.clear()
 	extras.clear()
-	guarding.clear()
 	candidates.clear()
 	priority.clear()
 	scan_clock = 0.0
-	intercept_clock = 0.0
+	guard.reset()

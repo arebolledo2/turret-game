@@ -74,11 +74,6 @@ func add_scrap_probabilistic(base_amount: int, multiplier: float) -> int:
 	return actual_amount
 
 
-## Add scrap with multiplier applied (Legacy - prefer add_scrap_probabilistic)
-func add_scrap(amount: int, scrap_earn_mult: float) -> void:
-	add_scrap_probabilistic(amount, scrap_earn_mult)
-
-
 ## Deduct scrap (returns true if successful, false if insufficient funds)
 func deduct_scrap(amount: int) -> bool:
 	if total_scrap >= amount:
@@ -89,7 +84,7 @@ func deduct_scrap(amount: int) -> bool:
 
 ## Shared pricing policy for both world presentations.
 func calculate_turret_price(base_price: int, wave: int) -> int:
-	# Legacy economy counts paid purchases; progression counts every additional frame.
+	# Without turret progression the surcharge counts paid purchases; with it, every additional frame.
 	var wave_multiplier: float = 1.0 + GameConstants.WAVE_PRICE_SCALE * wave
 	var penalty_per_turret: float = TurretStatsService.get_turret_purchase_penalty()
 	var penalty_multiplier: float = 1.0 + penalty_per_turret * turrets_purchased

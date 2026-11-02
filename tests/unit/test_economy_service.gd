@@ -52,21 +52,21 @@ func test_reset_state_clears_turrets_purchased():
 
 func test_add_scrap_without_multiplier():
 	economy_service.total_scrap = 100
-	economy_service.add_scrap(50, 1.0)
+	economy_service.add_scrap_probabilistic(50, 1.0)
 	assert_eq(economy_service.total_scrap, 150,
 		"Should add 50 scrap")
 
 
 func test_add_scrap_with_multiplier():
 	economy_service.total_scrap = 100
-	economy_service.add_scrap(50, 1.5)
+	economy_service.add_scrap_probabilistic(50, 1.5)
 	assert_eq(economy_service.total_scrap, 175,
 		"Should add 50 * 1.5 = 75 scrap")
 
 
 func test_add_scrap_with_exact_multiplier():
 	economy_service.total_scrap = 100
-	economy_service.add_scrap(10, 2.0) # 10 * 2.0 = 20 (exact, no probabilistic rounding)
+	economy_service.add_scrap_probabilistic(10, 2.0) # 10 * 2.0 = 20 (exact, no probabilistic rounding)
 	assert_eq(economy_service.total_scrap, 120,
 		"Should add exactly 20 scrap with multiplier 2.0")
 
@@ -251,7 +251,7 @@ func test_negative_scrap_deduction():
 
 func test_large_scrap_amounts():
 	economy_service.total_scrap = 999999
-	economy_service.add_scrap(100000, 1.0)
+	economy_service.add_scrap_probabilistic(100000, 1.0)
 	assert_eq(economy_service.total_scrap, 1099999,
 		"Should handle large scrap amounts")
 
