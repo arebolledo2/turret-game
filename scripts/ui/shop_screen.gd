@@ -202,7 +202,7 @@ func refresh() -> void:
 		return
 	subtitle.text = "Wave %d secured · Prepare for wave %d" % [GameStateService.current_wave, GameStateService.current_wave + 1]
 	balance.text = "%d SCRAP" % EconomyService.total_scrap
-	growth_summary.text = _growth_summary()
+	growth_summary.text = ShopDetailText.growth_summary(world)
 	growth_summary.add_theme_color_override("font_color", UiPalette.GOOD if int(world.salvage.last_settlement.get("xp_awarded", 0)) > 0 else UiPalette.MUTED)
 	var compact := size.x < 1650
 	offers_grid.columns = 2 if compact else 4
@@ -336,7 +336,7 @@ func _refresh_details() -> void:
 			elif offer.asset_id in ["mono_type_mastery", "army_doctrine", "elite_forces", "elemental_conduit"]:
 				impact_text.text = "No active bonus for this build."
 			else:
-				impact_text.text = "No matching turret owned" if _needs_turret(offer) else "Upgrades your support systems."
+				impact_text.text = "No matching turret owned" if ShopDetailText.needs_turret(offer) else "Upgrades your support systems."
 		else:
 			impact_text.text = "Installed."
 	else:
@@ -348,102 +348,8 @@ func _refresh_details() -> void:
 	vital_text.text += "\nMove %.2f m/s · Pickup %.2f m" % [after["speed"], after["pickup"]]
 	if world.convoy_mode:
 		vital_text.text += "\n" + world.shop.convoy_preview_line()
-	var lines := PackedStringArray()
-	lines.append("[b]Hero weapon · %s[/b]\n%s damage · %s shots/s\n%s m reach" % [
-		", ".join(world.run_config.hero.families).capitalize(),
-		_number(data.hero_weapon, after.hero_weapon, "damage", ""),
-		_number(data.hero_weapon, after.hero_weapon, "fire_rate", ""),
-		"%.2f" % (float(after.hero_weapon.range) * WorldGeometry.METRES_PER_PIXEL)])
-	for turret: Dictionary in after["turrets"]:
-		var was: Dictionary = {}
-		for old: Dictionary in data["turrets"]:
-			if old["id"] == turret["id"]:
-				was = old
-		var instances: Array = turret.get("instances", [])
-		if instances.is_empty():
-			lines.append("[b]%s ×%d[/b]\n%s" % [turret["name"], turret["count"], _turret_numbers(was, turret)])
-			continue
-		for growth: Dictionary in instances:
-			var current: Dictionary = growth["combat"]
-			var previous: Dictionary = {}
-			var previous_gun: Dictionary = {}
-			for old_growth: Dictionary in was.get("instances", []):
-				if old_growth["id"] == growth["id"]:
-					previous = old_growth["combat"]
-					previous_gun = old_growth.get("gun", {})
-			var caption := "[b]%s #%d · Lv %d[/b]" % [growth["name"], growth["id"], growth["level"]]
-			caption += "\nXP %d / %d toward Lv %d" % [growth["xp"], growth["next_cost"], int(growth["level"]) + 1]
-			var change: Dictionary = world.salvage.last_settlement.get("changes", {}).get(growth["id"], {})
-			if not change.is_empty() and int(world.salvage.last_settlement.get("wave", -1)) == GameStateService.current_wave:
-				caption += "\n[color=#8be0c9]+%d XP this wave" % change["xp_awarded"]
-				if change["after"]["level"] > change["before"]["level"]:
-					caption += " · Lv %d → %d" % [change["before"]["level"], change["after"]["level"]]
-				caption += "[/color]"
-			lines.append(caption + "\n" + _turret_numbers(previous, current))
-			if growth.has("gun"):
-				lines.append("[b]Gun · Projectile[/b]\n" + _turret_numbers(previous_gun, growth["gun"]))
-		if int(turret["count"]) > instances.size():
-			lines.append("[b]%s · New Lv 1 turret[/b]\n%s" % [turret["name"], _turret_numbers({}, turret)])
-	turret_text.text = "\n\n".join(lines)
+	turret_text.text = ShopDetailText.turret_report(world, data, after)
 	_refresh_installed(data["items"])
-
-func _growth_summary() -> String:
-	if not world.session.state.turret_progression_enabled:
-		return "Turret growth is OFF for this run."
-	var ledger := world.salvage.last_settlement
-	if ledger.is_empty() or int(ledger.get("wave", -1)) != GameStateService.current_wave:
-		return "Turret growth is ON · Scrap left on the floor becomes XP at wave end."
-	if int(ledger["raw_scrap"]) == 0:
-		return "Turret growth · +0 XP — no scrap was left on the floor."
-	if int(ledger["xp_awarded"]) == 0:
-		return "Turret growth · No turrets to receive XP; salvage returned %d scrap." % ledger["fallback_cash"]
-	var levels := 0
-	for change: Dictionary in ledger["changes"].values():
-		levels += int(change["after"]["level"]) - int(change["before"]["level"])
-	var text := "Turret growth · +%d XP from leftover scrap · %d %s gained" % [
-		ledger["xp_awarded"], levels, "level" if levels == 1 else "levels"]
-	if float(ledger.get("abandoned", 0.0)) > 0.0:
-		text += "\nAbandoned scrap · scrap earned +%d%% for the rest of the run" % roundi(float(ledger["abandon_bonus"]) * 100.0)
-	return text
-
-func _turret_numbers(was: Dictionary, turret: Dictionary) -> String:
-	if bool(turret.get("utility", false)):
-		# A turret that does not attack (the Scrap Press): damage and shots per second mean nothing for it.
-		return "No attack · " + _number(was, turret, "interval", " s per drop", true) + "\n" + _number(was, turret, "range", " m drop reach")
-	var cadence_key := "rotation_rate" if turret["rotation_rate"] > 0 else "fire_rate"
-	var cadence_unit := "°/s sweep" if cadence_key == "rotation_rate" else (" mines/s" if bool(turret.get("deploys", false)) else (" ticks/s" if bool(turret.get("beam", false)) else " shots/s"))
-	if cadence_key == "fire_rate" and int(turret.get("burst_size", 1)) > 1:
-		cadence_unit = " bursts/s (%d shots)" % int(turret["burst_size"])
-	if cadence_key == "fire_rate" and int(turret.get("drones", 0)) > 0:
-		cadence_unit = " shots/s each · %d drones" % int(turret["drones"])
-	var numbers := _number(was, turret, "damage", " damage") + " · " + _number(was, turret, cadence_key, cadence_unit)
-	numbers += "\n" + _number(was, turret, "range", " m reach")
-	if turret["area"] > 0:
-		numbers += " · " + _number(was, turret, "area", " m area")
-	for spec: Array in [["pierce", " pierce"], ["projectile_speed", " m/s projectile"], ["chain_count", " chain jumps"],
-		["chain_decay", "% chain damage retained"], ["slow", "% slow strength"], ["slow_duration", " s slow"],
-		["rehit_delay", " s rehit"], ["knockback", " m knockback"]]:
-		if not was.is_empty() and not is_equal_approx(float(was["stats"][spec[0]]), float(turret["stats"][spec[0]])):
-			numbers += "\n" + _number(was["stats"], turret["stats"], spec[0], spec[1], spec[0] == "rehit_delay")
-	return numbers
-
-## Explicit before/after numbers; colour reinforces the direction without carrying meaning alone.
-func _number(before: Dictionary, after: Dictionary, key: String, unit: String, lower_is_better: bool = false) -> String:
-	var value := float(after.get(key, 0))
-	var old := float(before.get(key, value))
-	var format := "%.1f" if key == "damage" else "%.2f"
-	if is_equal_approx(old, value):
-		return (format % value) + unit
-	var better := value < old if lower_is_better else value > old
-	return "[color=#%s]%s → %s%s[/color]" % ["8be0c9" if better else "ff9b8c", format % old, format % value, unit]
-
-func _needs_turret(offer: ShopOffer) -> bool:
-	if offer.kind == "turret":
-		return true
-	for modifier: Dictionary in ItemRegistry.get_modifiers(offer.asset_id):
-		if modifier.get("filter", {}).has("attack_family"):
-			return true
-	return offer.asset_id in ["reactor_overload", "storm_conductor", "mono_type_mastery", "elemental_conduit"]
 
 func _refresh_installed(items: Array) -> void:
 	if items.hash() == installed_key:
