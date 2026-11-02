@@ -108,7 +108,7 @@ func setup(offer: ShopOffer, damage_mult: float, affordable: bool) -> void:
 	var accent := ItemRegistry.get_rarity_color(rarity) if is_item else UiPalette.INK
 	(get_theme_stylebox("normal") as StyleBoxFlat).border_color = Color(accent, .65) if is_item else Color("36505b")
 	name_label.add_theme_color_override("font_color", accent)
-	var leveled := not is_item and offer.level > 1
+	var leveled := not is_item
 	rarity_label.visible = is_item or leveled
 	rarity_label.text = ItemRegistry.get_rarity_name(rarity).to_upper() if is_item else ""
 	if leveled:

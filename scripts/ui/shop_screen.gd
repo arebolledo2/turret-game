@@ -324,7 +324,7 @@ func _refresh_details() -> void:
 	var after := data
 	if selected >= 0 and selected < EconomyService.current_shop_offers.size():
 		var offer := EconomyService.current_shop_offers[selected]
-		detail_title.text = ArenaShop.offer_name(offer) + (" · Lv %d" % offer.level if offer.kind == "turret" and offer.level > 1 else "")
+		detail_title.text = ArenaShop.offer_name(offer) + (" · Lv %d" % offer.level if offer.kind == "turret" else "")
 		detail_text.text = ArenaShop.offer_description(offer)
 		if not offer.sold:
 			after = ShopViewData.preview(world, offer)
