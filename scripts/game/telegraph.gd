@@ -68,8 +68,11 @@ static func place_sector(node: MeshInstance3D, origin: Vector3, direction: Vecto
 	(node.material_override as ShaderMaterial).set_shader_parameter("half_angle", half_angle)
 	node.visible = true
 
+## Reaching 1 means the attack executes, so the telegraph disappears; `place_*` shows it again for the next attack.
 static func set_progress(node: MeshInstance3D, progress: float) -> void:
 	(node.material_override as ShaderMaterial).set_shader_parameter("progress", clampf(progress, 0.0, 1.0))
+	if progress >= 1.0:
+		node.visible = false
 
 static func recolor(node: MeshInstance3D, color: Color) -> void:
 	(node.material_override as ShaderMaterial).set_shader_parameter("tint", color)

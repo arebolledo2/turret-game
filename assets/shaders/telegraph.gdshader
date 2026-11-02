@@ -1,9 +1,9 @@
 shader_type spatial;
 render_mode unshaded, blend_mix, cull_disabled, depth_draw_never, shadows_disabled;
 
-// Fill-gauge attack telegraph. The quad is the exact attack footprint: a crisp rim marks the hit area, a dark
-// hazard-hatched backing keeps it readable on any floor, and an energy fill advances from the attacker toward the
-// far edge as the wind-up elapses, landing at progress = 1.
+// Fill-gauge attack telegraph. The quad is the exact attack footprint, but only the energy fill is drawn: it
+// advances from the attacker toward the far edge as the wind-up elapses (rim and glow appear only on the filled
+// part), landing at progress = 1. There is no empty outline or backing.
 // shape: 0 = line (rectangle along -Z), 1 = circle, 2 = sector (cone from the quad centre toward -Z).
 uniform int shape = 0;
 uniform vec4 tint : source_color = vec4(1.0, 0.54, 0.24, 1.0);
@@ -47,9 +47,15 @@ void fragment() {
 	pulse = mix(1.0, pulse, urgency * flow);
 	float landed = smoothstep(0.985, 1.0, progress);
 
-	float filled = (1.0 - smoothstep(progress - 0.01, progress + 0.01, t)) * step(0.0005, progress);
+	// The advancing front is pointed, never flat: it leads on the centre line and trails toward the sides by `tip`
+	// metres. Circles keep their round radial front.
+	float tip = shape == 1 ? 0.0 : (shape == 0 ? min(extent.x * 0.6, reach * 0.5) : reach * 0.3);
+	float pos = t * reach + tip * lateral;          // metres from the attacker, bent back at the sides
+	float front = progress * reach;                 // apex reaches the far edge at progress = 1, so the point is never clipped flat
+	float to_front = pos - front;
+	float filled = (1.0 - smoothstep(-0.01, 0.01, to_front)) * step(0.0005, progress);
 	// Depth into the fill: 0 at the attacker, 1 at the advancing front. Energy pools at the front.
-	float depth = clamp(t / max(progress, 0.001), 0.0, 1.0);
+	float depth = clamp(pos / max(front, 0.001), 0.0, 1.0);
 
 	// Backing: dark wash plus faint diagonal hazard stripes, so the outline stays legible on bright floors.
 	float stripes = smoothstep(0.42, 0.58, abs(fract((p.x + p.y) * 3.2) - 0.5) * 2.0);
@@ -67,7 +73,6 @@ void fragment() {
 	fill_alpha *= 0.9 + 0.1 * pulse;
 
 	// Hot leading edge, a crisp line with a soft halo behind it.
-	float to_front = (t - progress) * reach;
 	float lead_line = (1.0 - smoothstep(0.0, 0.035 + aa, abs(to_front))) * step(0.0005, progress) * step(progress, 0.995);
 	float lead_halo = exp(-pow(to_front / 0.16, 2.0)) * step(0.0005, progress);
 
@@ -84,11 +89,12 @@ void fragment() {
 	color = mix(color, hot, rim * (0.30 + 0.30 * urgency));
 	color = mix(color, vec3(1.0, 0.95, 0.85), landed * 0.6);
 
-	float alpha = mix(back_alpha, fill_alpha, filled) * inside;
-	alpha += inner_glow * mix(0.10, 0.22, filled) * pulse;
+	// Only the filled region is drawn: no empty backing, rim or glow ahead of the advancing front.
+	float alpha = fill_alpha * filled * inside;
+	alpha += inner_glow * 0.22 * filled * pulse;
 	alpha += lead_halo * filled * inside * 0.20;
 	alpha += lead_line * inside * 0.55;
-	alpha = max(alpha, rim * mix(0.78, 1.0, urgency));
+	alpha = max(alpha, rim * filled * mix(0.78, 1.0, urgency));
 	alpha += landed * inside * 0.2;
 
 	ALBEDO = color;
