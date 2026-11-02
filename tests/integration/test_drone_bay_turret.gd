@@ -221,7 +221,7 @@ func test_drones_launch_one_after_another_and_wait_on_their_docks() -> void:
 	assert_eq(swarm.count_of(bay.turret_id), 2, "Never more than the bay keeps")
 	for drone in _form(bay).live_drones():
 		assert_true(drone.is_docked(), "No enemy: they stay parked")
-		var dock := DroneBayForm.dock_offset(DroneBayForm.perches(bay.model), drone.slot, 2)
+		var dock := DroneDock.dock_offset(DroneDock.perches(bay.model), drone.slot, 2)
 		assert_almost_eq(_gap(drone.position, bay.position), Vector2(dock.x, dock.z).length(), .01, "on its parking dish")
 		assert_almost_eq(drone.height(), dock.y, .01, "at the dish's height")
 		assert_gt(dock.y, Drone.DOCK_HEIGHT + .2, "The dishes stand well above the floor")
@@ -470,7 +470,7 @@ func test_each_guardian_drone_shoots_down_one_shot_per_cooldown() -> void:
 	for i in 8:
 		var shot := _bolt(Vector3(-2.0 + float(i) * .5, 0, -3.5), Vector3.ZERO)
 		shots.append(shot)
-	_form(wing)._scan_ordnance()
+	_form(wing).guard.scan()
 	for i in 20:
 		_step(wing)
 	var down := 0
@@ -966,40 +966,40 @@ func test_each_form_adds_pads_for_its_drones_and_hardware_to_the_chassis() -> vo
 
 func test_the_chassis_parks_two_drones_that_the_real_ones_replace_while_they_hold_the_slots() -> void:
 	var bay := _bay()
-	assert_eq(DroneBayForm.perches(bay.model).size(), 2, "The model has two parking dishes")
+	assert_eq(DroneDock.perches(bay.model).size(), 2, "The model has two parking dishes")
 	for index in 2:
-		var parts := DroneBayForm.parked_drone(bay.model, index)
+		var parts := DroneDock.parked_drone(bay.model, index)
 		assert_eq(parts.size(), 4, "Body, dome, glow and propellers")
 		for node in parts:
 			assert_true(node.visible, "In the shop the parked pair shows")
 	rig.combat()
 	_run(bay, 1.0)
 	for index in 2:
-		for node in DroneBayForm.parked_drone(bay.model, index):
+		for node in DroneDock.parked_drone(bay.model, index):
 			assert_false(node.visible, "A real drone holds the slot, so the parked one is hidden")
 	for label in ["Drone_Wire", "Drone_Arm"]:
 		assert_true((bay.model.find_child("%s_Brass" % label, true, false) as Node3D).visible, "The dish stays")
 	rig.shop()
 	bay._physics_process(STEP)
 	for index in 2:
-		for node in DroneBayForm.parked_drone(bay.model, index):
+		for node in DroneDock.parked_drone(bay.model, index):
 			assert_true(node.visible, "Back to the parked pair when combat stops")
 
 func test_docks_past_the_dishes_are_floor_pads_in_the_front_arc_and_other_chassis_use_the_ring() -> void:
-	var dishes := DroneBayForm.perches(_bay().model)
+	var dishes := DroneDock.perches(_bay().model)
 	var seen: Array[Vector2] = []
 	for slot in 5:
-		var dock := DroneBayForm.dock_offset(dishes, slot, 5)
+		var dock := DroneDock.dock_offset(dishes, slot, 5)
 		if slot >= 2:
-			assert_almost_eq(Vector2(dock.x, dock.z).length(), DroneBayForm.PAD_RING, .001, "Floor pads sit on one ring")
+			assert_almost_eq(Vector2(dock.x, dock.z).length(), DroneDock.PAD_RING, .001, "Floor pads sit on one ring")
 			assert_gt(dock.z, 0.3, "in front of the tower, clear of the tunnel")
 			assert_lt(dock.y, .4, "at the floor")
 		for other in seen:
 			assert_gt(Vector2(dock.x, dock.z).distance_to(other), .35, "No two docks overlap")
 		seen.append(Vector2(dock.x, dock.z))
 	for slot in 3:
-		var ring := DroneBayForm.dock_offset([], slot, 3)
-		assert_almost_eq(Vector2(ring.x, ring.z).length(), DroneBayForm.DOCK_RADIUS, .001, "No dishes: the plain ring")
+		var ring := DroneDock.dock_offset([], slot, 3)
+		assert_almost_eq(Vector2(ring.x, ring.z).length(), DroneDock.DOCK_RADIUS, .001, "No dishes: the plain ring")
 
 func test_the_rotating_hardware_rides_the_head() -> void:
 	var wing := _guardian(Vector3(0, 0, 20))
