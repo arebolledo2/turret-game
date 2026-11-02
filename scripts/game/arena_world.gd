@@ -15,7 +15,6 @@ var god_mode: bool = false
 var dev_menu_open: bool = false
 var telemetry: RunTelemetry = RunTelemetry.new()
 var dev_panel: DevPanel
-var _next_turret_id: int = 1
 var shop := ArenaShop.new()
 var waves := WaveDirector.new()
 var salvage := WaveSalvage.new()
@@ -34,6 +33,10 @@ var terrain: TerrainZones
 var spawn_zones: SpawnZones
 var preparation: PreparationPhase
 var placement := TurretPlacement.new()
+var launcher := ProjectileLauncher.new()
+var roster := TurretRoster.new()
+var outcome := RunOutcome.new()
+var input := ArenaInput.new()
 var stage: ArenaStage
 var session: RunSession
 var item_effects := ItemCombatEffects.new()
@@ -123,6 +126,10 @@ func _configure_run() -> void:
 	blasts.world = self
 	dev.world = self
 	placement.world = self
+	launcher.world = self
+	roster.world = self
+	outcome.world = self
+	input.world = self
 	add_child(session)
 
 ## Roots for interpolated actors and pickups, plus the convoy route overlay.
@@ -223,7 +230,7 @@ func start_run() -> void:
 	scrap_income.reset(GameRandom.gameplay.state)
 	telemetry.begin_run()
 	FeatureFlagService.clear_pending()
-	_next_turret_id = 1
+	roster.reset()
 	GameStateMachine.force_transition(GameStateMachine.GameState.IDLE)
 	GameStateService.is_game_active = true
 	GameStateService.current_wave = 0
@@ -395,71 +402,22 @@ func nearest_enemy(origin: Vector3, range_metres: float) -> CombatActor:
 	return combat.select_target(origin, range_metres, enemies)
 
 func fire(origin: Vector3, target: CombatActor, damage: float, speed: float) -> Projectile3D:
-	var spec := CombatShot3D.new()
-	spec.damage = damage
-	spec.speed = speed
-	return fire_shot(origin, target, spec)
+	return launcher.fire(origin, target, damage, speed)
 
 func fire_shot(origin: Vector3, target: CombatActor, spec: CombatShot3D) -> Projectile3D:
-	return fire_direction(origin, target.position - origin, spec)
+	return launcher.fire_shot(origin, target, spec)
 
 func fire_direction(origin: Vector3, heading: Vector3, spec: CombatShot3D) -> Projectile3D:
-	var shot: Projectile3D = null
-	for projectile in projectiles:
-		if not projectile.active:
-			shot = projectile
-			break
-	if not shot:
-		shot = Projectile3D.new()
-		shot.world = self
-		actor_root.add_child(shot)
-		projectiles.append(shot)
-	shot.acquire_shot(origin, heading, spec)
-	audio.play_cue("plasma" if spec.damage_type == GameEnums.DamageType.PLASMA else "ion", origin)
-	effects.show_muzzle(origin, spec.damage_type)
-	return shot
+	return launcher.fire_direction(origin, heading, spec)
 
 ## `level` and `form` place a turret that arrives already grown (a shop purchase); `value_basis` is what its level 1 self
 ## cost, or -1 for the type's base price.
 func add_turret(at: Vector3, type_id: String = "normal", starting: bool = false, level: int = 1, form: String = "", value_basis: int = -1) -> TurretActor:
-	var turret := TurretActor.new()
-	turret.world = self
-	turret.turret_type = type_id
-	turret.turret_id = _next_turret_id
-	_next_turret_id += 1
-	if level > 1:
-		turret.progression.start_at(level, form)
-	turret.value_basis = TurretRegistry.get_base_price(type_id) if value_basis < 0 else value_basis
-	turret.raised_prices = not starting
-	session.state.turret_progression[turret.turret_id] = turret.progression
-	if not starting:
-		session.state.additional_turrets_acquired += 1
-	turret.position = at
-	actor_root.add_child(turret)
-	turret.reset_physics_interpolation()
-	turrets.append(turret)
-	TurretStatsService.turret_counts[type_id] = int(TurretStatsService.turret_counts.get(type_id, 0)) + 1
-	GameStateService.turrets_spawned = turrets.size()
-	return turret
+	return roster.add(at, type_id, starting, level, form, value_basis)
 
-## Takes a turret out of the run (a sale). Leaving the tree runs the form's `removed`, which clears its mines, drones and beams.
+## Takes a turret out of the run (a sale).
 func remove_turret(turret: TurretActor) -> void:
-	if placement.carried == turret:
-		placement.carried = null
-	turrets.erase(turret)
-	session.state.turret_progression.erase(turret.turret_id)
-	var count := int(TurretStatsService.turret_counts.get(turret.turret_type, 0)) - 1
-	if count > 0:
-		TurretStatsService.turret_counts[turret.turret_type] = count
-	else:
-		TurretStatsService.turret_counts.erase(turret.turret_type)
-	if turret.raised_prices:
-		session.state.additional_turrets_acquired = maxi(0, session.state.additional_turrets_acquired - 1)
-	GameStateService.turrets_spawned = turrets.size()
-	deployables.clear_owner(turret.turret_id)
-	drones.clear_owner(turret.turret_id)
-	actor_root.remove_child(turret)
-	turret.queue_free()
+	roster.remove(turret)
 
 ## Lays a scrap pickup on the floor (kills and the Scrap Press).
 func spawn_scrap_pickup(at: Vector3, amount: int) -> ScrapPickup:
@@ -522,36 +480,17 @@ func _on_actor_defeated(actor: Node3D, _at: Vector3) -> void:
 		_on_player_died(victim)
 
 func _on_player_died(_actor: CombatActor) -> void:
-	_end_run_in_defeat("HULL LOST" if core_mode else "")
+	outcome.end_in_defeat("HULL LOST" if core_mode else "")
 
 func core_max_health() -> float:
-	return GameConstants.PLAYER_BASE_MAX_HEALTH * GameConstants.CORE_HEALTH_MULT * float(difficulty_config.get("core_health_mult", 1.0))
+	return outcome.core_max_health()
 
 ## Enemy contact and blasts land here. Ends the run when the core falls.
 func damage_core(amount: float) -> void:
-	if not core or core.dead or god_mode or not is_combat():
-		return
-	var applied := core.take_hit(amount)
-	if applied > 0.0:
-		effects.damage_numbers.show_damage(core, applied, true)
-		audio.play_cue("hull", core.position)
-		if core.dead:
-			_end_run_in_defeat("CORE DESTROYED")
+	outcome.damage_core(amount)
 
 func _end_run_in_defeat(reason: String) -> void:
-	defeat_reason = reason
-	audio.reset()
-	audio.play_cue("defeat", player.position)
-	GameStateService.is_game_active = false
-	GameStateMachine.transition_to(GameStateMachine.GameState.GAME_OVER)
-	effects.reset(true)
-	ground_zones.clear()
-	deployables.clear()
-	drones.clear()
-	for enemy in enemies:
-		enemy.clear_transients()
-	for projectile in projectiles:
-		projectile.release()
+	outcome.end_in_defeat(reason)
 
 func turret_price(type_id: String = "normal") -> int:
 	return EconomyService.calculate_turret_price(TurretRegistry.get_base_price(type_id), GameStateService.current_wave)
@@ -587,30 +526,8 @@ func toggle_ranges() -> void:
 	message = "Turret ranges %s" % ("shown" if show_ranges else "hidden")
 
 func _unhandled_input(event: InputEvent) -> void:
-	if preparation and preparation.handle_input(event):
-		get_viewport().set_input_as_handled()
-		return
-	if event.is_action_pressed("toggle_range") and not event.is_echo() and GameStateService.is_game_active:
-		toggle_ranges()
-	if event is InputEventKey and event.pressed and not event.echo:
-		match event.physical_keycode:
-			KEY_ESCAPE: toggle_pause()
-			KEY_E: interact()
-			KEY_R:
-				if not GameStateService.is_game_active:
-					start_run()
-	if event is InputEventMouseButton and event.pressed and camera_rig:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			camera_rig.zoom_steps(1.0)
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			camera_rig.zoom_steps(-1.0)
-	if event is InputEventJoypadButton and event.pressed:
-		if event.button_index == JOY_BUTTON_START:
-			toggle_pause()
-		elif event.button_index == JOY_BUTTON_A:
-			interact()
+	input.handle(event)
 
 ## Between waves the hero and the core are fully healed for free.
 func heal_between_waves() -> void:
-	if is_instance_valid(player) and not player.dead: player.health = player.max_health
-	if is_instance_valid(core) and not core.dead: core.repair(core.max_health)
+	outcome.heal_between_waves()
