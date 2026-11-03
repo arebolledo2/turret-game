@@ -80,6 +80,8 @@ func begin_spawning() -> void:
 	hurtbox.collision_layer = 0
 	marker.visible = false
 	set_rise(0.0)
+	# Physics interpolation would otherwise blend the visual from its standing pose (set before this call) down into the pit.
+	reset_physics_interpolation()
 
 ## 0 = fully below the floor, 1 = standing; eased out so the enemy surges up and settles.
 func set_rise(amount: float) -> void:
