@@ -32,16 +32,16 @@ func test_every_v2_item_exists_with_tag_and_modifiers() -> void:
 		assert_false(ItemRegistry.get_modifiers(item_id).is_empty() and ItemRegistry.get_item_dict(item_id).get("special_effect", "").is_empty(), item_id)
 		assert_false(ArenaShop.item_description(item_id).is_empty(), item_id)
 
-func test_pool_rarity_split_is_13_20_12_9_2() -> void: # includes the 3 convoy items (1 common, 2 uncommon)
+func test_pool_rarity_split_is_13_22_16_11_3() -> void: # includes the 3 convoy items (1 common, 2 uncommon)
 	var counts := {}
 	for item_id in ShopCatalog.ids("item"):
 		var rarity := ItemRegistry.get_rarity(item_id)
 		counts[rarity] = int(counts.get(rarity, 0)) + 1
 	assert_eq(counts[GameEnums.ItemRarity.COMMON], 13)
-	assert_eq(counts[GameEnums.ItemRarity.UNCOMMON], 20)
-	assert_eq(counts[GameEnums.ItemRarity.RARE], 12)
-	assert_eq(counts[GameEnums.ItemRarity.EPIC], 9)
-	assert_eq(counts[GameEnums.ItemRarity.LEGENDARY], 2)
+	assert_eq(counts[GameEnums.ItemRarity.UNCOMMON], 22)
+	assert_eq(counts[GameEnums.ItemRarity.RARE], 16)
+	assert_eq(counts[GameEnums.ItemRarity.EPIC], 11)
+	assert_eq(counts[GameEnums.ItemRarity.LEGENDARY], 3)
 
 func test_projectile_doctrine_also_benefits_explosive_projectiles_without_other_penalties() -> void:
 	_own("ion_doctrine")

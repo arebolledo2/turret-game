@@ -237,11 +237,6 @@ func get_player_weapon_damage(base_damage: float) -> float:
 	return apply_to_stat(base_damage, "player_weapon_damage", "player")
 
 
-## Get player luck with modifiers applied
-func get_player_luck(base_luck: float) -> float:
-	return apply_to_stat(base_luck, "player_luck", "player")
-
-
 ## Get reroll cost multiplier (1.0 = normal)
 func get_reroll_cost_multiplier() -> float:
 	return apply_to_stat(1.0, "reroll_cost", "player")

@@ -168,3 +168,18 @@ func test_wave_caps_the_best_level_on_offer() -> void:
 	world.session.state.current_wave = 2
 	for i in 2000:
 		assert_lte(world.shop.roll_turret_level("plasma"), 3)
+
+func test_luck_shifts_rolled_turret_levels() -> void:
+	world.session.state.turret_progression_enabled = true
+	world.session.state.current_wave = 30
+	var average := func(points: int) -> float:
+		PlayerStatsService.player_luck = points
+		var total := 0.0
+		for i in 2000:
+			total += world.shop.roll_turret_level("plasma")
+		return total / 2000.0
+	var unlucky: float = average.call(-30)
+	var neutral: float = average.call(0)
+	var lucky: float = average.call(30)
+	assert_lt(unlucky, neutral, "Negative luck lowers rolled levels")
+	assert_gt(lucky, neutral, "Positive luck raises rolled levels")

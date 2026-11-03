@@ -62,7 +62,7 @@ The opaque `ShopScreen` hides the arena and combat HUD, suspends 3D drawing whil
 
 `ShopCatalog` remains the stock/reward authority. Every catalogued item is always stocked unless its row names a flag. `mode_convoy` items additionally require Convoy mode. Mine remains outside supported shop content; Sniper, Flamethrower, Bow and Bowling are stocked. Reserve Battery additionally requires a core mode.
 
-To add an item, add a reviewed row to ItemCatalog, a catalog entry and supported family/capability filters. Provide a separate `assets/ui/items/<id>.svg`, a clear description and appropriate rarity/stack cap. Add tests for actual stat or combat behaviour and preview equivalence. New stats require a runtime consumer.
+To add an item, add a reviewed row to ItemCatalog, a catalog entry and supported family/capability filters. Provide a separate `assets/ui/items/<id>.svg`, a clear description and appropriate rarity/stack cap. Add tests for actual stat or combat behaviour and preview equivalence. New stats require a runtime consumer. Luck items (`lucky_coin`, `rabbits_paw`, `four_leaf_clover`, `loaded_dice`, `fortunes_ledger`, `black_cat_charm`, `gamblers_crown`, `cosmic_alignment`, `golden_horseshoe`) all use the existing `player_luck` stat with whole-number `add` values; `black_cat_charm` is the negative-luck trade-off.
 
 Art tooling: `python tools/build_shop_art.py` rebuilds the full-colour SVG set from curated shapes and the layout-study motifs; `res://tools/render_shop_portraits.tscn` renders the model portraits with a graphics driver (every form; `-- --only=key,key` renders just those keys and leaves the rest untouched). Run an editor import after regenerating. `res://tools/export_shop_catalog.tscn` writes an audit JSON under `.test-results/`.
 

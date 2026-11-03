@@ -23,7 +23,7 @@ func before_each() -> void:
 # =============================================================================
 
 func test_reset_state_sets_base_luck():
-	player_stats_service.player_luck = 0.5
+	player_stats_service.player_luck = 5
 	player_stats_service.reset_state()
 	assert_eq(player_stats_service.player_luck, GameConstants.PLAYER_BASE_LUCK,
 		"Reset should set base luck")
@@ -166,74 +166,51 @@ func test_get_player_luck_base():
 
 
 func test_get_player_luck_with_additive_modifier():
-	modifier_service.add_modifier({
-		"stat": "player_luck",
-		"operation": "add",
-		"value": 0.05,
-		"source": "luck_item"
-	})
-	var luck = player_stats_service.get_player_luck()
-	assert_eq(luck, GameConstants.PLAYER_BASE_LUCK + 0.05,
+	modifier_service.add_modifier({"stat": "player_luck", "operation": "add", "value": 2, "source": "luck_item"})
+	assert_eq(player_stats_service.get_player_luck(), GameConstants.PLAYER_BASE_LUCK + 2,
 		"Should apply luck modifier")
 
 
-func test_get_player_luck_clamped_to_max():
-	player_stats_service.player_luck = 1.8
-	modifier_service.add_modifier({
-		"stat": "player_luck",
-		"operation": "add",
-		"value": 0.5, # 1.8 + 0.5 = 2.3, should clamp to 2.0
-		"source": "luck_item"
-	})
-	var luck = player_stats_service.get_player_luck()
-	assert_eq(luck, GameConstants.PLAYER_MAX_LUCK,
-		"Luck should be clamped to max")
+func test_get_player_luck_is_uncapped():
+	player_stats_service.player_luck = 500
+	assert_eq(player_stats_service.get_player_luck(), 500, "Luck points have no cap")
 
 
-func test_get_player_luck_clamped_to_zero():
-	player_stats_service.player_luck = 0.05
-	modifier_service.add_modifier({
-		"stat": "player_luck",
-		"operation": "add",
-		"value": - 0.2,
-		"source": "luck_penalty"
-	})
-	var luck = player_stats_service.get_player_luck()
-	assert_eq(luck, 0.0,
-		"Luck should be clamped to 0")
+func test_get_player_luck_can_be_negative():
+	modifier_service.add_modifier({"stat": "player_luck", "operation": "add", "value": -3, "source": "luck_penalty"})
+	assert_eq(player_stats_service.get_player_luck(), -3, "Luck can go below zero")
+	assert_lt(player_stats_service.get_luck_factor(), 0.0, "Negative luck gives a negative factor")
 
 
-func test_get_player_luck_within_bounds():
-	player_stats_service.player_luck = 0.15
-	var luck = player_stats_service.get_player_luck()
-	assert_gte(luck, 0.0, "Luck should be >= 0")
-	assert_lte(luck, GameConstants.PLAYER_MAX_LUCK,
-		"Luck should be <= max")
+func test_get_player_luck_display_is_signed_int():
+	player_stats_service.player_luck = 7
+	assert_eq(player_stats_service.get_player_luck_display(), 7)
+	player_stats_service.player_luck = -2
+	assert_eq(player_stats_service.get_player_luck_display(), -2)
 
 
-func test_get_player_luck_display():
-	player_stats_service.player_luck = 0.15
-	var display = player_stats_service.get_player_luck_display()
-	assert_eq(display, 15, "Should convert 0.15 to 15")
+func test_luck_factor_has_diminishing_returns():
+	assert_eq(ItemRegistry.luck_factor_for(0.0), 0.0)
+	var previous := 0.0
+	var previous_gain := INF
+	for points in [5.0, 10.0, 20.0, 40.0, 80.0]:
+		var factor := ItemRegistry.luck_factor_for(points)
+		assert_gt(factor, previous, "More luck always helps")
+		assert_lt(factor, GameConstants.LUCK_FACTOR_MAX, "Factor stays under its asymptote")
+		var gain_per_point: float = (factor - previous) / (points - (previous_points_for(points)))
+		assert_lt(gain_per_point, previous_gain, "Each extra point is worth less")
+		previous = factor
+		previous_gain = gain_per_point
 
 
-func test_get_player_luck_display_with_modifier():
-	player_stats_service.player_luck = 0.10
-	modifier_service.add_modifier({
-		"stat": "player_luck",
-		"operation": "add",
-		"value": 0.05,
-		"source": "luck_item"
-	})
-	var display = player_stats_service.get_player_luck_display()
-	assert_eq(display, 15, "Should display modified luck as integer")
+func previous_points_for(points: float) -> float:
+	return {5.0: 0.0, 10.0: 5.0, 20.0: 10.0, 40.0: 20.0, 80.0: 40.0}[points]
 
 
-func test_get_player_luck_display_max():
-	player_stats_service.player_luck = GameConstants.PLAYER_MAX_LUCK
-	var display = player_stats_service.get_player_luck_display()
-	assert_eq(display, int(GameConstants.PLAYER_MAX_LUCK * 100),
-		"Should display max luck correctly")
+func test_negative_luck_factor_floors_at_negative_max():
+	assert_lt(ItemRegistry.luck_factor_for(-10.0), 0.0)
+	assert_gt(ItemRegistry.luck_factor_for(-1000.0), -GameConstants.LUCK_NEGATIVE_FACTOR_MAX - 0.0001)
+	assert_almost_eq(ItemRegistry.luck_factor_for(-1000.0), -GameConstants.LUCK_NEGATIVE_FACTOR_MAX, 0.001)
 
 
 # =============================================================================
@@ -278,7 +255,7 @@ func test_multiple_stats_with_different_modifiers():
 	modifier_service.add_modifier({
 		"stat": "player_luck",
 		"operation": "add",
-		"value": 0.1,
+		"value": 3,
 		"source": "luck_item"
 	})
 
@@ -290,7 +267,7 @@ func test_multiple_stats_with_different_modifiers():
 		"Speed should be modified by add")
 	assert_eq(damage, GameConstants.PLAYER_TURRET_DAMAGE * 2.0,
 		"Damage should be modified by 'more' 2.0x")
-	assert_eq(luck, GameConstants.PLAYER_BASE_LUCK + 0.1,
+	assert_eq(luck, GameConstants.PLAYER_BASE_LUCK + 3,
 		"Luck should be modified by add")
 
 
@@ -316,11 +293,10 @@ func test_very_high_difficulty():
 		"Should handle very high difficulty")
 
 
-func test_luck_display_rounds_down():
-	player_stats_service.player_luck = 0.159
-	var display = player_stats_service.get_player_luck_display()
-	assert_eq(display, 15,
-		"Should round down 15.9 to 15")
+func test_luck_increase_modifier_rounds_to_whole_points():
+	player_stats_service.player_luck = 5
+	modifier_service.add_modifier({"stat": "player_luck", "operation": "increase", "value": 0.3, "source": "luck_item"})
+	assert_eq(player_stats_service.get_player_luck(), 7, "5 * 1.3 = 6.5 rounds to 7")
 
 
 # =============================================================================

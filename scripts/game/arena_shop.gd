@@ -41,7 +41,7 @@ func generate() -> void:
 	state.current_shop_offers.append_array(kept_items)
 	for i in range(GameConstants.SHOP_OFFER_COUNT - state.current_shop_offers.size()):
 		var item_id := ItemRegistry.get_weighted_random_item(state.current_wave,
-			PlayerStatsService.get_player_luck(), state.item_counts, excluded, rng)
+			PlayerStatsService.get_luck_factor(), state.item_counts, excluded, rng)
 		if item_id.is_empty():
 			break
 		excluded.append(item_id)
@@ -55,17 +55,20 @@ func roll_turret_offer(type_id: String) -> ShopOffer:
 	return offer
 
 ## Each level is SHOP_TURRET_LEVEL_DECAY times as likely as the one below it, up to what the turret has forms for and what the wave allows.
+## Luck raises (or, when negative, lowers) the decay so higher levels are more (less) likely.
 ## Without turret growth every offer is level 1.
 func roll_turret_level(type_id: String) -> int:
 	if not state.turret_progression_enabled:
 		return 1
 	var top := mini(max_offer_level(type_id), state.current_wave + GameConstants.SHOP_TURRET_LEVEL_PER_WAVE_HEADROOM)
+	var decay := clampf(GameConstants.SHOP_TURRET_LEVEL_DECAY + GameConstants.TURRET_LEVEL_LUCK_DECAY_BONUS * PlayerStatsService.get_luck_factor(),
+		GameConstants.TURRET_LEVEL_MIN_DECAY, .95)
 	var total := 0.0
 	for level in range(1, top + 1):
-		total += pow(GameConstants.SHOP_TURRET_LEVEL_DECAY, level - 1)
+		total += pow(decay, level - 1)
 	var pick := rng.randf() * total
 	for level in range(1, top + 1):
-		pick -= pow(GameConstants.SHOP_TURRET_LEVEL_DECAY, level - 1)
+		pick -= pow(decay, level - 1)
 		if pick < 0.0:
 			return level
 	return top
@@ -166,7 +169,7 @@ func unavailable_item_ids() -> Array:
 
 ## One item from the shop's weighted pool (for rewards outside the shop); "" when nothing is left.
 func roll_item_reward() -> String:
-	return ItemRegistry.get_weighted_random_item(state.current_wave, PlayerStatsService.get_player_luck(),
+	return ItemRegistry.get_weighted_random_item(state.current_wave, PlayerStatsService.get_luck_factor(),
 		state.item_counts, unavailable_item_ids(), rng)
 
 func item_price(item_id: String) -> int:

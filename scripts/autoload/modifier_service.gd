@@ -67,10 +67,6 @@ func get_player_weapon_damage(base_damage: float) -> float:
 	return _system.get_player_weapon_damage(base_damage)
 
 
-func get_player_luck(base_luck: float) -> float:
-	return _system.get_player_luck(base_luck)
-
-
 func get_reroll_cost_multiplier() -> float:
 	return _system.get_reroll_cost_multiplier()
 

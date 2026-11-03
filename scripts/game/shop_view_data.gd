@@ -111,7 +111,8 @@ static func build_data(world: ArenaWorld, extra_turret: String = "") -> Dictiona
 	world.item_effects.modify_stats(hero_stats, 0, "kinetic" in world.run_config.hero.families)
 	return {"hero_weapon": hero_stats, "turrets": turrets, "dps": dps, "max_hull": max_hull, "hull": minf(world.player.health, max_hull),
 		"speed": PlayerStatsService.get_player_speed() * WorldGeometry.METRES_PER_PIXEL,
-		"pickup": PlayerStatsService.get_pickup_radius() * WorldGeometry.METRES_PER_PIXEL, "items": items}
+		"pickup": PlayerStatsService.get_pickup_radius() * WorldGeometry.METRES_PER_PIXEL,
+		"luck": PlayerStatsService.get_player_luck(), "items": items}
 
 static func _actor_numbers(actor: TurretActor, secondary: bool = false) -> Dictionary:
 	var values := actor.resolve_attack_stats(secondary)

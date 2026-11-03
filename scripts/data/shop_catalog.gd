@@ -29,6 +29,9 @@ const DEFAULT_ENTRIES: Dictionary = {
 		"last_stand": "", "quality_over_quantity": "", "glass_cannon_core": "",
 		"mono_type_mastery": "", "reactor_overload": "", "storm_conductor": "",
 		"elemental_conduit": "", "whirlwind_frame": "",
+		# Luck items
+		"lucky_coin": "", "rabbits_paw": "", "four_leaf_clover": "", "loaded_dice": "", "fortunes_ledger": "", "black_cat_charm": "",
+		"gamblers_crown": "", "cosmic_alignment": "", "golden_horseshoe": "",
 	},
 }
 

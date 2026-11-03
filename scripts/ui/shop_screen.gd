@@ -338,7 +338,7 @@ func _refresh_details() -> void:
 		impact_text.text = ""
 	if after["max_hull"] != data["max_hull"]:
 		vital_text.text += "\nMax hull %.0f → %.0f" % [data["max_hull"], after["max_hull"]]
-	vital_text.text += "\nMove %.2f m/s · Pickup %.2f m" % [after["speed"], after["pickup"]]
+	vital_text.text += "\nMove %.2f m/s · Pickup %.2f m · Luck %d" % [after["speed"], after["pickup"], after["luck"]]
 	if world.convoy_mode:
 		vital_text.text += "\n" + world.shop.convoy_preview_line()
 	turret_text.text = ShopDetailText.turret_report(world, data, after)

@@ -165,3 +165,23 @@ func test_stack_limit_can_sell_and_restart_discards_pending_rewards() -> void:
 	world.start_run()
 	assert_true(world.drops.pending_items.is_empty())
 	assert_false(world.chest_rewards.active)
+
+func test_boss_rarity_shifts_with_luck_and_stays_in_bounds() -> void:
+	PlayerStatsService.player_luck = 1000
+	var lifted := 0
+	var low := 0
+	for i in 400:
+		if world.drops.luck_shifted_boss_rarity(GameEnums.ItemRarity.EPIC) == GameEnums.ItemRarity.LEGENDARY:
+			lifted += 1
+		assert_eq(world.drops.luck_shifted_boss_rarity(GameEnums.ItemRarity.LEGENDARY), GameEnums.ItemRarity.LEGENDARY, "Legendary is the ceiling")
+	assert_between(float(lifted) / 400.0, .4, .6, "Max luck lifts ~50% of Epic boss drops")
+	PlayerStatsService.player_luck = -1000
+	for i in 400:
+		var rarity := world.drops.luck_shifted_boss_rarity(GameEnums.ItemRarity.EPIC)
+		assert_between(rarity, GameEnums.ItemRarity.RARE, GameEnums.ItemRarity.EPIC)
+		if rarity == GameEnums.ItemRarity.RARE:
+			low += 1
+		assert_eq(world.drops.luck_shifted_boss_rarity(GameEnums.ItemRarity.RARE), GameEnums.ItemRarity.RARE, "Rare is the floor")
+	assert_gt(low, 0, "Negative luck can drop a boss reward a tier")
+	PlayerStatsService.player_luck = 0
+	assert_eq(world.drops.luck_shifted_boss_rarity(GameEnums.ItemRarity.EPIC), GameEnums.ItemRarity.EPIC, "No luck, no shift")

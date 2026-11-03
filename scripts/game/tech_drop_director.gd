@@ -123,7 +123,7 @@ func reward(drop: CombatActor) -> void:
 		var counts := ItemTrackingService.item_counts.duplicate()
 		for pending in pending_items:
 			counts[pending.id] = int(counts.get(pending.id, 0)) + 1
-		item_id = ItemRegistry.get_weighted_random_item(GameStateService.current_wave, PlayerStatsService.get_player_luck(), counts, world.shop.unavailable_item_ids(), GameRandom.gameplay)
+		item_id = ItemRegistry.get_weighted_random_item(GameStateService.current_wave, PlayerStatsService.get_luck_factor(), counts, world.shop.unavailable_item_ids(), GameRandom.gameplay)
 	if item_id.is_empty():
 		world.message = "Tech drop destroyed · scrap recovered"
 	else:
@@ -140,6 +140,7 @@ func reward_boss(type_id: String) -> void:
 	var rarity := GameEnums.ItemRarity.EPIC
 	if type_id == "grand_marionettist" or (type_id == "prism_conductor" and GameRandom.gameplay.randf() < .25):
 		rarity = GameEnums.ItemRarity.LEGENDARY
+	rarity = luck_shifted_boss_rarity(rarity)
 	var counts := ItemTrackingService.item_counts.duplicate()
 	for pending in pending_items:
 		counts[pending.id] = int(counts.get(pending.id, 0)) + 1
@@ -158,6 +159,15 @@ func reward_boss(type_id: String) -> void:
 	else:
 		queue_item(eligible[GameRandom.gameplay.randi_range(0, eligible.size() - 1)], "BOSS DEFEATED")
 		world.message = "%s boss reward secured · choose at wave end" % ItemRegistry.get_rarity_name(rarity)
+
+## Positive luck can lift a boss reward one rarity tier (to Legendary at most); negative luck can drop it one (to Rare at least).
+func luck_shifted_boss_rarity(rarity: GameEnums.ItemRarity) -> GameEnums.ItemRarity:
+	var factor := PlayerStatsService.get_luck_factor()
+	if factor == 0.0 or GameRandom.gameplay.randf() >= absf(factor) * GameConstants.BOSS_LUCK_TIER_CHANCE:
+		return rarity
+	if factor > 0.0:
+		return mini(rarity + 1, GameEnums.ItemRarity.LEGENDARY) as GameEnums.ItemRarity
+	return maxi(rarity - 1, GameEnums.ItemRarity.RARE) as GameEnums.ItemRarity
 
 func can_keep_next() -> bool:
 	return not pending_items.is_empty() and not ItemRegistry.is_at_max_stacks(pending_items[0].id, ItemTrackingService.item_counts)

@@ -136,7 +136,7 @@ func roll_result(tier: int) -> Dictionary:
 
 func _roll_item(tier: int) -> String:
 	return ItemRegistry.get_weighted_random_item(GameStateService.current_wave,
-		PlayerStatsService.get_player_luck() + GameConstants.BUILD_ZONE_TIER_LUCK * tier,
+		PlayerStatsService.get_luck_factor() +GameConstants.BUILD_ZONE_TIER_LUCK * tier,
 		ItemTrackingService.item_counts, world.shop.unavailable_item_ids(), GameRandom.gameplay)
 
 func spawn_zone(at: Vector3, kind: String, asset_id: String, tier: int) -> BuildZoneActor:

@@ -120,6 +120,7 @@ func _build_stats(data: Dictionary, after: Dictionary) -> void:
 		["hull", "hull", "Hull", "%d/%d" % [ceili(after["hull"]), ceili(after["max_hull"])], float(data["max_hull"]), float(after["max_hull"])],
 		["speed", "speed", "Move m/s", "%.2f" % after["speed"], float(data["speed"]), float(after["speed"])],
 		["pickup", "pickup", "Pickup m", "%.2f" % after["pickup"], float(data["pickup"]), float(after["pickup"])],
+		["scrap", "star", "Luck", "%+d" % after["luck"] if after["luck"] != 0 else "0", float(data["luck"]), float(after["luck"])],
 	]
 	for entry: Array in tiles:
 		var tile := StatTile.new().setup(entry[0], entry[1], entry[2], entry[3])

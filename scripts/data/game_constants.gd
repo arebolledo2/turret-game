@@ -268,8 +268,16 @@ const RARITY_MIN_WAVE: Dictionary = {
 const RARITY_WAVE_BONUS_PER_WAVE: float = 0.05 # +5% weight per wave past min
 
 # Player luck configuration
-const PLAYER_BASE_LUCK: float = 0.0
-const PLAYER_MAX_LUCK: float = 2.0 # Cap at 200% for sanity
+# Luck is an uncapped signed integer (points). It maps to a "luck factor" with diminishing returns:
+# positive points approach LUCK_FACTOR_MAX, negative points approach -LUCK_NEGATIVE_FACTOR_MAX.
+# The factor (not the points) drives rarity weights, boss tiers and turret levels.
+const PLAYER_BASE_LUCK: int = 0
+const LUCK_FACTOR_MAX: float = 2.0
+const LUCK_NEGATIVE_FACTOR_MAX: float = 1.0
+const LUCK_SOFTNESS: float = 12.0 # points at which ~63% of the max factor is reached
+const BOSS_LUCK_TIER_CHANCE: float = .25 # per unit of luck factor, to shift a boss drop one rarity tier
+const TURRET_LEVEL_LUCK_DECAY_BONUS: float = .15 # per unit of luck factor, on the level-up continue chance
+const TURRET_LEVEL_MIN_DECAY: float = .15
 
 # Hero progression: XP per collected scrap, and growth per level (linear) plus a burst at every 5th level
 const HERO_XP_PER_SCRAP: float = 1.0

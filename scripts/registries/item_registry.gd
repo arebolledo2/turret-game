@@ -221,10 +221,18 @@ static func get_items_by_rarity(rarity: GameEnums.ItemRarity) -> Array:
 	return result
 
 
-## Calculate effective rarity weights based on wave and luck
+## Convert luck points (uncapped, signed) to a luck factor with diminishing returns
+static func luck_factor_for(points: float) -> float:
+	var saturation := 1.0 - exp(-absf(points) / GameConstants.LUCK_SOFTNESS)
+	if points >= 0.0:
+		return GameConstants.LUCK_FACTOR_MAX * saturation
+	return -GameConstants.LUCK_NEGATIVE_FACTOR_MAX * saturation
+
+
+## Calculate effective rarity weights based on wave and luck factor (see luck_factor_for)
 static func calculate_rarity_weights(wave: int, luck: float) -> Dictionary:
 	var weights: Dictionary = {}
-	var clamped_luck := clampf(luck, 0.0, GameConstants.PLAYER_MAX_LUCK)
+	var clamped_luck := clampf(luck, -GameConstants.LUCK_NEGATIVE_FACTOR_MAX, GameConstants.LUCK_FACTOR_MAX)
 
 	for rarity in GameConstants.RARITY_BASE_WEIGHTS.keys():
 		var min_wave: int = GameConstants.RARITY_MIN_WAVE.get(rarity, 1)
@@ -238,8 +246,11 @@ static func calculate_rarity_weights(wave: int, luck: float) -> Dictionary:
 		var luck_mult: float = GameConstants.LUCK_WEIGHT_MULTIPLIERS.get(rarity, 1.0)
 
 		# Interpolate based on luck (0.0 = no effect, 1.0+ = full multiplier effect)
-		var effective_luck := minf(clamped_luck, 1.0)
-		var luck_factor := lerpf(1.0, luck_mult, effective_luck)
+		var luck_factor: float
+		if clamped_luck < 0.0:
+			luck_factor = lerpf(1.0, 1.0 / luck_mult, -clamped_luck)
+		else:
+			luck_factor = lerpf(1.0, luck_mult, minf(clamped_luck, 1.0))
 
 		# Extra luck bonus beyond 1.0
 		if clamped_luck > 1.0:

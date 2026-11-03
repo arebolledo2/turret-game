@@ -242,3 +242,43 @@ func test_modifier_has_required_fields():
 
 func before_each() -> void:
 	TestHelpers.reset_all_services()
+
+
+# =============================================================================
+# LUCK
+# =============================================================================
+
+func _rare_plus_share(wave: int, points: float) -> float:
+	var weights := ItemRegistry.calculate_rarity_weights(wave, ItemRegistry.luck_factor_for(points))
+	var total := 0.0
+	var high := 0.0
+	for rarity in weights:
+		total += weights[rarity]
+		if rarity >= GameEnums.ItemRarity.RARE:
+			high += weights[rarity]
+	return high / total
+
+
+func test_luck_raises_rare_share_monotonically():
+	var previous := -1.0
+	for points in [-10.0, 0.0, 5.0, 10.0, 20.0, 40.0]:
+		var share := _rare_plus_share(8, points)
+		assert_gt(share, previous, "Rare+ share should rise with luck (points %s)" % points)
+		previous = share
+
+
+func test_negative_luck_never_zeroes_a_unlocked_rarity():
+	var weights := ItemRegistry.calculate_rarity_weights(8, ItemRegistry.luck_factor_for(-1000.0))
+	for rarity in [GameEnums.ItemRarity.COMMON, GameEnums.ItemRarity.UNCOMMON, GameEnums.ItemRarity.RARE, GameEnums.ItemRarity.EPIC, GameEnums.ItemRarity.LEGENDARY]:
+		assert_gt(weights[rarity], 0.0, "Rarity %d should stay possible" % rarity)
+
+
+func test_zero_luck_matches_base_weights_at_min_wave():
+	var weights := ItemRegistry.calculate_rarity_weights(1, 0.0)
+	assert_eq(weights[GameEnums.ItemRarity.COMMON], GameConstants.RARITY_BASE_WEIGHTS[GameEnums.ItemRarity.COMMON])
+
+
+func test_luck_items_grant_luck_modifiers():
+	for item_id in ["lucky_coin", "rabbits_paw", "four_leaf_clover", "loaded_dice", "fortunes_ledger", "gamblers_crown", "cosmic_alignment", "golden_horseshoe", "black_cat_charm"]:
+		var stats: Array = ItemRegistry.get_modifiers(item_id).map(func(m: Dictionary) -> String: return str(m["stat"]))
+		assert_has(stats, "player_luck", "%s should modify player_luck" % item_id)

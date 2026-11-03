@@ -13,7 +13,7 @@ func _ready() -> void:
 ## Manages player health, speed, luck, and stat modifiers
 
 # Core player stats
-var player_luck: float:
+var player_luck: int:
 	get: return state.player_luck
 	set(value): state.player_luck = value
 
@@ -51,15 +51,19 @@ func get_player_weapon_damage() -> float:
 	return float(get_weapon_stats().damage)
 
 
-## Get player luck with modifiers applied, clamped to valid range
-func get_player_luck() -> float:
-	var modified_luck := ModifierService.apply_modifiers_to_stat(player_luck, "player_luck", "player")
-	return clampf(modified_luck, 0.0, GameConstants.PLAYER_MAX_LUCK)
+## Get player luck points (uncapped, may be negative) with modifiers applied
+func get_player_luck() -> int:
+	return roundi(ModifierService.apply_modifiers_to_stat(float(player_luck), "player_luck", "player"))
 
 
-## Get player luck as display integer (0.11 -> 11)
+## Luck points as the signed display integer
 func get_player_luck_display() -> int:
-	return int(get_player_luck() * 100.0)
+	return get_player_luck()
+
+
+## Luck points converted to the diminishing-returns factor that rolls use
+func get_luck_factor() -> float:
+	return ItemRegistry.luck_factor_for(float(get_player_luck()))
 
 
 ## Get pickup radius with modifiers applied

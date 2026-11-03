@@ -23,7 +23,7 @@ var hero_progression: HeroProgression = HeroProgression.new()
 var wave_scrap_dropped: int = 0
 ## Run-long sum of each wave's effective abandoned fraction (0..1 per wave).
 var abandon_index: float = 0.0
-var player_luck: float = GameConstants.PLAYER_BASE_LUCK
+var player_luck: int =GameConstants.PLAYER_BASE_LUCK
 var turret_counts: Dictionary = {}
 var collected_items: Array[String] = []
 var item_counts: Dictionary = {}
