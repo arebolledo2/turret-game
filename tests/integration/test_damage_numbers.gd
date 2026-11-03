@@ -28,7 +28,8 @@ func test_numbers_use_actual_damage_and_ignore_blocked_hits() -> void:
 	var numbers := world.effects.damage_numbers
 	assert_eq(numbers.entries.size(), 1)
 	assert_eq(numbers.entries[0].amount, 7.5)
-	assert_eq(numbers.entries[0].label.text, "7.5!")
+	assert_eq(numbers.entries[0].label.text, "8")
+	assert_eq(numbers.entries[0].label.font_size, 84, "Crits are drawn larger instead of marked with !")
 	world.player.invulnerability = 1
 	world.combat.apply_hit(world.player, CombatHit3D.new(10))
 	assert_eq(numbers.entries.size(), 1)
