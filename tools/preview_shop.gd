@@ -36,7 +36,7 @@ func _ready() -> void:
 		world.session.state.turret_progression_enabled = true
 		world.turrets[0].progression.award(1500)
 		world.hud.shop_screen.switch_tab(1)
-		world.hud.shop_screen.turret_inspector.evolution_preview.show_form(world.turrets[0], "machine_gun")
+		print(EvolutionComparison.text(world.turrets[0], "machine_gun"))
 	# --sniper: the Sniper turret offer card and roster; --sniper-form=<form> opens that form's evolution preview.
 	var sniper_form := ""
 	for argument in OS.get_cmdline_user_args():
@@ -54,7 +54,7 @@ func _ready() -> void:
 			if sniper_form != "piercer_rifle":
 				sniper.evolve("piercer_rifle")
 			world.hud.shop_screen.switch_tab(1)
-			world.hud.shop_screen.turret_inspector.evolution_preview.show_form(sniper, sniper_form)
+			print(EvolutionComparison.text(sniper, sniper_form))
 	# --quake: the Quake turret offer card and roster; --quake-form=<form> opens that form's evolution preview.
 	var quake_form := ""
 	for argument in OS.get_cmdline_user_args():
@@ -72,7 +72,7 @@ func _ready() -> void:
 			if quake_form != "aftershock":
 				quake.evolve("aftershock")
 			world.hud.shop_screen.switch_tab(1)
-			world.hud.shop_screen.turret_inspector.evolution_preview.show_form(quake, quake_form)
+			print(EvolutionComparison.text(quake, quake_form))
 	# --decoy: the Decoy turret offer card and roster; --decoy-form=<form> opens that form's evolution preview.
 	var decoy_form := ""
 	for argument in OS.get_cmdline_user_args():
@@ -90,7 +90,7 @@ func _ready() -> void:
 			if decoy_form != "bumper_post":
 				decoy.evolve("bumper_post")
 			world.hud.shop_screen.switch_tab(1)
-			world.hud.shop_screen.turret_inspector.evolution_preview.show_form(decoy, decoy_form)
+			print(EvolutionComparison.text(decoy, decoy_form))
 	# --press: the Scrap Press offer card and roster; --press-form=<coin_feeder|treasury|academy> opens that form's evolution preview.
 	var press_form := ""
 	for argument in OS.get_cmdline_user_args():
@@ -109,7 +109,7 @@ func _ready() -> void:
 			if press_form != "coin_feeder":
 				press.evolve("coin_feeder")
 			world.hud.shop_screen.switch_tab(1)
-			world.hud.shop_screen.turret_inspector.evolution_preview.show_form(press, press_form)
+			print(EvolutionComparison.text(press, press_form))
 	# --mines: the Mine Layer offer card and roster; --mine-form=<minefield|dead_zone|chain_reaction> opens that form's evolution preview.
 	var mine_form := ""
 	for argument in OS.get_cmdline_user_args():
@@ -128,7 +128,7 @@ func _ready() -> void:
 			if mine_form != "minefield":
 				layer.evolve("minefield")
 			world.hud.shop_screen.switch_tab(1)
-			world.hud.shop_screen.turret_inspector.evolution_preview.show_form(layer, mine_form)
+			print(EvolutionComparison.text(layer, mine_form))
 	# --laser: the Laser offer card and roster; --laser-form=<focus_beam|halo_cutter|sunpiercer> opens that form's evolution preview.
 	var laser_form := ""
 	for argument in OS.get_cmdline_user_args():
@@ -147,7 +147,7 @@ func _ready() -> void:
 			if laser_form != "focus_beam":
 				laser.evolve("focus_beam")
 			world.hud.shop_screen.switch_tab(1)
-			world.hud.shop_screen.turret_inspector.evolution_preview.show_form(laser, laser_form)
+			print(EvolutionComparison.text(laser, laser_form))
 	# --drone-bay: the Drone Bay offer card and roster; --drone-bay-form=<escort_drones|guardian_wing|reaper_swarm> opens that form's evolution preview.
 	var drone_form := ""
 	for argument in OS.get_cmdline_user_args():
@@ -166,7 +166,7 @@ func _ready() -> void:
 			if drone_form != "escort_drones":
 				bay.evolve("escort_drones")
 			world.hud.shop_screen.switch_tab(1)
-			world.hud.shop_screen.turret_inspector.evolution_preview.show_form(bay, drone_form)
+			print(EvolutionComparison.text(bay, drone_form))
 	if "--reminder" in OS.get_cmdline_user_args():
 		world.session.state.turret_progression_enabled = true
 		world.turrets[0].progression.award(1500)

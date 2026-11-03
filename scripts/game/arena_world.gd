@@ -23,6 +23,7 @@ var scrap_income := ScrapIncome.new()
 ## Headless tools skip presentation; tests can explicitly enable and advance it.
 var present_wave_rewards: bool = DisplayServer.get_name() != "headless"
 var chest_rewards: ChestRewardScreen
+var evolution_popup: EvolutionPopup
 var reward_presentation: SalvagePresentation
 var drops := TechDropDirector.new()
 var build_zones := BuildZoneDirector.new()
@@ -188,6 +189,10 @@ func _create_combat_presentation() -> void:
 	chest_rewards = ChestRewardScreen.new()
 	chest_rewards.world = self
 	add_child(chest_rewards)
+	evolution_popup = EvolutionPopup.new()
+	evolution_popup.world = self
+	evolution_popup.finished.connect(waves.complete_wave)
+	add_child(evolution_popup)
 
 func _create_stage_and_hud() -> void:
 	stage = ArenaStage.new()
@@ -285,6 +290,7 @@ func _clear_actors() -> void:
 	item_effects.reset()
 	reward_presentation.cancel()
 	chest_rewards.cancel()
+	evolution_popup.cancel()
 	drops.pending_items.clear()
 	audio.reset()
 	core = null
@@ -446,9 +452,12 @@ func award_hero_xp(amount: int) -> void:
 		_refresh_hero_growth(true)
 		Events.hero_leveled.emit(int(change.after.level))
 
-## Takes one of the hero's evolutions; only while the shop is open, like a turret's.
+## Evolutions (hero and turrets) are taken in the popup after a wave, or in the shop phase that follows it.
+func can_evolve() -> bool:
+	return not paused and GameStateService.is_game_active and GameStateMachine.current_state in [GameStateMachine.GameState.WAVE_END, GameStateMachine.GameState.SHOP]
+
 func evolve_hero(form_id: String) -> bool:
-	if not shop.is_open() or not PlayerStatsService.state.hero_progression.evolve(form_id):
+	if not can_evolve() or not PlayerStatsService.state.hero_progression.evolve(form_id):
 		return false
 	_refresh_hero_growth(false)
 	player.apply_form_look(form_id)

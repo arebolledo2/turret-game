@@ -210,6 +210,9 @@ func complete_wave() -> void:
 			world.chest_rewards.show_next()
 		return
 	world.placement.drop_carried()
+	# Milestone evolutions are taken now, before the shop (the popup re-enters here when it finishes).
+	if world.show_hud and state.current_wave < world.wave_limit and world.evolution_popup.begin():
+		return
 	if state.current_wave >= world.wave_limit:
 		world.audio.play_cue("victory", world.player.position)
 		GameStateMachine.transition_to(GameStateMachine.GameState.VICTORY)

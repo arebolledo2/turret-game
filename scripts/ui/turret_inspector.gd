@@ -15,7 +15,6 @@ var xp_label: Label
 var xp_bar: TurretXpBar
 var detail: RichTextLabel
 var detail_key: int = 0
-var evolution_choices: VBoxContainer
 const PAGE_SIZE := 6
 var page := 0
 var page_label: Label
@@ -25,7 +24,6 @@ var roster_art: Array[TextureRect] = []
 var stat_values: Array[Label] = []
 var milestones: Label
 var navigation_exit: Control
-var evolution_preview: EvolutionPreview
 var sell_button: Button
 ## The turret whose SELL was pressed once; pressing it again completes the sale.
 var sell_armed_id: int = 0
@@ -33,10 +31,6 @@ var sell_armed_id: int = 0
 signal sold
 
 func _ready() -> void:
-	evolution_preview = EvolutionPreview.new()
-	add_child(evolution_preview)
-	evolution_preview.accepted.connect(_evolve_selected)
-	evolution_preview.canceled.connect(_restore_roster_focus)
 	add_theme_constant_override("separation", 40)
 	var squad := VBoxContainer.new()
 	squad.custom_minimum_size.x = 340
@@ -121,9 +115,6 @@ func _ready() -> void:
 	detail.bbcode_enabled = true
 	detail.hide()
 	column.add_child(detail)
-	evolution_choices = VBoxContainer.new()
-	evolution_choices.add_theme_constant_override("separation", 8)
-	column.add_child(evolution_choices)
 	sell_button = Button.new()
 	sell_button.custom_minimum_size.y = 48
 	sell_button.add_theme_color_override("font_color", UiPalette.SCRAP)
@@ -177,8 +168,6 @@ func refresh() -> void:
 		var turret := world.turrets[i]
 		buttons[i].text = "%s #%d   ·   Lv %d\n" % [turret.display_name(),
 			turret.turret_id, turret.progression.level]
-		if not turret.available_evolutions().is_empty():
-			buttons[i].text += "EVOLUTION READY"
 		buttons[i].custom_minimum_size.y = 86
 		buttons[i].visible = i / PAGE_SIZE == page
 		roster_art[i].texture = ShopArt.turret(turret.turret_type, turret.progression.evolution_form)
@@ -346,19 +335,9 @@ func _show_selected() -> void:
 				taken = TurretEvolution.options(turret.turret_type, 0)[0]
 			state = TurretEvolution.form_name(taken)
 		elif growth.level >= milestone:
-			state = "Evolution ready" if not turret.available_evolutions().is_empty() else "Form in development — milestone retained"
+			state = "Evolves after the wave" if not turret.available_evolutions().is_empty() else "Form in development — milestone retained"
 		lines.append("Level %d  ·  %s" % [milestone, state])
 	lines.append("Ordinary stat levels continue beyond level 10.")
-	for child in evolution_choices.get_children():
-		evolution_choices.remove_child(child)
-		child.queue_free()
-	for form_id in turret.available_evolutions():
-		var button := Button.new()
-		button.custom_minimum_size.y = 48
-		button.text = "EVOLVE · %s" % TurretEvolution.form_name(form_id)
-		button.tooltip_text = TurretEvolution.description(form_id)
-		button.pressed.connect(evolution_preview.show_form.bind(turret, form_id))
-		evolution_choices.add_child(button)
 	detail.text = "\n".join(lines)
 	art.tooltip_text = detail.get_parsed_text()
 
@@ -381,7 +360,7 @@ func refresh_navigation() -> void:
 		pager.focus_neighbor_bottom = pager.get_path_to(visible_roster[0])
 		pager.focus_neighbor_right = pager.get_path_to(next_page if pager == previous_page and not next_page.disabled else selected_button)
 		pager.focus_neighbor_left = pager.get_path_to(previous_page if pager == next_page and not previous_page.disabled else selected_button)
-	var choices := evolution_choices.get_children()
+	var choices: Array[Node] = []
 	if sell_button.visible:
 		choices.append(sell_button)
 	if choices.is_empty():
@@ -406,17 +385,3 @@ func change_page(direction: int) -> void:
 	select(world.turrets[page * PAGE_SIZE].turret_id)
 	buttons[page * PAGE_SIZE].grab_focus()
 
-func _evolve_selected(turret: TurretActor, form_id: String) -> void:
-	if turret.evolve(form_id):
-		detail_key = 0
-		refresh()
-		for button in buttons:
-			if button.button_pressed:
-				button.grab_focus()
-				break
-
-func _restore_roster_focus() -> void:
-	for button in buttons:
-		if button.button_pressed:
-			button.grab_focus()
-			return

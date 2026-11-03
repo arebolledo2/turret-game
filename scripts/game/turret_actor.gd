@@ -421,7 +421,7 @@ func available_evolutions() -> Array[String]:
 	return result
 
 func evolve(form_id: String) -> bool:
-	if not form_id in available_evolutions() or not world.shop.is_open():
+	if not form_id in available_evolutions() or not world.can_evolve():
 		return false
 	if not progression.evolve(turret_type, form_id):
 		return false

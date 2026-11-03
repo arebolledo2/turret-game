@@ -10,7 +10,6 @@ var tab_hint: Label
 var turret_inspector: TurretInspector
 var offer_buttons: Array[Button] = []
 var reroll_button: IconButton
-var evolution_reminder: EvolutionReminder
 var hero_panel: HeroPanel
 var continue_button: IconButton
 var offers_grid: GridContainer
@@ -57,11 +56,6 @@ func _ready() -> void:
 	turret_inspector.size_flags_vertical = SIZE_EXPAND_FILL
 	column.add_child(turret_inspector)
 	_build_footer(column)
-	evolution_reminder = EvolutionReminder.new()
-	add_child(evolution_reminder)
-	evolution_reminder.review_requested.connect(_review_ready_turret)
-	evolution_reminder.deploy_requested.connect(_deploy)
-	evolution_reminder.canceled.connect(func() -> void: continue_button.grab_focus.call_deferred())
 	status = UiBuilder.label(column, "", 20, UiPalette.MUTED, true)
 	visible = false
 
@@ -154,8 +148,6 @@ func _build_sidebar(content: HBoxContainer) -> void:
 	sidebar.add_theme_constant_override("separation", 16)
 	side_scroll.add_child(sidebar)
 	hero_panel = HeroPanel.new()
-	hero_panel.world = world
-	hero_panel.evolved.connect(refresh)
 	sidebar.add_child(hero_panel)
 	UiBuilder.label(sidebar, "Your build", 30, UiPalette.INK, true)
 	vital_text = UiBuilder.label(sidebar, "", 23, UiPalette.MUTED, true)
@@ -231,11 +223,6 @@ func refresh() -> void:
 	turret_inspector.visible = active_tab == 1
 	tab_hint.text = "Tabs: Q / E or LB / RB" if active_tab == 1 else "Tabs: Q / E or LB / RB  -  Details: right stick / mouse wheel"
 	reroll_button.visible = active_tab == 0
-	var ready_turrets := 0
-	for turret in world.turrets:
-		if not turret.available_evolutions().is_empty():
-			ready_turrets += 1
-	tabs[1].text = "TURRETS" if ready_turrets == 0 else "TURRETS - %d READY" % ready_turrets
 	for i in tabs.size():
 		tabs[i].set_pressed_no_signal(i == active_tab)
 	if active_tab == 1:
@@ -253,7 +240,7 @@ func switch_tab(index: int) -> void:
 	tabs[active_tab].grab_focus()
 
 func _input(event: InputEvent) -> void:
-	if not visible or not world.shop.is_open() or turret_inspector.evolution_preview.visible or evolution_reminder.visible:
+	if not visible or not world.shop.is_open():
 		return
 	var lock_pressed: bool = (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_L) or (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_X)
 	if lock_pressed and active_tab == 0:
@@ -455,27 +442,11 @@ func _refresh_focus() -> void:
 		button.focus_neighbor_bottom = button.get_path_to(owned_buttons[i + 1] if i + 1 < owned_buttons.size() else continue_button)
 
 func _request_deploy() -> void:
-	var count := 0
-	for turret in world.turrets:
-		if not turret.available_evolutions().is_empty():
-			count += 1
-	if count > 0:
-		evolution_reminder.show_ready(count)
-	else:
-		_deploy()
+	_deploy()
 
 func _deploy() -> void:
 	world.begin_next_wave()
 	refresh()
-
-func _review_ready_turret() -> void:
-	switch_tab(1)
-	for i in range(world.turrets.size()):
-		var turret: TurretActor = world.turrets[i]
-		if not turret.available_evolutions().is_empty():
-			turret_inspector.select(turret.turret_id)
-			turret_inspector.buttons[i].grab_focus.call_deferred()
-			return
 
 func _nearest_horizontal(from: Control, candidates: Array[Button]) -> Button:
 	var best: Button = continue_button

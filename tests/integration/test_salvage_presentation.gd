@@ -22,6 +22,11 @@ func _finish(amount: int = 110) -> void:
 	world.pickup_root.add_child(pickup)
 	assert_true(world.finish_wave())
 
+## A turret that reached a milestone evolves in the popup that follows the recap, before the shop opens.
+func _resolve_evolutions() -> void:
+	while world.evolution_popup.active:
+		world.evolution_popup.buttons[0].pressed.emit()
+
 func test_collection_waits_for_continue_then_opens_shop_once() -> void:
 	_finish()
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_END)
@@ -35,6 +40,7 @@ func test_collection_waits_for_continue_then_opens_shop_once() -> void:
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.WAVE_END, "Never auto-advance")
 	assert_true(world.reward_presentation.active)
 	world.reward_presentation.skip_button.pressed.emit()
+	_resolve_evolutions()
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.SHOP)
 	assert_false(world.reward_presentation.active)
 	var money := EconomyService.total_scrap
@@ -53,6 +59,7 @@ func test_pause_freezes_sequence_and_skip_keeps_rewards() -> void:
 	world.toggle_pause()
 	world.reward_presentation.advance(.1)
 	world.reward_presentation.skip_button.pressed.emit()
+	_resolve_evolutions()
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.SHOP)
 	assert_eq(world.turrets[0].progression.total_xp, 110)
 
@@ -105,6 +112,7 @@ func test_controller_accept_keeps_recap_focus_and_continues_after_pause() -> voi
 	accept.pressed = false
 	Input.parse_input_event(accept)
 	await wait_process_frames(2)
+	_resolve_evolutions()
 	assert_eq(GameStateMachine.current_state, GameStateMachine.GameState.SHOP)
 	assert_eq(world.turrets[0].progression.total_xp, 110)
 
@@ -149,6 +157,7 @@ func test_xp_bars_show_partial_progress_in_recap_and_turret_roster() -> void:
 	assert_eq(bar.value, 3.0, "Overflow after reaching level 5 is shown")
 	assert_eq(bar.max_value, float(TurretProgression.cost_to_next(5)))
 	world.reward_presentation.complete()
+	_resolve_evolutions()
 	var shop: ShopScreen = world.hud.shop_screen
 	shop.refresh()
 	shop.switch_tab(1)
@@ -164,6 +173,8 @@ func test_no_leftovers_does_not_delay_shop() -> void:
 func test_turrets_tab_uses_individual_stats_and_controller_can_reach_deploy() -> void:
 	_finish()
 	world.reward_presentation.complete()
+	_resolve_evolutions()
+	await wait_process_frames(2) # let the HUD settle its phase-change focus handling
 	var second := world.add_turret(Vector3(6, 0, 0), "melee")
 	second.set_physics_process(false)
 	var shop: ShopScreen = world.hud.shop_screen
