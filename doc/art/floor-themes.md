@@ -34,6 +34,7 @@ Display names and notes for the main-menu **FLOORS** gallery live in `scripts/re
   is hard-thresholded at pixel scale. Everything is periodic, so the tile is seamless. Fine grain is baked into the normal map.
 - The runtime adds soft stain and scorch decals (`FloorDecals`), so heavy stains are not baked into the albedo.
 - The arena floor multiplies the albedo by `WorldGeometry.FLOOR_ALBEDO_GAIN` (1.4 to 5.0 by theme) and draws `floor_overlay.gdshader` on top (tone drift, scuffs, wall apron, dash line; see `room-and-space.md`, "Floor pass"). Keep new textures dark and flat as described here and retune the theme's gain so the gameplay render lands at a median of about 50 to 56/255.
+- Enemy spawn hatches redraw the floor's own maps (`WorldGeometry.floor_texture`, `FLOOR_ALBEDO_GAIN`, `FLOOR_METALLIC`) as sliding plates (`ground_hatch.gdshader`), so a new theme needs nothing extra, but its maps must keep tiling at `FLOOR_TILE_METRES` and the plates will not show the finish pass (tone drift, wall occlusion). See `doc/enemy-ecology.md`.
 
 ## Rerun and check
 

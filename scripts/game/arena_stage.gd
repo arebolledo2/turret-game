@@ -100,6 +100,13 @@ func set_floor_theme(theme: String) -> void:
 	floor_decals.apply_theme(theme)
 	room.apply_theme(theme, rim_color)
 
+## The floor plane's size in metres, and the current tint of its seam lights: what an effect needs to redraw a piece of the floor.
+func floor_size() -> Vector2:
+	return (floor_visual.mesh as PlaneMesh).size
+
+func floor_emission() -> Color:
+	return _floor_material.emission
+
 ## Picks what the ship is flying through outside the room (see `SpaceThemes`).
 func set_space_theme(theme: String) -> void:
 	if theme != backdrop.theme:

@@ -11,6 +11,8 @@ const SPAWN_OPEN := .55
 const SPAWN_RISE := .5
 const SPAWN_CLOSE := .25
 const SPAWN_TOTAL := SPAWN_OPEN + SPAWN_RISE + SPAWN_CLOSE
+## The last stretch of SPAWN_CLOSE is the shut hatch's impact flash and dust; its plates have already met by then.
+const SPAWN_SLAM := .07
 ## Hatch radius as a multiple of the enemy's hurtbox footprint (never below SPAWN_CLEARANCE).
 const HATCH_FOOTPRINT_SCALE := 2.0
 const SPAWN_CLEARANCE := .9
@@ -68,9 +70,7 @@ func spawn_blocked(at: Vector3) -> bool:
 ## Opens a floor hatch at `at`; `advance_spawn_warnings` then runs its open / rise / close sequence.
 func warn_spawn(type_id: String, at: Vector3, boss: bool = false) -> void:
 	if spawn_blocked(at): return
-	var hatch := GroundHatch.create(world.actor_root, hatch_radius(type_id))
-	hatch.position = at + Vector3(0, .05, 0)
-	GroundHatch.update(hatch, 0.0)
+	var hatch := GroundHatch.create(world.actor_root, at, hatch_radius(type_id), world.stage)
 	pending_spawns.append(PendingSpawn.new(type_id, at, SPAWN_TOTAL, hatch, boss))
 
 ## Big enemies (bosses) get a wider hatch so they do not spill over its edge as they rise.
@@ -78,8 +78,9 @@ func hatch_radius(type_id: String) -> float:
 	var footprint := float(EnemyEcology.FOOTPRINTS.get(type_id, .36)) * EnemyVariants.body_scale(type_id)
 	return maxf(SPAWN_CLEARANCE, footprint * HATCH_FOOTPRINT_SCALE)
 
-## Hatch phases by elapsed time: OPEN (ease-out, may still be cancelled), RISE (enemy emerges, inactive), CLOSE (quick;
-## the enemy is active from its start).
+## Hatch phases by elapsed time: OPEN (the floor cracks and its halves slide apart on a smoothstep, so it is not fully open until the
+## enemy emerges; may still be cancelled), RISE (enemy emerges, inactive), CLOSE (quick; the enemy is active from its start, the halves
+## slam shut before the last SPAWN_SLAM seconds, which carry the impact flash).
 func advance_spawn_warnings(delta: float) -> void:
 	for index in range(pending_spawns.size() - 1, -1, -1):
 		var pending := pending_spawns[index]
@@ -101,10 +102,11 @@ func advance_spawn_warnings(delta: float) -> void:
 			if is_instance_valid(pending.marker): pending.marker.queue_free()
 			pending_spawns.remove_at(index)
 		else:
-			var closing := clampf((elapsed - SPAWN_OPEN - SPAWN_RISE) / SPAWN_CLOSE, 0.0, 1.0)
-			var opening := 1.0 - pow(1.0 - clampf(elapsed / SPAWN_OPEN, 0.0, 1.0), 3.0)
-			var fade := minf(elapsed / .1, 1.0) * minf(pending.left / .06, 1.0)
-			GroundHatch.update(pending.marker, opening * (1.0 - closing * closing), fade)
+			# The halves ease apart (slow start while the floor cracks, slow end as they reach full travel) and slam back quickly.
+			var opening := smoothstep(0.0, 1.0, elapsed / SPAWN_OPEN)
+			var closing := clampf((elapsed - SPAWN_OPEN - SPAWN_RISE) / (SPAWN_CLOSE - SPAWN_SLAM), 0.0, 1.0)
+			var slam := clampf(1.0 - (elapsed - (SPAWN_TOTAL - SPAWN_SLAM)) / SPAWN_SLAM, 0.0, 1.0) if closing >= 1.0 else 0.0
+			GroundHatch.update(pending.marker, opening * (1.0 - closing * closing), minf(elapsed / .08, 1.0), elapsed, slam)
 
 ## Creates the enemy for a hatch that has opened; it stays inactive and outside `world.enemies` until it has risen.
 func _emerge_enemy(pending: PendingSpawn) -> EnemyActor:

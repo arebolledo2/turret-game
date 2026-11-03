@@ -9,7 +9,13 @@ var mode := "roster"
 var sequence := false
 var frame := 0
 var attacks := false
-const HATCH_STEP := .15
+## --ecology=hatch: seconds between frames (--hatch-step), how many (--hatch-frames), the time of the first (--hatch-start), and optionally
+## a floor theme (--theme=<id>) and wave (--wave=<n>).
+var hatch_step := .15
+var hatch_frames := 8
+var hatch_start := 0.0
+var theme := ""
+var wave := 0
 
 func _ready() -> void:
 	call_deferred("setup")
@@ -19,6 +25,11 @@ func setup() -> void:
 		if arg.begins_with("--ecology="): mode = arg.trim_prefix("--ecology=")
 		if arg == "--sequence": sequence = true
 		if arg == "--attacks": attacks = true
+		if arg.begins_with("--theme="): theme = arg.trim_prefix("--theme=")
+		if arg.begins_with("--wave="): wave = int(arg.trim_prefix("--wave="))
+		if arg.begins_with("--hatch-step="): hatch_step = float(arg.trim_prefix("--hatch-step="))
+		if arg.begins_with("--hatch-frames="): hatch_frames = int(arg.trim_prefix("--hatch-frames="))
+		if arg.begins_with("--hatch-start="): hatch_start = float(arg.trim_prefix("--hatch-start="))
 	world = ArenaWorld.new()
 	world.auto_start = false
 	world.run_config = RunConfig.new()
@@ -67,9 +78,12 @@ func setup() -> void:
 		world.camera_rig.snap()
 		return
 	if mode == "hatch":
-		# Spawn hatches advanced by hand: run with --sequence to capture every HATCH_STEP seconds.
+		# Spawn hatches advanced by hand: run with --sequence to capture every hatch_step seconds.
+		if theme != "": world.stage.set_floor_theme(theme)
+		if wave > 0: world.stage.set_floor_wave(wave, false)
 		for at in [Vector3(-3, 0, 0), Vector3(0, 0, -2), Vector3(3, 0, 0.5)]:
 			world.waves.warn_spawn(["drowse", "hopper", "brass_ram"][int(at.x + 3) / 3], at)
+		if hatch_start > 0.0: world.waves.advance_spawn_warnings(hatch_start)
 		world.camera_rig.set_zoom(1.6)
 		world.camera_rig.snap()
 		world.camera_rig.set_physics_process(false)
@@ -160,11 +174,11 @@ func capture() -> void:
 	get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path(path))
 	print("ECOLOGY_CAPTURE ", path)
 	if mode == "hatch":
-		if frame >= 8:
+		if frame >= hatch_frames:
 			get_tree().quit()
 			return
 		frame += 1
-		world.waves.advance_spawn_warnings(HATCH_STEP)
+		world.waves.advance_spawn_warnings(hatch_step)
 		elapsed = 0.0
 		captured = false
 		return

@@ -72,6 +72,10 @@ static func _floor_texture(theme: String, map: String) -> Texture2D:
 		_floor_textures[path] = load(path)
 	return _floor_textures[path]
 
+## One of a floor theme's maps (`albedo`, `normal`, `roughness`, `emission`) for effects that redraw the floor, like the spawn hatch's plates.
+static func floor_texture(theme: String, map: String) -> Texture2D:
+	return _floor_texture(theme, map)
+
 ## Tiling floor plating for a flat floor covering `area` metres. Albedo, normal, roughness and emission come from
 ## `assets/textures/floor/<theme>/`; the emission map carries the seam lines and status lights. With `arena` set (the playfield) the albedo
 ## is lifted by `FLOOR_ALBEDO_GAIN` and the finish pass `floor_overlay_material` rides along as the next pass; the FLOORS showcase patch

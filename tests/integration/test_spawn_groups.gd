@@ -62,6 +62,27 @@ func test_hatch_opens_then_enemy_rises_inactive_then_activates_as_it_closes() ->
 	assert_true(world.waves.pending_spawns.is_empty())
 	assert_true(WaveDirector.SPAWN_CLOSE < WaveDirector.SPAWN_OPEN, "closes faster than it opens")
 
+func test_hatch_is_one_floor_quad_per_hatch_sharing_a_material_per_theme() -> void:
+	world.waves.warn_spawn("basic", Vector3(4, 0, 0))
+	world.waves.warn_spawn("brass_ram", Vector3(-4, 0, 0), true)
+	var small: MeshInstance3D = world.waves.pending_spawns[0].marker
+	var big: MeshInstance3D = world.waves.pending_spawns[1].marker
+	assert_same(small.material_override, big.material_override, "one material per floor theme")
+	assert_same(small.mesh, big.mesh)
+	assert_true(small.layers & FloorDecals.LAYER != 0, "the floor's decals mark the plates too")
+	assert_almost_eq(small.scale.x, world.waves.hatch_radius("basic") * GroundHatch.EXTENT, .0001)
+	assert_gt(big.scale.x, small.scale.x, "a boss gets a wider hatch")
+	assert_lt(small.position.y, 0.0, "it lies on the floor, not above it")
+	assert_eq(small.get_child_count(), 0, "no extra nodes per hatch")
+
+func test_hatch_update_is_safe_through_every_phase() -> void:
+	world.waves.warn_spawn("basic", Vector3(4, 0, 0))
+	for step in 50:
+		world.waves.advance_spawn_warnings(.03)
+		for pending in world.waves.pending_spawns:
+			assert_true(is_instance_valid(pending.marker))
+	assert_true(world.waves.pending_spawns.is_empty())
+
 func test_blocker_after_enemy_emerged_does_not_cancel() -> void:
 	world.waves.warn_spawn("basic", Vector3(4, 0, 0))
 	world.waves.advance_spawn_warnings(WaveDirector.SPAWN_OPEN + .05)
