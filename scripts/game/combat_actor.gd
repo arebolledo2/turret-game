@@ -26,6 +26,8 @@ var body_scale: float = 1.0
 var explosion_radius: float = 0.0
 var explosion_damage: float = 0.0
 var dead: bool = false
+## True while rising through a spawn hatch: no AI, no hurtbox, not in `world.enemies` (see `EnemyActor.begin_spawning`).
+var spawning: bool = false
 var invulnerability: float = 0.0
 var visual: Node3D
 var hurtbox: Area3D
@@ -113,7 +115,7 @@ func clear_transients() -> void:
 		charge.interrupt()
 
 func _physics_process(delta: float) -> void:
-	if dead or not is_instance_valid(world) or not world.is_combat():
+	if dead or spawning or not is_instance_valid(world) or not world.is_combat():
 		return
 	invulnerability = maxf(0.0, invulnerability - delta)
 	flash_time = maxf(0.0, flash_time - delta)

@@ -42,7 +42,7 @@ A top-screen boss bar shows health, phase marks and reward rarity; an offscreen 
 
 The new boss wave names override the corresponding identities below; escort roster weights are retained.
 
-Roster percentages are encounter-point weights, not exact enemy head counts. Expensive roles consume more points. Deterministic weighted scheduling replaces the expanding global random pool; caps can change the resulting mix. Arrivals are distributed across the combat timer in groups about every 3.5 seconds, with a 0.9-second amber ground warning. Sparse escort budgets accumulate into less frequent groups. A hero or core overlapping a marked point cancels that spawn; it is not moved elsewhere or re-queued. Pending warnings clear at wave end and pause with combat.
+Roster percentages are encounter-point weights, not exact enemy head counts. Expensive roles consume more points. Deterministic weighted scheduling replaces the expanding global random pool; caps can change the resulting mix. Arrivals are distributed across the combat timer in groups about every 3.5 seconds, through floor hatches: the hatch opens (0.55 s), the enemy rises inactive and untargetable (0.5 s), then the hatch closes faster than it opened (0.25 s) and the enemy becomes active as it shuts. Sparse escort budgets accumulate into less frequent groups. A hero or core overlapping the hatch point cancels that spawn while the hatch is still opening (once the enemy has emerged it is committed); it is not moved elsewhere or re-queued. Pending hatches (and any still-rising enemy) clear at wave end and pause with combat.
 
 | Wave | Identity | Roster weights |
 |---|---|---|

@@ -277,14 +277,14 @@ func test_registry_scaling_and_charger_wave_gate_are_authoritative() -> void:
 	world.waves.spawn_clock = 0
 	world.waves.remaining_spawns = 1
 	world._physics_process(.01)
-	world.waves.advance_spawn_warnings(1.0)
+	world.waves.advance_spawn_warnings(WaveDirector.SPAWN_TOTAL)
 	assert_eq(world.enemies.back().enemy_type, world.waves.spawn_plan[0])
 	world.start_run()
 	world.preparation.deploy()
 	GameStateMachine.transition_to(GameStateMachine.GameState.COMBAT)
 	world.waves.spawn_clock = 0
 	world._physics_process(.01)
-	world.waves.advance_spawn_warnings(1.0)
+	world.waves.advance_spawn_warnings(WaveDirector.SPAWN_TOTAL)
 	assert_eq(world.enemies.back().enemy_type, world.waves.spawn_plan[0])
 	assert_true(EnemyEcology.roster(1).has(world.enemies.back().enemy_type), "Wave 1 never spawns chargers")
 

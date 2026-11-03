@@ -6,7 +6,13 @@ extends RefCounted
 const ANNOUNCEMENT_TIME: float = .8
 const FIRST_SPAWN_DELAY: float = .2
 const GROUP_INTERVAL := 3.5
-const SPAWN_WARNING := .9
+## Floor-hatch arrival: the hatch opens, the enemy rises, then the hatch closes faster than it opened.
+const SPAWN_OPEN := .55
+const SPAWN_RISE := .5
+const SPAWN_CLOSE := .25
+const SPAWN_TOTAL := SPAWN_OPEN + SPAWN_RISE + SPAWN_CLOSE
+## Hatch radius as a multiple of the enemy's hurtbox footprint (never below SPAWN_CLEARANCE).
+const HATCH_FOOTPRINT_SCALE := 2.0
 const SPAWN_CLEARANCE := .9
 const CONVOY_CORE_SPAWN_GAP := 4.0
 const CONVOY_PATH_HALF_WIDTH := 2.0
@@ -34,6 +40,8 @@ var arrival_time_left := 0.0
 func clear_spawn_warnings() -> void:
 	for pending in pending_spawns:
 		if is_instance_valid(pending.marker): pending.marker.queue_free()
+		# An enemy still rising is not in `world.enemies`, so field cleanup would never free it.
+		if is_instance_valid(pending.enemy) and pending.enemy.spawning: pending.enemy.queue_free()
 	pending_spawns.clear()
 
 ## Protect the whole active waypoint-to-waypoint leg, including the part already travelled.
@@ -57,36 +65,61 @@ func spawn_blocked(at: Vector3) -> bool:
 		return true
 	return world.core != null and WorldGeometry.planar(world.core.position - at).length() < SPAWN_CLEARANCE + world.core.radius
 
+## Opens a floor hatch at `at`; `advance_spawn_warnings` then runs its open / rise / close sequence.
 func warn_spawn(type_id: String, at: Vector3, boss: bool = false) -> void:
 	if spawn_blocked(at): return
-	var marker := GroundDial.create(world.actor_root, SPAWN_CLEARANCE, Color("f4a775"), true)
-	marker.position = at + Vector3(0, .05, 0)
-	GroundDial.update(marker, 0.0, false, 4)
-	pending_spawns.append(PendingSpawn.new(type_id, at, SPAWN_WARNING, marker, boss))
+	var hatch := GroundHatch.create(world.actor_root, hatch_radius(type_id))
+	hatch.position = at + Vector3(0, .05, 0)
+	GroundHatch.update(hatch, 0.0)
+	pending_spawns.append(PendingSpawn.new(type_id, at, SPAWN_TOTAL, hatch, boss))
 
+## Big enemies (bosses) get a wider hatch so they do not spill over its edge as they rise.
+func hatch_radius(type_id: String) -> float:
+	var footprint := float(EnemyEcology.FOOTPRINTS.get(type_id, .36)) * EnemyVariants.body_scale(type_id)
+	return maxf(SPAWN_CLEARANCE, footprint * HATCH_FOOTPRINT_SCALE)
+
+## Hatch phases by elapsed time: OPEN (ease-out, may still be cancelled), RISE (enemy emerges, inactive), CLOSE (quick;
+## the enemy is active from its start).
 func advance_spawn_warnings(delta: float) -> void:
 	for index in range(pending_spawns.size() - 1, -1, -1):
 		var pending := pending_spawns[index]
 		pending.left -= delta
-		var blocked := spawn_blocked(pending.at)
-		if blocked or pending.left <= 0.0:
+		var elapsed := SPAWN_TOTAL - pending.left
+		if not pending.enemy and spawn_blocked(pending.at):
 			if is_instance_valid(pending.marker): pending.marker.queue_free()
 			pending_spawns.remove_at(index)
-			if blocked: continue # Cancel, without relocating or banking a replacement.
-			var type_id: String = pending.type
-			if not pending.boss and active_count(type_id) >= int(EnemyEcology.CAPS.get(type_id, 10000)):
-				type_id = EnemyEcology.fallback(state.current_wave, world.escort_mode())
-			var assault := not EnemyEcology.TYPES.has(type_id)
-			var elite := assault and state.current_wave >= 6 and _take_credit("elite_chance")
-			var seeker := assault and state.current_wave >= 6 and world.core != null and _take_credit("seeker_share")
-			spawn_enemy(pending.at, type_id, elite, seeker)
+			continue # Cancel, without relocating or banking a replacement.
+		if not pending.enemy and elapsed >= SPAWN_OPEN:
+			pending.enemy = _emerge_enemy(pending)
+		if pending.enemy and pending.enemy.spawning:
+			var rise := clampf((elapsed - SPAWN_OPEN) / SPAWN_RISE, 0.0, 1.0)
+			pending.enemy.set_rise(rise)
+			if rise >= 1.0:
+				pending.enemy.finish_spawning()
+				world.enemies.append(pending.enemy)
+		if pending.left <= 0.0:
+			if is_instance_valid(pending.marker): pending.marker.queue_free()
+			pending_spawns.remove_at(index)
 		else:
-			GroundDial.update(pending.marker, 1.0 - float(pending.left) / SPAWN_WARNING, false, 4)
+			var closing := clampf((elapsed - SPAWN_OPEN - SPAWN_RISE) / SPAWN_CLOSE, 0.0, 1.0)
+			var opening := 1.0 - pow(1.0 - clampf(elapsed / SPAWN_OPEN, 0.0, 1.0), 3.0)
+			var fade := minf(elapsed / .1, 1.0) * minf(pending.left / .06, 1.0)
+			GroundHatch.update(pending.marker, opening * (1.0 - closing * closing), fade)
+
+## Creates the enemy for a hatch that has opened; it stays inactive and outside `world.enemies` until it has risen.
+func _emerge_enemy(pending: PendingSpawn) -> EnemyActor:
+	var type_id: String = pending.type
+	if not pending.boss and active_count(type_id) >= int(EnemyEcology.CAPS.get(type_id, 10000)):
+		type_id = EnemyEcology.fallback(state.current_wave, world.escort_mode())
+	var assault := not EnemyEcology.TYPES.has(type_id)
+	var elite := assault and state.current_wave >= 6 and _take_credit("elite_chance")
+	var seeker := assault and state.current_wave >= 6 and world.core != null and _take_credit("seeker_share")
+	return spawn_enemy(pending.at, type_id, elite, seeker, true)
 
 func queue_spawn_group() -> void:
 	spawn_credit += GROUP_INTERVAL / maxf(spawn_interval, .001)
 	var count := mini(remaining_spawns, maxi(0, floori(spawn_credit)))
-	if arrival_time_left <= GROUP_INTERVAL + SPAWN_WARNING:
+	if arrival_time_left <= GROUP_INTERVAL + SPAWN_TOTAL:
 		count = remaining_spawns
 	elif count < 2 and remaining_spawns > 1:
 		return # Accumulate a small group instead of exhausting sparse escort waves early.
@@ -118,7 +151,7 @@ func tick(delta: float) -> void:
 	advance_spawn_warnings(delta)
 	arrival_time_left = maxf(0.0, arrival_time_left - delta)
 	spawn_clock -= delta
-	if remaining_spawns > 0 and spawn_clock <= 0.0 and arrival_time_left > SPAWN_WARNING:
+	if remaining_spawns > 0 and spawn_clock <= 0.0 and arrival_time_left > SPAWN_TOTAL:
 		queue_spawn_group()
 		spawn_clock += GROUP_INTERVAL
 	world.drops.tick(delta)
@@ -243,7 +276,8 @@ func _take_credit(rule_key: String) -> bool:
 	return taken
 
 ## `elite` toughens the enemy; `seeker` (core mode) makes it ignore the hero and head for the core.
-func spawn_enemy(at: Vector3, type_id: String = "basic", elite: bool = false, seeker: bool = false) -> EnemyActor:
+## `emerge` creates it inactive and outside `world.enemies` (see `EnemyActor.begin_spawning`); the caller activates it.
+func spawn_enemy(at: Vector3, type_id: String = "basic", elite: bool = false, seeker: bool = false, emerge: bool = false) -> EnemyActor:
 	var enemy := EnemyActor.new()
 	enemy.world = world
 	enemy.enemy_type = type_id
@@ -268,7 +302,10 @@ func spawn_enemy(at: Vector3, type_id: String = "basic", elite: bool = false, se
 	enemy.position = at
 	world.actor_root.add_child(enemy)
 	enemy.reset_physics_interpolation()
-	world.enemies.append(enemy)
+	if emerge:
+		enemy.begin_spawning()
+	else:
+		world.enemies.append(enemy)
 	return enemy
 
 ## Core mode: a point on the rectangle at CORE_SPAWN_BOX of the arena, so waves arrive from every side of the core.
@@ -312,6 +349,10 @@ func active_count(type_id: String) -> int:
 	var count := 0
 	for actor in world.enemies:
 		if is_instance_valid(actor) and not actor.dead and actor.enemy_type == type_id:
+			count += 1
+	# Enemies still rising through a hatch count towards caps too.
+	for pending in pending_spawns:
+		if is_instance_valid(pending.enemy) and pending.enemy.spawning and pending.enemy.enemy_type == type_id:
 			count += 1
 	return count
 

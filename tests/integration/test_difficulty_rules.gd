@@ -109,7 +109,7 @@ func test_survive_mode_never_makes_seekers() -> void:
 	world.waves.remaining_spawns = 5
 	world.waves.spawn_clock = 0.0
 	world.waves.tick(.01)
-	world.waves.advance_spawn_warnings(1.0)
+	world.waves.advance_spawn_warnings(WaveDirector.SPAWN_TOTAL)
 	assert_gt(world.enemies.size(), 0)
 	for enemy in world.enemies:
 		assert_false(enemy.ignores_hero)

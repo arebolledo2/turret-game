@@ -29,9 +29,53 @@ func test_group_warns_before_multiple_enemies_arrive_together() -> void:
 	assert_eq(world.waves.pending_spawns.size(), 4)
 	world.waves.tick(.5)
 	assert_eq(world.enemies.size(), 0)
-	world.waves.tick(.41)
+	world.waves.tick(.5)
+	assert_eq(world.enemies.size(), 0, "enemies are still rising")
+	world.waves.tick(.06)
 	assert_eq(world.enemies.size(), 4)
+	assert_eq(world.waves.pending_spawns.size(), 4, "hatches are still closing")
+	world.waves.tick(WaveDirector.SPAWN_CLOSE)
 	assert_true(world.waves.pending_spawns.is_empty())
+
+func test_hatch_opens_then_enemy_rises_inactive_then_activates_as_it_closes() -> void:
+	world.waves.warn_spawn("basic", Vector3(4, 0, 0))
+	var pending: PendingSpawn = world.waves.pending_spawns[0]
+	world.waves.advance_spawn_warnings(WaveDirector.SPAWN_OPEN - .05)
+	assert_null(pending.enemy, "no enemy while the hatch is still opening")
+	world.waves.advance_spawn_warnings(.1)
+	var enemy := pending.enemy
+	assert_not_null(enemy)
+	assert_true(enemy.spawning)
+	assert_true(world.enemies.is_empty(), "a rising enemy cannot be targeted")
+	assert_eq(enemy.hurtbox.collision_layer, 0)
+	assert_lt(enemy.visual.position.y, 0.0, "still below the floor")
+	var before := enemy.position
+	enemy._physics_process(.5)
+	assert_eq(enemy.position, before, "a rising enemy does not move")
+	world.waves.advance_spawn_warnings(WaveDirector.SPAWN_RISE)
+	assert_false(enemy.spawning)
+	assert_eq(enemy.visual.position.y, 0.0)
+	assert_eq(enemy.hurtbox.collision_layer, WorldGeometry.ENEMY_HURTBOX_LAYER)
+	assert_true(world.enemies.has(enemy))
+	assert_eq(world.waves.pending_spawns.size(), 1, "the hatch is still closing")
+	world.waves.advance_spawn_warnings(WaveDirector.SPAWN_CLOSE)
+	assert_true(world.waves.pending_spawns.is_empty())
+	assert_true(WaveDirector.SPAWN_CLOSE < WaveDirector.SPAWN_OPEN, "closes faster than it opens")
+
+func test_blocker_after_enemy_emerged_does_not_cancel() -> void:
+	world.waves.warn_spawn("basic", Vector3(4, 0, 0))
+	world.waves.advance_spawn_warnings(WaveDirector.SPAWN_OPEN + .05)
+	world.player.position = Vector3(4, 0, 0)
+	world.waves.advance_spawn_warnings(WaveDirector.SPAWN_RISE)
+	assert_eq(world.enemies.size(), 1)
+
+func test_clearing_the_field_frees_a_rising_enemy() -> void:
+	world.waves.warn_spawn("basic", Vector3(4, 0, 0))
+	world.waves.advance_spawn_warnings(WaveDirector.SPAWN_OPEN + .05)
+	var enemy: EnemyActor = world.waves.pending_spawns[0].enemy
+	world.clear_field(false)
+	await get_tree().process_frame
+	assert_false(is_instance_valid(enemy))
 
 func test_hero_or_core_cancels_warning_without_replacement() -> void:
 	var at := Vector3(4, 0, 0)

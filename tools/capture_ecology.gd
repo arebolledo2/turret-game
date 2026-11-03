@@ -9,6 +9,7 @@ var mode := "roster"
 var sequence := false
 var frame := 0
 var attacks := false
+const HATCH_STEP := .15
 
 func _ready() -> void:
 	call_deferred("setup")
@@ -64,6 +65,18 @@ func setup() -> void:
 		world.player.health = world.player.max_health * .15
 		world.core.health = world.core.max_health * .15
 		world.camera_rig.snap()
+		return
+	if mode == "hatch":
+		# Spawn hatches advanced by hand: run with --sequence to capture every HATCH_STEP seconds.
+		for at in [Vector3(-3, 0, 0), Vector3(0, 0, -2), Vector3(3, 0, 0.5)]:
+			world.waves.warn_spawn(["drowse", "hopper", "brass_ram"][int(at.x + 3) / 3], at)
+		world.camera_rig.set_zoom(1.6)
+		world.camera_rig.snap()
+		world.camera_rig.set_physics_process(false)
+		world.hud.hide()
+		world.player.hide()
+		if world.core: world.core.hide()
+		for turret in world.turrets: turret.hide()
 		return
 	if mode == "route":
 		for at in [Vector3(-4, 0, 1), Vector3(-2.6, 0, 1), Vector3(-4, 0, 2.4), Vector3(-2.6, 0, 2.4)]:
@@ -146,6 +159,15 @@ func capture() -> void:
 	if sequence: path = "res://.test-results/ecology-%s-%02d.png" % [mode, frame]
 	get_viewport().get_texture().get_image().save_png(ProjectSettings.globalize_path(path))
 	print("ECOLOGY_CAPTURE ", path)
+	if mode == "hatch":
+		if frame >= 8:
+			get_tree().quit()
+			return
+		frame += 1
+		world.waves.advance_spawn_warnings(HATCH_STEP)
+		elapsed = 0.0
+		captured = false
+		return
 	if sequence and frame < 23:
 		frame += 1
 		elapsed = 0.0

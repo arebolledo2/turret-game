@@ -11,6 +11,8 @@ const HOOK_LANES: int = 3
 const HOOK_LANE_GAP: float = .35
 const HOOK_ORBIT_SPEED: float = .75
 const HOOK_LANE_TOLERANCE: float = 1.2
+## Metres (before body scale) the model starts below the floor when it rises from a spawn hatch.
+const RISE_DEPTH: float = 1.7
 
 ## Cached `EnemyEcology.taunt_kind` (-1 until first asked).
 var _taunt_kind: int = -1
@@ -71,6 +73,25 @@ func _build_visuals() -> void:
 	slow_marker.visible = false
 	if charge:
 		_build_warning()
+
+## Rise from a spawn hatch: inert and unhittable, hidden below the floor until `set_rise` lifts it. Call after `add_child`.
+func begin_spawning() -> void:
+	spawning = true
+	hurtbox.collision_layer = 0
+	marker.visible = false
+	set_rise(0.0)
+
+## 0 = fully below the floor, 1 = standing; eased out so the enemy surges up and settles.
+func set_rise(amount: float) -> void:
+	var eased := 1.0 - pow(1.0 - clampf(amount, 0.0, 1.0), 2.0)
+	visual.position.y = -RISE_DEPTH * body_scale * (1.0 - eased)
+
+func finish_spawning() -> void:
+	spawning = false
+	visual.position.y = 0.0
+	hurtbox.collision_layer = WorldGeometry.ENEMY_HURTBOX_LAYER
+	_refresh_ground_marker()
+	reset_physics_interpolation()
 
 ## Builds the enemy's body model; specialised actors (the tech-drop crate) override this.
 func _build_enemy_model() -> Node3D:
