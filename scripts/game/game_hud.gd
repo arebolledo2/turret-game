@@ -2,6 +2,8 @@ extends CanvasLayer
 
 var world: ArenaWorld
 var hull_bar: VitalBar
+var hero_level_label: Label
+var hero_xp_bar: TurretXpBar
 var core_bar: VitalBar
 var wave_value: Label
 var wave_total: Label
@@ -193,7 +195,15 @@ func _build_corner_clusters(root: Control) -> void:
 	root.add_child(left)
 	hull_bar = VitalBar.new().setup("hull", "hull")
 	hull_bar.custom_minimum_size.x = 225
-	left.add_child(hull_bar)
+	var hull_column := VBoxContainer.new()
+	hull_column.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hull_column.add_theme_constant_override("separation", 4)
+	left.add_child(hull_column)
+	hull_column.add_child(hull_bar)
+	hero_level_label = UiBuilder.label(hull_column, "LV 1", 16, UiPalette.TEAL_HI)
+	hero_xp_bar = TurretXpBar.new()
+	hero_xp_bar.custom_minimum_size.y = 8
+	hull_column.add_child(hero_xp_bar)
 	core_bar = VitalBar.new().setup("core", "core")
 	core_bar.visible = false
 	core_bar.custom_minimum_size.x = 225
@@ -360,6 +370,11 @@ func _process(delta: float) -> void:
 		return
 	var ended := phase in [GameStateMachine.GameState.GAME_OVER, GameStateMachine.GameState.VICTORY]
 	hull_bar.set_values(world.player.health, world.player.max_health)
+	var hero_growth: HeroProgression = PlayerStatsService.state.hero_progression
+	hero_level_label.visible = PlayerStatsService.state.turret_progression_enabled
+	hero_xp_bar.visible = hero_level_label.visible
+	hero_level_label.text = "LV %d" % hero_growth.level
+	hero_xp_bar.show_progress(hero_growth.level, hero_growth.xp)
 	core_bar.visible = world.core != null
 	if world.core:
 		core_bar.set_values(world.core.health, world.core.max_health)

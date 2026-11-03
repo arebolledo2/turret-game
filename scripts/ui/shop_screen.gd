@@ -11,6 +11,7 @@ var turret_inspector: TurretInspector
 var offer_buttons: Array[Button] = []
 var reroll_button: IconButton
 var evolution_reminder: EvolutionReminder
+var hero_panel: HeroPanel
 var continue_button: IconButton
 var offers_grid: GridContainer
 var balance: Label
@@ -152,6 +153,10 @@ func _build_sidebar(content: HBoxContainer) -> void:
 	sidebar.size_flags_horizontal = SIZE_EXPAND_FILL
 	sidebar.add_theme_constant_override("separation", 16)
 	side_scroll.add_child(sidebar)
+	hero_panel = HeroPanel.new()
+	hero_panel.world = world
+	hero_panel.evolved.connect(refresh)
+	sidebar.add_child(hero_panel)
 	UiBuilder.label(sidebar, "Your build", 30, UiPalette.INK, true)
 	vital_text = UiBuilder.label(sidebar, "", 23, UiPalette.MUTED, true)
 	turret_text = RichTextLabel.new()
@@ -235,6 +240,7 @@ func refresh() -> void:
 		tabs[i].set_pressed_no_signal(i == active_tab)
 	if active_tab == 1:
 		turret_inspector.refresh()
+	hero_panel.refresh()
 	_refresh_details()
 	_refresh_focus()
 	if opening:

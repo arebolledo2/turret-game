@@ -17,6 +17,8 @@ var turrets_purchased: int = 0
 var turret_progression_enabled: bool = false
 var additional_turrets_acquired: int = 0
 var turret_progression: Dictionary = {}
+## The hero's own XP, level and form; grows from collected scrap when `turret_progression_enabled`.
+var hero_progression: HeroProgression = HeroProgression.new()
 ## Raw scrap dropped on the field this wave; the denominator for the abandoned fraction.
 var wave_scrap_dropped: int = 0
 ## Run-long sum of each wave's effective abandoned fraction (0..1 per wave).

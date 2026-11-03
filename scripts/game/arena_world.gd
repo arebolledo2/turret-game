@@ -433,8 +433,35 @@ func collect_scrap(amount: int) -> void:
 	var added := EconomyService.add_scrap_probabilistic(amount, ItemTrackingService.get_scrap_earn_multiplier())
 	telemetry.record_scrap_earned(added)
 	GameStateService.lifetime_scrap += added
+	award_hero_xp(roundi(amount * GameConstants.HERO_XP_PER_SCRAP))
 	if is_combat():
 		audio.play_cue("pickup", player.position)
+
+## Collected scrap feeds the hero's own growth (uncollected scrap still goes to the turrets at wave end).
+func award_hero_xp(amount: int) -> void:
+	if not session.state.turret_progression_enabled or not is_instance_valid(player):
+		return
+	var change: Dictionary = PlayerStatsService.state.hero_progression.award(amount)
+	if change.leveled:
+		_refresh_hero_growth(true)
+		Events.hero_leveled.emit(int(change.after.level))
+
+## Takes one of the hero's evolutions; only while the shop is open, like a turret's.
+func evolve_hero(form_id: String) -> bool:
+	if not shop.is_open() or not PlayerStatsService.state.hero_progression.evolve(form_id):
+		return false
+	_refresh_hero_growth(false)
+	player.apply_form_look(form_id)
+	Events.hero_evolved.emit(form_id)
+	return true
+
+## Re-derives max health after a level or form change; the health gained is also healed.
+func _refresh_hero_growth(heal_gain: bool) -> void:
+	var previous := player.max_health
+	player.max_health = maxf(1.0, PlayerStatsService.get_player_max_health(float(difficulty_config["player_health_mult"])))
+	if heal_gain:
+		player.health += maxf(0.0, player.max_health - previous)
+	player.health = minf(player.health, player.max_health)
 
 ## Feeds telemetry only; never changes combat results.
 func _record_hit(target: Node3D, hit: CombatHit3D, applied: float) -> void:

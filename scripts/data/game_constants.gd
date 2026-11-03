@@ -270,3 +270,12 @@ const RARITY_WAVE_BONUS_PER_WAVE: float = 0.05 # +5% weight per wave past min
 # Player luck configuration
 const PLAYER_BASE_LUCK: float = 0.0
 const PLAYER_MAX_LUCK: float = 2.0 # Cap at 200% for sanity
+
+# Hero progression: XP per collected scrap, and growth per level (linear) plus a burst at every 5th level
+const HERO_XP_PER_SCRAP: float = 1.0
+const HERO_HEALTH_PER_LEVEL: float = 0.06
+const HERO_HEALTH_PER_BURST: float = 0.05
+const HERO_DAMAGE_PER_LEVEL: float = 0.05
+const HERO_DAMAGE_PER_BURST: float = 0.05
+const HERO_FIRE_RATE_PER_LEVEL: float = 0.03
+const HERO_FIRE_RATE_PER_BURST: float = 0.04

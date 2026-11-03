@@ -21,6 +21,23 @@ func _build_visuals() -> void:
 	weapon_muzzle = model.find_child("Muzzle", true, false) as Node3D
 	marker = WorldGeometry.ring(self, .3, Color("58ece1"))
 	marker.position.y = .025
+	apply_form_look(_form_id())
+
+func _form_id() -> String:
+	return PlayerStatsService.state.hero_progression.evolution_form
+
+## Placeholder look for an evolved form: a tinted overlay and a larger hull, until authored models exist.
+func apply_form_look(form_id: String) -> void:
+	var look := HeroForms.row(form_id)
+	visual.scale = Vector3.ONE * float(look.get("scale", 1.0))
+	var overlay: StandardMaterial3D = null
+	if look.has("tint"):
+		overlay = StandardMaterial3D.new()
+		overlay.albedo_color = look.tint
+		overlay.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		overlay.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	for node in visual.find_children("*", "GeometryInstance3D", true, false):
+		(node as GeometryInstance3D).material_overlay = overlay
 
 ## Accelerates the hero toward the stick/keys input (camera-relative) and returns the input direction.
 func _steer(delta: float) -> Vector3:
@@ -85,6 +102,7 @@ func _tick_player_weapon(delta: float) -> void:
 	if weapon_clock <= 0.0 and is_instance_valid(weapon_target):
 		var shot := CombatShot3D.from_stats(weapon_stats, world.run_config.hero.damage_type)
 		shot.attack_families.assign(world.run_config.hero.families)
+		HeroForms.apply_shot(_form_id(), shot)
 		if PlayerStatsService.roll_player_crit():
 			shot.critical = true
 			shot.damage = PlayerStatsService.calculate_player_crit_damage(shot.damage)

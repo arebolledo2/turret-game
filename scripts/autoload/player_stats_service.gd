@@ -20,6 +20,13 @@ var player_luck: float:
 func reset_state() -> void:
 	_weapon_cache.clear()
 	player_luck = GameConstants.PLAYER_BASE_LUCK
+	state.hero_progression = HeroProgression.new()
+
+## The hero's level and form growth; identity multipliers when progression is off.
+func hero_multipliers() -> Dictionary:
+	if not state.turret_progression_enabled:
+		return {"health": 1.0, "damage": 1.0, "fire_rate": 1.0, "range": 1.0}
+	return state.hero_progression.stat_multipliers()
 
 
 ## Get player speed with modifiers applied
@@ -35,7 +42,7 @@ func get_core_move_speed() -> float:
 
 ## Get player max health with modifiers applied
 func get_player_max_health(difficulty_mult: float) -> float:
-	var base_health := GameConstants.PLAYER_BASE_MAX_HEALTH * difficulty_mult
+	var base_health := GameConstants.PLAYER_BASE_MAX_HEALTH * difficulty_mult * float(hero_multipliers().health)
 	return ModifierService.apply_modifiers_to_stat(base_health, "player_max_health", "player")
 
 
@@ -105,12 +112,15 @@ func get_damage_reduction() -> float:
 ## Current hero is Pip: an Ion sidearm. The run profile owns this weapon and starting turret.
 func get_weapon_stats(profile: Dictionary = {}, cached: bool = true) -> Dictionary:
 	var definition := HeroLoadouts.pip() if profile.is_empty() else profile
-	var key := hash(definition)
+	var progression := state.hero_progression
+	var key := hash([definition, state.turret_progression_enabled, progression.level, progression.evolution_form])
 	if cached and _weapon_cache.has(key):
 		return _weapon_cache[key]
 	var base: Dictionary = definition.weapon.duplicate(true)
-	base.damage = ModifierService.apply_modifiers_to_stat(base.damage, "player_weapon_damage", "player")
-	base.fire_rate = ModifierService.apply_modifiers_to_stat(base.fire_rate, "player_fire_rate", "player")
+	var growth := hero_multipliers()
+	base.damage = ModifierService.apply_modifiers_to_stat(float(base.damage) * float(growth.damage), "player_weapon_damage", "player")
+	base.fire_rate = ModifierService.apply_modifiers_to_stat(float(base.fire_rate) * float(growth.fire_rate), "player_fire_rate", "player")
+	base.range = float(base.range) * float(growth.range)
 	var families: Array[String] = []
 	families.assign(definition.families)
 	var capabilities: Array[String] = []
