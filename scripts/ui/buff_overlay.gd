@@ -9,7 +9,7 @@ func _ready() -> void:
 	layer = 8
 
 func _process(_delta: float) -> void:
-	var enabled := world.show_hud and world.is_combat() and is_instance_valid(world.camera)
+	var enabled := world.show_hud and world.show_buffs() and world.is_combat() and is_instance_valid(world.camera)
 	for panel: HBoxContainer in panels.values():
 		panel.visible = false
 	if not enabled:
@@ -23,9 +23,6 @@ func _process(_delta: float) -> void:
 	for actor in actors:
 		var source: int = actor.turret_id if actor is TurretActor else 0
 		live.append(source)
-		var near := actor == world.player or actor.position.distance_to(world.player.position) < TurretPlacement.PICKUP_RANGE
-		if not (near or world.show_ranges):
-			continue
 		var entries := world.item_effects.visible_buffs(source)
 		if entries.is_empty():
 			continue

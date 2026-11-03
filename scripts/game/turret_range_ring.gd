@@ -11,9 +11,7 @@ func _init(owner: TurretActor) -> void:
 
 func update() -> void:
 	var world := turret.world
-	var inspecting := not turret.carried and is_instance_valid(world.player) and turret.position.distance_to(world.player.position) < TurretPlacement.PICKUP_RANGE
-	var contextual := inspecting and SettingsService.ground_markers != SettingsService.GroundMarkers.OFF
-	if not (world.show_ranges or contextual) or not FeatureFlagService.is_enabled(FeatureFlagService.RANGE_OVERLAY):
+	if not world.show_ranges() or not FeatureFlagService.is_enabled(FeatureFlagService.RANGE_OVERLAY):
 		if ring:
 			ring.visible = false
 		return

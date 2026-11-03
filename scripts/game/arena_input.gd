@@ -10,7 +10,7 @@ func handle(event: InputEvent) -> void:
 		world.get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed("toggle_range") and not event.is_echo() and GameStateService.is_game_active:
-		world.toggle_ranges()
+		world.cycle_overlay()
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.physical_keycode:
 			KEY_ESCAPE: world.toggle_pause()

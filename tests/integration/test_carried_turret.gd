@@ -113,7 +113,7 @@ func test_placement_dial_distinguishes_blocked_ground_and_hides_on_drop() -> voi
 
 func test_range_dial_tracks_carried_position_on_floor_in_same_tick() -> void:
 	var turret := _carry("normal")
-	world.show_ranges = true
+	world.overlay_mode = ArenaWorld.OverlayMode.BUFFS_RANGES
 	world.player.position = Vector3(3, 0, 2)
 	turret._physics_process(.01)
 	assert_almost_eq(turret.range_ring.global_position.y, .04, .001)

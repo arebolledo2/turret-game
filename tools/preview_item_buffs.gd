@@ -14,7 +14,7 @@ func _ready() -> void:
 	world.camera.look_at(Vector3.ZERO)
 	world.camera.size = 11
 	world.player.position = Vector3(1, 0, 1)
-	world.show_ranges = true
+	world.overlay_mode = ArenaWorld.OverlayMode.BUFFS_RANGES
 	for item in ["follow_through", "victory_lap", "rescue_beacon", "close_partnership"]:
 		world.shop.apply_item(item)
 	world.turrets[0].position = Vector3(-3, 0, -1)

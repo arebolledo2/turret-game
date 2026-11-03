@@ -552,14 +552,20 @@ func request_menu() -> void:
 	else:
 		get_tree().change_scene_to_file.call_deferred("res://scenes/main.tscn")
 
-## Turret range rings, toggled with the `toggle_range` action (Y / Tab). Stays on between waves until toggled again.
-var show_ranges: bool = false
+enum OverlayMode { BUFFS, BUFFS_RANGES, OFF }
 
-func toggle_ranges() -> void:
-	if not FeatureFlagService.is_enabled(FeatureFlagService.RANGE_OVERLAY):
-		return
-	show_ranges = not show_ranges
-	message = "Turret ranges %s" % ("shown" if show_ranges else "hidden")
+## Buff icons / turret range rings, cycled with the `toggle_range` action (Y / Tab). Stays between waves until cycled again.
+var overlay_mode: OverlayMode = OverlayMode.BUFFS
+
+func show_buffs() -> bool:
+	return overlay_mode != OverlayMode.OFF
+
+func show_ranges() -> bool:
+	return overlay_mode == OverlayMode.BUFFS_RANGES
+
+func cycle_overlay() -> void:
+	overlay_mode = ((overlay_mode + 1) % OverlayMode.size()) as OverlayMode
+	message = ["Buff icons", "Buff icons + turret ranges", "Buff icons and ranges hidden"][overlay_mode]
 
 func _unhandled_input(event: InputEvent) -> void:
 	input.handle(event)

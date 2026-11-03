@@ -28,14 +28,28 @@ func test_toggle_action_is_bound_to_y_and_tab() -> void:
 		kinds.append(event.get_class())
 	assert_has(kinds, "InputEventJoypadButton")
 
-func test_rings_are_hidden_until_toggled() -> void:
+func test_toggle_cycles_buffs_then_ranges_then_off() -> void:
+	assert_eq(world.overlay_mode, ArenaWorld.OverlayMode.BUFFS)
+	assert_true(world.show_buffs())
+	assert_false(world.show_ranges())
+	_press_toggle()
+	assert_eq(world.overlay_mode, ArenaWorld.OverlayMode.BUFFS_RANGES)
+	assert_true(world.show_buffs())
+	assert_true(world.show_ranges())
+	_press_toggle()
+	assert_eq(world.overlay_mode, ArenaWorld.OverlayMode.OFF)
+	assert_false(world.show_buffs())
+	assert_false(world.show_ranges())
+	_press_toggle()
+	assert_eq(world.overlay_mode, ArenaWorld.OverlayMode.BUFFS)
+
+func test_rings_only_show_in_buffs_and_ranges_mode() -> void:
 	var turret := world.turrets[0]
 	world.player.position = turret.position + Vector3(10, 0, 0)
 	await wait_physics_frames(2)
 	assert_null(turret.range_ring)
 	_press_toggle()
 	await wait_physics_frames(2)
-	assert_true(world.show_ranges)
 	assert_true(turret.range_ring.visible)
 	var expected := turret._current_view(0.0).range_metres
 	assert_almost_eq(turret.range_ring_metres, expected, .001)
@@ -45,24 +59,21 @@ func test_rings_are_hidden_until_toggled() -> void:
 
 func test_ring_follows_a_carried_turret_on_the_floor() -> void:
 	var turret := world.turrets[0]
-	world.show_ranges = true
+	world.overlay_mode = ArenaWorld.OverlayMode.BUFFS_RANGES
 	turret.carried = true
 	await wait_physics_frames(3)
 	assert_almost_eq(turret.range_ring.global_position.y, .04, .001)
 	assert_true(turret.range_ring.visible)
 
-func test_flag_off_disables_the_toggle() -> void:
+func test_flag_off_hides_rings_even_in_ranges_mode() -> void:
 	FeatureFlagService.set_enabled(FeatureFlagService.RANGE_OVERLAY, false)
-	_press_toggle()
-	assert_false(world.show_ranges)
-
-func test_nearby_turret_reveals_range_without_global_toggle() -> void:
+	world.overlay_mode = ArenaWorld.OverlayMode.BUFFS_RANGES
 	var turret := world.turrets[0]
-	SettingsService.ground_markers = SettingsService.GroundMarkers.CONTEXTUAL
-	world.show_ranges = false
+	turret._update_range_ring()
+	assert_null(turret.range_ring)
+
+func test_nearby_turret_no_longer_reveals_range() -> void:
+	var turret := world.turrets[0]
 	world.player.position = turret.position + Vector3(.5, 0, 0)
 	turret._update_range_ring()
-	assert_true(turret.range_ring.visible)
-	world.player.position += Vector3(10, 0, 0)
-	turret._update_range_ring()
-	assert_false(turret.range_ring.visible)
+	assert_null(turret.range_ring)

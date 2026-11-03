@@ -39,7 +39,7 @@ func test_area_upgrade_reaches_shock_boundary_and_preserves_projectile_targeting
 	var plasma_range := TurretStats.new(stats("plasma")).range_metres
 	var plasma_area := TurretStats.new(stats("plasma")).aoe_radius_metres
 	world.shop.apply_item("cluster_warheads")
-	world.show_ranges = true
+	world.overlay_mode = ArenaWorld.OverlayMode.BUFFS_RANGES
 	shock._update_range_ring()
 	assert_almost_eq(shock.range_ring_metres, base * 1.2, .001)
 	var target := world.spawn_enemy(shock.position + Vector3(base * 1.2, 0, 0))
