@@ -354,8 +354,13 @@ func refresh_navigation() -> void:
 	if not selected_button:
 		return
 	var visible_roster := visible_buttons()
-	for button in visible_roster:
-		button.focus_neighbor_left = button.get_path_to(previous_page if not previous_page.disabled else next_page if not next_page.disabled else button)
+	var page_exit: Button = previous_page if not previous_page.disabled else next_page if not next_page.disabled else null
+	for i in visible_roster.size():
+		var button := visible_roster[i]
+		button.focus_neighbor_left = button.get_path_to(page_exit if page_exit else button)
+		# Shown over the shop, so vertical moves must stay in the roster or leave by the exit.
+		button.focus_neighbor_top = button.get_path_to(visible_roster[i - 1] if i > 0 else page_exit if page_exit else button)
+		button.focus_neighbor_bottom = button.get_path_to(visible_roster[i + 1] if i + 1 < visible_roster.size() else navigation_exit)
 	for pager in [previous_page, next_page]:
 		pager.focus_neighbor_bottom = pager.get_path_to(visible_roster[0])
 		pager.focus_neighbor_right = pager.get_path_to(next_page if pager == previous_page and not next_page.disabled else selected_button)

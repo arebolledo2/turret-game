@@ -148,7 +148,7 @@ func test_locked_leveled_offer_keeps_its_level_across_rerolls() -> void:
 
 func test_sell_button_arms_then_sells() -> void:
 	var shop: ShopScreen = world.hud.shop_screen
-	shop.switch_tab(1)
+	shop.open_turret_details()
 	var inspector := shop.turret_inspector
 	var starter := world.turrets[0]
 	var before := EconomyService.total_scrap

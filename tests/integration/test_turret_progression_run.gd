@@ -226,19 +226,20 @@ func test_shop_exposes_wave_award_individual_levels_and_damage_previews() -> voi
 	screen.refresh()
 	assert_true(screen.growth_summary.text.contains("+110 XP"))
 	assert_true(screen.growth_summary.text.contains("4 levels gained"))
-	assert_true(screen.turret_text.text.contains("#1 · Lv 5"))
-	assert_true(screen.turret_text.text.contains("#2 · Lv 1"))
-	assert_true(screen.turret_text.text.contains("XP 0 / 41"))
-	assert_true(screen.turret_text.text.contains("Lv 1 → 5"))
+	var squad := func() -> String: return "\n".join(screen.squad_cards.map(func(c: SquadCard) -> String: return c.tooltip_text))
+	assert_true(squad.call().contains("#1 · Lv 5"))
+	assert_true(squad.call().contains("#2 · Lv 1"))
+	assert_true(squad.call().contains("XP 0 / 41"))
+	assert_true(squad.call().contains("Lv 1 → 5"))
 	var veteran_damage := world.turrets[0]._current_view(1.0).damage
-	assert_true(screen.turret_text.text.contains("%.1f damage" % veteran_damage))
+	assert_true(squad.call().contains("%.1f damage" % veteran_damage))
 	var before := ShopViewData.build_data(world)
 	var base: float = before.turrets[0].damage
 	assert_almost_eq(float(before.dps), base * 2.21 * float(before.turrets[0].fire_rate), .001)
 	var offer := ShopOffer.new("item", "dense_rounds", 1)
 	EconomyService.current_shop_offers.assign([offer])
 	screen._select(0)
-	assert_true(screen.turret_text.text.contains("%.1f → %.1f damage" % [veteran_damage, veteran_damage * 1.1]))
+	assert_true(squad.call().contains("%.1f → %.1f damage" % [veteran_damage, veteran_damage * 1.1]))
 	assert_eq(world.turrets[0].progression.level, 5, "Preview never changes progression")
 
 func test_shop_explains_zero_xp_and_inactive_progression() -> void:

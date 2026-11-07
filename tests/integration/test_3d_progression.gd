@@ -319,7 +319,8 @@ func test_hud_shows_offers_build_and_terminal_summary() -> void:
 	assert_eq(hud.shop_screen.offer_buttons.size(), GameConstants.SHOP_OFFER_COUNT)
 	assert_true(hud.shop_screen.offer_buttons[0].visible, "offers show in the shop")
 	assert_eq(hud.shop_screen.offer_buttons[0].shown_key.split(":")[1], EconomyService.current_shop_offers[0].asset_id)
-	assert_false(hud.shop_screen.turret_text.text.is_empty(), "build is populated")
+	assert_false(hud.shop_screen.squad_cards.is_empty(), "squad is populated")
+	assert_false(hud.shop_screen.squad_cards[0].tooltip_text.is_empty())
 	assert_eq(ShopViewData.build_data(world)["turrets"][0]["name"], "Ion")
 	world.player.health = 1
 	world.begin_next_wave()

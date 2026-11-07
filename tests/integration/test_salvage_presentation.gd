@@ -160,7 +160,7 @@ func test_xp_bars_show_partial_progress_in_recap_and_turret_roster() -> void:
 	_resolve_evolutions()
 	var shop: ShopScreen = world.hud.shop_screen
 	shop.refresh()
-	shop.switch_tab(1)
+	shop.open_turret_details()
 	assert_eq(shop.turret_inspector.xp_bar.value, bar.value)
 	assert_eq(shop.turret_inspector.roster_bars[0].value, bar.value)
 	assert_eq(shop.turret_inspector.roster_bars[0].max_value, bar.max_value)
@@ -179,10 +179,8 @@ func test_turrets_tab_uses_individual_stats_and_controller_can_reach_deploy() ->
 	second.set_physics_process(false)
 	var shop: ShopScreen = world.hud.shop_screen
 	shop.refresh()
-	shop.switch_tab(1)
-	assert_false(shop.offers_content.visible)
-	assert_true(shop.turret_inspector.visible)
-	assert_false(shop.reroll_button.visible)
+	shop.open_turret_details()
+	assert_true(shop.details_modal.visible)
 	assert_eq(shop.turret_inspector.buttons.size(), 2)
 	assert_true(shop.turret_inspector.title.text.contains("LEVEL 5"))
 	assert_true(shop.turret_inspector.detail.text.contains("+110 XP"))
@@ -197,14 +195,14 @@ func test_turrets_tab_uses_individual_stats_and_controller_can_reach_deploy() ->
 	down.pressed = true
 	Input.parse_input_event(down)
 	await wait_process_frames(1)
-	assert_same(get_viewport().gui_get_focus_owner(), shop.continue_button)
-	var bumper := InputEventJoypadButton.new()
-	bumper.button_index = JOY_BUTTON_LEFT_SHOULDER
-	bumper.pressed = true
-	Input.parse_input_event(bumper)
+	assert_same(get_viewport().gui_get_focus_owner(), shop.details_modal.close_button)
+	var back := InputEventJoypadButton.new()
+	back.button_index = JOY_BUTTON_B
+	back.pressed = true
+	Input.parse_input_event(back)
 	await wait_process_frames(1)
-	assert_eq(shop.active_tab, 0)
-	assert_true(shop.offers_content.visible)
+	assert_false(shop.details_modal.visible)
+	assert_false(world.paused, "B closes the details without pausing")
 
 func test_large_roster_fits_without_scroll_and_level_ups_come_first() -> void:
 	for i in 11:

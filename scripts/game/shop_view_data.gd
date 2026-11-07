@@ -224,12 +224,15 @@ const IMPACT_KEYS: Dictionary = {
 ## What buying `offer` does to each deployed turret and the hero, for the squad highlight. Keyed by
 ## turret_id (int) and "hero": {tone: 1 helps, -1 hurts, 0 mixed; changes: [{icon, text, tone}];
 ## situational: true when a rule rather than a number says it applies}. Unaffected entries are left out.
-static func turret_impacts(world: ArenaWorld, offer: ShopOffer) -> Dictionary:
+## `before`/`after` may be passed in when the caller already has build_data and preview for this offer.
+static func turret_impacts(world: ArenaWorld, offer: ShopOffer, before: Dictionary = {}, after: Dictionary = {}) -> Dictionary:
 	var result := {}
 	if offer.sold:
 		return result
-	var before := build_data(world)
-	var after := preview(world, offer)
+	if before.is_empty():
+		before = build_data(world)
+	if after.is_empty():
+		after = preview(world, offer)
 	for turret: Dictionary in after["turrets"]:
 		var old: Dictionary = {}
 		for candidate: Dictionary in before["turrets"]:
@@ -253,12 +256,21 @@ static func turret_impacts(world: ArenaWorld, offer: ShopOffer) -> Dictionary:
 			if changes.is_empty() and situational != 1:
 				continue
 			result[actor.turret_id] = _impact(changes, situational == 1 and changes.is_empty())
+			result[actor.turret_id]["icon"] = _rule_icon(offer)
 	var hero := _changes(before["hero_weapon"], after["hero_weapon"])
 	for spec: Array in [["max_hull", "hull"], ["speed", "speed"], ["pickup", "pickup"], ["luck", "star"]]:
 		hero.append_array(_changes({spec[0]: before[spec[0]]}, {spec[0]: after[spec[0]]}, spec[1]))
 	if not hero.is_empty():
 		result["hero"] = _impact(hero, false)
 	return result
+
+## Icon for an impact that a rule rather than a number describes: entrenchment, or a plain check.
+static func _rule_icon(offer: ShopOffer) -> String:
+	if offer.kind == "item":
+		for modifier: Dictionary in ItemRegistry.get_modifiers(offer.asset_id):
+			if str(modifier["stat"]).begins_with("entrench_"):
+				return "entrench"
+	return "check"
 
 static func _impact(changes: Array[Dictionary], situational: bool) -> Dictionary:
 	var tone := 1

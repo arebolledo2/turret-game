@@ -29,12 +29,12 @@ func press_direction(button: JoyButton) -> void:
 	Input.parse_input_event(event)
 	await wait_process_frames(1)
 
-func test_bottom_row_reaches_deploy_and_returns() -> void:
+func test_reroll_reaches_prepare_and_prepare_climbs_to_the_squad() -> void:
 	hud.reroll_button.grab_focus()
 	await press_direction(JOY_BUTTON_DPAD_RIGHT)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
-	await press_direction(JOY_BUTTON_DPAD_LEFT)
-	assert_same(get_viewport().gui_get_focus_owner(), hud.reroll_button)
+	await press_direction(JOY_BUTTON_DPAD_UP)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.squad_cards.back())
 
 func test_shop_is_opaque_hides_combat_and_restores_rendering_on_exit() -> void:
 	world.hud._process(0)
@@ -66,13 +66,17 @@ func test_controller_can_inspect_installed_items_and_return_to_deploy() -> void:
 	EconomyService.current_shop_offers.assign([ShopOffer.new("turret", "plasma", 10), ShopOffer.new("item", "capacitor_bank", 10),
 		ShopOffer.new("item", "dense_rounds", 10), ShopOffer.new("item", "quick_loader", 10)])
 	hud.refresh()
-	hud.offer_buttons[3].grab_focus()
-	await press_direction(JOY_BUTTON_DPAD_RIGHT)
-	assert_same(get_viewport().gui_get_focus_owner(), hud.owned_buttons[0])
+	await wait_process_frames(2)
+	hud.squad_cards[0].grab_focus()
+	await press_direction(JOY_BUTTON_DPAD_DOWN)
+	assert_has(hud.owned_buttons, get_viewport().gui_get_focus_owner(), "down from the squad reaches the items")
+	hud.owned_buttons[0].grab_focus()
+	await wait_process_frames(1)
 	assert_eq(hud.detail_title.text, "Polished Barrels")
-	await press_direction(JOY_BUTTON_DPAD_DOWN)
+	await press_direction(JOY_BUTTON_DPAD_RIGHT)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.owned_buttons[1])
-	await press_direction(JOY_BUTTON_DPAD_DOWN)
+	assert_eq(hud.detail_title.text, "Blast Charges")
+	await press_direction(JOY_BUTTON_DPAD_RIGHT)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
 
 func test_pause_and_dev_overlay_restore_shop_and_focus() -> void:
@@ -116,13 +120,16 @@ func test_controller_moves_between_card_lock_and_nearest_footer_action() -> void
 	await press_direction(JOY_BUTTON_DPAD_LEFT)
 	await press_direction(JOY_BUTTON_DPAD_UP)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.offer_buttons[0])
-	# The last row leads to the nearest enabled footer action, not always Deploy.
+	# The last lock row leads down to the squad, and back up to the nearest lock.
 	var bottom_index := 0 if hud.offers_grid.columns == 4 else 2
 	hud.offer_buttons[bottom_index].lock_button.grab_focus()
 	await press_direction(JOY_BUTTON_DPAD_DOWN)
-	assert_same(get_viewport().gui_get_focus_owner(), hud.reroll_button)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.squad_cards[0])
 	await press_direction(JOY_BUTTON_DPAD_UP)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.offer_buttons[bottom_index].lock_button)
+	hud.offer_buttons[0].grab_focus()
+	await press_direction(JOY_BUTTON_DPAD_UP)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.reroll_button)
 
 func test_purchase_focus_advances_to_next_offer_instead_of_first() -> void:
 	EconomyService.current_shop_offers.assign([ShopOffer.new("item", "polished_barrels", 10), ShopOffer.new("item", "capacitor_bank", 10), ShopOffer.new("item", "blast_charges", 10)])
@@ -133,7 +140,7 @@ func test_purchase_focus_advances_to_next_offer_instead_of_first() -> void:
 
 func test_turret_pages_keep_roster_visible_and_controller_reaches_next_page() -> void:
 	for i in 7: world.add_turret(Vector3(i, 0, 5), "normal")
-	hud.switch_tab(1)
+	hud.open_turret_details()
 	var inspector := hud.turret_inspector
 	assert_eq(inspector.visible_buttons().size(), 6)
 	assert_false(inspector.next_page.disabled)
@@ -149,8 +156,11 @@ func test_turret_pages_keep_roster_visible_and_controller_reaches_next_page() ->
 	await press_direction(JOY_BUTTON_DPAD_DOWN)
 	assert_same(get_viewport().gui_get_focus_owner(), inspector.buttons[7])
 	await press_direction(JOY_BUTTON_DPAD_DOWN)
-	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.details_modal.close_button)
 	assert_true(inspector.find_children("*", "ScrollContainer", true, false).is_empty())
+	await press_direction(JOY_BUTTON_B)
+	assert_false(hud.details_modal.visible, "B closes the details")
+	assert_true(get_viewport().gui_get_focus_owner() is SquadCard, "focus returns to the squad")
 
 func test_core_and_hero_are_healed_between_waves() -> void:
 	world.player.health = 1
@@ -205,7 +215,7 @@ const EVOLUTION_PATHS: Array = [
 
 func test_each_evolution_path_offers_its_forms_and_the_inspector_shows_them() -> void:
 	world.session.state.turret_progression_enabled = true
-	hud.switch_tab(1)
+	hud.open_turret_details()
 	var inspector := hud.turret_inspector
 	for path: Array in EVOLUTION_PATHS:
 		var turret := world.add_turret(Vector3(2, 0, 2), str(path[0]))
@@ -230,3 +240,24 @@ func test_each_evolution_path_offers_its_forms_and_the_inspector_shows_them() ->
 		await wait_process_frames(2)
 		assert_same(inspector.art.texture, ShopArt.turret(str(path[0]), str(path[3])))
 		assert_true(turret.available_evolutions().is_empty())
+
+func test_squad_cards_open_details_and_show_what_the_focused_offer_does() -> void:
+	EconomyService.current_shop_offers.assign([ShopOffer.new("item", "rapid_coolant", 10), ShopOffer.new("item", "gamblers_crown", 10),
+		ShopOffer.new("item", "blast_charges", 10), ShopOffer.new("item", "polished_barrels", 10)])
+	hud.refresh()
+	var card: SquadCard = hud.squad_cards[0]
+	assert_eq(card.turret_id, world.turrets[0].turret_id)
+	assert_false(card.impact_badge.visible, "no offer focused: no highlight")
+	hud._select(0)
+	assert_true(card.impact_badge.visible)
+	assert_eq((card.get_theme_stylebox("normal") as StyleBoxFlat).border_color, UiPalette.GOOD)
+	hud._select(1)
+	assert_eq((card.get_theme_stylebox("normal") as StyleBoxFlat).border_color, UiPalette.BAD)
+	hud._select(2)
+	assert_false(card.impact_badge.visible, "an AoE item leaves the Ion alone")
+	assert_lt(card.modulate.a, 1.0, "untouched turrets dim while an offer is focused")
+	card.pressed.emit()
+	assert_true(hud.details_modal.visible)
+	assert_eq(hud.turret_inspector.selected_id, card.turret_id)
+	hud.close_turret_details()
+	assert_false(hud.details_modal.visible)

@@ -2,12 +2,9 @@ class_name ShopScreen
 extends Control
 
 ## Opaque shop presentation; transactions and simulation remain owned by ArenaShop/ArenaWorld.
+## One screen: offers on top, the squad and owned items below, the build on the right. Focusing an offer
+## outlines the turrets it helps (green) or hurts (red); a squad card opens the turret details modal.
 var world: ArenaWorld
-var active_tab: int = 0
-var tabs: Array[Button] = []
-var offers_content: HBoxContainer
-var tab_hint: Label
-var turret_inspector: TurretInspector
 var offer_buttons: Array[Button] = []
 var reroll_button: IconButton
 var hero_panel: HeroPanel
@@ -16,19 +13,28 @@ var offers_grid: GridContainer
 var balance: Label
 var subtitle: Label
 var growth_summary: Label
-var vital_text: Label
-var turret_text: RichTextLabel
+var squad_row: HBoxContainer
+var squad_cards: Array[SquadCard] = []
+var squad_empty: Label
+var vitals: HFlowContainer
+var weapon_badges: AttackFamilyBadges
+var weapon_chips: HFlowContainer
+var convoy_text: Label
 var detail_title: Label
 var detail_text: Label
 var impact_text: Label
-var installed: VBoxContainer
+var installed: HFlowContainer
 var status: Label
+var details_modal: TurretDetailsModal
+var turret_inspector: TurretInspector
 var selected: int = -1
 var details_key: int = 0
 var installed_key: int = 0
 var owned_buttons: Array[Button] = []
 var prior_disable_3d: bool = false
 var suppressing_world: bool = false
+
+const SIDEBAR_WIDTH: float = 400.0
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -39,87 +45,89 @@ func _ready() -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side: String in ["left", "right"]:
-		margin.add_theme_constant_override("margin_" + side, 56)
+		margin.add_theme_constant_override("margin_" + side, 48)
 	for side: String in ["top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 36)
+		margin.add_theme_constant_override("margin_" + side, 28)
 	add_child(margin)
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 24)
+	column.add_theme_constant_override("separation", 16)
 	margin.add_child(column)
 	_build_header(column)
-	_build_tabs(column)
-	var content := _build_offers(column)
+	var content := HBoxContainer.new()
+	content.size_flags_vertical = SIZE_EXPAND_FILL
+	content.add_theme_constant_override("separation", 28)
+	column.add_child(content)
+	_build_main(content)
 	_build_sidebar(content)
-	turret_inspector = TurretInspector.new()
-	turret_inspector.world = world
-	turret_inspector.sold.connect(refresh)
-	turret_inspector.size_flags_vertical = SIZE_EXPAND_FILL
-	column.add_child(turret_inspector)
-	_build_footer(column)
-	status = UiBuilder.label(column, "", 20, UiPalette.MUTED, true)
+	status = UiBuilder.label(column, "", 19, UiPalette.MUTED, true)
+	details_modal = TurretDetailsModal.new(world)
+	add_child(details_modal)
+	turret_inspector = details_modal.inspector
+	turret_inspector.sold.connect(_on_turret_sold)
+	details_modal.closed.connect(_on_details_closed)
 	visible = false
 
-## Title, balance and the growth summary line.
+## One slim bar: title, wave, growth summary, controls and balance.
 func _build_header(column: VBoxContainer) -> void:
 	var header := HBoxContainer.new()
+	header.add_theme_constant_override("separation", 18)
 	column.add_child(header)
-	var heading := VBoxContainer.new()
-	heading.size_flags_horizontal = SIZE_EXPAND_FILL
-	header.add_child(heading)
-	UiBuilder.label(heading, "SHOP", 48, UiPalette.INK, true)
-	subtitle = UiBuilder.label(heading, "", 23, UiPalette.MUTED, true)
-	balance = UiBuilder.label(header, "", 42, UiPalette.SCRAP, true)
+	UiBuilder.label(header, "SHOP", 40, UiPalette.INK)
+	subtitle = UiBuilder.label(header, "", 21, UiPalette.MUTED)
+	subtitle.size_flags_vertical = SIZE_SHRINK_CENTER
+	growth_summary = UiBuilder.label(header, "", 19, UiPalette.GOOD)
+	growth_summary.size_flags_horizontal = SIZE_EXPAND_FILL
+	growth_summary.size_flags_vertical = SIZE_SHRINK_CENTER
+	growth_summary.clip_text = true
+	growth_summary.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	growth_summary.mouse_filter = Control.MOUSE_FILTER_PASS
+	var hint := UiBuilder.label(header, "A buy  ·  X / L lock  ·  B close details", 18, UiPalette.MUTED)
+	hint.size_flags_vertical = SIZE_SHRINK_CENTER
+	balance = UiBuilder.label(header, "", 36, UiPalette.SCRAP)
 	balance.autowrap_mode = TextServer.AUTOWRAP_OFF
 	balance.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	growth_summary = UiBuilder.label(column, "", 24, UiPalette.GOOD, true)
 	column.add_child(HSeparator.new())
 
-## OFFERS / TURRETS tab buttons and the navigation hint.
-func _build_tabs(column: VBoxContainer) -> void:
-	var tab_row := HBoxContainer.new()
-	tab_row.add_theme_constant_override("separation", 16)
-	column.add_child(tab_row)
-	for tab_name in ["OFFERS", "TURRETS"]:
-		var tab := Button.new()
-		ChamferStyle.style_button(tab)
-		tab.text = tab_name
-		tab.toggle_mode = true
-		tab.custom_minimum_size = Vector2(220, 52)
-		tab.add_theme_font_size_override("font_size", 25)
-		tab.pressed.connect(switch_tab.bind(tabs.size()))
-		tab_row.add_child(tab)
-		tabs.append(tab)
-	tab_hint = UiBuilder.label(tab_row, "Tabs: Q / E or LB / RB  ·  Details: right stick / mouse wheel", 21, UiPalette.MUTED, true)
-	tab_hint.autowrap_mode = TextServer.AUTOWRAP_OFF
-	tab_hint.size_flags_horizontal = SIZE_EXPAND_FILL
-	tab_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+func _section(parent: Node, title: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 14)
+	parent.add_child(row)
+	var label := UiBuilder.label(row, title, 18, UiPalette.MUTED)
+	label.size_flags_vertical = SIZE_SHRINK_CENTER
+	var rule := HSeparator.new()
+	rule.size_flags_horizontal = SIZE_EXPAND_FILL
+	rule.size_flags_vertical = SIZE_SHRINK_CENTER
+	row.add_child(rule)
+	return row
 
-## One card per possible offer; returns the row that also holds the sidebar.
-func _build_offers(column: VBoxContainer) -> HBoxContainer:
-	var content := HBoxContainer.new()
-	offers_content = content
-	content.size_flags_vertical = SIZE_EXPAND_FILL
-	content.add_theme_constant_override("separation", 32)
-	column.add_child(content)
-	var offers_scroll := ScrollContainer.new()
-	offers_scroll.follow_focus = true
-	offers_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	offers_scroll.size_flags_horizontal = SIZE_EXPAND_FILL
-	content.add_child(offers_scroll)
+## Offers, then the squad strip, then owned items, in one focus-following scroll.
+func _build_main(content: HBoxContainer) -> void:
+	var scroll := ScrollContainer.new()
+	scroll.follow_focus = true
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_horizontal = SIZE_EXPAND_FILL
+	content.add_child(scroll)
+	# Focus outlines and impact badges extend beyond control bounds; reserve space inside the scroll clip.
+	var focus_margin := MarginContainer.new()
+	focus_margin.size_flags_horizontal = SIZE_EXPAND_FILL
+	for edge in ["left", "right", "top", "bottom"]:
+		focus_margin.add_theme_constant_override("margin_" + edge, 6)
+	scroll.add_child(focus_margin)
+	var main := VBoxContainer.new()
+	main.size_flags_horizontal = SIZE_EXPAND_FILL
+	main.add_theme_constant_override("separation", 14)
+	focus_margin.add_child(main)
+	var offers_header := _section(main, "OFFERS")
+	reroll_button = IconButton.new().setup("reroll", "REROLL")
+	reroll_button.custom_minimum_size = Vector2(230, 48)
+	reroll_button.pressed.connect(_reroll)
+	offers_header.add_child(reroll_button)
 	offers_grid = GridContainer.new()
 	offers_grid.columns = 4
 	offers_grid.size_flags_horizontal = SIZE_EXPAND_FILL
-	offers_grid.size_flags_vertical = SIZE_EXPAND_FILL
-	offers_grid.add_theme_constant_override("h_separation", 18)
-	offers_grid.add_theme_constant_override("v_separation", 18)
-	# Focus outlines extend beyond control bounds; reserve space inside the scroll clip.
-	var focus_margin := MarginContainer.new()
-	focus_margin.size_flags_horizontal = SIZE_EXPAND_FILL
-	focus_margin.size_flags_vertical = SIZE_EXPAND_FILL
-	for edge in ["left", "right", "top", "bottom"]:
-		focus_margin.add_theme_constant_override("margin_" + edge, 6)
-	offers_scroll.add_child(focus_margin)
-	focus_margin.add_child(offers_grid)
+	offers_grid.add_theme_constant_override("h_separation", 16)
+	offers_grid.add_theme_constant_override("v_separation", 16)
+	main.add_child(offers_grid)
 	for i in range(GameConstants.SHOP_OFFER_COUNT):
 		var card := OfferCard.new()
 		card.pressed.connect(_purchase.bind(i))
@@ -127,68 +135,86 @@ func _build_offers(column: VBoxContainer) -> HBoxContainer:
 		card.lock_requested.connect(_toggle_lock.bind(i))
 		var slot := VBoxContainer.new()
 		slot.size_flags_horizontal = SIZE_EXPAND_FILL
-		slot.size_flags_vertical = SIZE_EXPAND_FILL
-		slot.add_theme_constant_override("separation", 10)
+		slot.add_theme_constant_override("separation", 8)
 		offers_grid.add_child(slot)
 		slot.add_child(card)
 		card.lock_button.reparent(slot)
 		card.lock_button.custom_minimum_size.y = 44
 		offer_buttons.append(card)
-	return content
+	var squad_header := _section(main, "SQUAD")
+	UiBuilder.label(squad_header, "green helped  ·  red hurt  ·  select for details", 17, UiPalette.MUTED).size_flags_vertical = SIZE_SHRINK_CENTER
+	var squad_scroll := ScrollContainer.new()
+	squad_scroll.follow_focus = true
+	squad_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	squad_scroll.size_flags_horizontal = SIZE_EXPAND_FILL
+	main.add_child(squad_scroll)
+	var squad_margin := MarginContainer.new()
+	# Room above the cards for the impact badge that overhangs their top edge.
+	squad_margin.add_theme_constant_override("margin_top", 14)
+	for edge in ["left", "right", "bottom"]:
+		squad_margin.add_theme_constant_override("margin_" + edge, 4)
+	squad_scroll.add_child(squad_margin)
+	squad_row = HBoxContainer.new()
+	squad_row.add_theme_constant_override("separation", 12)
+	squad_margin.add_child(squad_row)
+	squad_empty = UiBuilder.label(squad_row, "No turrets deployed yet.", 20, UiPalette.MUTED)
+	_section(main, "ITEMS")
+	installed = HFlowContainer.new()
+	installed.add_theme_constant_override("h_separation", 10)
+	installed.add_theme_constant_override("v_separation", 10)
+	main.add_child(installed)
 
-## Build summary, offer details and installed upgrades.
+## Hero, build numbers (with the focused offer's before → after), offer details and Prepare.
 func _build_sidebar(content: HBoxContainer) -> void:
+	var side := VBoxContainer.new()
+	side.custom_minimum_size.x = SIDEBAR_WIDTH
+	side.add_theme_constant_override("separation", 14)
+	content.add_child(side)
+	var panel := PanelContainer.new()
+	panel.size_flags_vertical = SIZE_EXPAND_FILL
+	panel.add_theme_stylebox_override("panel", ChamferStyle.make(UiPalette.PANEL_SOLID, UiPalette.LINE, 14.0, 18.0, 16.0))
+	side.add_child(panel)
 	var side_scroll := ScrollContainer.new()
 	side_scroll.follow_focus = true
-	side_scroll.custom_minimum_size.x = 410
 	side_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	content.add_child(side_scroll)
+	panel.add_child(side_scroll)
 	var sidebar := VBoxContainer.new()
 	sidebar.size_flags_horizontal = SIZE_EXPAND_FILL
-	sidebar.add_theme_constant_override("separation", 16)
+	sidebar.add_theme_constant_override("separation", 12)
 	side_scroll.add_child(sidebar)
 	hero_panel = HeroPanel.new()
 	sidebar.add_child(hero_panel)
-	UiBuilder.label(sidebar, "Your build", 30, UiPalette.INK, true)
-	vital_text = UiBuilder.label(sidebar, "", 23, UiPalette.MUTED, true)
-	turret_text = RichTextLabel.new()
-	turret_text.bbcode_enabled = true
-	turret_text.fit_content = true
-	turret_text.scroll_active = false
-	turret_text.add_theme_font_size_override("normal_font_size", 23)
-	sidebar.add_child(turret_text)
+	UiBuilder.label(sidebar, "BUILD", 18, UiPalette.MUTED)
+	vitals = HFlowContainer.new()
+	vitals.add_theme_constant_override("h_separation", 8)
+	vitals.add_theme_constant_override("v_separation", 8)
+	sidebar.add_child(vitals)
+	convoy_text = UiBuilder.label(sidebar, "", 19, UiPalette.MUTED, true)
+	var weapon_header := HBoxContainer.new()
+	weapon_header.add_theme_constant_override("separation", 8)
+	sidebar.add_child(weapon_header)
+	UiBuilder.label(weapon_header, "HERO WEAPON", 18, UiPalette.MUTED)
+	weapon_badges = AttackFamilyBadges.new(false, 20.0)
+	weapon_header.add_child(weapon_badges)
+	weapon_chips = HFlowContainer.new()
+	weapon_chips.add_theme_constant_override("h_separation", 8)
+	weapon_chips.add_theme_constant_override("v_separation", 8)
+	sidebar.add_child(weapon_chips)
 	sidebar.add_child(HSeparator.new())
-	detail_title = UiBuilder.label(sidebar, "Choose an offer", 30, UiPalette.INK, true)
-	detail_text = UiBuilder.label(sidebar, "See what it adds to your build.", 23, Color("b9cdd0"), true)
-	impact_text = UiBuilder.label(sidebar, "", 23, UiPalette.GOOD, true)
-	sidebar.add_child(HSeparator.new())
-	UiBuilder.label(sidebar, "Installed upgrades", 26, UiPalette.INK, true)
-	installed = VBoxContainer.new()
-	sidebar.add_child(installed)
-
-## Reroll and the deploy button.
-func _build_footer(column: VBoxContainer) -> void:
-	var footer := HBoxContainer.new()
-	footer.add_theme_constant_override("separation", 18)
-	column.add_child(footer)
-	reroll_button = IconButton.new().setup("reroll", "REROLL")
-	reroll_button.custom_minimum_size.x = 265
-	reroll_button.pressed.connect(_reroll)
-	footer.add_child(reroll_button)
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = SIZE_EXPAND_FILL
-	footer.add_child(spacer)
+	detail_title = UiBuilder.label(sidebar, "Choose an offer", 26, UiPalette.INK, true)
+	detail_text = UiBuilder.label(sidebar, "", 20, Color("b9cdd0"), true)
+	impact_text = UiBuilder.label(sidebar, "", 20, UiPalette.GOOD, true)
 	continue_button = IconButton.new().setup("deploy", "PREPARE", true)
-	continue_button.custom_minimum_size.x = 310
+	continue_button.custom_minimum_size.y = 60
 	continue_button.pressed.connect(_request_deploy)
-	footer.add_child(continue_button)
-	turret_inspector.navigation_exit = continue_button
+	side.add_child(continue_button)
 
 func refresh() -> void:
 	var active := world.shop.is_open() and not world.dev_menu_open
 	var opening := active and not visible
 	if opening:
 		selected = -1
+		details_modal.visible = false
 	visible = active
 	if active and not suppressing_world:
 		prior_disable_3d = get_viewport().disable_3d
@@ -200,10 +226,10 @@ func refresh() -> void:
 	subtitle.text = "Wave %d secured · Prepare for wave %d" % [GameStateService.current_wave, GameStateService.current_wave + 1]
 	balance.text = "%d SCRAP" % EconomyService.total_scrap
 	growth_summary.text = ShopDetailText.growth_summary(world)
+	growth_summary.tooltip_text = growth_summary.text.replace("   ·   ", "\n")
 	growth_summary.add_theme_color_override("font_color", UiPalette.GOOD if int(world.salvage.last_settlement.get("xp_awarded", 0)) > 0 else UiPalette.MUTED)
 	var compact := size.x < 1650
 	offers_grid.columns = 2 if compact else 4
-	continue_button.custom_minimum_size.x = 250 if compact else 310
 	for i in range(offer_buttons.size()):
 		var card := offer_buttons[i] as OfferCard
 		var exists := i < EconomyService.current_shop_offers.size()
@@ -219,51 +245,55 @@ func refresh() -> void:
 	reroll_button.set_cost(cost, EconomyService.total_scrap >= cost)
 	reroll_button.disabled = not world.shop.can_reroll() or EconomyService.total_scrap < cost
 	status.text = world.message
-	offers_content.visible = active_tab == 0
-	turret_inspector.visible = active_tab == 1
-	tab_hint.text = "Tabs: Q / E or LB / RB" if active_tab == 1 else "Tabs: Q / E or LB / RB  -  Details: right stick / mouse wheel"
-	reroll_button.visible = active_tab == 0
-	for i in tabs.size():
-		tabs[i].set_pressed_no_signal(i == active_tab)
-	if active_tab == 1:
-		turret_inspector.refresh()
 	hero_panel.refresh()
 	_refresh_details()
+	if details_modal.visible:
+		turret_inspector.refresh()
 	_refresh_focus()
 	if opening:
 		selected = -1
 		continue_button.grab_focus()
 
-func switch_tab(index: int) -> void:
-	active_tab = clampi(index, 0, 1)
+## Opens the details modal on one turret (the first when `turret_id` is 0).
+func open_turret_details(turret_id: int = 0) -> void:
+	if world.turrets.is_empty():
+		return
+	details_modal.open(turret_id)
+
+func close_turret_details() -> void:
+	details_modal.close()
+
+func _on_details_closed() -> void:
+	var id := turret_inspector.selected_id
+	for card in squad_cards:
+		if card.turret_id == id:
+			card.grab_focus()
+			return
+	continue_button.grab_focus()
+
+func _on_turret_sold() -> void:
+	details_key = 0
 	refresh()
-	tabs[active_tab].grab_focus()
+	if world.turrets.is_empty():
+		close_turret_details()
 
 func _input(event: InputEvent) -> void:
 	if not visible or not world.shop.is_open():
 		return
+	if details_modal.visible:
+		var back: bool = (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_ESCAPE) \
+			or (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_B)
+		if back:
+			close_turret_details()
+			get_viewport().set_input_as_handled()
+		return
 	var lock_pressed: bool = (event is InputEventKey and event.pressed and not event.echo and event.physical_keycode == KEY_L) or (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_X)
-	if lock_pressed and active_tab == 0:
+	if lock_pressed:
 		var focused := offer_buttons.find(get_viewport().gui_get_focus_owner())
 		var index := focused if focused >= 0 else selected
 		if index >= 0:
 			_toggle_lock(index)
 			get_viewport().set_input_as_handled()
-		return
-	var direction := 0
-	if event is InputEventKey and event.pressed and not event.echo:
-		if event.physical_keycode == KEY_Q:
-			direction = -1
-		elif event.physical_keycode == KEY_E:
-			direction = 1
-	elif event is InputEventJoypadButton and event.pressed:
-		if event.button_index == JOY_BUTTON_LEFT_SHOULDER:
-			direction = -1
-		elif event.button_index == JOY_BUTTON_RIGHT_SHOULDER:
-			direction = 1
-	if direction != 0:
-		switch_tab(posmod(active_tab + direction, 2))
-		get_viewport().set_input_as_handled()
 
 func _restore_world() -> void:
 	if suppressing_world:
@@ -302,47 +332,139 @@ func _reroll() -> void:
 		details_key = 0
 	refresh()
 
+func _focused_offer() -> ShopOffer:
+	if selected < 0 or selected >= EconomyService.current_shop_offers.size():
+		return null
+	var offer := EconomyService.current_shop_offers[selected]
+	return null if offer.sold else offer
+
 func _refresh_details() -> void:
 	if not is_instance_valid(world.player):
 		return
 	var data := ShopViewData.build_data(world)
 	var key := [data, EconomyService.current_shop_offers.map(func(o: ShopOffer) -> Array: return [o.asset_id, o.price, o.sold, o.level, o.form]), selected,
-		world.core.health if world.core else -1].hash()
+		world.core.health if world.core else -1, world.turrets.map(func(t: TurretActor) -> Array: return [t.turret_id, t.progression.snapshot()])].hash()
 	if key == details_key:
 		return
 	details_key = key
-	vital_text.text = "Hull %d / %d" % [ceili(data["hull"]), ceili(data["max_hull"])]
-	if world.core:
-		vital_text.text += "   Core %d / %d" % [ceili(world.core.health), ceili(world.core.max_health)]
-	var after := data
+	var offer := _focused_offer()
+	var after := ShopViewData.preview(world, offer) if offer else data
+	var impacts := ShopViewData.turret_impacts(world, offer, data, after) if offer else {}
+	_refresh_squad(data, after, impacts, offer != null)
+	_refresh_build(data, after)
 	if selected >= 0 and selected < EconomyService.current_shop_offers.size():
-		var offer := EconomyService.current_shop_offers[selected]
-		detail_title.text = ArenaShop.offer_name(offer) + (" · Lv %d" % offer.level if offer.kind == "turret" else "")
-		detail_text.text = ArenaShop.offer_description(offer)
-		if not offer.sold:
-			after = ShopViewData.preview(world, offer)
-			var affected := ShopViewData.affected_turrets(world, offer)
-			if after.hero_weapon != data.hero_weapon:
-				affected.push_front("Hero weapon")
-			if not affected.is_empty():
-				impact_text.text = "Affects: " + ", ".join(affected)
-			elif offer.asset_id in ["mono_type_mastery", "army_doctrine", "elite_forces", "elemental_conduit"]:
-				impact_text.text = "No active bonus for this build."
-			else:
-				impact_text.text = "No matching turret owned" if ShopDetailText.needs_turret(offer) else "Upgrades your support systems."
-		else:
-			impact_text.text = "Installed."
+		var shown := EconomyService.current_shop_offers[selected]
+		detail_title.text = ArenaShop.offer_name(shown) + (" · Lv %d" % shown.level if shown.kind == "turret" else "")
+		detail_text.text = ArenaShop.offer_description(shown)
+		impact_text.text = "Installed." if shown.sold else _impact_summary(shown, impacts)
+		impact_text.add_theme_color_override("font_color", UiPalette.MUTED if impacts.is_empty() else UiPalette.GOOD)
 	else:
 		detail_title.text = "Choose an offer"
-		detail_text.text = "Inspect its benefits and the changes to your build."
+		detail_text.text = "Focus an offer to see which turrets it helps or hurts."
 		impact_text.text = ""
-	if after["max_hull"] != data["max_hull"]:
-		vital_text.text += "\nMax hull %.0f → %.0f" % [data["max_hull"], after["max_hull"]]
-	vital_text.text += "\nMove %.2f m/s · Pickup %.2f m · Luck %d" % [after["speed"], after["pickup"], after["luck"]]
-	if world.convoy_mode:
-		vital_text.text += "\n" + world.shop.convoy_preview_line()
-	turret_text.text = ShopDetailText.turret_report(world, data, after)
 	_refresh_installed(data["items"])
+
+func _impact_summary(offer: ShopOffer, impacts: Dictionary) -> String:
+	var helped := 0
+	var hurt := 0
+	for id: Variant in impacts:
+		if str(id) == "hero":
+			continue
+		helped += int(impacts[id]["tone"] >= 0)
+		hurt += int(impacts[id]["tone"] <= 0)
+	var parts := PackedStringArray()
+	if helped > 0:
+		parts.append("Helps %d %s" % [helped, "turret" if helped == 1 else "turrets"])
+	if hurt > 0:
+		parts.append("hurts %d" % hurt if helped > 0 else "Hurts %d %s" % [hurt, "turret" if hurt == 1 else "turrets"])
+	if impacts.has("hero"):
+		var tone := int(impacts["hero"]["tone"])
+		parts.append("%s your hero" % ("helps" if tone > 0 else "hurts" if tone < 0 else "changes"))
+	if not parts.is_empty():
+		return " · ".join(parts) + "."
+	if offer.asset_id in ["mono_type_mastery", "army_doctrine", "elite_forces", "elemental_conduit"]:
+		return "No active bonus for this build."
+	return "No matching turret owned." if ShopDetailText.needs_turret(offer) else "Upgrades your support systems."
+
+## Rebuild the squad strip when the roster changes, then refresh every card's numbers and impact.
+func _refresh_squad(data: Dictionary, after: Dictionary, impacts: Dictionary, focused: bool) -> void:
+	var ids := world.turrets.map(func(t: TurretActor) -> int: return t.turret_id)
+	if ids != squad_cards.map(func(c: SquadCard) -> int: return c.turret_id):
+		for card in squad_cards:
+			squad_row.remove_child(card)
+			card.queue_free()
+		squad_cards.clear()
+		for actor in world.turrets:
+			var card := SquadCard.new()
+			card.turret_id = actor.turret_id
+			card.pressed.connect(open_turret_details.bind(actor.turret_id))
+			squad_row.add_child(card)
+			squad_cards.append(card)
+	squad_empty.visible = squad_cards.is_empty()
+	for i in world.turrets.size():
+		var actor := world.turrets[i]
+		var growth := actor.progression
+		var families: Array = ["kinetic", "projectile"] if growth.evolution_form == "stormblade" else TurretRegistry.get_attack_families(actor.turret_type)
+		var numbers := _actor_numbers(data, actor)
+		var stats: Array = []
+		if bool(numbers.get("utility", false)):
+			stats.append(["timer", "%.1fs" % float(numbers.get("interval", 0.0))])
+		else:
+			stats.append(["damage", "%.1f" % float(numbers.get("damage", 0.0))])
+			stats.append(["rate", "%.0f°/s" % float(numbers["rotation_rate"]) if float(numbers.get("rotation_rate", 0.0)) > 0.0 else "%.2f" % float(numbers.get("fire_rate", 0.0))])
+		var text := ShopDetailText.instance_text(world, data, after, actor)
+		squad_cards[i].setup(actor.turret_id, "%s #%d" % [actor.display_name(), actor.turret_id], actor.turret_type,
+			growth.evolution_form, growth.level, growth.xp, families, stats, text)
+		squad_cards[i].show_impact(impacts.get(actor.turret_id, {}), focused)
+
+## This turret's current numbers: its own when turret growth is on, otherwise its type's.
+func _actor_numbers(data: Dictionary, actor: TurretActor) -> Dictionary:
+	for turret: Dictionary in data["turrets"]:
+		if turret["id"] != actor.turret_type:
+			continue
+		for growth: Dictionary in turret.get("instances", []):
+			if growth["id"] == actor.turret_id:
+				return growth["combat"]
+		return turret
+	return {}
+
+## Hull, movement, pickup, luck and the hero weapon as chips, each showing before → after while an offer is focused.
+func _refresh_build(data: Dictionary, after: Dictionary) -> void:
+	for container: Node in [vitals, weapon_chips]:
+		for child in container.get_children():
+			container.remove_child(child)
+			child.queue_free()
+	var hull := "%d / %d" % [ceili(data["hull"]), ceili(data["max_hull"])]
+	if not is_equal_approx(data["max_hull"], after["max_hull"]):
+		hull = "%d → %d" % [ceili(data["max_hull"]), ceili(after["max_hull"])]
+	_add_tip(vitals, StatChip.new().setup("hull", hull, "hull", _tone(data["max_hull"], after["max_hull"])), "Hull")
+	if world.core:
+		_add_tip(vitals, StatChip.new().setup("core", "%d / %d" % [ceili(world.core.health), ceili(world.core.max_health)], "core"), "Core")
+	_add_tip(vitals, _value_chip("speed", "speed", data["speed"], after["speed"], "%.2f m/s"), "Move speed")
+	_add_tip(vitals, _value_chip("pickup", "pickup", data["pickup"], after["pickup"], "%.2f m"), "Pickup range")
+	_add_tip(vitals, _value_chip("star", "scrap", data["luck"], after["luck"], "%d"), "Luck")
+	convoy_text.visible = world.convoy_mode
+	if world.convoy_mode:
+		convoy_text.text = world.shop.convoy_preview_line()
+	weapon_badges.show_families(world.run_config.hero.families, "hero")
+	var was: Dictionary = data["hero_weapon"]
+	var now: Dictionary = after["hero_weapon"]
+	_add_tip(weapon_chips, _value_chip("damage", "dmg", float(was["damage"]), float(now["damage"]), "%.1f"), "Damage")
+	_add_tip(weapon_chips, _value_chip("rate", "rate", float(was["fire_rate"]), float(now["fire_rate"]), "%.2f/s"), "Shots per second")
+	_add_tip(weapon_chips, _value_chip("range", "range", float(was["range"]) * WorldGeometry.METRES_PER_PIXEL,
+		float(now["range"]) * WorldGeometry.METRES_PER_PIXEL, "%.2f m"), "Reach")
+
+func _add_tip(parent: Node, chip: StatChip, tip: String) -> void:
+	chip.tooltip_text = tip
+	chip.mouse_filter = Control.MOUSE_FILTER_PASS
+	parent.add_child(chip)
+
+func _value_chip(icon: String, stat: String, before: float, after: float, format: String) -> StatChip:
+	var text := format % before if is_equal_approx(before, after) else (format % before) + " → " + (format % after)
+	return StatChip.new().setup(icon, text, stat, _tone(before, after))
+
+func _tone(before: float, after: float) -> int:
+	return 0 if is_equal_approx(before, after) else (1 if after > before else -1)
 
 func _refresh_installed(items: Array) -> void:
 	if items.hash() == installed_key:
@@ -353,20 +475,38 @@ func _refresh_installed(items: Array) -> void:
 		child.queue_free()
 	owned_buttons.clear()
 	for item: Dictionary in items:
+		var definition := ItemRegistry.get_item(item["id"])
 		var button := Button.new()
-		button.text = "%s ×%d" % [item["name"], item["count"]]
+		button.custom_minimum_size = Vector2(76, 76)
 		button.icon = ShopArt.item(item["id"])
 		button.expand_icon = true
-		button.add_theme_constant_override("icon_max_width", 44)
-		button.add_theme_font_size_override("font_size", 22)
-		button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-		button.tooltip_text = ItemRegistry.get_item(item["id"]).description
+		button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		button.tooltip_text = "%s ×%d\n%s" % [item["name"], item["count"], definition.description]
+		var edge := ItemRegistry.get_rarity_color(ItemRegistry.get_rarity(item["id"]))
+		for slot: String in ["normal", "hover", "pressed", "focus"]:
+			var box := StyleBoxFlat.new()
+			box.bg_color = UiPalette.PANEL_HI if slot != "normal" else UiPalette.PANEL_SOLID
+			box.border_color = UiPalette.TEAL_HI if slot == "focus" else Color(edge, .7)
+			box.set_border_width_all(3 if slot == "focus" else 1)
+			box.set_corner_radius_all(10)
+			box.set_content_margin_all(6)
+			button.add_theme_stylebox_override(slot, box)
 		button.focus_entered.connect(_inspect_owned.bind(item["id"]))
 		button.pressed.connect(_inspect_owned.bind(item["id"]))
 		installed.add_child(button)
+		if int(item["count"]) > 1:
+			var count := UiBuilder.label(button, "×%d" % item["count"], 18, UiPalette.INK)
+			count.theme_type_variation = &"Numeral"
+			count.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			count.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+			count.offset_left = -34
+			count.offset_top = -26
+			count.offset_right = -4
+			count.offset_bottom = -2
+			count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		owned_buttons.append(button)
 	if items.is_empty():
-		UiBuilder.label(installed, "No upgrades installed yet.", 22, UiPalette.MUTED, true)
+		UiBuilder.label(installed, "No upgrades installed yet.", 20, UiPalette.MUTED)
 
 func _inspect_owned(id: String) -> void:
 	selected = -1
@@ -374,72 +514,85 @@ func _inspect_owned(id: String) -> void:
 	detail_title.text = ItemRegistry.get_item(id).name
 	detail_text.text = ItemRegistry.get_item(id).description
 	impact_text.text = "Installed ×%d" % ItemTrackingService.item_counts.get(id, 0)
+	impact_text.add_theme_color_override("font_color", UiPalette.GOOD)
 
+## Controller paths: offers (left/right, up to Reroll, down to their lock) → squad → items → Prepare.
+## Every row's right end and the bottom of the page lead to Prepare; Prepare climbs back the way it came.
 func _refresh_focus() -> void:
-	var row: Array[Button] = [reroll_button, continue_button]
-	for i in range(row.size()):
-		for direction: int in [-1, 1]:
-			var target := row[i]
-			var j := i + direction
-			while j >= 0 and j < row.size():
-				if row[j].visible and not row[j].disabled:
-					target = row[j]
-					break
-				j += direction
-			row[i].set_focus_neighbor(SIDE_LEFT if direction < 0 else SIDE_RIGHT, row[i].get_path_to(target))
-	tabs[0].focus_neighbor_right = tabs[0].get_path_to(tabs[1])
-	tabs[1].focus_neighbor_left = tabs[1].get_path_to(tabs[0])
-	if active_tab == 1:
-		var roster := turret_inspector.visible_buttons()
-		for tab in tabs:
-			tab.focus_neighbor_bottom = tab.get_path_to(roster[0] if not roster.is_empty() else continue_button)
-		for i in roster.size():
-			roster[i].focus_neighbor_top = roster[i].get_path_to(roster[i - 1] if i > 0 else tabs[1])
-			roster[i].focus_neighbor_bottom = roster[i].get_path_to(roster[i + 1] if i + 1 < roster.size() else continue_button)
-		turret_inspector.refresh_navigation()
-		for button in row:
-			button.focus_neighbor_top = button.get_path_to(roster[-1] if not roster.is_empty() else tabs[1])
-		return
 	var available: Array[Button] = []
 	for card in offer_buttons:
 		if card.visible and not card.disabled:
 			available.append(card)
-	for tab in tabs:
-		tab.focus_neighbor_bottom = tab.get_path_to(available[0] if not available.is_empty() else continue_button)
-	var bottom_locks: Array[Button] = []
+	var locks: Array[Button] = []
 	for card in available:
-		var index := offer_buttons.find(card)
-		if index + offers_grid.columns >= offer_buttons.size() or offer_buttons[index + offers_grid.columns] not in available:
-			bottom_locks.append((card as OfferCard).lock_button)
-	for button in row:
-		button.focus_neighbor_top = button.get_path_to(_nearest_horizontal(button, bottom_locks) if not bottom_locks.is_empty() else owned_buttons[0] if not owned_buttons.is_empty() else tabs[0])
-		button.focus_neighbor_bottom = button.get_path_to(button)
-	for i in range(available.size()):
+		locks.append((card as OfferCard).lock_button)
+	var squad: Array[Button] = []
+	for card in squad_cards:
+		squad.append(card)
+	var rows: Array = [locks, squad, owned_buttons]
+	reroll_button.focus_neighbor_bottom = reroll_button.get_path_to(available[0] if not available.is_empty() else _first_row(rows, 0))
+	reroll_button.focus_neighbor_right = reroll_button.get_path_to(continue_button)
+	reroll_button.focus_neighbor_left = reroll_button.get_path_to(reroll_button)
+	reroll_button.focus_neighbor_top = reroll_button.get_path_to(reroll_button)
+	var columns := offers_grid.columns
+	for i in available.size():
 		var card := available[i]
+		var position := offer_buttons.find(card)
 		var left: Button = card
 		var right: Button = card
-		var grid_row := offer_buttons.find(card) / offers_grid.columns
-		if i > 0 and offer_buttons.find(available[i - 1]) / offers_grid.columns == grid_row: left = available[i - 1]
-		if i + 1 < available.size() and offer_buttons.find(available[i + 1]) / offers_grid.columns == grid_row: right = available[i + 1]
-		card.focus_neighbor_left = card.get_path_to(left)
-		card.focus_neighbor_right = card.get_path_to(right if right != card else owned_buttons[0] if not owned_buttons.is_empty() else card)
-		var position := offer_buttons.find(card)
-		var below := position + offers_grid.columns
-		var above := position - offers_grid.columns
+		if i > 0 and offer_buttons.find(available[i - 1]) / columns == position / columns: left = available[i - 1]
+		if i + 1 < available.size() and offer_buttons.find(available[i + 1]) / columns == position / columns: right = available[i + 1]
+		var above := position - columns
+		var below := position + columns
 		var lock := (card as OfferCard).lock_button
+		card.focus_neighbor_left = card.get_path_to(left)
+		card.focus_neighbor_right = card.get_path_to(right if right != card else continue_button)
+		card.focus_neighbor_top = card.get_path_to((offer_buttons[above] as OfferCard).lock_button if above >= 0 and offer_buttons[above] in available else reroll_button)
 		card.focus_neighbor_bottom = card.get_path_to(lock)
-		card.focus_neighbor_top = card.get_path_to((offer_buttons[above] as OfferCard).lock_button if above >= 0 and offer_buttons[above] in available else tabs[0])
 		lock.focus_neighbor_top = lock.get_path_to(card)
-		lock.focus_neighbor_bottom = lock.get_path_to(offer_buttons[below] if below < offer_buttons.size() and offer_buttons[below] in available else _nearest_horizontal(lock, row))
-		# Let horizontal navigation leave either end of the available lock row.
-		var left_exit: Button = reroll_button if not reroll_button.disabled else _nearest_horizontal(lock, row)
-		lock.focus_neighbor_left = lock.get_path_to((left as OfferCard).lock_button if left != card else left_exit)
+		lock.focus_neighbor_bottom = lock.get_path_to(offer_buttons[below] if below < offer_buttons.size() and offer_buttons[below] in available else _nearest_in_rows(lock, rows, 1))
+		# Let horizontal navigation leave either end of the lock row.
+		lock.focus_neighbor_left = lock.get_path_to((left as OfferCard).lock_button if left != card else reroll_button if not reroll_button.disabled else continue_button)
 		lock.focus_neighbor_right = lock.get_path_to((right as OfferCard).lock_button if right != card else continue_button)
-	for i in range(owned_buttons.size()):
-		var button := owned_buttons[i]
-		button.focus_neighbor_left = button.get_path_to(available[-1] if not available.is_empty() else continue_button)
-		button.focus_neighbor_top = button.get_path_to(owned_buttons[maxi(0, i - 1)])
-		button.focus_neighbor_bottom = button.get_path_to(owned_buttons[i + 1] if i + 1 < owned_buttons.size() else continue_button)
+	for r in [1, 2]:
+		var row: Array[Button] = rows[r]
+		for i in row.size():
+			var button := row[i]
+			button.focus_neighbor_left = button.get_path_to(row[i - 1] if i > 0 else button)
+			button.focus_neighbor_right = button.get_path_to(row[i + 1] if i + 1 < row.size() else continue_button)
+			button.focus_neighbor_top = button.get_path_to(_nearest_in_rows(button, rows, r - 1, -1))
+			button.focus_neighbor_bottom = button.get_path_to(_nearest_in_rows(button, rows, r + 1))
+	continue_button.focus_neighbor_top = continue_button.get_path_to(_last_row_end(rows))
+	continue_button.focus_neighbor_left = continue_button.focus_neighbor_top
+	continue_button.focus_neighbor_bottom = continue_button.get_path_to(continue_button)
+	continue_button.focus_neighbor_right = continue_button.get_path_to(continue_button)
+
+## The control nearest `from` horizontally in the first non-empty row from `start` going `step`; Prepare
+## below the last row, the lock's card (or Reroll) above the first.
+func _nearest_in_rows(from: Control, rows: Array, start: int, step: int = 1) -> Button:
+	var r := start
+	while r >= 0 and r < rows.size():
+		var candidates: Array[Button] = rows[r]
+		var visible_ones := candidates.filter(func(b: Button) -> bool: return b.is_visible_in_tree() and not b.disabled)
+		if not visible_ones.is_empty():
+			return _nearest_horizontal(from, visible_ones)
+		r += step
+	if step < 0:
+		var cards := offer_buttons.filter(func(b: Button) -> bool: return b.visible and not b.disabled)
+		return _nearest_horizontal(from, cards) if not cards.is_empty() else reroll_button
+	return continue_button
+
+func _first_row(rows: Array, start: int) -> Button:
+	return _nearest_in_rows(continue_button, rows, start)
+
+func _last_row_end(rows: Array) -> Button:
+	for r in range(rows.size() - 1, -1, -1):
+		var row: Array[Button] = rows[r]
+		var visible_ones := row.filter(func(b: Button) -> bool: return b.is_visible_in_tree() and not b.disabled)
+		if not visible_ones.is_empty():
+			return visible_ones.back()
+	var cards := offer_buttons.filter(func(b: Button) -> bool: return b.visible and not b.disabled)
+	return cards.back() if not cards.is_empty() else reroll_button
 
 func _request_deploy() -> void:
 	_deploy()
@@ -448,10 +601,10 @@ func _deploy() -> void:
 	world.begin_next_wave()
 	refresh()
 
-func _nearest_horizontal(from: Control, candidates: Array[Button]) -> Button:
+func _nearest_horizontal(from: Control, candidates: Array) -> Button:
 	var best: Button = continue_button
 	var distance := INF
-	for candidate in candidates:
+	for candidate: Button in candidates:
 		if not candidate.is_visible_in_tree() or candidate.disabled: continue
 		var gap := absf(candidate.get_global_rect().get_center().x - from.get_global_rect().get_center().x)
 		if gap < distance:

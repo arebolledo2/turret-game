@@ -27,6 +27,9 @@ func show_families(families: Array, identity: String = "") -> void:
 		remove_child(child)
 		child.queue_free()
 	visible = not ordered.is_empty()
+	# Unlabelled badges sit inside rows; reserve their width so a flow container never stacks them.
+	if not labelled:
+		custom_minimum_size.x = ordered.size() * (badge_size + 4.0)
 	for family in ordered:
 		var row := HBoxContainer.new()
 		row.mouse_filter = Control.MOUSE_FILTER_IGNORE

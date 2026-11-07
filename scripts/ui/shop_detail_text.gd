@@ -20,7 +20,7 @@ static func growth_summary(world: ArenaWorld) -> String:
 	var text := "Turret growth · +%d XP from leftover scrap · %d %s gained" % [
 		ledger["xp_awarded"], levels, "level" if levels == 1 else "levels"]
 	if float(ledger.get("abandoned", 0.0)) > 0.0:
-		text += "\nAbandoned scrap · scrap earned +%d%% for the rest of the run" % roundi(float(ledger["abandon_bonus"]) * 100.0)
+		text += "   ·   Abandoned scrap · +%d%% scrap for the run" % roundi(float(ledger["abandon_bonus"]) * 100.0)
 	return text
 
 static func needs_turret(offer: ShopOffer) -> bool:
@@ -49,27 +49,54 @@ static func turret_report(world: ArenaWorld, data: Dictionary, after: Dictionary
 			lines.append("[b]%s ×%d[/b]\n%s" % [turret["name"], turret["count"], turret_numbers(was, turret)])
 			continue
 		for growth: Dictionary in instances:
-			var current: Dictionary = growth["combat"]
-			var previous: Dictionary = {}
-			var previous_gun: Dictionary = {}
-			for old_growth: Dictionary in was.get("instances", []):
-				if old_growth["id"] == growth["id"]:
-					previous = old_growth["combat"]
-					previous_gun = old_growth.get("gun", {})
-			var caption := "[b]%s #%d · Lv %d[/b]" % [growth["name"], growth["id"], growth["level"]]
-			caption += "\nXP %d / %d toward Lv %d" % [growth["xp"], growth["next_cost"], int(growth["level"]) + 1]
-			var change: Dictionary = world.salvage.last_settlement.get("changes", {}).get(growth["id"], {})
-			if not change.is_empty() and int(world.salvage.last_settlement.get("wave", -1)) == GameStateService.current_wave:
-				caption += "\n[color=#8be0c9]+%d XP this wave" % change["xp_awarded"]
-				if change["after"]["level"] > change["before"]["level"]:
-					caption += " · Lv %d → %d" % [change["before"]["level"], change["after"]["level"]]
-				caption += "[/color]"
-			lines.append(caption + "\n" + turret_numbers(previous, current))
-			if growth.has("gun"):
-				lines.append("[b]Gun · Projectile[/b]\n" + turret_numbers(previous_gun, growth["gun"]))
+			lines.append(_instance_block(world, growth, was))
 		if int(turret["count"]) > instances.size():
 			lines.append("[b]%s · New Lv 1 turret[/b]\n%s" % [turret["name"], turret_numbers({}, turret)])
 	return "\n\n".join(lines)
+
+## One turret instance: its caption (name, level, XP, this wave's award) and before/after numbers.
+static func _instance_block(world: ArenaWorld, growth: Dictionary, was: Dictionary) -> String:
+	var previous: Dictionary = {}
+	var previous_gun: Dictionary = {}
+	for old_growth: Dictionary in was.get("instances", []):
+		if old_growth["id"] == growth["id"]:
+			previous = old_growth["combat"]
+			previous_gun = old_growth.get("gun", {})
+	var block := _caption(world, growth) + "\n" + turret_numbers(previous, growth["combat"])
+	if growth.has("gun"):
+		block += "\n\n[b]Gun · Projectile[/b]\n" + turret_numbers(previous_gun, growth["gun"])
+	return block
+
+static func _caption(world: ArenaWorld, growth: Dictionary) -> String:
+	var caption := "[b]%s #%d · Lv %d[/b]" % [growth["name"], growth["id"], growth["level"]]
+	caption += "\nXP %d / %d toward Lv %d" % [growth["xp"], growth["next_cost"], int(growth["level"]) + 1]
+	var change: Dictionary = world.salvage.last_settlement.get("changes", {}).get(growth["id"], {})
+	if not change.is_empty() and int(world.salvage.last_settlement.get("wave", -1)) == GameStateService.current_wave:
+		caption += "\n[color=#8be0c9]+%d XP this wave" % change["xp_awarded"]
+		if change["after"]["level"] > change["before"]["level"]:
+			caption += " · Lv %d → %d" % [change["before"]["level"], change["after"]["level"]]
+		caption += "[/color]"
+	return caption
+
+## Plain-text caption and before/after numbers for one deployed turret (a squad card tooltip). Runs
+## without turret growth fall back to the numbers shared by every turret of the type.
+static func instance_text(world: ArenaWorld, data: Dictionary, after: Dictionary, actor: TurretActor) -> String:
+	for turret: Dictionary in after["turrets"]:
+		if turret["id"] != actor.turret_type:
+			continue
+		var was: Dictionary = {}
+		for old: Dictionary in data["turrets"]:
+			if old["id"] == turret["id"]:
+				was = old
+		for growth: Dictionary in turret.get("instances", []):
+			if growth["id"] == actor.turret_id:
+				return plain(_instance_block(world, growth, was))
+		return plain("%s #%d\n%s" % [turret["name"], actor.turret_id, turret_numbers(was, turret)])
+	return ""
+
+## BBCode removed, for tooltips and plain labels.
+static func plain(text: String) -> String:
+	return RegEx.create_from_string("\\[/?[^\\]]+\\]").sub(text, "", true)
 
 static func turret_numbers(was: Dictionary, turret: Dictionary) -> String:
 	if bool(turret.get("utility", false)):
