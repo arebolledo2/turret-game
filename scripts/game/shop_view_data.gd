@@ -36,17 +36,35 @@ static func offer_chips(offer: ShopOffer, difficulty_damage_mult: float = 1.0) -
 		return chips
 	for modifier: Dictionary in ItemRegistry.get_modifiers(offer.asset_id):
 		var stat := str(modifier["stat"])
+		# A stat with no fitting icon, or a rule a number cannot describe, is left to the card's text.
+		if stat in TEXT_ONLY_STATS or not STAT_UI.has(stat):
+			continue
 		var value := float(modifier["value"])
-		var percentage: bool = modifier["operation"] == "increase" or stat == "turret_penalty_reduction"
-		var unit := "pp" if stat == "turret_penalty_reduction" else ("%" if percentage else "")
-		var ui: Array = STAT_UI.get(stat, ["", "module", false])
+		var ui: Array = STAT_UI[stat]
 		var better := value > 0.0
 		if bool(ui[2]):
 			better = not better
 		var families: Array = modifier.get("filter", {}).get("attack_family", [])
 		chips.append({"stat": ui[0], "icon": ui[1], "tone": 1 if better else -1, "families": families.duplicate(),
-			"text": "%+.0f%s" % [value * 100.0 if percentage else value, unit]})
+			"text": _modifier_text(stat, str(modifier["operation"]), value)})
 	return chips
+
+## Rules rather than stats (a conditional bonus or a new effect): the chip would mislead, the text explains.
+const TEXT_ONLY_STATS: Array[String] = ["reactor_overload", "storm_link_damage", "last_stand_fire_rate"]
+## Flat additions stored as fractions that read as percentage points ("+10%" slow strength).
+const POINT_STATS: Array[String] = ["slow_intensity", "chain_decay", "turret_penalty_reduction", "turret_penalty_increase"]
+
+## "+12%" for a percentage increase, "+10%" for percentage points, "+0.2s" for seconds, "+2" for counts.
+static func _modifier_text(stat: String, operation: String, value: float) -> String:
+	if operation == "increase":
+		return "%+.0f%%" % (value * 100.0)
+	if stat in POINT_STATS:
+		return "%+.0f%s" % [value * 100.0, "pp" if stat.begins_with("turret_penalty") else "%"]
+	if stat == "slow_duration":
+		return "%+.1fs" % value
+	if is_equal_approx(value, roundf(value)):
+		return "%+d" % roundi(value)
+	return "%+.1f" % value
 
 static func _turret_chips(type_id: String, damage_mult: float) -> Array[Dictionary]:
 	var stats := TurretStatsService.get_turret_stats(type_id, damage_mult)

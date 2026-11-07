@@ -108,6 +108,23 @@ func test_every_item_has_chips_or_a_description_and_known_icons() -> void:
 		for chip in chips:
 			assert_true(UiIcons.has_icon(chip["icon"]), "%s chip icon %s" % [item_id, chip["icon"]])
 
+func test_static_grounding_reads_as_slow_points_and_seconds() -> void:
+	var chips := ShopViewData.offer_chips(_offer("item", "static_grounding"))
+	assert_eq(chips.map(func(c: Dictionary) -> String: return c["text"]), ["+10%", "+0.2s"])
+	for chip in chips:
+		assert_eq(chip["families"], ["instant"])
+
+func test_no_chip_rounds_a_real_change_to_zero_and_rules_stay_text() -> void:
+	for item_id: String in ArenaShop.ITEMS:
+		for chip in ShopViewData.offer_chips(_offer("item", item_id)):
+			assert_false(chip["text"] in ["+0", "-0", "+0%", "-0%", "+0.0"], "%s chip %s" % [item_id, chip["text"]])
+	for stat: String in ShopViewData.TEXT_ONLY_STATS:
+		for item_id: String in ArenaShop.ITEMS:
+			for modifier: Dictionary in ItemRegistry.get_modifiers(item_id):
+				if modifier["stat"] == stat:
+					assert_eq(ShopViewData.offer_chips(_offer("item", item_id)).size(), ItemRegistry.get_modifiers(item_id).size() - 1,
+						"%s drops its %s chip" % [item_id, stat])
+
 func test_every_modifier_stat_has_a_ui_mapping() -> void:
 	for item_id: String in ArenaShop.ITEMS:
 		for modifier: Dictionary in ItemRegistry.get_modifiers(item_id):
