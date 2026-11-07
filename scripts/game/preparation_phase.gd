@@ -298,7 +298,7 @@ func _refresh() -> void:
 		GroundDial.resize(range_dial, reach)
 		range_dial.position = selected.position + Vector3(0, .04, 0)
 		GroundDial.update(range_dial, 1.0, false, 16)
-		if detail: detail.text = "%s #%d  |  Range %.2f m" % [TurretRegistry.get_short_name(selected.turret_type), selected.turret_id, reach]
+		if detail: detail.text = "%s #%d  |  Range %.1f m" % [TurretRegistry.get_short_name(selected.turret_type), selected.turret_id, reach]
 	elif detail:
 		detail.text = "Select a turret to reposition it"
 	if not layer: return

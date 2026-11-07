@@ -38,7 +38,7 @@ static func turret_report(world: ArenaWorld, data: Dictionary, after: Dictionary
 		", ".join(world.run_config.hero.families).capitalize(),
 		number(data.hero_weapon, after.hero_weapon, "damage", ""),
 		number(data.hero_weapon, after.hero_weapon, "fire_rate", ""),
-		"%.2f" % (float(after.hero_weapon.range) * WorldGeometry.METRES_PER_PIXEL)])
+		"%.1f" % (float(after.hero_weapon.range) * WorldGeometry.METRES_PER_PIXEL)])
 	for turret: Dictionary in after["turrets"]:
 		var was: Dictionary = {}
 		for old: Dictionary in data["turrets"]:
@@ -123,7 +123,7 @@ static func turret_numbers(was: Dictionary, turret: Dictionary) -> String:
 static func number(before: Dictionary, after: Dictionary, key: String, unit: String, lower_is_better: bool = false) -> String:
 	var value := float(after.get(key, 0))
 	var old := float(before.get(key, value))
-	var format := "%.1f" if key == "damage" else "%.2f"
+	var format := StatFormat.decimals(old, value)
 	if is_equal_approx(old, value):
 		return (format % value) + unit
 	var better := value < old if lower_is_better else value > old

@@ -242,7 +242,7 @@ func advance(delta: float) -> void:
 					continue
 				var base := float(card[key]) / float(change["after"]["multipliers"][key])
 				var title: String = card["speed_label"] if key == "speed" else key.capitalize()
-				var format := "%.2f" if key == "speed" else "%.1f"
+				var format := "%.1f"
 				var old_text := format % (base * before_mult)
 				var new_text := format % (base * current_mult)
 				lines.append("%s %s → %s" % [title, old_text, new_text] if old_text != new_text else "%s +%.1f%%" % [title, (current_mult / before_mult - 1.0) * 100.0])

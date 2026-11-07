@@ -59,7 +59,16 @@ func test_stat_chip_shows_text_and_tone() -> void:
 	var chip: StatChip = add_child_autofree(StatChip.new().setup("damage", "+6%", "dmg", 1))
 	assert_eq(chip.label.text, "+6%")
 	assert_eq(chip.label.get_theme_color("font_color"), UiPalette.GOOD)
-	assert_eq(chip.icon_rect.modulate, UiPalette.stat_color("dmg"))
+	assert_eq(chip.icon_rect.modulate, UiPalette.GOOD, "the tone recolours the icon too")
+	var neutral: StatChip = add_child_autofree(StatChip.new().setup("damage", "11.7", "dmg"))
+	assert_eq(neutral.icon_rect.modulate, StatChip.ICON_NEUTRAL)
+	assert_eq(neutral.label.get_theme_color("font_color"), UiPalette.INK)
+
+func test_stat_format_uses_one_decimal_unless_a_change_would_vanish() -> void:
+	assert_eq(StatFormat.one(1.2), "1.2")
+	assert_eq(StatFormat.pair(2.4, 2.4, " m"), "2.4 m")
+	assert_eq(StatFormat.pair(1.53, 1.38), "1.5 → 1.4")
+	assert_eq(StatFormat.pair(1.20, 1.24, "/s"), "1.20/s → 1.24/s")
 
 func test_stat_tile_updates_its_value() -> void:
 	var tile: StatTile = add_child_autofree(StatTile.new().setup("hull", "hull", "Hull", "25"))

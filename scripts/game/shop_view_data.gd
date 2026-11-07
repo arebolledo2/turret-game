@@ -55,10 +55,10 @@ static func _turret_chips(type_id: String, damage_mult: float) -> Array[Dictiona
 		return chips
 	chips.append({"stat": "dmg", "icon": "damage", "tone": 0, "text": "%.1f" % stats["damage"]})
 	if float(stats.get("fire_rate", 0.0)) > 0.0:
-		chips.append({"stat": "rate", "icon": "rate", "tone": 0, "text": "%.2f" % stats["fire_rate"]})
+		chips.append({"stat": "rate", "icon": "rate", "tone": 0, "text": "%.1f" % stats["fire_rate"]})
 	elif stats.has("rotation_rate"):
 		chips.append({"stat": "rate", "icon": "rate", "tone": 0, "text": "%.0f°/s" % stats["rotation_rate"]})
-	chips.append({"stat": "range", "icon": "range", "tone": 0, "text": "%.2fm" % (float(stats["range"]) * WorldGeometry.METRES_PER_PIXEL)})
+	chips.append({"stat": "range", "icon": "range", "tone": 0, "text": "%.1fm" % (float(stats["range"]) * WorldGeometry.METRES_PER_PIXEL)})
 	if stats.has("slow_intensity"):
 		chips.append({"stat": "slow", "icon": "slow", "tone": 0, "text": "%.0f%%" % (float(stats["slow_intensity"]) * 100.0)})
 	return chips

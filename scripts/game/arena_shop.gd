@@ -261,7 +261,7 @@ static func item_description(item_id: String) -> String:
 ## "Core 1.38m/s · next route: 3 doors, 58 m, ~1:21" - the planned route at the current core speed.
 func convoy_preview_line() -> String:
 	var speed := PlayerStatsService.get_core_move_speed()
-	var line := "Core %.2fm/s" % speed
+	var line := "Core %.1fm/s" % speed
 	if world.convoy_route:
 		var seconds := roundi(world.convoy_route.duration(speed))
 		line += " · next route: %d doors, %.0f m, ~%d:%02d" % [world.convoy_route.door_count() - 1, world.convoy_route.total_length(), floori(seconds / 60.0), seconds % 60]
@@ -273,11 +273,11 @@ func build_summary() -> String:
 		var count := int(state.turret_counts.get(type_id, 0))
 		if count > 0 and type_id == "melee":
 			var bat := TurretStatsService.get_turret_stats(type_id, float(world.difficulty_config["turret_damage_mult"]))
-			lines.append("Melee ×%d   %.1f dmg · %.0f°/s · %.2fm" % [count, bat["damage"], bat["rotation_rate"], float(bat["range"]) * WorldGeometry.METRES_PER_PIXEL])
+			lines.append("Melee ×%d   %.1f dmg · %.0f°/s · %.1fm" % [count, bat["damage"], bat["rotation_rate"], float(bat["range"]) * WorldGeometry.METRES_PER_PIXEL])
 		elif count > 0:
 			var stats := TurretStatsService.get_turret_stats(type_id, float(world.difficulty_config["turret_damage_mult"]))
-			lines.append("%s ×%d   %.1f dmg · %.2f/s · %.2fm" % [TurretRegistry.get_short_name(type_id), count, stats["damage"], stats["fire_rate"], float(stats["range"]) * WorldGeometry.METRES_PER_PIXEL])
-	lines.append("Hull %.0f/%.0f · Move %.2fm/s · Pickup %.2fm" % [world.player.health, world.player.max_health, PlayerStatsService.get_player_speed() * WorldGeometry.METRES_PER_PIXEL, PlayerStatsService.get_pickup_radius() * WorldGeometry.METRES_PER_PIXEL])
+			lines.append("%s ×%d   %.1f dmg · %.1f/s · %.1fm" % [TurretRegistry.get_short_name(type_id), count, stats["damage"], stats["fire_rate"], float(stats["range"]) * WorldGeometry.METRES_PER_PIXEL])
+	lines.append("Hull %.0f/%.0f · Move %.1fm/s · Pickup %.1fm" % [world.player.health, world.player.max_health, PlayerStatsService.get_player_speed() * WorldGeometry.METRES_PER_PIXEL, PlayerStatsService.get_pickup_radius() * WorldGeometry.METRES_PER_PIXEL])
 	if world.convoy_mode:
 		lines.append(convoy_preview_line())
 	if state.item_counts.is_empty():

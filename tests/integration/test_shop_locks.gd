@@ -76,25 +76,24 @@ func test_controller_x_locks_focused_offer_without_purchasing() -> void:
 	(shop.offer_buttons[1] as OfferCard).lock_button.pressed.emit()
 	assert_false(offer.locked, "Mouse lock button also toggles")
 
-func test_controller_navigates_to_lock_and_accept_does_not_buy() -> void:
+func test_corner_lock_is_an_icon_outside_the_focus_path() -> void:
 	var shop: ShopScreen = world.hud.shop_screen
 	shop.refresh()
 	var card := shop.offer_buttons[1] as OfferCard
 	var offer := EconomyService.current_shop_offers[1]
-	card.grab_focus()
-	await _press(JOY_BUTTON_DPAD_DOWN)
-	assert_same(get_viewport().gui_get_focus_owner(), card.lock_button)
-	assert_eq(card.lock_button.text, "LOCK")
-	await _press(JOY_BUTTON_A)
+	assert_eq(card.lock_button.focus_mode, Control.FOCUS_NONE, "X / L locks the focused card instead")
+	assert_eq(card.lock_button.get_parent(), card, "the lock sits inside the card's corner")
+	assert_same(card.lock_button.icon, UiIcons.get_icon("unlock"))
+	card.lock_button.pressed.emit()
 	assert_true(offer.locked)
 	assert_false(offer.sold)
 	assert_eq(EconomyService.total_scrap, 1000)
-	assert_eq(card.lock_button.text, "UNLOCK")
-	assert_same(get_viewport().gui_get_focus_owner(), card.lock_button)
-	await _press(JOY_BUTTON_DPAD_RIGHT)
-	assert_same(get_viewport().gui_get_focus_owner(), (shop.offer_buttons[2] as OfferCard).lock_button)
+	assert_true(card.locked)
+	assert_same(card.lock_button.icon, UiIcons.get_icon("lock"))
+	card.grab_focus()
 	await _press(JOY_BUTTON_DPAD_DOWN)
-	assert_true(get_viewport().gui_get_focus_owner() is SquadCard, "below the locks is the squad")
+	var below: Control = get_viewport().gui_get_focus_owner()
+	assert_true(below is SquadCard or below is OfferCard, "below a card is the next card or the squad")
 
 func _press(button: JoyButton) -> void:
 	for pressed in [true, false]:

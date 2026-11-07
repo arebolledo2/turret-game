@@ -242,9 +242,9 @@ func _show_selected() -> void:
 	xp_bar.show_progress(growth.level, growth.xp)
 	var utility := TurretRegistry.is_no_attack(turret.turret_type)
 	stat_values[0].text = "—" if utility else "%.1f" % stats.damage
-	stat_values[1].text = "%.2f m" % (stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0))
-	stat_values[2].text = "%.0f°/s" % stats.rotation_rate if turret.turret_type == "melee" else "%.2f /s" % stats.fire_rate
-	stat_values[3].text = "%d jumps" % stats.chain_count if stats.chain_count > 0 else "%.2f m" % stats.aoe_radius_metres if stats.aoe_radius_metres > 0 else "—"
+	stat_values[1].text = "%.1f m" % (stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0))
+	stat_values[2].text = "%.0f°/s" % stats.rotation_rate if turret.turret_type == "melee" else "%.1f /s" % stats.fire_rate
+	stat_values[3].text = "%d jumps" % stats.chain_count if stats.chain_count > 0 else "%.1f m" % stats.aoe_radius_metres if stats.aoe_radius_metres > 0 else "—"
 	stat_values[4].text = TurretEvolution.pierce_text(stats.pierce) if stats.pierce > 0 else "—"
 	stat_values[5].text = "%d stacks" % turret.entrench_stacks_cached
 	var steps := PackedStringArray()
@@ -256,16 +256,16 @@ func _show_selected() -> void:
 	lines.append("[color=#8be0c9][b]CURRENT COMBAT STATS[/b][/color]")
 	var press := turret.form as ScrapPressForm
 	if utility:
-		lines.append("Does not attack     Drop lands within  [b]%.2f m[/b]" % stats.range_metres)
+		lines.append("Does not attack     Drop lands within  [b]%.1f m[/b]" % stats.range_metres)
 		if press:
 			lines.append("Makes a drop every  [b]%.1f s[/b]     Worth  [b]%d[/b] %s now" % [press.drop_interval(), press.drop_value(), "XP" if press.makes_xp() else "scrap"])
 			if press.current_yield() < 1.0:
 				lines.append("Output stacks down with more presses: this one keeps %.0f%%" % (press.current_yield() * 100.0))
 		lines.append(TurretEvolution.scrap_press_pattern_text(growth.evolution_form))
 	else:
-		lines.append("Damage  [b]%.1f[/b]     Reach  [b]%.2f m[/b]" % [stats.damage, stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0)])
+		lines.append("Damage  [b]%.1f[/b]     Reach  [b]%.1f m[/b]" % [stats.damage, stats.range_metres * (stats.area_size if TurretRegistry.get_fire_mode(turret.turret_type) in [TurretRegistry.FIRE_PULSE, TurretRegistry.FIRE_FLAME] else 1.0)])
 		if turret.turret_type == "melee":
-			lines.append("Sweep  %.0f°/s     Rehit interval  %.2f s" % [stats.rotation_rate, stats.rehit_delay])
+			lines.append("Sweep  %.0f°/s     Rehit interval  %.1f s" % [stats.rotation_rate, stats.rehit_delay])
 		elif turret.form is LaserForm:
 			var laser := turret.form as LaserForm
 			lines.append("Rate  %.1f ticks/s     Beam now  [b]x%.1f[/b]" % [stats.fire_rate, laser.ramp_now()])
@@ -273,13 +273,13 @@ func _show_selected() -> void:
 			lines.append(TurretEvolution.laser_pattern_text(growth.evolution_form))
 		elif turret.form is DroneBayForm:
 			var bay := turret.form as DroneBayForm
-			lines.append("Rate  %.2f shots/s each     Drones  [b]%d[/b] (%d in the air)" % [stats.fire_rate, bay.drone_count(), bay.live_drones().size()])
+			lines.append("Rate  %.1f shots/s each     Drones  [b]%d[/b] (%d in the air)" % [stats.fire_rate, bay.drone_count(), bay.live_drones().size()])
 			lines.append("Up to [b]%.0f DPS[/b] with every drone shooting; less while they fly out, return and dock" % bay.estimate_dps(stats))
 			lines.append(TurretEvolution.drone_bay_pattern_text(growth.evolution_form))
 		else:
-			lines.append("Rate  %.2f shots/s     Cooldown  %.2f s" % [stats.fire_rate, stats.cooldown_seconds])
+			lines.append("Rate  %.1f shots/s     Cooldown  %.1f s" % [stats.fire_rate, stats.cooldown_seconds])
 	if stats.projectile_speed_metres > 0:
-		lines.append("Projectile speed  %.2f m/s     Pierce  %d" % [stats.projectile_speed_metres, stats.pierce])
+		lines.append("Projectile speed  %.1f m/s     Pierce  %d" % [stats.projectile_speed_metres, stats.pierce])
 	if turret.turret_type == "sniper":
 		lines.append("Instant hit on the toughest enemy in range     Pierce  %s" % TurretEvolution.pierce_text(stats.pierce))
 		if growth.evolution_form == "overwatch":
@@ -287,31 +287,31 @@ func _show_selected() -> void:
 	if turret.turret_type == "quake":
 		lines.append("Stagger  %.1f s     %s" % [stats.stagger_seconds, TurretEvolution.quake_pattern_text(growth.evolution_form)])
 	if turret.turret_type == "decoy":
-		lines.append("Taunt radius  %.2f m     Knockback  %.2f m" % [stats.taunt_metres, stats.knockback_metres])
+		lines.append("Taunt radius  %.1f m     Knockback  %.1f m" % [stats.taunt_metres, stats.knockback_metres])
 		lines.append(TurretEvolution.decoy_pattern_text(growth.evolution_form))
 	if turret.form is MineLayerForm:
 		var layer := turret.form as MineLayerForm
 		if layer.is_limpet_layer():
 			lines.append("Launches a limpet every  [b]%.1f s[/b]     Out now  [b]%d / %d[/b]" % [stats.cooldown_seconds, layer.out_now(), layer.max_mines(stats)])
 		else:
-			lines.append("Lays a mine every  [b]%.1f s[/b]     Out now  [b]%d / %d[/b]     Set off within  [b]%.2f m[/b]" % [stats.cooldown_seconds, layer.out_now(), layer.max_mines(stats), float(stats.values.get("proximity_radius", 0.0)) * WorldGeometry.METRES_PER_PIXEL])
+			lines.append("Lays a mine every  [b]%.1f s[/b]     Out now  [b]%d / %d[/b]     Set off within  [b]%.1f m[/b]" % [stats.cooldown_seconds, layer.out_now(), layer.max_mines(stats), float(stats.values.get("proximity_radius", 0.0)) * WorldGeometry.METRES_PER_PIXEL])
 		lines.append(TurretEvolution.mine_layer_pattern_text(growth.evolution_form))
 	if stats.aoe_radius_metres > 0:
-		lines.append("Blast radius  %.2f m" % stats.aoe_radius_metres)
+		lines.append("Blast radius  %.1f m" % stats.aoe_radius_metres)
 	if stats.chain_count > 0:
-		lines.append("Chain jumps  %d     Chain reach  %.2f m" % [stats.chain_count, stats.chain_range_metres])
+		lines.append("Chain jumps  %d     Chain reach  %.1f m" % [stats.chain_count, stats.chain_range_metres])
 	if stats.slow_intensity > 0:
-		lines.append("Slow  %.0f%% for %.2f s" % [stats.slow_intensity * 100, stats.slow_duration])
+		lines.append("Slow  %.0f%% for %.1f s" % [stats.slow_intensity * 100, stats.slow_duration])
 	if turret.turret_type == "flamethrower":
 		lines.append("Flame cone %.0f degrees" % float(stats.values.get("cone_degrees", 36.0)))
 		lines.append("Burn %.1f damage/s for %.1f s" % [stats.damage * float(stats.values.get("burn_ratio", 1.6)), float(stats.values.get("burn_duration", 2.0))])
 	if not utility:
-		lines.append("Knockback  %.2f m" % stats.knockback_metres)
+		lines.append("Knockback  %.1f m" % stats.knockback_metres)
 	if growth.evolution_form == "stormblade":
 		var gun := turret.gun_stats
 		lines.append("\n[b]GUN · PROJECTILE[/b]")
 		var shots := TurretEvolution.barrel_burst(growth.evolution_form)
-		lines.append("Damage %.1f · Reach %.2f m · %.2f bursts/s · %d shots/burst" % [gun.damage, gun.range_metres, gun.fire_rate, shots])
+		lines.append("Damage %.1f · Reach %.1f m · %.1f bursts/s · %d shots/burst" % [gun.damage, gun.range_metres, gun.fire_rate, shots])
 		lines.append("Fires along the rotating barrel. Kinetic bonuses affect the blade only.")
 	lines.append("\n[b]PROGRESSION & POSITION[/b]")
 	lines.append("XP  %d / %d to next level  ·  %d total earned" % [growth.xp, TurretProgression.cost_to_next(growth.level), growth.total_xp])

@@ -50,6 +50,8 @@ const PATHS: Dictionary = {
 	"down": "<path d='M6 9l6 6 6-6'/>",
 	"arrow_up": "<path d='M12 20V5M5 12l7-7 7 7'/>",
 	"arrow_down": "<path d='M12 4v15M5 12l7 7 7-7'/>",
+	"lock": "<rect x='5' y='11' width='14' height='10' rx='1.5'/><path d='M8 11V7a4 4 0 018 0v4'/>",
+	"unlock": "<rect x='5' y='11' width='14' height='10' rx='1.5'/><path d='M8 11V7a4 4 0 017.5-2'/>",
 	"back": "<path d='M14 5l-7 7 7 7M7 12h13'/>",
 	"signal": "<path d='M3 9a14 14 0 0118 0M6 13a9 9 0 0112 0M9.5 17a4 4 0 015 0M3 3l18 18'/>",
 	"trophy": "<path d='M7 4h10v5a5 5 0 01-10 0zM7 6H4v2a3 3 0 003 3M17 6h3v2a3 3 0 01-3 3M12 14v4M8 20h8'/>",

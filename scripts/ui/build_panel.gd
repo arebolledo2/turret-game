@@ -104,10 +104,10 @@ func _build_turrets(data: Dictionary, after: Dictionary) -> void:
 		grid.add_child(_value("×%d" % turret["count"], float(was["count"]), float(turret["count"])))
 		grid.add_child(_value("%.1f" % turret["damage"], float(was["damage"]), float(turret["damage"])))
 		if float(turret["fire_rate"]) > 0.0:
-			grid.add_child(_value("%.2f" % turret["fire_rate"], float(was["fire_rate"]), float(turret["fire_rate"])))
+			grid.add_child(_value("%.1f" % turret["fire_rate"], float(was["fire_rate"]), float(turret["fire_rate"])))
 		else:
 			grid.add_child(_value("%.0f°" % turret["rotation_rate"], float(was["rotation_rate"]), float(turret["rotation_rate"])))
-		grid.add_child(_value("%.2fm" % turret["range"], float(was["range"]), float(turret["range"])))
+		grid.add_child(_value("%.1fm" % turret["range"], float(was["range"]), float(turret["range"])))
 
 func _build_stats(data: Dictionary, after: Dictionary) -> void:
 	var box := _section("Stats", "")
@@ -118,8 +118,8 @@ func _build_stats(data: Dictionary, after: Dictionary) -> void:
 	box.add_child(grid)
 	var tiles: Array = [
 		["hull", "hull", "Hull", "%d/%d" % [ceili(after["hull"]), ceili(after["max_hull"])], float(data["max_hull"]), float(after["max_hull"])],
-		["speed", "speed", "Move m/s", "%.2f" % after["speed"], float(data["speed"]), float(after["speed"])],
-		["pickup", "pickup", "Pickup m", "%.2f" % after["pickup"], float(data["pickup"]), float(after["pickup"])],
+		["speed", "speed", "Move m/s", "%.1f" % after["speed"], float(data["speed"]), float(after["speed"])],
+		["pickup", "pickup", "Pickup m", "%.1f" % after["pickup"], float(data["pickup"]), float(after["pickup"])],
 		["scrap", "star", "Luck", "%+d" % after["luck"] if after["luck"] != 0 else "0", float(data["luck"]), float(after["luck"])],
 	]
 	for entry: Array in tiles:

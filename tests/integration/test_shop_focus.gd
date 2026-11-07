@@ -106,27 +106,22 @@ func test_installed_items_remain_reachable_after_every_offer_is_sold() -> void:
 	await press_direction(JOY_BUTTON_DPAD_DOWN)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
 
-func test_controller_moves_between_card_lock_and_nearest_footer_action() -> void:
+func test_controller_moves_from_cards_to_the_squad_and_back() -> void:
 	EconomyService.current_shop_offers.assign([ShopOffer.new("turret", "plasma", 10), ShopOffer.new("item", "capacitor_bank", 10),
 		ShopOffer.new("item", "dense_rounds", 10), ShopOffer.new("item", "quick_loader", 10)])
 	hud.refresh()
 	hud.offer_buttons[0].grab_focus()
-	var lock: Button = hud.offer_buttons[0].lock_button
-	assert_true(lock.get_global_rect().position.y >= hud.offer_buttons[0].get_global_rect().end.y)
-	await press_direction(JOY_BUTTON_DPAD_DOWN)
-	assert_same(get_viewport().gui_get_focus_owner(), lock)
 	await press_direction(JOY_BUTTON_DPAD_RIGHT)
-	assert_same(get_viewport().gui_get_focus_owner(), hud.offer_buttons[1].lock_button)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.offer_buttons[1])
 	await press_direction(JOY_BUTTON_DPAD_LEFT)
-	await press_direction(JOY_BUTTON_DPAD_UP)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.offer_buttons[0])
-	# The last lock row leads down to the squad, and back up to the nearest lock.
+	# The bottom row of cards leads down to the squad, and back up to the nearest card.
 	var bottom_index := 0 if hud.offers_grid.columns == 4 else 2
-	hud.offer_buttons[bottom_index].lock_button.grab_focus()
+	hud.offer_buttons[bottom_index].grab_focus()
 	await press_direction(JOY_BUTTON_DPAD_DOWN)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.squad_cards[0])
 	await press_direction(JOY_BUTTON_DPAD_UP)
-	assert_same(get_viewport().gui_get_focus_owner(), hud.offer_buttons[bottom_index].lock_button)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.offer_buttons[bottom_index])
 	hud.offer_buttons[0].grab_focus()
 	await press_direction(JOY_BUTTON_DPAD_UP)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.reroll_button)
@@ -179,7 +174,7 @@ func test_core_and_hero_are_healed_between_waves() -> void:
 	assert_eq(world.player.health, world.player.max_health)
 	assert_eq(world.core.health, world.core.max_health)
 
-func test_lock_row_exits_left_to_reroll_and_right_to_prepare() -> void:
+func test_offer_row_exits_left_to_reroll_and_right_to_prepare() -> void:
 	# Match the reported case: only the middle two offers remain available.
 	EconomyService.current_shop_offers.assign([
 		ShopOffer.new("item", "polished_barrels", 10), ShopOffer.new("item", "capacitor_bank", 10),
@@ -188,18 +183,18 @@ func test_lock_row_exits_left_to_reroll_and_right_to_prepare() -> void:
 	EconomyService.current_shop_offers[3].sold = true
 	hud.refresh()
 	await wait_process_frames(2)
-	hud.offer_buttons[1].lock_button.grab_focus()
+	hud.offer_buttons[1].grab_focus()
 	await press_direction(JOY_BUTTON_DPAD_LEFT)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.reroll_button)
-	hud.offer_buttons[2].lock_button.grab_focus()
+	hud.offer_buttons[2].grab_focus()
 	await press_direction(JOY_BUTTON_DPAD_RIGHT)
 	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
-	# An unaffordable reroll must not trap focus at the left edge either.
+	# An unaffordable reroll is skipped: the left edge holds focus on the card.
 	EconomyService.total_scrap = 0
 	hud.refresh()
-	hud.offer_buttons[1].lock_button.grab_focus()
+	hud.offer_buttons[1].grab_focus()
 	await press_direction(JOY_BUTTON_DPAD_LEFT)
-	assert_same(get_viewport().gui_get_focus_owner(), hud.continue_button)
+	assert_same(get_viewport().gui_get_focus_owner(), hud.offer_buttons[1])
 
 
 ## Each row: base turret, upgrade, [finals], the final taken, a comparison line expected for the upgrade and for the final.
@@ -248,13 +243,17 @@ func test_squad_cards_open_details_and_show_what_the_focused_offer_does() -> voi
 	var card: SquadCard = hud.squad_cards[0]
 	assert_eq(card.turret_id, world.turrets[0].turret_id)
 	assert_false(card.impact_badge.visible, "no offer focused: no highlight")
+	assert_false(card.impact_bar.visible)
 	hud._select(0)
 	assert_true(card.impact_badge.visible)
-	assert_eq((card.get_theme_stylebox("normal") as StyleBoxFlat).border_color, UiPalette.GOOD)
+	assert_true(card.impact_bar.visible)
+	assert_eq(card.impact_bar.color, UiPalette.GOOD)
+	assert_eq((card.get_theme_stylebox("normal") as StyleBoxFlat).get_border_width(SIDE_TOP), 0, "no outline, only a tint and a bar")
 	hud._select(1)
-	assert_eq((card.get_theme_stylebox("normal") as StyleBoxFlat).border_color, UiPalette.BAD)
+	assert_eq(card.impact_bar.color, UiPalette.BAD)
 	hud._select(2)
 	assert_false(card.impact_badge.visible, "an AoE item leaves the Ion alone")
+	assert_false(card.impact_bar.visible)
 	assert_lt(card.modulate.a, 1.0, "untouched turrets dim while an offer is focused")
 	card.pressed.emit()
 	assert_true(hud.details_modal.visible)
