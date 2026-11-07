@@ -6,27 +6,28 @@ extends RefCounted
 
 ## Game stat key -> [UI stat key, icon name, lower_is_better].
 const STAT_UI: Dictionary = {
-	"area_size": ["range", "range", false], "attack_speed": ["rate", "rate", false],
+	"area_size": ["range", "area", false], "attack_speed": ["rate", "rate", false],
 	"damage": ["dmg", "damage", false], "fire_rate": ["rate", "rate", false], "range": ["range", "range", false],
 	"rotation_rate": ["rate", "rate", false], "projectile_speed": ["speed", "speed", false],
-	"aoe_radius": ["range", "range", false], "knockback_force": ["dmg", "damage", false],
-	"chain_count": ["dmg", "damage", false], "slow_intensity": ["slow", "slow", false],
+	"aoe_radius": ["range", "area", false], "knockback_force": ["dmg", "knockback", false],
+	"chain_count": ["dmg", "chain", false], "slow_intensity": ["slow", "slow", false],
 	"slow_duration": ["slow", "slow", false], "player_speed": ["speed", "speed", false],
-	"carry_speed": ["speed", "speed", false], "core_move_speed": ["speed", "speed", false],
+	"carry_speed": ["speed", "carry", false], "core_move_speed": ["speed", "core_speed", false],
 	"player_max_health": ["hull", "hull", false], "player_health_regen": ["hull", "repair", false],
 	"pickup_radius": ["pickup", "pickup", false], "reroll_cost": ["scrap", "reroll", true],
 	"turret_penalty_reduction": ["penalty", "penalty", true], "shop_price_mult": ["scrap", "penalty", true],
 	"scrap_earn_mult": ["scrap", "scrap", false], "enemy_count_mult": ["kills", "kills", true],
 	"player_luck": ["scrap", "star", false], "turret_crit_chance": ["dmg", "kills", false],
 	"player_crit_chance": ["dmg", "kills", false], "entrench_stack_seconds": ["rate", "timer", true],
-	"entrench_max_stacks": ["rate", "rate", false], "entrench_bonus": ["rate", "rate", false],
-	"pierce": ["dmg", "damage", false], "chain_decay": ["dmg", "damage", false], "rehit_delay": ["rate", "rate", true],
+	"entrench_max_stacks": ["rate", "entrench_cap", false], "entrench_bonus": ["rate", "entrench", false],
+	"pierce": ["dmg", "pierce", false], "chain_decay": ["dmg", "chain", false], "rehit_delay": ["rate", "rate", true],
 	"turret_penalty_increase": ["penalty", "penalty", true], "last_stand_fire_rate": ["rate", "rate", false],
 	"reactor_overload": ["dps", "damage", false], "storm_link_damage": ["dmg", "damage", false],
 }
 
-## Stat chips for one offer: [{stat, icon, text, tone}]. Special-effect items return none (their rules
-## are text only); the card falls back to the description for those.
+## Stat chips for one offer: [{stat, icon, text, tone, families}]. `families` lists the attack families a
+## family-scoped modifier is limited to (empty: it applies to everything). Special-effect items return none
+## (their rules are text only); the card falls back to the description for those.
 static func offer_chips(offer: ShopOffer, difficulty_damage_mult: float = 1.0) -> Array[Dictionary]:
 	if offer.kind == "turret":
 		return _turret_chips(offer.asset_id, difficulty_damage_mult)
@@ -42,7 +43,8 @@ static func offer_chips(offer: ShopOffer, difficulty_damage_mult: float = 1.0) -
 		var better := value > 0.0
 		if bool(ui[2]):
 			better = not better
-		chips.append({"stat": ui[0], "icon": ui[1], "tone": 1 if better else -1,
+		var families: Array = modifier.get("filter", {}).get("attack_family", [])
+		chips.append({"stat": ui[0], "icon": ui[1], "tone": 1 if better else -1, "families": families.duplicate(),
 			"text": "%+.0f%s" % [value * 100.0 if percentage else value, unit]})
 	return chips
 
@@ -176,25 +178,118 @@ static func affected_turrets(world: ArenaWorld, offer: ShopOffer) -> Array[Strin
 			if candidate["id"] == turret["id"]:
 				old = candidate
 		var affected: bool = old.is_empty() or old != turret
-		# Conditional effects do not pretend to have a permanently active numeric bonus.
-		if offer.asset_id == "reactor_overload":
-			affected = "aoe" in TurretRegistry.get_attack_families(turret["id"])
-		elif offer.asset_id == "storm_conductor":
-			affected = "instant" in TurretRegistry.get_attack_families(turret["id"])
-		elif offer.asset_id == "last_stand":
-			affected = true
-		elif offer.asset_id in ["opening_salvo", "return_address", "slipstream_fletching"]:
-			affected = "projectile" in TurretRegistry.get_attack_families(turret["id"]) or turret["id"] == "melee" and _has_gunblade(world)
-		elif offer.asset_id in ["follow_through", "counterweight", "victory_lap"]:
-			affected = "kinetic" in TurretRegistry.get_attack_families(turret["id"])
-		elif offer.asset_id == "cinder_reserve":
-			affected = TurretRegistry.get_fire_mode(turret["id"]) == TurretRegistry.FIRE_FLAME
-		elif offer.asset_id == "arc_insurance":
-			affected = TurretRegistry.get_fire_mode(turret["id"]) == TurretRegistry.FIRE_CHAIN
-		elif offer.asset_id in ["rescue_beacon", "close_partnership", "lone_sentry", "crosslink_array"]:
-			affected = true
+		var situational := _situational(world, offer, turret["id"])
+		if situational >= 0:
+			affected = situational == 1
 		if affected:
 			result.append("%s x%d" % [turret["name"], int(turret["count"])])
+	return result
+
+## Conditional effects do not pretend to have a permanently active numeric bonus, so their reach is a
+## rule: 1 the offer applies to this turret type, 0 it does not, -1 no rule (compare the numbers instead).
+static func _situational(world: ArenaWorld, offer: ShopOffer, type_id: String) -> int:
+	var families := TurretRegistry.get_attack_families(type_id)
+	match offer.asset_id:
+		"reactor_overload":
+			return int("aoe" in families)
+		"storm_conductor":
+			return int("instant" in families)
+		"opening_salvo", "return_address", "slipstream_fletching":
+			return int("projectile" in families or type_id == "melee" and _has_gunblade(world))
+		"follow_through", "counterweight", "victory_lap":
+			return int("kinetic" in families)
+		"cinder_reserve":
+			return int(TurretRegistry.get_fire_mode(type_id) == TurretRegistry.FIRE_FLAME)
+		"arc_insurance":
+			return int(TurretRegistry.get_fire_mode(type_id) == TurretRegistry.FIRE_CHAIN)
+		"last_stand", "rescue_beacon", "close_partnership", "lone_sentry", "crosslink_array":
+			return 1
+	# Entrenchment is not part of the combat numbers; it helps every turret that can hold position.
+	if offer.kind != "item":
+		return -1
+	for modifier: Dictionary in ItemRegistry.get_modifiers(offer.asset_id):
+		if str(modifier["stat"]).begins_with("entrench_"):
+			return int(not TurretRegistry.is_no_attack(type_id))
+	return -1
+
+## Numbers the squad cards compare: key -> [icon, lower_is_better]. Keys under "stats" are nested.
+const IMPACT_KEYS: Dictionary = {
+	"damage": ["damage", false], "fire_rate": ["rate", false], "rotation_rate": ["rate", false],
+	"range": ["range", false], "area": ["area", false], "interval": ["timer", true],
+	"pierce": ["pierce", false], "projectile_speed": ["speed", false], "knockback": ["knockback", false],
+	"chain_count": ["chain", false], "chain_decay": ["chain", false], "slow": ["slow", false],
+	"slow_duration": ["slow", false], "rehit_delay": ["rate", true],
+}
+
+## What buying `offer` does to each deployed turret and the hero, for the squad highlight. Keyed by
+## turret_id (int) and "hero": {tone: 1 helps, -1 hurts, 0 mixed; changes: [{icon, text, tone}];
+## situational: true when a rule rather than a number says it applies}. Unaffected entries are left out.
+static func turret_impacts(world: ArenaWorld, offer: ShopOffer) -> Dictionary:
+	var result := {}
+	if offer.sold:
+		return result
+	var before := build_data(world)
+	var after := preview(world, offer)
+	for turret: Dictionary in after["turrets"]:
+		var old: Dictionary = {}
+		for candidate: Dictionary in before["turrets"]:
+			if candidate["id"] == turret["id"]:
+				old = candidate
+		var situational := _situational(world, offer, turret["id"])
+		for actor in world.turrets:
+			if actor.turret_type != turret["id"]:
+				continue
+			var now: Dictionary = turret
+			var was: Dictionary = old
+			for growth: Dictionary in turret.get("instances", []):
+				if growth["id"] == actor.turret_id:
+					now = growth["combat"]
+			for growth: Dictionary in old.get("instances", []):
+				if growth["id"] == actor.turret_id:
+					was = growth["combat"]
+			var changes := _changes(was, now)
+			if situational == 0:
+				continue
+			if changes.is_empty() and situational != 1:
+				continue
+			result[actor.turret_id] = _impact(changes, situational == 1 and changes.is_empty())
+	var hero := _changes(before["hero_weapon"], after["hero_weapon"])
+	for spec: Array in [["max_hull", "hull"], ["speed", "speed"], ["pickup", "pickup"], ["luck", "star"]]:
+		hero.append_array(_changes({spec[0]: before[spec[0]]}, {spec[0]: after[spec[0]]}, spec[1]))
+	if not hero.is_empty():
+		result["hero"] = _impact(hero, false)
+	return result
+
+static func _impact(changes: Array[Dictionary], situational: bool) -> Dictionary:
+	var tone := 1
+	if not changes.is_empty():
+		var tones := changes.map(func(c: Dictionary) -> int: return c["tone"])
+		tone = 1 if tones.min() > 0 else -1 if tones.max() < 0 else 0
+	return {"tone": tone, "changes": changes, "situational": situational}
+
+## Changed numbers between two stat dictionaries (top level and the nested "stats" block).
+static func _changes(was: Dictionary, now: Dictionary, icon_override: String = "") -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	if was.is_empty():
+		return result
+	var pairs: Array = [[was, now]]
+	if was.has("stats") and now.has("stats"):
+		pairs.append([was["stats"], now["stats"]])
+	for pair: Array in pairs:
+		for key: String in (pair[1] as Dictionary):
+			var spec: Array = IMPACT_KEYS.get(key, [icon_override, false])
+			if str(spec[0]).is_empty() or not (pair[0] as Dictionary).has(key):
+				continue
+			var old_value: Variant = pair[0][key]
+			var new_value: Variant = pair[1][key]
+			if not (old_value is float or old_value is int) or is_equal_approx(float(old_value), float(new_value)):
+				continue
+			var delta := float(new_value) - float(old_value)
+			var better := delta < 0.0 if bool(spec[1]) else delta > 0.0
+			var text := "%+.0f%%" % (delta / float(old_value) * 100.0) if not is_zero_approx(float(old_value)) else "%+.0f" % delta
+			if old_value is int:
+				text = "%+d" % int(delta)
+			result.append({"key": key, "icon": spec[0], "text": text, "tone": 1 if better else -1})
 	return result
 
 static func _has_gunblade(world: ArenaWorld) -> bool:

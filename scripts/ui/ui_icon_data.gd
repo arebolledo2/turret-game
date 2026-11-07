@@ -17,10 +17,23 @@ const PATHS: Dictionary = {
 	"wave": "<path d='M2 14c2-5 4-5 6 0s4 5 6 0 4-5 6-1'/><path d='M2 20h20' opacity='.5'/>",
 	"timer": "<circle cx='12' cy='13' r='8'/><path d='M12 8.5V13l3 2M9.5 2.5h5'/>",
 	"damage": "<path d='M12 2l2.2 6.3 6.3-2.3-3.7 5.6 5.2 3.4-6.2.9.8 6.6-4.6-4.6-4.6 4.6.8-6.6-6.2-.9 5.2-3.4L3.5 6l6.3 2.3z'/>",
-	"rate": "<path d='M20.5 12a8.5 8.5 0 11-2.5-6M20 2.5V7h-4.5'/><path d='M12 7.5V12l3 2'/>",
-	"range": "<circle cx='12' cy='12' r='9'/><circle cx='12' cy='12' r='5'/><circle cx='12' cy='12' r='1.4' fill='#fff' stroke='none'/>",
+	"rate": "<path d='M4 17a8 8 0 1116 0'/><path d='M12 17l4-6M8 21h8'/>",
+	"range": "<path d='M12 2v4M12 18v4M2 12h4M18 12h4'/><circle cx='12' cy='12' r='4'/>",
+	"area": "<circle cx='12' cy='12' r='9'/><circle cx='12' cy='12' r='3'/>",
+	"knockback": "<path d='M3 12h11M10 7l5 5-5 5M20 4v16'/>",
+	"pierce": "<path d='M2 12h17M15 7l5 5-5 5M8 7v10'/>",
+	"chain": "<circle cx='5' cy='18' r='2'/><circle cx='19' cy='6' r='2'/><path d='M6.5 16.5L10 10l4 5 3.5-7'/>",
+	"burn": "<path d='M12 22c4 0 7-3 7-7 0-5-4-7-5-12-2 3-1 5-3 7-1-1-2-2-2-4-2 2-4 5-4 9 0 4 3 7 7 7z'/>",
 	"slow": "<path d='M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9'/><path d='M9.5 4.5L12 7l2.5-2.5M9.5 19.5L12 17l2.5 2.5'/>",
-	"speed": "<path d='M13 2L5 14h6l-1 8 8-12h-6z'/>",
+	"speed": "<path d='M4 17l5-5-5-5M11 17l5-5-5-5M18 7v10'/>",
+	"carry": "<path d='M4 21h16M6 21V11h12v10M9 11V7h6v4'/>",
+	"core_speed": "<path d='M12 3l7 4v8l-7 4-7-4V7z'/><path d='M12 15V8M9 11l3-3 3 3'/>",
+	"entrench": "<path d='M12 8v13M5 13a7 7 0 0014 0M8 9h8'/><circle cx='12' cy='5' r='3'/>",
+	"entrench_cap": "<path d='M12 3l9 5-9 5-9-5zM3 13l9 5 9-5'/>",
+	"xp": "<path d='M6 13l6-6 6 6M6 19l6-6 6 6'/>",
+	"all_weapons": "<path d='M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9'/>",
+	"nearby": "<path d='M12 3a9 9 0 016.4 2.6M21 12a9 9 0 01-2.6 6.4M12 21a9 9 0 01-6.4-2.6M3 12a9 9 0 012.6-6.4'/><circle cx='12' cy='12' r='2'/>",
+	"low_hull": "<path d='M12 3l7 3v5.5c0 4.6-3 7.7-7 9.5-4-1.8-7-4.9-7-9.5V6z'/><path d='M5 14h14'/>",
 	"pickup": "<path d='M5 4v8a7 7 0 0014 0V4h-4v8a3 3 0 01-6 0V4z'/><path d='M5 8h4M15 8h4'/>",
 	"penalty": "<path d='M3 3h8l10 10-8 8L3 11z'/><circle cx='7.5' cy='7.5' r='1.4' fill='#fff' stroke='none'/>",
 	# Actions and screens
@@ -35,6 +48,8 @@ const PATHS: Dictionary = {
 	"check": "<path d='M5 12l5 5 9-10'/>",
 	"up": "<path d='M6 15l6-6 6 6'/>",
 	"down": "<path d='M6 9l6 6 6-6'/>",
+	"arrow_up": "<path d='M12 20V5M5 12l7-7 7 7'/>",
+	"arrow_down": "<path d='M12 4v15M5 12l7 7 7-7'/>",
 	"back": "<path d='M14 5l-7 7 7 7M7 12h13'/>",
 	"signal": "<path d='M3 9a14 14 0 0118 0M6 13a9 9 0 0112 0M9.5 17a4 4 0 015 0M3 3l18 18'/>",
 	"trophy": "<path d='M7 4h10v5a5 5 0 01-10 0zM7 6H4v2a3 3 0 003 3M17 6h3v2a3 3 0 01-3 3M12 14v4M8 20h8'/>",
@@ -106,3 +121,19 @@ const PATHS: Dictionary = {
 	"item_elemental_conduit": "<path d='M3 3h4v4H3zM17 3h4v4h-4zM3 17h4v4H3zM17 17h4v4h-4z'/><path d='M7 7l3 3M17 7l-3 3M7 17l3-3M17 17l-3-3'/><circle cx='12' cy='12' r='2' fill='#fff' stroke='none'/>",
 	"item_whirlwind_frame": "<path d='M5.1 8A8 8 0 0 1 16 5.1'/><path d='M18.9 16A8 8 0 0 1 8 18.9' opacity='.5'/><path d='M12 12h4'/><circle cx='18' cy='12' r='2'/>",
 }
+
+## Attack family badges: a filled shape per family (so they read in greyscale) with a white glyph.
+## [display name, shape, glyph, fill, edge, glyph transform]. Drawn in colour by `UiIcons.family_badge`.
+const FAMILIES: Dictionary = {
+	"projectile": ["Projectile", "<circle cx='12' cy='12' r='10.5'/>", "<path d='M3 12h14M13 7l5 5-5 5'/>",
+		"#16335c", "#6fa8ff", "translate(6 6) scale(.5)"],
+	"aoe": ["AoE", "<path d='M12 1.5l9.1 5.25v10.5L12 22.5l-9.1-5.25V6.75z'/>", "<circle cx='12' cy='12' r='9'/><circle cx='12' cy='12' r='2'/>",
+		"#4a2a12", "#ff9b4a", "translate(6 6) scale(.5)"],
+	"instant": ["Instant", "<path d='M12 1.5l11 20H1z'/>", "<path d='M13 2L4 14h8l-1 8 9-12h-8z'/>",
+		"#33215a", "#c39bff", "translate(6.5 9) scale(.46)"],
+	"kinetic": ["Kinetic", "<path d='M2.5 2.5h19v19h-19z'/>", "<path d='M14 4l6 6-4 4-6-6zM10 8l-7 7v3h3l7-7'/>",
+		"#4d1a2b", "#f0729a", "translate(6 6) scale(.5)"],
+}
+
+## Fixed display order, so a turret in two families always shows its badges the same way round.
+const FAMILY_ORDER: Array[String] = ["projectile", "aoe", "instant", "kinetic"]

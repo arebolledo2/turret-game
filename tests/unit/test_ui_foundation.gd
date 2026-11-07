@@ -71,3 +71,17 @@ func test_icon_button_carries_icon_and_label() -> void:
 	var button: IconButton = add_child_autofree(IconButton.new().setup("deploy", "DEPLOY", true))
 	assert_eq(button.text, "DEPLOY")
 	assert_not_null(button.icon)
+
+func test_family_badges_rasterise_in_colour_and_sort_in_display_order() -> void:
+	for family: String in UiIconData.FAMILY_ORDER:
+		var badge := UiIcons.family_badge(family)
+		assert_eq(badge.get_width(), UiIcons.RASTER_SIZE, family)
+		assert_same(UiIcons.family_badge(family), badge)
+	assert_eq(UiIcons.sort_families(["kinetic", "aoe"]), ["aoe", "kinetic"] as Array[String])
+	assert_eq(UiIcons.family_name("aoe"), "AoE")
+
+func test_stat_chip_family_prefix_puts_badges_before_the_icon() -> void:
+	var chip: StatChip = add_child_autofree(StatChip.new().setup("damage", "+20%", "dmg", 1).with_families(["projectile"]))
+	var row := chip.icon_rect.get_parent()
+	assert_eq(row.get_child_count(), 3)
+	assert_eq(chip.icon_rect.get_index(), 1)

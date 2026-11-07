@@ -28,6 +28,35 @@ static func get_icon(icon_name: String) -> Texture2D:
 	cache[key] = texture
 	return texture
 
+## Full-colour attack family badge (UiIconData.FAMILIES); never tinted, so the shape and fill carry the family.
+static func family_badge(family: String) -> Texture2D:
+	var key := "family_" + family
+	if cache.has(key):
+		return cache[key]
+	if not UiIconData.FAMILIES.has(family):
+		return get_icon("missing")
+	var row: Array = UiIconData.FAMILIES[family]
+	var svg := "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke-linecap='round' stroke-linejoin='round'>" \
+		+ "<g fill='%s' stroke='%s' stroke-width='1.5'>%s</g>" % [row[3], row[4], row[1]] \
+		+ "<g transform='%s' stroke='#fff' stroke-width='2.8'>%s</g></svg>" % [row[5], row[2]]
+	var image := Image.new()
+	if image.load_svg_from_string(svg, float(RASTER_SIZE) / GRID) != OK:
+		push_warning("UiIcons: could not rasterise family badge '%s'" % family)
+	var texture := ImageTexture.create_from_image(image)
+	cache[key] = texture
+	return texture
+
+static func family_name(family: String) -> String:
+	return str(UiIconData.FAMILIES[family][0]) if UiIconData.FAMILIES.has(family) else family.capitalize()
+
+## Families in display order.
+static func sort_families(families: Array) -> Array[String]:
+	var result: Array[String] = []
+	for family in UiIconData.FAMILY_ORDER:
+		if family in families:
+			result.append(family)
+	return result
+
 static func turret(type_id: String) -> Texture2D:
 	var key := "turret_" + type_id
 	return get_icon(key if has_icon(key) else "turret")

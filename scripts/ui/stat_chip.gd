@@ -37,3 +37,18 @@ func setup(icon_name: String, text: String, stat: String = "", tone: int = 0) ->
 	add_theme_stylebox_override("panel", ChamferStyle.make(
 		UiPalette.PANEL_SOLID.lerp(base, .14), Color(base, .45), 6.0, 7.0, 3.0))
 	return self
+
+## Prefix the chip with attack family badges: the stat only applies to those families.
+func with_families(families: Array) -> StatChip:
+	var row := icon_rect.get_parent()
+	for family in UiIcons.sort_families(families):
+		var badge := TextureRect.new()
+		badge.texture = UiIcons.family_badge(family)
+		badge.custom_minimum_size = Vector2(ICON_SIZE, ICON_SIZE)
+		badge.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		badge.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		badge.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(badge)
+		row.move_child(badge, icon_rect.get_index())
+	return self

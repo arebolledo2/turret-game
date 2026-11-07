@@ -24,11 +24,11 @@ func test_offer_badges_show_overlapping_item_families_and_clear_for_items() -> v
 	add_child_autofree(card)
 	card.setup(_offer("turret", "plasma"), 1.0, true)
 	assert_eq(card.family_badges.get_child_count(), 2)
-	assert_eq(card.family_badges.get_child(0).label.text, "Projectile")
-	assert_eq(card.family_badges.get_child(1).label.text, "AoE")
+	assert_eq(card.family_badges.get_child(0).tooltip_text, "Projectile")
+	assert_eq(card.family_badges.get_child(1).tooltip_text, "AoE")
 	card.setup(_offer("turret", "melee"), 1.0, true)
 	assert_eq(card.family_badges.get_child_count(), 1)
-	assert_eq(card.family_badges.get_child(0).label.text, "Kinetic")
+	assert_eq(card.family_badges.get_child(0).tooltip_text, "Kinetic")
 	card.setup(_offer("item", "dense_rounds"), 1.0, true)
 	assert_false(card.family_badges.visible)
 	assert_eq(card.family_badges.get_child_count(), 0)
@@ -112,3 +112,33 @@ func test_every_modifier_stat_has_a_ui_mapping() -> void:
 	for item_id: String in ArenaShop.ITEMS:
 		for modifier: Dictionary in ItemRegistry.get_modifiers(item_id):
 			assert_true(ShopViewData.STAT_UI.has(modifier["stat"]), "%s uses unmapped stat %s" % [item_id, modifier["stat"]])
+
+func test_family_scoped_chips_name_their_families() -> void:
+	var chips := ShopViewData.offer_chips(_offer("item", "spiked_bat"))
+	assert_false(chips.is_empty())
+	for chip in chips:
+		assert_eq(chip["families"], ["kinetic"])
+	for chip in ShopViewData.offer_chips(_offer("item", "rapid_coolant")):
+		assert_true(chip["families"].is_empty(), "an all-weapons item has no family badge")
+
+func test_impacts_mark_helped_hurt_and_untouched_turrets() -> void:
+	var ion := world.turrets[0]
+	var helped := ShopViewData.turret_impacts(world, _offer("item", "rapid_coolant"))
+	assert_eq(helped[ion.turret_id]["tone"], 1)
+	assert_eq(helped[ion.turret_id]["changes"][0]["icon"], "rate")
+	assert_eq(helped["hero"]["tone"], 1)
+	var hurt := ShopViewData.turret_impacts(world, _offer("item", "gamblers_crown"))
+	assert_eq(hurt[ion.turret_id]["tone"], -1)
+	assert_eq(hurt["hero"]["tone"], 0, "luck up and fire rate down is a mixed change")
+	var untouched := ShopViewData.turret_impacts(world, _offer("item", "blast_charges"))
+	assert_false(untouched.has(ion.turret_id), "an AoE item leaves a projectile turret alone")
+	var entrench := ShopViewData.turret_impacts(world, _offer("item", "hardpoint"))
+	assert_true(entrench[ion.turret_id]["situational"])
+	assert_eq(entrench[ion.turret_id]["tone"], 1)
+
+func test_impacts_leave_live_state_untouched() -> void:
+	var modifiers_before := ModifierService.active_modifiers.size()
+	var counts_before := ItemTrackingService.item_counts.duplicate()
+	ShopViewData.turret_impacts(world, _offer("item", "glass_cannon_core"))
+	assert_eq(ModifierService.active_modifiers.size(), modifiers_before)
+	assert_eq(ItemTrackingService.item_counts, counts_before)
