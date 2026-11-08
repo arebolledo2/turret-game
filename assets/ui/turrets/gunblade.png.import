@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://o7n74je1q8f4"
-path="res://.godot/imported/lance_1.png-efb77e4b60e0b67bc4ef1deacac46198.ctex"
+uid="uid://cfmsidqfyxaeg"
+path="res://.godot/imported/gunblade.png-751d1e0a611ca2f97fcde41b1cedf01e.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/lance_1.png"
-dest_files=["res://.godot/imported/lance_1.png-efb77e4b60e0b67bc4ef1deacac46198.ctex"]
+source_file="res://assets/ui/turrets/gunblade.png"
+dest_files=["res://.godot/imported/gunblade.png-751d1e0a611ca2f97fcde41b1cedf01e.ctex"]
 
 [params]
 

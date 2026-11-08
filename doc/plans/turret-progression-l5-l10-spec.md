@@ -144,3 +144,26 @@ Existing tests to port, by file (counts from the repo; each needs a read-through
 ## Follow-up outside this change
 
 The `3d-asset-design` skill still describes the old levels (a level-10 sibling concept of a level-15 form, `<branch>_{1,2,3}.png` portraits, `model_key` per stage). Update it once this lands: one concept per final form, one per level-5 upgrade, portraits named by form id.
+
+## Update 8 Nov 2026: two level-5 branches, each with its own level-10 capstone
+
+Decided: level 5 offers two upgrades (a branch), and the level-5 pick decides the level-10 form (a forced capstone, no second choice). 4 forms per two-branch turret instead of 3. Done first for Ion, Melee, Bow, Flamethrower, Bowling and Shock, whose second level-5 forms were restored from the old tree (`726171f^`); the other nine bases are unchanged (one upgrade, two finals open to it).
+
+| Base | Branch A | Branch B |
+|---|---|---|
+| Ion | Machine Gun → Cyclone Gatling | Scattershot (`scatter`) → Omnifire |
+| Melee | Saber → Orbit Saber | Gunblade → Stormblade |
+| Bow | Repeater Bow → Arrowstorm | Greatbow → Titan Bow |
+| Flamethrower | Wide Flame → Inferno Crown | Focused Jet → Dragonheart |
+| Bowling | Heavy Roller → Juggernaut | Bank Shot → Ricochet King |
+| Shock | Resonator → Resonance Engine | Focused Lance → Thunder Spear |
+
+How it is wired:
+
+- `TurretForms`: a FINAL row may name `"from": "<upgrade id>"`. A final with no `from` stays open to every upgrade of its base. A base's rows read upgrade, final, upgrade, final (or upgrade, final, final).
+- `TurretEvolution.options(base, stage, from_form := "")` returns every upgrade at stage 0, and at stage 1 the finals whose `from` matches `from_form` (all finals when `from_form` is empty). `upgrade_of(form_id)` answers which upgrade a form comes from. `paths()` now has `upgrades` (all) beside `upgrade` (the first) and `finals`.
+- `TurretProgression.evolution_options` passes `evolution_form`, so the capstone follows the branch taken.
+- Behaviour: `ScatterForm` falls back to a three-way spread when the form has no crossfire exits; `LanceForm` strikes a whole lane only with the `lane` param (Thunder Spear); the Gunblade is `GunbladeForm` with `barrel_burst` 1 and the same visual builder as the Stormblade; the bow, flame and bowling visuals accept the new ids.
+- Stats are the old stage-1 numbers from the three-stage tree. They have not been re-benched against the new finals (retune is still open).
+- Portraits renamed from `<branch>_1.png` to the form id. The stale `*_2.png` portraits of retired stage-2 forms are still in `assets/ui/turrets/` and should be deleted.
+- Not done: Plasma (Mortar → Constellation) and Tesla (Capacitor → Thunderhead) second branches are unbuilt; the seven newer turrets (Sniper, Quake, Decoy, Scrap Press, Mine Layer, Laser, Drone Bay) need new second level-5 forms.

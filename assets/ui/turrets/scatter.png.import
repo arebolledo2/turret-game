@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b2a2a1y5neegm"
-path="res://.godot/imported/focused_jet_1.png-4f966846dccc52346a98e16b59ea0ea8.ctex"
+uid="uid://3aspml4ndnhf"
+path="res://.godot/imported/scatter.png-bea93d95e2d527920a80bc001d77cbc8.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/focused_jet_1.png"
-dest_files=["res://.godot/imported/focused_jet_1.png-4f966846dccc52346a98e16b59ea0ea8.ctex"]
+source_file="res://assets/ui/turrets/scatter.png"
+dest_files=["res://.godot/imported/scatter.png-bea93d95e2d527920a80bc001d77cbc8.ctex"]
 
 [params]
 

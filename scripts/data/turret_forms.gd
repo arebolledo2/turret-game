@@ -4,12 +4,14 @@ extends RefCounted
 ## The form table: one row per evolution form, and the only place a form's facts are written down.
 ## `TurretEvolution` reads these rows (options, names, models, descriptions, stats, shot shapes, which forms are built),
 ## `TurretForm.create` takes the behaviour from the row and `TurretActor` takes the visual builder from it. Nothing else
-## lists forms: the order of the rows is the order of the paths (an upgrade row, then its two final rows, per base).
+## lists forms: the order of the rows is the order of the paths (per base: an upgrade row and its final row, once per branch; or one upgrade row and its two final rows).
 ##
 ## ## Row keys
 ## Required:
 ##   base         the base turret id (`TurretRegistry.TYPES`) that owns the form
-##   kind         `UPGRADE` (taken at level 5, no choice) or `FINAL` (level 10, pick one of two)
+##   kind         `UPGRADE` (level 5; a base has one or two and the player picks) or `FINAL` (level 10)
+##   from         (FINAL, optional) the upgrade this final caps: the level-5 pick decides the level-10 form. A final
+##                with no `from` is open to every upgrade of its base (one upgrade, two finals to pick from)
 ##   name         player-facing name
 ##   model        the authored chassis (`ClockworkModels.KEYS`); several forms may share one
 ##   description  player-facing text; numbers typed into it must match `stats` and `params`
@@ -23,6 +25,7 @@ extends RefCounted
 ##   shot         `CombatShot3D` fields set after the shot is built (visual_key, radius, lifetime, ricochets); a
 ##                `visual_scale` also scales the radius
 ##   params       numbers the behaviour or visual reads through `TurretEvolution.param(form_id, key, default)`:
+##                  lane        Thunder Spear: the bolt also strikes every enemy in line behind its target, out to full range
 ##                  volley      arrows loosed per draw (Repeater Bow, Arrowstorm)
 ##                  blades      held blades (Orbit Saber)
 ##                  spool       Gatling rotor spool ceiling
@@ -113,14 +116,20 @@ const FORMS: Dictionary = {
 		"behaviour": "MachineGunForm",
 	},
 	"cyclone_gatling": {
-		"base": "normal", "kind": FINAL, "name": "Cyclone Gatling", "model": "gatling", "implemented": true,
+		"base": "normal", "kind": FINAL, "from": "machine_gun", "name": "Cyclone Gatling", "model": "gatling", "implemented": true,
 		"description": "Piercing rotary fire accelerates to 2.5 times its resting rate.",
 		"stats": {"damage": 6.5, "fire_rate": 4.8, "projectile_speed": 1000.0, "pierce": 1},
 		"behaviour": "MachineGunForm", "visual": "GatlingEvolutionVisual",
 		"params": {"spool": 1.5},
 	},
+	"scatter": {
+		"base": "normal", "kind": UPGRADE, "name": "Scattershot", "model": "scatter", "implemented": true,
+		"description": "Three projectiles fan out with each shot.",
+		"stats": {"damage": 8.0, "fire_rate": 1.0, "range": 220.0},
+		"behaviour": "ScatterForm",
+	},
 	"omnifire": {
-		"base": "normal", "kind": FINAL, "name": "Omnifire", "model": "crossfire", "implemented": true,
+		"base": "normal", "kind": FINAL, "from": "scatter", "name": "Omnifire", "model": "crossfire", "implemented": true,
 		"description": "Twelve shots cover a full circle in evenly spaced directions.",
 		"stats": {"damage": 10.0, "fire_rate": 1.25, "range": 220.0},
 		"behaviour": "ScatterForm", "visual": "CrossfireEvolutionVisual",
@@ -133,14 +142,21 @@ const FORMS: Dictionary = {
 		"behaviour": "SweepForm",
 	},
 	"orbit_saber": {
-		"base": "melee", "kind": FINAL, "name": "Orbit Saber", "model": "saber", "implemented": true,
+		"base": "melee", "kind": FINAL, "from": "saber", "name": "Orbit Saber", "model": "saber", "implemented": true,
 		"description": "Three held energy blades sweep evenly around the turret.",
 		"stats": {"damage": 14.0, "rotation_rate": 480.0, "range": 170.0},
 		"behaviour": "SweepForm",
 		"params": {"blades": 3},
 	},
+	"gunblade": {
+		"base": "melee", "kind": UPGRADE, "name": "Gunblade", "model": "gunblade", "implemented": true,
+		"description": "Sweeps a blade and fires when its barrel aligns with an enemy.",
+		"stats": {"damage": 9.0, "rotation_rate": 300.0, "range": 150.0},
+		"behaviour": "GunbladeForm", "visual": "GunbladeEvolutionVisual",
+		"params": {"barrel": {"damage": 7.0, "fire_rate": 2.0, "range": 300.0, "pierce": 0}, "barrel_burst": 1},
+	},
 	"stormblade": {
-		"base": "melee", "kind": FINAL, "name": "Stormblade", "model": "gunblade", "implemented": true,
+		"base": "melee", "kind": FINAL, "from": "gunblade", "name": "Stormblade", "model": "gunblade", "implemented": true,
 		"description": "Three-shot piercing bursts accompany a longer, faster blade sweep.",
 		"stats": {"damage": 12.0, "rotation_rate": 360.0, "range": 170.0},
 		"behaviour": "GunbladeForm", "visual": "GunbladeEvolutionVisual",
@@ -155,14 +171,22 @@ const FORMS: Dictionary = {
 		"params": {"volley": 2},
 	},
 	"arrowstorm": {
-		"base": "bow", "kind": FINAL, "name": "Arrowstorm", "model": "bow", "implemented": true,
+		"base": "bow", "kind": FINAL, "from": "repeater_bow", "name": "Arrowstorm", "model": "bow", "implemented": true,
 		"description": "Fires a quick burst of 5 piercing arrows.",
 		"stats": {"damage": 14.0, "fire_rate": 1.1, "projectile_speed": 1050.0, "pierce": 2},
 		"behaviour": "RepeaterBowForm", "visual": "BowEvolutionVisual",
 		"params": {"volley": 5},
 	},
+	"greatbow": {
+		"base": "bow", "kind": UPGRADE, "name": "Greatbow", "model": "bow", "implemented": true,
+		"description": "Heavy arrows pierce 4 enemies and knock them back.",
+		"stats": {"damage": 32.0, "fire_rate": .7, "range": 390.0, "projectile_speed": 1100.0, "pierce": 3, "knockback_force": 120.0},
+		"visual": "BowEvolutionVisual",
+		"shot": {"visual_scale": 1.3},
+		"params": {"layers": 1},
+	},
 	"titan_bow": {
-		"base": "bow", "kind": FINAL, "name": "Titan Bow", "model": "bow", "implemented": true,
+		"base": "bow", "kind": FINAL, "from": "greatbow", "name": "Titan Bow", "model": "bow", "implemented": true,
 		"description": "Heavy arrows pierce 9 enemies and knock them back.",
 		"stats": {"damage": 66.0, "fire_rate": .8, "range": 470.0, "projectile_speed": 1100.0, "pierce": 8, "knockback_force": 240.0},
 		"visual": "BowEvolutionVisual",
@@ -178,14 +202,21 @@ const FORMS: Dictionary = {
 		"params": {"burner_pairs": 1, "burner_fan": 22.0},
 	},
 	"inferno_crown": {
-		"base": "flamethrower", "kind": FINAL, "name": "Inferno Crown", "model": "flamethrower", "implemented": true,
+		"base": "flamethrower", "kind": FINAL, "from": "wide_flame", "name": "Inferno Crown", "model": "flamethrower", "implemented": true,
 		"description": "A 110-degree fan blankets a crowd and leaves enemies burning.",
 		"stats": {"damage": 5.0, "cone_degrees": 110.0, "burn_duration": 3.0},
 		"visual": "FlameEvolutionVisual",
 		"params": {"burner_pairs": 3, "burner_fan": 47.0},
 	},
+	"focused_jet": {
+		"base": "flamethrower", "kind": UPGRADE, "name": "Focused Jet", "model": "flamethrower", "implemented": true,
+		"description": "A longer, narrower jet delivers a stronger, longer-lasting burn.",
+		"stats": {"damage": 3.2, "range": 280.0, "cone_degrees": 24.0, "burn_ratio": 2.2, "burn_duration": 2.5},
+		"visual": "FlameEvolutionVisual",
+		"params": {"lance_segments": 1},
+	},
 	"dragonheart": {
-		"base": "flamethrower", "kind": FINAL, "name": "Dragonheart", "model": "flamethrower", "implemented": true,
+		"base": "flamethrower", "kind": FINAL, "from": "focused_jet", "name": "Dragonheart", "model": "flamethrower", "implemented": true,
 		"description": "A longer, narrower jet delivers a stronger, longer-lasting burn.",
 		"stats": {"damage": 5.0, "range": 380.0, "cone_degrees": 16.0, "burn_ratio": 3.0, "burn_duration": 3.5},
 		"visual": "FlameEvolutionVisual",
@@ -201,15 +232,23 @@ const FORMS: Dictionary = {
 		"params": {"braces": 1},
 	},
 	"juggernaut": {
-		"base": "bowling", "kind": FINAL, "name": "Juggernaut", "model": "bowling", "implemented": true,
+		"base": "bowling", "kind": FINAL, "from": "heavy_roller", "name": "Juggernaut", "model": "bowling", "implemented": true,
 		"description": "Larger balls drive through crowds with stronger knockback.",
 		"stats": {"damage": 60.0, "pierce": 14, "knockback_force": 520.0, "fire_rate": .7},
 		"visual": "BowlingEvolutionVisual",
 		"shot": {"visual_scale": 1.75},
 		"params": {"braces": 3},
 	},
+	"bank_shot": {
+		"base": "bowling", "kind": UPGRADE, "name": "Bank Shot", "model": "bowling", "implemented": true,
+		"description": "Redirects toward a fresh nearby enemy up to 2 times.",
+		"stats": {"damage": 22.0, "fire_rate": .7, "projectile_speed": 400.0, "pierce": 0},
+		"visual": "BowlingEvolutionVisual",
+		"shot": {"ricochets": 2, "lifetime": 6.0},
+		"params": {"bumpers": 1},
+	},
 	"ricochet_king": {
-		"base": "bowling", "kind": FINAL, "name": "Ricochet King", "model": "bowling", "implemented": true,
+		"base": "bowling", "kind": FINAL, "from": "bank_shot", "name": "Ricochet King", "model": "bowling", "implemented": true,
 		"description": "Redirects toward a fresh nearby enemy up to 6 times.",
 		"stats": {"damage": 36.0, "fire_rate": .9, "projectile_speed": 400.0, "pierce": 0},
 		"visual": "BowlingEvolutionVisual",
@@ -246,17 +285,24 @@ const FORMS: Dictionary = {
 		"params": {"echo_delays": [.5]},
 	},
 	"resonance_engine": {
-		"base": "shock", "kind": FINAL, "name": "Resonance Engine", "model": "resonance_engine", "implemented": true,
+		"base": "shock", "kind": FINAL, "from": "resonator", "name": "Resonance Engine", "model": "resonance_engine", "implemented": true,
 		"description": "Pulses alternate a tight, hard inner ring and a wide outer ring; enemies caught by both are Exposed, taking 30% more from Instant turrets.",
 		"stats": {"damage": 5.0, "range": 276.0},
 		"behaviour": "ResonatorForm",
 		"params": {"echo_delays": [.4, .8], "alternating_rings": true},
 	},
+	"focused_lance": {
+		"base": "shock", "kind": UPGRADE, "name": "Focused Lance", "model": "focused_lance", "implemented": true,
+		"description": "Replaces the pulse with a single focused bolt that slows its target.",
+		"stats": {"damage": 24.0, "fire_rate": .75, "range": 300.0, "slow_intensity": .3, "slow_duration": .8},
+		"behaviour": "LanceForm",
+	},
 	"thunder_spear": {
-		"base": "shock", "kind": FINAL, "name": "Thunder Spear", "model": "thunder_spear", "implemented": true,
+		"base": "shock", "kind": FINAL, "from": "focused_lance", "name": "Thunder Spear", "model": "thunder_spear", "implemented": true,
 		"description": "The bolt drives through a whole lane of enemies and pins every one.",
 		"stats": {"damage": 48.0, "fire_rate": .85, "range": 400.0, "slow_intensity": .9, "slow_duration": 2.0},
 		"behaviour": "LanceForm",
+		"params": {"lane": true},
 	},
 	# --- Tesla (registered, not built yet) ---
 	"forked_coil": {

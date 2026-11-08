@@ -332,7 +332,7 @@ func _show_selected() -> void:
 			# Milestone 0 is the upgrade (still named once a final replaced it); milestone 1 is the chosen final.
 			var taken := growth.evolution_form
 			if i == 0 and growth.evolution_stage > 1:
-				taken = TurretEvolution.options(turret.turret_type, 0)[0]
+				taken = TurretEvolution.upgrade_of(growth.evolution_form)
 			state = TurretEvolution.form_name(taken)
 		elif growth.level >= milestone:
 			state = "Evolves after the wave" if not turret.available_evolutions().is_empty() else "Form in development — milestone retained"

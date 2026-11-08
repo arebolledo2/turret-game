@@ -7,7 +7,7 @@ static var materials: Dictionary = {}
 ## Wide Flame and Inferno Crown: `burner_pairs` burners per side on the manifold, the outermost fanned out `burner_fan`
 ## degrees. Dragonheart: a pressure lance of `lance_segments` segments (its length and rings grow with them).
 static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
-	if form_id not in ["wide_flame", "inferno_crown", "dragonheart"]:
+	if form_id not in ["wide_flame", "inferno_crown", "focused_jet", "dragonheart"]:
 		return null
 	var emitters: Array[Node3D] = []
 	if materials.is_empty():

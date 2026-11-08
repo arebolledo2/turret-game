@@ -6,7 +6,8 @@ extends RefCounted
 ## The form table is `TurretForms`, one row per form (read its header to add a turret). This class answers questions about
 ## the rows and holds the mechanic constants several forms of a line share.
 
-## base id -> {"upgrade": form id, "finals": [form ids]}, derived once from the rows (row order is path order).
+## base id -> {"upgrade": first upgrade id, "upgrades": [every level-5 upgrade id], "finals": [every level-10 final id]},
+## derived once from the rows (row order is path order). A final whose row names a `from` upgrade is that upgrade's capstone.
 static var _paths: Dictionary = {}
 ## Global class name -> script path, read once from the project's class list.
 static var _class_paths: Dictionary = {}
@@ -23,14 +24,16 @@ static func form_ids() -> Array[String]:
 	result.assign(TurretForms.FORMS.keys())
 	return result
 
-## The upgrade and the two finals of each base turret that has forms.
+## The upgrades and finals of each base turret that has forms.
 static func paths() -> Dictionary:
 	if _paths.is_empty():
 		for form_id: String in TurretForms.FORMS:
 			var form_row: Dictionary = TurretForms.FORMS[form_id]
-			var path: Dictionary = _paths.get(form_row["base"], {"upgrade": "", "finals": [] as Array[String]})
+			var path: Dictionary = _paths.get(form_row["base"], {"upgrade": "", "upgrades": [] as Array[String], "finals": [] as Array[String]})
 			if form_row["kind"] == TurretForms.UPGRADE:
-				path["upgrade"] = form_id
+				if path["upgrades"].is_empty():
+					path["upgrade"] = form_id
+				path["upgrades"].append(form_id)
 			else:
 				path["finals"].append(form_id)
 			_paths[form_row["base"]] = path
@@ -42,15 +45,29 @@ static func bases() -> Array[String]:
 	result.assign(paths().keys())
 	return result
 
-## Forms offered at `stage` (evolutions already taken): the upgrade at 0, the two finals at 1, nothing after.
-static func options(base_type: String, stage: int) -> Array[String]:
+## Forms offered at `stage` (evolutions already taken): every upgrade at 0, the finals at 1, nothing after. `from_form` is
+## the form the turret holds now: a final that names a `from` upgrade is offered only from that upgrade (the level-5 pick
+## decides the level-10 form); with no `from_form`, or a final with no `from`, every final of the base is offered.
+static func options(base_type: String, stage: int, from_form: String = "") -> Array[String]:
 	var result: Array[String] = []
 	var path: Dictionary = paths().get(base_type, {})
-	if stage == 0 and path.has("upgrade"):
-		result.append(str(path["upgrade"]))
+	if stage == 0:
+		result.assign(path.get("upgrades", []))
 	elif stage == 1:
-		result.assign(path.get("finals", []))
+		for final_id: String in path.get("finals", []):
+			var from: String = str(row(final_id).get("from", ""))
+			if from_form.is_empty() or from.is_empty() or from == from_form:
+				result.append(final_id)
 	return result
+
+## The level-5 upgrade a form comes from: a final's `from`, else the base's first upgrade (a base with a single upgrade), else
+## the form itself when it is an upgrade.
+static func upgrade_of(form_id: String) -> String:
+	var form_row := row(form_id)
+	if form_row.get("kind", "") == TurretForms.UPGRADE:
+		return form_id
+	var from: String = str(form_row.get("from", ""))
+	return from if not from.is_empty() else str(paths().get(form_row.get("base", ""), {}).get("upgrade", ""))
 
 static func form_name(form_id: String) -> String:
 	return str(row(form_id).get("name", ""))

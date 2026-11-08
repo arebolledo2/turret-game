@@ -25,7 +25,7 @@ func _ready() -> void:
 			var turret := world.add_turret(Vector3(i * 3 - 3, 0, 0), "melee")
 			turret.set_physics_process(false)
 			turret.progression.award(1500)
-			var path: Array = [["saber"], ["saber", "orbit_saber"], ["saber", "stormblade"]][i]
+			var path: Array = [["saber"], ["saber", "orbit_saber"], ["gunblade", "stormblade"]][i]
 			for form: String in path:
 				turret.evolve(form)
 			turret.aim.rotation.y = PI * .65
@@ -296,7 +296,7 @@ func _ready() -> void:
 			var turret := world.add_turret(Vector3(i * 5 - 2.5, 0, 1), "flamethrower")
 			turret.set_physics_process(false)
 			turret.progression.award(1500)
-			var path: Array = [["wide_flame", "inferno_crown"], ["wide_flame", "dragonheart"]][i]
+			var path: Array = [["wide_flame", "inferno_crown"], ["focused_jet", "dragonheart"]][i]
 			for form: String in path:
 				turret.evolve(form)
 			var stats := turret._current_view(0)
@@ -326,7 +326,7 @@ func _ready() -> void:
 	var repeater := world.add_turret(Vector3(0, 0, -3), "bow")
 	var siege := world.add_turret(Vector3(3, 0, -3), "plasma")
 	var actors: Array[TurretActor] = [machine, omnifire, saber, gatling, repeater, siege]
-	var paths: Array = [["machine_gun"], ["machine_gun", "omnifire"], ["saber"], ["machine_gun", "cyclone_gatling"], ["repeater_bow"], ["siege"]]
+	var paths: Array = [["machine_gun"], ["scatter", "omnifire"], ["saber"], ["machine_gun", "cyclone_gatling"], ["repeater_bow"], ["siege"]]
 	for i in actors.size():
 		var turret := actors[i]
 		turret.progression.award(389 if i in [1, 3] else 110)

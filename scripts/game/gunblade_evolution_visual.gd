@@ -4,7 +4,7 @@ extends RefCounted
 static var materials: Dictionary = {}
 
 static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
-	if form_id != "stormblade":
+	if form_id not in ["gunblade", "stormblade"]:
 		return null
 	var exits: Array[Node3D] = []
 	var aim := model.find_child("Aim", true, false) as Node3D

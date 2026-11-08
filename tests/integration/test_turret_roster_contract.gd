@@ -74,29 +74,36 @@ func test_every_stocked_turret_is_bought_and_taken_through_every_implemented_for
 	var evolved := 0
 	for base in ShopCatalog.ids("turret"):
 		var upgrades := _implemented(TurretEvolution.options(base, 0))
-		var finals := _implemented(TurretEvolution.options(base, 1))
 		var turret := _buy(base)
 		rig.level_to(turret, TurretProgression.EVOLUTION_LEVELS[-1])
 		assert_false(turret.progression.evolution_options(base).is_empty(), "%s has an evolution waiting" % base)
 		if upgrades.is_empty():
 			assert_true(turret.available_evolutions().is_empty(), "%s: nothing is offered until a form is built" % base)
 			continue
-		assert_eq(turret.available_evolutions(), upgrades, "%s level 5 offers its upgrade" % base)
-		assert_true(turret.evolve(upgrades[0]), "%s takes its upgrade" % base)
-		evolved += 1
-		_assert_form_built(turret, upgrades[0])
-		assert_eq(turret.progression.evolution_stage, 1)
-		assert_eq(turret.available_evolutions(), finals, "%s level 10 offers its built finals" % base)
-		for index in finals.size():
-			# One turret takes one final: the first goes on the bought turret, the others on a fresh copy.
-			var upgrade_path: Array[String] = [upgrades[0]]
-			var candidate := turret if index == 0 else rig.turret(base, upgrade_path)
-			rig.level_to(candidate, TurretProgression.EVOLUTION_LEVELS[-1])
-			assert_true(candidate.evolve(finals[index]), "%s takes %s" % [base, finals[index]])
+		assert_eq(turret.available_evolutions(), upgrades, "%s level 5 offers its upgrades" % base)
+		for upgrade_index in upgrades.size():
+			var upgrade := upgrades[upgrade_index]
+			# One turret takes one upgrade: the first goes on the bought turret, the others on a fresh copy.
+			var branch := turret
+			if upgrade_index > 0:
+				branch = rig.turret(base)
+				rig.level_to(branch, TurretProgression.EVOLUTION_LEVELS[-1])
+			assert_true(branch.evolve(upgrade), "%s takes %s" % [base, upgrade])
 			evolved += 1
-			_assert_form_built(candidate, finals[index])
-			assert_eq(candidate.progression.evolution_stage, 2)
-			assert_true(candidate.available_evolutions().is_empty(), "%s has nothing left after its final" % base)
+			_assert_form_built(branch, upgrade)
+			assert_eq(branch.progression.evolution_stage, 1)
+			var finals := _implemented(TurretEvolution.options(base, 1, upgrade))
+			assert_eq(branch.available_evolutions(), finals, "%s level 10 offers the built finals of %s" % [base, upgrade])
+			for index in finals.size():
+				# One turret takes one final: the first goes on the branch turret, the others on a fresh copy.
+				var upgrade_path: Array[String] = [upgrade]
+				var candidate := branch if index == 0 else rig.turret(base, upgrade_path)
+				rig.level_to(candidate, TurretProgression.EVOLUTION_LEVELS[-1])
+				assert_true(candidate.evolve(finals[index]), "%s takes %s" % [base, finals[index]])
+				evolved += 1
+				_assert_form_built(candidate, finals[index])
+				assert_eq(candidate.progression.evolution_stage, 2)
+				assert_true(candidate.available_evolutions().is_empty(), "%s has nothing left after its final" % base)
 	assert_eq(evolved, TurretEvolution.implemented_forms().size(), "Every implemented form was taken by some turret")
 
 func test_a_turret_without_built_forms_keeps_its_milestone_instead_of_offering_a_stub() -> void:

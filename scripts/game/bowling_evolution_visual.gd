@@ -7,7 +7,7 @@ var flippers: Array[Node3D] = []
 var kick_time := 0.0
 
 static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
-	if form_id not in ["heavy_roller", "juggernaut", "ricochet_king"]:
+	if form_id not in ["heavy_roller", "juggernaut", "bank_shot", "ricochet_king"]:
 		return null
 	if materials.is_empty():
 		materials = VisualPalette.build([["brass", "dba94c", .8], ["purple", "624483", .45], ["dark", "202a33", .4]])

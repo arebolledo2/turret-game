@@ -7,7 +7,7 @@ const BOW_PARTS := ["BowClamps", "BowHardware", "BowLimbs", "BowString"]
 ## Repeater Bow and Arrowstorm add one rail per arrow of the volley (`volley` param); the Titan Bow grows `layers` laminated
 ## limb layers that scale the heavy bow and its loaded arrow.
 static func build(model: Node3D, form_id: String) -> TurretVisualHandles:
-	if form_id not in ["repeater_bow", "arrowstorm", "titan_bow"]:
+	if form_id not in ["repeater_bow", "arrowstorm", "greatbow", "titan_bow"]:
 		return null
 	var aim := model.find_child("Aim", true, false) as Node3D
 	var receiver := model.find_child("Receiver", true, false) as Node3D

@@ -61,13 +61,14 @@ func award(amount: int) -> Dictionary:
 			pending_evolutions.append(level)
 	return {"xp_awarded": amount, "before": before, "after": snapshot()}
 
-## Level 5 offers the base turret's single upgrade; level 10 offers its two finals.
+## Level 5 offers the base turret's upgrades; level 10 offers the finals open to the upgrade taken (all of them for a base
+## whose finals do not name one).
 func evolution_options(base_type: String) -> Array[String]:
 	if pending_evolutions.is_empty() or evolution_stage >= EVOLUTION_LEVELS.size():
 		return []
 	if pending_evolutions[0] != EVOLUTION_LEVELS[evolution_stage] or level < pending_evolutions[0]:
 		return []
-	return TurretEvolution.options(base_type, evolution_stage)
+	return TurretEvolution.options(base_type, evolution_stage, evolution_form)
 
 func evolve(base_type: String, form: String) -> bool:
 	if form not in evolution_options(base_type):

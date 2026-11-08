@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://i42lj3t2lshh"
-path="res://.godot/imported/bank_shot_1.png-dc315e1c169d7398a83a3332b1f8a705.ctex"
+uid="uid://doo7m8bkl4464"
+path="res://.godot/imported/focused_jet.png-c66301d6c072a56f2b0c6100a48bd308.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/bank_shot_1.png"
-dest_files=["res://.godot/imported/bank_shot_1.png-dc315e1c169d7398a83a3332b1f8a705.ctex"]
+source_file="res://assets/ui/turrets/focused_jet.png"
+dest_files=["res://.godot/imported/focused_jet.png-c66301d6c072a56f2b0c6100a48bd308.ctex"]
 
 [params]
 

@@ -4,7 +4,7 @@ extends GutTest
 ## row that is malformed fails here with its id instead of surfacing as a missing model or a silent default attack.
 
 const REQUIRED: Array[String] = ["base", "kind", "name", "model", "description", "stats", "implemented"]
-const OPTIONAL: Array[String] = ["behaviour", "visual", "shot", "params"]
+const OPTIONAL: Array[String] = ["from", "behaviour", "visual", "shot", "params"]
 
 func test_every_row_has_every_required_key_and_no_unknown_one() -> void:
 	for form: String in TurretForms.FORMS:
@@ -21,7 +21,7 @@ func test_every_row_belongs_to_a_registered_base_turret() -> void:
 	for form: String in TurretForms.FORMS:
 		assert_true(TurretRegistry.TYPES.has(TurretForms.FORMS[form]["base"]), "%s: base turret is in the registry" % form)
 
-func test_paths_are_derived_one_upgrade_then_two_finals_per_base_in_row_order() -> void:
+func test_paths_are_derived_upgrades_then_finals_per_base_in_row_order() -> void:
 	var rows_by_base: Dictionary = {}
 	for form: String in TurretForms.FORMS:
 		var base: String = TurretForms.FORMS[form]["base"]
@@ -29,7 +29,15 @@ func test_paths_are_derived_one_upgrade_then_two_finals_per_base_in_row_order() 
 		kinds.append(TurretForms.FORMS[form]["kind"])
 		rows_by_base[base] = kinds
 	for base: String in rows_by_base:
-		assert_eq(rows_by_base[base], [TurretForms.UPGRADE, TurretForms.FINAL, TurretForms.FINAL], "%s rows read upgrade, final, final" % base)
+		var kinds: Array = rows_by_base[base]
+		var plain: Array = [TurretForms.UPGRADE, TurretForms.FINAL, TurretForms.FINAL]
+		var branched: Array = [TurretForms.UPGRADE, TurretForms.FINAL, TurretForms.UPGRADE, TurretForms.FINAL]
+		assert_true(kinds == plain or kinds == branched, "%s rows read upgrade, final, final or upgrade, final, upgrade, final" % base)
+		if kinds == branched:
+			for form: String in TurretForms.FORMS:
+				var row: Dictionary = TurretForms.FORMS[form]
+				if row["base"] == base and row["kind"] == TurretForms.FINAL:
+					assert_true(TurretForms.FORMS.has(row.get("from", "")) and TurretForms.FORMS[row["from"]]["kind"] == TurretForms.UPGRADE, "%s names the upgrade it caps" % form)
 	assert_eq(TurretEvolution.bases(), rows_by_base.keys(), "Bases keep the table's order")
 
 func test_named_behaviours_and_visuals_resolve_to_the_right_kind_of_script() -> void:

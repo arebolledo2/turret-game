@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bnm2fwqoueqaf"
-path="res://.godot/imported/scatter_1.png-a686395d3abe8be4b36e97814154c912.ctex"
+uid="uid://cogb4mp2cndau"
+path="res://.godot/imported/greatbow.png-bb97b5a018c49351635953062bbeb56a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/scatter_1.png"
-dest_files=["res://.godot/imported/scatter_1.png-a686395d3abe8be4b36e97814154c912.ctex"]
+source_file="res://assets/ui/turrets/greatbow.png"
+dest_files=["res://.godot/imported/greatbow.png-bb97b5a018c49351635953062bbeb56a.ctex"]
 
 [params]
 

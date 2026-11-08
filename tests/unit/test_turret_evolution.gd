@@ -1,18 +1,19 @@
 extends GutTest
 
-func test_level_5_offers_exactly_one_upgrade() -> void:
+func test_level_5_offers_each_bases_upgrades() -> void:
 	var growth := TurretProgression.new()
 	assert_eq(growth.evolution_options("normal"), [] as Array[String], "Nothing before the first milestone")
 	assert_false(growth.evolve("normal", "machine_gun"))
 	growth.award(110)
 	assert_eq(growth.level, 5)
-	assert_eq(growth.evolution_options("normal"), ["machine_gun"])
-	assert_eq(growth.evolution_options("melee"), ["saber"])
+	assert_eq(growth.evolution_options("normal"), ["machine_gun", "scatter"], "Ion has two level-5 branches")
+	assert_eq(growth.evolution_options("melee"), ["saber", "gunblade"])
+	assert_eq(growth.evolution_options("plasma"), ["siege"], "A base with one upgrade offers just that")
 	assert_false(growth.evolve("normal", "omnifire"), "A level-10 final cannot be taken at level 5")
 	assert_false(growth.evolve("normal", "saber"), "Another base's upgrade is not offered")
 	assert_eq(growth.evolution_stage, 0)
 
-func test_level_10_offers_the_two_finals_and_the_choice_is_final() -> void:
+func test_level_10_offers_the_capstone_of_the_branch_taken_and_the_choice_is_final() -> void:
 	var growth := TurretProgression.new()
 	growth.award(389)
 	var before := growth.snapshot()
@@ -21,11 +22,12 @@ func test_level_10_offers_the_two_finals_and_the_choice_is_final() -> void:
 	assert_eq(growth.evolution_form, "machine_gun")
 	assert_eq(growth.evolution_stage, 1)
 	assert_eq(growth.pending_evolutions, [10])
-	assert_eq(growth.evolution_options("normal"), ["cyclone_gatling", "omnifire"])
+	assert_eq(growth.evolution_options("normal"), ["cyclone_gatling"], "The level-5 pick decides the level-10 form")
 	assert_false(growth.evolve("normal", "machine_gun"), "The upgrade cannot be taken twice")
+	assert_false(growth.evolve("normal", "omnifire"), "The other branch's capstone is not offered")
 	assert_false(growth.evolve("normal", "stormblade"), "A final of another base is not offered")
-	assert_true(growth.evolve("normal", "omnifire"))
-	assert_eq(growth.evolution_form, "omnifire")
+	assert_true(growth.evolve("normal", "cyclone_gatling"))
+	assert_eq(growth.evolution_form, "cyclone_gatling")
 	assert_eq(growth.evolution_stage, 2)
 	assert_true(growth.pending_evolutions.is_empty())
 	assert_false(growth.evolve("normal", "cyclone_gatling"), "Only one final form per turret")
@@ -34,10 +36,10 @@ func test_level_10_offers_the_two_finals_and_the_choice_is_final() -> void:
 	assert_eq(growth.level, before.level)
 	assert_eq(growth.total_xp, before.total_xp)
 	assert_eq(growth.xp, before.xp)
-	assert_eq(TurretEvolution.form_name("omnifire"), "Omnifire")
+	assert_eq(TurretEvolution.form_name("cyclone_gatling"), "Cyclone Gatling")
 	assert_eq(before.evolution_stage, 0, "Earlier settlement snapshots remain frozen")
 	assert_eq(before.evolution_form, "")
-	assert_eq(growth.snapshot().evolution_form, "omnifire")
+	assert_eq(growth.snapshot().evolution_form, "cyclone_gatling")
 
 func test_level_10_final_cannot_be_taken_before_the_level_5_upgrade() -> void:
 	var growth := TurretProgression.new()
@@ -54,10 +56,11 @@ func test_a_single_award_crossing_both_levels_queues_both_in_order() -> void:
 	growth.award(389)
 	assert_eq(growth.level, 10)
 	assert_eq(growth.pending_evolutions, [5, 10])
-	assert_eq(growth.evolution_options("bow"), ["repeater_bow"], "Only the upgrade is offered first")
+	assert_eq(growth.evolution_options("bow"), ["repeater_bow", "greatbow"], "Only the upgrades are offered first")
 	assert_false(growth.evolve("bow", "arrowstorm"))
-	assert_true(growth.evolve("bow", "repeater_bow"))
-	assert_eq(growth.evolution_options("bow"), ["arrowstorm", "titan_bow"])
+	assert_true(growth.evolve("bow", "greatbow"))
+	assert_eq(growth.evolution_options("bow"), ["titan_bow"])
+	assert_false(growth.evolve("bow", "arrowstorm"), "Arrowstorm caps the Repeater Bow, not the Greatbow")
 	assert_true(growth.evolve("bow", "titan_bow"))
 	assert_eq(growth.evolution_form, "titan_bow")
 
@@ -65,19 +68,38 @@ func test_no_third_evolution_appears_after_level_10() -> void:
 	var growth := TurretProgression.new()
 	growth.award(896)
 	assert_true(growth.evolve("shock", "resonator"))
-	assert_true(growth.evolve("shock", "thunder_spear"))
+	assert_false(growth.evolve("shock", "thunder_spear"), "Thunder Spear caps the Focused Lance")
+	assert_true(growth.evolve("shock", "resonance_engine"))
 	growth.award(TurretProgression.cost_to_next(growth.level) * 12)
 	assert_gt(growth.level, 15)
 	assert_true(growth.pending_evolutions.is_empty())
 	assert_eq(growth.evolution_options("shock"), [] as Array[String])
 	assert_false(growth.evolve("shock", "resonance_engine"))
 
-func test_every_base_has_one_upgrade_and_two_named_finals() -> void:
-	assert_eq(TurretEvolution.form_ids().size(), TurretEvolution.bases().size() * 3, "Every base has one upgrade and two finals")
+const TWO_BRANCH_BASES: Array[String] = ["normal", "melee", "bow", "flamethrower", "bowling", "shock"]
+
+func test_two_branch_bases_pair_each_upgrade_with_its_own_capstone() -> void:
+	for base: String in TWO_BRANCH_BASES:
+		var upgrades := TurretEvolution.options(base, 0)
+		assert_eq(upgrades.size(), 2, "%s has two level-5 branches" % base)
+		var capstones: Array[String] = []
+		for upgrade: String in upgrades:
+			var finals := TurretEvolution.options(base, 1, upgrade)
+			assert_eq(finals.size(), 1, "%s leads to exactly one level-10 form" % upgrade)
+			assert_eq(TurretEvolution.upgrade_of(finals[0]), upgrade)
+			assert_eq(TurretEvolution.upgrade_of(upgrade), upgrade)
+			capstones.append(finals[0])
+		assert_eq(capstones.size(), 2)
+		assert_ne(capstones[0], capstones[1], "%s: the branches end differently" % base)
+	assert_eq(TurretEvolution.options("normal", 1), ["cyclone_gatling", "omnifire"], "With no upgrade given every final is listed")
+	assert_eq(TurretEvolution.options("plasma", 1, "siege"), ["worldbreaker", "constellation"], "Finals with no `from` stay open to the upgrade")
+
+func test_every_base_has_its_upgrades_and_two_named_finals() -> void:
+	assert_eq(TurretEvolution.form_ids().size(), TurretEvolution.bases().size() * 3 + TWO_BRANCH_BASES.size(), "Three forms per base, plus a second upgrade on each two-branch base")
 	for base: String in TurretEvolution.bases():
 		var upgrades := TurretEvolution.options(base, 0)
 		var finals := TurretEvolution.options(base, 1)
-		assert_eq(upgrades.size(), 1, "%s has one level-5 upgrade" % base)
+		assert_eq(upgrades.size(), 2 if base in TWO_BRANCH_BASES else 1, "%s has its level-5 upgrades" % base)
 		assert_eq(finals.size(), 2, "%s has two level-10 finals" % base)
 		assert_true(TurretEvolution.options(base, 2).is_empty())
 		assert_true(TurretEvolution.options(base, -1).is_empty())

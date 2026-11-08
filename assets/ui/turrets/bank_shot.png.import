@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://biyukmjnxwesj"
-path="res://.godot/imported/greatbow_1.png-85d14d627f4154517980e0f43754c217.ctex"
+uid="uid://iaxw3qyjiryi"
+path="res://.godot/imported/bank_shot.png-d028771257c93ec24becb170b1afe567.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/greatbow_1.png"
-dest_files=["res://.godot/imported/greatbow_1.png-85d14d627f4154517980e0f43754c217.ctex"]
+source_file="res://assets/ui/turrets/bank_shot.png"
+dest_files=["res://.godot/imported/bank_shot.png-d028771257c93ec24becb170b1afe567.ctex"]
 
 [params]
 
