@@ -626,6 +626,17 @@
       "meshes": 18,
       "materials": 7,
       "iteration": 4
+    },
+    {
+      "id": "tech_vault",
+      "source": "art-source/clockwork-pop/tech_vault/build_tech_vault.py",
+      "model": "assets/models/clockwork/cp_tech_vault.glb",
+      "reference": "art-source/clockwork-pop/references/tech_vault.png",
+      "sha256": "9702f03ee7a40704eb4419cde8750fafc999d2b00d528ee19fc605b1756dc85a",
+      "triangles": 73006,
+      "meshes": 14,
+      "materials": 12,
+      "iteration": 5
     }
   ]
 }

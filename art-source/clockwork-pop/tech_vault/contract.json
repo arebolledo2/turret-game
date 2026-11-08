@@ -1,0 +1,30 @@
+{
+  "name": "tech_vault",
+  "ref": "ref/tech_vault.png",
+  "build": "build_tech_vault.py",
+  "glb": "tech_vault.glb",
+  "required_nodes": [
+    "Body",
+    "Core",
+    "Ring_Outer",
+    "Ring_Inner"
+  ],
+  "limits": {
+    "height": [
+      0.8,
+      1.25
+    ],
+    "max_width": 1.4,
+    "ground_gap": [
+      -0.02,
+      0.1
+    ]
+  },
+  "targets": {
+    "max_texture_px": 1024,
+    "max_textures": 4
+  },
+  "render_background": "#8d99a6",
+  "require_textures": true,
+  "required_animations": []
+}

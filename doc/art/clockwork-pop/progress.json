@@ -452,6 +452,13 @@
       "status": "review",
       "preview": "previews/drone_bay.png",
       "metrics": "12,246 triangles \u00c2\u00b7 29 meshes \u00c2\u00b7 13 materials"
+    },
+    {
+      "key": "tech_vault",
+      "name": "Tech Vault",
+      "status": "review",
+      "preview": "previews/tech_vault.png",
+      "metrics": "73,006 triangles \u00c2\u00b7 14 meshes \u00c2\u00b7 12 materials"
     }
   ],
   "events": [
@@ -782,6 +789,10 @@
     {
       "stage": "Export: shock",
       "text": "Glass Dome Shock replaces the Resonance Bell: harness iteration 4 of cp_shock_dome3-v1 passed the contract and was reviewed in Godot (showcase and game camera)."
+    },
+    {
+      "stage": "Export: tech_vault",
+      "text": "Reviewed harness iteration 5; contract passed. Copied source and export into game collection. Godot import and runtime review remain pending."
     }
   ],
   "checks": {

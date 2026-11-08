@@ -27,6 +27,8 @@ func test_imported_roster_has_the_required_articulation() -> void:
 			required = ["FlightRoot", "Arrow"]
 		elif key == "bowling_ball":
 			required = [] # Single centered rigid mesh, no articulated markers.
+		elif key == "tech_vault":
+			required = ["Body", "Core", "Ring_Outer", "Ring_Inner"]
 		elif key == "core":
 			required = ["Body", "Orb", "Ring_Outer", "Ring_Middle", "Ring_Inner"]
 		elif key == "hero":

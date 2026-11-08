@@ -1,0 +1,81 @@
+{
+ "triangles": 73006,
+ "mesh_objects": 14,
+ "materials": 12,
+ "loose_components": 8206,
+ "size_m": [
+  1.1,
+  1.059,
+  1.0
+ ],
+ "min_z": 0.0,
+ "centre_xy": [
+  0.033,
+  0.001
+ ],
+ "origin_node": null,
+ "origin_xy": [
+  0.033,
+  0.001
+ ],
+ "missing_nodes": [],
+ "empty_leg_pivots": [],
+ "textures": [
+  [
+   "vault_circuit",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "vault_metal_base",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "vault_metal_normal",
+   [
+    1024,
+    1024
+   ]
+  ],
+  [
+   "vault_metal_orm",
+   [
+    1024,
+    1024
+   ]
+  ]
+ ],
+ "animations": [],
+ "checks": {
+  "required_nodes_present": true,
+  "each_required_node_has_geometry": true,
+  "height_ok": true,
+  "width_ok": true,
+  "ground_gap_ok": true,
+  "origin_xy_centred": true,
+  "has_meshes": true,
+  "textures_present": true
+ },
+ "passed": true,
+ "limits": {
+  "height": [
+   0.8,
+   1.25
+  ],
+  "max_width": 1.4,
+  "ground_gap": [
+   -0.02,
+   0.1
+  ]
+ },
+ "targets": {
+  "max_texture_px": 1024,
+  "max_textures": 4
+ },
+ "target_overruns": []
+}

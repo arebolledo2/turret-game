@@ -17,6 +17,13 @@ func _leg_sides() -> Array[String]:
 ## A destructible cache with a health bar; retain the original plinth for comparison.
 func _build_drop_model() -> Node3D:
 	var model := Node3D.new()
+	if ClockworkModels.available("tech_vault"):
+		var vault := ClockworkModels.instantiate("tech_vault")
+		# Exported window faces -Z; the fixed gameplay camera views from +Z.
+		vault.rotation.y = PI
+		model.add_child(vault)
+		TechDropVisual.new().setup(vault)
+		return model
 	if ClockworkModels.available("dropbox"):
 		var chest := ClockworkModels.instantiate("dropbox")
 		# Exported latch faces -Z; the fixed gameplay camera views from +Z.
