@@ -19,6 +19,8 @@ var carried: bool = false:
 		if value:
 			reset_entrench()
 var crossfire_muzzles: Array[Node3D] = []
+## A Storm Network's coil heads, in firing order (empty for the other Tesla forms: they fire from `muzzle`).
+var chain_muzzles: Array[Node3D] = []
 var gun_muzzles: Array[Node3D] = []
 var bow_burst := ShotBurst.new(.09)
 var flame_emitters: Array[Node3D] = []
@@ -157,6 +159,7 @@ func _build_form_visual() -> void:
 	bowling_hardware = handles.bowling_hardware if handles else null
 	gun_muzzles.assign(handles.gun_muzzles if handles else [])
 	crossfire_muzzles.assign(handles.crossfire_muzzles if handles else [])
+	chain_muzzles.assign(handles.chain_muzzles if handles else [])
 
 func invalidate_stats() -> void:
 	stats_valid = false
@@ -349,6 +352,8 @@ func _fire_pulse(stats: TurretStats, range_metres: float) -> void:
 	_reset_cooldown(stats)
 
 func _fire_chain(stats: TurretStats) -> void:
+	if form and form.fire_chain(stats):
+		return
 	world.effects.show_muzzle(muzzle.global_position, GameEnums.DamageType.ELECTRIC)
 	world.combat.chain(muzzle.global_position, target, _new_shot(stats), stats.chain_count,
 		stats.chain_range_metres, stats.chain_decay, world.enemies)

@@ -8,7 +8,8 @@ func test_level_5_offers_each_bases_upgrades() -> void:
 	assert_eq(growth.level, 5)
 	assert_eq(growth.evolution_options("normal"), ["machine_gun", "scatter"], "Ion has two level-5 branches")
 	assert_eq(growth.evolution_options("melee"), ["saber", "gunblade"])
-	assert_eq(growth.evolution_options("plasma"), ["siege"], "A base with one upgrade offers just that")
+	assert_eq(growth.evolution_options("plasma"), ["siege", "mortar"])
+	assert_eq(growth.evolution_options("sniper"), ["piercer_rifle"], "A base with one upgrade offers just that")
 	assert_false(growth.evolve("normal", "omnifire"), "A level-10 final cannot be taken at level 5")
 	assert_false(growth.evolve("normal", "saber"), "Another base's upgrade is not offered")
 	assert_eq(growth.evolution_stage, 0)
@@ -76,7 +77,7 @@ func test_no_third_evolution_appears_after_level_10() -> void:
 	assert_eq(growth.evolution_options("shock"), [] as Array[String])
 	assert_false(growth.evolve("shock", "resonance_engine"))
 
-const TWO_BRANCH_BASES: Array[String] = ["normal", "melee", "bow", "flamethrower", "bowling", "shock"]
+const TWO_BRANCH_BASES: Array[String] = ["normal", "melee", "bow", "flamethrower", "bowling", "plasma", "shock", "tesla"]
 
 func test_two_branch_bases_pair_each_upgrade_with_its_own_capstone() -> void:
 	for base: String in TWO_BRANCH_BASES:
@@ -92,7 +93,7 @@ func test_two_branch_bases_pair_each_upgrade_with_its_own_capstone() -> void:
 		assert_eq(capstones.size(), 2)
 		assert_ne(capstones[0], capstones[1], "%s: the branches end differently" % base)
 	assert_eq(TurretEvolution.options("normal", 1), ["cyclone_gatling", "omnifire"], "With no upgrade given every final is listed")
-	assert_eq(TurretEvolution.options("plasma", 1, "siege"), ["worldbreaker", "constellation"], "Finals with no `from` stay open to the upgrade")
+	assert_eq(TurretEvolution.options("sniper", 1, "piercer_rifle"), ["horizon_piercer", "overwatch"], "Finals with no `from` stay open to the upgrade")
 
 func test_every_base_has_its_upgrades_and_two_named_finals() -> void:
 	assert_eq(TurretEvolution.form_ids().size(), TurretEvolution.bases().size() * 3 + TWO_BRANCH_BASES.size(), "Three forms per base, plus a second upgrade on each two-branch base")
@@ -140,7 +141,7 @@ func test_form_stats_keep_the_authored_upgrade_and_final_numbers() -> void:
 	assert_eq(upgrade.pierce, 0)
 	assert_eq(final.pierce, 1)
 	assert_eq(TurretEvolution.base_stats("normal", ""), TurretRegistry.get_base_stats("normal"), "No form leaves the base stats alone")
-	assert_eq(TurretEvolution.base_stats("tesla", "storm_network"), TurretRegistry.get_base_stats("tesla"), "Unbuilt forms add no stats yet")
+	assert_eq(TurretEvolution.base_stats("tesla", "storm_network").chain_count, 10, "The Storm Network chains up to 10 jumps")
 	assert_eq(TurretEvolution.volley_size("repeater_bow"), 2)
 	assert_eq(TurretEvolution.volley_size("arrowstorm"), 5)
 

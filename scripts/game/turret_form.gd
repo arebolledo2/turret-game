@@ -91,6 +91,10 @@ func fire_pulse(_stats: TurretStats, _range_metres: float, _target: CombatActor)
 func before_instant(_stats: TurretStats, _range_metres: float) -> void:
 	pass
 
+## Chain-mode attack at `actor.target`. Returns true when the form fired it (the cooldown is the form's to reset), false for the plain chain.
+func fire_chain(_stats: TurretStats) -> bool:
+	return false
+
 ## Projectile-mode attack along `heading` (toward the actor's target). Returns false to use the default single shot.
 func fire_projectile(_stats: TurretStats, _heading: Vector3) -> bool:
 	return false

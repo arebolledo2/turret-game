@@ -166,4 +166,17 @@ How it is wired:
 - Behaviour: `ScatterForm` falls back to a three-way spread when the form has no crossfire exits; `LanceForm` strikes a whole lane only with the `lane` param (Thunder Spear); the Gunblade is `GunbladeForm` with `barrel_burst` 1 and the same visual builder as the Stormblade; the bow, flame and bowling visuals accept the new ids.
 - Stats are the old stage-1 numbers from the three-stage tree. They have not been re-benched against the new finals (retune is still open).
 - Portraits renamed from `<branch>_1.png` to the form id. The stale `*_2.png` portraits of retired stage-2 forms are still in `assets/ui/turrets/` and should be deleted.
-- Not done: Plasma (Mortar → Constellation) and Tesla (Capacitor → Thunderhead) second branches are unbuilt; the seven newer turrets (Sniper, Quake, Decoy, Scrap Press, Mine Layer, Laser, Drone Bay) need new second level-5 forms.
+- Not done: the seven newer turrets (Sniper, Quake, Decoy, Scrap Press, Mine Layer, Laser, Drone Bay) need new second level-5 forms.
+
+### Plasma and Tesla (8 Nov 2026)
+
+| Base | Branch A | Branch B |
+|---|---|---|
+| Plasma | Siege Cannon → Worldbreaker | Mortar → Constellation |
+| Tesla | Forked Coil → Storm Network | Capacitor → Thunderhead |
+
+- `MortarForm` (`scripts/game/mortar_form.gd`): the shell marks the ground under the target and lands `delay` (1.1 s) later, whether or not the enemy stays; no knockback; a filling ring is the marker. Constellation lands a star (centre plus 6 blasts 1.7 m out) and repeats it once 0.5 s later. Blasts are copies of one shot rolled at launch, so item modifiers are not applied twice. `clear()` drops queued blasts at wave end.
+- `ChainForm` (`scripts/game/chain_form.gd`): `TurretForm.fire_chain` is a new hook. `fork` makes the first jump fork in two (`CombatDirector.chain_forked`, branches take turns so none starves another, no enemy is hit twice); `shared_budget` splits `chain_count` between the forks (Storm Network: 10 jumps, 5 each). Capacitor and Thunderhead charge through a long cooldown with a `ChargeMeter` ring that fills as it runs; Thunderhead's strike leaves a storm cloud for 2.5 s that arcs every 0.5 s at 30% damage.
+- `TeslaEvolutionVisual`: fork prongs (Forked Coil), capacitor cans and meter (Capacitor), a second coil head `Muzzle2` (Storm Network, fires in turn with the chassis muzzle via `TurretActor.chain_muzzles`), a meter ring (Thunderhead). `SiegeEvolutionVisual` now also builds the Mortar (barrel lifted) and Constellation (halo of 7 stars).
+- Portraits: `mortar.png`, `constellation.png` rendered with `render_shop_portraits`; `forked_coil.png` and `capacitor.png` re-rendered from the Tuning Fork chassis with the new hardware.
+- Stats are first-pass numbers (single-target DPS before levels: Mortar 18, Constellation 24 against a lone target and far more on a cluster, Forked Coil 14.4, Storm Network 21, Capacitor 14.3, Thunderhead 28). Not benched; the Storm Network's second head position and the Thunderhead meter were not checked in the arena.

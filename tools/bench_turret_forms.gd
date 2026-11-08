@@ -33,6 +33,8 @@ extends Node
 ## whole cell's damage, which is how a team buff such as the Overwatch mark is measured.
 const FORMS := [
 	["normal", ""], ["shock", ""], ["tesla", ""],
+	["plasma", "siege"], ["plasma", "worldbreaker"], ["plasma", "mortar"], ["plasma", "constellation"],
+	["tesla", "forked_coil"], ["tesla", "storm_network"], ["tesla", "capacitor"], ["tesla", "thunderhead"],
 	["shock", "resonator"], ["shock", "resonance_engine"], ["shock", "focused_lance"], ["shock", "thunder_spear"],
 	["normal", "machine_gun"], ["normal", "cyclone_gatling"], ["normal", "scatter"], ["normal", "omnifire"],
 	["plasma", "siege"], ["plasma", "worldbreaker"],

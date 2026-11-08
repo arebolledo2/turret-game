@@ -61,6 +61,13 @@ extends RefCounted
 ##                  hunt_bonus, hunt_reach, kill_drone_seconds, max_extra  Reaper Swarm: extra damage (0.6 = +60%) to Kites, Lobbers
 ##                              and Tenders, the metres from the hero within which the drones dive at them, and the seconds and
 ##                              the most (at a time) of the extra drones a kill launches
+##                  delay, elevation, points, star_radius, repeats, repeat_delay  Mortar: seconds from firing to the blast landing, the
+##                              barrel's lift (degrees); Constellation: blasts on the ring round the centre blast, the ring's
+##                              metres, and how many more times the whole star lands (`repeat_delay` seconds apart)
+##                  fork, shared_budget, meter, storm_seconds, storm_interval, storm_share, storm_jumps  Tesla: the first
+##                              jump forks in two (the forks split `chain_count` when shared), a charge meter on the chassis,
+##                              and Thunderhead's storm cloud: how long it hangs, the seconds between its arcs, their share
+##                              of the strike's damage and their jumps
 ##                  layers, burner_pairs, burner_fan, lance_segments, braces, bumpers, housing_pairs, barrel_bands
 ##                              hardware counts and angles for the visual builders
 ## `BASES` holds the same kind of facts for a base turret that has not evolved yet (and for what all its forms share).
@@ -256,6 +263,8 @@ const FORMS: Dictionary = {
 		"params": {"bumpers": 3},
 	},
 	# --- Plasma ---
+	# Siege Cannon and Worldbreaker are direct shells. Mortar and Constellation are indirect: the shell lands `delay` seconds
+	# after it is fired on the ground under the target (blast radius is `aoe_radius`, 100 = 1 m), with no knockback.
 	"siege": {
 		"base": "plasma", "kind": UPGRADE, "name": "Siege Cannon", "model": "siege", "implemented": true,
 		"description": "Slow, heavy shells explode over a large area and push enemies back.",
@@ -264,17 +273,26 @@ const FORMS: Dictionary = {
 		"shot": {"radius": .22},
 	},
 	"worldbreaker": {
-		"base": "plasma", "kind": FINAL, "name": "Worldbreaker", "model": "siege", "implemented": true,
+		"base": "plasma", "kind": FINAL, "from": "siege", "name": "Worldbreaker", "model": "siege", "implemented": true,
 		"description": "Slow, heavy shells explode over a large area and push enemies back.",
 		"stats": {"damage": 80.0, "fire_rate": .55, "range": 330.0, "projectile_speed": 350.0, "aoe_radius": 185.0, "knockback_force": 360.0},
 		"visual": "SiegeEvolutionVisual",
 		"shot": {"radius": .34},
 		"params": {"housing_pairs": 2, "barrel_bands": 3},
 	},
+	"mortar": {
+		"base": "plasma", "kind": UPGRADE, "name": "Mortar", "model": "siege", "implemented": true,
+		"description": "A lobbed shell marks the ground under its target and lands 1.1 seconds later: 30 damage in a 1.15 metre blast from up to 4 metres away, with no knockback.",
+		"stats": {"damage": 30.0, "fire_rate": .6, "range": 400.0, "projectile_speed": 350.0, "aoe_radius": 115.0, "knockback_force": 0.0},
+		"behaviour": "MortarForm", "visual": "SiegeEvolutionVisual",
+		"params": {"delay": 1.1, "elevation": 24.0},
+	},
 	"constellation": {
-		"base": "plasma", "kind": FINAL, "name": "Constellation", "model": "siege", "implemented": false,
-		"description": "",
-		"stats": {},
+		"base": "plasma", "kind": FINAL, "from": "mortar", "name": "Constellation", "model": "siege", "implemented": true,
+		"description": "The shell lands as a star: a centre blast and six more on a ring 1.7 metres out, then the whole star again 0.5 seconds later. 24 damage per blast in a 0.8 metre radius, no knockback.",
+		"stats": {"damage": 24.0, "fire_rate": .5, "range": 400.0, "projectile_speed": 350.0, "aoe_radius": 80.0, "knockback_force": 0.0},
+		"behaviour": "MortarForm", "visual": "SiegeEvolutionVisual",
+		"params": {"delay": 1.1, "elevation": 30.0, "points": 6, "star_radius": 1.7, "repeats": 1, "repeat_delay": .5},
 	},
 	# --- Shock ---
 	"resonator": {
@@ -304,21 +322,37 @@ const FORMS: Dictionary = {
 		"behaviour": "LanceForm",
 		"params": {"lane": true},
 	},
-	# --- Tesla (registered, not built yet) ---
+	# --- Tesla ---
+	# Chain lightning: `chain_count` jumps after the first hit, each hit `chain_decay` times the one before, jumps up to
+	# `chain_range` away. Forked Coil and Capacitor use the Tuning Fork Conductor chassis (model key `tesla`);
+	# `TeslaEvolutionVisual` adds the per-form hardware and `ChainForm` runs the forks, charge meter and storm cloud.
 	"forked_coil": {
-		"base": "tesla", "kind": UPGRADE, "name": "Forked Coil", "model": "tesla", "implemented": false,
-		"description": "",
-		"stats": {},
+		"base": "tesla", "kind": UPGRADE, "name": "Forked Coil", "model": "tesla", "implemented": true,
+		"description": "The first jump forks in two, and each fork chains up to 3 times: 12 damage, each hit 70% of the one before.",
+		"stats": {"damage": 12.0, "range": 240.0, "chain_count": 3, "chain_range": 240.0},
+		"behaviour": "ChainForm", "visual": "TeslaEvolutionVisual",
+		"params": {"fork": true},
 	},
 	"storm_network": {
-		"base": "tesla", "kind": FINAL, "name": "Storm Network", "model": "storm_network", "implemented": false,
-		"description": "",
-		"stats": {},
+		"base": "tesla", "kind": FINAL, "from": "forked_coil", "name": "Storm Network", "model": "storm_network", "implemented": true,
+		"description": "Two coil heads fire in turn, and every strike forks after its first hit. Up to 10 jumps shared between the forks, each hit 80% of the one before.",
+		"stats": {"damage": 14.0, "fire_rate": 1.5, "range": 260.0, "chain_count": 10, "chain_range": 260.0, "chain_decay": .8},
+		"behaviour": "ChainForm", "visual": "TeslaEvolutionVisual",
+		"params": {"fork": true, "shared_budget": true},
+	},
+	"capacitor": {
+		"base": "tesla", "kind": UPGRADE, "name": "Capacitor", "model": "tesla", "implemented": true,
+		"description": "Stores a charge for about 1.8 seconds between strikes, then discharges 26 damage and up to 4 jumps.",
+		"stats": {"damage": 26.0, "fire_rate": .55, "range": 240.0, "chain_count": 4, "chain_range": 240.0, "chain_decay": .75},
+		"behaviour": "ChainForm", "visual": "TeslaEvolutionVisual",
+		"params": {"meter": true},
 	},
 	"thunderhead": {
-		"base": "tesla", "kind": FINAL, "name": "Thunderhead", "model": "thunderhead", "implemented": false,
-		"description": "",
-		"stats": {},
+		"base": "tesla", "kind": FINAL, "from": "capacitor", "name": "Thunderhead", "model": "thunderhead", "implemented": true,
+		"description": "Charges for 3 seconds on a visible meter, then discharges 34 damage and up to 7 jumps. The strike leaves a storm cloud over its target for 2.5 seconds that fires a 2-jump arc every 0.5 seconds at 30% damage.",
+		"stats": {"damage": 34.0, "fire_rate": .33, "range": 260.0, "chain_count": 7, "chain_range": 260.0, "chain_decay": .8},
+		"behaviour": "ChainForm", "visual": "TeslaEvolutionVisual",
+		"params": {"meter": true, "storm_seconds": 2.5, "storm_interval": .5, "storm_share": .3, "storm_jumps": 2},
 	},
 	# --- Sniper ---
 	# Single-target DPS (before level and item bonuses) is 14 base, 20.8 Piercer Rifle, 31.5 Horizon Piercer, 23.5 Overwatch.

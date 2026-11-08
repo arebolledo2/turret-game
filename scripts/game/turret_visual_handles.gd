@@ -9,3 +9,5 @@ var bowling_hardware: BowlingEvolutionVisual
 var gun_muzzles: Array[Node3D] = []
 ## Omnifire's radial exits.
 var crossfire_muzzles: Array[Node3D] = []
+## Storm Network: the coil heads that fire in turn (the first is the chassis muzzle).
+var chain_muzzles: Array[Node3D] = []

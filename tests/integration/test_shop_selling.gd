@@ -123,8 +123,8 @@ func test_rolled_levels_favour_low_levels_and_forms_match_levels() -> void:
 	assert_between(float(counts[1]) / 3000.0, .48, .62)
 	assert_lte(counts.keys().max(), ArenaShop.max_offer_level("plasma"))
 
-func test_turrets_without_built_forms_are_not_offered_past_the_milestone() -> void:
-	assert_lte(ArenaShop.max_offer_level("tesla"), 9)
+func test_turrets_are_not_offered_past_a_milestone_they_cannot_evolve_through() -> void:
+	assert_eq(ArenaShop.max_offer_level("tesla"), GameConstants.SHOP_TURRET_MAX_LEVEL, "Tesla has built forms at both milestones")
 	for type_id in ArenaShop.TURRETS:
 		var top := ArenaShop.max_offer_level(type_id)
 		assert_gte(top, 4)

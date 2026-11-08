@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cmtwel83laoc0"
-path="res://.godot/imported/relay_1.png-50290207951f36873b17747dfeefc702.ctex"
+uid="uid://ko3hy61e7k01"
+path="res://.godot/imported/forked_coil.png-74f0787c756ce34be592e2a7f5f935f6.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/relay_1.png"
-dest_files=["res://.godot/imported/relay_1.png-50290207951f36873b17747dfeefc702.ctex"]
+source_file="res://assets/ui/turrets/forked_coil.png"
+dest_files=["res://.godot/imported/forked_coil.png-74f0787c756ce34be592e2a7f5f935f6.ctex"]
 
 [params]
 

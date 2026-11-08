@@ -67,8 +67,9 @@ func hit_from_shot(target: CombatActor, at: Vector3, heading: Vector3, shot: Com
 ## Instant chain lightning: hits `primary`, then jumps to the nearest unhit living enemy within
 ## `jump_range`, up to `jumps` more times, each hit scaled by `decay`.
 func chain(origin: Vector3, primary: CombatActor, shot: CombatShot3D, jumps: int, jump_range: float,
-		decay: float, candidates: Array[CombatActor]) -> int:
-	var struck: Array[CombatActor] = []
+		decay: float, candidates: Array[CombatActor], shared_struck: Array[CombatActor] = []) -> int:
+	# `shared_struck` lets a forked chain skip what a sibling branch already hit.
+	var struck: Array[CombatActor] = shared_struck
 	var current := primary
 	var from := origin
 	var damage := shot.damage
@@ -76,25 +77,72 @@ func chain(origin: Vector3, primary: CombatActor, shot: CombatShot3D, jumps: int
 	for step in range(jumps + 1):
 		if not is_instance_valid(current) or current.dead:
 			break
-		var to := current.position + Vector3(0, .45, 0)
-		chain_arc.emit(from, to, step)
-		struck.append(current)
-		var next := _nearest_unstruck(current.position, jump_range, struck, candidates)
-		var insurance := 1.0
-		if not next and current.world.item_effects.owns("arc_insurance"):
-			insurance += minf(.24, .08 * float(jumps - step))
-		var jump_hit := CombatHit3D.new(damage * insurance, from, Vector3.ZERO, shot.damage_type)
-		jump_hit.critical = shot.critical
-		jump_hit.source_id = shot.source_id
-		jump_hit.attack_families = shot.attack_families.duplicate()
-		jump_hit.slow_intensity = shot.slow_intensity
-		jump_hit.slow_duration = shot.slow_duration
-		if apply_hit(current, jump_hit) > 0.0:
-			hits += 1
-		from = to
+		var link := _chain_link(current, from, damage, shot, step, jumps, jump_range, struck, candidates)
+		hits += int(link["hit"])
+		from = link["to"]
 		damage *= decay
-		current = next
+		current = link["next"]
 	return hits
+
+## Forked chain lightning (the Tesla's Forked Coil and Storm Network): hits `primary`, then the `forks` nearest unhit enemies
+## each start a branch that jumps on, all branches taking their turn jump by jump so no branch starves another of targets.
+## Each branch makes `jumps_each` more hits after its own first (a fork's first hit counts as its first jump). No enemy is struck
+## twice. Returns the number of hits that landed.
+func chain_forked(origin: Vector3, primary: CombatActor, shot: CombatShot3D, jumps_each: int, jump_range: float,
+		decay: float, candidates: Array[CombatActor], forks: int = 2) -> int:
+	var struck: Array[CombatActor] = []
+	var hits := chain(origin, primary, shot, 0, 0.0, decay, candidates, struck)
+	var heads: Array[CombatActor] = []
+	var taken: Array[CombatActor] = struck.duplicate()
+	for fork in forks:
+		var next := _nearest_unstruck(primary.position, jump_range, taken, candidates)
+		if not next:
+			break
+		heads.append(next)
+		taken.append(next)
+	# Both heads count as struck before either branch runs, so neither steps onto the other's head.
+	struck.append_array(heads)
+	var froms: Array[Vector3] = []
+	var damages: Array[float] = []
+	for head in heads:
+		froms.append(primary.position + Vector3(0, .45, 0))
+		damages.append(shot.damage * decay)
+	for step in range(jumps_each):
+		for index in heads.size():
+			var current := heads[index]
+			if not is_instance_valid(current) or current.dead:
+				heads[index] = null
+				continue
+			var link := _chain_link(current, froms[index], damages[index], shot, step + 1, jumps_each - 1, jump_range, struck, candidates)
+			hits += int(link["hit"])
+			froms[index] = link["to"]
+			damages[index] *= decay
+			heads[index] = link["next"]
+			if heads[index] != null:
+				struck.append(heads[index])
+	return hits
+
+## One strike of a chain: the arc to `current`, the hit it takes, and the next enemy to jump to (null at the end).
+func _chain_link(current: CombatActor, from: Vector3, damage: float, shot: CombatShot3D, step: int, jumps: int,
+		jump_range: float, struck: Array[CombatActor], candidates: Array[CombatActor]) -> Dictionary:
+	var to := current.position + Vector3(0, .45, 0)
+	chain_arc.emit(from, to, step)
+	struck.append(current)
+	var next := _nearest_unstruck(current.position, jump_range, struck, candidates)
+	var insurance := 1.0
+	if not next and current.world.item_effects.owns("arc_insurance"):
+		insurance += minf(.24, .08 * float(jumps - step))
+	var jump_hit := CombatHit3D.new(damage * insurance, from, Vector3.ZERO, shot.damage_type)
+	jump_hit.critical = shot.critical
+	jump_hit.source_id = shot.source_id
+	jump_hit.attack_families = shot.attack_families.duplicate()
+	jump_hit.slow_intensity = shot.slow_intensity
+	jump_hit.slow_duration = shot.slow_duration
+	return {"hit": apply_hit(current, jump_hit) > 0.0, "to": to, "next": next}
+
+## The nearest living enemy within `jump_range` of `at` that is not in `struck`, or null.
+func nearest_unstruck(at: Vector3, jump_range: float, struck: Array[CombatActor], candidates: Array[CombatActor]) -> CombatActor:
+	return _nearest_unstruck(at, jump_range, struck, candidates)
 
 func _nearest_unstruck(at: Vector3, jump_range: float, struck: Array[CombatActor], candidates: Array[CombatActor]) -> CombatActor:
 	var best: CombatActor = null

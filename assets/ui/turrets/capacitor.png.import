@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://btqkxwk6k3cfw"
-path="res://.godot/imported/capacitor_1.png-8be37057a6f7d4375755158d2437b9ba.ctex"
+uid="uid://da17j1la221wm"
+path="res://.godot/imported/capacitor.png-564792c196a77e41095242f10a1fe402.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/turrets/capacitor_1.png"
-dest_files=["res://.godot/imported/capacitor_1.png-8be37057a6f7d4375755158d2437b9ba.ctex"]
+source_file="res://assets/ui/turrets/capacitor.png"
+dest_files=["res://.godot/imported/capacitor.png-564792c196a77e41095242f10a1fe402.ctex"]
 
 [params]
 
