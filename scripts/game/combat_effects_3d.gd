@@ -55,7 +55,8 @@ func show_hit(actor: Node3D, hit: CombatHit3D, _amount: float) -> void:
 	var enemy := (actor as CombatActor).is_enemy
 	if enemy and hit.damage_type == GameEnums.DamageType.ELECTRIC:
 		status.mark_shocked(actor)
-	damage_numbers.show_damage(actor, _amount, not enemy, hit.critical, hit.damage_type == GameEnums.DamageType.FIRE)
+	var shown := maxf((actor as CombatActor).last_hit_damage, _amount) if enemy else _amount
+	damage_numbers.show_damage(actor, shown, not enemy, hit.critical, hit.damage_type == GameEnums.DamageType.FIRE)
 	show_burst(actor.position + Vector3(0, .5, 0), _burst_kind(hit.damage_type) if enemy else "hurt")
 	_show_spark(actor.position + Vector3(0, .45, 0), hit_material if enemy else hull_material,
 		.10 if enemy else .18, .10 if enemy else .16)

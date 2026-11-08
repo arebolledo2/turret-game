@@ -18,6 +18,8 @@ var slow_marker: MeshInstance3D
 var mark_marker: MeshInstance3D
 ## Ground ring shown while Staggered (built on first use).
 var stagger_marker: MeshInstance3D
+## Full scaled damage of the latest hit, before it is capped by remaining health. Used for damage numbers so a killing shot shows its own damage, not the health it finished off.
+var last_hit_damage: float = 0.0
 var health: float = 25.0
 var max_health: float = 25.0
 var speed: float = 2.5
@@ -186,6 +188,7 @@ func receive_hit(hit: CombatHit3D) -> float:
 		return 0.0
 	var amount := _scale_damage(hit)
 	var applied := minf(health, amount)
+	last_hit_damage = amount
 	health = maxf(0.0, health - amount)
 	_on_health_changed()
 	if brain:

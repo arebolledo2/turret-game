@@ -18,7 +18,7 @@ func before_each() -> void:
 		turret.set_physics_process(false)
 	GameStateMachine.force_transition(GameStateMachine.GameState.COMBAT)
 
-func test_numbers_use_actual_damage_and_ignore_blocked_hits() -> void:
+func test_numbers_show_full_shot_damage_even_on_kill_and_ignore_blocked_hits() -> void:
 	var enemy := world.spawn_enemy(Vector3.ZERO)
 	enemy.set_physics_process(false)
 	enemy.health = 7.5
@@ -27,8 +27,8 @@ func test_numbers_use_actual_damage_and_ignore_blocked_hits() -> void:
 	world.combat.apply_hit(enemy, hit)
 	var numbers := world.effects.damage_numbers
 	assert_eq(numbers.entries.size(), 1)
-	assert_eq(numbers.entries[0].amount, 7.5)
-	assert_eq(numbers.entries[0].label.text, "8")
+	assert_eq(numbers.entries[0].amount, 100.0, "A killing shot shows its full damage, not the health it finished off")
+	assert_eq(numbers.entries[0].label.text, "100")
 	assert_eq(numbers.entries[0].label.font_size, 84, "Crits are drawn larger instead of marked with !")
 	world.player.invulnerability = 1
 	world.combat.apply_hit(world.player, CombatHit3D.new(10))
