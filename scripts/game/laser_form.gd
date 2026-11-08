@@ -136,6 +136,8 @@ func _tick_single(delta: float, stats: TurretStats, reach: float) -> void:
 	# Ticks deal the ramp as it stood when the step began, so the beam that lands is exactly x1.
 	var multiplier := ramp_now()
 	var ticks := beam.advance(delta, stats.fire_rate)
+	if ticks > 0:
+		_glow(_origin(false))
 	for i in ticks:
 		if not beam.holds(centre, reach):
 			break
@@ -185,6 +187,7 @@ func _tick_cross(delta: float, stats: TurretStats, reach: float) -> void:
 	var multiplier := ramp_now()
 	var ticks := beam.advance(delta, stats.fire_rate)
 	if ticks > 0:
+		_glow(_origin(true))
 		var victims := ContinuousBeam.touching(actor.world.crowd, centre, directions, reach, ARM_HALF_WIDTH, MAX_VICTIMS)
 		for i in ticks:
 			for victim in victims:
@@ -194,6 +197,10 @@ func _tick_cross(delta: float, stats: TurretStats, reach: float) -> void:
 	for index in directions.size():
 		var direction := directions[index]
 		lines.set_segment(index, from + direction * ARM_START, from + direction * reach, BEAM_WIDTH + .02)
+
+## A dim light flash at the emitter on each damage tick, so a held beam keeps lighting its surroundings.
+func _glow(at: Vector3) -> void:
+	actor.world.effects.muzzle_lights.flash(at, Color(1.0, .35, .3), .6)
 
 ## The arms' unit directions on the ground now (the first is the way `Aim` faces, the rest follow evenly round).
 func arm_directions() -> Array[Vector3]:

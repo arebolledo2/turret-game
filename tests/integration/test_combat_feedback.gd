@@ -90,6 +90,27 @@ func test_feedback_caps_instances_and_remains_static_in_reduced_motion() -> void
 	assert_true(world.effects.sparks[0].visible)
 	SettingsService.set_reduced_motion(false, false)
 
+func test_muzzle_flash_lights_are_pooled_tinted_and_decay() -> void:
+	var lights := world.effects.muzzle_lights
+	for index in range(50):
+		world.effects.show_muzzle(Vector3(index, 1, 0), GameEnums.DamageType.PHYSICAL)
+	assert_eq(lights.lights.size(), MuzzleLights.MAX_LIGHTS)
+	world.effects.show_muzzle(Vector3.ZERO, GameEnums.DamageType.PLASMA)
+	var plasma := lights.lights[(lights.next_light + MuzzleLights.MAX_LIGHTS - 1) % MuzzleLights.MAX_LIGHTS]
+	assert_eq(plasma.light_color, MuzzleLights.color_for(GameEnums.DamageType.PLASMA))
+	assert_true(plasma.visible)
+	world.effects.show_muzzle(Vector3.ZERO, GameEnums.DamageType.FIRE, Color.GREEN)
+	var tinted := lights.lights[(lights.next_light + MuzzleLights.MAX_LIGHTS - 1) % MuzzleLights.MAX_LIGHTS]
+	assert_eq(tinted.light_color, Color.GREEN)
+	world.effects._physics_process(MuzzleLights.LIFETIME * .5)
+	assert_lt(tinted.light_energy, MuzzleLights.ENERGY)
+	world.effects._physics_process(MuzzleLights.LIFETIME)
+	assert_false(tinted.visible)
+	world.effects.show_muzzle(Vector3.ZERO, GameEnums.DamageType.PHYSICAL)
+	world.effects.reset()
+	for light in lights.lights:
+		assert_false(light.visible)
+
 func test_audio_and_feedback_do_not_consume_gameplay_rng() -> void:
 	var state := GameRandom.gameplay.state
 	world.audio.play_cue("plasma", Vector3.ZERO)

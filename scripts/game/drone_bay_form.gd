@@ -453,6 +453,7 @@ func _shoot(drone: Drone, enemy: CombatActor, stats: TurretStats) -> void:
 	var from := Vector3(drone.position.x, drone.height(), drone.position.z)
 	var heading := WorldGeometry.planar(enemy.position - drone.position).normalized()
 	world.effects.show_tracer(from, Vector3(enemy.position.x, .5, enemy.position.z))
+	world.effects.show_muzzle(from, shot.damage_type)
 	world.audio.play_cue("ion", from)
 	shots += 1
 	world.combat.impact(enemy, enemy.position, heading, shot, [] as Array[CombatActor])

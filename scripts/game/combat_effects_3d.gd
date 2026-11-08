@@ -45,6 +45,8 @@ var world: ArenaWorld
 var status := StatusVisuals3D.new(self)
 ## Tracers and chain-lightning arcs.
 var bolts := BoltEffects3D.new(self)
+## Short omni flashes at muzzles.
+var muzzle_lights := MuzzleLights.new(self)
 var plasma_material := WorldGeometry.material(Color("b56cff"), true)
 var shock_material := WorldGeometry.material(Color("55dcff"), true)
 
@@ -151,8 +153,10 @@ func _burst_material(kind: String) -> ParticleProcessMaterial:
 	burst_materials[kind] = material
 	return material
 
-func show_muzzle(at: Vector3, damage_type: int) -> void:
+## Muzzle spark plus a brief pooled light. `color` overrides the damage-type colour of the light.
+func show_muzzle(at: Vector3, damage_type: int, color: Color = Color.TRANSPARENT) -> void:
 	_show_spark(at, plasma_material if damage_type == GameEnums.DamageType.PLASMA else hit_material, .09, .065)
+	muzzle_lights.flash(at, color if color.a > 0.0 else MuzzleLights.color_for(damage_type))
 
 func _show_spark(at: Vector3, material: Material, radius: float, lifetime: float) -> void:
 	var index := spark_lifetimes.find(0.0)
@@ -248,6 +252,7 @@ func _physics_process(delta: float) -> void:
 		spark_lifetimes[index] = maxf(0.0, spark_lifetimes[index] - delta)
 		sparks[index].visible = spark_lifetimes[index] > 0.0
 	bolts.update(delta)
+	muzzle_lights.update(delta)
 	for index in range(pulses.size()):
 		if ages[index] < 0:
 			continue
@@ -263,6 +268,7 @@ func _physics_process(delta: float) -> void:
 func reset(preserve_damage: bool = false) -> void:
 	status.reset()
 	bolts.reset()
+	muzzle_lights.reset()
 	if not preserve_damage:
 		damage_numbers.reset()
 	for index in range(flame_ribbons.size()):

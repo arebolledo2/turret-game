@@ -344,10 +344,12 @@ func _reset_cooldown(stats: TurretStats) -> void:
 func _fire_pulse(stats: TurretStats, range_metres: float) -> void:
 	var pulse := _new_shot(stats)
 	pulse.splash_radius = range_metres
+	world.effects.show_muzzle(muzzle.global_position, pulse.damage_type)
 	world.combat.impact(null, position, Vector3.ZERO, pulse, world.enemies)
 	_reset_cooldown(stats)
 
 func _fire_chain(stats: TurretStats) -> void:
+	world.effects.show_muzzle(muzzle.global_position, GameEnums.DamageType.ELECTRIC)
 	world.combat.chain(muzzle.global_position, target, _new_shot(stats), stats.chain_count,
 		stats.chain_range_metres, stats.chain_decay, world.enemies)
 	_reset_cooldown(stats)
@@ -453,7 +455,9 @@ func _fire_flame(stats: TurretStats, reach: float, heading: Vector3) -> void:
 		hit.burn_duration = float(stats.values.get("burn_duration", 2.0))
 		world.combat.apply_hit(enemy, hit)
 	world.effects.show_flame(muzzle.global_position, heading, reach, half_angle / (2.0 if not flame_emitters.is_empty() else 1.0), position)
+	world.effects.show_muzzle(muzzle.global_position, GameEnums.DamageType.FIRE)
 	for emitter in flame_emitters:
+		world.effects.show_muzzle(emitter.global_position, GameEnums.DamageType.FIRE)
 		var direction := WorldGeometry.planar(-emitter.global_basis.z).normalized()
 		world.effects.show_flame(emitter.global_position, direction, reach, deg_to_rad(8.0), position)
 	_reset_cooldown(stats)
