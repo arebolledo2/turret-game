@@ -10,6 +10,8 @@ const SPIN_SPEED := 0.6
 const DRAG_SPEED := 0.01
 ## Retired types that no wave spawns.
 const LEGACY: Array[String] = ["lazy_wanderer", "neon_drone", "lazy_shooter"]
+const CYCLE_SECONDS := 2.5
+const WALK_METRES_PER_SECOND := 1.5
 const FALLBACK_MODEL := "res://assets/models/game/spider_drone.glb"
 
 var entries: Array[Dictionary] = []
@@ -25,6 +27,10 @@ var stage: Node3D
 var pivot: Node3D
 var camera: Camera3D
 var model: Node3D
+var ecology_motion: EcologyMotion
+var clockwork_motion: ClockworkMotion
+var motion_time := 0.0
+var selected_id := ""
 var selected := -1
 var dragging := false
 
@@ -147,6 +153,8 @@ func show_entry(index: int) -> void:
 	var id: String = entry["id"]
 	_clear_model()
 	model = build_model(id)
+	selected_id = id
+	_start_motion(id)
 	pivot.rotation = Vector3.ZERO
 	pivot.add_child(model)
 	var bounds := model_bounds()
@@ -177,6 +185,19 @@ static func build_model(id: String) -> Node3D:
 	holder.scale = Vector3.ONE * EnemyVariants.body_scale(id)
 	return holder
 
+## Same motion classes the arena uses; models without them (fallback mesh) stay still.
+func _start_motion(id: String) -> void:
+	ecology_motion = null
+	clockwork_motion = null
+	motion_time = 0.0
+	if not ClockworkModels.available(id):
+		return
+	var body := model.get_child(0) as Node3D
+	if EnemyEcology.TYPES.has(id):
+		ecology_motion = EcologyMotion.new(body)
+	else:
+		clockwork_motion = ClockworkMotion.new(body, id)
+
 static func _number(value: Variant) -> String:
 	return str(snappedf(float(value), .1)).trim_suffix(".0")
 
@@ -201,10 +222,25 @@ func _clear_model() -> void:
 		pivot.remove_child(model)
 		model.free()
 	model = null
+	ecology_motion = null
+	clockwork_motion = null
 
 func _process(delta: float) -> void:
 	if not dragging and is_instance_valid(pivot):
 		pivot.rotation.y += SPIN_SPEED * delta
+	advance(delta)
+
+## Plays the model's own motion on a loop: idle, then walking, then (for authored clips) attacking.
+func advance(delta: float) -> void:
+	if ecology_motion == null and clockwork_motion == null:
+		return
+	motion_time = fmod(motion_time + delta, CYCLE_SECONDS * 3.0)
+	var step := int(motion_time / CYCLE_SECONDS)
+	var reduced := FeatureFlagService.is_enabled(FeatureFlagService.REDUCED_MOTION)
+	if ecology_motion:
+		ecology_motion.tick(delta, step == 1, step == 2, reduced, WALK_METRES_PER_SECOND if step == 1 and selected_id == "hopper" else -1.0)
+	else:
+		clockwork_motion.tick(delta, WALK_METRES_PER_SECOND if step == 1 else 0.0, reduced)
 
 func _on_view_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:

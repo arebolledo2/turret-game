@@ -40,3 +40,18 @@ func test_every_entry_builds_a_model() -> void:
 		showcase.show_entry(index)
 		assert_not_null(showcase.model, showcase.entries[index]["id"])
 		assert_eq(showcase.title_label.text, str(showcase.entries[index]["name"]).to_upper())
+
+func test_models_play_their_own_motion_through_idle_walk_and_attack() -> void:
+	var showcase := EnemyShowcase.new()
+	add_child_autofree(showcase)
+	var animated := 0
+	for index in showcase.entries.size():
+		showcase.show_entry(index)
+		var moving := showcase.ecology_motion != null or showcase.clockwork_motion != null
+		if ClockworkModels.available(showcase.entries[index]["id"]):
+			assert_true(moving, "%s has motion" % showcase.entries[index]["id"])
+		if moving:
+			animated += 1
+			for _step in 3:
+				showcase.advance(EnemyShowcase.CYCLE_SECONDS)
+	assert_gt(animated, 0)
