@@ -9,6 +9,8 @@ var showcase_button: Button
 var showcase: TurretShowcase
 var floor_button: Button
 var floor_showcase: FloorShowcase
+var enemy_button: Button
+var enemy_showcase: EnemyShowcase
 var back_button: Button
 var home: VBoxContainer
 var options: VBoxContainer
@@ -81,6 +83,7 @@ func _build_menu() -> void:
 	settings_button = _button(home, "SETTINGS", show_settings, "settings")
 	showcase_button = _button(home, "TURRETS", show_showcase, "turret")
 	floor_button = _button(home, "FLOORS", show_floor_showcase, "sector")
+	enemy_button = _button(home, "ENEMIES", show_enemy_showcase, "kills")
 	_button(home, "QUIT", func() -> void: get_tree().quit(), "power")
 	options = VBoxContainer.new()
 	options.add_theme_constant_override("separation", 18)
@@ -264,6 +267,24 @@ func _close_floor_showcase() -> void:
 	floor_showcase = null
 	show_home()
 	floor_button.grab_focus()
+
+## Opens the enemy gallery over the menu; built on demand and freed when closed.
+func show_enemy_showcase() -> void:
+	if is_instance_valid(enemy_showcase):
+		return
+	enemy_showcase = EnemyShowcase.new()
+	enemy_showcase.closed.connect(_close_enemy_showcase)
+	add_child(enemy_showcase)
+	menu.visible = false
+	enemy_showcase.open()
+
+func _close_enemy_showcase() -> void:
+	if is_instance_valid(enemy_showcase):
+		remove_child(enemy_showcase)
+		enemy_showcase.queue_free()
+	enemy_showcase = null
+	show_home()
+	enemy_button.grab_focus()
 
 func _update_volume_label() -> void:
 	volume_label.text = "SOUND EFFECTS  %d%%%s" % [roundi(SettingsService.sfx_volume * 100), " / MUTED" if SettingsService.sfx_volume <= 0 else ""]

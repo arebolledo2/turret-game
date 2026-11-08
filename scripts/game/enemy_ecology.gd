@@ -69,6 +69,31 @@ const BOSS_IDS: Array[String] = ["brass_ram", "prism_conductor", "grand_marionet
 static func is_boss(type_id: String) -> bool:
 	return type_id in BOSS_IDS
 
+## One-line field notes for the enemy gallery (ids that EnemyRegistry already describes are not repeated here).
+const DESCRIPTIONS := {
+	"drowse": "Small, sluggish beetle that drifts toward the core. Weak alone, dangerous in a crowd.",
+	"hopper": "Fast clockwork hopper that closes distance in bursts and hits hard on contact.",
+	"kite": "Needle-armed flyer that keeps its distance and shoots from range.",
+	"lobber": "Slow siege crawler that lobs shells from range.",
+	"tender": "Support unit that stays back and tends the brood, spawning smaller enemies.",
+	"skitter": "Tiny rivet scuttler spawned in numbers by other enemies.",
+	"lens": "Prism lens summoned by the Prism Conductor.",
+	"anchor": "Stationary tether anchor summoned in pairs.",
+	"puppet": "Clockwork puppet summoned by the Grand Marionettist.",
+	"brass_ram": "Boss. A heavy brass charger that rams straight at the hero.",
+	"prism_conductor": "Boss. Conducts light through summoned prism lenses.",
+	"grand_marionettist": "Boss. Pulls the strings of a troupe of clockwork puppets.",
+	"broadside_baron": "Boss. A ranged brute that pounds the arena from afar.",
+	"frostforge_yeti": "Boss. A frost-forged bruiser from the cold sectors.",
+	"skyfall_kestrel": "Boss. The fastest of the bosses, striking from above.",
+	"crucible_crab": "Boss. A slow molten crab that holds the ground.",
+	"pendulum_regent": "Boss. A swinging regent ruled by a relentless pendulum.",
+	"crownwheel_colossus": "Boss. The final giant of the expansion, built around a great crown wheel.",
+}
+
+static func description(type_id: String) -> String:
+	return str(DESCRIPTIONS.get(type_id, ""))
+
 static func ranged_threat(type_id: String) -> bool:
 	return type_id in EXPANSION_BOSSES or type_id in ["kite", "lobber", "lens", "anchor", "tender", "prism_conductor", "grand_marionettist"]
 

@@ -52,3 +52,7 @@ Salvage Continue uses a compact chamfered control with teal selected/focus state
 ## Floor showcase
 
 The main menu's FLOORS button opens `FloorShowcase` (same shape as `TurretShowcase`): a list of every `WorldGeometry.FLOOR_THEMES` entry beside a turning patch of the real floor material with a turret for scale. Drag to turn it; Back / ui_cancel closes.
+
+## Enemy showcase
+
+The main menu's ENEMIES button opens `EnemyShowcase` (same shape as `TurretShowcase`): a list of every wave enemy followed by the bosses, beside a turning `ClockworkModels` model at in-game size and tint, with base health, speed and contact damage. Entries come from `EnemyRegistry.get_all_type_ids()`; summons (`EnemyEcology.SUMMONS`) and retired types (`EnemyShowcase.LEGACY`) are skipped. Descriptions come from `EnemyRegistry.TYPES` or `EnemyEcology.DESCRIPTIONS`, so a new enemy needs one of those. There is no discovered/locked state.
