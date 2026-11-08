@@ -99,9 +99,14 @@ func test_walls_stand_outside_the_playfield_and_the_floor_stops_at_them() -> voi
 	assert_almost_eq(floor_plane.size.x, half.x * 2.0 + .6, .001, "The floor no longer runs on past the walls")
 	var vertices := _room_vertices()
 	assert_gt(vertices.size(), 1000)
+	var trespassers := 0
+	var first := Vector3.ZERO
 	for vertex in vertices:
-		var inside := absf(vertex.x) < half.x and absf(vertex.z) < half.y and vertex.y > -0.5
-		assert_false(inside, "%s is inside the playfield" % vertex)
+		if absf(vertex.x) < half.x and absf(vertex.z) < half.y and vertex.y > -0.5:
+			if trespassers == 0:
+				first = vertex
+			trespassers += 1
+	assert_eq(trespassers, 0, "%d vertices are inside the playfield, first at %s" % [trespassers, first])
 
 func test_room_is_merged_into_a_handful_of_meshes() -> void:
 	world.start_run()

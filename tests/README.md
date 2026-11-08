@@ -16,6 +16,8 @@ Use PowerShell 7 and the Godot version in `.godot-version`. GUT 9.5.1 is vendore
 
 Set `GODOT_BIN` or pass `-GodotPath` for an installation outside the standard local location. The runner rejects a different engine version. `-unit` and `-integration` are mutually exclusive; `-filter` selects script filenames by substring. A filter matching nothing fails the run.
 
+A default run (no `-filter`) executes `unit` plus up to `-Shards` integration shards (default `min(4, cores/3)`, balanced by file size) as concurrent Godot processes, each with its own `.test-results/<run-id>/<part>/` directory and gate check. Use `-Serial` for a single process, e.g. when bisecting inter-test interference.
+
 The runner isolates Godot's user data in `.test-results/<run-id>/`, by setting APPDATA/XDG_DATA_HOME only in its child process. It retains stdout, stderr, engine logs and `results.json`. It rejects nonzero exits, timeouts, missing/empty results, failures, risky/pending tests, unexpected engine errors and remaining orphan nodes. Errors explicitly asserted with GUT's engine-error assertions are exported individually; the gate exempts exactly those occurrences. It never suppresses a whole error category. Windows is the supported CI platform.
 
 `.github/workflows/tests.yml` downloads the pinned engine, verifies its SHA512 checksum, tests the gate, audits resource links, imports the project, runs the full suite and exercises both six-wave progression builds. Results are uploaded even after failure. Updating Godot requires updating `.godot-version` and `.godot-windows-sha512` together.

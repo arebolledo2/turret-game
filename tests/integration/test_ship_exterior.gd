@@ -325,9 +325,15 @@ func test_side_decks_reach_the_back_deck_so_no_gap_shows_at_the_corners() -> voi
 func test_nothing_stands_inside_the_playfield() -> void:
 	var exterior := _build()
 	var half := WorldGeometry.HALF_ARENA
+	var trespassers := 0
+	var first := Vector3.ZERO
 	for mesh in _meshes(exterior):
 		for vertex: Vector3 in _arrays(mesh)[Mesh.ARRAY_VERTEX]:
-			assert_false(absf(vertex.x) < half.x and absf(vertex.z) < half.y and vertex.y > -0.5, "%s is inside the playfield" % vertex)
+			if absf(vertex.x) < half.x and absf(vertex.z) < half.y and vertex.y > -0.5:
+				if trespassers == 0:
+					first = vertex
+				trespassers += 1
+	assert_eq(trespassers, 0, "%d vertices are inside the playfield, first at %s" % [trespassers, first])
 
 func test_side_decks_differ_so_the_two_sides_are_not_mirror_images() -> void:
 	assert_ne(ShipExterior.MODULES_LEFT, ShipExterior.MODULES_RIGHT)
