@@ -405,27 +405,27 @@ const FORMS: Dictionary = {
 	# 3 s. Tuned in simulated traffic at level 10 (see `test_laser_turret.gd`, not the bench): against Focus Beam, Halo Cutter is
 	# about 1.8 to 2.2 times in a crowd (packs and rings of walkers; it is a crowd turret and far weaker on a lone target) and
 	# Sunpiercer about 1.7 times on a lone or long-held target (boss, lane), 1.1 times on short-lived targets.
-	# Single-target DPS before level and item bonuses: base 30 at x1 / 90 at x3 (60 averaged over the ramp), Focus Beam 40 / 120
-	# (80), Halo Cutter 48 per arm on a lone enemy, Sunpiercer 28 at x1 / 168 at x6 plus the flare (98 averaged over the ramp).
+	# Single-target DPS before level and item bonuses: base 15 at x1 / 45 at x3 (30 averaged over the ramp), Focus Beam 20 / 60
+	# (40), Halo Cutter 24 per arm on a lone enemy, Sunpiercer 14 at x1 / 84 at x6 plus the flare (49 averaged over the ramp).
 	# All four use the real cp_laser chassis (model key `laser`); `LaserEvolutionVisual` adds the per-form hardware.
 	"focus_beam": {
 		"base": "laser", "kind": UPGRADE, "name": "Focus Beam", "model": "laser", "implemented": true,
-		"description": "A lensed emitter: 4 damage ten times a second, from farther off, reaching its x3 ramp in 2 seconds instead of 3.",
-		"stats": {"damage": 4.0, "fire_rate": 10.0, "range": 300.0},
+		"description": "A lensed emitter: 2 damage ten times a second, from farther off, reaching its x3 ramp in 2 seconds instead of 3.",
+		"stats": {"damage": 2.0, "fire_rate": 10.0, "range": 300.0},
 		"behaviour": "LaserForm", "visual": "LaserEvolutionVisual",
 		"params": {"ramp_peak": 3.0, "ramp_seconds": 2.0},
 	},
 	"halo_cutter": {
 		"base": "laser", "kind": FINAL, "name": "Halo Cutter", "model": "laser", "implemented": true,
-		"description": "Four beams on a spinning cross turn 120 degrees a second and cut every enemy they sweep across: 6 damage, 8 times a second. Nothing to focus on, so no ramp.",
-		"stats": {"damage": 6.0, "fire_rate": 8.0, "range": 300.0},
+		"description": "Four beams on a spinning cross turn 120 degrees a second and cut every enemy they sweep across: 3 damage, 8 times a second. Nothing to focus on, so no ramp.",
+		"stats": {"damage": 3.0, "fire_rate": 8.0, "range": 300.0},
 		"behaviour": "LaserForm", "visual": "LaserEvolutionVisual",
 		"params": {"beams": 4, "spin_degrees": 120.0, "ramp_peak": 1.0},
 	},
 	"sunpiercer": {
 		"base": "laser", "kind": FINAL, "name": "Sunpiercer", "model": "laser", "implemented": true,
-		"description": "The ramp climbs to x6 over 4 seconds, from 2.8 damage a tick. At full ramp a flare runs the whole line through the target every 2 seconds, hitting every enemy on it for 6 full-strength ticks.",
-		"stats": {"damage": 2.8, "fire_rate": 10.0, "range": 340.0},
+		"description": "The ramp climbs to x6 over 4 seconds, from 1.4 damage a tick. At full ramp a flare runs the whole line through the target every 2 seconds, hitting every enemy on it for 6 full-strength ticks.",
+		"stats": {"damage": 1.4, "fire_rate": 10.0, "range": 340.0},
 		"behaviour": "LaserForm", "visual": "LaserEvolutionVisual",
 		"params": {"ramp_peak": 6.0, "ramp_seconds": 4.0, "flare_scale": 6.0, "flare_interval": 2.0},
 	},

@@ -113,7 +113,7 @@ func test_shop_view_data_dev_tools_and_art_know_the_laser() -> void:
 	assert_true(row.beam, "The shop knows its rate is ticks per second")
 	assert_false(row.deploys)
 	assert_false(row.utility, "It attacks")
-	assert_almost_eq(float(row.damage), 3.0, .001)
+	assert_almost_eq(float(row.damage), 1.5, .001)
 	assert_almost_eq(float(row.fire_rate), 10.0, .001)
 	assert_same(ShopArt.turret("laser"), load("res://assets/ui/turrets/laser.png"))
 	for form in ["laser", "focus_beam", "halo_cutter", "sunpiercer"]:
@@ -123,7 +123,7 @@ func test_shop_view_data_dev_tools_and_art_know_the_laser() -> void:
 
 func test_registry_entry_matches_the_card_and_counts_as_an_instant_turret() -> void:
 	var base := TurretRegistry.get_base_stats("laser")
-	assert_eq(base.damage, 3.0, "3 damage")
+	assert_eq(base.damage, 1.5, "1.5 damage")
 	assert_eq(base.fire_rate, 10.0, "ten times a second")
 	assert_eq(base.range, 260.0)
 	assert_eq(TurretRegistry.get_fire_mode("laser"), TurretRegistry.FIRE_BEAM)
@@ -140,14 +140,14 @@ func test_an_instant_item_strengthens_the_beam_and_a_projectile_item_does_not() 
 	ModifierService.add_modifier({"stat": "damage", "operation": "increase", "value": .5, "filter": {"attack_family": ["projectile"]}})
 	laser.invalidate_stats()
 	_step(laser)
-	assert_almost_eq(_dealt(enemy), 3.0, .001, "A projectile item changes nothing")
+	assert_almost_eq(_dealt(enemy), 1.5, .001, "A projectile item changes nothing")
 	ModifierService.clear_modifiers()
 	ModifierService.add_modifier({"stat": "damage", "operation": "increase", "value": .5, "filter": {"attack_family": ["instant"]}})
 	laser.invalidate_stats()
 	enemy.health = HUGE
 	_relock(laser)
 	_step(laser)
-	assert_almost_eq(_dealt(enemy), 4.5, .001, "An Instant item reaches the beam")
+	assert_almost_eq(_dealt(enemy), 2.25, .001, "An Instant item reaches the beam")
 
 func test_an_instant_attack_speed_item_quickens_the_ticks() -> void:
 	var laser := _laser()
@@ -165,19 +165,19 @@ func test_resonance_link_counts_the_laser_as_an_instant_turret() -> void:
 	ModifierService.add_modifier({"stat": "storm_link_damage", "operation": "add", "value": .35, "filter": {}})
 	laser.invalidate_stats()
 	_step(laser)
-	assert_almost_eq(_dealt(enemy), 3.0, .001, "Alone it is not linked")
+	assert_almost_eq(_dealt(enemy), 1.5, .001, "Alone it is not linked")
 	var partner := rig.turret("sniper", [], Vector3(3, 0, 0))
 	laser.invalidate_stats()
 	enemy.health = HUGE
 	_relock(laser)
 	_step(laser)
-	assert_almost_eq(_dealt(enemy), 3.0 * 1.35, .001, "An Instant turret within 4 m links it")
+	assert_almost_eq(_dealt(enemy), 1.5 * 1.35, .001, "An Instant turret within 4 m links it")
 	partner.position = Vector3(8, 0, 0)
 	laser.invalidate_stats()
 	enemy.health = HUGE
 	_relock(laser)
 	_step(laser)
-	assert_almost_eq(_dealt(enemy), 3.0, .001, "Out of range again")
+	assert_almost_eq(_dealt(enemy), 1.5, .001, "Out of range again")
 	var second := _laser([], Vector3(2, 0, 0))
 	laser.invalidate_stats()
 	assert_true(laser._has_instant_neighbour(), "Two lasers link each other")
@@ -188,22 +188,22 @@ func test_crit_exposed_and_marked_apply_to_each_tick_like_a_sniper_shot() -> voi
 	var enemy := _dummy(Vector3(0, 0, -2))
 	rig.combat()
 	_step(laser)
-	assert_almost_eq(_dealt(enemy), 3.0, .001)
+	assert_almost_eq(_dealt(enemy), 1.5, .001)
 	enemy.statuses.expose(5.0)
 	enemy.health = HUGE
 	_relock(laser)
 	_step(laser)
-	assert_almost_eq(_dealt(enemy), 3.0 * 1.3, .001, "Exposed: +30% from Instant hits")
+	assert_almost_eq(_dealt(enemy), 1.5 * 1.3, .001, "Exposed: +30% from Instant hits")
 	enemy.statuses.mark(5.0)
 	enemy.health = HUGE
 	_relock(laser)
 	_step(laser)
-	assert_almost_eq(_dealt(enemy), 3.0 * 1.3 * 1.25, .001, "Marked multiplies with it")
+	assert_almost_eq(_dealt(enemy), 1.5 * 1.3 * 1.25, .001, "Marked multiplies with it")
 	TestHelpers.force_crits()
 	enemy.health = HUGE
 	_relock(laser)
 	_step(laser)
-	assert_almost_eq(_dealt(enemy), 3.0 * 1.3 * 1.25 * TurretStatsService.get_turret_crit_multiplier(), .01, "Every tick rolls its own crit")
+	assert_almost_eq(_dealt(enemy), 1.5 * 1.3 * 1.25 * TurretStatsService.get_turret_crit_multiplier(), .01, "Every tick rolls its own crit")
 
 func test_a_tick_carries_the_turrets_id_families_and_damage_type_for_credit() -> void:
 	var laser := _laser()
@@ -225,7 +225,7 @@ func test_the_beam_lands_a_tick_at_once_and_the_ramp_climbs_to_three_times() -> 
 	var enemy := _dummy(Vector3(0, 0, -2))
 	rig.combat()
 	_step(laser)
-	assert_almost_eq(_dealt(enemy), 3.0, .001, "The first tick lands with the beam, at x1")
+	assert_almost_eq(_dealt(enemy), 1.5, .001, "The first tick lands with the beam, at x1")
 	assert_true(_form(laser).is_beaming())
 	assert_same(laser.target, enemy)
 	var before := _dealt(enemy)
@@ -235,7 +235,7 @@ func test_the_beam_lands_a_tick_at_once_and_the_ramp_climbs_to_three_times() -> 
 	assert_almost_eq(_form(laser).ramp_now(), 3.0, .0001, "Full ramp is x3")
 	var full := _dealt(enemy)
 	_run(laser, 1.0)
-	assert_almost_eq(_dealt(enemy) - full, 90.0, 4.5, "30 damage a second becomes 90 at full ramp")
+	assert_almost_eq(_dealt(enemy) - full, 45.0, 2.25, "15 damage a second becomes 45 at full ramp")
 	assert_gt(full - before, 0.0)
 
 func test_the_ramp_integral_over_the_first_three_seconds_matches_the_card() -> void:
@@ -243,8 +243,8 @@ func test_the_ramp_integral_over_the_first_three_seconds_matches_the_card() -> v
 	var enemy := _dummy(Vector3(0, 0, -2))
 	rig.combat()
 	_run(laser, 3.0)
-	# Ten ticks a second for three seconds, the multiplier rising from 1 to 3: about 3 x 10 x 3 x 2 = 180 (plus the landing tick).
-	assert_between(_dealt(enemy), 175.0, 195.0)
+	# Ten ticks a second for three seconds, the multiplier rising from 1 to 3: about 1.5 x 10 x 3 x 2 = 90 (plus the landing tick).
+	assert_between(_dealt(enemy), 87.5, 97.5)
 
 func test_ticks_per_second_do_not_depend_on_the_frame_rate() -> void:
 	var results: Array[float] = []
@@ -269,10 +269,10 @@ func test_a_step_never_deals_more_than_the_tick_cap_however_fast_the_rate() -> v
 	ModifierService.add_modifier({"stat": "attack_speed", "operation": "increase", "value": 500.0, "filter": {"attack_family": ["instant"]}})
 	laser.invalidate_stats()
 	_step(laser)
-	assert_lte(_dealt(enemy), 3.0 * ContinuousBeam.MAX_TICKS_PER_STEP + .001)
+	assert_lte(_dealt(enemy), 1.5 * ContinuousBeam.MAX_TICKS_PER_STEP + .001)
 	var before := _dealt(enemy)
 	_step(laser, 5.0)
-	assert_lte(_dealt(enemy) - before, 3.0 * ContinuousBeam.MAX_TICKS_PER_STEP * 3.0 + .001, "A stalled frame pays at most the cap at the current ramp")
+	assert_lte(_dealt(enemy) - before, 1.5 * ContinuousBeam.MAX_TICKS_PER_STEP * 3.0 + .001, "A stalled frame pays at most the cap at the current ramp")
 
 func test_it_locks_the_nearest_enemy_and_keeps_it_when_a_closer_one_arrives() -> void:
 	var laser := _laser()
@@ -407,7 +407,7 @@ func test_focus_beam_hits_harder_ramps_faster_and_reaches_farther() -> void:
 	var enemy := _dummy(Vector3(0, 0, -2.8))
 	rig.combat()
 	var damage := _view_damage(laser)
-	assert_almost_eq(float(TurretEvolution.base_stats("laser", "focus_beam").damage), 4.0, .001, "4 damage a tick before level bonuses")
+	assert_almost_eq(float(TurretEvolution.base_stats("laser", "focus_beam").damage), 2.0, .001, "2 damage a tick before level bonuses")
 	assert_eq(TurretStats.new(TurretEvolution.base_stats("laser", "focus_beam")).range_metres, 3.0)
 	_step(laser)
 	assert_almost_eq(_dealt(enemy), damage, .001, "The landing tick is x1")
@@ -474,7 +474,7 @@ func test_halo_cutter_strikes_at_most_the_cap_per_tick_nearest_first() -> void:
 
 func test_halo_cutter_goes_quiet_with_nothing_in_reach_and_restarts_on_a_new_enemy() -> void:
 	var laser := _halo()
-	var enemy := rig.enemy(Vector3(0, 0, -2), 20.0)
+	var enemy := rig.enemy(Vector3(0, 0, -2), 10.0)
 	rig.combat()
 	_run(laser, 1.0)
 	assert_true(enemy.dead)
@@ -610,7 +610,7 @@ func test_two_lasers_on_one_enemy_each_deal_their_own_ticks() -> void:
 		second._physics_process(STEP)
 	assert_gt(_form(first).strikes, 0)
 	assert_gt(_form(second).strikes, 0)
-	assert_gte(_dealt(enemy), 3.0 * float(_form(first).strikes + _form(second).strikes) - .01, "Both lasers' ticks landed")
+	assert_gte(_dealt(enemy), 1.5 * float(_form(first).strikes + _form(second).strikes) - .01, "Both lasers' ticks landed")
 
 func test_kill_credit_goes_to_the_laser_that_dealt_the_blow() -> void:
 	var first := _laser([], Vector3(0, 0, 0))
@@ -837,7 +837,7 @@ func test_other_turrets_make_no_beam_and_a_sniper_still_shoots() -> void:
 
 func test_shop_and_inspector_report_a_ramp_averaged_dps() -> void:
 	var laser := _laser()
-	assert_almost_eq(TurretForm.dps_of(laser), 3.0 * 10.0 * 2.0, .001, "Base: 30 at x1, 90 at x3, 60 on average while ramping")
+	assert_almost_eq(TurretForm.dps_of(laser), 1.5 * 10.0 * 2.0, .001, "Base: 15 at x1, 45 at x3, 30 on average while ramping")
 	var focus := _focus(Vector3(5, 0, 0))
 	var view := focus.resolve_attack_view()
 	assert_almost_eq(TurretForm.dps_of(focus), view.damage * view.fire_rate * 2.0, .001, "Focus Beam: x1 to x3, averaging x2")

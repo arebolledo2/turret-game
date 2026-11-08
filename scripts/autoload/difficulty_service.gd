@@ -16,20 +16,8 @@ const RULE_DEFAULTS: Dictionary = {
 const DIFFICULTY_CONFIG: Dictionary = {
 	GameEnums.Difficulty.EASY: {
 		"name": "Easy",
-		"description": "Relaxed gameplay for learning",
-		"enemy_health_mult": 1.0,
-		"enemy_speed_mult": 1.0,
-		"enemy_damage_mult": 1.0,
-		"enemy_count_mult": 1.8,
-		"enemy_hp_scale_per_wave": 1.10,
-		"enemy_speed_scale_per_wave": 1.0,
-		"player_health_mult": 1.0,
-		"turret_damage_mult": 1.0,
-	},
-	GameEnums.Difficulty.MEDIUM: {
-		"name": "Medium",
 		"late_pressure": 1.0, "elite_start_wave": 6, "elite_health_mult": 1.65, "elite_speed_mult": 1.10,
-		"description": "Balanced challenge",
+		"description": "Relaxed gameplay for learning",
 		"enemy_health_mult": 1.25,
 		"enemy_speed_mult": 1.0,
 		"enemy_damage_mult": 1.2,
@@ -39,10 +27,10 @@ const DIFFICULTY_CONFIG: Dictionary = {
 		"player_health_mult": 1.0,
 		"turret_damage_mult": 1.0,
 	},
-	GameEnums.Difficulty.HARD: {
-		"name": "Hard",
+	GameEnums.Difficulty.MEDIUM: {
+		"name": "Medium",
 		"late_pressure": 1.0,
-		"description": "For experienced survivors",
+		"description": "Balanced challenge",
 		"enemy_health_mult": 1.5,
 		"enemy_speed_mult": 1.0,
 		"enemy_damage_mult": 1.5,
@@ -54,8 +42,8 @@ const DIFFICULTY_CONFIG: Dictionary = {
 		"elite_start_wave": 4, "elite_chance": 0.10, "elite_health_mult": 2.0, "elite_speed_mult": 1.15,
 		"core_health_mult": 0.85, "seeker_share": 0.10, "spawn_rate_mult": 1.15,
 	},
-	GameEnums.Difficulty.BRUTAL: {
-		"name": "Brutal",
+	GameEnums.Difficulty.HARD: {
+		"name": "Hard",
 		"late_pressure": 1.0,
 		"description": "Elites, core seekers and no mercy",
 		"enemy_health_mult": 1.6,
@@ -68,6 +56,21 @@ const DIFFICULTY_CONFIG: Dictionary = {
 		"turret_damage_mult": 0.9,
 		"elite_start_wave": 4, "elite_chance": 0.15, "elite_health_mult": 2.0, "elite_speed_mult": 1.2,
 		"core_health_mult": 0.7, "seeker_share": 0.25, "spawn_rate_mult": 1.3,
+	},
+	GameEnums.Difficulty.BRUTAL: {
+		"name": "Brutal",
+		"late_pressure": 1.0,
+		"description": "Relentless elites, swarms and almost no mercy",
+		"enemy_health_mult": 2.4,
+		"enemy_speed_mult": 1.0,
+		"enemy_damage_mult": 2.4,
+		"enemy_count_mult": 4.2,
+		"enemy_hp_scale_per_wave": 1.20,
+		"enemy_speed_scale_per_wave": 1.0,
+		"player_health_mult": 0.5,
+		"turret_damage_mult": 0.8,
+		"elite_start_wave": 4, "elite_chance": 0.225, "elite_health_mult": 3.0, "elite_speed_mult": 1.3,
+		"core_health_mult": 0.47, "seeker_share": 0.375, "spawn_rate_mult": 1.6,
 	},
 }
 
@@ -108,7 +111,7 @@ static func wave_rule(config: Dictionary, key: String, wave: int) -> float:
 	var base := rule(config, key)
 	var ramp := clampf(float(wave - 4) / 16.0, 0.0, 1.0) * rule(config, "late_pressure")
 	match key:
-		"elite_chance": return minf(.30, base + ramp * .12)
+		"elite_chance": return minf(.40, base + ramp * .15)
 		"seeker_share": return minf(.50, base + ramp * .30)
-		"spawn_rate_mult": return base * (1.0 + ramp * .15)
+		"spawn_rate_mult": return base * (1.0 + ramp * .30)
 	return base

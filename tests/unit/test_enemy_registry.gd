@@ -66,8 +66,8 @@ func test_health_scaling_wave_1_easy():
 	var stats = EnemyRegistry.get_stats_for_wave("basic", 1, easy_config)
 	var base_stats = EnemyRegistry.get_base_stats("basic")
 
-	# Wave 1 with easy: base * 1.0 * 1.1^0 = base
-	assert_eq(stats["health"], base_stats["health"], "Wave 1 Easy should have base health")
+	# Wave 1 with easy: base * health mult * scale^0
+	assert_almost_eq(float(stats["health"]), float(base_stats["health"]) * float(easy_config["enemy_health_mult"]), 0.001, "Wave 1 Easy should be base health times the tier multiplier")
 
 
 func test_health_scaling_exponential():

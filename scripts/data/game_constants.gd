@@ -95,7 +95,7 @@ const ENEMY_BASE_HEALTH: float = 8.0
 # WAVE TIMING
 # =============================================================================
 const WAVE_BASE_ENEMY_COUNT: int = 22
-const WAVE_ENEMY_INCREMENT: int = 8
+const WAVE_ENEMY_INCREMENT: int = 9
 
 # Wave duration scaling (linear progression: 30s, 35s, 40s, 45s, 50s, 55s, 60s+)
 const WAVE_DURATION_BASE: float = 30.0 # Wave 1

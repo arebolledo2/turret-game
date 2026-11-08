@@ -46,7 +46,7 @@ func test_elites_arrive_at_the_configured_share() -> void:
 	for index in 100:
 		if world.waves._take_credit("elite_chance"):
 			elites += 1
-	assert_eq(elites, 15, "15% of 100 spawns, evenly spread")
+	assert_between(elites, 22, 23, "22.5% of 100 spawns, evenly spread")
 
 func test_hard_tiers_delay_elites_until_wave_four_without_banking_credit() -> void:
 	for tier in [GameEnums.Difficulty.HARD, GameEnums.Difficulty.BRUTAL]:
@@ -62,28 +62,28 @@ func test_hard_tiers_delay_elites_until_wave_four_without_banking_credit() -> vo
 			if world.waves._take_credit("elite_chance"):
 				elites += 1
 		if tier == GameEnums.Difficulty.HARD:
-			assert_between(elites, 9, 10)
-		else:
 			assert_eq(elites, 15)
+		else:
+			assert_between(elites, 22, 23)
 
 func test_elite_is_tougher_faster_and_worth_more() -> void:
 	var world := await _world(GameEnums.Difficulty.BRUTAL)
 	var normal := world.waves.spawn_enemy(Vector3(5, 0, 5), "basic")
 	var elite := world.waves.spawn_enemy(Vector3(6, 0, 5), "basic", true)
 	assert_true(elite.elite)
-	assert_almost_eq(elite.max_health, normal.max_health * 2.0, .001)
-	assert_almost_eq(elite.speed, normal.speed * 1.2, .001)
+	assert_almost_eq(elite.max_health, normal.max_health * 3.0, .001)
+	assert_almost_eq(elite.speed, normal.speed * 1.3, .001)
 	assert_eq(elite.scrap_value, normal.scrap_value * 2)
 
-func test_easy_and_medium_spawn_no_elites() -> void:
-	for tier in [GameEnums.Difficulty.EASY, GameEnums.Difficulty.MEDIUM]:
+func test_easy_spawns_no_elites() -> void:
+	for tier in [GameEnums.Difficulty.EASY]:
 		var world := await _world(tier)
 		for index in 50:
 			assert_false(world.waves._take_credit("elite_chance"))
 
 func test_brutal_core_has_less_health() -> void:
 	var world := await _world(GameEnums.Difficulty.BRUTAL, RunConfig.MODE_CORE)
-	assert_almost_eq(world.core.max_health, GameConstants.PLAYER_BASE_MAX_HEALTH * GameConstants.CORE_HEALTH_MULT * .7, .01)
+	assert_almost_eq(world.core.max_health, GameConstants.PLAYER_BASE_MAX_HEALTH * GameConstants.CORE_HEALTH_MULT * .47, .01)
 
 func test_seekers_ignore_the_hero_in_core_mode() -> void:
 	var world := await _world(GameEnums.Difficulty.BRUTAL, RunConfig.MODE_CORE)

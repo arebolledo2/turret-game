@@ -340,7 +340,7 @@ const FORMS: Dictionary = {
 		"name": "Focus Beam",
 		"model": "laser",
 		"implemented": true,
-		"description": "A lensed emitter: 4 damage ten times a second, from farther off, reaching its x3 ramp in 2 seconds instead of 3.",
+		"description": "A lensed emitter: 2 damage ten times a second, from farther off, reaching its x3 ramp in 2 seconds instead of 3.",
 	},
 	"halo_cutter": {
 		"base": "laser",
@@ -348,7 +348,7 @@ const FORMS: Dictionary = {
 		"name": "Halo Cutter",
 		"model": "laser",
 		"implemented": true,
-		"description": "Four beams on a spinning cross turn 120 degrees a second and cut every enemy they sweep across: 6 damage, 8 times a second. Nothing to focus on, so no ramp.",
+		"description": "Four beams on a spinning cross turn 120 degrees a second and cut every enemy they sweep across: 3 damage, 8 times a second. Nothing to focus on, so no ramp.",
 	},
 	"sunpiercer": {
 		"base": "laser",
@@ -356,7 +356,7 @@ const FORMS: Dictionary = {
 		"name": "Sunpiercer",
 		"model": "laser",
 		"implemented": true,
-		"description": "The ramp climbs to x6 over 4 seconds, from 2.8 damage a tick. At full ramp a flare runs the whole line through the target every 2 seconds, hitting every enemy on it for 6 full-strength ticks.",
+		"description": "The ramp climbs to x6 over 4 seconds, from 1.4 damage a tick. At full ramp a flare runs the whole line through the target every 2 seconds, hitting every enemy on it for 6 full-strength ticks.",
 	},
 	"escort_drones": {
 		"base": "drone_bay",
@@ -815,25 +815,25 @@ const STATS: Dictionary = {
 		"knockback_force": 80.0,
 	},
 	"(laser)": {
-		"damage": 3.0,
+		"damage": 1.5,
 		"fire_rate": 10.0,
 		"range": 260.0,
 		"rotation_speed": 0.0,
 	},
 	"focus_beam": {
-		"damage": 4.0,
+		"damage": 2.0,
 		"fire_rate": 10.0,
 		"range": 300.0,
 		"rotation_speed": 0.0,
 	},
 	"halo_cutter": {
-		"damage": 6.0,
+		"damage": 3.0,
 		"fire_rate": 8.0,
 		"range": 300.0,
 		"rotation_speed": 0.0,
 	},
 	"sunpiercer": {
-		"damage": 2.8,
+		"damage": 1.4,
 		"fire_rate": 10.0,
 		"range": 340.0,
 		"rotation_speed": 0.0,

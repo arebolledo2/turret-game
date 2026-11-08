@@ -349,7 +349,7 @@ func test_laser_path_forms_tiers_and_real_chassis() -> void:
 
 func test_laser_base_stats_match_the_card() -> void:
 	var base := TurretRegistry.get_base_stats("laser")
-	assert_eq(base.damage, 3.0)
+	assert_eq(base.damage, 1.5)
 	assert_eq(base.fire_rate, 10.0)
 	assert_eq(base.range, 260.0)
 	assert_eq(TurretRegistry.get_base_price("laser"), 19)
@@ -359,7 +359,7 @@ func test_laser_base_stats_match_the_card() -> void:
 
 func test_laser_forms_change_how_the_beam_works() -> void:
 	var focus := TurretEvolution.base_stats("laser", "focus_beam")
-	assert_gt(float(focus.damage), 3.0)
+	assert_gt(float(focus.damage), 1.5)
 	assert_gt(float(focus.range), 260.0)
 	assert_lt(float(TurretEvolution.param("focus_beam", "ramp_seconds")), LaserForm.DEFAULT_RAMP_SECONDS, "Focus Beam ramps faster")
 	assert_eq(TurretEvolution.param("halo_cutter", "beams"), 4)

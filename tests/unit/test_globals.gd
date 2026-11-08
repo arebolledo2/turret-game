@@ -81,8 +81,9 @@ func test_wave_enemy_count_scales_with_difficulty():
 func test_enemy_health_wave_1():
 	DifficultyService.set_difficulty(GameEnums.Difficulty.EASY)
 	var health = EnemyRegistry.get_stats_for_wave("basic", 1, DifficultyService.get_difficulty_config())["health"]
-	# Wave 1: base * mult * 1.0^0 = base
-	assert_eq(health, GameConstants.ENEMY_BASE_HEALTH, "Wave 1 Easy should have base health")
+	# Wave 1: base * mult * scale^0
+	var mult := float(DifficultyService.get_difficulty_config()["enemy_health_mult"])
+	assert_almost_eq(float(health), GameConstants.ENEMY_BASE_HEALTH * mult, 0.001, "Wave 1 Easy should be base health times the tier multiplier")
 
 
 func test_enemy_health_scales_exponentially():
@@ -90,11 +91,11 @@ func test_enemy_health_scales_exponentially():
 	var wave1_hp = EnemyRegistry.get_stats_for_wave("basic", 1, DifficultyService.get_difficulty_config())["health"]
 	var wave5_hp = EnemyRegistry.get_stats_for_wave("basic", 5, DifficultyService.get_difficulty_config())["health"]
 
-	# Easy: 10% per wave, so wave 5 = base * 1.1^4
-	var expected_ratio = pow(1.10, 4) # ~1.4641
+	# Easy: 12% per wave, so wave 5 = base * 1.12^4
+	var expected_ratio = pow(1.12, 4)
 	var actual_ratio = wave5_hp / wave1_hp
 
-	assert_almost_eq(actual_ratio, expected_ratio, 0.01, "Health should scale by 1.1^(wave-1)")
+	assert_almost_eq(actual_ratio, expected_ratio, 0.01, "Health should scale by 1.12^(wave-1)")
 
 
 func test_enemy_health_harder_on_hard_mode():
@@ -175,7 +176,7 @@ func test_player_health_reduced_on_hard():
 	var hard_hp = PlayerStatsService.get_player_max_health(DifficultyService.get_difficulty_config()["player_health_mult"])
 
 	assert_lt(hard_hp, easy_hp, "Hard mode should have less player health")
-	assert_almost_eq(hard_hp, GameConstants.PLAYER_BASE_MAX_HEALTH * 0.8, 0.01, "Hard should be 80% health")
+	assert_almost_eq(hard_hp, GameConstants.PLAYER_BASE_MAX_HEALTH * 0.75, 0.01, "Hard should be 75% health")
 
 
 func test_turret_damage_reduced_on_hard():

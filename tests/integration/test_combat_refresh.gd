@@ -45,7 +45,7 @@ func test_hero_excludes_other_families_and_turret_only_bonuses() -> void:
 
 func test_late_core_waves_raise_pressure_without_early_elites() -> void:
 	var config := world.difficulty_config
-	for wave in range(1, 6):
+	for wave in range(1, 4):
 		GameStateService.current_wave = wave
 		for i in range(100): assert_false(world.waves._take_credit("elite_chance"))
 	var previous := 0
@@ -54,14 +54,14 @@ func test_late_core_waves_raise_pressure_without_early_elites() -> void:
 		assert_gt(count, previous)
 		previous = count
 	assert_gt(GameStateService.get_wave_enemy_count(20, 2.2, 1.0), 500)
-	assert_almost_eq(DifficultyService.wave_rule(config, "seeker_share", 20), .3, .001)
-	assert_almost_eq(DifficultyService.wave_rule(config, "elite_chance", 20), .12, .001)
+	assert_almost_eq(DifficultyService.wave_rule(config, "seeker_share", 20), .4, .001)
+	assert_almost_eq(DifficultyService.wave_rule(config, "elite_chance", 20), .25, .001)
 	GameStateService.current_wave = 20
 	world.waves.elite_credit = 0
 	var elites := 0
 	for i in range(100):
 		if world.waves._take_credit("elite_chance"): elites += 1
-	assert_between(elites, 11, 12)
+	assert_between(elites, 24, 26)
 	var tanks := 0
 	for i in range(100):
 		if EnemyVariants.pick_type(14, i) == "tank": tanks += 1

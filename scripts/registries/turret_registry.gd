@@ -300,7 +300,7 @@ const TYPES: Dictionary = {
 		"attack_styles": [GameEnums.AttackStyle.INSTANT],
 		"damage_types": [GameEnums.DamageType.PLASMA],
 		"base_stats": {
-			"damage": 3.0,
+			"damage": 1.5,
 			"fire_rate": 10.0,
 			"range": 260.0,
 			"rotation_speed": 0.0,
